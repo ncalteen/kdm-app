@@ -155,7 +155,7 @@ values -- Aenas
     5
   );
 -- Wanderer Timeline Entries
-insert into wanderer_timeline_entries (wanderer, timeline_year, entries)
+insert into wanderer_timeline_entry (wanderer, timeline_year, entries)
 values -- Aenas
   (
     (
@@ -207,7 +207,7 @@ values -- Aenas
     '{"Wanderer - Luck"}'
   );
 -- Philosophies
-insert into philosophies (philosophy_name)
+insert into philosophy (philosophy_name)
 values ('Ambitionism'),
   ('Champion'),
   ('Collectivism'),
@@ -228,7 +228,7 @@ values ('Ambitionism'),
   ('Verminism'),
   ('Wanderer');
 -- Weapon Types
-insert into weapon_types (type_name)
+insert into weapon_type (type_name)
 values ('Axe'),
   ('Bow'),
   ('Cleaver'),
