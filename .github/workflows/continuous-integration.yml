@@ -1,0 +1,52 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  checks: write
+  contents: read
+
+jobs:
+  continuous-integration:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install Dependencies
+        id: install
+        run: npm install
+
+      - name: Check Format
+        id: format-check
+        run: npm run format:check
+
+      - name: Lint
+        id: lint
+        run: npm run lint
+
+      - name: Test
+        id: test
+        run: npm run ci-test
+
+      - name: Build
+        id: build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build
