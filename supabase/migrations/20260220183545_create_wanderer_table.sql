@@ -1,8 +1,6 @@
 -- Wanderer
 create table wanderer (
   id uuid primary key default gen_random_uuid(),
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
   abilities_impairments varchar [] not null default '{}',
   accuracy int not null default 0,
   arc boolean not null default false,

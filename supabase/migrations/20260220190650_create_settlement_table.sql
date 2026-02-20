@@ -4,9 +4,6 @@ create table settlement (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   shared_user_ids uuid [] not null default '{}',
-  -- General Data
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
   -- Settlement Data
   arrival_bonuses varchar [] not null default '{}',
   campaign_type campaign_type not null default 'PEOPLE_OF_THE_LANTERN',

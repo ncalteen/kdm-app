@@ -5,9 +5,6 @@ create table survivor (
   -- IDs
   id uuid primary key default gen_random_uuid(),
   settlement_id uuid not null references settlement(id) on delete cascade,
-  -- General Data
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
   -- Base Survivor Data
   abilities_impairments varchar [] not null default '{}',
   accuracy int not null default 0,
