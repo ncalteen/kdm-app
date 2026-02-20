@@ -66,4 +66,19 @@ contributors list for any pages you contribute to!
 This project uses Supabase for its database needs. If you need to make changes
 to the database schema, please follow these steps:
 
-TODO
+1. Create a new migration file
+
+   ```bash
+   npx supabase migration new <migration-name>
+   ```
+
+   This will create a new SQL file in the `supabase/migrations` directory.
+
+1. Add your SQL statements to the new migration file
+1. Run the migration to apply the changes to your local database
+
+   ```bash
+   npx supabase migration up
+   ```
+
+1. Test your changes locally
