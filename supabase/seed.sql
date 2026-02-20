@@ -155,7 +155,7 @@ values -- Aenas
     5
   );
 -- Wanderer Timeline Entries
-insert into wanderer_timeline_entry (wanderer, timeline_year, entries)
+insert into wanderer_timeline_entry (wanderer_id, timeline_year, entries)
 values -- Aenas
   (
     (
