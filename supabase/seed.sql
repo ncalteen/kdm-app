@@ -1,5 +1,5 @@
 -- Wanderers
-insert into wanderers (
+insert into wanderer (
     abilities_impairments,
     accuracy,
     arc,
@@ -160,7 +160,7 @@ values -- Aenas
   (
     (
       select id
-      from wanderers
+      from wanderer
       where wanderer_name = 'Aenas'
     ),
     7,
@@ -170,7 +170,7 @@ values -- Aenas
   (
     (
       select id
-      from wanderers
+      from wanderer
       where wanderer_name = 'Candy & Cola'
     ),
     2,
@@ -180,7 +180,7 @@ values -- Aenas
   (
     (
       select id
-      from wanderers
+      from wanderer
       where wanderer_name = 'Death Drifter'
     ),
     6,
@@ -190,7 +190,7 @@ values -- Aenas
   (
     (
       select id
-      from wanderers
+      from wanderer
       where wanderer_name = 'Goth'
     ),
     4,
@@ -200,7 +200,7 @@ values -- Aenas
   (
     (
       select id
-      from wanderers
+      from wanderer
       where wanderer_name = 'Luck'
     ),
     23,
