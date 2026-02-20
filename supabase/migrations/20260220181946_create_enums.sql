@@ -1,10 +1,6 @@
--- Ambush Types
-create type ambush_type as enum (
-  'SURVIVORS',
-  'MONSTER'
-);
-
--- Campaign Types
+-- Ambush Type
+create type ambush_type as enum ('SURVIVORS', 'MONSTER');
+-- Campaign Type
 create type campaign_type as enum (
   'PEOPLE_OF_THE_DREAM_KEEPER',
   'PEOPLE_OF_THE_LANTERN',
@@ -13,8 +9,7 @@ create type campaign_type as enum (
   'SQUIRES_OF_THE_CITADEL',
   'CUSTOM'
 );
-
--- Color Choices
+-- Color Choice
 create type color_choice as enum (
   'neutral',
   'stone',
@@ -39,22 +34,11 @@ create type color_choice as enum (
   'pink',
   'rose'
 );
-
 -- Gender
-create type gender as enum (
-  'FEMALE',
-  'MALE'
-);
-
--- Hunt Event Types
-create type hunt_event_type as enum (
-  'ARC',
-  'BASIC',
-  'MONSTER',
-  'SCOUT'
-);
-
--- Monster Nodes
+create type gender as enum ('FEMALE', 'MALE');
+-- Hunt Event Type
+create type hunt_event_type as enum ('ARC', 'BASIC', 'MONSTER', 'SCOUT');
+-- Monster Node
 create type monster_node as enum (
   'NQ1',
   'NQ2',
@@ -66,23 +50,11 @@ create type monster_node as enum (
   'CO',
   'FI'
 );
-
--- Monster Versions
-create type monster_version as enum (
-  'ORIGINAL',
-  'ALTERNATE',
-  'VIGNETTE'
-);
-
--- Resource Categories
-create type resource_category as enum (
-  'BASIC',
-  'MONSTER',
-  'STRANGE',
-  'VERMIN'
-);
-
--- Resource Types
+-- Monster Version
+create type monster_version as enum ('ORIGINAL', 'ALTERNATE', 'VIGNETTE');
+-- Resource Category
+create type resource_category as enum ('BASIC', 'MONSTER', 'STRANGE', 'VERMIN');
+-- Resource Type
 create type resource_type as enum (
   'BONE',
   'HIDE',
@@ -91,8 +63,7 @@ create type resource_type as enum (
   'HERB',
   'VERMIN'
 );
-
--- Settlement Phase Steps
+-- Settlement Phase Step
 create type settlement_phase_step as enum (
   'SET_UP_SETTLEMENT',
   'SURVIVORS_RETURN',
@@ -106,15 +77,7 @@ create type settlement_phase_step as enum (
   'RECORD_AND_ARCHIVE_RESOURCES',
   'END_SETTLEMENT_PHASE'
 );
-
--- Showdown Types
-create type showdown_type as enum (
-  'REGULAR',
-  'SPECIAL'
-);
-
--- Survivor Types
-create type survivor_type as enum (
-  'CORE',
-  'ARC'
-);
+-- Showdown Type
+create type showdown_type as enum ('REGULAR', 'SPECIAL');
+-- Survivor Type
+create type survivor_type as enum ('CORE', 'ARC');
