@@ -12,7 +12,6 @@ select using (true);
 -- Quarry Level Data
 create table quarry_level_data (
   id uuid primary key default gen_random_uuid(),
-  settlement_id uuid not null references settlement(id) on delete cascade,
   accuracy int not null default 0,
   accuracy_tokens int not null default 0,
   ai_deck uuid not null references ai_deck_data(id) on delete
