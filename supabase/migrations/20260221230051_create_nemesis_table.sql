@@ -32,8 +32,6 @@ alter table nemesis_timeline enable row level security;
 create policy "Allow read access to all users" on nemesis_timeline for
 select using (true);
 -- Indexes
-create index idx_nemesis_cc_reward_nemesis_id on nemesis_cc_reward (nemesis_id);
-create index idx_nemesis_cc_reward_cc_reward_id on nemesis_cc_reward (cc_reward_id);
 create index idx_nemesis_level_nemesis_id on nemesis_level (nemesis_id);
 create index idx_nemesis_level_data_id on nemesis_level (nemesis_level_data_id);
 create index idx_nemesis_timeline_nemesis_id on nemesis_timeline (nemesis_id);
