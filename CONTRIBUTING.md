@@ -66,6 +66,11 @@ contributors list for any pages you contribute to!
 This project uses Supabase for its database needs. If you need to make changes
 to the database schema, please follow these steps:
 
+> [!NOTE]
+>
+> Please make sure to add any necessary seed data to the `supabase/seed`
+> directory as well, and update the seeding scripts if needed.
+
 1. Create a new migration file
 
    ```bash
