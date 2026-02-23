@@ -77,6 +77,8 @@ create type settlement_phase_step as enum (
   'RECORD_AND_ARCHIVE_RESOURCES',
   'END_SETTLEMENT_PHASE'
 );
+-- Showdown Turn
+create type showdown_turn as enum ('MONSTER', 'SURVIVOR');
 -- Showdown Type
 create type showdown_type as enum ('REGULAR', 'SPECIAL');
 -- Survivor Type
