@@ -27,6 +27,8 @@ create policy "Allow all for shared users" on hunt_ai_deck for all using (
       and auth.uid() = any(s.shared_user_ids)
   )
 );
+-- Indexes
+create index idx_hunt_ai_deck_settlement on hunt_ai_deck (settlement_id);
 -- Hunt Monster Data
 create table hunt_monster_data (
   -- Metadata
@@ -46,9 +48,11 @@ create table hunt_monster_data (
   luck integer not null default 0,
   luck_tokens integer not null default 0,
   moods varchar [] not null default '{}',
+  monster_name varchar,
   movement integer not null default 0,
   movement_tokens integer not null default 0,
   notes text not null default '',
+  settlement_id uuid not null references settlement (id) on delete cascade,
   speed integer not null default 0,
   speed_tokens integer not null default 0,
   strength integer not null default 0,
@@ -57,3 +61,22 @@ create table hunt_monster_data (
   traits varchar [] not null default '{}',
   wounds integer not null default 0
 );
+alter table hunt_monster_data enable row level security;
+create policy "Allow all for owner" on hunt_monster_data for all using (
+  auth.uid() = (
+    select user_id
+    from settlement
+    where id = settlement_id
+  )
+);
+create policy "Allow all for shared users" on hunt_monster_data for all using (
+  exists (
+    select 1
+    from settlement s
+    where s.id = settlement_id
+      and auth.uid() = any(s.shared_user_ids)
+  )
+);
+-- Indexes
+create index idx_hunt_monster_data_settlement on hunt_monster_data (settlement_id);
+create index idx_hunt_monster_data_ai_deck on hunt_monster_data (ai_deck_id);
