@@ -228,7 +228,7 @@ values ('Ambitionism'),
   ('Verminism'),
   ('Wanderer');
 -- Weapon Types
-insert into weapon_type (type_name)
+insert into weapon_type (weapon_type_name)
 values ('Axe'),
   ('Bow'),
   ('Cleaver'),

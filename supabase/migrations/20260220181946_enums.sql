@@ -1,3 +1,5 @@
+-- Aenas State
+create type aenas_state as enum ('Content', 'Hungry');
 -- Ambush Type
 create type ambush_type as enum ('SURVIVORS', 'MONSTER');
 -- Campaign Type

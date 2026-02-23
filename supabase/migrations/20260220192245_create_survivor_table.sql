@@ -1,5 +1,3 @@
--- Aenas State
-create type aenas_state as enum ('Content', 'Hungry');
 -- Survivor
 create table survivor (
   -- Metadata
