@@ -1,6 +1,10 @@
 -- Nemesis
 create table nemesis (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Nemesis Data
   alternate_id uuid references alternate_nemesis(id) on delete cascade,
   monster_name varchar not null,
   multi_monster boolean not null default false,

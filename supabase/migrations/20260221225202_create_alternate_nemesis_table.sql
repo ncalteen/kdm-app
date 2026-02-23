@@ -1,6 +1,10 @@
 -- Alternate Nemesis
 create table alternate_nemesis (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Alternate Nemesis Data
   locations varchar [] not null default '{}',
   monster_name varchar not null,
   multi_monster boolean not null default false

@@ -1,11 +1,14 @@
 -- Settlement Phase
 create table settlement_phase (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
-  settlement_id uuid not null references settlement (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Phase Data
   endeavors int not null default 0,
-  returning_scout_id uuid references survivor (id) on delete
-  set null,
-    step settlement_phase_step not null default 'SET_UP_SETTLEMENT'
+  returning_scout_id uuid references survivor (id) on delete cascade,
+  settlement_id uuid not null references settlement (id) on delete cascade,
+  step settlement_phase_step not null default 'SET_UP_SETTLEMENT'
 );
 alter table settlement_phase enable row level security;
 create policy "Allow all for owner" on settlement_phase for all using (

@@ -1,6 +1,10 @@
 -- Wanderer
 create table wanderer (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Wanderer Data
   abilities_impairments varchar [] not null default '{}',
   accuracy int not null default 0,
   arc boolean not null default false,
@@ -30,8 +34,13 @@ create policy "Allow authenticated read" on wanderer for
 select using (auth.role() = 'authenticated');
 -- Wanderer Timeline Entries
 create table wanderer_timeline_entry (
+  -- IDs
   id uuid primary key default gen_random_uuid(),
   wanderer_id uuid not null references wanderer(id) on delete cascade,
+  -- Metadata
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Timeline Entry Data
   timeline_year int not null,
   entries varchar [] not null default '{}'
 );

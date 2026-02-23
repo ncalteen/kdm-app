@@ -1,12 +1,16 @@
 -- Squire Suspicion
 create table squire_suspicion (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
-  settlement_id uuid not null references settlement (id) on delete cascade,
-  survivor_id uuid not null references survivor (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Suspicion Data
   level_1 boolean not null default false,
   level_2 boolean not null default false,
   level_3 boolean not null default false,
-  level_4 boolean not null default false
+  level_4 boolean not null default false,
+  settlement_id uuid not null references settlement (id) on delete cascade,
+  survivor_id uuid not null references survivor (id) on delete cascade
 );
 alter table squire_suspicion enable row level security;
 create policy "Allow all for owner" on squire_suspicion for all using (

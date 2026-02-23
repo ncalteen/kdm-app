@@ -1,9 +1,9 @@
 -- Settlement
 create table settlement (
-  -- IDs
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  shared_user_ids uuid [] not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   -- Settlement Data
   arrival_bonuses varchar [] not null default '{}',
   campaign_type campaign_type not null default 'PEOPLE_OF_THE_LANTERN',
@@ -23,9 +23,11 @@ create table settlement (
   -- resources
   seed_patterns varchar [] not null default '{}',
   settlement_name varchar not null default 'New Settlement',
+  shared_user_ids uuid [] not null default '{}',
   survival_limit int not null default 1,
   survivor_type survivor_type not null default 'CORE',
   -- timeline
+  user_id uuid not null references auth.users(id) on delete cascade,
   uses_scouts boolean not null default false,
   wanderer_ids uuid [] not null default '{}',
   -- Arc Specific Data

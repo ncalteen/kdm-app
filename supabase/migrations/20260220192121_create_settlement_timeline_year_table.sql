@@ -1,9 +1,13 @@
 -- Settlement Timeline Year
 create table settlement_timeline_year (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
-  settlement_id uuid not null references settlement(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Timeline Data
   completed boolean not null default false,
-  entries varchar [] not null default '{}'
+  entries varchar [] not null default '{}',
+  settlement_id uuid not null references settlement(id) on delete cascade
 );
 alter table settlement_timeline_year enable row level security;
 create policy "Allow all for owner" on settlement_timeline_year for all using (

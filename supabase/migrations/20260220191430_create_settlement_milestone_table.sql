@@ -1,10 +1,14 @@
 -- Settlement Milestone
 create table settlement_milestone (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
-  settlement_id uuid not null references settlement (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Milestone Data
   milestone_name varchar not null,
   complete boolean not null default false,
-  event_name varchar not null default ''
+  event_name varchar not null default '',
+  settlement_id uuid not null references settlement (id) on delete cascade
 );
 alter table settlement_milestone enable row level security;
 create policy "Allow all for owner" on settlement_milestone for all using (

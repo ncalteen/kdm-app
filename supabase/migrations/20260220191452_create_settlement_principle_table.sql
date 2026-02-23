@@ -1,12 +1,16 @@
 -- Settlement Principle
 create table settlement_principle (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
-  settlement_id uuid not null references settlement (id) on delete cascade,
-  principle_name varchar not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Principle Data
   option_1_name varchar not null,
   option_1_selected boolean not null default false,
   option_2_name varchar not null,
-  option_2_selected boolean not null default false
+  option_2_selected boolean not null default false,
+  principle_name varchar not null,
+  settlement_id uuid not null references settlement (id) on delete cascade
 );
 alter table settlement_principle enable row level security;
 create policy "Allow all for owner" on settlement_principle for all using (

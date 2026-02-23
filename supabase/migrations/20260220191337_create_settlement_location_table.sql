@@ -1,8 +1,12 @@
 -- Settlement Location
 create table settlement_location (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
-  settlement_id uuid not null references settlement (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Location Data
   location_name varchar not null,
+  settlement_id uuid not null references settlement (id) on delete cascade,
   unlocked boolean not null default false
 );
 alter table settlement_location enable row level security;

@@ -1,6 +1,10 @@
 -- Quarry Collective Cognition Reward
 create table quarry_collective_cognition_reward (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Data
   cc int not null default 0,
   reward_name varchar not null
 );

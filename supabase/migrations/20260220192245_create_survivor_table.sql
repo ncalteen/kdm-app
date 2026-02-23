@@ -2,9 +2,10 @@
 create type aenas_state as enum ('Content', 'Hungry');
 -- Survivor
 create table survivor (
-  -- IDs
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
-  settlement_id uuid not null references settlement(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   -- Base Survivor Data
   abilities_impairments varchar [] not null default '{}',
   accuracy int not null default 0,
@@ -42,6 +43,7 @@ create table survivor (
   reroll_used boolean not null default false,
   retired boolean not null default false,
   secret_fighting_arts varchar [] not null default '{}',
+  settlement_id uuid not null references settlement(id) on delete cascade,
   skip_next_hunt boolean not null default false,
   speed int not null default 0,
   aenas_state aenas_state,

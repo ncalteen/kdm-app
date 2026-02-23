@@ -1,6 +1,10 @@
 -- Alternate Quarry
 create table alternate_quarry (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Alternate Quarry Data
   hunt_board_id uuid references quarry_hunt_board(id) on delete cascade,
   locations varchar [] not null default '{}',
   monster_name varchar not null,

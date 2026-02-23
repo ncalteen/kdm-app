@@ -1,10 +1,13 @@
 -- Settlement Knowledge
 create table settlement_knowledge (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
-  settlement_id uuid not null references settlement (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Knowledge Data
   knowledge_name varchar not null,
-  philosophy_id uuid references philosophy (id) on delete
-  set null
+  philosophy_id uuid references philosophy (id) on delete cascade,
+  settlement_id uuid not null references settlement (id) on delete cascade
 );
 alter table settlement_knowledge enable row level security;
 create policy "Allow all for owner" on settlement_knowledge for all using (

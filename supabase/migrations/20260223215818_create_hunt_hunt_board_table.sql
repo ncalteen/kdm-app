@@ -1,7 +1,7 @@
 -- Hunt Board
 -- Positions 0, 6, and 12 are purposefully omitted as they are always null and
 -- represent Start, Overwhelming Darkness, and Starvation respectively.
-create table quarry_hunt_board (
+create table hunt_hunt_board (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -16,8 +16,22 @@ create table quarry_hunt_board (
   pos_8 hunt_event_type not null default 'BASIC',
   pos_9 hunt_event_type not null default 'BASIC',
   pos_10 hunt_event_type not null default 'BASIC',
-  pos_11 hunt_event_type not null default 'BASIC'
+  pos_11 hunt_event_type not null default 'BASIC',
+  settlement_id uuid not null references settlement(id) on delete cascade
 );
-alter table quarry_hunt_board enable row level security;
-create policy "Allow read access to all users" on quarry_hunt_board for
-select using (true);
+alter table hunt_hunt_board enable row level security;
+create policy "Allow all for owner" on hunt_hunt_board for all using (
+  auth.uid() = (
+    select user_id
+    from settlement
+    where id = settlement_id
+  )
+);
+create policy "Allow all for shared users" on hunt_hunt_board for all using (
+  exists (
+    select 1
+    from settlement s
+    where s.id = settlement_id
+      and auth.uid() = any(s.shared_user_ids)
+  )
+);

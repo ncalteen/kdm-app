@@ -1,9 +1,13 @@
 -- Settlement Collective Cognition Reward
 create table settlement_collective_cognition_reward (
+  -- Metadata
   id uuid primary key default gen_random_uuid(),
-  settlement_id uuid not null references settlement (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Reward Data
   cc int not null default 0,
   reward_name varchar not null,
+  settlement_id uuid not null references settlement (id) on delete cascade,
   unlocked boolean not null default false
 );
 alter table settlement_collective_cognition_reward enable row level security;
