@@ -5,11 +5,11 @@ create table nemesis (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Nemesis Data
-  alternate_id uuid references alternate_nemesis(id) on delete cascade,
+  alternate_id uuid references nemesis_alternate(id) on delete cascade,
   monster_name varchar not null,
   multi_monster boolean not null default false,
   node monster_node not null,
-  vignette_id uuid references vignette_nemesis(id) on delete cascade
+  vignette_id uuid references nemesis_vignette(id) on delete cascade
 );
 alter table nemesis enable row level security;
 create policy "Allow read access to all users" on nemesis for

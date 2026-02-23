@@ -5,14 +5,14 @@ create table quarry (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Quarry Data
-  alternate_id uuid references alternate_quarry(id) on delete cascade,
+  alternate_id uuid references quarry_alternate(id) on delete cascade,
   hunt_board_id uuid references quarry_hunt_board(id) on delete cascade,
   locations varchar [] not null default '{}',
   monster_name varchar not null,
   multi_monster boolean not null default false,
   node monster_node not null,
   prologue boolean not null default false,
-  vignette_id uuid references vignette_quarry(id) on delete cascade
+  vignette_id uuid references quarry_vignette(id) on delete cascade
 );
 alter table quarry enable row level security;
 create policy "Allow read access to all users" on quarry for
