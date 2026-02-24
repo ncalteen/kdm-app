@@ -8,8 +8,7 @@ create table quarry_location (
   updated_at timestamptz not null default now(),
   -- Quarry Location Data
   location_id uuid not null references location(id) on delete cascade,
-  quarry_id uuid not null references quarry(id) on delete cascade,
-  primary key (location_id, quarry_id)
+  quarry_id uuid not null references quarry(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies

@@ -8,8 +8,7 @@ create table nemesis_location (
   updated_at timestamptz not null default now(),
   -- Nemesis Location Data
   location_id uuid not null references location(id) on delete cascade,
-  nemesis_id uuid not null references nemesis(id) on delete cascade,
-  primary key (location_id, nemesis_id)
+  nemesis_id uuid not null references nemesis(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies

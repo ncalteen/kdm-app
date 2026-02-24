@@ -7,17 +7,16 @@ create table settlement_nemesis (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Settlement Nemesis Data
-  set null,
-    collective_cognition_level_1 boolean not null default false,
-    collective_cognition_level_2 boolean not null default false,
-    collective_cognition_level_3 boolean not null default false,
-    level_1_defeated boolean not null default false,
-    level_2_defeated boolean not null default false,
-    level_3_defeated boolean not null default false,
-    level_4_defeated boolean not null default false,
-    nemesis_id uuid not null references nemesis(id) on delete cascade,
-    settlement_id uuid not null references settlement(id) on delete cascade,
-    unlocked boolean not null default false
+  collective_cognition_level_1 boolean not null default false,
+  collective_cognition_level_2 boolean not null default false,
+  collective_cognition_level_3 boolean not null default false,
+  level_1_defeated boolean not null default false,
+  level_2_defeated boolean not null default false,
+  level_3_defeated boolean not null default false,
+  level_4_defeated boolean not null default false,
+  nemesis_id uuid not null references nemesis(id) on delete cascade,
+  settlement_id uuid not null references settlement(id) on delete cascade,
+  unlocked boolean not null default false
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies

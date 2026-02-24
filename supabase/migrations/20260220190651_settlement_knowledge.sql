@@ -8,8 +8,7 @@ create table settlement_knowledge (
   updated_at timestamptz not null default now(),
   -- Settlement Knowledge Data
   settlement_id uuid not null references settlement(id) on delete cascade,
-  knowledge_id uuid not null references knowledge(id) on delete cascade,
-  primary key (settlement_id, knowledge_id)
+  knowledge_id uuid not null references knowledge(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies

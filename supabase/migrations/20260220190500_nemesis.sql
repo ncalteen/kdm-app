@@ -12,12 +12,12 @@ create table nemesis (
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
   -- Nemesis Data
-  alternate_id uuid references nemesis_alternate(id) on delete
+  alternate_id uuid references nemesis(id) on delete
   set null,
     monster_name varchar not null,
     multi_monster boolean not null default false,
     node monster_node not null,
-    vignette_id uuid references nemesis_vignette(id) on delete
+    vignette_id uuid references nemesis(id) on delete
   set null
 );
 --------------------------------------------------------------------------------

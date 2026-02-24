@@ -15,22 +15,6 @@ create table settlement_quarry (
   settlement_id uuid not null references settlement(id) on delete cascade,
   unlocked boolean not null default false
 );
-alter table settlement_quarry enable row level security;
-create policy "Allow all for owner" on settlement_quarry for all using (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-);
-create policy "Allow all for shared users" on settlement_quarry for all using (
-  exists (
-    select 1
-    from settlement s
-    where s.id = settlement_id
-      and auth.uid() = any(s.shared_user_ids)
-  )
-);
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------

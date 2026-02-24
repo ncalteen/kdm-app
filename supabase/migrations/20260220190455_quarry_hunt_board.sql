@@ -30,7 +30,7 @@ select using (
     auth.role() = 'authenticated'
     and exists (
       select 1
-      from quarry w
+      from quarry q
       where q.id = quarry_id
         and not q.custom
     )

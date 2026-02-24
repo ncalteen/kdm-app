@@ -8,8 +8,7 @@ create table settlement_philosophy (
   updated_at timestamptz not null default now(),
   -- Settlement Philosophy Data
   settlement_id uuid not null references settlement(id) on delete cascade,
-  philosophy_id uuid not null references philosophy(id) on delete cascade,
-  primary key (settlement_id, philosophy_id)
+  philosophy_id uuid not null references philosophy(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies

@@ -8,8 +8,7 @@ create table settlement_wanderer (
   updated_at timestamptz not null default now(),
   -- Settlement Wanderer Data
   settlement_id uuid not null references settlement(id) on delete cascade,
-  wanderer_id uuid not null references wanderer(id) on delete cascade,
-  primary key (settlement_id, wanderer_id)
+  wanderer_id uuid not null references wanderer(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
