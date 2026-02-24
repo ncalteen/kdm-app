@@ -60,8 +60,14 @@ create policy "Allow all for owner" on weapon_type_shared_user for all using (
     where id = weapon_type_id
   )
 );
+create policy "Allow admin to manage all" on weapon_type for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_weapon_type_shared_user_weapon_type on weapon_type_shared_user(weapon_type_id);
 create index idx_weapon_type_shared_user_user on weapon_type_shared_user(shared_user_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on weapon_type for each row execute function update_updated_at();

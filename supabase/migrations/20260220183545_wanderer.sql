@@ -85,8 +85,16 @@ create policy "Allow all for owner" on wanderer_shared_user for all using (
     where id = wanderer_id
   )
 );
+create policy "Allow admin to manage all" on wanderer for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_wanderer_user on wanderer(user_id);
+create index idx_wanderer_custom on wanderer(custom);
 create index idx_wanderer_shared_user_wanderer on wanderer_shared_user(wanderer_id);
 create index idx_wanderer_shared_user_user on wanderer_shared_user(shared_user_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on wanderer for each row execute function update_updated_at();

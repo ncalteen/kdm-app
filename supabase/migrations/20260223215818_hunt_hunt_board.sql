@@ -2,6 +2,11 @@
 -- Hunt Board Table
 -- Positions 0, 6, and 12 are purposefully omitted as they are always null and
 -- represent Start, Overwhelming Darkness, and Starvation respectively.
+--
+-- This table tracks the hunt board state for a specific active hunt. Its initial
+-- values are copied from the quarry's base hunt board configuration
+-- (quarry_hunt_board) when a new hunt is started. Changes made during the hunt
+-- are recorded here without affecting the quarry's base data.
 --------------------------------------------------------------------------------
 create table hunt_hunt_board (
   -- Metadata
@@ -26,33 +31,14 @@ create table hunt_hunt_board (
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table hunt_hunt_board enable row level security;
-create policy "Allow all for owner/shared" on hunt_hunt_board for all using (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = hunt_hunt_board.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-) with check (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = hunt_hunt_board.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-);
+create policy "Allow all for owner/shared" on hunt_hunt_board for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_hunt_hunt_board_hunt_id on hunt_hunt_board(hunt_id);
 create index idx_hunt_hunt_board_settlement_id on hunt_hunt_board(settlement_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on hunt_hunt_board for each row execute function update_updated_at();

@@ -40,7 +40,9 @@ create table nemesis_level (
   survivor_statuses varchar [] not null default '{}',
   toughness int not null default 0,
   toughness_tokens int not null default 0,
-  traits varchar [] not null default '{}'
+  traits varchar [] not null default '{}',
+  -- Constraints
+  unique (nemesis_id, level_number)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -89,7 +91,27 @@ create policy "Allow all for owner/shared of nemesis" on nemesis_level for all u
       )
   )
 );
+create policy "Allow admin to manage all" on nemesis_level for all using (
+  is_admin()
+  and exists (
+    select 1
+    from nemesis n
+    where n.id = nemesis_id
+  )
+) with check (
+  is_admin()
+  and exists (
+    select 1
+    from nemesis n
+    where n.id = nemesis_id
+  )
+);
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_nemesis_level_nemesis on nemesis_level(nemesis_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on nemesis_level for each row execute function update_updated_at();

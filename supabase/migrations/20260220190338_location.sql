@@ -60,8 +60,14 @@ create policy "Allow all for owner" on location_shared_user for all using (
     where id = location_id
   )
 );
+create policy "Allow admin to manage all" on location for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_location_shared_user_location on location_shared_user(location_id);
 create index idx_location_shared_user_user on location_shared_user(shared_user_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on location for each row execute function update_updated_at();

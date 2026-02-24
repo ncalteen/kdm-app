@@ -13,39 +13,21 @@ create table settlement_quarry (
   collective_cognition_prologue boolean not null default false,
   quarry_id uuid not null references quarry(id) on delete cascade,
   settlement_id uuid not null references settlement(id) on delete cascade,
-  unlocked boolean not null default false
+  unlocked boolean not null default false,
+  unique (settlement_id, quarry_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table settlement_quarry enable row level security;
-create policy "Allow all for owner/shared" on settlement_quarry for all using (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = settlement_quarry.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-) with check (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = settlement_quarry.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-);
+create policy "Allow all for owner/shared" on settlement_quarry for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_settlement_quarry_settlement on settlement_quarry(settlement_id);
 create index idx_settlement_quarry_quarry on settlement_quarry(quarry_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on settlement_quarry for each row execute function update_updated_at();

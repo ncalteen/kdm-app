@@ -85,3 +85,16 @@ create type showdown_turn as enum ('MONSTER', 'SURVIVOR');
 create type showdown_type as enum ('REGULAR', 'SPECIAL');
 -- Survivor Type
 create type survivor_type as enum ('CORE', 'ARC');
+--------------------------------------------------------------------------------
+-- Helper Functions
+--------------------------------------------------------------------------------
+create or replace function update_updated_at() returns trigger as $$ begin new.updated_at = now();
+return new;
+end;
+$$ language plpgsql;
+create or replace function is_admin() returns boolean language sql stable security definer as $$
+select coalesce(
+    (auth.jwt()->'app_metadata'->>'is_admin')::boolean,
+    false
+  );
+$$;

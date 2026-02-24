@@ -12,7 +12,9 @@ create table quarry_timeline_year (
   campaigns campaign_type [] not null default '{}',
   quarry_id uuid not null references quarry(id) on delete cascade,
   entries varchar [] not null default '{}',
-  year_number int not null
+  year_number int not null,
+  -- Constraints
+  unique (quarry_id, year_number)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -61,7 +63,27 @@ create policy "Allow all for owner/shared of custom" on quarry_timeline_year for
       )
   )
 );
+create policy "Allow admin to manage all" on quarry_timeline_year for all using (
+  is_admin()
+  and exists (
+    select 1
+    from quarry q
+    where q.id = quarry_id
+  )
+) with check (
+  is_admin()
+  and exists (
+    select 1
+    from quarry q
+    where q.id = quarry_id
+  )
+);
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_timeline_entries_quarry on quarry_timeline_year(quarry_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on quarry_timeline_year for each row execute function update_updated_at();

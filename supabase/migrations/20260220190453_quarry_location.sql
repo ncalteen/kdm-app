@@ -8,7 +8,9 @@ create table quarry_location (
   updated_at timestamptz not null default now(),
   -- Quarry Location Data
   location_id uuid not null references location(id) on delete cascade,
-  quarry_id uuid not null references quarry(id) on delete cascade
+  quarry_id uuid not null references quarry(id) on delete cascade,
+  -- Constraints
+  unique (quarry_id, location_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -57,8 +59,28 @@ create policy "Allow all for owner/shared of quarry" on quarry_location for all 
       )
   )
 );
+create policy "Allow admin to manage all" on quarry_location for all using (
+  is_admin()
+  and exists (
+    select 1
+    from quarry q
+    where q.id = quarry_id
+  )
+) with check (
+  is_admin()
+  and exists (
+    select 1
+    from quarry q
+    where q.id = quarry_id
+  )
+);
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_quarry_location_location on quarry_location(location_id);
 create index idx_quarry_location_quarry on quarry_location(quarry_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on quarry_location for each row execute function update_updated_at();

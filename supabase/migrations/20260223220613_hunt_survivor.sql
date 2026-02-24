@@ -18,40 +18,22 @@ create table hunt_survivor (
   speed_tokens integer not null default 0,
   strength_tokens integer not null default 0,
   survival_tokens integer not null default 0,
-  survivor_id uuid not null references survivor(id) on delete cascade
+  survivor_id uuid not null references survivor(id) on delete cascade,
+  unique (hunt_id, survivor_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table hunt_survivor enable row level security;
-create policy "Allow all for owner/shared" on hunt_survivor for all using (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = hunt_survivor.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-) with check (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = hunt_survivor.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-);
+create policy "Allow all for owner/shared" on hunt_survivor for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_hunt_survivor_hunt on hunt_survivor(hunt_id);
 create index idx_hunt_survivor_settlement on hunt_survivor(settlement_id);
 create index idx_hunt_survivor_survivor on hunt_survivor(survivor_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on hunt_survivor for each row execute function update_updated_at();

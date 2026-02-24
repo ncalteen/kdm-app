@@ -9,38 +9,20 @@ create table settlement_location (
   -- Settlement Location Data
   location_name varchar not null,
   settlement_id uuid not null references settlement(id) on delete cascade,
-  unlocked boolean not null default false
+  unlocked boolean not null default false,
+  unique (settlement_id, location_name)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table settlement_location enable row level security;
-create policy "Allow all for owner/shared" on settlement_location for all using (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = settlement_location.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-) with check (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = settlement_location.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-);
+create policy "Allow all for owner/shared" on settlement_location for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_settlement_location_settlement on settlement_location(settlement_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on settlement_location for each row execute function update_updated_at();

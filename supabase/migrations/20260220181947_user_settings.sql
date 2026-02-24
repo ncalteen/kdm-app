@@ -12,7 +12,7 @@ create table user_settings (
   unlocked_killenium_butcher boolean not null default false,
   unlocked_screaming_nukalope boolean not null default false,
   unlocked_white_gigalion boolean not null default false,
-  user_id uuid not null references auth.users(id) on delete cascade
+  user_id uuid not null unique references auth.users(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -23,3 +23,8 @@ create policy "Users can only access their own settings" on user_settings for al
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_user_settings_user_id on user_settings(user_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on user_settings for each row execute function update_updated_at();

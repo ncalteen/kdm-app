@@ -18,7 +18,7 @@ create table survivor (
   can_surge boolean not null default false,
   can_use_fighting_arts_knowledges boolean not null default true,
   color color_choice not null default 'slate',
-  courage int not null default 0,
+  courage int not null default 0 check (courage >= 0),
   cursed_gear varchar [] not null default '{}',
   dead boolean not null default false,
   disorders varchar [] not null default '{}',
@@ -32,9 +32,9 @@ create table survivor (
   has_prepared boolean not null default false,
   has_stalwart boolean not null default false,
   has_tinker boolean not null default false,
-  hunt_xp int not null default 0,
+  hunt_xp int not null default 0 check (hunt_xp >= 0),
   hunt_xp_rank_up int [] not null default '{}',
-  insanity int not null default 0,
+  insanity int not null default 0 check (insanity >= 0),
   luck int not null default 0,
   movement int not null default 0,
   next_departure varchar [] not null default '{}',
@@ -52,27 +52,27 @@ create table survivor (
   survivor_name varchar,
   understanding int not null default 0,
   wanderer boolean not null default false,
-  weapon_proficiency int not null default 0,
+  weapon_proficiency int not null default 0 check (weapon_proficiency >= 0),
   weapon_proficiency_type varchar,
   -- Hunt/Showdown Attributes
-  arm_armor int not null default 0,
+  arm_armor int not null default 0 check (arm_armor >= 0),
   arm_light_damage boolean default false,
   arm_heavy_damage boolean default false,
-  body_armor int not null default 0,
+  body_armor int not null default 0 check (body_armor >= 0),
   body_light_damage boolean default false,
   body_heavy_damage boolean default false,
   brain_light_damage boolean default false,
-  head_armor int not null default 0,
+  head_armor int not null default 0 check (head_armor >= 0),
   head_light_damage boolean default false,
   head_heavy_damage boolean default false,
-  leg_armor int not null default 0,
+  leg_armor int not null default 0 check (leg_armor >= 0),
   leg_light_damage boolean default false,
   leg_heavy_damage boolean default false,
-  waist_armor int not null default 0,
+  waist_armor int not null default 0 check (waist_armor >= 0),
   waist_light_damage boolean default false,
   waist_heavy_damage boolean default false,
   -- Severe Injuries
-  arm_boken int not null default 0,
+  arm_broken int not null default 0,
   arm_contracture int not null default 0,
   arm_dismembered int not null default 0,
   arm_ruptured_muscle boolean not null default false,
@@ -93,12 +93,12 @@ create table survivor (
   -- Arc Survivors
   can_endure boolean,
   knowledge_1 varchar,
-  knowledge_1_observaton_conditions text,
+  knowledge_1_observation_conditions text,
   knowledge_1_observation_rank int,
   knowledge_1_rank_up int [],
   knowledge_1_rules text,
   knowledge_2 varchar,
-  knowledge_2_observaton_conditions text,
+  knowledge_2_observation_conditions text,
   knowledge_2_observation_rank int,
   knowledge_2_rank_up int [],
   knowledge_2_rules text,
@@ -108,7 +108,7 @@ create table survivor (
   philosophy_rank int,
   systemic_pressure int,
   tenet_knowledge varchar,
-  tenet_knowledge_observaton_conditions text,
+  tenet_knowledge_observation_conditions text,
   tenet_knowledge_observation_rank int,
   tenet_knowledge_rank_up int [],
   tenet_knowledge_rules text,
@@ -140,32 +140,15 @@ create table survivor (
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table survivor enable row level security;
-create policy "Allow all for owner/shared" on survivor for all using (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = survivor.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-) with check (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = survivor.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-);
+create policy "Allow all for owner/shared" on survivor for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_survivor_settlement on survivor(settlement_id);
+create index idx_survivor_dead on survivor(dead);
+create index idx_survivor_retired on survivor(retired);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on survivor for each row execute function update_updated_at();

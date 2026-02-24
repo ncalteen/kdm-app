@@ -69,8 +69,15 @@ create policy "Allow all for owner" on quarry_shared_user for all using (
     where id = quarry_id
   )
 );
+create policy "Allow admin to manage all" on quarry for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_quarry_node on quarry(node);
 create index idx_quarry_shared_user_quarry on quarry_shared_user(quarry_id);
 create index idx_quarry_shared_user_user on quarry_shared_user(shared_user_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on quarry for each row execute function update_updated_at();

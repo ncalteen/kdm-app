@@ -11,7 +11,9 @@ create table wanderer_timeline_year (
   -- Wanderer Timeline Year Data
   wanderer_id uuid not null references wanderer(id) on delete cascade,
   entries varchar [] not null default '{}',
-  year_number int not null
+  year_number int not null,
+  -- Constraints
+  unique (wanderer_id, year_number)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -60,7 +62,27 @@ create policy "Allow all for owner/shared of custom" on wanderer_timeline_year f
       )
   )
 );
+create policy "Allow admin to manage all" on wanderer_timeline_year for all using (
+  is_admin()
+  and exists (
+    select 1
+    from wanderer w
+    where w.id = wanderer_id
+  )
+) with check (
+  is_admin()
+  and exists (
+    select 1
+    from wanderer w
+    where w.id = wanderer_id
+  )
+);
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_timeline_entries_wanderer on wanderer_timeline_year(wanderer_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on wanderer_timeline_year for each row execute function update_updated_at();

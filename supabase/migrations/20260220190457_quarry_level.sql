@@ -40,7 +40,8 @@ create table quarry_level (
   survivor_statuses varchar [] not null default '{}',
   toughness int not null default 0,
   toughness_tokens int not null default 0,
-  traits varchar [] not null default '{}'
+  traits varchar [] not null default '{}',
+  unique (quarry_id, level_number)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -89,7 +90,27 @@ create policy "Allow all for owner/shared of quarry" on quarry_level for all usi
       )
   )
 );
+create policy "Allow admin to manage all" on quarry_level for all using (
+  is_admin()
+  and exists (
+    select 1
+    from quarry q
+    where q.id = quarry_id
+  )
+) with check (
+  is_admin()
+  and exists (
+    select 1
+    from quarry q
+    where q.id = quarry_id
+  )
+);
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_quarry_level_quarry on quarry_level(quarry_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on quarry_level for each row execute function update_updated_at();

@@ -60,8 +60,14 @@ create policy "Allow all for owner" on knowledge_shared_user for all using (
     where id = knowledge_id
   )
 );
+create policy "Allow admin to manage all" on knowledge for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_knowledge_shared_user_knowledge on knowledge_shared_user(knowledge_id);
 create index idx_knowledge_shared_user_user on knowledge_shared_user(shared_user_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on knowledge for each row execute function update_updated_at();

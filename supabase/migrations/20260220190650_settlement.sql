@@ -20,7 +20,7 @@ create table settlement (
   patterns varchar [] not null default '{}',
   seed_patterns varchar [] not null default '{}',
   settlement_name varchar not null default 'New Settlement',
-  survival_limit int not null default 1,
+  survival_limit int not null default 1 check (survival_limit >= 0),
   survivor_type survivor_type not null default 'CORE',
   uses_scouts boolean not null default false,
   -- Arc Specific Data
@@ -38,26 +38,27 @@ create table settlement_shared_user (
   primary key (settlement_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
+-- Helper Functions
+--------------------------------------------------------------------------------
+create or replace function is_settlement_member(p_settlement_id uuid) returns boolean language sql stable security definer as $$
+select exists (
+    select 1
+    from settlement
+    where id = p_settlement_id
+      and user_id = auth.uid()
+  )
+  or exists (
+    select 1
+    from settlement_shared_user
+    where settlement_id = p_settlement_id
+      and shared_user_id = auth.uid()
+  );
+$$;
+--------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table settlement enable row level security;
-create policy "Allow all for owner/shared" on settlement for all using (
-  auth.uid() = user_id
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = id
-      and su.shared_user_id = auth.uid()
-  )
-) with check (
-  auth.uid() = user_id
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = id
-      and su.shared_user_id = auth.uid()
-  )
-);
+create policy "Allow all for owner/shared" on settlement for all using (is_settlement_member(id)) with check (is_settlement_member(id));
 alter table settlement_shared_user enable row level security;
 create policy "Allow all for owner" on settlement_shared_user for all using (
   auth.uid() = (
@@ -72,3 +73,8 @@ create policy "Allow all for owner" on settlement_shared_user for all using (
 create index idx_settlement_user on settlement(user_id);
 create index idx_settlement_shared_user_settlement on settlement_shared_user(settlement_id);
 create index idx_settlement_shared_user_user on settlement_shared_user(shared_user_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on settlement for each row execute function update_updated_at();

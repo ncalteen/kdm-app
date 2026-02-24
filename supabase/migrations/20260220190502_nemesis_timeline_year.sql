@@ -12,7 +12,9 @@ create table nemesis_timeline_year (
   campaigns campaign_type [] not null default '{}',
   entries varchar [] not null default '{}',
   nemesis_id uuid not null references nemesis(id) on delete cascade,
-  year_number int not null
+  year_number int not null,
+  -- Constraints
+  unique (nemesis_id, year_number)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -61,7 +63,27 @@ create policy "Allow all for owner/shared of custom" on nemesis_timeline_year fo
       )
   )
 );
+create policy "Allow admin to manage all" on nemesis_timeline_year for all using (
+  is_admin()
+  and exists (
+    select 1
+    from nemesis n
+    where n.id = nemesis_id
+  )
+) with check (
+  is_admin()
+  and exists (
+    select 1
+    from nemesis n
+    where n.id = nemesis_id
+  )
+);
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_nemesis_timeline_year_nemesis on nemesis_timeline_year(nemesis_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on nemesis_timeline_year for each row execute function update_updated_at();

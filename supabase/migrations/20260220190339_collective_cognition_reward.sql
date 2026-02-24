@@ -61,8 +61,14 @@ create policy "Allow all for owner" on collective_cognition_reward_shared_user f
     where id = collective_cognition_reward_id
   )
 );
+create policy "Allow admin to manage all" on collective_cognition_reward for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_collective_cognition_reward_shared_user_collective_cognition_reward on collective_cognition_reward_shared_user(collective_cognition_reward_id);
 create index idx_collective_cognition_reward_shared_user_user on collective_cognition_reward_shared_user(shared_user_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on collective_cognition_reward for each row execute function update_updated_at();

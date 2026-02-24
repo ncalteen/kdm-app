@@ -10,7 +10,9 @@ create table quarry_collective_cognition_reward (
   updated_at timestamptz not null default now(),
   -- Quarry Collective Cognition Reward Data
   collective_cognition_reward_id uuid not null references collective_cognition_reward(id) on delete cascade,
-  quarry_id uuid not null references quarry(id) on delete cascade
+  quarry_id uuid not null references quarry(id) on delete cascade,
+  -- Constraints
+  unique (quarry_id, collective_cognition_reward_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -59,8 +61,28 @@ create policy "Allow all for owner/shared of quarry" on quarry_collective_cognit
       )
   )
 );
+create policy "Allow admin to manage all" on quarry_collective_cognition_reward for all using (
+  is_admin()
+  and exists (
+    select 1
+    from quarry q
+    where q.id = quarry_id
+  )
+) with check (
+  is_admin()
+  and exists (
+    select 1
+    from quarry q
+    where q.id = quarry_id
+  )
+);
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_quarry_collective_cognition_reward_quarry_id on quarry_collective_cognition_reward(quarry_id);
 create index idx_quarry_collective_cognition_reward_reward_id on quarry_collective_cognition_reward(collective_cognition_reward_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on quarry_collective_cognition_reward for each row execute function update_updated_at();

@@ -8,7 +8,9 @@ create table nemesis_location (
   updated_at timestamptz not null default now(),
   -- Nemesis Location Data
   location_id uuid not null references location(id) on delete cascade,
-  nemesis_id uuid not null references nemesis(id) on delete cascade
+  nemesis_id uuid not null references nemesis(id) on delete cascade,
+  -- Constraints
+  unique (nemesis_id, location_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -57,8 +59,28 @@ create policy "Allow all for owner/shared of nemesis" on nemesis_location for al
       )
   )
 );
+create policy "Allow admin to manage all" on nemesis_location for all using (
+  is_admin()
+  and exists (
+    select 1
+    from nemesis n
+    where n.id = nemesis_id
+  )
+) with check (
+  is_admin()
+  and exists (
+    select 1
+    from nemesis n
+    where n.id = nemesis_id
+  )
+);
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_nemesis_location_location on nemesis_location(location_id);
 create index idx_nemesis_location_nemesis on nemesis_location(nemesis_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on nemesis_location for each row execute function update_updated_at();

@@ -68,8 +68,15 @@ create policy "Allow all for owner" on nemesis_shared_user for all using (
     where id = nemesis_id
   )
 );
+create policy "Allow admin to manage all" on nemesis for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_nemesis_node on nemesis(node);
 create index idx_nemesis_shared_user_nemesis on nemesis_shared_user(nemesis_id);
 create index idx_nemesis_shared_user_user on nemesis_shared_user(shared_user_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on nemesis for each row execute function update_updated_at();

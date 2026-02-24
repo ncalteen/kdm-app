@@ -37,33 +37,15 @@ create table hunt_monster (
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table hunt_monster enable row level security;
-create policy "Allow all for owner/shared" on hunt_monster for all using (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = hunt_monster.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-) with check (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-  or exists (
-    select 1
-    from settlement_shared_user su
-    where su.settlement_id = hunt_monster.settlement_id
-      and su.shared_user_id = auth.uid()
-  )
-);
+create policy "Allow all for owner/shared" on hunt_monster for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_hunt_monster_hunt on hunt_monster(hunt_id);
 create index idx_hunt_monster_settlement on hunt_monster(settlement_id);
+create index idx_hunt_monster_ai_deck on hunt_monster(ai_deck_id);
+--------------------------------------------------------------------------------
+-- Triggers
+--------------------------------------------------------------------------------
+create trigger set_updated_at before
+update on hunt_monster for each row execute function update_updated_at();
