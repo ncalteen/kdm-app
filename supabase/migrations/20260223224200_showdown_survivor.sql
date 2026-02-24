@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- Showdown Survivor Data Table
+-- Showdown Survivor Table
 --------------------------------------------------------------------------------
-create table showdown_survivor_data (
+create table showdown_survivor (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -29,8 +29,8 @@ create table showdown_survivor_data (
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
-alter table showdown_survivor_data enable row level security;
-create policy "Allow all for owner/shared" on showdown_survivor_data for all using (
+alter table showdown_survivor enable row level security;
+create policy "Allow all for owner/shared" on showdown_survivor for all using (
   auth.uid() = (
     select user_id
     from settlement
@@ -39,7 +39,7 @@ create policy "Allow all for owner/shared" on showdown_survivor_data for all usi
   or exists (
     select 1
     from settlement_shared_user su
-    where su.settlement_id = showdown_survivor_data.settlement_id
+    where su.settlement_id = showdown_survivor.settlement_id
       and su.shared_user_id = auth.uid()
   )
 ) with check (
@@ -51,12 +51,12 @@ create policy "Allow all for owner/shared" on showdown_survivor_data for all usi
   or exists (
     select 1
     from settlement_shared_user su
-    where su.settlement_id = showdown_survivor_data.settlement_id
+    where su.settlement_id = showdown_survivor.settlement_id
       and su.shared_user_id = auth.uid()
   )
 );
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_showdown_survivor_data_settlement on showdown_survivor_data(settlement_id);
-create index idx_showdown_survivor_data_survivor on showdown_survivor_data(survivor_id);
+create index idx_showdown_survivor_settlement on showdown_survivor(settlement_id);
+create index idx_showdown_survivor_survivor on showdown_survivor(survivor_id);
