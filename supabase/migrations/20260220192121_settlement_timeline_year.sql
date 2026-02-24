@@ -9,7 +9,8 @@ create table settlement_timeline_year (
   -- Timeline Data
   completed boolean not null default false,
   entries varchar [] not null default '{}',
-  settlement_id uuid not null references settlement(id) on delete cascade
+  settlement_id uuid not null references settlement(id) on delete cascade,
+  year_number int not null
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
