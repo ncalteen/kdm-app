@@ -3,9 +3,10 @@
 --------------------------------------------------------------------------------
 create table nemesis_location (
   -- Metadata
+  id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Nemesis Location
+  -- Nemesis Location Data
   location_id uuid not null references location(id) on delete cascade,
   nemesis_id uuid not null references nemesis(id) on delete cascade,
   primary key (location_id, nemesis_id)
@@ -55,14 +56,6 @@ create policy "Allow all for owner/shared of nemesis" on nemesis_location for al
             and su.shared_user_id = auth.uid()
         )
       )
-  )
-);
-alter table nemesis_location enable row level security;
-create policy "Allow all for owner of location" on nemesis_location for all using (
-  auth.uid() = (
-    select user_id
-    from location
-    where id = location_id
   )
 );
 --------------------------------------------------------------------------------

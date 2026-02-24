@@ -18,7 +18,8 @@ create table quarry_hunt_board (
   pos_8 hunt_event_type not null default 'BASIC',
   pos_9 hunt_event_type not null default 'BASIC',
   pos_10 hunt_event_type not null default 'BASIC',
-  pos_11 hunt_event_type not null default 'BASIC'
+  pos_11 hunt_event_type not null default 'BASIC',
+  quarry_id uuid not null references quarry(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies

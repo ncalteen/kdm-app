@@ -6,7 +6,7 @@ create table settlement_principle (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Principle Data
+  -- Settlement Principle Data
   option_1_name varchar not null,
   option_1_selected boolean not null default false,
   option_2_name varchar not null,

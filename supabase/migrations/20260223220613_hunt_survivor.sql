@@ -9,6 +9,7 @@ create table hunt_survivor (
   -- Hunt Survivor Data
   accuracy_tokens integer not null default 0,
   evasion_tokens integer not null default 0,
+  hunt_id uuid not null references hunt(id) on delete cascade,
   insanity_tokens integer not null default 0,
   luck_tokens integer not null default 0,
   movement_tokens integer not null default 0,
@@ -51,5 +52,6 @@ create policy "Allow all for owner/shared" on hunt_survivor for all using (
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_hunt_survivor_hunt on hunt_survivor(hunt_id);
 create index idx_hunt_survivor_settlement on hunt_survivor(settlement_id);
 create index idx_hunt_survivor_survivor on hunt_survivor(survivor_id);

@@ -64,4 +64,4 @@ create policy "Allow all for owner/shared of custom" on nemesis_timeline_year fo
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_timeline_entries_nemesis on nemesis_timeline_year(nemesis_id);
+create index idx_nemesis_timeline_year_nemesis on nemesis_timeline_year(nemesis_id);

@@ -1,22 +1,21 @@
 --------------------------------------------------------------------------------
--- Settlement Milestone Table
+-- Junction Table: Settlement Philosophy
 --------------------------------------------------------------------------------
-create table settlement_milestone (
+create table settlement_philosophy (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Settlement Milestone Data
-  milestone_name varchar not null,
-  complete boolean not null default false,
-  event_name varchar not null default '',
-  settlement_id uuid not null references settlement(id) on delete cascade
+  -- Settlement Philosophy Data
+  settlement_id uuid not null references settlement(id) on delete cascade,
+  philosophy_id uuid not null references philosophy(id) on delete cascade,
+  primary key (settlement_id, philosophy_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
-alter table settlement_milestone enable row level security;
-create policy "Allow all for owner/shared" on settlement_milestone for all using (
+alter table settlement_philosophy enable row level security;
+create policy "Allow all for owner/shared" on settlement_philosophy for all using (
   auth.uid() = (
     select user_id
     from settlement
@@ -25,7 +24,7 @@ create policy "Allow all for owner/shared" on settlement_milestone for all using
   or exists (
     select 1
     from settlement_shared_user su
-    where su.settlement_id = settlement_milestone.settlement_id
+    where su.settlement_id = settlement_philosophy.settlement_id
       and su.shared_user_id = auth.uid()
   )
 ) with check (
@@ -37,11 +36,12 @@ create policy "Allow all for owner/shared" on settlement_milestone for all using
   or exists (
     select 1
     from settlement_shared_user su
-    where su.settlement_id = settlement_milestone.settlement_id
+    where su.settlement_id = settlement_philosophy.settlement_id
       and su.shared_user_id = auth.uid()
   )
 );
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_settlement_milestone_settlement on settlement_milestone(settlement_id);
+create index idx_settlement_philosophy_settlement on settlement_philosophy(settlement_id);
+create index idx_settlement_philosophy_philosophy on settlement_philosophy(philosophy_id);

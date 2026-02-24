@@ -21,6 +21,7 @@ create table showdown_survivor (
   notes text not null default '',
   priority_target boolean not null default false,
   settlement_id uuid not null references settlement(id) on delete cascade,
+  showdown_id uuid not null references showdown(id) on delete cascade,
   speed_tokens integer not null default 0,
   strength_tokens integer not null default 0,
   survival_tokens integer not null default 0,
@@ -59,4 +60,5 @@ create policy "Allow all for owner/shared" on showdown_survivor for all using (
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_showdown_survivor_settlement on showdown_survivor(settlement_id);
+create index idx_showdown_survivor_showdown on showdown_survivor(showdown_id);
 create index idx_showdown_survivor_survivor on showdown_survivor(survivor_id);

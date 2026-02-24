@@ -7,7 +7,7 @@ create table settlement_collective_cognition_reward (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Reward Data
-  cc int not null default 0,
+  collective_cognition int not null default 0,
   reward_name varchar not null,
   settlement_id uuid not null references settlement(id) on delete cascade,
   unlocked boolean not null default false

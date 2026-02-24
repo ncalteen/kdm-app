@@ -18,7 +18,7 @@ create table quarry (
     multi_monster boolean not null default false,
     node monster_node not null,
     prologue boolean not null default false,
-    vignette_id uuid references vignette(id) on delete
+    vignette_id uuid references quarry(id) on delete
   set null
 );
 --------------------------------------------------------------------------------

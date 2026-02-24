@@ -23,6 +23,7 @@ create table showdown_monster (
   movement_tokens int not null default 0,
   notes text not null default '',
   settlement_id uuid not null references settlement (id) on delete cascade,
+  showdown_id uuid not null references showdown(id) on delete cascade,
   speed int not null default 0,
   speed_tokens int not null default 0,
   strength int not null default 0,
@@ -64,3 +65,4 @@ create policy "Allow all for owner/shared" on showdown_monster for all using (
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_showdown_monster_settlement on showdown_monster(settlement_id);
+create index idx_showdown_monster_showdown on showdown_monster(showdown_id);

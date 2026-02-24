@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- Quarry Collective Cognition Reward Table
+-- Junction Table: Quarry Collective Cognition Reward
 -- The collective cognition rewards that will be added to a settlement when the
 -- quarry is added.
 --------------------------------------------------------------------------------
@@ -9,8 +9,9 @@ create table quarry_collective_cognition_reward (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Quarry Collective Cognition Reward Data
-  collective_cognition int not null default 0,
-  reward_name varchar not null
+  collective_cognition_reward_id uuid not null references collective_cognition_reward(id) on delete cascade,
+  quarry_id uuid not null references quarry(id) on delete cascade,
+  primary key (quarry_id, collective_cognition_reward_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -26,7 +27,7 @@ select using (
         and not q.custom
     )
   );
-create policy "Allow all for owner/shared of custom" on quarry_collective_cognition_reward for all using (
+create policy "Allow all for owner/shared of quarry" on quarry_collective_cognition_reward for all using (
   exists (
     select 1
     from quarry q
@@ -62,4 +63,5 @@ create policy "Allow all for owner/shared of custom" on quarry_collective_cognit
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_quarry_collective_cognition_reward_quarry on quarry_collective_cognition_reward(quarry_id);
+create index idx_quarry_location_location on quarry_location(location_id);
+create index idx_quarry_location_quarry on quarry_location(quarry_id);

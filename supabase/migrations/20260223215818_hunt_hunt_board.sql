@@ -8,7 +8,7 @@ create table hunt_hunt_board (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Hunt Position Data
+  -- Hunt Board Data
   pos_1 hunt_event_type not null default 'BASIC',
   pos_2 hunt_event_type not null default 'BASIC',
   pos_3 hunt_event_type not null default 'BASIC',
@@ -19,6 +19,7 @@ create table hunt_hunt_board (
   pos_9 hunt_event_type not null default 'BASIC',
   pos_10 hunt_event_type not null default 'BASIC',
   pos_11 hunt_event_type not null default 'BASIC',
+  hunt_id uuid not null references hunt(id) on delete cascade,
   settlement_id uuid references settlement(id) on delete cascade
 );
 --------------------------------------------------------------------------------
@@ -53,4 +54,5 @@ create policy "Allow all for owner/shared" on hunt_hunt_board for all using (
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_hunt_hunt_board_hunt_id on hunt_hunt_board(hunt_id);
 create index idx_hunt_hunt_board_settlement_id on hunt_hunt_board(settlement_id);

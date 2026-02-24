@@ -3,9 +3,10 @@
 --------------------------------------------------------------------------------
 create table quarry_location (
   -- Metadata
+  id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Quarry Location
+  -- Quarry Location Data
   location_id uuid not null references location(id) on delete cascade,
   quarry_id uuid not null references quarry(id) on delete cascade,
   primary key (location_id, quarry_id)
@@ -55,14 +56,6 @@ create policy "Allow all for owner/shared of quarry" on quarry_location for all 
             and su.shared_user_id = auth.uid()
         )
       )
-  )
-);
-alter table quarry_location enable row level security;
-create policy "Allow all for owner of location" on quarry_location for all using (
-  auth.uid() = (
-    select user_id
-    from location
-    where id = location_id
   )
 );
 --------------------------------------------------------------------------------

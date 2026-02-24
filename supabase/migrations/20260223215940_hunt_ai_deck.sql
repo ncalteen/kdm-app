@@ -6,11 +6,12 @@ create table hunt_ai_deck (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Deck Data
+  -- Hunt AI Deck Data
   basic_cards int not null default 0,
   advanced_cards int not null default 0,
   legendary_cards int not null default 0,
   overtone_cards int not null default 0,
+  hunt_id uuid not null references hunt(id) on delete cascade,
   settlement_id uuid not null references settlement(id) on delete cascade
 );
 --------------------------------------------------------------------------------
@@ -45,4 +46,5 @@ create policy "Allow all for owner/shared" on hunt_ai_deck for all using (
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_hunt_ai_deck_hunt on hunt_ai_deck(hunt_id);
 create index idx_hunt_ai_deck_settlement on hunt_ai_deck(settlement_id);

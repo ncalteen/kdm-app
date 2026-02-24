@@ -9,7 +9,7 @@ create table location (
   -- Owner Data
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
-  -- Data
+  -- Location Data
   location_name varchar not null
 );
 --------------------------------------------------------------------------------

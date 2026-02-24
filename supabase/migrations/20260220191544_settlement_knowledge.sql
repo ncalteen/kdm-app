@@ -7,7 +7,7 @@ create table settlement_knowledge (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Knowledge Data
-  knowledge_name varchar not null,
+  knowledge_id uuid not null references knowledge(id) on delete cascade,
   philosophy_id uuid references philosophy(id) on delete
   set null,
     settlement_id uuid not null references settlement(id) on delete cascade

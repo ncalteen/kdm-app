@@ -6,7 +6,7 @@ create table settlement_timeline_year (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Timeline Data
+  -- Settlement Timeline Year Data
   completed boolean not null default false,
   entries varchar [] not null default '{}',
   settlement_id uuid not null references settlement(id) on delete cascade,

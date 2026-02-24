@@ -1,22 +1,25 @@
 --------------------------------------------------------------------------------
--- Settlement Milestone Table
+-- Showdown Table
 --------------------------------------------------------------------------------
-create table settlement_milestone (
+create table showdown (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Settlement Milestone Data
-  milestone_name varchar not null,
-  complete boolean not null default false,
-  event_name varchar not null default '',
-  settlement_id uuid not null references settlement(id) on delete cascade
+  -- Showdown Data
+  ambush boolean not null default false,
+  monster_level int not null,
+  scout_id uuid references survivor(id) on delete
+  set null,
+    settlement_id uuid references settlement(id) on delete cascade,
+    showdown_type showdown_type not null default 'REGULAR',
+    turn showdown_turn not null default 'MONSTER'
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
-alter table settlement_milestone enable row level security;
-create policy "Allow all for owner/shared" on settlement_milestone for all using (
+alter table showdown enable row level security;
+create policy "Allow all for owner/shared" on showdown for all using (
   auth.uid() = (
     select user_id
     from settlement
@@ -25,7 +28,7 @@ create policy "Allow all for owner/shared" on settlement_milestone for all using
   or exists (
     select 1
     from settlement_shared_user su
-    where su.settlement_id = settlement_milestone.settlement_id
+    where su.settlement_id = showdown.settlement_id
       and su.shared_user_id = auth.uid()
   )
 ) with check (
@@ -37,11 +40,12 @@ create policy "Allow all for owner/shared" on settlement_milestone for all using
   or exists (
     select 1
     from settlement_shared_user su
-    where su.settlement_id = settlement_milestone.settlement_id
+    where su.settlement_id = showdown.settlement_id
       and su.shared_user_id = auth.uid()
   )
 );
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_settlement_milestone_settlement on settlement_milestone(settlement_id);
+create index idx_showdown_settlement on showdown(settlement_id);
+create index idx_showdown_scout on showdown(scout_id);

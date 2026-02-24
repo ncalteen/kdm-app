@@ -6,7 +6,7 @@ create table settlement_location (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Location Data
+  -- Settlement Location Data
   location_name varchar not null,
   settlement_id uuid not null references settlement(id) on delete cascade,
   unlocked boolean not null default false

@@ -31,6 +31,7 @@ create table nemesis_level (
   moods varchar [] not null default '{}',
   movement int not null default 1,
   movement_tokens int not null default 0,
+  nemesis_id uuid not null references nemesis(id) on delete cascade,
   sub_monster_name varchar,
   speed int not null default 0,
   speed_tokens int not null default 0,
@@ -86,14 +87,6 @@ create policy "Allow all for owner/shared of nemesis" on nemesis_level for all u
             and su.shared_user_id = auth.uid()
         )
       )
-  )
-);
-alter table nemesis_level enable row level security;
-create policy "Allow all for owner of location" on nemesis_level for all using (
-  auth.uid() = (
-    select user_id
-    from location
-    where id = location_id
   )
 );
 --------------------------------------------------------------------------------

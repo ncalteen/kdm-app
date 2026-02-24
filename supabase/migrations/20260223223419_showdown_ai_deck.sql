@@ -11,7 +11,8 @@ create table showdown_ai_deck (
   advanced_cards int not null default 0,
   legendary_cards int not null default 0,
   overtone_cards int not null default 0,
-  settlement_id uuid not null references settlement(id) on delete cascade
+  settlement_id uuid not null references settlement(id) on delete cascade,
+  showdown_id uuid not null references showdown(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -46,3 +47,4 @@ create policy "Allow all for owner/shared" on showdown_ai_deck for all using (
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_showdown_ai_deck_settlement on showdown_ai_deck(settlement_id);
+create index idx_showdown_ai_deck_showdown on showdown_ai_deck(showdown_id);

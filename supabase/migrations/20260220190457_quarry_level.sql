@@ -89,14 +89,6 @@ create policy "Allow all for owner/shared of quarry" on quarry_level for all usi
       )
   )
 );
-alter table quarry_level enable row level security;
-create policy "Allow all for owner of location" on quarry_level for all using (
-  auth.uid() = (
-    select user_id
-    from location
-    where id = location_id
-  )
-);
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
