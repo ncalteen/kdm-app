@@ -1,5 +1,8 @@
 --------------------------------------------------------------------------------
 -- Wanderer Table
+-- Information about individual wanderers, before they are added to a settlement
+-- as survivors. This includes both custom wanderers created by users and those
+-- available by default in the app.
 --------------------------------------------------------------------------------
 create table wanderer (
   -- Metadata

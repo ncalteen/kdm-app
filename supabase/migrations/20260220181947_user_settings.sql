@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 -- User Settings Table
+-- All settings stored at the user level, such as strain milestone unlocks,
+-- vignettes, etc.
 --------------------------------------------------------------------------------
 create table user_settings (
   -- Metadata
@@ -12,6 +14,9 @@ create table user_settings (
   unlocked_white_gigalion boolean not null default false,
   user_id uuid not null references auth.users(id) on delete cascade
 );
+--------------------------------------------------------------------------------
+-- Row Level Security Policies
+--------------------------------------------------------------------------------
 alter table user_settings enable row level security;
 create policy "Users can only access their own settings" on user_settings for all using (auth.uid() = user_id);
 --------------------------------------------------------------------------------

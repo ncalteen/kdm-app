@@ -1,44 +1,45 @@
 --------------------------------------------------------------------------------
--- Wanderer Timeline Year Table
+-- Quarry Timeline Year Table
 -- Each entry represents a single timeline year and any events that will be
--- added to the settlement timeline when the wanderer is added.
+-- added to the settlement timeline when the quarry is added.
 --------------------------------------------------------------------------------
-create table wanderer_timeline_year (
+create table quarry_timeline_year (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Wanderer Timeline Year Data
-  wanderer_id uuid not null references wanderer(id) on delete cascade,
+  -- Quarry Timeline Year Data
+  campaigns campaign_type [] not null default '{}',
+  quarry_id uuid not null references quarry(id) on delete cascade,
   entries varchar [] not null default '{}',
   year_number int not null
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
-alter table wanderer_timeline_year enable row level security;
-create policy "Allow authenticated read for non-custom" on wanderer_timeline_year for
+alter table quarry_timeline_year enable row level security;
+create policy "Allow authenticated read for non-custom" on quarry_timeline_year for
 select using (
     auth.role() = 'authenticated'
     and exists (
       select 1
-      from wanderer w
-      where w.id = wanderer_id
-        and not w.custom
+      from quarry q
+      where q.id = quarry_id
+        and not q.custom
     )
   );
-create policy "Allow all for owner/shared of custom" on wanderer_timeline_year for all using (
+create policy "Allow all for owner/shared of custom" on quarry_timeline_year for all using (
   exists (
     select 1
-    from wanderer w
-    where w.id = wanderer_id
-      and w.custom
+    from quarry q
+    where q.id = quarry_id
+      and q.custom
       and (
-        w.user_id = auth.uid()
+        q.user_id = auth.uid()
         or exists (
           select 1
-          from wanderer_shared_user su
-          where su.wanderer_id = w.id
+          from quarry_shared_user su
+          where su.quarry_id = q.id
             and su.shared_user_id = auth.uid()
         )
       )
@@ -46,15 +47,15 @@ create policy "Allow all for owner/shared of custom" on wanderer_timeline_year f
 ) with check (
   exists (
     select 1
-    from wanderer w
-    where w.id = wanderer_id
-      and w.custom
+    from quarry q
+    where q.id = quarry_id
+      and q.custom
       and (
-        w.user_id = auth.uid()
+        q.user_id = auth.uid()
         or exists (
           select 1
-          from wanderer_shared_user su
-          where su.wanderer_id = w.id
+          from quarry_shared_user su
+          where su.quarry_id = q.id
             and su.shared_user_id = auth.uid()
         )
       )
@@ -63,4 +64,4 @@ create policy "Allow all for owner/shared of custom" on wanderer_timeline_year f
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_timeline_entries_wanderer on wanderer_timeline_year(wanderer_id);
+create index idx_timeline_entries_quarry on quarry_timeline_year(quarry_id);
