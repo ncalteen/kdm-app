@@ -85,5 +85,5 @@ create policy "Allow all for owner" on wanderer_shared_user for all using (
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_wanderer_shared_user_wanderer on wanderer_shared_user (wanderer_id);
-create index idx_wanderer_shared_user_user on wanderer_shared_user (shared_user_id);
+create index idx_wanderer_shared_user_wanderer on wanderer_shared_user(wanderer_id);
+create index idx_wanderer_shared_user_user on wanderer_shared_user(shared_user_id);

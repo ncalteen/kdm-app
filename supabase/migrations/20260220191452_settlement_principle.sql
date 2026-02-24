@@ -46,4 +46,4 @@ create policy "Allow all for owner/shared" on settlement_principle for all using
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_settlement_principle_settlement on settlement_principle (settlement_id);
+create index idx_settlement_principle_settlement on settlement_principle(settlement_id);

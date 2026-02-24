@@ -44,4 +44,4 @@ create policy "Allow all for owner/shared" on settlement_milestone for all using
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_settlement_milestone_settlement on settlement_milestone (settlement_id);
+create index idx_settlement_milestone_settlement on settlement_milestone(settlement_id);

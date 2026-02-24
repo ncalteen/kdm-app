@@ -61,4 +61,4 @@ create policy "Allow all for owner/shared of custom" on wanderer_timeline_entry 
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_timeline_entries_wanderer on wanderer_timeline_entry (wanderer_id);
+create index idx_timeline_entries_wanderer on wanderer_timeline_entry(wanderer_id);

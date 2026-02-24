@@ -63,5 +63,5 @@ create policy "Allow all for owner" on philosophy_shared_user for all using (
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_philosophy_shared_user_philosophy on philosophy_shared_user (philosophy_id);
-create index idx_philosophy_shared_user_user on philosophy_shared_user (shared_user_id);
+create index idx_philosophy_shared_user_philosophy on philosophy_shared_user(philosophy_id);
+create index idx_philosophy_shared_user_user on philosophy_shared_user(shared_user_id);

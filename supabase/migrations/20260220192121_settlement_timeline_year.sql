@@ -43,4 +43,4 @@ create policy "Allow all for owner/shared" on settlement_timeline_year for all u
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_settlement_timeline_year_settlement on settlement_timeline_year (settlement_id);
+create index idx_settlement_timeline_year_settlement on settlement_timeline_year(settlement_id);
