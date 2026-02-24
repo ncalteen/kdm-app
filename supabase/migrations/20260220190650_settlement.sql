@@ -39,7 +39,7 @@ create table settlement (
   -- People of the Lantern/Sun Specific Data
   lantern_research int,
   monster_volumes varchar [] not null default '{}' --
-  -- Squires of the et nullet nullCitadel Specific Data
+  -- Squires of the Citadel Specific Data
   -- squire_suspicions
 );
 --------------------------------------------------------------------------------
@@ -117,7 +117,7 @@ create policy "Allow all for owner" on settlement_shared_user for all using (
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_settlement_wanderer_settlement on settlement_wanderer (settlement_id);
-create index idx_settlement_wanderer_wanderer on settlement_wanderer (wanderer_id);
-create index idx_settlement_shared_user_settlement on settlement_shared_user (settlement_id);
-create index idx_settlement_shared_user_user on settlement_shared_user (shared_user_id);
+create index idx_settlement_wanderer_settlement on settlement_wanderer(settlement_id);
+create index idx_settlement_wanderer_wanderer on settlement_wanderer(wanderer_id);
+create index idx_settlement_shared_user_settlement on settlement_shared_user(settlement_id);
+create index idx_settlement_shared_user_user on settlement_shared_user(shared_user_id);
