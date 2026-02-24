@@ -1,35 +1,6 @@
--- AI Deck Data
-create table hunt_ai_deck (
-  -- Metadata
-  id uuid primary key default gen_random_uuid(),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  -- Deck Data
-  basic_cards int not null default 0,
-  advanced_cards int not null default 0,
-  legendary_cards int not null default 0,
-  overtone_cards int not null default 0,
-  settlement_id uuid not null references settlement(id) on delete cascade
-);
-alter table hunt_ai_deck enable row level security;
-create policy "Allow all for owner" on hunt_ai_deck for all using (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
-  )
-);
-create policy "Allow all for shared users" on hunt_ai_deck for all using (
-  exists (
-    select 1
-    from settlement s
-    where s.id = settlement_id
-      and auth.uid() = any(s.shared_user_ids)
-  )
-);
--- Indexes
-create index idx_hunt_ai_deck_settlement on hunt_ai_deck (settlement_id);
--- Hunt Monster Data
+--------------------------------------------------------------------------------
+-- Hunt Monster Data Table
+--------------------------------------------------------------------------------
 create table hunt_monster_data (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
@@ -61,22 +32,36 @@ create table hunt_monster_data (
   traits varchar [] not null default '{}',
   wounds integer not null default 0
 );
+--------------------------------------------------------------------------------
+-- Row Level Security Policies
+--------------------------------------------------------------------------------
 alter table hunt_monster_data enable row level security;
-create policy "Allow all for owner" on hunt_monster_data for all using (
+create policy "Allow all for owner/shared" on hunt_monster_data for all using (
   auth.uid() = (
     select user_id
     from settlement
     where id = settlement_id
   )
-);
-create policy "Allow all for shared users" on hunt_monster_data for all using (
-  exists (
+  or exists (
     select 1
-    from settlement s
-    where s.id = settlement_id
-      and auth.uid() = any(s.shared_user_ids)
+    from settlement_shared_user su
+    where su.settlement_id = hunt_monster_data.settlement_id
+      and su.shared_user_id = auth.uid()
+  )
+) with check (
+  auth.uid() = (
+    select user_id
+    from settlement
+    where id = settlement_id
+  )
+  or exists (
+    select 1
+    from settlement_shared_user su
+    where su.settlement_id = hunt_monster_data.settlement_id
+      and su.shared_user_id = auth.uid()
   )
 );
+--------------------------------------------------------------------------------
 -- Indexes
-create index idx_hunt_monster_data_settlement on hunt_monster_data (settlement_id);
-create index idx_hunt_monster_data_ai_deck on hunt_monster_data (ai_deck_id);
+--------------------------------------------------------------------------------
+create index idx_hunt_monster_data_settlement on hunt_monster_data(settlement_id);

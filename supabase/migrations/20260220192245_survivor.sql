@@ -1,4 +1,6 @@
--- Survivor
+--------------------------------------------------------------------------------
+-- Survivor Table
+--------------------------------------------------------------------------------
 create table survivor (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
@@ -127,23 +129,43 @@ create table survivor (
   sculptor_reaper boolean,
   sculptor_rust boolean,
   sculptor_storm boolean,
-  sculptor_witch boolean
+  sculptor_witch boolean,
+  -- Squires of the Citadel Survivors
+  squire_suspicion_level_1 boolean not null default false,
+  squire_suspicion_level_2 boolean not null default false,
+  squire_suspicion_level_3 boolean not null default false,
+  squire_suspicion_level_4 boolean not null default false
 );
+--------------------------------------------------------------------------------
+-- Row Level Security Policies
+--------------------------------------------------------------------------------
 alter table survivor enable row level security;
-create policy "Allow all for owner" on survivor for all using (
+create policy "Allow all for owner/shared" on survivor for all using (
   auth.uid() = (
     select user_id
     from settlement
     where id = settlement_id
   )
-);
-create policy "Allow all for shared users" on survivor for all using (
-  exists (
+  or exists (
     select 1
-    from settlement s
-    where s.id = settlement_id
-      and auth.uid() = any(s.shared_user_ids)
+    from settlement_shared_user su
+    where su.settlement_id = survivor.settlement_id
+      and su.shared_user_id = auth.uid()
+  )
+) with check (
+  auth.uid() = (
+    select user_id
+    from settlement
+    where id = settlement_id
+  )
+  or exists (
+    select 1
+    from settlement_shared_user su
+    where su.settlement_id = survivor.settlement_id
+      and su.shared_user_id = auth.uid()
   )
 );
+--------------------------------------------------------------------------------
 -- Indexes
-create index idx_survivor_settlement on survivor (settlement_id);
+--------------------------------------------------------------------------------
+create index idx_survivor_settlement on survivor(settlement_id);

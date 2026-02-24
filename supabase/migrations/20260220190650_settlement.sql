@@ -11,20 +11,13 @@ create table settlement (
   -- Settlement Data
   arrival_bonuses varchar [] not null default '{}',
   campaign_type campaign_type not null default 'PEOPLE_OF_THE_LANTERN',
-  -- death_count
   departing_bonuses varchar [] not null default '{}',
   gear varchar [] not null default '{}',
   innovations varchar [] not null default '{}',
-  -- locations
-  -- lost_settlements
-  -- milestones
   -- nemeses
   notes text not null default '',
   patterns varchar [] not null default '{}',
-  -- population
-  -- principles
   -- quarries
-  -- resources
   seed_patterns varchar [] not null default '{}',
   settlement_name varchar not null default 'New Settlement',
   survival_limit int not null default 1,
@@ -32,24 +25,34 @@ create table settlement (
   -- timeline
   uses_scouts boolean not null default false,
   -- Arc Specific Data
-  -- collective_cognition_rewards
-  cc_value int,
-  -- knowledges
-  -- philosophies
+  collective_cognition int not null default 0,
   -- People of the Lantern/Sun Specific Data
-  lantern_research int,
-  monster_volumes varchar [] not null default '{}' --
-  -- Squires of the Citadel Specific Data
-  -- squire_suspicions
+  lantern_research int not null default 0,
+  monster_volumes varchar [] not null default '{}'
+);
+--------------------------------------------------------------------------------
+-- Junction Table: Settlement Knowledges
+--------------------------------------------------------------------------------
+create table settlement_knowledge (
+  settlement_id uuid not null references settlement(id) on delete cascade,
+  knowledge_id uuid not null references knowledge(id) on delete cascade,
+  primary key (settlement_id, knowledge_id)
+);
+--------------------------------------------------------------------------------
+-- Junction Table: Settlement Philosophies
+--------------------------------------------------------------------------------
+create table settlement_philosophy (
+  settlement_id uuid not null references settlement(id) on delete cascade,
+  philosophy_id uuid not null references philosophy(id) on delete cascade,
+  primary key (settlement_id, philosophy_id)
 );
 --------------------------------------------------------------------------------
 -- Junction Table: Settlement Wanderers
 --------------------------------------------------------------------------------
 create table settlement_wanderer (
   settlement_id uuid not null references settlement(id) on delete cascade,
-  wanderer_id uuid not null references wanderer(id) on delete -- If a wanderer is deleted, don't delete the settlement!
-  set null,
-    primary key (settlement_id, wanderer_id)
+  wanderer_id uuid not null references wanderer(id) on delete cascade,
+  primary key (settlement_id, wanderer_id)
 );
 --------------------------------------------------------------------------------
 -- Junction Table: Settlement Shared Users
@@ -77,6 +80,58 @@ create policy "Allow all for owner/shared" on settlement for all using (
     select 1
     from settlement_shared_user su
     where su.settlement_id = id
+      and su.shared_user_id = auth.uid()
+  )
+);
+alter table settlement_knowledge enable row level security;
+create policy "Allow all for owner/shared" on settlement_knowledge for all using (
+  auth.uid() = (
+    select user_id
+    from settlement
+    where id = settlement_id
+  )
+  or exists (
+    select 1
+    from settlement_shared_user su
+    where su.settlement_id = settlement_knowledge.settlement_id
+      and su.shared_user_id = auth.uid()
+  )
+) with check (
+  auth.uid() = (
+    select user_id
+    from settlement
+    where id = settlement_id
+  )
+  or exists (
+    select 1
+    from settlement_shared_user su
+    where su.settlement_id = settlement_knowledge.settlement_id
+      and su.shared_user_id = auth.uid()
+  )
+);
+alter table settlement_philosophy enable row level security;
+create policy "Allow all for owner/shared" on settlement_philosophy for all using (
+  auth.uid() = (
+    select user_id
+    from settlement
+    where id = settlement_id
+  )
+  or exists (
+    select 1
+    from settlement_shared_user su
+    where su.settlement_id = settlement_philosophy.settlement_id
+      and su.shared_user_id = auth.uid()
+  )
+) with check (
+  auth.uid() = (
+    select user_id
+    from settlement
+    where id = settlement_id
+  )
+  or exists (
+    select 1
+    from settlement_shared_user su
+    where su.settlement_id = settlement_philosophy.settlement_id
       and su.shared_user_id = auth.uid()
   )
 );
@@ -117,6 +172,11 @@ create policy "Allow all for owner" on settlement_shared_user for all using (
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_settlement_user on settlement(user_id);
+create index idx_settlement_knowledge_settlement on settlement_knowledge(settlement_id);
+create index idx_settlement_knowledge_knowledge on settlement_knowledge(knowledge_id);
+create index idx_settlement_philosophy_settlement on settlement_philosophy(settlement_id);
+create index idx_settlement_philosophy_philosophy on settlement_philosophy(philosophy_id);
 create index idx_settlement_wanderer_settlement on settlement_wanderer(settlement_id);
 create index idx_settlement_wanderer_wanderer on settlement_wanderer(wanderer_id);
 create index idx_settlement_shared_user_settlement on settlement_shared_user(settlement_id);
