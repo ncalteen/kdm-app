@@ -21,3 +21,4 @@ favicon.ico
 .nojekyll
 *.png
 *.svg
+lib/database.types.ts

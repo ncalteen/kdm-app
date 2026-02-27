@@ -13,6 +13,7 @@ create table settlement (
   -- Base Data
   arrival_bonuses varchar [] not null default '{}',
   campaign_type campaign_type not null default 'PEOPLE_OF_THE_LANTERN',
+  current_year int not null default 0 check (current_year >= 0),
   departing_bonuses varchar [] not null default '{}',
   gear varchar [] not null default '{}',
   innovations varchar [] not null default '{}',

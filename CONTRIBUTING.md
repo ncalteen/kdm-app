@@ -87,3 +87,12 @@ to the database schema, please follow these steps:
    ```
 
 1. Test your changes locally
+1. Regenerate the TypeScript types
+
+   ```bash
+   # If you want to generate types directly from the remote database
+   npx supabase gen types typescript --project-id "$PROJECT_REF" --schema public > lib/database.types.ts
+
+   # If you want to generate types from your local database
+   npx supabase gen types typescript --local > lib/database.types.ts
+   ```
