@@ -1,8 +1,8 @@
 # Survivor and Settlement Tracker for Kingdom Death: Monster
 
-![Continuous Integration](https://github.com/ncalteen/kdm/actions/workflows/continuous-integration.yml/badge.svg)
-![Continuous Delivery](https://github.com/ncalteen/kdm/actions/workflows/continuous-delivery.yml/badge.svg)
-![Linter](https://github.com/ncalteen/kdm/actions/workflows/linter.yml/badge.svg)
+![Continuous Integration](https://github.com/ncalteen/kdm-app/actions/workflows/continuous-integration.yml/badge.svg)
+![Continuous Delivery](https://github.com/ncalteen/kdm-app/actions/workflows/continuous-delivery.yml/badge.svg)
+![Linter](https://github.com/ncalteen/kdm-app/actions/workflows/linter.yml/badge.svg)
 
 _In a place of stone faces, nameless survivors stand together. They have
 nothing. Only a lantern to light their struggle._
@@ -24,7 +24,7 @@ Death: Monster. It is designed to be lightweight and easy to use, allowing
 players to enjoy the game and save some trees.
 
 Try it out here:
-[`https://ncalteen.github.io/kdm`](https://ncalteen.github.io/kdm)
+[`https://ncalteen.github.io-app`](https://ncalteen.github.io/kdm-app)
 
 ## Storage
 
@@ -43,7 +43,7 @@ This project is open source and free to use. It is maintained on a best-effort
 basis, with no guarantees.
 
 If you have any questions, suggestions, or problems, please feel free to
-[open an issue](https://github.com/ncalteen/kdm/issues).
+[open an issue](https://github.com/ncalteen/kdm-app/issues).
 
 If you like this project and want to support its development, please consider
 [buying me a coffee](https://buymeacoffee.com/ncalteenw)!
@@ -55,7 +55,7 @@ If you like this project and want to support its development, please consider
 Mobile support is currently limited. The site is designed to be responsive and
 (mostly) mobile-friendly, but some features may not work as expected on smaller
 screens. If you encounter any issues, please
-[open an issue](https://github.com/ncalteen/kdm/issues/new)! To date, the
+[open an issue](https://github.com/ncalteen/kdm-app/issues/new)! To date, the
 project has been tested on the following devices:
 
 - iPhone XR

@@ -23,11 +23,10 @@ create table nemesis_level (
   damage_tokens int not null default 0,
   evasion int not null default 0,
   evasion_tokens int not null default 0,
-  hunt_pos int not null default 12,
   level_number int not null check (
     level_number between 1 and 4
   ),
-  life int not null default 0,
+  life int,
   luck int not null default 0,
   luck_tokens int not null default 0,
   moods varchar [] not null default '{}',
