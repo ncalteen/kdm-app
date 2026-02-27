@@ -1,7 +1,7 @@
 import '@/app/globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
-import { CampaignProvider } from '@/contexts/campaign-context'
+import { LocalProvider } from '@/contexts/local-context'
 import { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ReactElement, ReactNode } from 'react'
@@ -40,7 +40,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange>
-          <CampaignProvider>{children}</CampaignProvider>
+          <LocalProvider>{children}</LocalProvider>
           <Toaster />
         </ThemeProvider>
       </body>
