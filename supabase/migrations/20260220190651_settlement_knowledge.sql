@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 -- Junction Table: Settlement Knowledge
+-- Represents the many-to-many relationship between settlements and knowledges.
 --------------------------------------------------------------------------------
 create table settlement_knowledge (
   -- Metadata
@@ -9,6 +10,7 @@ create table settlement_knowledge (
   -- Settlement Knowledge Data
   settlement_id uuid not null references settlement(id) on delete cascade,
   knowledge_id uuid not null references knowledge(id) on delete cascade,
+  -- Constraints
   unique (settlement_id, knowledge_id)
 );
 --------------------------------------------------------------------------------
@@ -16,6 +18,7 @@ create table settlement_knowledge (
 --------------------------------------------------------------------------------
 alter table settlement_knowledge enable row level security;
 create policy "Allow all for owner/shared" on settlement_knowledge for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
+create policy "Allow admin to manage all" on settlement_knowledge for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ create table nemesis (
   -- Owner Data
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
-  -- Nemesis Data
+  -- Data
   alternate_id uuid references nemesis(id) on delete
   set null,
     monster_name varchar not null,
@@ -21,7 +21,7 @@ create table nemesis (
   set null
 );
 --------------------------------------------------------------------------------
--- Junction Table: Nemesis Shared Users
+-- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table nemesis_shared_user (
   nemesis_id uuid not null references nemesis(id) on delete cascade,
@@ -60,6 +60,7 @@ create policy "Allow all for owner/shared of custom" on nemesis for all using (
     )
   )
 );
+create policy "Allow admin to manage all" on nemesis for all using (is_admin()) with check (is_admin());
 alter table nemesis_shared_user enable row level security;
 create policy "Allow all for owner" on nemesis_shared_user for all using (
   auth.uid() = (
@@ -68,7 +69,7 @@ create policy "Allow all for owner" on nemesis_shared_user for all using (
     where id = nemesis_id
   )
 );
-create policy "Allow admin to manage all" on nemesis for all using (is_admin()) with check (is_admin());
+create policy "Allow admin to manage all" on nemesis_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

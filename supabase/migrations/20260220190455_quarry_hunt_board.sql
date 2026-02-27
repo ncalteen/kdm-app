@@ -13,7 +13,7 @@ create table quarry_hunt_board (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Quarry Hunt Board Data
+  -- Data
   pos_1 hunt_event_type not null default 'BASIC',
   pos_2 hunt_event_type not null default 'BASIC',
   pos_3 hunt_event_type not null default 'BASIC',
@@ -73,21 +73,7 @@ create policy "Allow all for owner/shared of custom" on quarry_hunt_board for al
       )
   )
 );
-create policy "Allow admin to manage all" on quarry_hunt_board for all using (
-  is_admin()
-  and exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-  )
-) with check (
-  is_admin()
-  and exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-  )
-);
+create policy "Allow admin to manage all" on quarry_hunt_board for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

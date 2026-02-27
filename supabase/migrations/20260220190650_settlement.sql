@@ -10,7 +10,7 @@ create table settlement (
   updated_at timestamptz not null default now(),
   -- Owner Data
   user_id uuid not null references auth.users(id) on delete cascade,
-  -- Settlement Data
+  -- Base Data
   arrival_bonuses varchar [] not null default '{}',
   campaign_type campaign_type not null default 'PEOPLE_OF_THE_LANTERN',
   departing_bonuses varchar [] not null default '{}',
@@ -30,7 +30,7 @@ create table settlement (
   monster_volumes varchar [] not null default '{}'
 );
 --------------------------------------------------------------------------------
--- Junction Table: Settlement Shared Users
+-- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table settlement_shared_user (
   settlement_id uuid not null references settlement(id) on delete cascade,
@@ -59,6 +59,7 @@ $$;
 --------------------------------------------------------------------------------
 alter table settlement enable row level security;
 create policy "Allow all for owner/shared" on settlement for all using (is_settlement_member(id)) with check (is_settlement_member(id));
+create policy "Allow admin to manage all" on settlement for all using (is_admin()) with check (is_admin());
 alter table settlement_shared_user enable row level security;
 create policy "Allow all for owner" on settlement_shared_user for all using (
   auth.uid() = (
@@ -67,6 +68,7 @@ create policy "Allow all for owner" on settlement_shared_user for all using (
     where id = settlement_id
   )
 );
+create policy "Allow admin to manage all" on settlement_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

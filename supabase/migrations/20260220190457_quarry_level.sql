@@ -1,7 +1,9 @@
 --------------------------------------------------------------------------------
 -- Quarry Level Table
 -- Each entry represents the level data for a quarry, which will be used to
--- determine the attributes and traits of the quarry during a hunt.
+-- determine the attributes and traits of the quarry during a hunt. A single
+-- quarry can have multiple level data entries for the same level, indicating a
+-- multi-monster hunt/showdown.
 --------------------------------------------------------------------------------
 create table quarry_level (
   -- Metadata
@@ -14,7 +16,7 @@ create table quarry_level (
   advanced_cards int not null default 0,
   legendary_cards int not null default 0,
   overtone_cards int not null default 0,
-  -- Quarry Level Data
+  -- Base Data
   accuracy int not null default 0,
   accuracy_tokens int not null default 0,
   damage int not null default 0,
@@ -40,8 +42,7 @@ create table quarry_level (
   survivor_statuses varchar [] not null default '{}',
   toughness int not null default 0,
   toughness_tokens int not null default 0,
-  traits varchar [] not null default '{}',
-  unique (quarry_id, level_number)
+  traits varchar [] not null default '{}'
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -90,21 +91,7 @@ create policy "Allow all for owner/shared of quarry" on quarry_level for all usi
       )
   )
 );
-create policy "Allow admin to manage all" on quarry_level for all using (
-  is_admin()
-  and exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-  )
-) with check (
-  is_admin()
-  and exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-  )
-);
+create policy "Allow admin to manage all" on quarry_level for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

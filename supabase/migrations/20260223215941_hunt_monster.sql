@@ -1,12 +1,13 @@
 --------------------------------------------------------------------------------
 -- Hunt Monster Table
+-- Data related to a monster during a hunt.
 --------------------------------------------------------------------------------
 create table hunt_monster (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Hunt Monster Data
+  -- Data
   accuracy integer not null default 0,
   accuracy_tokens integer not null default 0,
   ai_deck_id uuid not null references hunt_ai_deck(id) on delete cascade,
@@ -38,6 +39,7 @@ create table hunt_monster (
 --------------------------------------------------------------------------------
 alter table hunt_monster enable row level security;
 create policy "Allow all for owner/shared" on hunt_monster for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
+create policy "Allow admin to manage all" on hunt_monster for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

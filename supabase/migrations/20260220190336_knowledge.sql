@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 -- Knowledge Table
+-- Built-in and custom knowledges.
 --------------------------------------------------------------------------------
 create table knowledge (
   -- Metadata
@@ -10,10 +11,11 @@ create table knowledge (
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
   -- Data
-  knowledge_name varchar not null
+  knowledge_name varchar not null,
+  philosophy_id uuid references philosophy(id) on delete cascade
 );
 --------------------------------------------------------------------------------
--- Junction Table: Knowledge Shared Users
+-- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table knowledge_shared_user (
   knowledge_id uuid not null references knowledge(id) on delete cascade,
@@ -52,6 +54,7 @@ create policy "Allow all for owner/shared of custom" on knowledge for all using 
     )
   )
 );
+create policy "Allow admin to manage all" on knowledge for all using (is_admin()) with check (is_admin());
 alter table knowledge_shared_user enable row level security;
 create policy "Allow all for owner" on knowledge_shared_user for all using (
   auth.uid() = (
@@ -60,7 +63,7 @@ create policy "Allow all for owner" on knowledge_shared_user for all using (
     where id = knowledge_id
   )
 );
-create policy "Allow admin to manage all" on knowledge for all using (is_admin()) with check (is_admin());
+create policy "Allow admin to manage all" on knowledge_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

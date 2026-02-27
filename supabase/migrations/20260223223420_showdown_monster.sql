@@ -1,12 +1,13 @@
 --------------------------------------------------------------------------------
 -- Showdown Monster Table
+-- Data related to a monster in a showdown.
 --------------------------------------------------------------------------------
 create table showdown_monster (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Showdown Monster Data
+  -- Data
   ai_card_drawn boolean not null default false,
   ai_deck_id uuid not null references showdown_ai_deck(id) on delete cascade,
   ai_deck_remaining int not null default 0,
@@ -37,6 +38,7 @@ create table showdown_monster (
 --------------------------------------------------------------------------------
 alter table showdown_monster enable row level security;
 create policy "Allow all for owner/shared" on showdown_monster for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
+create policy "Allow admin to manage all" on showdown_monster for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

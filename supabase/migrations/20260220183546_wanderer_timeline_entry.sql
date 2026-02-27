@@ -8,7 +8,7 @@ create table wanderer_timeline_year (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Wanderer Timeline Year Data
+  -- Data
   wanderer_id uuid not null references wanderer(id) on delete cascade,
   entries varchar [] not null default '{}',
   year_number int not null,
@@ -62,21 +62,7 @@ create policy "Allow all for owner/shared of custom" on wanderer_timeline_year f
       )
   )
 );
-create policy "Allow admin to manage all" on wanderer_timeline_year for all using (
-  is_admin()
-  and exists (
-    select 1
-    from wanderer w
-    where w.id = wanderer_id
-  )
-) with check (
-  is_admin()
-  and exists (
-    select 1
-    from wanderer w
-    where w.id = wanderer_id
-  )
-);
+create policy "Allow admin to manage all" on wanderer_timeline_year for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

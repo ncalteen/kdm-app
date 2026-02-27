@@ -8,7 +8,7 @@ create table quarry_timeline_year (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Quarry Timeline Year Data
+  -- Data
   campaigns campaign_type [] not null default '{}',
   quarry_id uuid not null references quarry(id) on delete cascade,
   entries varchar [] not null default '{}',
@@ -63,21 +63,7 @@ create policy "Allow all for owner/shared of custom" on quarry_timeline_year for
       )
   )
 );
-create policy "Allow admin to manage all" on quarry_timeline_year for all using (
-  is_admin()
-  and exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-  )
-) with check (
-  is_admin()
-  and exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-  )
-);
+create policy "Allow admin to manage all" on quarry_timeline_year for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

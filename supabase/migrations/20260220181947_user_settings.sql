@@ -8,7 +8,7 @@ create table user_settings (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Settings
+  -- Data
   unlocked_killenium_butcher boolean not null default false,
   unlocked_screaming_nukalope boolean not null default false,
   unlocked_white_gigalion boolean not null default false,
@@ -19,6 +19,7 @@ create table user_settings (
 --------------------------------------------------------------------------------
 alter table user_settings enable row level security;
 create policy "Users can only access their own settings" on user_settings for all using (auth.uid() = user_id);
+create policy "Allow admin to manage all" on user_settings for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

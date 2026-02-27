@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
--- Weapon Type Table
--- Built-in and custom weapon types.
+-- Pattern Table
+-- Built-in and custom patterns/seed patterns.
 --------------------------------------------------------------------------------
-create table weapon_type (
+create table pattern (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -11,33 +11,34 @@ create table weapon_type (
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
   -- Data
-  weapon_type_name varchar not null
+  pattern_name varchar not null,
+  seed_pattern boolean not null default false
 );
 --------------------------------------------------------------------------------
 -- Junction Table: Shared Users
 --------------------------------------------------------------------------------
-create table weapon_type_shared_user (
-  weapon_type_id uuid not null references weapon_type(id) on delete cascade,
+create table pattern_shared_user (
+  pattern_id uuid not null references pattern(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
-  primary key (weapon_type_id, shared_user_id)
+  primary key (pattern_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
-alter table weapon_type enable row level security;
-create policy "Allow authenticated read for non-custom" on weapon_type for
+alter table pattern enable row level security;
+create policy "Allow authenticated read for non-custom" on pattern for
 select using (
     auth.role() = 'authenticated'
     and not custom
   );
-create policy "Allow all for owner/shared of custom" on weapon_type for all using (
+create policy "Allow all for owner/shared of custom" on pattern for all using (
   custom
   and (
     auth.uid() = user_id
     or exists (
       select 1
-      from weapon_type_shared_user su
-      where su.weapon_type_id = id
+      from pattern_shared_user su
+      where su.pattern_id = id
         and su.shared_user_id = auth.uid()
     )
   )
@@ -47,29 +48,29 @@ create policy "Allow all for owner/shared of custom" on weapon_type for all usin
     auth.uid() = user_id
     or exists (
       select 1
-      from weapon_type_shared_user su
-      where su.weapon_type_id = id
+      from pattern_shared_user su
+      where su.pattern_id = id
         and su.shared_user_id = auth.uid()
     )
   )
 );
-create policy "Allow admin to manage all" on weapon_type for all using (is_admin()) with check (is_admin());
-alter table weapon_type_shared_user enable row level security;
-create policy "Allow all for owner" on weapon_type_shared_user for all using (
+create policy "Allow admin to manage all" on pattern for all using (is_admin()) with check (is_admin());
+alter table pattern_shared_user enable row level security;
+create policy "Allow all for owner" on pattern_shared_user for all using (
   auth.uid() = (
     select user_id
-    from weapon_type
-    where id = weapon_type_id
+    from pattern
+    where id = pattern_id
   )
 );
-create policy "Allow admin to manage all" on weapon_type_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow admin to manage all" on pattern_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_weapon_type_shared_user_weapon_type on weapon_type_shared_user(weapon_type_id);
-create index idx_weapon_type_shared_user_user on weapon_type_shared_user(shared_user_id);
+create index idx_pattern_shared_user_pattern on pattern_shared_user(pattern_id);
+create index idx_pattern_shared_user_user on pattern_shared_user(shared_user_id);
 --------------------------------------------------------------------------------
 -- Triggers
 --------------------------------------------------------------------------------
 create trigger set_updated_at before
-update on weapon_type for each row execute function update_updated_at();
+update on pattern for each row execute function update_updated_at();

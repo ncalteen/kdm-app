@@ -1,12 +1,13 @@
 --------------------------------------------------------------------------------
 -- Hunt Survivor Table
+-- Data related to a survivor during a hunt.
 --------------------------------------------------------------------------------
 create table hunt_survivor (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Hunt Survivor Data
+  -- Data
   accuracy_tokens integer not null default 0,
   evasion_tokens integer not null default 0,
   hunt_id uuid not null references hunt(id) on delete cascade,
@@ -19,6 +20,7 @@ create table hunt_survivor (
   strength_tokens integer not null default 0,
   survival_tokens integer not null default 0,
   survivor_id uuid not null references survivor(id) on delete cascade,
+  -- Constraints
   unique (hunt_id, survivor_id)
 );
 --------------------------------------------------------------------------------
@@ -26,6 +28,7 @@ create table hunt_survivor (
 --------------------------------------------------------------------------------
 alter table hunt_survivor enable row level security;
 create policy "Allow all for owner/shared" on hunt_survivor for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
+create policy "Allow admin to manage all" on hunt_survivor for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

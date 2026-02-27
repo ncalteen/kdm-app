@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
--- Weapon Type Table
--- Built-in and custom weapon types.
+-- Neurosis Table
+-- Built-in and custom neuroses.
 --------------------------------------------------------------------------------
-create table weapon_type (
+create table neurosis (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -11,33 +11,34 @@ create table weapon_type (
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
   -- Data
-  weapon_type_name varchar not null
+  neurosis_name varchar not null,
+  philosophy_id uuid references philosophy(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Junction Table: Shared Users
 --------------------------------------------------------------------------------
-create table weapon_type_shared_user (
-  weapon_type_id uuid not null references weapon_type(id) on delete cascade,
+create table neurosis_shared_user (
+  neurosis_id uuid not null references neurosis(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
-  primary key (weapon_type_id, shared_user_id)
+  primary key (neurosis_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
-alter table weapon_type enable row level security;
-create policy "Allow authenticated read for non-custom" on weapon_type for
+alter table neurosis enable row level security;
+create policy "Allow authenticated read for non-custom" on neurosis for
 select using (
     auth.role() = 'authenticated'
     and not custom
   );
-create policy "Allow all for owner/shared of custom" on weapon_type for all using (
+create policy "Allow all for owner/shared of custom" on neurosis for all using (
   custom
   and (
     auth.uid() = user_id
     or exists (
       select 1
-      from weapon_type_shared_user su
-      where su.weapon_type_id = id
+      from neurosis_shared_user su
+      where su.neurosis_id = id
         and su.shared_user_id = auth.uid()
     )
   )
@@ -47,29 +48,29 @@ create policy "Allow all for owner/shared of custom" on weapon_type for all usin
     auth.uid() = user_id
     or exists (
       select 1
-      from weapon_type_shared_user su
-      where su.weapon_type_id = id
+      from neurosis_shared_user su
+      where su.neurosis_id = id
         and su.shared_user_id = auth.uid()
     )
   )
 );
-create policy "Allow admin to manage all" on weapon_type for all using (is_admin()) with check (is_admin());
-alter table weapon_type_shared_user enable row level security;
-create policy "Allow all for owner" on weapon_type_shared_user for all using (
+create policy "Allow admin to manage all" on neurosis for all using (is_admin()) with check (is_admin());
+alter table neurosis_shared_user enable row level security;
+create policy "Allow all for owner" on neurosis_shared_user for all using (
   auth.uid() = (
     select user_id
-    from weapon_type
-    where id = weapon_type_id
+    from neurosis
+    where id = neurosis_id
   )
 );
-create policy "Allow admin to manage all" on weapon_type_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow admin to manage all" on neurosis_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_weapon_type_shared_user_weapon_type on weapon_type_shared_user(weapon_type_id);
-create index idx_weapon_type_shared_user_user on weapon_type_shared_user(shared_user_id);
+create index idx_neurosis_shared_user_neurosis on neurosis_shared_user(neurosis_id);
+create index idx_neurosis_shared_user_user on neurosis_shared_user(shared_user_id);
 --------------------------------------------------------------------------------
 -- Triggers
 --------------------------------------------------------------------------------
 create trigger set_updated_at before
-update on weapon_type for each row execute function update_updated_at();
+update on neurosis for each row execute function update_updated_at();

@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 -- Location Table
+-- Built-in and custom locations.
 --------------------------------------------------------------------------------
 create table location (
   -- Metadata
@@ -13,7 +14,7 @@ create table location (
   location_name varchar not null
 );
 --------------------------------------------------------------------------------
--- Junction Table: Location Shared Users
+-- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table location_shared_user (
   location_id uuid not null references location(id) on delete cascade,
@@ -52,6 +53,7 @@ create policy "Allow all for owner/shared of custom" on location for all using (
     )
   )
 );
+create policy "Allow admin to manage all" on location for all using (is_admin()) with check (is_admin());
 alter table location_shared_user enable row level security;
 create policy "Allow all for owner" on location_shared_user for all using (
   auth.uid() = (
@@ -60,7 +62,7 @@ create policy "Allow all for owner" on location_shared_user for all using (
     where id = location_id
   )
 );
-create policy "Allow admin to manage all" on location for all using (is_admin()) with check (is_admin());
+create policy "Allow admin to manage all" on location_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

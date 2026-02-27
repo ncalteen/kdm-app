@@ -8,7 +8,7 @@ create table quarry_collective_cognition_reward (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Quarry Collective Cognition Reward Data
+  -- Data
   collective_cognition_reward_id uuid not null references collective_cognition_reward(id) on delete cascade,
   quarry_id uuid not null references quarry(id) on delete cascade,
   -- Constraints
@@ -61,21 +61,7 @@ create policy "Allow all for owner/shared of quarry" on quarry_collective_cognit
       )
   )
 );
-create policy "Allow admin to manage all" on quarry_collective_cognition_reward for all using (
-  is_admin()
-  and exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-  )
-) with check (
-  is_admin()
-  and exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-  )
-);
+create policy "Allow admin to manage all" on quarry_collective_cognition_reward for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

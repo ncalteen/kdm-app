@@ -1,12 +1,14 @@
 --------------------------------------------------------------------------------
 -- Hunt AI Deck Table
+-- This table stores the AI deck composition for each hunt, allowing for user
+-- adjustment without affecting base monster data.
 --------------------------------------------------------------------------------
 create table hunt_ai_deck (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Hunt AI Deck Data
+  -- Data
   basic_cards int not null default 0,
   advanced_cards int not null default 0,
   legendary_cards int not null default 0,
@@ -19,6 +21,7 @@ create table hunt_ai_deck (
 --------------------------------------------------------------------------------
 alter table hunt_ai_deck enable row level security;
 create policy "Allow all for owner/shared" on hunt_ai_deck for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
+create policy "Allow admin to manage all" on hunt_ai_deck for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

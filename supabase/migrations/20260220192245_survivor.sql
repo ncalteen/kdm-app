@@ -1,12 +1,13 @@
 --------------------------------------------------------------------------------
 -- Survivor Table
+-- Represents a survivor associated with a settlement.
 --------------------------------------------------------------------------------
 create table survivor (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Base Survivor Data
+  -- Base Data
   abilities_impairments varchar [] not null default '{}',
   accuracy int not null default 0,
   arc boolean not null default false,
@@ -141,6 +142,7 @@ create table survivor (
 --------------------------------------------------------------------------------
 alter table survivor enable row level security;
 create policy "Allow all for owner/shared" on survivor for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
+create policy "Allow admin to manage all" on survivor for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

@@ -1,19 +1,20 @@
 --------------------------------------------------------------------------------
 -- Settlement Phase Table
+-- Tracks data for the settlement phase after a showdown or hunt ends.
 --------------------------------------------------------------------------------
 create table settlement_phase (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Phase Data
+  -- Data
   endeavors int not null default 0 check (endeavors >= 0),
   returning_scout_id uuid references survivor(id) on delete cascade,
   settlement_id uuid not null references settlement(id) on delete cascade,
   step settlement_phase_step not null default 'SET_UP_SETTLEMENT'
 );
 --------------------------------------------------------------------------------
--- Junction Table: Settlement Phase Returning Survivors
+-- Junction Table: Returning Survivors
 --------------------------------------------------------------------------------
 create table settlement_phase_returning_survivor (
   settlement_phase_id uuid not null references settlement_phase(id) on delete cascade,
@@ -25,6 +26,7 @@ create table settlement_phase_returning_survivor (
 --------------------------------------------------------------------------------
 alter table settlement_phase enable row level security;
 create policy "Allow all for owner/shared" on settlement_phase for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
+create policy "Allow admin to manage all" on settlement_phase for all using (is_admin()) with check (is_admin());
 alter table settlement_phase_returning_survivor enable row level security;
 create policy "Allow all for owner/shared" on settlement_phase_returning_survivor for all using (
   is_settlement_member(
@@ -43,6 +45,7 @@ create policy "Allow all for owner/shared" on settlement_phase_returning_survivo
     )
   )
 );
+create policy "Allow admin to manage all" on settlement_phase_returning_survivor for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

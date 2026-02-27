@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 -- Collective Cognition Reward Table
+-- Built-in and custom collective cognition rewards for Arc settlements.
 --------------------------------------------------------------------------------
 create table collective_cognition_reward (
   -- Metadata
@@ -9,12 +10,12 @@ create table collective_cognition_reward (
   -- Owner Data
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
-  -- Collective Cognition Reward Data
+  -- Data
   collective_cognition int not null default 0,
   reward_name varchar not null
 );
 --------------------------------------------------------------------------------
--- Junction Table: Collective Cognition Shared Users
+-- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table collective_cognition_reward_shared_user (
   collective_cognition_reward_id uuid not null references collective_cognition_reward(id) on delete cascade,
@@ -53,6 +54,7 @@ create policy "Allow all for owner/shared of custom" on collective_cognition_rew
     )
   )
 );
+create policy "Allow admin to manage all" on collective_cognition_reward for all using (is_admin()) with check (is_admin());
 alter table collective_cognition_reward_shared_user enable row level security;
 create policy "Allow all for owner" on collective_cognition_reward_shared_user for all using (
   auth.uid() = (
@@ -61,7 +63,7 @@ create policy "Allow all for owner" on collective_cognition_reward_shared_user f
     where id = collective_cognition_reward_id
   )
 );
-create policy "Allow admin to manage all" on collective_cognition_reward for all using (is_admin()) with check (is_admin());
+create policy "Allow admin to manage all" on collective_cognition_reward_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

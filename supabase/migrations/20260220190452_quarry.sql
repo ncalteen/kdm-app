@@ -11,7 +11,7 @@ create table quarry (
   -- Owner Data
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
-  -- Quarry Data
+  -- Data
   alternate_id uuid references quarry(id) on delete
   set null,
     monster_name varchar not null,
@@ -22,7 +22,7 @@ create table quarry (
   set null
 );
 --------------------------------------------------------------------------------
--- Junction Table: Quarry Shared Users
+-- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table quarry_shared_user (
   quarry_id uuid not null references quarry(id) on delete cascade,
@@ -61,6 +61,7 @@ create policy "Allow all for owner/shared of custom" on quarry for all using (
     )
   )
 );
+create policy "Allow admin to manage all" on quarry for all using (is_admin()) with check (is_admin());
 alter table quarry_shared_user enable row level security;
 create policy "Allow all for owner" on quarry_shared_user for all using (
   auth.uid() = (
@@ -69,7 +70,7 @@ create policy "Allow all for owner" on quarry_shared_user for all using (
     where id = quarry_id
   )
 );
-create policy "Allow admin to manage all" on quarry for all using (is_admin()) with check (is_admin());
+create policy "Allow admin to manage all" on quarry_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

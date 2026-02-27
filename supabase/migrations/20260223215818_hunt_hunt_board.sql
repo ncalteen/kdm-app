@@ -13,7 +13,7 @@ create table hunt_hunt_board (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Hunt Board Data
+  -- Data
   pos_1 hunt_event_type not null default 'BASIC',
   pos_2 hunt_event_type not null default 'BASIC',
   pos_3 hunt_event_type not null default 'BASIC',
@@ -32,6 +32,7 @@ create table hunt_hunt_board (
 --------------------------------------------------------------------------------
 alter table hunt_hunt_board enable row level security;
 create policy "Allow all for owner/shared" on hunt_hunt_board for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
+create policy "Allow admin to manage all" on hunt_hunt_board for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

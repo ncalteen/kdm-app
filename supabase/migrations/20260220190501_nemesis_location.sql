@@ -1,12 +1,13 @@
 --------------------------------------------------------------------------------
 -- Junction Table: Nemesis Location
+-- Represents the many-to-many relationship between nemeses and locations.
 --------------------------------------------------------------------------------
 create table nemesis_location (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Nemesis Location Data
+  -- Data
   location_id uuid not null references location(id) on delete cascade,
   nemesis_id uuid not null references nemesis(id) on delete cascade,
   -- Constraints
@@ -59,21 +60,7 @@ create policy "Allow all for owner/shared of nemesis" on nemesis_location for al
       )
   )
 );
-create policy "Allow admin to manage all" on nemesis_location for all using (
-  is_admin()
-  and exists (
-    select 1
-    from nemesis n
-    where n.id = nemesis_id
-  )
-) with check (
-  is_admin()
-  and exists (
-    select 1
-    from nemesis n
-    where n.id = nemesis_id
-  )
-);
+create policy "Allow admin to manage all" on nemesis_location for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

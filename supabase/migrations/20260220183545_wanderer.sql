@@ -12,7 +12,7 @@ create table wanderer (
   -- Owner Data
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
-  -- Wanderer Data
+  -- Data
   abilities_impairments varchar [] not null default '{}',
   accuracy int not null default 0,
   arc boolean not null default false,
@@ -38,7 +38,7 @@ create table wanderer (
   understanding int not null default 0
 );
 --------------------------------------------------------------------------------
--- Junction Table: Wanderer Shared Users
+-- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table wanderer_shared_user (
   wanderer_id uuid not null references wanderer(id) on delete cascade,
@@ -77,6 +77,7 @@ create policy "Allow all for owner/shared of custom" on wanderer for all using (
     )
   )
 );
+create policy "Allow admin to manage all" on wanderer for all using (is_admin()) with check (is_admin());
 alter table wanderer_shared_user enable row level security;
 create policy "Allow all for owner" on wanderer_shared_user for all using (
   auth.uid() = (
@@ -85,7 +86,7 @@ create policy "Allow all for owner" on wanderer_shared_user for all using (
     where id = wanderer_id
   )
 );
-create policy "Allow admin to manage all" on wanderer for all using (is_admin()) with check (is_admin());
+create policy "Allow admin to manage all" on wanderer_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

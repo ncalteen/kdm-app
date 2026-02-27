@@ -1,7 +1,9 @@
 --------------------------------------------------------------------------------
 -- Nemesis Level Table
 -- Each entry represents the level data for a nemesis, which will be used to
--- determine the attributes and traits of the nemesis during a showdown.
+-- determine the attributes and traits of the nemesis during a showdown. A
+-- single nemesis can have multiple level data entries for the same level,
+-- indicating a multi-monster showdown.
 --------------------------------------------------------------------------------
 create table nemesis_level (
   -- Metadata
@@ -14,7 +16,7 @@ create table nemesis_level (
   advanced_cards int not null default 0,
   legendary_cards int not null default 0,
   overtone_cards int not null default 0,
-  -- Nemesis Level Data
+  -- Base Data
   accuracy int not null default 0,
   accuracy_tokens int not null default 0,
   damage int not null default 0,
@@ -40,9 +42,7 @@ create table nemesis_level (
   survivor_statuses varchar [] not null default '{}',
   toughness int not null default 0,
   toughness_tokens int not null default 0,
-  traits varchar [] not null default '{}',
-  -- Constraints
-  unique (nemesis_id, level_number)
+  traits varchar [] not null default '{}'
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -91,21 +91,7 @@ create policy "Allow all for owner/shared of nemesis" on nemesis_level for all u
       )
   )
 );
-create policy "Allow admin to manage all" on nemesis_level for all using (
-  is_admin()
-  and exists (
-    select 1
-    from nemesis n
-    where n.id = nemesis_id
-  )
-) with check (
-  is_admin()
-  and exists (
-    select 1
-    from nemesis n
-    where n.id = nemesis_id
-  )
-);
+create policy "Allow admin to manage all" on nemesis_level for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

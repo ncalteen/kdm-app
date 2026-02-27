@@ -1,12 +1,13 @@
 --------------------------------------------------------------------------------
 -- Showdown Survivor Table
+-- Data related to a survivor during a showdown.
 --------------------------------------------------------------------------------
 create table showdown_survivor (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Showdown Survivor Data
+  -- Data
   activation_used boolean not null default false,
   accuracy_tokens integer not null default 0,
   bleeding_tokens integer not null default 0,
@@ -26,6 +27,7 @@ create table showdown_survivor (
   strength_tokens integer not null default 0,
   survival_tokens integer not null default 0,
   survivor_id uuid not null references survivor(id) on delete cascade,
+  -- Constraints
   unique (showdown_id, survivor_id)
 );
 --------------------------------------------------------------------------------
@@ -33,6 +35,7 @@ create table showdown_survivor (
 --------------------------------------------------------------------------------
 alter table showdown_survivor enable row level security;
 create policy "Allow all for owner/shared" on showdown_survivor for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
+create policy "Allow admin to manage all" on showdown_survivor for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

@@ -8,7 +8,7 @@ create table nemesis_timeline_year (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Nemesis Timeline Year Data
+  -- Data
   campaigns campaign_type [] not null default '{}',
   entries varchar [] not null default '{}',
   nemesis_id uuid not null references nemesis(id) on delete cascade,
@@ -63,21 +63,7 @@ create policy "Allow all for owner/shared of custom" on nemesis_timeline_year fo
       )
   )
 );
-create policy "Allow admin to manage all" on nemesis_timeline_year for all using (
-  is_admin()
-  and exists (
-    select 1
-    from nemesis n
-    where n.id = nemesis_id
-  )
-) with check (
-  is_admin()
-  and exists (
-    select 1
-    from nemesis n
-    where n.id = nemesis_id
-  )
-);
+create policy "Allow admin to manage all" on nemesis_timeline_year for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

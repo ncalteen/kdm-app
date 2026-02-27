@@ -1,12 +1,13 @@
 --------------------------------------------------------------------------------
 -- Junction Table: Quarry Location
+-- Represents the many-to-many relationship between quarries and locations
 --------------------------------------------------------------------------------
 create table quarry_location (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- Quarry Location Data
+  -- Data
   location_id uuid not null references location(id) on delete cascade,
   quarry_id uuid not null references quarry(id) on delete cascade,
   -- Constraints
@@ -59,21 +60,7 @@ create policy "Allow all for owner/shared of quarry" on quarry_location for all 
       )
   )
 );
-create policy "Allow admin to manage all" on quarry_location for all using (
-  is_admin()
-  and exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-  )
-) with check (
-  is_admin()
-  and exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-  )
-);
+create policy "Allow admin to manage all" on quarry_location for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
