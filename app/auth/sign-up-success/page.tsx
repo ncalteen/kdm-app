@@ -3,9 +3,17 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  CardTitle
+} from '@/components/ui/card'
 
+/**
+ * Sign-Up Success Page
+ *
+ * Informs the user that they have successfully signed up and prompts them to
+ * check their email for confirmation.
+ *
+ * @returns Sign-Up Success Page Component
+ */
 export default function Page() {
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
@@ -28,5 +36,5 @@ export default function Page() {
         </div>
       </div>
     </div>
-  );
+  )
 }

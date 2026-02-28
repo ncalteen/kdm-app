@@ -1,5 +1,13 @@
-import { LoginForm } from "@/components/login-form";
+import { LoginForm } from '@/components/login-form'
 
+/**
+ * Login Page
+ *
+ * This component renders the login page of the application. It uses the
+ * `LoginForm` component to display the login form to the user.
+ *
+ * @returns Login Page Component
+ */
 export default function Page() {
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
@@ -7,5 +15,5 @@ export default function Page() {
         <LoginForm />
       </div>
     </div>
-  );
+  )
 }
