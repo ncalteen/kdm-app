@@ -71,17 +71,6 @@ export function SignUpForm({
       if (signUpError) throw signUpError
       if (!data.user) throw new Error('User creation failed')
 
-      // Create the user settings entry
-      const { error: settingsError } = await supabase
-        .from('user_settings')
-        .insert({
-          unlocked_killenium_butcher: false,
-          unlocked_screaming_nukalope: false,
-          unlocked_white_gigalion: false,
-          user_id: data.user.id
-        })
-      if (settingsError) throw settingsError
-
       router.push('/auth/sign-up-success')
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')
