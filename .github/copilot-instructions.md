@@ -28,12 +28,31 @@ npm install
 - Use TypeScript's type system to ensure type safety and clarity
 - Keep functions focused and manageable
 - Use descriptive variable and function names that clearly convey their purpose
-- Use JSDoc comments to document functions, classes, and complex logic
 - When suggesting code changes, always opt for the most maintainable approach.
   Try your best to keep the code clean and follow "Don't Repeat Yourself" (DRY)
   principles
 - Avoid unnecessary complexity and always consider the long-term maintainability
   of the code
+- Use JSDoc comments to document functions, classes, and complex logic. This
+  helps other developers understand the purpose and usage of the code, and can
+  also improve the development experience by providing better autocomplete and
+  type information in IDEs.
+  - JSDoc comments should follow a standard format. For example:
+
+    ```ts
+    /**
+     * Calculates Rectangle Area
+     *
+     * Calculates area of a rectangle and returns the result.
+     *
+     * @param width Rectangle Width
+     * @param height Rectangle Height
+     * @returns Rectangle Area
+     */
+    function calculateArea(width: number, height: number): number {
+      return width * height
+    }
+    ```
 
 ## Object Schemas
 
