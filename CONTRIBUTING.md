@@ -20,7 +20,9 @@ All contributions are welcome and greatly appreciated!
    ```
 
    This will start a local instance of the database and output the connection
-   details.
+   details. The following are also started:
+   - [Supabase Studio](http://localhost:54323/)
+   - [Mailpit](http://localhost:54324/)
 
 1. Add the following environment variables to your `.env` file, using the
    connection details from the previous step:
