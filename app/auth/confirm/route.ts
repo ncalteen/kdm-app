@@ -23,8 +23,10 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient()
 
   // Exchange the PKCE authorization code for a session.
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-  if (error) redirect(`/auth/error?error=${error.message}`)
+  const { data, error: exchangeError } =
+    await supabase.auth.exchangeCodeForSession(code)
+  if (exchangeError)
+    redirect(`/auth/error?error=${encodeURIComponent(exchangeError.message)}`)
 
   // Check if the user settings entry exists already (in case the user hits the
   // confirmation link multiple times). If it does, skip creating a new one.
@@ -36,7 +38,7 @@ export async function GET(request: NextRequest) {
 
   // If the error is not "No rows found", redirect to the error page.
   if (fetchError && fetchError.code !== 'PGRST116')
-    redirect(`/auth/error?error=${fetchError.message}`)
+    redirect(`/auth/error?error=${encodeURIComponent(fetchError.message)}`)
 
   // If settings already exist, redirect to the next page.
   if (existingSettings) redirect(next)
@@ -51,7 +53,8 @@ export async function GET(request: NextRequest) {
     }
   ])
 
-  if (settingsError) redirect(`/auth/error?error=${settingsError.message}`)
+  if (settingsError)
+    redirect(`/auth/error?error=${encodeURIComponent(settingsError.message)}`)
 
   redirect(next)
 }

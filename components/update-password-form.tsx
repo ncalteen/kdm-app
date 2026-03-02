@@ -31,11 +31,11 @@ export function UpdatePasswordForm({
   const router = useRouter()
 
   /**
-   * Handle forgot password form submission
+   * Handle update password form submission
    *
    * @param e React form event
    */
-  const handleForgotPassword = async (e: FormEvent) => {
+  const handleUpdatePassword = async (e: FormEvent) => {
     e.preventDefault()
     const supabase = createClient()
     setIsLoading(true)
@@ -65,7 +65,7 @@ export function UpdatePasswordForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleForgotPassword}>
+          <form onSubmit={handleUpdatePassword}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="password">New password</Label>
