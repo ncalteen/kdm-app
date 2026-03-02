@@ -654,7 +654,7 @@ export function useFetch<T>(url: string): UseFetchResult<T> {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err : new Error('Unknown error'))
+          setError(err instanceof Error ? err : new Error('Unknown Error'))
         }
       } finally {
         if (!cancelled) {
