@@ -1,109 +1,117 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Survivor and Settlement Tracker for Kingdom Death: Monster
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+![Continuous Integration](https://github.com/ncalteen/kdm-app/actions/workflows/continuous-integration.yml/badge.svg)
+![Continuous Delivery](https://github.com/ncalteen/kdm-app/actions/workflows/continuous-delivery.yml/badge.svg)
+![Linter](https://github.com/ncalteen/kdm-app/actions/workflows/linter.yml/badge.svg)
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+_In a place of stone faces, nameless survivors stand together. They have
+nothing. Only a lantern to light their struggle._
 
-## Features
+[Kingdom Death: Monster](https://kingdomdeath.com/) is cooperative game for up
+to 4 players. Play survivors ekeing out an existence in the overwhelming
+darkness. Your story unfolds in a campaign that is played over many nights at
+the game table or ends quickly in bitter defeat.
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+Every decision matters. Every space moved, every resource spent, every governing
+principle chosen - all have lasting impact on this highly replayable and
+challenging game.
 
-## Demo
+## About
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+This project is a [Next.js](https://nextjs.org/) web application that provides a
+simple UI for keeping track of settlment and survivor information in Kingdom
+Death: Monster. It is designed to be lightweight and easy to use, allowing
+players to enjoy the game and save some trees.
 
-## Deploy to Vercel
+Try it out here:
+[`https://ncalteen.github.io-app`](https://ncalteen.github.io/kdm-app)
 
-Vercel deployment will guide you through creating a Supabase account and project.
+## Storage
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+This site makes use of your browser's local storage to save your data. This
+means that you can close the tab or even your browser and come back later to
+find your data still there. However, this also means that if you clear your
+browser's local storage, your data will be lost. If you want to back up your
+data, use the `Preserve Records` button.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+This will download a JSON file containing all of your settlements. You can then
+upload this file later to restore your settlements at any time!
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+## Support
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+This project is open source and free to use. It is maintained on a best-effort
+basis, with no guarantees.
 
-## Clone and run locally
+If you have any questions, suggestions, or problems, please feel free to
+[open an issue](https://github.com/ncalteen/kdm-app/issues).
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+If you like this project and want to support its development, please consider
+[buying me a coffee](https://buymeacoffee.com/ncalteenw)!
 
-2. Create a Next.js app using the Supabase Starter template npx command
+[![Buy Me A Coffee](./img/bmc_qr.png)](https://www.buymeacoffee.com/ncalteenw)
+
+### Mobile Support
+
+Mobile support is currently limited. The site is designed to be responsive and
+(mostly) mobile-friendly, but some features may not work as expected on smaller
+screens. If you encounter any issues, please
+[open an issue](https://github.com/ncalteen/kdm-app/issues/new)! To date, the
+project has been tested on the following devices:
+
+- iPhone XR
+- iPhone 14 Pro Max
+- Pixel 7
+- iPad Mini
+- iPad Pro
+
+## Development
+
+### Prerequisites
+
+[Node.js](https://nodejs.org/en)
+
+- See [.node-version](./.node-version) for the current version being used by
+  this project.
+
+### Getting Started
+
+This project can be run locally for development and testing. Since it is a
+static site, you can run it practically anywhere!
+
+To get started, simply follow the below steps:
+
+1. Fork this repository
+1. Install the dependencies
 
    ```bash
-   npx create-next-app --example with-supabase with-supabase-app
+   npm install
    ```
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
-
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
-
-3. Use `cd` to change into the app's directory
-
-   ```bash
-   cd with-supabase-app
-   ```
-
-4. Rename `.env.example` to `.env.local` and update the following:
-
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
-
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
-
-5. You can now run the Next.js local development server:
+1. Start the development server
 
    ```bash
    npm run dev
    ```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+1. Open your browser and navigate to
+   [`http://localhost:3000`](http://localhost:3000)
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+## Disclaimer
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+This project is not affiliated with or endorsed by Kingdom Death: Monster or any
+of its creators. It is a fan-made project created for personal use and
+entertainment purposes only. All rights to Kingdom Death: Monster and its
+associated materials are owned by their respective copyright holders. This
+project is intended to be a tool for players to enhance their experience with
+the game and is not intended for commercial use or distribution.
 
-## Feedback and issues
+If, at any point in time, the creators of Kingdom Death: Monster would like this
+project to be taken down, please contact me at `@hollow_forest` in the
+[Lantern's Reign Discord](https://discord.gg/kingdomdeath) and I will remove it
+immediately. I have no intention of profiting from this project or infringing on
+any copyrights. I simply want to provide a tool for players to use and enjoy.
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+## License
 
-## More Supabase examples
-
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE)
+file for details.

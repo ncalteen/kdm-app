@@ -1,12 +1,21 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Suspense } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Suspense } from 'react'
 
+/**
+ * Error Content
+ *
+ * This component is responsible for displaying the error message based on the
+ * search parameters.
+ *
+ * @param props Error Content Properties
+ * @returns Error Content Component
+ */
 async function ErrorContent({
-  searchParams,
+  searchParams
 }: {
-  searchParams: Promise<{ error: string }>;
+  searchParams: Promise<{ error: string }>
 }) {
-  const params = await searchParams;
+  const params = await searchParams
 
   return (
     <>
@@ -20,13 +29,22 @@ async function ErrorContent({
         </p>
       )}
     </>
-  );
+  )
 }
 
+/**
+ * Error Page
+ *
+ * This page is responsible for displaying the error message when the user is
+ * redirected to the error page after a failed email confirmation attempt.
+ *
+ * @param props Error Page Properties
+ * @returns Error Page Component
+ */
 export default function Page({
-  searchParams,
+  searchParams
 }: {
-  searchParams: Promise<{ error: string }>;
+  searchParams: Promise<{ error: string }>
 }) {
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
@@ -47,5 +65,5 @@ export default function Page({
         </div>
       </div>
     </div>
-  );
+  )
 }

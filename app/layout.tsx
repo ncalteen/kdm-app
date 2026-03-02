@@ -1,41 +1,49 @@
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import "./globals.css";
-
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
-
-export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
-};
+import '@/app/globals.css'
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
+import { LocalProvider } from '@/contexts/local-context'
+import { Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import { ReactElement, ReactNode } from 'react'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  display: "swap",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin']
+})
 
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin']
+})
+
+export const metadata: Metadata = {
+  title: 'Kingdom Death: Monster - Record Keeper'
+}
+
+/**
+ * Root Layout Component
+ *
+ * @param props Component Properties
+ * @returns Root Layout Component
+ */
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
-  children: React.ReactNode;
-}>) {
+  children: ReactNode
+}>): ReactElement {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
-        >
-          {children}
+          disableTransitionOnChange>
+          <LocalProvider>{children}</LocalProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
