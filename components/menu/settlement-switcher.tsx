@@ -82,7 +82,7 @@ export function SettlementSwitcher({
     getSettlementsForUser()
       .then((data) => setSettlements(data))
       .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Unknown error')
+        setError(err instanceof Error ? err.message : 'Unknown Error')
       )
       .finally(() => setIsLoading(false))
   }, [])
@@ -99,13 +99,18 @@ export function SettlementSwitcher({
       getHuntId(settlementId),
       getSettlementPhaseId(settlementId),
       getShowdownId(settlementId)
-    ]).then(([huntId, settlementPhaseId, showdownId]) => {
-      setSelectedSettlementId(settlementId)
-      setSelectedHuntId(huntId)
-      setSelectedSettlementPhaseId(settlementPhaseId)
-      setSelectedShowdownId(showdownId)
-      setSelectedSurvivorId(null)
-    })
+    ])
+      .then(([huntId, settlementPhaseId, showdownId]) => {
+        setSelectedSettlementId(settlementId)
+        setSelectedHuntId(huntId)
+        setSelectedSettlementPhaseId(settlementPhaseId)
+        setSelectedShowdownId(showdownId)
+        setSelectedSurvivorId(null)
+      })
+      .catch((err: unknown) => {
+        console.error('Settlement Select Error:', err)
+        setError(err instanceof Error ? err.message : 'Unknown Error')
+      })
   }
 
   if (isLoading)
@@ -155,7 +160,7 @@ export function SettlementSwitcher({
               </div>
 
               <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-sm">
+                <span className="text-sm">
                   {selectedSettlementId
                     ? settlements.find((s) => s.id === selectedSettlementId)
                         ?.settlement_name || 'Unknown Settlement'
@@ -179,8 +184,9 @@ export function SettlementSwitcher({
             {/* Always display the create settlement option */}
             <DropdownMenuItem
               onSelect={() => {
-                setSelectedSettlementId(null)
                 setSelectedHuntId(null)
+                setSelectedSettlementId(null)
+                setSelectedSettlementPhaseId(null)
                 setSelectedShowdownId(null)
                 setSelectedSurvivorId(null)
               }}>
