@@ -27,13 +27,21 @@ export async function GET(request: NextRequest) {
 
   if (error) redirect(`/auth/error?error=${error.message}`)
 
-  // Create the user settings entry
-  const { error: settingsError } = await supabase.from('user_settings').insert({
-    unlocked_killenium_butcher: false,
-    unlocked_screaming_nukalope: false,
-    unlocked_white_gigalion: false,
-    user_id: data.user.id
-  })
+  // Create the user settings entry (idempotent: ignore if user_settings already exists)
+  const { error: settingsError } = await supabase
+    .from('user_settings')
+    .insert(
+      {
+        unlocked_killenium_butcher: false,
+        unlocked_screaming_nukalope: false,
+        unlocked_white_gigalion: false,
+        user_id: data.user.id
+      },
+      {
+        onConflict: 'user_id',
+        ignoreDuplicates: true
+      }
+    )
   if (settingsError) redirect(`/auth/error?error=${settingsError.message}`)
 
   redirect(next)
