@@ -1,7 +1,6 @@
 'use client'
 
 import { AppSidebar } from '@/components/app-sidebar'
-import { UserSettingsCard } from '@/components/settlement/user-settings'
 import { SiteHeader } from '@/components/side-header'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
@@ -130,7 +129,6 @@ function MainPage(): ReactElement {
               setSelectedSurvivorId={setSelectedSurvivorId}
               setSelectedTab={setSelectedTab}
             />
-            <UserSettingsCard />
           </div>
         </div>
       </SidebarProvider>
