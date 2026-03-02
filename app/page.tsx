@@ -6,7 +6,7 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { ReactElement, Suspense, useEffect, useRef } from 'react'
+import { ReactElement, Suspense, useEffect, useRef, useState } from 'react'
 
 /**
  * Main Page Component
@@ -48,8 +48,9 @@ function MainPageLoading(): ReactElement {
  */
 function MainPageContent(): ReactElement {
   const router = useRouter()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  // Track if the component is mounted and loading state
+  // Track if the component is mounted
   const isMounted = useRef(false)
 
   // Verify authentication; redirect to login if unauthenticated
@@ -60,13 +61,17 @@ function MainPageContent(): ReactElement {
 
     supabase.auth.getUser().then(({ data, error }) => {
       if (!isMounted.current) return
+
       if (error || !data?.user) router.replace('/auth/login')
+      else setIsAuthenticated(true)
     })
 
     return () => {
       isMounted.current = false
     }
   }, [router])
+
+  if (!isAuthenticated) return <MainPageLoading />
 
   return <MainPage />
 }
