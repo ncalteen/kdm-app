@@ -45,7 +45,7 @@ export function UpdatePasswordForm({
       const { error: updateError } = await supabase.auth.updateUser({
         password
       })
-      if (updateError) throw error
+      if (updateError) throw updateError
 
       router.push('/')
     } catch (error: unknown) {
