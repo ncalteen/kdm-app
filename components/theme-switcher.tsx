@@ -10,18 +10,17 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Laptop, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
+import { useTransition } from 'react'
 
 const ThemeSwitcher = () => {
-  const [mounted, setMounted] = useState(false)
+  const [, startTransition] = useTransition()
   const { theme, setTheme } = useTheme()
 
-  // useEffect only runs on the client, so now we can safely show the UI
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) {
+  // Use startTransition to defer the theme value update and avoid cascading
+  // renders
+  if (theme === undefined) {
+    // Wait for theme to be defined by next-themes
+    startTransition(() => {})
     return null
   }
 
