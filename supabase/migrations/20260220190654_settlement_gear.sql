@@ -8,8 +8,9 @@ create table settlement_gear (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  settlement_id uuid not null references settlement(id) on delete cascade,
-  gear_id uuid not null references gear(id) on delete cascade
+  gear_id uuid not null references gear(id) on delete cascade,
+  quantity integer not null default 0,
+  settlement_id uuid not null references settlement(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies

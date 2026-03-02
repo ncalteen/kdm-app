@@ -18,6 +18,8 @@ create table user_settings (
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table user_settings enable row level security;
+create policy "Allow insert for authenticated users" on user_settings for
+insert with check (auth.uid() = user_id);
 create policy "Users can only access their own settings" on user_settings for all using (auth.uid() = user_id);
 create policy "Allow admin to manage all" on user_settings for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------

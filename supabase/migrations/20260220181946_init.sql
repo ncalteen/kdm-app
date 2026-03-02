@@ -59,11 +59,32 @@ create type resource_category as enum ('BASIC', 'MONSTER', 'STRANGE', 'VERMIN');
 -- Resource Type
 create type resource_type as enum (
   'BONE',
+  'CLOTH',
+  'CONSUMABLE',
+  'COPPER',
+  'DEATHMETAL',
+  'DIAMOND',
+  'DUNG',
+  'ELASTOMER',
+  'EMOTION',
+  'FISH',
+  'FLOWER',
+  'FRUIT',
+  'GLASS',
   'HIDE',
+  'INDOMITABLE',
+  'IRON',
   'ORGAN',
+  'OTHER',
+  'PERFECT',
   'SCRAP',
+  'SILK',
+  'SKULL',
+  'STONE',
   'HERB',
-  'VERMIN'
+  'VEGETABLE',
+  'VERMIN',
+  'VIRID'
 );
 -- Settlement Phase Step
 create type settlement_phase_step as enum (
