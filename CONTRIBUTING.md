@@ -27,6 +27,8 @@ All contributions are welcome and greatly appreciated!
 1. Add the following environment variables to your `.env` file, using the
    connection details from the previous step:
 
+   <!-- secretlint-disable -->
+
    ```env
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="<your-publishable-key>"
    NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
@@ -40,6 +42,8 @@ All contributions are welcome and greatly appreciated!
    SUPABASE_SECRET_KEY="<your-secret-key>"
    SUPABASE_URL="http://127.0.0.1:54321"
    ```
+
+   <!-- secretlint-enable -->
 
 1. Start your development server
 
@@ -93,7 +97,8 @@ to the database schema, please follow these steps:
 
    ```bash
    # If you want to generate types directly from the remote database
-   npx supabase gen types typescript --project-id "$PROJECT_REF" --schema public > lib/database.types.ts
+   npx supabase gen types typescript \
+      --project-id "$PROJECT_REF" --schema public > lib/database.types.ts
 
    # If you want to generate types from your local database
    npx supabase gen types typescript --local > lib/database.types.ts

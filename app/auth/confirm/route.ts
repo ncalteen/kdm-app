@@ -24,24 +24,33 @@ export async function GET(request: NextRequest) {
 
   // Exchange the PKCE authorization code for a session.
   const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
   if (error) redirect(`/auth/error?error=${error.message}`)
 
-  // Create the user settings entry (idempotent: ignore if user_settings already exists)
-  const { error: settingsError } = await supabase
+  // Check if the user settings entry exists already (in case the user hits the
+  // confirmation link multiple times). If it does, skip creating a new one.
+  const { data: existingSettings, error: fetchError } = await supabase
     .from('user_settings')
-    .insert(
-      {
-        unlocked_killenium_butcher: false,
-        unlocked_screaming_nukalope: false,
-        unlocked_white_gigalion: false,
-        user_id: data.user.id
-      },
-      {
-        onConflict: 'user_id',
-        ignoreDuplicates: true
-      }
-    )
+    .select('user_id')
+    .eq('user_id', data.user.id)
+    .single()
+
+  // If the error is not "No rows found", redirect to the error page.
+  if (fetchError && fetchError.code !== 'PGRST116')
+    redirect(`/auth/error?error=${fetchError.message}`)
+
+  // If settings already exist, redirect to the next page.
+  if (existingSettings) redirect(next)
+
+  // Create the settings for the new user.
+  const { error: settingsError } = await supabase.from('user_settings').insert([
+    {
+      unlocked_killenium_butcher: false,
+      unlocked_screaming_nukalope: false,
+      unlocked_white_gigalion: false,
+      user_id: data.user.id
+    }
+  ])
+
   if (settingsError) redirect(`/auth/error?error=${settingsError.message}`)
 
   redirect(next)

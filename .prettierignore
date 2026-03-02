@@ -22,3 +22,6 @@ favicon.ico
 *.png
 *.svg
 lib/database.types.ts
+*.sql
+*.env*
+*.toml
