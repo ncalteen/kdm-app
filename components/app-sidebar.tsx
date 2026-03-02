@@ -181,7 +181,6 @@ export function AppSidebar({
 }: AppSidebarProps): ReactElement {
   const [navItems, setNavItems] = useState(baseNavPrimary)
   const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     // Get the settlement's campaign type and survivor type
@@ -210,20 +209,26 @@ export function AppSidebar({
 
         setNavItems(newNavItems)
       })
-      .catch((err: unknown) => {
+      .catch((err: unknown) =>
         setError(
           err instanceof Error
-            ? `Failed to load settlement data: ${err.message}`
-            : 'Failed to load settlement data'
+            ? `Settlement Load Error: ${err.message}`
+            : 'Settlement Load Error: Unknown Error'
         )
-      })
-      .finally(() => setIsLoading(false))
+      )
   }, [selectedSettlementId])
+
+  if (error)
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    )
 
   return (
     <Sidebar
       collapsible="icon"
-      className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+      className="top-(--header-height) !h-[calc(100svh-var(--header-height))]"
       {...props}>
       <SidebarHeader>
         <SettlementSwitcher
