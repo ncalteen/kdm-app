@@ -18,10 +18,10 @@ export async function getCampaignType(
   const supabase = createClient()
 
   const { data, error } = await supabase
-    .from('settlements')
+    .from('settlement')
     .select('campaign_type')
     .eq('id', settlementId)
-    .single()
+    .maybeSingle()
 
   if (error)
     throw new Error(`Error Fetching Settlement Campaign Type: ${error.message}`)
@@ -45,10 +45,10 @@ export async function getSurvivorType(
   const supabase = createClient()
 
   const { data, error } = await supabase
-    .from('settlements')
+    .from('settlement')
     .select('survivor_type')
     .eq('id', settlementId)
-    .single()
+    .maybeSingle()
 
   if (error)
     throw new Error(`Error Fetching Settlement Survivor Type: ${error.message}`)
@@ -75,7 +75,7 @@ export async function getHuntId(
     .from('hunt')
     .select('id')
     .eq('settlement_id', settlementId)
-    .single()
+    .maybeSingle()
 
   if (error)
     throw new Error(`Error Fetching Settlement Hunt ID: ${error.message}`)
@@ -102,7 +102,7 @@ export async function getShowdownId(
     .from('showdown')
     .select('id')
     .eq('settlement_id', settlementId)
-    .single()
+    .maybeSingle()
 
   if (error)
     throw new Error(`Error Fetching Settlement Showdown ID: ${error.message}`)
@@ -129,7 +129,7 @@ export async function getSettlementPhaseId(
     .from('settlement_phase')
     .select('id')
     .eq('settlement_id', settlementId)
-    .single()
+    .maybeSingle()
 
   if (error)
     throw new Error(
