@@ -20,8 +20,6 @@ create table settlement (
   survival_limit int not null default 1 check (survival_limit >= 0),
   survivor_type survivor_type not null default 'CORE',
   uses_scouts boolean not null default false,
-  -- Arc Specific Data
-  collective_cognition int not null default 0,
   -- People of the Lantern/Sun Specific Data
   lantern_research int not null default 0,
   monster_volumes varchar [] not null default '{}'
