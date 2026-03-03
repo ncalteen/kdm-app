@@ -1,7 +1,7 @@
 -- Aenas State
 create type aenas_state as enum ('Content', 'Hungry');
 -- Ambush Type
-create type ambush_type as enum ('SURVIVORS', 'MONSTER');
+create type ambush_type as enum ('SURVIVORS', 'MONSTER', 'NONE');
 -- Campaign Type
 create type campaign_type as enum (
   'PEOPLE_OF_THE_DREAM_KEEPER',
