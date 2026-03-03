@@ -23,6 +23,23 @@ create table fighting_art_shared_user (
   primary key (fighting_art_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
+-- Security Definer Function to Check Membership
+--------------------------------------------------------------------------------
+create or replace function is_fighting_art_member(p_id uuid) returns boolean language sql stable security definer as $$
+select exists (
+    select 1
+    from fighting_art
+    where id = p_id
+      and user_id = auth.uid()
+  )
+  or exists (
+    select 1
+    from fighting_art_shared_user
+    where fighting_art_id = p_id
+      and shared_user_id = auth.uid()
+  );
+$$;
+--------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table fighting_art enable row level security;
@@ -33,36 +50,14 @@ select using (
   );
 create policy "Allow all for owner/shared of custom" on fighting_art for all using (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from fighting_art_shared_user su
-      where su.fighting_art_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_fighting_art_member(id)
 ) with check (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from fighting_art_shared_user su
-      where su.fighting_art_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_fighting_art_member(id)
 );
 create policy "Allow admin to manage all" on fighting_art for all using (is_admin()) with check (is_admin());
 alter table fighting_art_shared_user enable row level security;
-create policy "Allow all for owner" on fighting_art_shared_user for all using (
-  auth.uid() = (
-    select user_id
-    from fighting_art
-    where id = fighting_art_id
-  )
-);
+create policy "Allow all for owner" on fighting_art_shared_user for all using (is_fighting_art_member(fighting_art_id));
 create policy "Allow admin to manage all" on fighting_art_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes

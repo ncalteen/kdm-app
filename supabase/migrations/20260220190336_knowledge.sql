@@ -23,6 +23,23 @@ create table knowledge_shared_user (
   primary key (knowledge_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
+-- Security Definer Function to Check Membership
+--------------------------------------------------------------------------------
+create or replace function is_knowledge_member(p_id uuid) returns boolean language sql stable security definer as $$
+select exists (
+    select 1
+    from knowledge
+    where id = p_id
+      and user_id = auth.uid()
+  )
+  or exists (
+    select 1
+    from knowledge_shared_user
+    where knowledge_id = p_id
+      and shared_user_id = auth.uid()
+  );
+$$;
+--------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table knowledge enable row level security;
@@ -33,36 +50,14 @@ select using (
   );
 create policy "Allow all for owner/shared of custom" on knowledge for all using (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from knowledge_shared_user su
-      where su.knowledge_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_knowledge_member(id)
 ) with check (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from knowledge_shared_user su
-      where su.knowledge_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_knowledge_member(id)
 );
 create policy "Allow admin to manage all" on knowledge for all using (is_admin()) with check (is_admin());
 alter table knowledge_shared_user enable row level security;
-create policy "Allow all for owner" on knowledge_shared_user for all using (
-  auth.uid() = (
-    select user_id
-    from knowledge
-    where id = knowledge_id
-  )
-);
+create policy "Allow all for owner" on knowledge_shared_user for all using (is_knowledge_member(knowledge_id));
 create policy "Allow admin to manage all" on knowledge_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes

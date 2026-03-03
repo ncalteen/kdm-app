@@ -24,6 +24,23 @@ create table resource_shared_user (
   primary key (resource_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
+-- Security Definer Function to Check Membership
+--------------------------------------------------------------------------------
+create or replace function is_resource_member(p_id uuid) returns boolean language sql stable security definer as $$
+select exists (
+    select 1
+    from resource
+    where id = p_id
+      and user_id = auth.uid()
+  )
+  or exists (
+    select 1
+    from resource_shared_user
+    where resource_id = p_id
+      and shared_user_id = auth.uid()
+  );
+$$;
+--------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table resource enable row level security;
@@ -34,36 +51,14 @@ select using (
   );
 create policy "Allow all for owner/shared of custom" on resource for all using (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from resource_shared_user su
-      where su.resource_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_resource_member(id)
 ) with check (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from resource_shared_user su
-      where su.resource_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_resource_member(id)
 );
 create policy "Allow admin to manage all" on resource for all using (is_admin()) with check (is_admin());
 alter table resource_shared_user enable row level security;
-create policy "Allow all for owner" on resource_shared_user for all using (
-  auth.uid() = (
-    select user_id
-    from resource
-    where id = resource_id
-  )
-);
+create policy "Allow all for owner" on resource_shared_user for all using (is_resource_member(resource_id));
 create policy "Allow admin to manage all" on resource_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes

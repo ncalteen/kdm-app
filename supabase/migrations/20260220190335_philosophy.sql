@@ -23,6 +23,23 @@ create table philosophy_shared_user (
   primary key (philosophy_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
+-- Security Definer Function to Check Membership
+--------------------------------------------------------------------------------
+create or replace function is_philosophy_member(p_id uuid) returns boolean language sql stable security definer as $$
+select exists (
+    select 1
+    from philosophy
+    where id = p_id
+      and user_id = auth.uid()
+  )
+  or exists (
+    select 1
+    from philosophy_shared_user
+    where philosophy_id = p_id
+      and shared_user_id = auth.uid()
+  );
+$$;
+--------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table philosophy enable row level security;
@@ -33,36 +50,14 @@ select using (
   );
 create policy "Allow all for owner/shared of custom" on philosophy for all using (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from philosophy_shared_user su
-      where su.philosophy_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_philosophy_member(id)
 ) with check (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from philosophy_shared_user su
-      where su.philosophy_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_philosophy_member(id)
 );
 create policy "Allow admin to manage all" on philosophy for all using (is_admin()) with check (is_admin());
 alter table philosophy_shared_user enable row level security;
-create policy "Allow all for owner" on philosophy_shared_user for all using (
-  auth.uid() = (
-    select user_id
-    from philosophy
-    where id = philosophy_id
-  )
-);
+create policy "Allow all for owner" on philosophy_shared_user for all using (is_philosophy_member(philosophy_id));
 create policy "Allow admin to manage all" on philosophy_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes

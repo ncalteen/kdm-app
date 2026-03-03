@@ -22,6 +22,23 @@ create table innovation_shared_user (
   primary key (innovation_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
+-- Security Definer Function to Check Membership
+--------------------------------------------------------------------------------
+create or replace function is_innovation_member(p_id uuid) returns boolean language sql stable security definer as $$
+select exists (
+    select 1
+    from innovation
+    where id = p_id
+      and user_id = auth.uid()
+  )
+  or exists (
+    select 1
+    from innovation_shared_user
+    where innovation_id = p_id
+      and shared_user_id = auth.uid()
+  );
+$$;
+--------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table innovation enable row level security;
@@ -32,36 +49,14 @@ select using (
   );
 create policy "Allow all for owner/shared of custom" on innovation for all using (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from innovation_shared_user su
-      where su.innovation_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_innovation_member(id)
 ) with check (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from innovation_shared_user su
-      where su.innovation_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_innovation_member(id)
 );
 create policy "Allow admin to manage all" on innovation for all using (is_admin()) with check (is_admin());
 alter table innovation_shared_user enable row level security;
-create policy "Allow all for owner" on innovation_shared_user for all using (
-  auth.uid() = (
-    select user_id
-    from innovation
-    where id = innovation_id
-  )
-);
+create policy "Allow all for owner" on innovation_shared_user for all using (is_innovation_member(innovation_id));
 create policy "Allow admin to manage all" on innovation_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes

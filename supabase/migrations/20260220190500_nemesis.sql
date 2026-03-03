@@ -29,6 +29,23 @@ create table nemesis_shared_user (
   primary key (nemesis_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
+-- Security Definer Function to Check Membership
+--------------------------------------------------------------------------------
+create or replace function is_nemesis_member(p_id uuid) returns boolean language sql stable security definer as $$
+select exists (
+    select 1
+    from nemesis
+    where id = p_id
+      and user_id = auth.uid()
+  )
+  or exists (
+    select 1
+    from nemesis_shared_user
+    where nemesis_id = p_id
+      and shared_user_id = auth.uid()
+  );
+$$;
+--------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table nemesis enable row level security;
@@ -39,36 +56,14 @@ select using (
   );
 create policy "Allow all for owner/shared of custom" on nemesis for all using (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from nemesis_shared_user su
-      where su.nemesis_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_nemesis_member(id)
 ) with check (
   custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from nemesis_shared_user su
-      where su.nemesis_id = id
-        and su.shared_user_id = auth.uid()
-    )
-  )
+  and is_nemesis_member(id)
 );
 create policy "Allow admin to manage all" on nemesis for all using (is_admin()) with check (is_admin());
 alter table nemesis_shared_user enable row level security;
-create policy "Allow all for owner" on nemesis_shared_user for all using (
-  auth.uid() = (
-    select user_id
-    from nemesis
-    where id = nemesis_id
-  )
-);
+create policy "Allow all for owner" on nemesis_shared_user for all using (is_nemesis_member(nemesis_id));
 create policy "Allow admin to manage all" on nemesis_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
