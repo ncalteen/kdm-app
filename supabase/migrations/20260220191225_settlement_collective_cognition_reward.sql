@@ -8,11 +8,10 @@ create table settlement_collective_cognition_reward (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  collective_cognition int not null default 0,
-  reward_name varchar not null,
+  collective_cognition_reward_id uuid not null references collective_cognition_reward(id) on delete cascade,
   settlement_id uuid not null references settlement(id) on delete cascade,
   unlocked boolean not null default false,
-  unique (settlement_id, reward_name)
+  unique (collective_cognition_reward_id, settlement_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
