@@ -21,6 +21,7 @@ create table showdown_survivor (
   movement_used boolean not null default false,
   notes text not null default '',
   priority_target boolean not null default false,
+  scout boolean not null default false,
   settlement_id uuid not null references settlement(id) on delete cascade,
   showdown_id uuid not null references showdown(id) on delete cascade,
   speed_tokens integer not null default 0,

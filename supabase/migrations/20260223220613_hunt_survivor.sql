@@ -15,6 +15,7 @@ create table hunt_survivor (
   luck_tokens integer not null default 0,
   movement_tokens integer not null default 0,
   notes text not null default '',
+  scout boolean not null default false,
   settlement_id uuid not null references settlement(id) on delete cascade,
   speed_tokens integer not null default 0,
   strength_tokens integer not null default 0,

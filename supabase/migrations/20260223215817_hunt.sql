@@ -10,10 +10,8 @@ create table hunt (
   -- Data
   monster_level int not null,
   monster_position int not null default 12,
-  scout_id uuid references survivor(id) on delete
-  set null,
-    settlement_id uuid references settlement(id) on delete cascade,
-    survivor_position int not null default 0
+  settlement_id uuid references settlement(id) on delete cascade,
+  survivor_position int not null default 0
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -25,7 +23,6 @@ create policy "Allow admin to manage all" on hunt for all using (is_admin()) wit
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_hunt_settlement on hunt(settlement_id);
-create index idx_hunt_scout on hunt(scout_id);
 --------------------------------------------------------------------------------
 -- Triggers
 --------------------------------------------------------------------------------

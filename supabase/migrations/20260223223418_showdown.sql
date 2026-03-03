@@ -9,13 +9,11 @@ create table showdown (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  ambush boolean not null default false,
+  ambush ambush_type not null default 'NONE',
   monster_level int not null,
-  scout_id uuid references survivor(id) on delete
-  set null,
-    settlement_id uuid references settlement(id) on delete cascade,
-    showdown_type showdown_type not null default 'REGULAR',
-    turn showdown_turn not null default 'MONSTER'
+  settlement_id uuid references settlement(id) on delete cascade,
+  showdown_type showdown_type not null default 'REGULAR',
+  turn showdown_turn not null default 'MONSTER'
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -27,7 +25,6 @@ create policy "Allow admin to manage all" on showdown for all using (is_admin())
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_showdown_settlement on showdown(settlement_id);
-create index idx_showdown_scout on showdown(scout_id);
 --------------------------------------------------------------------------------
 -- Triggers
 --------------------------------------------------------------------------------
