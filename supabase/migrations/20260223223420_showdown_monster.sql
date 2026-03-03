@@ -8,6 +8,8 @@ create table showdown_monster (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
+  accuracy int not null default 0,
+  accuracy_tokens int not null default 0,
   ai_card_drawn boolean not null default false,
   ai_deck_id uuid not null references showdown_ai_deck(id) on delete cascade,
   ai_deck_remaining int not null default 0,
