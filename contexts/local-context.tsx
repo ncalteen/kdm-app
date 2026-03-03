@@ -11,12 +11,14 @@ import {
 } from 'react'
 
 const newLocal = {
-  selectedHuntId: undefined,
-  selectedSettlementId: undefined,
-  selectedSettlementPhaseId: undefined,
-  selectedShowdownId: undefined,
-  selectedSurvivorId: undefined,
-  selectedTab: undefined
+  selectedHuntId: null,
+  selectedHuntMonsterIndex: 0,
+  selectedSettlementId: null,
+  selectedSettlementPhaseId: null,
+  selectedShowdownId: null,
+  selectedShowdownMonsterIndex: 0,
+  selectedSurvivorId: null,
+  selectedTab: null
 }
 
 /**
