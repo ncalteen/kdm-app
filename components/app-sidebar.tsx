@@ -5,14 +5,20 @@ import { NavMain } from '@/components/nav-main'
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail
 } from '@/components/ui/sidebar'
 import { getCampaignType, getSurvivorType } from '@/lib/dal/settlement'
 import { CampaignType, SurvivorType, TabType } from '@/lib/enums'
+import { generateSeedData } from '@/lib/seed'
 import {
+  DatabaseIcon,
   HourglassIcon,
   LightbulbIcon,
   NotebookPenIcon,
@@ -274,6 +280,22 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarRail />
+
+      {process.env.NODE_ENV === 'development' && (
+        <SidebarFooter>
+          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+            <SidebarGroupLabel>Developer</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={generateSeedData}>
+                  <DatabaseIcon />
+                  <span>Generate Seed Data</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarFooter>
+      )}
     </Sidebar>
   )
 }
