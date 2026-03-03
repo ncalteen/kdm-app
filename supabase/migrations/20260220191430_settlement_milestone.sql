@@ -8,12 +8,11 @@ create table settlement_milestone (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  milestone_name varchar not null,
   complete boolean not null default false,
-  event_name varchar not null default '',
+  milestone_id uuid not null references milestone(id) on delete cascade,
   settlement_id uuid not null references settlement(id) on delete cascade,
   -- Constraints
-  unique (settlement_id, milestone_name)
+  unique (settlement_id, milestone_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies

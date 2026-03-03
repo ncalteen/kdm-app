@@ -8,14 +8,12 @@ create table settlement_principle (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  option_1_name varchar not null,
   option_1_selected boolean not null default false,
-  option_2_name varchar not null,
   option_2_selected boolean not null default false,
-  principle_name varchar not null,
+  principle_id uuid not null references principle(id) on delete cascade,
   settlement_id uuid not null references settlement (id) on delete cascade,
   -- Constraints
-  unique (settlement_id, principle_name)
+  unique (settlement_id, principle_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
