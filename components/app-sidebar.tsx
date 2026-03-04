@@ -21,6 +21,7 @@ import {
   DatabaseIcon,
   HourglassIcon,
   LightbulbIcon,
+  LoaderCircleIcon,
   NotebookPenIcon,
   PawPrintIcon,
   School2Icon,
@@ -31,7 +32,14 @@ import {
   UsersIcon,
   WrenchIcon
 } from 'lucide-react'
-import { ComponentProps, ReactElement, useEffect, useState } from 'react'
+import {
+  ComponentProps,
+  ReactElement,
+  useEffect,
+  useState,
+  useTransition
+} from 'react'
+import { toast } from 'sonner'
 
 /**
  * Primary Navigation Items
@@ -187,6 +195,7 @@ export function AppSidebar({
 }: AppSidebarProps): ReactElement {
   const [navItems, setNavItems] = useState(baseNavPrimary)
   const [error, setError] = useState<string | null>(null)
+  const [isSeeding, startSeedTransition] = useTransition()
 
   useEffect(() => {
     // Get the settlement's campaign type and survivor type
@@ -287,9 +296,28 @@ export function AppSidebar({
             <SidebarGroupLabel>Developer</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={generateSeedData}>
-                  <DatabaseIcon />
-                  <span>Generate Seed Data</span>
+                <SidebarMenuButton
+                  disabled={isSeeding}
+                  onClick={() => {
+                    startSeedTransition(async () => {
+                      try {
+                        await generateSeedData()
+                      } catch (err) {
+                        console.error('Seed Data Error:', err)
+                        toast.error(
+                          'The darkness swallows your words. Please try again.'
+                        )
+                      }
+                    })
+                  }}>
+                  {isSeeding ? (
+                    <LoaderCircleIcon className="animate-spin" />
+                  ) : (
+                    <DatabaseIcon />
+                  )}
+                  <span>
+                    {isSeeding ? 'Generating...' : 'Generate Seed Data'}
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
