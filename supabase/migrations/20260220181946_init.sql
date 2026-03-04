@@ -114,8 +114,5 @@ return new;
 end;
 $$ language plpgsql;
 create or replace function is_admin() returns boolean language sql stable security definer as $$
-select coalesce(
-    (auth.jwt()->'app_metadata'->>'is_admin')::boolean,
-    false
-  );
+select auth.role() = 'admin';
 $$;
