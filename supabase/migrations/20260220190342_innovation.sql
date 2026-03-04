@@ -18,52 +18,126 @@ create table innovation (
 --------------------------------------------------------------------------------
 create table innovation_shared_user (
   innovation_id uuid not null references innovation(id) on delete cascade,
+  owner_id uuid not null references auth.users(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
   primary key (innovation_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
--- Security Definer Function to Check Membership
---------------------------------------------------------------------------------
-create or replace function is_innovation_member(p_id uuid) returns boolean language sql stable security definer as $$
-select exists (
-    select 1
-    from innovation
-    where id = p_id
-      and user_id = auth.uid()
-  )
-  or exists (
-    select 1
-    from innovation_shared_user
-    where innovation_id = p_id
-      and shared_user_id = auth.uid()
-  );
-$$;
---------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table innovation enable row level security;
-create policy "Allow authenticated read for non-custom" on innovation for
-select using (
-    auth.role() = 'authenticated'
-    and not custom
-  );
-create policy "Allow all for owner/shared of custom" on innovation for all using (
-  custom
-  and is_innovation_member(id)
-) with check (
-  custom
-  and is_innovation_member(id)
-);
-create policy "Allow admin to manage all" on innovation for all using (is_admin()) with check (is_admin());
-create policy "Allow insert of custom for self" on innovation for
-insert with check (
-    auth.role() = 'authenticated'
+create policy "Allow insert for authenticated and custom" on innovation for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
     and custom
-    and user_id = auth.uid()
   );
+create policy "Allow select for authenticated and non-custom" on innovation for
+select to authenticated using (not custom);
+create policy "Allow select for owner and custom" on innovation for
+select to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner and custom" on innovation for
+update to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner and custom" on innovation for delete to authenticated using (
+  custom
+  and user_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared and custom" on innovation for
+select to authenticated using (
+    custom
+    and exists (
+      select 1
+      from innovation_shared_user su
+      where su.innovation_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared and custom" on innovation for
+update to authenticated using (
+    custom
+    and exists (
+      select 1
+      from innovation_shared_user su
+      where su.innovation_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    custom
+    and exists (
+      select 1
+      from innovation_shared_user su
+      where su.innovation_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "All all for admin" on innovation for all using (is_admin()) with check (is_admin());
 alter table innovation_shared_user enable row level security;
-create policy "Allow all for owner" on innovation_shared_user for all using (is_innovation_member(innovation_id));
-create policy "Allow admin to manage all" on innovation_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow insert for authenticated" on innovation_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from innovation i
+      where i.id = innovation_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on innovation_shared_user for
+select to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on innovation_shared_user for
+update to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  ) with check (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on innovation_shared_user for delete to authenticated using (
+  owner_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared" on innovation_shared_user for
+select to authenticated using (
+    shared_user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on innovation_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

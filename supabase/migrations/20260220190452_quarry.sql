@@ -25,53 +25,127 @@ create table quarry (
 -- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table quarry_shared_user (
+  owner_id uuid not null references auth.users(id) on delete cascade,
   quarry_id uuid not null references quarry(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
   primary key (quarry_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
--- Security Definer Function to Check Membership
---------------------------------------------------------------------------------
-create or replace function is_quarry_member(p_id uuid) returns boolean language sql stable security definer as $$
-select exists (
-    select 1
-    from quarry
-    where id = p_id
-      and user_id = auth.uid()
-  )
-  or exists (
-    select 1
-    from quarry_shared_user
-    where quarry_id = p_id
-      and shared_user_id = auth.uid()
-  );
-$$;
---------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table quarry enable row level security;
-create policy "Allow authenticated read for non-custom" on quarry for
-select using (
-    auth.role() = 'authenticated'
-    and not custom
-  );
-create policy "Allow all for owner/shared of custom" on quarry for all using (
-  custom
-  and is_quarry_member(id)
-) with check (
-  custom
-  and is_quarry_member(id)
-);
-create policy "Allow admin to manage all" on quarry for all using (is_admin()) with check (is_admin());
-create policy "Allow insert of custom for self" on quarry for
-insert with check (
-    auth.role() = 'authenticated'
+create policy "Allow insert for authenticated and custom" on quarry for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
     and custom
-    and user_id = auth.uid()
   );
+create policy "Allow select for authenticated and non-custom" on quarry for
+select to authenticated using (not custom);
+create policy "Allow select for owner and custom" on quarry for
+select to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner and custom" on quarry for
+update to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner and custom" on quarry for delete to authenticated using (
+  custom
+  and user_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared and custom" on quarry for
+select to authenticated using (
+    custom
+    and exists (
+      select 1
+      from quarry_shared_user su
+      where su.quarry_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared and custom" on quarry for
+update to authenticated using (
+    custom
+    and exists (
+      select 1
+      from quarry_shared_user su
+      where su.quarry_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    custom
+    and exists (
+      select 1
+      from quarry_shared_user su
+      where su.quarry_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "All all for admin" on quarry for all using (is_admin()) with check (is_admin());
 alter table quarry_shared_user enable row level security;
-create policy "Allow all for owner" on quarry_shared_user for all using (is_quarry_member(quarry_id));
-create policy "Allow admin to manage all" on quarry_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow insert for authenticated" on quarry_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from quarry q
+      where q.id = quarry_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on quarry_shared_user for
+select to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on quarry_shared_user for
+update to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  ) with check (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on quarry_shared_user for delete to authenticated using (
+  owner_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared" on quarry_shared_user for
+select to authenticated using (
+    shared_user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on quarry_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

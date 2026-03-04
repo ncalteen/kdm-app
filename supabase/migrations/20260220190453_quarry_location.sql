@@ -17,50 +17,84 @@ create table quarry_location (
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table quarry_location enable row level security;
-create policy "Allow authenticated read for non-custom" on quarry_location for
-select using (
-    auth.role() = 'authenticated'
-    and exists (
+create policy "Allow insert for authenticated and custom" on quarry_location for
+insert to authenticated with check (
+    exists (
+      select 1
+      from quarry q
+      where q.id = quarry_id
+        and q.custom
+        and q.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow select for authenticated and non-custom" on quarry_location for
+select to authenticated using (
+    exists (
       select 1
       from quarry q
       where q.id = quarry_id
         and not q.custom
     )
   );
-create policy "Allow all for owner/shared of quarry" on quarry_location for all using (
+create policy "Allow select for owner and custom" on quarry_location for
+select to authenticated using (
+    exists (
+      select 1
+      from quarry q
+      where q.id = quarry_id
+        and q.custom
+        and q.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for owner and custom" on quarry_location for
+update to authenticated using (
+    exists (
+      select 1
+      from quarry q
+      where q.id = quarry_id
+        and q.custom
+        and q.user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    exists (
+      select 1
+      from quarry q
+      where q.id = quarry_id
+        and q.custom
+        and q.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow delete for owner and custom" on quarry_location for delete to authenticated using (
   exists (
     select 1
     from quarry q
     where q.id = quarry_id
       and q.custom
-      and (
-        q.user_id = auth.uid()
-        or exists (
-          select 1
-          from quarry_shared_user su
-          where su.quarry_id = q.id
-            and su.shared_user_id = auth.uid()
-        )
-      )
-  )
-) with check (
-  exists (
-    select 1
-    from quarry q
-    where q.id = quarry_id
-      and q.custom
-      and (
-        q.user_id = auth.uid()
-        or exists (
-          select 1
-          from quarry_shared_user su
-          where su.quarry_id = q.id
-            and su.shared_user_id = auth.uid()
-        )
+      and q.user_id = (
+        select auth.uid()
       )
   )
 );
-create policy "Allow admin to manage all" on quarry_location for all using (is_admin()) with check (is_admin());
+create policy "Allow select for shared and custom" on quarry_location for
+select to authenticated using (
+    exists (
+      select 1
+      from quarry_shared_user su
+      where quarry_id = su.quarry_id
+        and shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow all for admin" on quarry_location for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

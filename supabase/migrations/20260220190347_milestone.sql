@@ -20,52 +20,126 @@ create table milestone (
 --------------------------------------------------------------------------------
 create table milestone_shared_user (
   milestone_id uuid not null references milestone(id) on delete cascade,
+  owner_id uuid not null references auth.users(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
   primary key (milestone_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
--- Security Definer Function to Check Membership
---------------------------------------------------------------------------------
-create or replace function is_milestone_member(p_id uuid) returns boolean language sql stable security definer as $$
-select exists (
-    select 1
-    from milestone
-    where id = p_id
-      and user_id = auth.uid()
-  )
-  or exists (
-    select 1
-    from milestone_shared_user
-    where milestone_id = p_id
-      and shared_user_id = auth.uid()
-  );
-$$;
---------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table milestone enable row level security;
-create policy "Allow authenticated read for non-custom" on milestone for
-select using (
-    auth.role() = 'authenticated'
-    and not custom
-  );
-create policy "Allow all for owner/shared of custom" on milestone for all using (
-  custom
-  and is_milestone_member(id)
-) with check (
-  custom
-  and is_milestone_member(id)
-);
-create policy "Allow admin to manage all" on milestone for all using (is_admin()) with check (is_admin());
-create policy "Allow insert of custom for self" on milestone for
-insert with check (
-    auth.role() = 'authenticated'
+create policy "Allow insert for authenticated and custom" on milestone for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
     and custom
-    and user_id = auth.uid()
   );
+create policy "Allow select for authenticated and non-custom" on milestone for
+select to authenticated using (not custom);
+create policy "Allow select for owner and custom" on milestone for
+select to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner and custom" on milestone for
+update to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner and custom" on milestone for delete to authenticated using (
+  custom
+  and user_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared and custom" on milestone for
+select to authenticated using (
+    custom
+    and exists (
+      select 1
+      from milestone_shared_user su
+      where su.milestone_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared and custom" on milestone for
+update to authenticated using (
+    custom
+    and exists (
+      select 1
+      from milestone_shared_user su
+      where su.milestone_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    custom
+    and exists (
+      select 1
+      from milestone_shared_user su
+      where su.milestone_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "All all for admin" on milestone for all using (is_admin()) with check (is_admin());
 alter table milestone_shared_user enable row level security;
-create policy "Allow all for owner" on milestone_shared_user for all using (is_milestone_member(milestone_id));
-create policy "Allow admin to manage all" on milestone_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow insert for authenticated" on milestone_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from milestone m
+      where m.id = milestone_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on milestone_shared_user for
+select to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on milestone_shared_user for
+update to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  ) with check (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on milestone_shared_user for delete to authenticated using (
+  owner_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared" on milestone_shared_user for
+select to authenticated using (
+    shared_user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on milestone_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

@@ -18,52 +18,126 @@ create table character (
 --------------------------------------------------------------------------------
 create table character_shared_user (
   character_id uuid not null references character(id) on delete cascade,
+  owner_id uuid not null references auth.users(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
   primary key (character_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
--- Security Definer Function to Check Membership
---------------------------------------------------------------------------------
-create or replace function is_character_member(p_id uuid) returns boolean language sql stable security definer as $$
-select exists (
-    select 1
-    from character
-    where id = p_id
-      and user_id = auth.uid()
-  )
-  or exists (
-    select 1
-    from character_shared_user
-    where character_id = p_id
-      and shared_user_id = auth.uid()
-  );
-$$;
---------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table character enable row level security;
-create policy "Allow authenticated read for non-custom" on character for
-select using (
-    auth.role() = 'authenticated'
-    and not custom
-  );
-create policy "Allow all for owner/shared of custom" on character for all using (
-  custom
-  and is_character_member(id)
-) with check (
-  custom
-  and is_character_member(id)
-);
-create policy "Allow admin to manage all" on character for all using (is_admin()) with check (is_admin());
-create policy "Allow insert of custom for self" on character for
-insert with check (
-    auth.role() = 'authenticated'
+create policy "Allow insert for authenticated and custom" on character for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
     and custom
-    and user_id = auth.uid()
   );
+create policy "Allow select for authenticated and non-custom" on character for
+select to authenticated using (not custom);
+create policy "Allow select for owner and custom" on character for
+select to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner and custom" on character for
+update to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner and custom" on character for delete to authenticated using (
+  custom
+  and user_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared and custom" on character for
+select to authenticated using (
+    custom
+    and exists (
+      select 1
+      from character_shared_user su
+      where su.character_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared and custom" on character for
+update to authenticated using (
+    custom
+    and exists (
+      select 1
+      from character_shared_user su
+      where su.character_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    custom
+    and exists (
+      select 1
+      from character_shared_user su
+      where su.character_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "All all for admin" on character for all using (is_admin()) with check (is_admin());
 alter table character_shared_user enable row level security;
-create policy "Allow all for owner" on character_shared_user for all using (is_character_member(character_id));
-create policy "Allow admin to manage all" on character_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow insert for authenticated" on character_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from character c
+      where c.id = character_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on character_shared_user for
+select to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on character_shared_user for
+update to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  ) with check (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on character_shared_user for delete to authenticated using (
+  owner_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared" on character_shared_user for
+select to authenticated using (
+    shared_user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on character_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

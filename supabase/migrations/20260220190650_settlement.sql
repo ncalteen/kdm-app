@@ -107,6 +107,9 @@ insert to authenticated with check (
           select auth.uid()
         )
     )
+    and owner_id = (
+      select auth.uid()
+    )
   );
 create policy "Allow select for owner" on settlement_shared_user for
 select to authenticated using (

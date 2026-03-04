@@ -20,53 +20,127 @@ create table principle (
 -- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table principle_shared_user (
+  owner_id uuid not null references auth.users(id) on delete cascade,
   principle_id uuid not null references principle(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
   primary key (principle_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
--- Security Definer Function to Check Membership
---------------------------------------------------------------------------------
-create or replace function is_principle_member(p_id uuid) returns boolean language sql stable security definer as $$
-select exists (
-    select 1
-    from principle
-    where id = p_id
-      and user_id = auth.uid()
-  )
-  or exists (
-    select 1
-    from principle_shared_user
-    where principle_id = p_id
-      and shared_user_id = auth.uid()
-  );
-$$;
---------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table principle enable row level security;
-create policy "Allow authenticated read for non-custom" on principle for
-select using (
-    auth.role() = 'authenticated'
-    and not custom
-  );
-create policy "Allow all for owner/shared of custom" on principle for all using (
-  custom
-  and is_principle_member(id)
-) with check (
-  custom
-  and is_principle_member(id)
-);
-create policy "Allow admin to manage all" on principle for all using (is_admin()) with check (is_admin());
-create policy "Allow insert of custom for self" on principle for
-insert with check (
-    auth.role() = 'authenticated'
+create policy "Allow insert for authenticated and custom" on principle for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
     and custom
-    and user_id = auth.uid()
   );
+create policy "Allow select for authenticated and non-custom" on principle for
+select to authenticated using (not custom);
+create policy "Allow select for owner and custom" on principle for
+select to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner and custom" on principle for
+update to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner and custom" on principle for delete to authenticated using (
+  custom
+  and user_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared and custom" on principle for
+select to authenticated using (
+    custom
+    and exists (
+      select 1
+      from principle_shared_user su
+      where su.principle_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared and custom" on principle for
+update to authenticated using (
+    custom
+    and exists (
+      select 1
+      from principle_shared_user su
+      where su.principle_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    custom
+    and exists (
+      select 1
+      from principle_shared_user su
+      where su.principle_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "All all for admin" on principle for all using (is_admin()) with check (is_admin());
 alter table principle_shared_user enable row level security;
-create policy "Allow all for owner" on principle_shared_user for all using (is_principle_member(principle_id));
-create policy "Allow admin to manage all" on principle_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow insert for authenticated" on principle_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from principle p
+      where p.id = principle_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on principle_shared_user for
+select to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on principle_shared_user for
+update to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  ) with check (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on principle_shared_user for delete to authenticated using (
+  owner_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared" on principle_shared_user for
+select to authenticated using (
+    shared_user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on principle_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

@@ -17,53 +17,127 @@ create table weapon_type (
 -- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table weapon_type_shared_user (
-  weapon_type_id uuid not null references weapon_type(id) on delete cascade,
+  owner_id uuid not null references auth.users(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
+  weapon_type_id uuid not null references weapon_type(id) on delete cascade,
   primary key (weapon_type_id, shared_user_id)
 );
---------------------------------------------------------------------------------
--- Security Definer Function to Check Membership
---------------------------------------------------------------------------------
-create or replace function is_weapon_type_member(p_id uuid) returns boolean language sql stable security definer as $$
-select exists (
-    select 1
-    from weapon_type
-    where id = p_id
-      and user_id = auth.uid()
-  )
-  or exists (
-    select 1
-    from weapon_type_shared_user
-    where weapon_type_id = p_id
-      and shared_user_id = auth.uid()
-  );
-$$;
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table weapon_type enable row level security;
-create policy "Allow authenticated read for non-custom" on weapon_type for
-select using (
-    auth.role() = 'authenticated'
-    and not custom
-  );
-create policy "Allow all for owner/shared of custom" on weapon_type for all using (
-  custom
-  and is_weapon_type_member(id)
-) with check (
-  custom
-  and is_weapon_type_member(id)
-);
-create policy "Allow admin to manage all" on weapon_type for all using (is_admin()) with check (is_admin());
-create policy "Allow insert of custom for self" on weapon_type for
-insert with check (
-    auth.role() = 'authenticated'
+create policy "Allow insert for authenticated and custom" on weapon_type for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
     and custom
-    and user_id = auth.uid()
   );
+create policy "Allow select for authenticated and non-custom" on weapon_type for
+select to authenticated using (not custom);
+create policy "Allow select for owner and custom" on weapon_type for
+select to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner and custom" on weapon_type for
+update to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner and custom" on weapon_type for delete to authenticated using (
+  custom
+  and user_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared and custom" on weapon_type for
+select to authenticated using (
+    custom
+    and exists (
+      select 1
+      from weapon_type_shared_user su
+      where su.weapon_type_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared and custom" on weapon_type for
+update to authenticated using (
+    custom
+    and exists (
+      select 1
+      from weapon_type_shared_user su
+      where su.weapon_type_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    custom
+    and exists (
+      select 1
+      from weapon_type_shared_user su
+      where su.weapon_type_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "All all for admin" on weapon_type for all using (is_admin()) with check (is_admin());
 alter table weapon_type_shared_user enable row level security;
-create policy "Allow all for owner" on weapon_type_shared_user for all using (is_weapon_type_member(weapon_type_id));
-create policy "Allow admin to manage all" on weapon_type_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow insert for authenticated" on weapon_type_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from weapon_type w
+      where w.id = weapon_type_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on weapon_type_shared_user for
+select to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on weapon_type_shared_user for
+update to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  ) with check (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on weapon_type_shared_user for delete to authenticated using (
+  owner_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared" on weapon_type_shared_user for
+select to authenticated using (
+    shared_user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on weapon_type_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

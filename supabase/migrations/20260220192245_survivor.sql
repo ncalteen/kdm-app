@@ -95,12 +95,12 @@ create table survivor (
   knowledge_1 varchar,
   knowledge_1_observation_conditions text,
   knowledge_1_observation_rank int,
-  knowledge_1_rank_up int [],
+  knowledge_1_rank_up int,
   knowledge_1_rules text,
   knowledge_2 varchar,
   knowledge_2_observation_conditions text,
   knowledge_2_observation_rank int,
-  knowledge_2_rank_up int [],
+  knowledge_2_rank_up int,
   knowledge_2_rules text,
   lumi int,
   neurosis varchar,
@@ -110,7 +110,7 @@ create table survivor (
   tenet_knowledge varchar,
   tenet_knowledge_observation_conditions text,
   tenet_knowledge_observation_rank int,
-  tenet_knowledge_rank_up int [],
+  tenet_knowledge_rank_up int,
   tenet_knowledge_rules text,
   torment int,
   -- People of the Stars Survivors
@@ -140,8 +140,70 @@ create table survivor (
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table survivor enable row level security;
-create policy "Allow all for owner/shared" on survivor for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
-create policy "Allow admin to manage all" on survivor for all using (is_admin()) with check (is_admin());
+create policy "Allow select for owner" on survivor for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow insert for owner" on survivor for
+insert to authenticated with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for owner" on survivor for
+update to authenticated using (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow delete for owner" on survivor for delete to authenticated using (
+  exists (
+    select 1
+    from settlement s
+    where s.id = settlement_id
+      and s.user_id = (
+        select auth.uid()
+      )
+  )
+);
+create policy "Allow select for shared" on survivor for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement_shared_user su
+      where settlement_id = su.settlement_id
+        and shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow all for admin" on survivor for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

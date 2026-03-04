@@ -18,53 +18,127 @@ create table philosophy (
 -- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table philosophy_shared_user (
+  owner_id uuid not null references auth.users(id) on delete cascade,
   philosophy_id uuid not null references philosophy(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
   primary key (philosophy_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
--- Security Definer Function to Check Membership
---------------------------------------------------------------------------------
-create or replace function is_philosophy_member(p_id uuid) returns boolean language sql stable security definer as $$
-select exists (
-    select 1
-    from philosophy
-    where id = p_id
-      and user_id = auth.uid()
-  )
-  or exists (
-    select 1
-    from philosophy_shared_user
-    where philosophy_id = p_id
-      and shared_user_id = auth.uid()
-  );
-$$;
---------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table philosophy enable row level security;
-create policy "Allow authenticated read for non-custom" on philosophy for
-select using (
-    auth.role() = 'authenticated'
-    and not custom
-  );
-create policy "Allow all for owner/shared of custom" on philosophy for all using (
-  custom
-  and is_philosophy_member(id)
-) with check (
-  custom
-  and is_philosophy_member(id)
-);
-create policy "Allow admin to manage all" on philosophy for all using (is_admin()) with check (is_admin());
-create policy "Allow insert of custom for self" on philosophy for
-insert with check (
-    auth.role() = 'authenticated'
+create policy "Allow insert for authenticated and custom" on philosophy for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
     and custom
-    and user_id = auth.uid()
   );
+create policy "Allow select for authenticated and non-custom" on philosophy for
+select to authenticated using (not custom);
+create policy "Allow select for owner and custom" on philosophy for
+select to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner and custom" on philosophy for
+update to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner and custom" on philosophy for delete to authenticated using (
+  custom
+  and user_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared and custom" on philosophy for
+select to authenticated using (
+    custom
+    and exists (
+      select 1
+      from philosophy_shared_user su
+      where su.philosophy_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared and custom" on philosophy for
+update to authenticated using (
+    custom
+    and exists (
+      select 1
+      from philosophy_shared_user su
+      where su.philosophy_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    custom
+    and exists (
+      select 1
+      from philosophy_shared_user su
+      where su.philosophy_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "All all for admin" on philosophy for all using (is_admin()) with check (is_admin());
 alter table philosophy_shared_user enable row level security;
-create policy "Allow all for owner" on philosophy_shared_user for all using (is_philosophy_member(philosophy_id));
-create policy "Allow admin to manage all" on philosophy_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow insert for authenticated" on philosophy_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from philosophy p
+      where p.id = philosophy_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on philosophy_shared_user for
+select to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on philosophy_shared_user for
+update to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  ) with check (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on philosophy_shared_user for delete to authenticated using (
+  owner_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared" on philosophy_shared_user for
+select to authenticated using (
+    shared_user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on philosophy_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

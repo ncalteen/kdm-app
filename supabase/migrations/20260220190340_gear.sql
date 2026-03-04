@@ -19,52 +19,126 @@ create table gear (
 --------------------------------------------------------------------------------
 create table gear_shared_user (
   gear_id uuid not null references gear(id) on delete cascade,
+  owner_id uuid not null references auth.users(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
   primary key (gear_id, shared_user_id)
 );
 --------------------------------------------------------------------------------
--- Security Definer Function to Check Membership
---------------------------------------------------------------------------------
-create or replace function is_gear_member(p_id uuid) returns boolean language sql stable security definer as $$
-select exists (
-    select 1
-    from gear
-    where id = p_id
-      and user_id = auth.uid()
-  )
-  or exists (
-    select 1
-    from gear_shared_user
-    where gear_id = p_id
-      and shared_user_id = auth.uid()
-  );
-$$;
---------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table gear enable row level security;
-create policy "Allow authenticated read for non-custom" on gear for
-select using (
-    auth.role() = 'authenticated'
-    and not custom
-  );
-create policy "Allow all for owner/shared of custom" on gear for all using (
-  custom
-  and is_gear_member(id)
-) with check (
-  custom
-  and is_gear_member(id)
-);
-create policy "Allow admin to manage all" on gear for all using (is_admin()) with check (is_admin());
-create policy "Allow insert of custom for self" on gear for
-insert with check (
-    auth.role() = 'authenticated'
+create policy "Allow insert for authenticated and custom" on gear for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
     and custom
-    and user_id = auth.uid()
   );
+create policy "Allow select for authenticated and non-custom" on gear for
+select to authenticated using (not custom);
+create policy "Allow select for owner and custom" on gear for
+select to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner and custom" on gear for
+update to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner and custom" on gear for delete to authenticated using (
+  custom
+  and user_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared and custom" on gear for
+select to authenticated using (
+    custom
+    and exists (
+      select 1
+      from gear_shared_user su
+      where su.gear_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared and custom" on gear for
+update to authenticated using (
+    custom
+    and exists (
+      select 1
+      from gear_shared_user su
+      where su.gear_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    custom
+    and exists (
+      select 1
+      from gear_shared_user su
+      where su.gear_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "All all for admin" on gear for all using (is_admin()) with check (is_admin());
 alter table gear_shared_user enable row level security;
-create policy "Allow all for owner" on gear_shared_user for all using (is_gear_member(gear_id));
-create policy "Allow admin to manage all" on gear_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow insert for authenticated" on gear_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from gear g
+      where g.id = gear_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on gear_shared_user for
+select to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on gear_shared_user for
+update to authenticated using (
+    owner_id = (
+      select auth.uid()
+    )
+  ) with check (
+    owner_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on gear_shared_user for delete to authenticated using (
+  owner_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared" on gear_shared_user for
+select to authenticated using (
+    shared_user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on gear_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
