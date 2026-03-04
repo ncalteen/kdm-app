@@ -20,7 +20,9 @@ create table user_settings (
 alter table user_settings enable row level security;
 create policy "Allow insert for authenticated users" on user_settings for
 insert with check (auth.uid() = user_id);
-create policy "Users can only access their own settings" on user_settings for all using (auth.uid() = user_id);
+create policy "Users can only update their own settings" on user_settings for
+update using (auth.uid() = user_id);
+create policy "Users can only delete their own settings" on user_settings for delete using (auth.uid() = user_id);
 create policy "Allow admin to manage all" on user_settings for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
