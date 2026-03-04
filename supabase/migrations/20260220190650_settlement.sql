@@ -31,25 +31,8 @@ create table settlement_shared_user (
   owner_id uuid not null references auth.users(id) on delete cascade,
   settlement_id uuid not null references settlement(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
-  primary key (settlement_id, shared_user_id)
+  primary key (owner_id, settlement_id, shared_user_id)
 );
---------------------------------------------------------------------------------
--- Helper Functions
---------------------------------------------------------------------------------
-create or replace function is_settlement_member(p_settlement_id uuid) returns boolean language sql stable security definer as $$
-select exists (
-    select 1
-    from settlement
-    where id = p_settlement_id
-      and user_id = auth.uid()
-  )
-  or exists (
-    select 1
-    from settlement_shared_user
-    where settlement_id = p_settlement_id
-      and shared_user_id = auth.uid()
-  );
-$$;
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
