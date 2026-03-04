@@ -56,6 +56,12 @@ create policy "Allow all for owner/shared of custom" on neurosis for all using (
   and is_neurosis_member(id)
 );
 create policy "Allow admin to manage all" on neurosis for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on neurosis for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table neurosis_shared_user enable row level security;
 create policy "Allow all for owner" on neurosis_shared_user for all using (is_neurosis_member(neurosis_id));
 create policy "Allow admin to manage all" on neurosis_shared_user for all using (is_admin()) with check (is_admin());

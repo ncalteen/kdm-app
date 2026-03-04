@@ -55,6 +55,12 @@ create policy "Allow all for owner/shared of custom" on weapon_type for all usin
   and is_weapon_type_member(id)
 );
 create policy "Allow admin to manage all" on weapon_type for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on weapon_type for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table weapon_type_shared_user enable row level security;
 create policy "Allow all for owner" on weapon_type_shared_user for all using (is_weapon_type_member(weapon_type_id));
 create policy "Allow admin to manage all" on weapon_type_shared_user for all using (is_admin()) with check (is_admin());

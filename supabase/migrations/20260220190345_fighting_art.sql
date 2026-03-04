@@ -56,6 +56,12 @@ create policy "Allow all for owner/shared of custom" on fighting_art for all usi
   and is_fighting_art_member(id)
 );
 create policy "Allow admin to manage all" on fighting_art for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on fighting_art for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table fighting_art_shared_user enable row level security;
 create policy "Allow all for owner" on fighting_art_shared_user for all using (is_fighting_art_member(fighting_art_id));
 create policy "Allow admin to manage all" on fighting_art_shared_user for all using (is_admin()) with check (is_admin());

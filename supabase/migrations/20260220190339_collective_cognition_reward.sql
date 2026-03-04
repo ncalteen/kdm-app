@@ -56,6 +56,12 @@ create policy "Allow all for owner/shared of custom" on collective_cognition_rew
   and is_collective_cognition_reward_member(id)
 );
 create policy "Allow admin to manage all" on collective_cognition_reward for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on collective_cognition_reward for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table collective_cognition_reward_shared_user enable row level security;
 create policy "Allow all for owner" on collective_cognition_reward_shared_user for all using (
   is_collective_cognition_reward_member(collective_cognition_reward_id)

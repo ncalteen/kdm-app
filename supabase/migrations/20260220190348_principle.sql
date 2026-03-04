@@ -58,6 +58,12 @@ create policy "Allow all for owner/shared of custom" on principle for all using 
   and is_principle_member(id)
 );
 create policy "Allow admin to manage all" on principle for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on principle for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table principle_shared_user enable row level security;
 create policy "Allow all for owner" on principle_shared_user for all using (is_principle_member(principle_id));
 create policy "Allow admin to manage all" on principle_shared_user for all using (is_admin()) with check (is_admin());

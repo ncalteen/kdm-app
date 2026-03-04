@@ -55,6 +55,12 @@ create policy "Allow all for owner/shared of custom" on location for all using (
   and is_location_member(id)
 );
 create policy "Allow admin to manage all" on location for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on location for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table location_shared_user enable row level security;
 create policy "Allow all for owner" on location_shared_user for all using (is_location_member(location_id));
 create policy "Allow admin to manage all" on location_shared_user for all using (is_admin()) with check (is_admin());

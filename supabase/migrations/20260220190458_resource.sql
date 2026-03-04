@@ -57,6 +57,12 @@ create policy "Allow all for owner/shared of custom" on resource for all using (
   and is_resource_member(id)
 );
 create policy "Allow admin to manage all" on resource for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on resource for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table resource_shared_user enable row level security;
 create policy "Allow all for owner" on resource_shared_user for all using (is_resource_member(resource_id));
 create policy "Allow admin to manage all" on resource_shared_user for all using (is_admin()) with check (is_admin());

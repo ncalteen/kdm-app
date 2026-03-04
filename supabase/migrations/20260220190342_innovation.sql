@@ -55,6 +55,12 @@ create policy "Allow all for owner/shared of custom" on innovation for all using
   and is_innovation_member(id)
 );
 create policy "Allow admin to manage all" on innovation for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on innovation for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table innovation_shared_user enable row level security;
 create policy "Allow all for owner" on innovation_shared_user for all using (is_innovation_member(innovation_id));
 create policy "Allow admin to manage all" on innovation_shared_user for all using (is_admin()) with check (is_admin());

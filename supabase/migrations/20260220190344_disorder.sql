@@ -55,6 +55,12 @@ create policy "Allow all for owner/shared of custom" on disorder for all using (
   and is_disorder_member(id)
 );
 create policy "Allow admin to manage all" on disorder for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on disorder for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table disorder_shared_user enable row level security;
 create policy "Allow all for owner" on disorder_shared_user for all using (is_disorder_member(disorder_id));
 create policy "Allow admin to manage all" on disorder_shared_user for all using (is_admin()) with check (is_admin());

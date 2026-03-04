@@ -56,6 +56,12 @@ create policy "Allow all for owner/shared of custom" on gear for all using (
   and is_gear_member(id)
 );
 create policy "Allow admin to manage all" on gear for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on gear for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table gear_shared_user enable row level security;
 create policy "Allow all for owner" on gear_shared_user for all using (is_gear_member(gear_id));
 create policy "Allow admin to manage all" on gear_shared_user for all using (is_admin()) with check (is_admin());

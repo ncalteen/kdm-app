@@ -55,6 +55,12 @@ create policy "Allow all for owner/shared of custom" on strain_milestone for all
   and is_strain_milestone_member(id)
 );
 create policy "Allow admin to manage all" on strain_milestone for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on strain_milestone for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table strain_milestone_shared_user enable row level security;
 create policy "Allow all for owner" on strain_milestone_shared_user for all using (is_strain_milestone_member(strain_milestone_id));
 create policy "Allow admin to manage all" on strain_milestone_shared_user for all using (is_admin()) with check (is_admin());

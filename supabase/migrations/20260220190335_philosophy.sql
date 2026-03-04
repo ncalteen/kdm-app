@@ -56,6 +56,12 @@ create policy "Allow all for owner/shared of custom" on philosophy for all using
   and is_philosophy_member(id)
 );
 create policy "Allow admin to manage all" on philosophy for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on philosophy for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table philosophy_shared_user enable row level security;
 create policy "Allow all for owner" on philosophy_shared_user for all using (is_philosophy_member(philosophy_id));
 create policy "Allow admin to manage all" on philosophy_shared_user for all using (is_admin()) with check (is_admin());

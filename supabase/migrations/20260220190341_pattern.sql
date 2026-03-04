@@ -56,6 +56,12 @@ create policy "Allow all for owner/shared of custom" on pattern for all using (
   and is_pattern_member(id)
 );
 create policy "Allow admin to manage all" on pattern for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on pattern for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table pattern_shared_user enable row level security;
 create policy "Allow all for owner" on pattern_shared_user for all using (is_pattern_member(pattern_id));
 create policy "Allow admin to manage all" on pattern_shared_user for all using (is_admin()) with check (is_admin());

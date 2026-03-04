@@ -55,6 +55,12 @@ create policy "Allow all for owner/shared of custom" on character for all using 
   and is_character_member(id)
 );
 create policy "Allow admin to manage all" on character for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on character for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table character_shared_user enable row level security;
 create policy "Allow all for owner" on character_shared_user for all using (is_character_member(character_id));
 create policy "Allow admin to manage all" on character_shared_user for all using (is_admin()) with check (is_admin());

@@ -63,6 +63,12 @@ create policy "Allow all for owner/shared of custom" on quarry for all using (
   and is_quarry_member(id)
 );
 create policy "Allow admin to manage all" on quarry for all using (is_admin()) with check (is_admin());
+create policy "Allow insert of custom for self" on quarry for
+insert with check (
+    auth.role() = 'authenticated'
+    and custom
+    and user_id = auth.uid()
+  );
 alter table quarry_shared_user enable row level security;
 create policy "Allow all for owner" on quarry_shared_user for all using (is_quarry_member(quarry_id));
 create policy "Allow admin to manage all" on quarry_shared_user for all using (is_admin()) with check (is_admin());
