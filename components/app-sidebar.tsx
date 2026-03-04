@@ -315,7 +315,7 @@ export function AppSidebar({
                   ) : (
                     <DatabaseIcon />
                   )}
-                  <span>
+                  <span className="text-xs">
                     {isSeeding ? 'Generating...' : 'Generate Seed Data'}
                   </span>
                 </SidebarMenuButton>
