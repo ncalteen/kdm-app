@@ -117,50 +117,46 @@ function MainPage(): ReactElement {
 
   return (
     <div className="[--header-height:calc(--spacing(10))] min-w-[450px]">
-      <SidebarProvider className="flex flex-col">
+      <SidebarProvider>
         <SiteHeader />
 
-        <div className="flex flex-1 pt-(--header-height)">
-          <div className="p-4 w-full">
-            <AppSidebar
+        <AppSidebar
+          selectedHuntId={selectedHuntId}
+          selectedSettlementId={selectedSettlementId}
+          selectedSettlementPhaseId={selectedSettlementPhaseId}
+          selectedShowdownId={selectedShowdownId}
+          selectedTab={selectedTab}
+          setSelectedHuntId={setSelectedHuntId}
+          setSelectedSettlementId={setSelectedSettlementId}
+          setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
+          setSelectedShowdownId={setSelectedShowdownId}
+          setSelectedSurvivorId={setSelectedSurvivorId}
+          setSelectedTab={setSelectedTab}
+        />
+        <SidebarInset>
+          <div className="p-4 pt-(--header-height)">
+            <SettlementCard
+              isCreatingNewSurvivor={isCreatingNewSurvivor}
               selectedHuntId={selectedHuntId}
+              selectedHuntMonsterIndex={selectedHuntMonsterIndex}
               selectedSettlementId={selectedSettlementId}
               selectedSettlementPhaseId={selectedSettlementPhaseId}
               selectedShowdownId={selectedShowdownId}
+              selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
+              selectedSurvivorId={selectedSurvivorId}
               selectedTab={selectedTab}
+              setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
               setSelectedHuntId={setSelectedHuntId}
+              setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
               setSelectedSettlementId={setSelectedSettlementId}
-              setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
+              setSelectedSettlementPhase={setSelectedSettlementPhaseId}
               setSelectedShowdownId={setSelectedShowdownId}
+              setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
               setSelectedSurvivorId={setSelectedSurvivorId}
               setSelectedTab={setSelectedTab}
             />
-            <SidebarInset>
-              <SettlementCard
-                isCreatingNewSurvivor={isCreatingNewSurvivor}
-                selectedHuntId={selectedHuntId}
-                selectedHuntMonsterIndex={selectedHuntMonsterIndex}
-                selectedSettlementId={selectedSettlementId}
-                selectedSettlementPhaseId={selectedSettlementPhaseId}
-                selectedShowdownId={selectedShowdownId}
-                selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
-                selectedSurvivorId={selectedSurvivorId}
-                selectedTab={selectedTab}
-                setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
-                setSelectedHuntId={setSelectedHuntId}
-                setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
-                setSelectedSettlementId={setSelectedSettlementId}
-                setSelectedSettlementPhase={setSelectedSettlementPhaseId}
-                setSelectedShowdownId={setSelectedShowdownId}
-                setSelectedShowdownMonsterIndex={
-                  setSelectedShowdownMonsterIndex
-                }
-                setSelectedSurvivorId={setSelectedSurvivorId}
-                setSelectedTab={setSelectedTab}
-              />
-            </SidebarInset>
           </div>
-        </div>
+        </SidebarInset>
       </SidebarProvider>
     </div>
   )
