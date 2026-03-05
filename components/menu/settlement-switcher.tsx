@@ -16,9 +16,9 @@ import {
 import {
   getHuntId,
   getSettlementPhaseId,
-  getSettlementsForUser,
   getShowdownId
 } from '@/lib/dal/settlement'
+import { getSettlements } from '@/lib/dal/user'
 import { Tables } from '@/lib/database.types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
 import { ComponentProps, ReactElement, useEffect, useState } from 'react'
@@ -79,7 +79,7 @@ export function SettlementSwitcher({
    * Handle Component Loading
    */
   useEffect(() => {
-    getSettlementsForUser()
+    getSettlements()
       .then((data) => setSettlements(data))
       .catch((err: unknown) =>
         setError(err instanceof Error ? err.message : 'Unknown Error')

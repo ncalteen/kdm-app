@@ -1,8 +1,9 @@
 'use client'
 
 import { AppSidebar } from '@/components/app-sidebar'
+import { SettlementCard } from '@/components/settlement/settlement-card'
 import { SiteHeader } from '@/components/side-header'
-import { SidebarProvider } from '@/components/ui/sidebar'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -120,7 +121,7 @@ function MainPage(): ReactElement {
         <SiteHeader />
 
         <div className="flex flex-1 pt-(--header-height)">
-          <div className="p-4 w-full max-w-xl">
+          <div className="p-4 w-full">
             <AppSidebar
               selectedHuntId={selectedHuntId}
               selectedSettlementId={selectedSettlementId}
@@ -134,6 +135,30 @@ function MainPage(): ReactElement {
               setSelectedSurvivorId={setSelectedSurvivorId}
               setSelectedTab={setSelectedTab}
             />
+            <SidebarInset>
+              <SettlementCard
+                isCreatingNewSurvivor={isCreatingNewSurvivor}
+                selectedHuntId={selectedHuntId}
+                selectedHuntMonsterIndex={selectedHuntMonsterIndex}
+                selectedSettlementId={selectedSettlementId}
+                selectedSettlementPhaseId={selectedSettlementPhaseId}
+                selectedShowdownId={selectedShowdownId}
+                selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
+                selectedSurvivorId={selectedSurvivorId}
+                selectedTab={selectedTab}
+                setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
+                setSelectedHuntId={setSelectedHuntId}
+                setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
+                setSelectedSettlementId={setSelectedSettlementId}
+                setSelectedSettlementPhase={setSelectedSettlementPhaseId}
+                setSelectedShowdownId={setSelectedShowdownId}
+                setSelectedShowdownMonsterIndex={
+                  setSelectedShowdownMonsterIndex
+                }
+                setSelectedSurvivorId={setSelectedSurvivorId}
+                setSelectedTab={setSelectedTab}
+              />
+            </SidebarInset>
           </div>
         </div>
       </SidebarProvider>

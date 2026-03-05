@@ -198,7 +198,6 @@ export function AppSidebar({
   const [isSeeding, startSeedTransition] = useTransition()
 
   useEffect(() => {
-    // Get the settlement's campaign type and survivor type
     Promise.all([
       getCampaignType(selectedSettlementId),
       getSurvivorType(selectedSettlementId)
