@@ -17,6 +17,27 @@ export enum CampaignType {
 }
 
 /**
+ * Database Campaign Type
+ *
+ * Used to look up the campaign type used in the database, using the friendly
+ * campaign type as a key.
+ */
+export enum DatabaseCampaignType {
+  /** People of the Dream Keeper */
+  'People of the Dream Keeper' = 'PEOPLE_OF_THE_DREAM_KEEPER',
+  /** People of the Lantern */
+  'People of the Lantern' = 'PEOPLE_OF_THE_LANTERN',
+  /** People of the Stars */
+  'People of the Stars' = 'PEOPLE_OF_THE_STARS',
+  /** People of the Sun */
+  'People of the Sun' = 'PEOPLE_OF_THE_SUN',
+  /** Squires of the Citadel */
+  'Squires of the Citadel' = 'SQUIRES_OF_THE_CITADEL',
+  /** Custom */
+  'Custom' = 'CUSTOM'
+}
+
+/**
  * Survivor Type
  */
 export enum SurvivorType {
@@ -24,6 +45,18 @@ export enum SurvivorType {
   ARC = 'Arc',
   /** Core */
   CORE = 'Core'
+}
+
+/**
+ * Database Survivor Type
+ *
+ * Used to look up the survivor type used in the database, using the friendly survivor type as a key.
+ */
+export enum DatabaseSurvivorType {
+  /** Arc */
+  'Arc' = 'ARC',
+  /** Core */
+  'Core' = 'CORE'
 }
 
 /**
