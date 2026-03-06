@@ -37,7 +37,7 @@ create table survivor (
   hunt_xp_rank_up int [] not null default '{}',
   insanity int not null default 0 check (insanity >= 0),
   luck int not null default 0,
-  movement int not null default 0,
+  movement int not null default 5,
   next_departure varchar [] not null default '{}',
   notes text not null default '',
   once_per_lifetime varchar [] not null default '{}',
