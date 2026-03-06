@@ -1,5 +1,6 @@
 'use client'
 
+import { CreateSettlementCard } from '@/components/settlement/create-settlement-card'
 import { OverviewCard } from '@/components/settlement/overview/overview-card'
 import { TabType } from '@/lib/enums'
 import { ReactElement } from 'react'
@@ -80,6 +81,23 @@ export function SettlementCard({
       />
 
       <hr className="pt-2" />
+
+      <div className="flex flex-1 flex-col h-full">
+        <div className="flex flex-col gap-2 py-2 px-2 flex-1">
+          {/* Create Settlement Form */}
+          {!selectedSettlementId && selectedTab !== TabType.SETTINGS && (
+            <CreateSettlementCard
+              setSelectedHuntId={setSelectedHuntId}
+              setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
+              setSelectedSettlementId={setSelectedSettlementId}
+              setSelectedSettlementPhaseId={setSelectedSettlementPhase}
+              setSelectedShowdownId={setSelectedShowdownId}
+              setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
+              setSelectedSurvivorId={setSelectedSurvivorId}
+            />
+          )}
+        </div>
+      </div>
     </>
   )
 }
