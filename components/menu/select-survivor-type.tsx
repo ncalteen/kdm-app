@@ -46,7 +46,7 @@ export function SelectSurvivorType({
   id
 }: SelectSurvivorTypeProps): ReactElement {
   const [open, setOpen] = useState(false)
-  const [value, setValue] = useState(propValue ?? '')
+  const value = propValue ?? SurvivorType.CORE
 
   const survivorTypeOptions = Object.values(SurvivorType).map(
     (survivorType) => ({
@@ -68,7 +68,6 @@ export function SelectSurvivorType({
     if (!currentValue) return
     if (currentValue === value) return setOpen(false)
 
-    setValue(currentValue)
     setOpen(false)
 
     if (onChange && currentValue) onChange(currentValue as SurvivorType)
