@@ -1,5 +1,3 @@
-'use client'
-
 import { CampaignType, SurvivorType } from '@/lib/enums'
 import { z } from 'zod'
 
