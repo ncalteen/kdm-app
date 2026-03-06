@@ -1403,7 +1403,7 @@ async function createCustomNemeses(
     .from('nemesis_timeline_year')
     .insert([
       {
-        campaigns: [
+        campaign_types: [
           'PEOPLE_OF_THE_LANTERN',
           'PEOPLE_OF_THE_SUN',
           'PEOPLE_OF_THE_STARS',
@@ -1416,7 +1416,7 @@ async function createCustomNemeses(
         year_number: 8
       },
       {
-        campaigns: [
+        campaign_types: [
           'PEOPLE_OF_THE_LANTERN',
           'PEOPLE_OF_THE_SUN',
           'PEOPLE_OF_THE_STARS',
@@ -1429,7 +1429,7 @@ async function createCustomNemeses(
         year_number: 16
       },
       {
-        campaigns: [
+        campaign_types: [
           'PEOPLE_OF_THE_LANTERN',
           'PEOPLE_OF_THE_SUN',
           'PEOPLE_OF_THE_STARS',
@@ -1559,7 +1559,7 @@ async function createCustomNemeses(
     .from('nemesis_timeline_year')
     .insert([
       {
-        campaigns: [
+        campaign_types: [
           'PEOPLE_OF_THE_LANTERN',
           'PEOPLE_OF_THE_SUN',
           'PEOPLE_OF_THE_STARS',
@@ -1572,7 +1572,7 @@ async function createCustomNemeses(
         year_number: 10
       },
       {
-        campaigns: [
+        campaign_types: [
           'PEOPLE_OF_THE_LANTERN',
           'PEOPLE_OF_THE_SUN',
           'PEOPLE_OF_THE_STARS',
@@ -1764,7 +1764,7 @@ async function createCustomQuarries(
     .from('quarry_timeline_year')
     .insert([
       {
-        campaigns: [
+        campaign_types: [
           'PEOPLE_OF_THE_LANTERN',
           'PEOPLE_OF_THE_SUN',
           'PEOPLE_OF_THE_STARS',
@@ -1777,7 +1777,7 @@ async function createCustomQuarries(
         year_number: 0
       },
       {
-        campaigns: [
+        campaign_types: [
           'PEOPLE_OF_THE_LANTERN',
           'PEOPLE_OF_THE_SUN',
           'PEOPLE_OF_THE_STARS',
@@ -1790,7 +1790,7 @@ async function createCustomQuarries(
         year_number: 6
       },
       {
-        campaigns: [
+        campaign_types: [
           'PEOPLE_OF_THE_LANTERN',
           'PEOPLE_OF_THE_SUN',
           'PEOPLE_OF_THE_STARS',
