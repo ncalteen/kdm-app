@@ -25,6 +25,28 @@ export async function getSquiresOfTheCitadelTemplate(): Promise<CampaignTemplate
 }
 
 /**
+ * Squires of the Citadel Survivors
+ */
+export const SquiresOfTheCitadelSurvivors = [
+  {
+    name: 'Cain',
+    gender: 'MALE'
+  },
+  {
+    name: 'Elle',
+    gender: 'FEMALE'
+  },
+  {
+    name: 'Iola',
+    gender: 'FEMALE'
+  },
+  {
+    name: 'Owen',
+    gender: 'MALE'
+  }
+]
+
+/**
  * Squire Card Data
  */
 export const SquireCardData = [
@@ -130,39 +152,5 @@ export const SquireCardData = [
         value: 'The quest cannot be abandoned; you still hunt.'
       }
     ]
-  }
-]
-
-/**
- * Default Squires of the Citadel Suspicion
- */
-export const DefaultSquiresSuspicion = [
-  {
-    name: 'Cain',
-    level1: false,
-    level2: false,
-    level3: false,
-    level4: false
-  },
-  {
-    name: 'Elle',
-    level1: false,
-    level2: false,
-    level3: false,
-    level4: false
-  },
-  {
-    name: 'Iola',
-    level1: false,
-    level2: false,
-    level3: false,
-    level4: false
-  },
-  {
-    name: 'Owen',
-    level1: false,
-    level2: false,
-    level3: false,
-    level4: false
   }
 ]
