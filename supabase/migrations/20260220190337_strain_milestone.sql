@@ -17,10 +17,10 @@ create table strain_milestone (
 -- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table strain_milestone_shared_user (
-  owner_id uuid not null references auth.users(id) on delete cascade,
   strain_milestone_id uuid not null references strain_milestone(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
-  primary key (strain_milestone_id, shared_user_id)
+  user_id uuid not null references auth.users(id) on delete cascade,
+  primary key (shared_user_id, strain_milestone_id, user_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -106,28 +106,28 @@ insert to authenticated with check (
           select auth.uid()
         )
     )
-    and owner_id = (
+    and user_id = (
       select auth.uid()
     )
   );
 create policy "Allow select for owner" on strain_milestone_shared_user for
 select to authenticated using (
-    owner_id = (
+    user_id = (
       select auth.uid()
     )
   );
 create policy "Allow update for owner" on strain_milestone_shared_user for
 update to authenticated using (
-    owner_id = (
+    user_id = (
       select auth.uid()
     )
   ) with check (
-    owner_id = (
+    user_id = (
       select auth.uid()
     )
   );
 create policy "Allow delete for owner" on strain_milestone_shared_user for delete to authenticated using (
-  owner_id = (
+  user_id = (
     select auth.uid()
   )
 );

@@ -28,10 +28,10 @@ create table settlement (
 -- Junction Table: Shared Users
 --------------------------------------------------------------------------------
 create table settlement_shared_user (
-  owner_id uuid not null references auth.users(id) on delete cascade,
   settlement_id uuid not null references settlement(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
-  primary key (owner_id, settlement_id, shared_user_id)
+  user_id uuid not null references auth.users(id) on delete cascade,
+  primary key (settlement_id, shared_user_id, user_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -107,34 +107,34 @@ insert to authenticated with check (
           select auth.uid()
         )
     )
-    and owner_id = (
+    and user_id = (
       select auth.uid()
     )
   );
 create policy "Allow select for owner" on settlement_shared_user for
 select to authenticated using (
-    owner_id = (
+    user_id = (
       select auth.uid()
     )
   );
 create policy "Allow update for owner" on settlement_shared_user for
 update to authenticated using (
-    owner_id = (
+    user_id = (
       select auth.uid()
     )
   ) with check (
-    owner_id = (
+    user_id = (
       select auth.uid()
     )
   );
 create policy "Allow delete for owner" on settlement_shared_user for delete to authenticated using (
-  owner_id = (
+  user_id = (
     select auth.uid()
   )
 );
 create policy "Allow select for shared" on settlement_shared_user for
 select to authenticated using (
-    owner_id = (
+    user_id = (
       select auth.uid()
     )
   );

@@ -64,18 +64,18 @@ export type Database = {
       character_shared_user: {
         Row: {
           character_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           character_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           character_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -120,18 +120,18 @@ export type Database = {
       collective_cognition_reward_shared_user: {
         Row: {
           collective_cognition_reward_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           collective_cognition_reward_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           collective_cognition_reward_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -173,18 +173,18 @@ export type Database = {
       disorder_shared_user: {
         Row: {
           disorder_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           disorder_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           disorder_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -229,18 +229,18 @@ export type Database = {
       fighting_art_shared_user: {
         Row: {
           fighting_art_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           fighting_art_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           fighting_art_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -293,18 +293,18 @@ export type Database = {
       gear_shared_user: {
         Row: {
           gear_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           gear_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           gear_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -698,18 +698,18 @@ export type Database = {
       innovation_shared_user: {
         Row: {
           innovation_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           innovation_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           innovation_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -762,18 +762,18 @@ export type Database = {
       knowledge_shared_user: {
         Row: {
           knowledge_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           knowledge_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           knowledge_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -815,18 +815,18 @@ export type Database = {
       location_shared_user: {
         Row: {
           location_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           location_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           location_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -874,18 +874,18 @@ export type Database = {
       milestone_shared_user: {
         Row: {
           milestone_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           milestone_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           milestone_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1103,18 +1103,18 @@ export type Database = {
       nemesis_shared_user: {
         Row: {
           nemesis_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           nemesis_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           nemesis_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1205,18 +1205,18 @@ export type Database = {
       neurosis_shared_user: {
         Row: {
           neurosis_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           neurosis_id: string
-          owner_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           neurosis_id?: string
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1260,19 +1260,19 @@ export type Database = {
       }
       pattern_shared_user: {
         Row: {
-          owner_id: string
           pattern_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
-          owner_id: string
           pattern_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
-          owner_id?: string
           pattern_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1316,19 +1316,19 @@ export type Database = {
       }
       philosophy_shared_user: {
         Row: {
-          owner_id: string
           philosophy_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
-          owner_id: string
           philosophy_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
-          owner_id?: string
           philosophy_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1378,19 +1378,19 @@ export type Database = {
       }
       principle_shared_user: {
         Row: {
-          owner_id: string
           principle_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
-          owner_id: string
           principle_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
-          owner_id?: string
           principle_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1711,19 +1711,19 @@ export type Database = {
       }
       quarry_shared_user: {
         Row: {
-          owner_id: string
           quarry_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
-          owner_id: string
           quarry_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
-          owner_id?: string
           quarry_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1819,19 +1819,19 @@ export type Database = {
       }
       resource_shared_user: {
         Row: {
-          owner_id: string
           resource_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
-          owner_id: string
           resource_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
-          owner_id?: string
           resource_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -2512,19 +2512,19 @@ export type Database = {
       }
       settlement_shared_user: {
         Row: {
-          owner_id: string
           settlement_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
-          owner_id: string
           settlement_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
-          owner_id?: string
           settlement_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -2952,19 +2952,19 @@ export type Database = {
       }
       strain_milestone_shared_user: {
         Row: {
-          owner_id: string
           shared_user_id: string
           strain_milestone_id: string
+          user_id: string
         }
         Insert: {
-          owner_id: string
           shared_user_id: string
           strain_milestone_id: string
+          user_id: string
         }
         Update: {
-          owner_id?: string
           shared_user_id?: string
           strain_milestone_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -3493,18 +3493,18 @@ export type Database = {
       }
       wanderer_shared_user: {
         Row: {
-          owner_id: string
           shared_user_id: string
+          user_id: string
           wanderer_id: string
         }
         Insert: {
-          owner_id: string
           shared_user_id: string
+          user_id: string
           wanderer_id: string
         }
         Update: {
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
           wanderer_id?: string
         }
         Relationships: [
@@ -3581,18 +3581,18 @@ export type Database = {
       }
       weapon_type_shared_user: {
         Row: {
-          owner_id: string
           shared_user_id: string
+          user_id: string
           weapon_type_id: string
         }
         Insert: {
-          owner_id: string
           shared_user_id: string
+          user_id: string
           weapon_type_id: string
         }
         Update: {
-          owner_id?: string
           shared_user_id?: string
+          user_id?: string
           weapon_type_id?: string
         }
         Relationships: [

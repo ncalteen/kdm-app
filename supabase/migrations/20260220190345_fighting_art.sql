@@ -19,9 +19,9 @@ create table fighting_art (
 --------------------------------------------------------------------------------
 create table fighting_art_shared_user (
   fighting_art_id uuid not null references fighting_art(id) on delete cascade,
-  owner_id uuid not null references auth.users(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
-  primary key (fighting_art_id, shared_user_id)
+  user_id uuid not null references auth.users(id) on delete cascade,
+  primary key (fighting_art_id, shared_user_id, user_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -107,28 +107,28 @@ insert to authenticated with check (
           select auth.uid()
         )
     )
-    and owner_id = (
+    and user_id = (
       select auth.uid()
     )
   );
 create policy "Allow select for owner" on fighting_art_shared_user for
 select to authenticated using (
-    owner_id = (
+    user_id = (
       select auth.uid()
     )
   );
 create policy "Allow update for owner" on fighting_art_shared_user for
 update to authenticated using (
-    owner_id = (
+    user_id = (
       select auth.uid()
     )
   ) with check (
-    owner_id = (
+    user_id = (
       select auth.uid()
     )
   );
 create policy "Allow delete for owner" on fighting_art_shared_user for delete to authenticated using (
-  owner_id = (
+  user_id = (
     select auth.uid()
   )
 );
