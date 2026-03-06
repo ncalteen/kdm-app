@@ -99,8 +99,7 @@ export async function getNemesisNodesById(
     .select('id, node')
     .in('id', ids)
 
-  if (error)
-    throw new Error(`Error Fetching Nemesis Nodes: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Nemesis Nodes: ${error.message}`)
 
   return (data ?? []).map((n) => ({ id: n.id, node: n.node as MonsterNode }))
 }

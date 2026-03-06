@@ -98,8 +98,7 @@ export async function getQuarryNodesById(
     .select('id, node')
     .in('id', ids)
 
-  if (error)
-    throw new Error(`Error Fetching Quarry Nodes: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Quarry Nodes: ${error.message}`)
 
   return (data ?? []).map((q) => ({ id: q.id, node: q.node as MonsterNode }))
 }
