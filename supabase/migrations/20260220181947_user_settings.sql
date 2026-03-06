@@ -45,7 +45,7 @@ create policy "Allow delete for owner" on user_settings for delete to authentica
     select auth.uid()
   )
 );
-create policy "All all for admin" on user_settings for all using (is_admin()) with check (is_admin());
+create policy "Allow all for admin" on user_settings for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

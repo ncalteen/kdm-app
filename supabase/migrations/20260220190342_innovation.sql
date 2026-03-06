@@ -94,7 +94,7 @@ update to authenticated using (
         )
     )
   );
-create policy "All all for admin" on innovation for all using (is_admin()) with check (is_admin());
+create policy "Allow all for admin" on innovation for all using (is_admin()) with check (is_admin());
 alter table innovation_shared_user enable row level security;
 create policy "Allow insert for authenticated" on innovation_shared_user for
 insert to authenticated with check (

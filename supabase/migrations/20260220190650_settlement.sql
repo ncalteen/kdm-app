@@ -95,7 +95,7 @@ update to authenticated using (
         )
     )
   );
-create policy "All all for admin" on settlement for all using (is_admin()) with check (is_admin());
+create policy "Allow all for admin" on settlement for all using (is_admin()) with check (is_admin());
 alter table settlement_shared_user enable row level security;
 create policy "Allow insert for authenticated" on settlement_shared_user for
 insert to authenticated with check (
