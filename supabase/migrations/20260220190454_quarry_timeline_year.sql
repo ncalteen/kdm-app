@@ -9,7 +9,7 @@ create table quarry_timeline_year (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  campaigns campaign_type [] not null default '{}',
+  campaign_types campaign_type [] not null default '{}',
   quarry_id uuid not null references quarry(id) on delete cascade,
   entries varchar [] not null default '{}',
   year_number int not null,

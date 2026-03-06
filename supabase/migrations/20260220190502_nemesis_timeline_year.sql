@@ -9,7 +9,7 @@ create table nemesis_timeline_year (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  campaigns campaign_type [] not null default '{}',
+  campaign_types campaign_type [] not null default '{}',
   entries varchar [] not null default '{}',
   nemesis_id uuid not null references nemesis(id) on delete cascade,
   year_number int not null,

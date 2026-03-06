@@ -641,7 +641,7 @@ values (
         and not custom
     )
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"Crimson Crocodile"}',
@@ -848,7 +848,7 @@ values (
         and not custom
     )
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"Glowing Crater"}',
@@ -1041,7 +1041,7 @@ values (
     0,
     '{"Burrow", "Baller", "Heavy Load", "Power Forward", "Prepared Tunnels", "Separation Anxiety", "Indomitable"}'
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"Rumbling in the Dark"}',
@@ -1234,7 +1234,7 @@ values (
     0,
     '{"Bloom", "Heart of the Woods", "Perfect Aim", "Razor Bulbs", "Set Roots", "Indomitable"}'
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"A Crone''s Tale"}',
@@ -1454,7 +1454,7 @@ values (
         and not custom
     )
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"Devour the White Lion"}',
@@ -1675,7 +1675,7 @@ values (
         and not custom
     )
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"The Approaching Storm"}',
@@ -1899,7 +1899,7 @@ values (
         and not custom
     )
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"The Awaited"}',
@@ -2092,7 +2092,7 @@ values (
     0,
     '{"Divine Prowess", "Heft", "Hollow Earth", "Immaculate Intuition", "Whiplash", "Indomitable"}'
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"The Silver City"}',
@@ -2316,7 +2316,7 @@ values (
         and not custom
     )
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"Phoenix Feather"}',
@@ -2553,7 +2553,7 @@ values (
         and not custom
     )
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"Endless Screams"}',
@@ -2777,7 +2777,7 @@ values (
         and not custom
     )
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"Death of Song"}',
@@ -2970,7 +2970,7 @@ values (
     0,
     '{"10,000 Teeth", "Hivemind", "Spawn", "Spiderling Action", "Twitching Leg Pile", "Indomitable"}'
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"Young Rivals"}',
@@ -3177,7 +3177,7 @@ values (
         and not custom
     )
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"Promise Under the Sun"}',
@@ -3414,7 +3414,7 @@ values (
         and not custom
     )
   );
-insert into quarry_timeline_year (campaigns, entries, quarry_id, year_number)
+insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
     '{"White Lion"}',

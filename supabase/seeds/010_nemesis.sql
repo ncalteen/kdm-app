@@ -255,7 +255,7 @@ values (
     0,
     '{"Curb Stomp", "Keen Eyes", "Mad Master", "Master''s Presence", "Old Battle Scars", "Spark of Joy", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{"PEOPLE_OF_THE_DREAM_KEEPER"}',
     '{"Unwanted Gifts"}',
@@ -446,7 +446,7 @@ values (
     8,
     '{"Red Preference", "Seasoned Duelist", "Sheer Cliffs", "Smash", "Spry", "Unsteady", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"Waiting Bell"}',
@@ -615,7 +615,7 @@ values (
     0,
     '{"Dreaded Trophies", "Fast Target", "Frenzied Berserker", "Invincible", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{"PEOPLE_OF_THE_DREAM_KEEPER", "PEOPLE_OF_THE_LANTERN"}',
     '{"Nemesis Encounter - Butcher Lvl 1"}',
@@ -753,7 +753,7 @@ values (
     0,
     '{"Irradiate", "Smolder", "Trample", "Unseen Agony"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"Nemesis Encounter - Death of the Dragon King"}',
@@ -841,7 +841,7 @@ values (
     0,
     '{"Critical Failure", "Dice Bag", "Double or Death", "Gambler''s Dice", "Magister Ludi"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"Nemesis Encounter - The Gambler"}',
@@ -929,7 +929,7 @@ values (
     0,
     '{"Old Blood", "Reinforcements", "True Ghost Step", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"Nemesis Encounter - Godhand"}',
@@ -1023,7 +1023,7 @@ values (
     0,
     '{"Blacken", "Frustration", "Mauler", "Secondary Forge", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"Nemesis Encounter - Gold Smoke Knight"}',
@@ -1187,7 +1187,7 @@ values (
     0,
     '{"Applause", "Blue Lens - Closed", "Ghost Step", "Green Lens - Closed", "Impossible Eyes", "Red Lens - Closed", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{"PEOPLE_OF_THE_LANTERN"}',
     '{"Regal Visit"}',
@@ -1373,7 +1373,7 @@ values (
     0,
     '{"King''s Aura", "King''s Combat", "Out-Fighting", "Silent Hymn", "Weak Spot", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{"PEOPLE_OF_THE_DREAM_KEEPER", "PEOPLE_OF_THE_LANTERN", "PEOPLE_OF_THE_STARS"}',
     '{"Armored Strangers"}',
@@ -1592,7 +1592,7 @@ values (
     0,
     '{"Drama Lessons", "Last Act", "Outburst", "Zeal", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"An Uninvited Guest"}',
@@ -1976,7 +1976,7 @@ values (
     0,
     '{"Full Stride", "Gritty Armament", "Gun Action", "Tombstone", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"The Hanged Man"}',
@@ -2167,7 +2167,7 @@ values (
     0,
     '{"Cyclopean Cruelty", "Inverted", "Jagged Grotto", "Somatic Empathy", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{"PEOPLE_OF_THE_LANTERN", "PEOPLE_OF_THE_DREAM_KEEPER"}',
     '{"The Fiend"}',
@@ -2447,7 +2447,7 @@ values (
     0,
     '{"Red Secret", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{"PEOPLE_OF_THE_DREAM_KEEPER", "PEOPLE_OF_THE_LANTERN", "PEOPLE_OF_THE_STARS"}',
     '{"Challenger At the Gates"}',
@@ -2633,7 +2633,7 @@ values (
     0,
     '{"Ensnare", "Gloom", "Hounds", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"It''s Already Here"}',
@@ -2760,7 +2760,7 @@ values (
     0,
     '{"Light & Shadow", "Living Shadows", "Monochrome", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"Nemesis Encounter - The Great Devourer"}',
@@ -2924,7 +2924,7 @@ values (
     0,
     '{"Crooked Step", "Destiny''s Marrow", "Quickened", "Spectral Blast", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"Nemesis Encounter - Tyrant Lvl 1"}',
@@ -3034,7 +3034,7 @@ values (
     0,
     '{"Audience", "Lantern Vortex", "Vapor of Nothingness", "Indomitable"}'
   );
-insert into nemesis_timeline_year (campaigns, entries, nemesis_id, year_number)
+insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
     '{}',
     '{"Watched"}',
