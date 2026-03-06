@@ -21,8 +21,8 @@ export async function addQuarriesToSettlement(
   const { error } = await supabase.from('settlement_quarry').insert(
     quarryIds.map((quarryId) => ({
       collective_cognition_level_1: false,
-      collective_cognition_level_2: false,
-      collective_cognition_level_3: false,
+      collective_cognition_level_2: [false, false],
+      collective_cognition_level_3: [false, false, false],
       collective_cognition_prologue: false,
       quarry_id: quarryId,
       settlement_id: settlementId,

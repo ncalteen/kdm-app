@@ -21,15 +21,22 @@ export async function getPrincipleIds(
 ): Promise<string[]> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('principle')
-    .select('id')
-    .in('principle_name', principleNames)
-    .contains('campaign_types', DatabaseCampaignType[campaignType])
-    .eq('custom', custom)
-    .eq('user_id', custom ? userId : null)
+  const { data, error } = userId
+    ? await supabase
+        .from('principle')
+        .select('id')
+        .in('principle_name', principleNames)
+        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .eq('custom', custom)
+        .eq('user_id', userId)
+    : await supabase
+        .from('principle')
+        .select('id')
+        .in('principle_name', principleNames)
+        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .eq('custom', custom)
 
-  if (error) throw new Error(`Error Fetching Principle IDs: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Principle ID(s): ${error.message}`)
 
   if (!data) throw new Error('Principle(s) Not Found')
 

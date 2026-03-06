@@ -18,14 +18,21 @@ export async function getInnovationIds(
 ): Promise<string[]> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('innovation')
-    .select('id')
-    .in('innovation_name', innovationNames)
-    .eq('custom', custom)
-    .eq('user_id', custom ? userId : null)
+  const { data, error } = userId
+    ? await supabase
+        .from('innovation')
+        .select('id')
+        .in('innovation_name', innovationNames)
+        .eq('custom', custom)
+        .eq('user_id', userId)
+    : await supabase
+        .from('innovation')
+        .select('id')
+        .in('innovation_name', innovationNames)
+        .eq('custom', custom)
 
-  if (error) throw new Error(`Error Fetching Innovation IDs: ${error.message}`)
+  if (error)
+    throw new Error(`Error Fetching Innovation ID(s): ${error.message}`)
 
   if (!data) throw new Error('Innovation(s) Not Found')
 

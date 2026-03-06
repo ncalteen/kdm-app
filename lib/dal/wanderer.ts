@@ -1,6 +1,71 @@
 import { createClient } from '@/lib/supabase/client'
 
 /**
+ * Get Wanderer Names
+ *
+ * Retrieves the wanderers a user has access to. This includes:
+ *
+ * - Non-custom wanderers
+ * - Custom wanderers created by the user
+ * - Custom wanderers shared with the user (via the wanderer_shared_user table)
+ *
+ * @returns Wanderer Data
+ */
+export async function getWandererNames(): Promise<
+  { id: string; wanderer_name: string }[]
+> {
+  const supabase = createClient()
+
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!userData.user) throw new Error('User Not Authenticated')
+
+  // Fetch all three categories of wanderers in parallel
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    // Non-custom wanderers (available to all users)
+    supabase.from('wanderer').select('id, wanderer_name').eq('custom', false),
+    // Custom wanderers created by the user
+    supabase
+      .from('wanderer')
+      .select('id, wanderer_name')
+      .eq('custom', true)
+      .eq('user_id', userData.user.id),
+    // Custom wanderers shared with the user
+    supabase
+      .from('wanderer_shared_user')
+      .select('wanderer_id, wanderer:wanderer_id(id, wanderer_name)')
+      .eq('user_id', userData.user.id)
+  ])
+
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Wanderers: ${result.error.message}`)
+
+  // Collect wanderers from all sources, deduplicating by ID
+  const wandererMap = new Map<string, { id: string; wanderer_name: string }>()
+
+  for (const w of nonCustomResult.data ?? [])
+    wandererMap.set(w.id, { id: w.id, wanderer_name: w.wanderer_name })
+
+  for (const w of userCustomResult.data ?? [])
+    wandererMap.set(w.id, { id: w.id, wanderer_name: w.wanderer_name })
+
+  for (const row of sharedResult.data ?? []) {
+    const w = row.wanderer as unknown as {
+      id: string
+      wanderer_name: string
+    }
+
+    if (w) wandererMap.set(w.id, { id: w.id, wanderer_name: w.wanderer_name })
+  }
+
+  if (wandererMap.size === 0) throw new Error('Wanderer(s) Not Found')
+
+  return [...wandererMap.values()]
+}
+
+/**
  * Get Wanderer IDs
  *
  * Retrieves the IDs of wanderers. This depends on if they are custom
@@ -18,14 +83,20 @@ export async function getWandererIds(
 ): Promise<string[]> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('wanderer')
-    .select('id')
-    .in('wanderer_name', wandererNames)
-    .eq('custom', custom)
-    .eq('user_id', custom ? userId : null)
+  const { data, error } = userId
+    ? await supabase
+        .from('wanderer')
+        .select('id')
+        .in('wanderer_name', wandererNames)
+        .eq('custom', custom)
+        .eq('user_id', userId)
+    : await supabase
+        .from('wanderer')
+        .select('id')
+        .in('wanderer_name', wandererNames)
+        .eq('custom', custom)
 
-  if (error) throw new Error(`Error Fetching Wanderer IDs: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Wanderer ID(s): ${error.message}`)
 
   if (!data) throw new Error('Wanderer(s) Not Found')
 

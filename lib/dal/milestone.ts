@@ -21,15 +21,22 @@ export async function getMilestoneIds(
 ): Promise<string[]> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('milestone')
-    .select('id')
-    .in('milestone_name', milestoneNames)
-    .contains('campaign_types', [DatabaseCampaignType[campaignType]])
-    .eq('custom', custom)
-    .eq('user_id', custom ? userId : null)
+  const { data, error } = userId
+    ? await supabase
+        .from('milestone')
+        .select('id')
+        .in('milestone_name', milestoneNames)
+        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .eq('custom', custom)
+        .eq('user_id', userId)
+    : await supabase
+        .from('milestone')
+        .select('id')
+        .in('milestone_name', milestoneNames)
+        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .eq('custom', custom)
 
-  if (error) throw new Error(`Error Fetching Milestone IDs: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Milestone ID(s): ${error.message}`)
 
   if (!data) throw new Error('Milestone(s) Not Found')
 

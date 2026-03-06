@@ -18,14 +18,20 @@ export async function getLocationIds(
 ): Promise<string[]> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('location')
-    .select('id')
-    .in('location_name', locationNames)
-    .eq('custom', custom)
-    .eq('user_id', custom ? userId : null)
+  const { data, error } = userId
+    ? await supabase
+        .from('location')
+        .select('id')
+        .in('location_name', locationNames)
+        .eq('custom', custom)
+        .eq('user_id', userId)
+    : await supabase
+        .from('location')
+        .select('id')
+        .in('location_name', locationNames)
+        .eq('custom', custom)
 
-  if (error) throw new Error(`Error Fetching Location IDs: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Location ID(s): ${error.message}`)
 
   if (!data) throw new Error('Location(s) Not Found')
 

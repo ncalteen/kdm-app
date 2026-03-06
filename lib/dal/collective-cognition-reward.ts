@@ -18,16 +18,22 @@ export async function getCollectiveCognitionRewardIds(
 ): Promise<string[]> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('collective_cognition_reward')
-    .select('id')
-    .in('reward_name', rewardNames)
-    .eq('custom', custom)
-    .eq('user_id', custom ? userId : null)
+  const { data, error } = userId
+    ? await supabase
+        .from('collective_cognition_reward')
+        .select('id')
+        .in('reward_name', rewardNames)
+        .eq('custom', custom)
+        .eq('user_id', userId)
+    : await supabase
+        .from('collective_cognition_reward')
+        .select('id')
+        .in('reward_name', rewardNames)
+        .eq('custom', custom)
 
   if (error)
     throw new Error(
-      `Error Fetching Collective Cognition Reward IDs: ${error.message}`
+      `Error Fetching Collective Cognition Reward ID(s): ${error.message}`
     )
 
   if (!data) throw new Error('Collective Cognition Reward(s) Not Found')
