@@ -5,16 +5,23 @@ import { NavMain } from '@/components/nav-main'
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail
 } from '@/components/ui/sidebar'
 import { getCampaignType, getSurvivorType } from '@/lib/dal/settlement'
 import { CampaignType, SurvivorType, TabType } from '@/lib/enums'
+import { generateSeedData } from '@/lib/seed'
 import {
+  DatabaseIcon,
   HourglassIcon,
   LightbulbIcon,
+  LoaderCircleIcon,
   NotebookPenIcon,
   PawPrintIcon,
   School2Icon,
@@ -25,7 +32,14 @@ import {
   UsersIcon,
   WrenchIcon
 } from 'lucide-react'
-import { ComponentProps, ReactElement, useEffect, useState } from 'react'
+import {
+  ComponentProps,
+  ReactElement,
+  useEffect,
+  useState,
+  useTransition
+} from 'react'
+import { toast } from 'sonner'
 
 /**
  * Primary Navigation Items
@@ -181,9 +195,9 @@ export function AppSidebar({
 }: AppSidebarProps): ReactElement {
   const [navItems, setNavItems] = useState(baseNavPrimary)
   const [error, setError] = useState<string | null>(null)
+  const [isSeeding, startSeedTransition] = useTransition()
 
   useEffect(() => {
-    // Get the settlement's campaign type and survivor type
     Promise.all([
       getCampaignType(selectedSettlementId),
       getSurvivorType(selectedSettlementId)
@@ -274,6 +288,41 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarRail />
+
+      {process.env.NODE_ENV === 'development' && (
+        <SidebarFooter>
+          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+            <SidebarGroupLabel>Developer</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  disabled={isSeeding}
+                  onClick={() => {
+                    startSeedTransition(async () => {
+                      try {
+                        await generateSeedData()
+                      } catch (err) {
+                        console.error('Seed Data Error:', err)
+                        toast.error(
+                          'The darkness swallows your words. Please try again.'
+                        )
+                      }
+                    })
+                  }}>
+                  {isSeeding ? (
+                    <LoaderCircleIcon className="animate-spin" />
+                  ) : (
+                    <DatabaseIcon />
+                  )}
+                  <span className="text-xs">
+                    {isSeeding ? 'Generating...' : 'Generate Seed Data'}
+                  </span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarFooter>
+      )}
     </Sidebar>
   )
 }

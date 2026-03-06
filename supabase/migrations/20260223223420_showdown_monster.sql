@@ -8,6 +8,8 @@ create table showdown_monster (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
+  accuracy int not null default 0,
+  accuracy_tokens int not null default 0,
   ai_card_drawn boolean not null default false,
   ai_deck_id uuid not null references showdown_ai_deck(id) on delete cascade,
   ai_deck_remaining int not null default 0,
@@ -37,8 +39,70 @@ create table showdown_monster (
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table showdown_monster enable row level security;
-create policy "Allow all for owner/shared" on showdown_monster for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
-create policy "Allow admin to manage all" on showdown_monster for all using (is_admin()) with check (is_admin());
+create policy "Allow select for owner" on showdown_monster for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow insert for owner" on showdown_monster for
+insert to authenticated with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for owner" on showdown_monster for
+update to authenticated using (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow delete for owner" on showdown_monster for delete to authenticated using (
+  exists (
+    select 1
+    from settlement s
+    where s.id = settlement_id
+      and s.user_id = (
+        select auth.uid()
+      )
+  )
+);
+create policy "Allow select for shared" on showdown_monster for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement_shared_user su
+      where settlement_id = su.settlement_id
+        and shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow all for admin" on showdown_monster for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

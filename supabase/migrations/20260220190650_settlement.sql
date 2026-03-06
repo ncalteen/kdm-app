@@ -15,17 +15,11 @@ create table settlement (
   campaign_type campaign_type not null default 'PEOPLE_OF_THE_LANTERN',
   current_year int not null default 0 check (current_year >= 0),
   departing_bonuses varchar [] not null default '{}',
-  gear varchar [] not null default '{}',
-  innovations varchar [] not null default '{}',
   notes text not null default '',
-  patterns varchar [] not null default '{}',
-  seed_patterns varchar [] not null default '{}',
   settlement_name varchar not null default 'New Settlement',
   survival_limit int not null default 1 check (survival_limit >= 0),
   survivor_type survivor_type not null default 'CORE',
   uses_scouts boolean not null default false,
-  -- Arc Specific Data
-  collective_cognition int not null default 0,
   -- People of the Lantern/Sun Specific Data
   lantern_research int not null default 0,
   monster_volumes varchar [] not null default '{}'
@@ -36,40 +30,115 @@ create table settlement (
 create table settlement_shared_user (
   settlement_id uuid not null references settlement(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
-  primary key (settlement_id, shared_user_id)
+  user_id uuid not null references auth.users(id) on delete cascade,
+  primary key (settlement_id, shared_user_id, user_id)
 );
---------------------------------------------------------------------------------
--- Helper Functions
---------------------------------------------------------------------------------
-create or replace function is_settlement_member(p_settlement_id uuid) returns boolean language sql stable security definer as $$
-select exists (
-    select 1
-    from settlement
-    where id = p_settlement_id
-      and user_id = auth.uid()
-  )
-  or exists (
-    select 1
-    from settlement_shared_user
-    where settlement_id = p_settlement_id
-      and shared_user_id = auth.uid()
-  );
-$$;
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table settlement enable row level security;
-create policy "Allow all for owner/shared" on settlement for all using (is_settlement_member(id)) with check (is_settlement_member(id));
-create policy "Allow admin to manage all" on settlement for all using (is_admin()) with check (is_admin());
-alter table settlement_shared_user enable row level security;
-create policy "Allow all for owner" on settlement_shared_user for all using (
-  auth.uid() = (
-    select user_id
-    from settlement
-    where id = settlement_id
+create policy "Allow insert for authenticated" on settlement for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on settlement for
+select to authenticated using (
+    user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on settlement for
+update to authenticated using (
+    user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on settlement for delete to authenticated using (
+  user_id = (
+    select auth.uid()
   )
 );
-create policy "Allow admin to manage all" on settlement_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow select for shared" on settlement for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement_shared_user
+      where settlement_id = id
+        and shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared" on settlement for
+update to authenticated using (
+    exists (
+      select 1
+      from settlement_shared_user
+      where settlement_id = id
+        and shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    exists (
+      select 1
+      from settlement_shared_user
+      where settlement_id = id
+        and shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow all for admin" on settlement for all using (is_admin()) with check (is_admin());
+alter table settlement_shared_user enable row level security;
+create policy "Allow insert for authenticated" on settlement_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from settlement
+      where id = settlement_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on settlement_shared_user for
+select to authenticated using (
+    user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on settlement_shared_user for
+update to authenticated using (
+    user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on settlement_shared_user for delete to authenticated using (
+  user_id = (
+    select auth.uid()
+  )
+);
+create policy "Allow select for shared" on settlement_shared_user for
+select to authenticated using (
+    user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on settlement_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

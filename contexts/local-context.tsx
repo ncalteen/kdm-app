@@ -11,12 +11,14 @@ import {
 } from 'react'
 
 const newLocal = {
-  selectedHuntId: undefined,
-  selectedSettlementId: undefined,
-  selectedSettlementPhaseId: undefined,
-  selectedShowdownId: undefined,
-  selectedSurvivorId: undefined,
-  selectedTab: undefined
+  selectedHuntId: null,
+  selectedHuntMonsterIndex: 0,
+  selectedSettlementId: null,
+  selectedSettlementPhaseId: null,
+  selectedShowdownId: null,
+  selectedShowdownMonsterIndex: 0,
+  selectedSurvivorId: null,
+  selectedTab: null
 }
 
 /**
@@ -35,7 +37,7 @@ interface LocalContextType {
   /** Selected Hunt ID */
   selectedHuntId: string | null
   /** Selected Hunt Monster Index */
-  selectedHuntMonsterIndex: number | null
+  selectedHuntMonsterIndex: number
   /** Selected Settlement ID */
   selectedSettlementId: string | null
   /** Selected Settlement Phase ID */
@@ -43,7 +45,7 @@ interface LocalContextType {
   /** Selected Showdown ID */
   selectedShowdownId: string | null
   /** Selected Showdown Monster Index */
-  selectedShowdownMonsterIndex: number | null
+  selectedShowdownMonsterIndex: number
   /** Selected Survivor ID */
   selectedSurvivorId: string | null
   /** Selected Tab */
@@ -61,7 +63,7 @@ interface LocalContextType {
   /** Set Selected Hunt ID */
   setSelectedHuntId: (hunt: string | null) => void
   /** Set Selected Hunt Monster Index */
-  setSelectedHuntMonsterIndex: (index: number | null) => void
+  setSelectedHuntMonsterIndex: (index: number) => void
   /** Set Selected Settlement ID */
   setSelectedSettlementId: (settlement: string | null) => void
   /** Set Selected Settlement Phase ID */
@@ -69,7 +71,7 @@ interface LocalContextType {
   /** Set Selected Showdown ID */
   setSelectedShowdownId: (showdown: string | null) => void
   /** Set Selected Showdown Monster Index */
-  setSelectedShowdownMonsterIndex: (index: number | null) => void
+  setSelectedShowdownMonsterIndex: (index: number) => void
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivor: string | null) => void
   /** Set Selected Tab */
@@ -103,7 +105,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     typeof window === 'undefined'
       ? newLocal
       : JSON.parse(
-          localStorage.getItem('kdm-recordkeeper-local') ??
+          localStorage.getItem('kdm-archivist-local') ??
             JSON.stringify(newLocal)
         )
   )
@@ -112,7 +114,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     () => local.selectedHuntId ?? null
   )
   const [selectedHuntMonsterIndex, setSelectedHuntMonsterIndexState] =
-    useState<number>(() => local.selectedHuntMonsterIndex ?? 0)
+    useState<number>(() => local.selectedHuntMonsterIndex)
   const [selectedSettlementId, setSelectedSettlementIdState] = useState<
     string | null
   >(() => local.selectedSettlementId ?? null)
@@ -122,7 +124,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     string | null
   >(() => local.selectedShowdownId ?? null)
   const [selectedShowdownMonsterIndex, setSelectedShowdownMonsterIndexState] =
-    useState<number>(() => local.selectedShowdownMonsterIndex ?? 0)
+    useState<number>(() => local.selectedShowdownMonsterIndex)
   const [selectedSurvivorId, setSelectedSurvivorIdState] = useState<
     string | null
   >(() => local.selectedSurvivorId ?? null)
@@ -166,12 +168,12 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    *
    * @param index Selected Hunt Monster Index
    */
-  const setSelectedHuntMonsterIndex = (index: number | null) => {
-    setSelectedHuntMonsterIndexState(index ?? 0)
+  const setSelectedHuntMonsterIndex = (index: number) => {
+    setSelectedHuntMonsterIndexState(index)
     setLocalState((local) => {
       const updated = {
         ...local,
-        selectedHuntMonsterIndex: index ?? 0
+        selectedHuntMonsterIndex: index
       }
 
       saveToLocalStorage(updated)
@@ -262,12 +264,12 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    *
    * @param index Selected Showdown Monster Index
    */
-  const setSelectedShowdownMonsterIndex = (index: number | null) => {
-    setSelectedShowdownMonsterIndexState(index ?? 0)
+  const setSelectedShowdownMonsterIndex = (index: number) => {
+    setSelectedShowdownMonsterIndexState(index)
     setLocalState((local) => {
       const updated = {
         ...local,
-        selectedShowdownMonsterIndex: index ?? 0
+        selectedShowdownMonsterIndex: index
       }
 
       saveToLocalStorage(updated)

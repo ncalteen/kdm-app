@@ -34,6 +34,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      character: {
+        Row: {
+          character_name: string
+          created_at: string
+          custom: boolean
+          id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          character_name: string
+          created_at?: string
+          custom?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          character_name?: string
+          created_at?: string
+          custom?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      character_shared_user: {
+        Row: {
+          character_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          shared_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_shared_user_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "character"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collective_cognition_reward: {
         Row: {
           collective_cognition: number
@@ -68,14 +121,17 @@ export type Database = {
         Row: {
           collective_cognition_reward_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           collective_cognition_reward_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           collective_cognition_reward_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -118,14 +174,17 @@ export type Database = {
         Row: {
           disorder_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           disorder_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           disorder_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -171,14 +230,17 @@ export type Database = {
         Row: {
           fighting_art_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           fighting_art_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           fighting_art_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -232,14 +294,17 @@ export type Database = {
         Row: {
           gear_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           gear_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           gear_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -257,7 +322,6 @@ export type Database = {
           id: string
           monster_level: number
           monster_position: number
-          scout_id: string | null
           settlement_id: string | null
           survivor_position: number
           updated_at: string
@@ -267,7 +331,6 @@ export type Database = {
           id?: string
           monster_level: number
           monster_position?: number
-          scout_id?: string | null
           settlement_id?: string | null
           survivor_position?: number
           updated_at?: string
@@ -277,19 +340,11 @@ export type Database = {
           id?: string
           monster_level?: number
           monster_position?: number
-          scout_id?: string | null
           settlement_id?: string | null
           survivor_position?: number
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "hunt_scout_id_fkey"
-            columns: ["scout_id"]
-            isOneToOne: false
-            referencedRelation: "survivor"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "hunt_settlement_id_fkey"
             columns: ["settlement_id"]
@@ -545,6 +600,7 @@ export type Database = {
           luck_tokens: number
           movement_tokens: number
           notes: string
+          scout: boolean
           settlement_id: string
           speed_tokens: number
           strength_tokens: number
@@ -562,6 +618,7 @@ export type Database = {
           luck_tokens?: number
           movement_tokens?: number
           notes?: string
+          scout?: boolean
           settlement_id: string
           speed_tokens?: number
           strength_tokens?: number
@@ -579,6 +636,7 @@ export type Database = {
           luck_tokens?: number
           movement_tokens?: number
           notes?: string
+          scout?: boolean
           settlement_id?: string
           speed_tokens?: number
           strength_tokens?: number
@@ -641,14 +699,17 @@ export type Database = {
         Row: {
           innovation_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           innovation_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           innovation_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -702,14 +763,17 @@ export type Database = {
         Row: {
           knowledge_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           knowledge_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           knowledge_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -752,14 +816,17 @@ export type Database = {
         Row: {
           location_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           location_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           location_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -767,6 +834,65 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "location"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestone: {
+        Row: {
+          campaign_types: Database["public"]["Enums"]["campaign_type"][]
+          created_at: string
+          custom: boolean
+          event_name: string
+          id: string
+          milestone_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          campaign_types?: Database["public"]["Enums"]["campaign_type"][]
+          created_at?: string
+          custom?: boolean
+          event_name: string
+          id?: string
+          milestone_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          campaign_types?: Database["public"]["Enums"]["campaign_type"][]
+          created_at?: string
+          custom?: boolean
+          event_name?: string
+          id?: string
+          milestone_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      milestone_shared_user: {
+        Row: {
+          milestone_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Insert: {
+          milestone_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Update: {
+          milestone_id?: string
+          shared_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_shared_user_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestone"
             referencedColumns: ["id"]
           },
         ]
@@ -837,11 +963,10 @@ export type Database = {
           damage_tokens: number
           evasion: number
           evasion_tokens: number
-          hunt_pos: number
           id: string
           legendary_cards: number
           level_number: number
-          life: number
+          life: number | null
           luck: number
           luck_tokens: number
           moods: string[]
@@ -871,11 +996,10 @@ export type Database = {
           damage_tokens?: number
           evasion?: number
           evasion_tokens?: number
-          hunt_pos?: number
           id?: string
           legendary_cards?: number
           level_number: number
-          life?: number
+          life?: number | null
           luck?: number
           luck_tokens?: number
           moods?: string[]
@@ -905,11 +1029,10 @@ export type Database = {
           damage_tokens?: number
           evasion?: number
           evasion_tokens?: number
-          hunt_pos?: number
           id?: string
           legendary_cards?: number
           level_number?: number
-          life?: number
+          life?: number | null
           luck?: number
           luck_tokens?: number
           moods?: string[]
@@ -981,14 +1104,17 @@ export type Database = {
         Row: {
           nemesis_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           nemesis_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           nemesis_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1002,7 +1128,7 @@ export type Database = {
       }
       nemesis_timeline_year: {
         Row: {
-          campaigns: Database["public"]["Enums"]["campaign_type"][]
+          campaign_types: Database["public"]["Enums"]["campaign_type"][]
           created_at: string
           entries: string[]
           id: string
@@ -1011,7 +1137,7 @@ export type Database = {
           year_number: number
         }
         Insert: {
-          campaigns?: Database["public"]["Enums"]["campaign_type"][]
+          campaign_types?: Database["public"]["Enums"]["campaign_type"][]
           created_at?: string
           entries?: string[]
           id?: string
@@ -1020,7 +1146,7 @@ export type Database = {
           year_number: number
         }
         Update: {
-          campaigns?: Database["public"]["Enums"]["campaign_type"][]
+          campaign_types?: Database["public"]["Enums"]["campaign_type"][]
           created_at?: string
           entries?: string[]
           id?: string
@@ -1080,14 +1206,17 @@ export type Database = {
         Row: {
           neurosis_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           neurosis_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           neurosis_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1133,14 +1262,17 @@ export type Database = {
         Row: {
           pattern_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           pattern_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           pattern_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1157,6 +1289,7 @@ export type Database = {
           created_at: string
           custom: boolean
           id: string
+          neurosis_name: string | null
           philosophy_name: string
           updated_at: string
           user_id: string | null
@@ -1165,6 +1298,7 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          neurosis_name?: string | null
           philosophy_name: string
           updated_at?: string
           user_id?: string | null
@@ -1173,6 +1307,7 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          neurosis_name?: string | null
           philosophy_name?: string
           updated_at?: string
           user_id?: string | null
@@ -1183,14 +1318,17 @@ export type Database = {
         Row: {
           philosophy_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           philosophy_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           philosophy_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1198,6 +1336,68 @@ export type Database = {
             columns: ["philosophy_id"]
             isOneToOne: false
             referencedRelation: "philosophy"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      principle: {
+        Row: {
+          campaign_types: Database["public"]["Enums"]["campaign_type"][]
+          created_at: string
+          custom: boolean
+          id: string
+          option_1_name: string
+          option_2_name: string
+          principle_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          campaign_types?: Database["public"]["Enums"]["campaign_type"][]
+          created_at?: string
+          custom?: boolean
+          id?: string
+          option_1_name: string
+          option_2_name: string
+          principle_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          campaign_types?: Database["public"]["Enums"]["campaign_type"][]
+          created_at?: string
+          custom?: boolean
+          id?: string
+          option_1_name?: string
+          option_2_name?: string
+          principle_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      principle_shared_user: {
+        Row: {
+          principle_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Insert: {
+          principle_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Update: {
+          principle_id?: string
+          shared_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "principle_shared_user_principle_id_fkey"
+            columns: ["principle_id"]
+            isOneToOne: false
+            referencedRelation: "principle"
             referencedColumns: ["id"]
           },
         ]
@@ -1513,14 +1713,17 @@ export type Database = {
         Row: {
           quarry_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           quarry_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           quarry_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1534,7 +1737,7 @@ export type Database = {
       }
       quarry_timeline_year: {
         Row: {
-          campaigns: Database["public"]["Enums"]["campaign_type"][]
+          campaign_types: Database["public"]["Enums"]["campaign_type"][]
           created_at: string
           entries: string[]
           id: string
@@ -1543,7 +1746,7 @@ export type Database = {
           year_number: number
         }
         Insert: {
-          campaigns?: Database["public"]["Enums"]["campaign_type"][]
+          campaign_types?: Database["public"]["Enums"]["campaign_type"][]
           created_at?: string
           entries?: string[]
           id?: string
@@ -1552,7 +1755,7 @@ export type Database = {
           year_number: number
         }
         Update: {
-          campaigns?: Database["public"]["Enums"]["campaign_type"][]
+          campaign_types?: Database["public"]["Enums"]["campaign_type"][]
           created_at?: string
           entries?: string[]
           id?: string
@@ -1618,14 +1821,17 @@ export type Database = {
         Row: {
           resource_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           resource_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           resource_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1641,18 +1847,13 @@ export type Database = {
         Row: {
           arrival_bonuses: string[]
           campaign_type: Database["public"]["Enums"]["campaign_type"]
-          collective_cognition: number
           created_at: string
           current_year: number
           departing_bonuses: string[]
-          gear: string[]
           id: string
-          innovations: string[]
           lantern_research: number
           monster_volumes: string[]
           notes: string
-          patterns: string[]
-          seed_patterns: string[]
           settlement_name: string
           survival_limit: number
           survivor_type: Database["public"]["Enums"]["survivor_type"]
@@ -1663,18 +1864,13 @@ export type Database = {
         Insert: {
           arrival_bonuses?: string[]
           campaign_type?: Database["public"]["Enums"]["campaign_type"]
-          collective_cognition?: number
           created_at?: string
           current_year?: number
           departing_bonuses?: string[]
-          gear?: string[]
           id?: string
-          innovations?: string[]
           lantern_research?: number
           monster_volumes?: string[]
           notes?: string
-          patterns?: string[]
-          seed_patterns?: string[]
           settlement_name?: string
           survival_limit?: number
           survivor_type?: Database["public"]["Enums"]["survivor_type"]
@@ -1685,18 +1881,13 @@ export type Database = {
         Update: {
           arrival_bonuses?: string[]
           campaign_type?: Database["public"]["Enums"]["campaign_type"]
-          collective_cognition?: number
           created_at?: string
           current_year?: number
           departing_bonuses?: string[]
-          gear?: string[]
           id?: string
-          innovations?: string[]
           lantern_research?: number
           monster_volumes?: string[]
           notes?: string
-          patterns?: string[]
-          seed_patterns?: string[]
           settlement_name?: string
           survival_limit?: number
           survivor_type?: Database["public"]["Enums"]["survivor_type"]
@@ -1708,33 +1899,37 @@ export type Database = {
       }
       settlement_collective_cognition_reward: {
         Row: {
-          collective_cognition: number
+          collective_cognition_reward_id: string
           created_at: string
           id: string
-          reward_name: string
           settlement_id: string
           unlocked: boolean
           updated_at: string
         }
         Insert: {
-          collective_cognition?: number
+          collective_cognition_reward_id: string
           created_at?: string
           id?: string
-          reward_name: string
           settlement_id: string
           unlocked?: boolean
           updated_at?: string
         }
         Update: {
-          collective_cognition?: number
+          collective_cognition_reward_id?: string
           created_at?: string
           id?: string
-          reward_name?: string
           settlement_id?: string
           unlocked?: boolean
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "settlement_collective_cogniti_collective_cognition_reward__fkey"
+            columns: ["collective_cognition_reward_id"]
+            isOneToOne: false
+            referencedRelation: "collective_cognition_reward"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "settlement_collective_cognition_reward_settlement_id_fkey"
             columns: ["settlement_id"]
@@ -1749,6 +1944,7 @@ export type Database = {
           created_at: string
           gear_id: string
           id: string
+          quantity: number
           settlement_id: string
           updated_at: string
         }
@@ -1756,6 +1952,7 @@ export type Database = {
           created_at?: string
           gear_id: string
           id?: string
+          quantity?: number
           settlement_id: string
           updated_at?: string
         }
@@ -1763,6 +1960,7 @@ export type Database = {
           created_at?: string
           gear_id?: string
           id?: string
+          quantity?: number
           settlement_id?: string
           updated_at?: string
         }
@@ -1776,6 +1974,45 @@ export type Database = {
           },
           {
             foreignKeyName: "settlement_gear_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settlement_innovation: {
+        Row: {
+          created_at: string
+          id: string
+          innovation_id: string
+          settlement_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          innovation_id: string
+          settlement_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          innovation_id?: string
+          settlement_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_innovation_innovation_id_fkey"
+            columns: ["innovation_id"]
+            isOneToOne: false
+            referencedRelation: "innovation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_innovation_settlement_id_fkey"
             columns: ["settlement_id"]
             isOneToOne: false
             referencedRelation: "settlement"
@@ -1868,31 +2105,35 @@ export type Database = {
         Row: {
           complete: boolean
           created_at: string
-          event_name: string
           id: string
-          milestone_name: string
+          milestone_id: string
           settlement_id: string
           updated_at: string
         }
         Insert: {
           complete?: boolean
           created_at?: string
-          event_name?: string
           id?: string
-          milestone_name: string
+          milestone_id: string
           settlement_id: string
           updated_at?: string
         }
         Update: {
           complete?: boolean
           created_at?: string
-          event_name?: string
           id?: string
-          milestone_name?: string
+          milestone_id?: string
           settlement_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "settlement_milestone_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestone"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "settlement_milestone_settlement_id_fkey"
             columns: ["settlement_id"]
@@ -1965,6 +2206,45 @@ export type Database = {
           },
         ]
       }
+      settlement_pattern: {
+        Row: {
+          created_at: string
+          id: string
+          pattern_id: string
+          settlement_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pattern_id: string
+          settlement_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pattern_id?: string
+          settlement_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_pattern_pattern_id_fkey"
+            columns: ["pattern_id"]
+            isOneToOne: false
+            referencedRelation: "pattern"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_pattern_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settlement_phase: {
         Row: {
           created_at: string
@@ -2012,18 +2292,28 @@ export type Database = {
       }
       settlement_phase_returning_survivor: {
         Row: {
+          settlement_id: string
           settlement_phase_id: string
           survivor_id: string
         }
         Insert: {
+          settlement_id: string
           settlement_phase_id: string
           survivor_id: string
         }
         Update: {
+          settlement_id?: string
           settlement_phase_id?: string
           survivor_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "settlement_phase_returning_survivor_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "settlement_phase_returning_survivor_settlement_phase_id_fkey"
             columns: ["settlement_phase_id"]
@@ -2083,37 +2373,38 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          option_1_name: string
           option_1_selected: boolean
-          option_2_name: string
           option_2_selected: boolean
-          principle_name: string
+          principle_id: string
           settlement_id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
-          option_1_name: string
           option_1_selected?: boolean
-          option_2_name: string
           option_2_selected?: boolean
-          principle_name: string
+          principle_id: string
           settlement_id: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
-          option_1_name?: string
           option_1_selected?: boolean
-          option_2_name?: string
           option_2_selected?: boolean
-          principle_name?: string
+          principle_id?: string
           settlement_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "settlement_principle_principle_id_fkey"
+            columns: ["principle_id"]
+            isOneToOne: false
+            referencedRelation: "principle"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "settlement_principle_settlement_id_fkey"
             columns: ["settlement_id"]
@@ -2223,14 +2514,17 @@ export type Database = {
         Row: {
           settlement_id: string
           shared_user_id: string
+          user_id: string
         }
         Insert: {
           settlement_id: string
           shared_user_id: string
+          user_id: string
         }
         Update: {
           settlement_id?: string
           shared_user_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -2321,46 +2615,36 @@ export type Database = {
       }
       showdown: {
         Row: {
-          ambush: boolean
+          ambush: Database["public"]["Enums"]["ambush_type"]
           created_at: string
           id: string
           monster_level: number
-          scout_id: string | null
           settlement_id: string | null
           showdown_type: Database["public"]["Enums"]["showdown_type"]
           turn: Database["public"]["Enums"]["showdown_turn"]
           updated_at: string
         }
         Insert: {
-          ambush?: boolean
+          ambush?: Database["public"]["Enums"]["ambush_type"]
           created_at?: string
           id?: string
           monster_level: number
-          scout_id?: string | null
           settlement_id?: string | null
           showdown_type?: Database["public"]["Enums"]["showdown_type"]
           turn?: Database["public"]["Enums"]["showdown_turn"]
           updated_at?: string
         }
         Update: {
-          ambush?: boolean
+          ambush?: Database["public"]["Enums"]["ambush_type"]
           created_at?: string
           id?: string
           monster_level?: number
-          scout_id?: string | null
           settlement_id?: string | null
           showdown_type?: Database["public"]["Enums"]["showdown_type"]
           turn?: Database["public"]["Enums"]["showdown_turn"]
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "showdown_scout_id_fkey"
-            columns: ["scout_id"]
-            isOneToOne: false
-            referencedRelation: "survivor"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "showdown_settlement_id_fkey"
             columns: ["settlement_id"]
@@ -2423,6 +2707,8 @@ export type Database = {
       }
       showdown_monster: {
         Row: {
+          accuracy: number
+          accuracy_tokens: number
           ai_card_drawn: boolean
           ai_deck_id: string
           ai_deck_remaining: number
@@ -2452,6 +2738,8 @@ export type Database = {
           wounds: number
         }
         Insert: {
+          accuracy?: number
+          accuracy_tokens?: number
           ai_card_drawn?: boolean
           ai_deck_id: string
           ai_deck_remaining?: number
@@ -2481,6 +2769,8 @@ export type Database = {
           wounds?: number
         }
         Update: {
+          accuracy?: number
+          accuracy_tokens?: number
           ai_card_drawn?: boolean
           ai_deck_id?: string
           ai_deck_remaining?: number
@@ -2550,6 +2840,7 @@ export type Database = {
           movement_used: boolean
           notes: string
           priority_target: boolean
+          scout: boolean
           settlement_id: string
           showdown_id: string
           speed_tokens: number
@@ -2574,6 +2865,7 @@ export type Database = {
           movement_used?: boolean
           notes?: string
           priority_target?: boolean
+          scout?: boolean
           settlement_id: string
           showdown_id: string
           speed_tokens?: number
@@ -2598,6 +2890,7 @@ export type Database = {
           movement_used?: boolean
           notes?: string
           priority_target?: boolean
+          scout?: boolean
           settlement_id?: string
           showdown_id?: string
           speed_tokens?: number
@@ -2626,6 +2919,59 @@ export type Database = {
             columns: ["survivor_id"]
             isOneToOne: false
             referencedRelation: "survivor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strain_milestone: {
+        Row: {
+          created_at: string
+          custom: boolean
+          id: string
+          strain_milestone_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          strain_milestone_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          strain_milestone_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      strain_milestone_shared_user: {
+        Row: {
+          shared_user_id: string
+          strain_milestone_id: string
+          user_id: string
+        }
+        Insert: {
+          shared_user_id: string
+          strain_milestone_id: string
+          user_id: string
+        }
+        Update: {
+          shared_user_id?: string
+          strain_milestone_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strain_milestone_shared_user_strain_milestone_id_fkey"
+            columns: ["strain_milestone_id"]
+            isOneToOne: false
+            referencedRelation: "strain_milestone"
             referencedColumns: ["id"]
           },
         ]
@@ -2668,7 +3014,7 @@ export type Database = {
           cursed_gear: string[]
           dead: boolean
           disorders: string[]
-          disposition: number
+          disposition: number | null
           evasion: number
           fighting_arts: string[]
           gambler_reaper: boolean | null
@@ -2691,7 +3037,6 @@ export type Database = {
           head_deaf: boolean
           head_heavy_damage: boolean | null
           head_intracranial_hemorrhage: boolean
-          head_light_damage: boolean | null
           head_shattered_jaw: boolean
           hunt_xp: number
           hunt_xp_rank_up: number[]
@@ -2700,12 +3045,12 @@ export type Database = {
           knowledge_1: string | null
           knowledge_1_observation_conditions: string | null
           knowledge_1_observation_rank: number | null
-          knowledge_1_rank_up: number[] | null
+          knowledge_1_rank_up: number | null
           knowledge_1_rules: string | null
           knowledge_2: string | null
           knowledge_2_observation_conditions: string | null
           knowledge_2_observation_rank: number | null
-          knowledge_2_rank_up: number[] | null
+          knowledge_2_rank_up: number | null
           knowledge_2_rules: string | null
           leg_armor: number
           leg_broken: number
@@ -2743,7 +3088,7 @@ export type Database = {
           tenet_knowledge: string | null
           tenet_knowledge_observation_conditions: string | null
           tenet_knowledge_observation_rank: number | null
-          tenet_knowledge_rank_up: number[] | null
+          tenet_knowledge_rank_up: number | null
           tenet_knowledge_rules: string | null
           torment: number | null
           understanding: number
@@ -2796,7 +3141,7 @@ export type Database = {
           cursed_gear?: string[]
           dead?: boolean
           disorders?: string[]
-          disposition?: number
+          disposition?: number | null
           evasion?: number
           fighting_arts?: string[]
           gambler_reaper?: boolean | null
@@ -2819,7 +3164,6 @@ export type Database = {
           head_deaf?: boolean
           head_heavy_damage?: boolean | null
           head_intracranial_hemorrhage?: boolean
-          head_light_damage?: boolean | null
           head_shattered_jaw?: boolean
           hunt_xp?: number
           hunt_xp_rank_up?: number[]
@@ -2828,12 +3172,12 @@ export type Database = {
           knowledge_1?: string | null
           knowledge_1_observation_conditions?: string | null
           knowledge_1_observation_rank?: number | null
-          knowledge_1_rank_up?: number[] | null
+          knowledge_1_rank_up?: number | null
           knowledge_1_rules?: string | null
           knowledge_2?: string | null
           knowledge_2_observation_conditions?: string | null
           knowledge_2_observation_rank?: number | null
-          knowledge_2_rank_up?: number[] | null
+          knowledge_2_rank_up?: number | null
           knowledge_2_rules?: string | null
           leg_armor?: number
           leg_broken?: number
@@ -2871,7 +3215,7 @@ export type Database = {
           tenet_knowledge?: string | null
           tenet_knowledge_observation_conditions?: string | null
           tenet_knowledge_observation_rank?: number | null
-          tenet_knowledge_rank_up?: number[] | null
+          tenet_knowledge_rank_up?: number | null
           tenet_knowledge_rules?: string | null
           torment?: number | null
           understanding?: number
@@ -2924,7 +3268,7 @@ export type Database = {
           cursed_gear?: string[]
           dead?: boolean
           disorders?: string[]
-          disposition?: number
+          disposition?: number | null
           evasion?: number
           fighting_arts?: string[]
           gambler_reaper?: boolean | null
@@ -2947,7 +3291,6 @@ export type Database = {
           head_deaf?: boolean
           head_heavy_damage?: boolean | null
           head_intracranial_hemorrhage?: boolean
-          head_light_damage?: boolean | null
           head_shattered_jaw?: boolean
           hunt_xp?: number
           hunt_xp_rank_up?: number[]
@@ -2956,12 +3299,12 @@ export type Database = {
           knowledge_1?: string | null
           knowledge_1_observation_conditions?: string | null
           knowledge_1_observation_rank?: number | null
-          knowledge_1_rank_up?: number[] | null
+          knowledge_1_rank_up?: number | null
           knowledge_1_rules?: string | null
           knowledge_2?: string | null
           knowledge_2_observation_conditions?: string | null
           knowledge_2_observation_rank?: number | null
-          knowledge_2_rank_up?: number[] | null
+          knowledge_2_rank_up?: number | null
           knowledge_2_rules?: string | null
           leg_armor?: number
           leg_broken?: number
@@ -2999,7 +3342,7 @@ export type Database = {
           tenet_knowledge?: string | null
           tenet_knowledge_observation_conditions?: string | null
           tenet_knowledge_observation_rank?: number | null
-          tenet_knowledge_rank_up?: number[] | null
+          tenet_knowledge_rank_up?: number | null
           tenet_knowledge_rules?: string | null
           torment?: number | null
           understanding?: number
@@ -3151,14 +3494,17 @@ export type Database = {
       wanderer_shared_user: {
         Row: {
           shared_user_id: string
+          user_id: string
           wanderer_id: string
         }
         Insert: {
           shared_user_id: string
+          user_id: string
           wanderer_id: string
         }
         Update: {
           shared_user_id?: string
+          user_id?: string
           wanderer_id?: string
         }
         Relationships: [
@@ -3236,14 +3582,17 @@ export type Database = {
       weapon_type_shared_user: {
         Row: {
           shared_user_id: string
+          user_id: string
           weapon_type_id: string
         }
         Insert: {
           shared_user_id: string
+          user_id: string
           weapon_type_id: string
         }
         Update: {
           shared_user_id?: string
+          user_id?: string
           weapon_type_id?: string
         }
         Relationships: [
@@ -3262,14 +3611,10 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
-      is_settlement_member: {
-        Args: { p_settlement_id: string }
-        Returns: boolean
-      }
     }
     Enums: {
       aenas_state: "Content" | "Hungry"
-      ambush_type: "SURVIVORS" | "MONSTER"
+      ambush_type: "SURVIVORS" | "MONSTER" | "NONE"
       campaign_type:
         | "PEOPLE_OF_THE_DREAM_KEEPER"
         | "PEOPLE_OF_THE_LANTERN"
@@ -3314,7 +3659,34 @@ export type Database = {
         | "FI"
       monster_version: "ORIGINAL" | "ALTERNATE" | "VIGNETTE"
       resource_category: "BASIC" | "MONSTER" | "STRANGE" | "VERMIN"
-      resource_type: "BONE" | "HIDE" | "ORGAN" | "SCRAP" | "HERB" | "VERMIN"
+      resource_type:
+        | "BONE"
+        | "CLOTH"
+        | "CONSUMABLE"
+        | "COPPER"
+        | "DEATHMETAL"
+        | "DIAMOND"
+        | "DUNG"
+        | "ELASTOMER"
+        | "EMOTION"
+        | "FISH"
+        | "FLOWER"
+        | "FRUIT"
+        | "GLASS"
+        | "HIDE"
+        | "INDOMITABLE"
+        | "IRON"
+        | "ORGAN"
+        | "OTHER"
+        | "PERFECT"
+        | "SCRAP"
+        | "SILK"
+        | "SKULL"
+        | "STONE"
+        | "HERB"
+        | "VEGETABLE"
+        | "VERMIN"
+        | "VIRID"
       settlement_phase_step:
         | "SET_UP_SETTLEMENT"
         | "SURVIVORS_RETURN"
@@ -3461,7 +3833,7 @@ export const Constants = {
   public: {
     Enums: {
       aenas_state: ["Content", "Hungry"],
-      ambush_type: ["SURVIVORS", "MONSTER"],
+      ambush_type: ["SURVIVORS", "MONSTER", "NONE"],
       campaign_type: [
         "PEOPLE_OF_THE_DREAM_KEEPER",
         "PEOPLE_OF_THE_LANTERN",
@@ -3509,7 +3881,35 @@ export const Constants = {
       ],
       monster_version: ["ORIGINAL", "ALTERNATE", "VIGNETTE"],
       resource_category: ["BASIC", "MONSTER", "STRANGE", "VERMIN"],
-      resource_type: ["BONE", "HIDE", "ORGAN", "SCRAP", "HERB", "VERMIN"],
+      resource_type: [
+        "BONE",
+        "CLOTH",
+        "CONSUMABLE",
+        "COPPER",
+        "DEATHMETAL",
+        "DIAMOND",
+        "DUNG",
+        "ELASTOMER",
+        "EMOTION",
+        "FISH",
+        "FLOWER",
+        "FRUIT",
+        "GLASS",
+        "HIDE",
+        "INDOMITABLE",
+        "IRON",
+        "ORGAN",
+        "OTHER",
+        "PERFECT",
+        "SCRAP",
+        "SILK",
+        "SKULL",
+        "STONE",
+        "HERB",
+        "VEGETABLE",
+        "VERMIN",
+        "VIRID",
+      ],
       settlement_phase_step: [
         "SET_UP_SETTLEMENT",
         "SURVIVORS_RETURN",

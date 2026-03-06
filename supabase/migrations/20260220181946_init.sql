@@ -1,7 +1,7 @@
 -- Aenas State
 create type aenas_state as enum ('Content', 'Hungry');
 -- Ambush Type
-create type ambush_type as enum ('SURVIVORS', 'MONSTER');
+create type ambush_type as enum ('SURVIVORS', 'MONSTER', 'NONE');
 -- Campaign Type
 create type campaign_type as enum (
   'PEOPLE_OF_THE_DREAM_KEEPER',
@@ -114,8 +114,5 @@ return new;
 end;
 $$ language plpgsql;
 create or replace function is_admin() returns boolean language sql stable security definer as $$
-select coalesce(
-    (auth.jwt()->'app_metadata'->>'is_admin')::boolean,
-    false
-  );
+select auth.role() = 'admin';
 $$;

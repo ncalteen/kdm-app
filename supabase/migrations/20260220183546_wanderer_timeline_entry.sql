@@ -11,7 +11,10 @@ create table wanderer_timeline_year (
   -- Data
   wanderer_id uuid not null references wanderer(id) on delete cascade,
   entries varchar [] not null default '{}',
-  year_number int not null,
+  year_number int not null check (
+    year_number >= 0
+    and year_number <= 40
+  ),
   -- Constraints
   unique (wanderer_id, year_number)
 );
@@ -19,50 +22,84 @@ create table wanderer_timeline_year (
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table wanderer_timeline_year enable row level security;
-create policy "Allow authenticated read for non-custom" on wanderer_timeline_year for
-select using (
-    auth.role() = 'authenticated'
-    and exists (
+create policy "Allow insert for authenticated and custom" on wanderer_timeline_year for
+insert to authenticated with check (
+    exists (
+      select 1
+      from wanderer w
+      where w.id = wanderer_id
+        and w.custom
+        and w.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow select for authenticated and non-custom" on wanderer_timeline_year for
+select to authenticated using (
+    exists (
       select 1
       from wanderer w
       where w.id = wanderer_id
         and not w.custom
     )
   );
-create policy "Allow all for owner/shared of custom" on wanderer_timeline_year for all using (
+create policy "Allow select for owner and custom" on wanderer_timeline_year for
+select to authenticated using (
+    exists (
+      select 1
+      from wanderer w
+      where w.id = wanderer_id
+        and w.custom
+        and w.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for owner and custom" on wanderer_timeline_year for
+update to authenticated using (
+    exists (
+      select 1
+      from wanderer w
+      where w.id = wanderer_id
+        and w.custom
+        and w.user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    exists (
+      select 1
+      from wanderer w
+      where w.id = wanderer_id
+        and w.custom
+        and w.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow delete for owner and custom" on wanderer_timeline_year for delete to authenticated using (
   exists (
     select 1
     from wanderer w
     where w.id = wanderer_id
       and w.custom
-      and (
-        w.user_id = auth.uid()
-        or exists (
-          select 1
-          from wanderer_shared_user su
-          where su.wanderer_id = w.id
-            and su.shared_user_id = auth.uid()
-        )
-      )
-  )
-) with check (
-  exists (
-    select 1
-    from wanderer w
-    where w.id = wanderer_id
-      and w.custom
-      and (
-        w.user_id = auth.uid()
-        or exists (
-          select 1
-          from wanderer_shared_user su
-          where su.wanderer_id = w.id
-            and su.shared_user_id = auth.uid()
-        )
+      and w.user_id = (
+        select auth.uid()
       )
   )
 );
-create policy "Allow admin to manage all" on wanderer_timeline_year for all using (is_admin()) with check (is_admin());
+create policy "Allow select for shared and custom" on wanderer_timeline_year for
+select to authenticated using (
+    exists (
+      select 1
+      from wanderer_shared_user su
+      where wanderer_id = su.wanderer_id
+        and shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow all for admin" on wanderer_timeline_year for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

@@ -1,12 +1,13 @@
 'use client'
 
 import { AppSidebar } from '@/components/app-sidebar'
+import { SettlementCard } from '@/components/settlement/settlement-card'
 import { SiteHeader } from '@/components/side-header'
-import { SidebarProvider } from '@/components/ui/sidebar'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { ReactElement, Suspense, useEffect, useRef } from 'react'
+import { ReactElement, Suspense, useEffect, useRef, useState } from 'react'
 
 /**
  * Main Page Component
@@ -48,8 +49,9 @@ function MainPageLoading(): ReactElement {
  */
 function MainPageContent(): ReactElement {
   const router = useRouter()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  // Track if the component is mounted and loading state
+  // Track if the component is mounted
   const isMounted = useRef(false)
 
   // Verify authentication; redirect to login if unauthenticated
@@ -60,13 +62,17 @@ function MainPageContent(): ReactElement {
 
     supabase.auth.getUser().then(({ data, error }) => {
       if (!isMounted.current) return
+
       if (error || !data?.user) router.replace('/auth/login')
+      else setIsAuthenticated(true)
     })
 
     return () => {
       isMounted.current = false
     }
   }, [router])
+
+  if (!isAuthenticated) return <MainPageLoading />
 
   return <MainPage />
 }
@@ -111,26 +117,46 @@ function MainPage(): ReactElement {
 
   return (
     <div className="[--header-height:calc(--spacing(10))] min-w-[450px]">
-      <SidebarProvider className="flex flex-col">
+      <SidebarProvider>
         <SiteHeader />
 
-        <div className="flex flex-1 pt-(--header-height)">
-          <div className="p-4 w-full max-w-xl">
-            <AppSidebar
+        <AppSidebar
+          selectedHuntId={selectedHuntId}
+          selectedSettlementId={selectedSettlementId}
+          selectedSettlementPhaseId={selectedSettlementPhaseId}
+          selectedShowdownId={selectedShowdownId}
+          selectedTab={selectedTab}
+          setSelectedHuntId={setSelectedHuntId}
+          setSelectedSettlementId={setSelectedSettlementId}
+          setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
+          setSelectedShowdownId={setSelectedShowdownId}
+          setSelectedSurvivorId={setSelectedSurvivorId}
+          setSelectedTab={setSelectedTab}
+        />
+        <SidebarInset>
+          <div className="p-4 pt-(--header-height)">
+            <SettlementCard
+              isCreatingNewSurvivor={isCreatingNewSurvivor}
               selectedHuntId={selectedHuntId}
+              selectedHuntMonsterIndex={selectedHuntMonsterIndex}
               selectedSettlementId={selectedSettlementId}
               selectedSettlementPhaseId={selectedSettlementPhaseId}
               selectedShowdownId={selectedShowdownId}
+              selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
+              selectedSurvivorId={selectedSurvivorId}
               selectedTab={selectedTab}
+              setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
               setSelectedHuntId={setSelectedHuntId}
+              setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
               setSelectedSettlementId={setSelectedSettlementId}
-              setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
+              setSelectedSettlementPhase={setSelectedSettlementPhaseId}
               setSelectedShowdownId={setSelectedShowdownId}
+              setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
               setSelectedSurvivorId={setSelectedSurvivorId}
               setSelectedTab={setSelectedTab}
             />
           </div>
-        </div>
+        </SidebarInset>
       </SidebarProvider>
     </div>
   )

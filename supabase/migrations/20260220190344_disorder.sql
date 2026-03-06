@@ -19,50 +19,125 @@ create table disorder (
 create table disorder_shared_user (
   disorder_id uuid not null references disorder(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
-  primary key (disorder_id, shared_user_id)
+  user_id uuid not null references auth.users(id) on delete cascade,
+  primary key (disorder_id, shared_user_id, user_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table disorder enable row level security;
-create policy "Allow authenticated read for non-custom" on disorder for
-select using (
-    auth.role() = 'authenticated'
-    and not custom
+create policy "Allow insert for authenticated and custom" on disorder for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
+    and custom
   );
-create policy "Allow all for owner/shared of custom" on disorder for all using (
-  custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from disorder_shared_user su
-      where su.disorder_id = id
-        and su.shared_user_id = auth.uid()
+create policy "Allow select for authenticated and non-custom" on disorder for
+select to authenticated using (not custom);
+create policy "Allow select for owner and custom" on disorder for
+select to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
     )
-  )
-) with check (
-  custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from disorder_shared_user su
-      where su.disorder_id = id
-        and su.shared_user_id = auth.uid()
+  );
+create policy "Allow update for owner and custom" on disorder for
+update to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
     )
+  ) with check (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner and custom" on disorder for delete to authenticated using (
+  custom
+  and user_id = (
+    select auth.uid()
   )
 );
-create policy "Allow admin to manage all" on disorder for all using (is_admin()) with check (is_admin());
+create policy "Allow select for shared and custom" on disorder for
+select to authenticated using (
+    custom
+    and exists (
+      select 1
+      from disorder_shared_user su
+      where su.disorder_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared and custom" on disorder for
+update to authenticated using (
+    custom
+    and exists (
+      select 1
+      from disorder_shared_user su
+      where su.disorder_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    custom
+    and exists (
+      select 1
+      from disorder_shared_user su
+      where su.disorder_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow all for admin" on disorder for all using (is_admin()) with check (is_admin());
 alter table disorder_shared_user enable row level security;
-create policy "Allow all for owner" on disorder_shared_user for all using (
-  auth.uid() = (
-    select user_id
-    from disorder
-    where id = disorder_id
+create policy "Allow insert for authenticated" on disorder_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from disorder d
+      where d.id = disorder_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on disorder_shared_user for
+select to authenticated using (
+    user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on disorder_shared_user for
+update to authenticated using (
+    user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on disorder_shared_user for delete to authenticated using (
+  user_id = (
+    select auth.uid()
   )
 );
-create policy "Allow admin to manage all" on disorder_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow select for shared" on disorder_shared_user for
+select to authenticated using (
+    shared_user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on disorder_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

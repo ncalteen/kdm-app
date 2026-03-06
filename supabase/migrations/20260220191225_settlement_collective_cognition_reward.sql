@@ -8,18 +8,79 @@ create table settlement_collective_cognition_reward (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  collective_cognition int not null default 0,
-  reward_name varchar not null,
+  collective_cognition_reward_id uuid not null references collective_cognition_reward(id) on delete cascade,
   settlement_id uuid not null references settlement(id) on delete cascade,
   unlocked boolean not null default false,
-  unique (settlement_id, reward_name)
+  unique (collective_cognition_reward_id, settlement_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table settlement_collective_cognition_reward enable row level security;
-create policy "Allow all for owner/shared" on settlement_collective_cognition_reward for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
-create policy "Allow admin to manage all" on settlement_collective_cognition_reward for all using (is_admin()) with check (is_admin());
+create policy "Allow select for owner" on settlement_collective_cognition_reward for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow insert for owner" on settlement_collective_cognition_reward for
+insert to authenticated with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for owner" on settlement_collective_cognition_reward for
+update to authenticated using (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow delete for owner" on settlement_collective_cognition_reward for delete to authenticated using (
+  exists (
+    select 1
+    from settlement s
+    where s.id = settlement_id
+      and s.user_id = (
+        select auth.uid()
+      )
+  )
+);
+create policy "Allow select for shared" on settlement_collective_cognition_reward for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement_shared_user su
+      where settlement_id = su.settlement_id
+        and shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow all for admin" on settlement_collective_cognition_reward for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

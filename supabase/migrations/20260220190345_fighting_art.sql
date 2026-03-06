@@ -20,50 +20,125 @@ create table fighting_art (
 create table fighting_art_shared_user (
   fighting_art_id uuid not null references fighting_art(id) on delete cascade,
   shared_user_id uuid not null references auth.users(id) on delete cascade,
-  primary key (fighting_art_id, shared_user_id)
+  user_id uuid not null references auth.users(id) on delete cascade,
+  primary key (fighting_art_id, shared_user_id, user_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table fighting_art enable row level security;
-create policy "Allow authenticated read for non-custom" on fighting_art for
-select using (
-    auth.role() = 'authenticated'
-    and not custom
+create policy "Allow insert for authenticated and custom" on fighting_art for
+insert to authenticated with check (
+    user_id = (
+      select auth.uid()
+    )
+    and custom
   );
-create policy "Allow all for owner/shared of custom" on fighting_art for all using (
-  custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from fighting_art_shared_user su
-      where su.fighting_art_id = id
-        and su.shared_user_id = auth.uid()
+create policy "Allow select for authenticated and non-custom" on fighting_art for
+select to authenticated using (not custom);
+create policy "Allow select for owner and custom" on fighting_art for
+select to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
     )
-  )
-) with check (
-  custom
-  and (
-    auth.uid() = user_id
-    or exists (
-      select 1
-      from fighting_art_shared_user su
-      where su.fighting_art_id = id
-        and su.shared_user_id = auth.uid()
+  );
+create policy "Allow update for owner and custom" on fighting_art for
+update to authenticated using (
+    custom
+    and user_id = (
+      select auth.uid()
     )
+  ) with check (
+    custom
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner and custom" on fighting_art for delete to authenticated using (
+  custom
+  and user_id = (
+    select auth.uid()
   )
 );
-create policy "Allow admin to manage all" on fighting_art for all using (is_admin()) with check (is_admin());
+create policy "Allow select for shared and custom" on fighting_art for
+select to authenticated using (
+    custom
+    and exists (
+      select 1
+      from fighting_art_shared_user su
+      where su.fighting_art_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for shared and custom" on fighting_art for
+update to authenticated using (
+    custom
+    and exists (
+      select 1
+      from fighting_art_shared_user su
+      where su.fighting_art_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    custom
+    and exists (
+      select 1
+      from fighting_art_shared_user su
+      where su.fighting_art_id = id
+        and su.shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow all for admin" on fighting_art for all using (is_admin()) with check (is_admin());
 alter table fighting_art_shared_user enable row level security;
-create policy "Allow all for owner" on fighting_art_shared_user for all using (
-  auth.uid() = (
-    select user_id
-    from fighting_art
-    where id = fighting_art_id
+create policy "Allow insert for authenticated" on fighting_art_shared_user for
+insert to authenticated with check (
+    exists (
+      select 1
+      from fighting_art f
+      where f.id = fighting_art_id
+        and user_id = (
+          select auth.uid()
+        )
+    )
+    and user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow select for owner" on fighting_art_shared_user for
+select to authenticated using (
+    user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow update for owner" on fighting_art_shared_user for
+update to authenticated using (
+    user_id = (
+      select auth.uid()
+    )
+  ) with check (
+    user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow delete for owner" on fighting_art_shared_user for delete to authenticated using (
+  user_id = (
+    select auth.uid()
   )
 );
-create policy "Allow admin to manage all" on fighting_art_shared_user for all using (is_admin()) with check (is_admin());
+create policy "Allow select for shared" on fighting_art_shared_user for
+select to authenticated using (
+    shared_user_id = (
+      select auth.uid()
+    )
+  );
+create policy "Allow all for admin" on fighting_art_shared_user for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

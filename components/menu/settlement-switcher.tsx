@@ -16,10 +16,11 @@ import {
 import {
   getHuntId,
   getSettlementPhaseId,
-  getSettlementsForUser,
   getShowdownId
 } from '@/lib/dal/settlement'
+import { getSettlements } from '@/lib/dal/user'
 import { Tables } from '@/lib/database.types'
+import { CampaignType } from '@/lib/enums'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
 import { ComponentProps, ReactElement, useEffect, useState } from 'react'
 
@@ -79,13 +80,13 @@ export function SettlementSwitcher({
    * Handle Component Loading
    */
   useEffect(() => {
-    getSettlementsForUser()
+    getSettlements()
       .then((data) => setSettlements(data))
       .catch((err: unknown) =>
         setError(err instanceof Error ? err.message : 'Unknown Error')
       )
       .finally(() => setIsLoading(false))
-  }, [])
+  }, [selectedSettlementId])
 
   /**
    * Handle Settlement Selection
@@ -139,6 +140,10 @@ export function SettlementSwitcher({
       </SidebarMenu>
     )
 
+  const campaignType = selectedSettlementId
+    ? settlements.find((s) => s.id === selectedSettlementId)?.campaign_type
+    : null
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -168,8 +173,8 @@ export function SettlementSwitcher({
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {selectedSettlementId
-                    ? settlements.find((s) => s.id === selectedSettlementId)
-                        ?.campaign_type || 'Unknown Campaign Type'
+                    ? (campaignType && CampaignType[campaignType]) ||
+                      'Unknown Campaign Type'
                     : 'Choose your destiny'}
                 </span>
               </div>
@@ -206,7 +211,7 @@ export function SettlementSwitcher({
                 <div className="flex flex-col">
                   <span className="text-sm">{settlement.settlement_name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {settlement.campaign_type}
+                    {CampaignType[settlement.campaign_type]}
                   </span>
                 </div>
                 {settlement.id === selectedSettlementId && (

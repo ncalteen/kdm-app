@@ -10,22 +10,81 @@ create table hunt (
   -- Data
   monster_level int not null,
   monster_position int not null default 12,
-  scout_id uuid references survivor(id) on delete
-  set null,
-    settlement_id uuid references settlement(id) on delete cascade,
-    survivor_position int not null default 0
+  settlement_id uuid references settlement(id) on delete cascade,
+  survivor_position int not null default 0
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table hunt enable row level security;
-create policy "Allow all for owner/shared" on hunt for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
-create policy "Allow admin to manage all" on hunt for all using (is_admin()) with check (is_admin());
+create policy "Allow select for owner" on hunt for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow insert for owner" on hunt for
+insert to authenticated with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for owner" on hunt for
+update to authenticated using (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow delete for owner" on hunt for delete to authenticated using (
+  exists (
+    select 1
+    from settlement s
+    where s.id = settlement_id
+      and s.user_id = (
+        select auth.uid()
+      )
+  )
+);
+create policy "Allow select for shared" on hunt for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement_shared_user su
+      where settlement_id = su.settlement_id
+        and shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow all for admin" on hunt for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_hunt_settlement on hunt(settlement_id);
-create index idx_hunt_scout on hunt(scout_id);
 --------------------------------------------------------------------------------
 -- Triggers
 --------------------------------------------------------------------------------

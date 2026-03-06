@@ -33,7 +33,7 @@ export function SiteHeader(): ReactElement {
         <ModeToggle />
 
         <h1 className="text-xs sm:text-sm whitespace-nowrap">
-          Kingdom Death: Monster - Recordkeeper
+          Kingdom Death: Monster - Archivist
         </h1>
       </div>
 

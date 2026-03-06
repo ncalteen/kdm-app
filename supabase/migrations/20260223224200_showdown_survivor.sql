@@ -21,6 +21,7 @@ create table showdown_survivor (
   movement_used boolean not null default false,
   notes text not null default '',
   priority_target boolean not null default false,
+  scout boolean not null default false,
   settlement_id uuid not null references settlement(id) on delete cascade,
   showdown_id uuid not null references showdown(id) on delete cascade,
   speed_tokens integer not null default 0,
@@ -34,8 +35,70 @@ create table showdown_survivor (
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
 alter table showdown_survivor enable row level security;
-create policy "Allow all for owner/shared" on showdown_survivor for all using (is_settlement_member(settlement_id)) with check (is_settlement_member(settlement_id));
-create policy "Allow admin to manage all" on showdown_survivor for all using (is_admin()) with check (is_admin());
+create policy "Allow select for owner" on showdown_survivor for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow insert for owner" on showdown_survivor for
+insert to authenticated with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow update for owner" on showdown_survivor for
+update to authenticated using (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  ) with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow delete for owner" on showdown_survivor for delete to authenticated using (
+  exists (
+    select 1
+    from settlement s
+    where s.id = settlement_id
+      and s.user_id = (
+        select auth.uid()
+      )
+  )
+);
+create policy "Allow select for shared" on showdown_survivor for
+select to authenticated using (
+    exists (
+      select 1
+      from settlement_shared_user su
+      where settlement_id = su.settlement_id
+        and shared_user_id = (
+          select auth.uid()
+        )
+    )
+  );
+create policy "Allow all for admin" on showdown_survivor for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------

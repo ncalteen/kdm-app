@@ -230,6 +230,31 @@ export const DEPARTING_BONUS_UPDATED_MESSAGE = (index?: number) =>
     : 'A new blessing graces your settlement.'
 
 /**
+ * Endeavors Minimum Error
+ *
+ * @returns Endeavors Minimum Error Message
+ */
+export const ENDEAVORS_MINIMUM_ERROR_MESSAGE = () =>
+  'Endeavors cannot be reduced below 0.'
+
+/**
+ * Endeavors Updated
+ *
+ * @param oldValue Old Endeavors Value
+ * @param newValue New Endeavors Value
+ * @returns Endeavors Updated Message
+ */
+export const ENDEAVORS_UPDATED_MESSAGE = (
+  oldValue: number,
+  newValue: number
+) =>
+  oldValue < newValue
+    ? 'The settlement gains endeavors.'
+    : oldValue > newValue
+      ? 'The settlement loses endeavors.'
+      : "The settlement's endeavors remain unchanged."
+
+/**
  * Error Message
  *
  * @returns Error Message

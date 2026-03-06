@@ -1,4 +1,67 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+
+/**
+ * Get Settlements for the Authenticated User
+ *
+ * This will include settlements owned by the user, or settlements that have
+ * been shared with the user via the settlement_shared_user table.
+ *
+ * @returns List of Settlements (or empty array)
+ */
+export async function getSettlements(): Promise<
+  (Tables<'settlement'> & { shared: boolean })[]
+> {
+  const supabase = createClient()
+
+  // Get the authenticated user's ID
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Not Authenticated')
+
+  // Get settlements owned by the user.
+  const { data: owned, error: ownedError } = await supabase
+    .from('settlement')
+    .select('*')
+    .eq('user_id', user.id)
+
+  if (ownedError)
+    throw new Error(`Error Fetching Owned Settlements: ${ownedError.message}`)
+
+  // Get settlements shared with the user via the junction table.
+  const { data: shared, error: sharedError } = await supabase
+    .from('settlement_shared_user')
+    .select('settlement(*)')
+    .eq('shared_user_id', user.id)
+
+  if (sharedError)
+    throw new Error(`Error Fetching Shared Settlements: ${sharedError.message}`)
+
+  const results: (Tables<'settlement'> & { shared: boolean })[] = []
+
+  for (const s of owned ?? [])
+    results.push({
+      ...s,
+      shared: false
+    })
+
+  for (const row of shared ?? []) {
+    // The join returns an array type, but each shared_user row references
+    // exactly one settlement. Access the first (and only) element.
+    const s = Array.isArray(row.settlement) ? row.settlement[0] : row.settlement
+
+    if (s) {
+      results.push({
+        ...s,
+        shared: true
+      })
+    }
+  }
+
+  return results
+}
 
 /**
  * Get User Data
