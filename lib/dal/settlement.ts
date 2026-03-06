@@ -29,6 +29,7 @@ import {
   SurvivorType
 } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { NewSettlementInput } from '@/schemas/new-settlement-input'
 
 /**
  * Create Settlement
@@ -37,40 +38,11 @@ import { createClient } from '@/lib/supabase/client'
  * create a new settlement.
  *
  * @param data Settlement Input Data
+ * @returns Settlement ID
  */
-export async function createSettlement(options: {
-  /** Campaign Type */
-  campaignType: CampaignType
-  /** Settlement Name */
-  settlementName: string
-  /** Survivor Type */
-  survivorType: SurvivorType
-  /** Uses Scouts */
-  usesScouts: boolean
-  /** Monster IDs */
-  monsters: {
-    /** Node Quarry 1 IDs */
-    NQ1: string[]
-    /** Node Quarry 2 IDs */
-    NQ2: string[]
-    /** Node Quarry 3 IDs */
-    NQ3: string[]
-    /** Node Quarry 4 IDs */
-    NQ4: string[]
-    /** Node Nemesis 1 IDs */
-    NN1: string[]
-    /** Node Nemesis 2 IDs */
-    NN2: string[]
-    /** Node Nemesis 3 IDs */
-    NN3: string[]
-    /** Core Monster IDs */
-    CO: string[]
-    /** Finale Monster IDs */
-    FI: string[]
-  }
-  /** Wanderer IDs */
-  wanderers: string[]
-}): Promise<void> {
+export async function createSettlement(
+  options: NewSettlementInput
+): Promise<string> {
   const supabase = createClient()
 
   const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -182,11 +154,11 @@ export async function createSettlement(options: {
   //////////////////////////////////////////////////////////////////////////////
 
   // Nemeses
-  const nemesisIds = options.monsters.NN1.concat(
-    options.monsters.NN2,
-    options.monsters.NN3,
-    options.monsters.CO,
-    options.monsters.FI
+  const nemesisIds = options.monsterIds.NN1.concat(
+    options.monsterIds.NN2,
+    options.monsterIds.NN3,
+    options.monsterIds.CO,
+    options.monsterIds.FI
   )
   await addNemesesToSettlement(nemesisIds, settlementId)
 
@@ -205,10 +177,10 @@ export async function createSettlement(options: {
   }
 
   // Quarries
-  const quarryIds = options.monsters.NQ1.concat(
-    options.monsters.NQ2,
-    options.monsters.NQ3,
-    options.monsters.NQ4
+  const quarryIds = options.monsterIds.NQ1.concat(
+    options.monsterIds.NQ2,
+    options.monsterIds.NQ3,
+    options.monsterIds.NQ4
   )
   await addQuarriesToSettlement(quarryIds, settlementId)
 
@@ -233,9 +205,9 @@ export async function createSettlement(options: {
   }
 
   // Wanderers
-  await addWanderersToSettlement(options.wanderers, settlementId)
+  await addWanderersToSettlement(options.wandererIds, settlementId)
 
-  for (const wandererId of options.wanderers)
+  for (const wandererId of options.wandererIds)
     // Append any timeline entries to the settlement timeline.
     for (const timelineYear of await getWandererTimelineYears(wandererId))
       settlementTimeline[timelineYear.year_number].entries.push(
@@ -263,6 +235,8 @@ export async function createSettlement(options: {
   // Squires of the Citadel
   if (options.campaignType === CampaignType.SQUIRES_OF_THE_CITADEL)
     await addSquiresOfTheCitadelSurvivors(settlementId)
+
+  return settlementId
 }
 
 /**
