@@ -47,7 +47,7 @@ export async function getQuarryNames(
     supabase
       .from('quarry_shared_user')
       .select('quarry_id, quarry:quarry_id!inner(id, monster_name, node)')
-      .eq('user_id', userData.user.id)
+      .eq('shared_user_id', userData.user.id)
       .in('quarry.node', nodeTypes)
   ])
 

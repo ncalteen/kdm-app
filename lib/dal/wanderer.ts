@@ -35,7 +35,7 @@ export async function getWandererNames(): Promise<
     supabase
       .from('wanderer_shared_user')
       .select('wanderer_id, wanderer:wanderer_id(id, wanderer_name)')
-      .eq('user_id', userData.user.id)
+      .eq('shared_user_id', userData.user.id)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])

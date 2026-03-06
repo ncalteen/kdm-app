@@ -41,13 +41,13 @@ export async function getSettlements(): Promise<
 
   const results: (Tables<'settlement'> & { shared: boolean })[] = []
 
-  for (const s of owned)
+  for (const s of owned ?? [])
     results.push({
       ...s,
       shared: false
     })
 
-  for (const row of shared) {
+  for (const row of shared ?? []) {
     // The join returns an array type, but each shared_user row references
     // exactly one settlement. Access the first (and only) element.
     const s = Array.isArray(row.settlement) ? row.settlement[0] : row.settlement

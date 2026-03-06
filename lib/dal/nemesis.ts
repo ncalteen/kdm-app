@@ -48,7 +48,7 @@ export async function getNemesisNames(
     supabase
       .from('nemesis_shared_user')
       .select('nemesis_id, nemesis:nemesis_id!inner(id, monster_name, node)')
-      .eq('user_id', userData.user.id)
+      .eq('shared_user_id', userData.user.id)
       .in('nemesis.node', nodeTypes)
   ])
 
