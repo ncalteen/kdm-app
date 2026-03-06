@@ -11,7 +11,10 @@ create table wanderer_timeline_year (
   -- Data
   wanderer_id uuid not null references wanderer(id) on delete cascade,
   entries varchar [] not null default '{}',
-  year_number int not null,
+  year_number int not null check (
+    year_number >= 0
+    and year_number <= 40
+  ),
   -- Constraints
   unique (wanderer_id, year_number)
 );

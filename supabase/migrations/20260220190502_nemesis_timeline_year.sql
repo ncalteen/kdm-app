@@ -12,7 +12,10 @@ create table nemesis_timeline_year (
   campaign_types campaign_type [] not null default '{}',
   entries varchar [] not null default '{}',
   nemesis_id uuid not null references nemesis(id) on delete cascade,
-  year_number int not null,
+  year_number int not null check (
+    year_number >= 0
+    and year_number <= 40
+  ),
   -- Constraints
   unique (nemesis_id, year_number)
 );
