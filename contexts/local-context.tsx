@@ -105,7 +105,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     typeof window === 'undefined'
       ? newLocal
       : JSON.parse(
-          localStorage.getItem('kdm-recordkeeper-local') ??
+          localStorage.getItem('kdm-archivist-local') ??
             JSON.stringify(newLocal)
         )
   )

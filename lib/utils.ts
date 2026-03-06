@@ -635,5 +635,5 @@ export const getAvailableNodes = (type: MonsterType): MonsterNode[] => {
  * @param local Data to Save
  */
 export function saveToLocalStorage(local: unknown) {
-  localStorage.setItem('kdm-recordkeeper-local', JSON.stringify(local))
+  localStorage.setItem('kdm-archivist-local', JSON.stringify(local))
 }

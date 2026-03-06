@@ -226,11 +226,11 @@ otp_expiry = 3600
 
 # Uncomment to customize email template
 [auth.email.template.invite]
-subject = "[KD:M - Recordkeeper] Welcome, Survivor!"
+subject = "[KD:M - Archivist] Welcome, Survivor!"
 content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.confirmation]
-subject = "[KD:M - Recordkeeper] Welcome, Survivor!"
+subject = "[KD:M - Archivist] Welcome, Survivor!"
 content_path = "./supabase/templates/confirmation.html"
 
 # Uncomment to customize notification email template
