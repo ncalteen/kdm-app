@@ -1,6 +1,269 @@
+import { getCustomCampaignTemplate } from '@/lib/campaigns/custom'
+import { getPeopleOfTheDreamKeeperTemplate } from '@/lib/campaigns/potdk'
+import { getPeopleOfTheLanternTemplate } from '@/lib/campaigns/potl'
+import { getPeopleOfTheStarsTemplate } from '@/lib/campaigns/potstars'
+import { getPeopleOfTheSunTemplate } from '@/lib/campaigns/potsun'
+import { getSquiresOfTheCitadelTemplate } from '@/lib/campaigns/squires'
+import { getLocationIds } from '@/lib/dal/location'
+import { getNemesisLocationIds } from '@/lib/dal/nemesis-location'
+import { getNemesisTimelineYears } from '@/lib/dal/nemesis-timeline-year'
+import { getQuarryCollectiveCognitionRewardIds } from '@/lib/dal/quarry-collective-cognition-reward'
+import { getQuarryLocationIds } from '@/lib/dal/quarry-location'
+import { getQuarryTimelineYears } from '@/lib/dal/quarry-timeline-year'
+import { addCollectiveCognitionRewardsToSettlement } from '@/lib/dal/settlement-collective-cognition-reward'
+import { addInnovationsToSettlement } from '@/lib/dal/settlement-innovation'
+import { addLocationsToSettlement } from '@/lib/dal/settlement-location'
+import { addMilestonesToSettlement } from '@/lib/dal/settlement-milestone'
+import { addNemesesToSettlement } from '@/lib/dal/settlement-nemesis'
+import { addPrinciplesToSettlement } from '@/lib/dal/settlement-principle'
+import { addQuarriesToSettlement } from '@/lib/dal/settlement-quarry'
+import { addTimelineYearsToSettlement } from '@/lib/dal/settlement-timeline-year'
+import { addWanderersToSettlement } from '@/lib/dal/settlement-wanderer'
+import { addSquiresOfTheCitadelSurvivors } from '@/lib/dal/survivor'
+import { getWandererTimelineYears } from '@/lib/dal/wanderer-timeline-year'
 import { Tables } from '@/lib/database.types'
-import { CampaignType, SurvivorType } from '@/lib/enums'
+import {
+  CampaignType,
+  DatabaseCampaignType,
+  DatabaseSurvivorType,
+  SurvivorType
+} from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+
+/**
+ * Create Settlement
+ *
+ * Takes either the preselected campaign or custom campaign data and uses it to
+ * create a new settlement.
+ *
+ * @param data Settlement Input Data
+ */
+export async function createSettlement(options: {
+  /** Campaign Type */
+  campaignType: CampaignType
+  /** Settlement Name */
+  settlementName: string
+  /** Survivor Type */
+  survivorType: SurvivorType
+  /** Uses Scouts */
+  usesScouts: boolean
+  /** Monster IDs */
+  monsters: {
+    /** Node Quarry 1 IDs */
+    NQ1: string[]
+    /** Node Quarry 2 IDs */
+    NQ2: string[]
+    /** Node Quarry 3 IDs */
+    NQ3: string[]
+    /** Node Quarry 4 IDs */
+    NQ4: string[]
+    /** Node Nemesis 1 IDs */
+    NN1: string[]
+    /** Node Nemesis 2 IDs */
+    NN2: string[]
+    /** Node Nemesis 3 IDs */
+    NN3: string[]
+    /** Core Monster IDs */
+    CO: string[]
+    /** Finale Monster IDs */
+    FI: string[]
+  }
+  /** Wanderer IDs */
+  wanderers: string[]
+}): Promise<void> {
+  const supabase = createClient()
+
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!userData.user) throw new Error('User Not Authenticated')
+
+  // Get the template based on the campaign type. This will call various helper
+  // functions to get the necessary data for creating the settlement.
+  const template = await {
+    [CampaignType.CUSTOM]: getCustomCampaignTemplate,
+    [CampaignType.PEOPLE_OF_THE_DREAM_KEEPER]:
+      getPeopleOfTheDreamKeeperTemplate,
+    [CampaignType.PEOPLE_OF_THE_LANTERN]: getPeopleOfTheLanternTemplate,
+    [CampaignType.PEOPLE_OF_THE_STARS]: getPeopleOfTheStarsTemplate,
+    [CampaignType.PEOPLE_OF_THE_SUN]: getPeopleOfTheSunTemplate,
+    [CampaignType.SQUIRES_OF_THE_CITADEL]: getSquiresOfTheCitadelTemplate
+  }[options.campaignType]()
+
+  // Create the settlement record. This is must happen first to generate the
+  // settlement ID.
+  const settlement: Omit<
+    Tables<'settlement'>,
+    'created_at' | 'id' | 'updated_at'
+  > = {
+    arrival_bonuses: [],
+    campaign_type: DatabaseCampaignType[options.campaignType],
+    current_year: 0,
+    departing_bonuses: [],
+    notes: '',
+    settlement_name: options.settlementName,
+    survival_limit: 1,
+    survivor_type: DatabaseSurvivorType[options.survivorType],
+    uses_scouts: options.usesScouts,
+    lantern_research: 0,
+    monster_volumes: [],
+    user_id: userData.user.id
+  }
+
+  const { data: settlementData, error: settlementError } = await supabase
+    .from('settlement')
+    .insert(settlement)
+    .select('id')
+    .maybeSingle()
+
+  if (settlementError)
+    throw new Error(`Error Creating Settlement: ${settlementError.message}`)
+  if (!settlementData) throw new Error('Settlement Creation Failed')
+
+  const settlementId = settlementData.id
+
+  //////////////////////////////////////////////////////////////////////////////
+  // The following do not need to be added for a new settlement.
+  // - Knowledges
+  // - Philosophies
+  // - Gear
+  // - Patterns
+  // - Resources
+  //////////////////////////////////////////////////////////////////////////////
+
+  //////////////////////////////////////////////////////////////////////////////
+  // The following are "simple" additions. They don't require any additional
+  // logic beyond creating in the database.
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Innovations
+  await addInnovationsToSettlement(template.innovationIds, settlementId)
+  // Milestones
+  await addMilestonesToSettlement(template.milestoneIds, settlementId)
+  // Principles
+  await addPrinciplesToSettlement(template.principleIds, settlementId)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // The following shouldn't be added until the remaining creation logic is
+  // done, as they will be updated based on the other inputs. Instead, they
+  // will be built up as the settlement is created, and then added at the end.
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Collective Cognition Rewards
+  const settlementCollectiveCognitionRewardIds =
+    template.collectiveCognitionRewardIds
+  // Locations
+  const settlementLocationIds = template.locationIds
+  // Timeline Events (data, not IDs)
+  const settlementTimeline: Omit<
+    Tables<'settlement_timeline_year'>,
+    'created_at' | 'id' | 'updated_at'
+  >[] = template.timeline.map(({ entries, year_number }) => ({
+    completed: false,
+    entries,
+    settlement_id: settlementId,
+    year_number
+  }))
+
+  // If the settlement uses Arc survivors, add the Forum location.
+  if (options.survivorType === SurvivorType.ARC)
+    settlementLocationIds.push(
+      ...(await getLocationIds(['Forum'], false, undefined))
+    )
+  // If the settlement uses scouts, get the Outskirts location.
+  if (options.usesScouts)
+    settlementLocationIds.push(
+      ...(await getLocationIds(['Outskirts'], false, undefined))
+    )
+
+  //////////////////////////////////////////////////////////////////////////////
+  // The following are more complex, as they will affect other tables like
+  // locations and timelines.
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Nemeses
+  const nemesisIds = options.monsters.NN1.concat(
+    options.monsters.NN2,
+    options.monsters.NN3,
+    options.monsters.CO,
+    options.monsters.FI
+  )
+  await addNemesesToSettlement(nemesisIds, settlementId)
+
+  for (const nemesisId of nemesisIds) {
+    // Append any timeline entries to the settlement timeline.
+    for (const timelineYear of await getNemesisTimelineYears(
+      nemesisId,
+      options.campaignType
+    ))
+      settlementTimeline[timelineYear.year_number].entries.push(
+        ...timelineYear.entries
+      )
+
+    // Add any locations to the settlement locations.
+    settlementLocationIds.push(...(await getNemesisLocationIds(nemesisId)))
+  }
+
+  // Quarries
+  const quarryIds = options.monsters.NQ1.concat(
+    options.monsters.NQ2,
+    options.monsters.NQ3,
+    options.monsters.NQ4
+  )
+  await addQuarriesToSettlement(quarryIds, settlementId)
+
+  for (const quarryId of quarryIds) {
+    // Append any timeline entries to the settlement timeline.
+    for (const timelineYear of await getQuarryTimelineYears(
+      quarryId,
+      options.campaignType
+    ))
+      settlementTimeline[timelineYear.year_number].entries.push(
+        ...timelineYear.entries
+      )
+
+    // Add any locations to the settlement locations.
+    settlementLocationIds.push(...(await getQuarryLocationIds(quarryId)))
+
+    // Add any collective cognition rewards to the settlement collective
+    // cognition rewards.
+    settlementCollectiveCognitionRewardIds.push(
+      ...(await getQuarryCollectiveCognitionRewardIds(quarryId))
+    )
+  }
+
+  // Wanderers
+  await addWanderersToSettlement(options.wanderers, settlementId)
+
+  for (const wandererId of options.wanderers)
+    // Append any timeline entries to the settlement timeline.
+    for (const timelineYear of await getWandererTimelineYears(wandererId))
+      settlementTimeline[timelineYear.year_number].entries.push(
+        ...timelineYear.entries
+      )
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Main creation logic is done. Add the built up data to the settlement.
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Collective Cognition Rewards
+  await addCollectiveCognitionRewardsToSettlement(
+    settlementCollectiveCognitionRewardIds,
+    settlementId
+  )
+  // Locations
+  await addLocationsToSettlement(settlementLocationIds, settlementId)
+  // Timeline Events
+  await addTimelineYearsToSettlement(settlementTimeline)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Any final additions or customizations based on the campaign type.
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Squires of the Citadel
+  if (options.campaignType === CampaignType.SQUIRES_OF_THE_CITADEL)
+    await addSquiresOfTheCitadelSurvivors(settlementId)
+}
 
 /**
  * Get Campaign Type
