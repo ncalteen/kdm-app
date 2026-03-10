@@ -36,7 +36,7 @@ interface ListCardProps {
   /** Save List */
   saveList: (updateData: string[]) => void
   /** Selected Settlement ID */
-  selectedSettlementId: string | undefined
+  selectedSettlementId: string | null
 }
 
 /**
