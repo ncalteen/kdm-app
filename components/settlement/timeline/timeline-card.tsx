@@ -293,11 +293,11 @@ export function TimelineCard({
   const handleAddYear = useCallback(() => {
     if (!selectedSettlementId) return
 
+    const yearKeys = Object.keys(timeline)
     const yearNumber =
-      Math.max(...Object.keys(timeline).map((val) => parseInt(val, 10))) + 1
-
-    console.log(yearNumber)
-
+      yearKeys.length === 0
+        ? 0
+        : Math.max(...yearKeys.map((val) => parseInt(val, 10))) + 1
     addYear(selectedSettlementId, yearNumber).then(() => {
       setTimeline({
         ...timeline,
