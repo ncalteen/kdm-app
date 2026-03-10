@@ -89,6 +89,8 @@ cutting-edge frontend architecture.
 - Implement code splitting with `lazy()` and dynamic imports
 - Use proper dependency arrays in `useEffect`, `useMemo`, and `useCallback`
 - Ref callbacks can now return cleanup functions for easier cleanup management
+- UI updates should be optimistic when possible, providing immediate feedback to
+  users
 
 ## Common Scenarios You Excel At
 
