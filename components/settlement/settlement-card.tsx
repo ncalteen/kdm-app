@@ -6,12 +6,13 @@ import { OverviewCard } from '@/components/settlement/overview/overview-card'
 import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
 import {
   updateArrivalBonuses,
-  updateDepartureBonuses
+  updateDepartureBonuses,
+  updateMonsterVolumes
 } from '@/lib/dal/settlement'
 import { Tables } from '@/lib/database.types'
-import { TabType } from '@/lib/enums'
-import { HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
-import { ReactElement } from 'react'
+import { CampaignType, TabType } from '@/lib/enums'
+import { BookOpenIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
+import { ReactElement, useState } from 'react'
 
 /**
  * Settlement Card Props
@@ -84,11 +85,17 @@ export function SettlementCard({
   setSelectedSurvivorId,
   setSelectedTab
 }: SettlementCardProps): ReactElement {
+  const [campaignType, setCampaignType] = useState<CampaignType>(
+    CampaignType.PEOPLE_OF_THE_LANTERN
+  )
+
   return (
     <>
       <OverviewCard
+        campaignType={campaignType}
         selectedSettlementId={selectedSettlementId}
         selectedSettlementPhaseId={selectedSettlementPhaseId}
+        setCampaignType={setCampaignType}
       />
 
       <hr className="pt-2" />

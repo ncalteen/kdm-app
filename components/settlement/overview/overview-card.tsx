@@ -34,10 +34,14 @@ import { toast } from 'sonner'
  * Overview Card Properties
  */
 interface OverviewCardProps {
+  /** Campaign Type */
+  campaignType: CampaignType
   /** Selected Settlement ID */
   selectedSettlementId: string | null
   /** Selected Settlement Phase ID */
   selectedSettlementPhaseId: string | null
+  /** Set Campaign Type */
+  setCampaignType: (campaignType: CampaignType) => void
 }
 
 /**
@@ -50,12 +54,11 @@ interface OverviewCardProps {
  * @returns Overview Card Component
  */
 export function OverviewCard({
+  campaignType,
   selectedSettlementId,
-  selectedSettlementPhaseId
+  selectedSettlementPhaseId,
+  setCampaignType
 }: OverviewCardProps): ReactElement {
-  const [campaignType, setCampaignType] = useState<CampaignType>(
-    CampaignType.PEOPLE_OF_THE_LANTERN
-  )
   const [collectiveCognition, setCollectiveCognition] = useState<number>(0)
   const [deathCount, setDeathCount] = useState<number>(0)
   const [endeavors, setEndeavors] = useState<number>(0)
@@ -117,7 +120,7 @@ export function OverviewCard({
         )
       )
       .finally(() => setIsLoading(false))
-  }, [selectedSettlementId, selectedSettlementPhaseId])
+  }, [selectedSettlementId, selectedSettlementPhaseId, setCampaignType])
 
   /**
    * Handle Endeavors Change
