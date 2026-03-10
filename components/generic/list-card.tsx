@@ -18,10 +18,8 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-
-type DisabledInputs = { [key: number]: boolean }
 
 /**
  * List Card Properties
@@ -44,6 +42,9 @@ interface ListCardProps {
 /**
  * List Card Component
  *
+ * Renders a sortable, editable list of string items with add, edit, reorder,
+ * and remove capabilities. Changes are persisted via the `saveList` callback.
+ *
  * @param props List Card Properties
  * @returns Lists Card Component
  */
@@ -55,30 +56,26 @@ export function ListCard({
   saveList,
   selectedSettlementId
 }: ListCardProps): ReactElement {
-  const [disabledInputs, setDisabledInputs] = useState<DisabledInputs>(
-    Object.fromEntries(initialItems.map((_, i) => [i, true]))
-  )
+  const [editingIndices, setEditingIndices] = useState<Set<number>>(new Set())
   const [items, setItems] = useState<string[]>(initialItems)
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
-  const [settlementId, setSettlementId] = useState<string | undefined>(
-    selectedSettlementId
-  )
 
-  // Update items and reset disabled inputs when initial list changes.
-  useEffect(() => {
+  // Track previous prop values to reset state during render when the source
+  // data or settlement changes.
+  const [prevInitialItems, setPrevInitialItems] =
+    useState<string[]>(initialItems)
+  const [prevSettlementId, setPrevSettlementId] = useState(selectedSettlementId)
+
+  if (
+    initialItems !== prevInitialItems ||
+    selectedSettlementId !== prevSettlementId
+  ) {
+    setPrevInitialItems(initialItems)
+    setPrevSettlementId(selectedSettlementId)
     setItems(initialItems)
-    setDisabledInputs(Object.fromEntries(initialItems.map((_, i) => [i, true])))
-  }, [initialItems])
-
-  // Reset disabled inputs when settlement changes.
-  useEffect(() => {
-    if (selectedSettlementId !== settlementId) {
-      setSettlementId(selectedSettlementId)
-      setDisabledInputs(
-        Object.fromEntries(initialItems.map((_, i) => [i, true]))
-      )
-    }
-  }, [selectedSettlementId, initialItems, settlementId])
+    setEditingIndices(new Set())
+    setIsAddingNew(false)
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -88,28 +85,40 @@ export function ListCard({
   )
 
   /**
+   * Item is Being Edited
+   *
+   * Returns true when any item is being edited.
+   */
+  const isEditing = useMemo(() => editingIndices.size > 0, [editingIndices])
+
+  /**
    * Handle Item Removal
    *
    * @param index Item Index
    */
-  const handleRemove = (index: number) => {
-    const current = [...items]
-    current.splice(index, 1)
+  const handleRemove = useCallback(
+    (index: number) => {
+      const updated = items.filter((_, i) => i !== index)
 
-    setItems(current)
-    setDisabledInputs((prev) => {
-      const next: { [key: number]: boolean } = {}
+      // Update editing indices to reflect removed item.
+      setItems(updated)
+      setEditingIndices((prev) => {
+        const next = new Set<number>()
 
-      Object.keys(prev).forEach((k) => {
-        const num = parseInt(k)
-        if (num < index) next[num] = prev[num]
-        else if (num > index) next[num - 1] = prev[num]
+        for (const idx of prev) {
+          if (idx < index) next.add(idx)
+          else if (idx > index) next.add(idx - 1)
+          // idx === index is removed — skip it
+        }
+
+        return next
       })
 
-      return next
-    })
-    saveList(current)
-  }
+      // Update the database with the new list order.
+      saveList(updated)
+    },
+    [items, saveList]
+  )
 
   /**
    * Handle Item Save
@@ -117,67 +126,98 @@ export function ListCard({
    * @param value Item Value
    * @param i Item Index (Updates Only)
    */
-  const handleSave = (value?: string, i?: number) => {
-    if (!value || value.trim() === '')
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE(itemName.toLowerCase()))
+  const handleSave = useCallback(
+    (value?: string, i?: number) => {
+      if (!value || value.trim() === '')
+        return toast.error(
+          NAMELESS_OBJECT_ERROR_MESSAGE(itemName.toLowerCase())
+        )
 
-    const updated = [...items]
+      const updated = [...items]
 
-    if (i !== undefined) {
-      // Updating an existing value
-      updated[i] = value
-      setDisabledInputs((prev) => ({
-        ...prev,
-        [i]: true
-      }))
-    } else {
-      // Adding a new value
-      updated.push(value)
-      setDisabledInputs((prev) => ({
-        ...prev,
-        [updated.length - 1]: true
-      }))
-    }
+      if (i !== undefined) {
+        // Updating an existing value.
+        updated[i] = value
+        setEditingIndices((prev) => {
+          const next = new Set(prev)
+          next.delete(i)
+          return next
+        })
+      } else
+        // Adding a new value.
+        updated.push(value)
 
-    setItems(updated)
-    saveList(updated)
-    setIsAddingNew(false)
-  }
+      setItems(updated)
+      saveList(updated)
+      setIsAddingNew(false)
+    },
+    [items, itemName, saveList]
+  )
+
+  /**
+   * Handle Edit Mode
+   *
+   * Enters edit mode for an item.
+   *
+   * @param index Item Index
+   */
+  const handleEdit = useCallback((index: number) => {
+    setEditingIndices((prev) => new Set(prev).add(index))
+  }, [])
+
+  /**
+   * Handle Cancel Edit
+   *
+   * Cancel editing and revert an item to its saved value.
+   */
+  const handleCancelEdit = useCallback((index: number) => {
+    setEditingIndices((prev) => {
+      const next = new Set(prev)
+      next.delete(index)
+      return next
+    })
+  }, [])
 
   /**
    * Handle Drag End Event
    *
    * @param event Drag End Event
    */
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
 
-    if (over && active.id !== over.id) {
-      const oldIndex = parseInt(active.id.toString())
-      const newIndex = parseInt(over.id.toString())
-      const newOrder = arrayMove(items, oldIndex, newIndex)
+      if (over && active.id !== over.id) {
+        const oldIndex = parseInt(active.id.toString())
+        const newIndex = parseInt(over.id.toString())
+        const newOrder = arrayMove(items, oldIndex, newIndex)
 
-      // Batch all local state updates first so React renders the new order
-      // before the async save runs.
-      setItems(newOrder)
-      setDisabledInputs((prev) => {
-        const next: { [key: number]: boolean } = {}
+        setItems(newOrder)
 
-        Object.keys(prev).forEach((k) => {
-          const num = parseInt(k)
-          if (num === oldIndex) next[newIndex] = prev[num]
-          else if (num >= newIndex && num < oldIndex) next[num + 1] = prev[num]
-          else if (num <= newIndex && num > oldIndex) next[num - 1] = prev[num]
-          else next[num] = prev[num]
+        // Re-map editing indices to follow their items.
+        setEditingIndices((prev) => {
+          if (prev.size === 0) return prev
+
+          const next = new Set<number>()
+
+          for (const idx of prev) {
+            if (idx === oldIndex) next.add(newIndex)
+            else if (oldIndex < newIndex)
+              // Item moved forward: indices in (oldIndex, newIndex] shift down.
+              next.add(idx > oldIndex && idx <= newIndex ? idx - 1 : idx)
+            else
+              // Item moved backward: indices in [newIndex, oldIndex) shift up.
+              next.add(idx >= newIndex && idx < oldIndex ? idx + 1 : idx)
+          }
+
+          return next
         })
 
-        return next
-      })
-
-      // Persist after state updates are queued.
-      saveList(newOrder)
-    }
-  }
+        saveList(newOrder)
+      }
+    },
+    [items, saveList]
+  )
 
   return (
     <Card className="p-0 border-1 gap-0">
@@ -192,10 +232,7 @@ export function ListCard({
               variant="outline"
               onClick={() => setIsAddingNew(true)}
               className="border-0 h-8 w-8"
-              disabled={
-                isAddingNew ||
-                Object.values(disabledInputs).some((v) => v === false)
-              }>
+              disabled={isAddingNew || isEditing}>
               <PlusIcon className="h-4 w-4" />
             </Button>
           )}
@@ -206,6 +243,12 @@ export function ListCard({
       <CardContent className="p-1 pb-0">
         <div className="flex flex-col h-[240px]">
           <div className="flex-1 overflow-y-auto">
+            {items.length === 0 && !isAddingNew && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No {itemName.toLowerCase()}s yet
+              </p>
+            )}
+
             {items.length !== 0 && (
               <DndContext
                 sensors={sensors}
@@ -214,29 +257,24 @@ export function ListCard({
                 <SortableContext
                   items={items.map((_, index) => index.toString())}
                   strategy={verticalListSortingStrategy}>
-                  {items.map((item, index) => {
-                    return (
-                      <ListItem
-                        key={`${index}-${item}`}
-                        id={index.toString()}
-                        index={index}
-                        handleRemove={handleRemove}
-                        isDisabled={!!disabledInputs[index]}
-                        handleSave={(value, i) => handleSave(value, i)}
-                        handleEdit={() =>
-                          setDisabledInputs((prev) => ({
-                            ...prev,
-                            [index]: false
-                          }))
-                        }
-                        listItems={items}
-                        placeholder={placeholder}
-                      />
-                    )
-                  })}
+                  {items.map((item, index) => (
+                    <ListItem
+                      key={`${index}-${item}`}
+                      id={index.toString()}
+                      index={index}
+                      handleCancelEdit={handleCancelEdit}
+                      handleEdit={handleEdit}
+                      handleRemove={handleRemove}
+                      handleSave={handleSave}
+                      isDisabled={!editingIndices.has(index)}
+                      itemValue={item}
+                      placeholder={placeholder}
+                    />
+                  ))}
                 </SortableContext>
               </DndContext>
             )}
+
             {isAddingNew && (
               <NewListItem
                 handleCancel={() => setIsAddingNew(false)}
