@@ -220,7 +220,7 @@ export async function toggleYearCompletionStatus(
 }
 
 /**
- * Add Timeline Yea
+ * Add Timeline Year
  *
  * Adds a timeline year to the settlement.
  *
@@ -233,13 +233,6 @@ export async function addYear(
 ): Promise<void> {
   const supabase = createClient()
 
-  const { data } = await supabase
-    .from('settlement_timeline_year')
-    .select('*')
-    .eq('settlement_id', settlementId)
-
-  console.log(data)
-
   const { error } = await supabase.from('settlement_timeline_year').insert({
     completed: false,
     entries: [],
@@ -247,8 +240,5 @@ export async function addYear(
     year_number: yearNumber
   })
 
-  if (error)
-    throw new Error(
-      `Error Toggling Timeline Year Completion Status: ${error.message}`
-    )
+  if (error) throw new Error(`Error Adding Timeline Year: ${error.message}`)
 }
