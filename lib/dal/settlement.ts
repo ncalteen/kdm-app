@@ -684,3 +684,25 @@ export async function updateDepartureBonuses(
   if (error)
     throw new Error(`Error Updating Departure Bonuses: ${error.message}`)
 }
+
+/**
+ * Update Monster Volumes
+ *
+ * @param settlementId Settlement ID
+ * @param volumes Updated Monster Volumes
+ */
+export async function updateMonsterVolumes(
+  settlementId: string | null,
+  volumes: string[]
+): Promise<void> {
+  if (!settlementId) return
+
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement')
+    .update({ monster_volumes: volumes })
+    .eq('id', settlementId)
+
+  if (error) throw new Error(`Error Updating Monster Volumes: ${error.message}`)
+}

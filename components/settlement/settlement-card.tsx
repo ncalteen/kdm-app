@@ -2,7 +2,9 @@
 
 import { ListCard } from '@/components/generic/list-card'
 import { CreateSettlementCard } from '@/components/settlement/create-settlement-card'
+import { NemesesCard } from '@/components/settlement/nemeses/nemeses-card'
 import { OverviewCard } from '@/components/settlement/overview/overview-card'
+import { QuarriesCard } from '@/components/settlement/quarries/quarries-card'
 import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
 import {
   updateArrivalBonuses,
@@ -157,6 +159,59 @@ export function SettlementCard({
               </div>
             </div>
           )}
+
+          {/* Monsters Tab */}
+          {selectedSettlement && selectedTab === TabType.MONSTERS && (
+            <div className="flex flex-col pl-2 gap-2">
+              <div className="flex flex-col lg:flex-row gap-2">
+                {/* Quarries */}
+                <div className="flex-1">
+                  <QuarriesCard selectedSettlementId={selectedSettlementId} />
+                </div>
+                {/* Nemeses */}
+                <div className="flex-1">
+                  <NemesesCard selectedSettlementId={selectedSettlementId} />
+                </div>
+              </div>
+
+              {/* Monster Volumes (PotL and PotSun) */}
+              {(campaignType === CampaignType.PEOPLE_OF_THE_LANTERN ||
+                campaignType === CampaignType.PEOPLE_OF_THE_SUN) && (
+                <ListCard
+                  icon={<BookOpenIcon className="h-4 w-4" />}
+                  initialItems={selectedSettlement?.monster_volumes || []}
+                  itemName="Monster Volume"
+                  placeholder="New monster volume..."
+                  saveList={(updateData) =>
+                    updateMonsterVolumes(selectedSettlementId, updateData)
+                  }
+                  selectedSettlementId={selectedSettlementId}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Squires of the Citadel Tab */}
+
+          {/* Survivors Tab */}
+
+          {/* Society Tab */}
+
+          {/* Society Tab - Squires of the Citadel */}
+
+          {/* Crafting Tab */}
+
+          {/* Arc Tab */}
+
+          {/* Notes Tab */}
+
+          {/* Settings Tab */}
+
+          {/* Hunt Tab */}
+
+          {/* Showdown Tab */}
+
+          {/* Settlement Phase Tab */}
         </div>
       </div>
     </>
