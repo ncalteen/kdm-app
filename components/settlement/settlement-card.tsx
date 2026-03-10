@@ -1,12 +1,16 @@
 'use client'
 
-import { ArrivalBonusesCard } from '@/components/settlement/arrival-bonuses/arrival-bonuses-card'
+import { ListCard } from '@/components/generic/list-card'
 import { CreateSettlementCard } from '@/components/settlement/create-settlement-card'
-import { DepartingBonusesCard } from '@/components/settlement/departing-bonuses/departing-bonuses-card'
 import { OverviewCard } from '@/components/settlement/overview/overview-card'
 import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
+import {
+  updateArrivalBonuses,
+  updateDepartureBonuses
+} from '@/lib/dal/settlement'
 import { Tables } from '@/lib/database.types'
 import { TabType } from '@/lib/enums'
+import { HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
 import { ReactElement } from 'react'
 
 /**
@@ -113,6 +117,36 @@ export function SettlementCard({
                   selectedSettlement={selectedSettlement}
                   selectedSettlementId={selectedSettlementId}
                 />
+              </div>
+
+              {/* Departure/Arrival Bonuses */}
+              <div className="flex flex-col gap-2 order-1 lg:order-2 lg:flex-1">
+                <div className="flex flex-col md:flex-row lg:flex-col gap-2">
+                  <div className="flex-1">
+                    <ListCard
+                      icon={<MapPinPlusIcon className="h-4 w-4" />}
+                      initialItems={selectedSettlement?.departing_bonuses || []}
+                      itemName="Departure Bonus"
+                      placeholder="New departure bonus..."
+                      saveList={(updateData) =>
+                        updateDepartureBonuses(selectedSettlementId, updateData)
+                      }
+                      selectedSettlementId={selectedSettlementId}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <ListCard
+                      icon={<HousePlusIcon className="h-4 w-4" />}
+                      initialItems={selectedSettlement?.arrival_bonuses || []}
+                      itemName="Arrival Bonus"
+                      placeholder="New arrival bonus..."
+                      saveList={(updateData) =>
+                        updateArrivalBonuses(selectedSettlementId, updateData)
+                      }
+                      selectedSettlementId={selectedSettlementId}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}

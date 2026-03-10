@@ -639,3 +639,48 @@ export async function updateSurvivalLimit(
 
   if (error) throw new Error(`Error Updating Survial Limit: ${error.message}`)
 }
+
+/**
+ * Update Arrival Bonuses
+ *
+ * @param settlementId Settlement ID
+ * @param bonuses Updated Bonuses
+ */
+export async function updateArrivalBonuses(
+  settlementId: string | null,
+  bonuses: string[]
+): Promise<void> {
+  if (!settlementId) return
+
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement')
+    .update({ arrival_bonuses: bonuses })
+    .eq('id', settlementId)
+
+  if (error) throw new Error(`Error Updating Arrival Bonuses: ${error.message}`)
+}
+
+/**
+ * Update Departure Bonuses
+ *
+ * @param settlementId Settlement ID
+ * @param bonuses Updated Bonuses
+ */
+export async function updateDepartureBonuses(
+  settlementId: string | null,
+  bonuses: string[]
+): Promise<void> {
+  if (!settlementId) return
+
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement')
+    .update({ departing_bonuses: bonuses })
+    .eq('id', settlementId)
+
+  if (error)
+    throw new Error(`Error Updating Departure Bonuses: ${error.message}`)
+}
