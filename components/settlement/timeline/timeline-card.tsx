@@ -71,9 +71,28 @@ export function TimelineCard({
     CampaignType[selectedSettlement?.campaign_type as keyof typeof CampaignType]
 
   useEffect(() => {
-    Promise.all([getTimelineYears(selectedSettlementId)]).then(
-      ([timelineYears]) => setTimeline(timelineYears)
-    )
+    let isCancelled = false
+
+    const loadTimeline = async () => {
+      try {
+        const [timelineYears] = await Promise.all([
+          getTimelineYears(selectedSettlementId)
+        ])
+
+        if (!isCancelled) {
+          setTimeline(timelineYears)
+        }
+      } catch (error) {
+        console.error('Timeline Load Error:', error)
+        toast.error('The darkness swallows your words. Please try again.')
+      }
+    }
+
+    void loadTimeline()
+
+    return () => {
+      isCancelled = true
+    }
   }, [selectedSettlementId])
 
   // Check if the campaign uses normal numbering (no Prologue). Prologue is
