@@ -13,6 +13,7 @@ import {
 import { Tables } from '@/lib/database.types'
 import { CampaignType } from '@/lib/enums'
 import {
+  ERROR_MESSAGE,
   TIMELINE_EVENT_EMPTY_ERROR_MESSAGE,
   TIMELINE_EVENT_EMPTY_WARNING_MESSAGE,
   TIMELINE_EVENT_REMOVED_MESSAGE,
@@ -84,7 +85,7 @@ export function TimelineCard({
         }
       } catch (error) {
         console.error('Timeline Load Error:', error)
-        toast.error('The darkness swallows your words. Please try again.')
+        toast.error(ERROR_MESSAGE())
       }
     }
 
