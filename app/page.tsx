@@ -123,17 +123,36 @@ function MainPage(): ReactElement {
     useState<Tables<'settlement'> | null>(null)
 
   useEffect(() => {
+    // Clear previous settlement immediately to avoid rendering stale data
+    setSelectedSettlement(null)
+
+    // Guard against out-of-order responses when selectedSettlementId changes quickly
+    let isCancelled = false
+
+    // Skip fetch if there is no selected settlement id
+    if (!selectedSettlementId) {
+      return () => {
+        isCancelled = true
+      }
+    }
+
     Promise.all([getSettlement(selectedSettlementId)])
       .then(([settlement]) => {
+        if (isCancelled) return
         setSelectedSettlement(settlement)
       })
-      .catch((err: unknown) =>
+      .catch((err: unknown) => {
+        if (isCancelled) return
         setError(
           err instanceof Error
             ? `Page Load Error: ${err.message}`
             : 'Page Load Error: Unknown Error'
         )
-      )
+      })
+
+    return () => {
+      isCancelled = true
+    }
   }, [selectedSettlementId])
 
   return (
