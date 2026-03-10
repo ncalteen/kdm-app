@@ -240,6 +240,32 @@ export async function createSettlement(
 }
 
 /**
+ * Get Settlement
+ *
+ * Gets the base details for a settlement by ID.
+ *
+ * @param settlementId Settlement ID
+ * @returns Settlement Details (or null)
+ */
+export async function getSettlement(
+  settlementId: string | null
+): Promise<Tables<'settlement'> | null> {
+  if (!settlementId) return null
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('settlement')
+    .select('*')
+    .eq('id', settlementId)
+    .maybeSingle()
+
+  if (error) throw new Error(`Error Fetching Settlement: ${error.message}`)
+
+  return data
+}
+
+/**
  * Get Campaign Type
  *
  * Retrieves the selected settlement's campaign type.
