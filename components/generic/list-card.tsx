@@ -1,3 +1,5 @@
+'use client'
+
 import { ListItem, NewListItem } from '@/components/generic/list-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
