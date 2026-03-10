@@ -17,6 +17,7 @@ import {
   updateSettlementNemesisUnlocked
 } from '@/lib/dal/settlement-nemesis'
 import {
+  ERROR_MESSAGE,
   NEMESIS_ADDED_MESSAGE,
   NEMESIS_REMOVED_MESSAGE,
   NEMESIS_UNLOCKED_MESSAGE
@@ -118,7 +119,7 @@ export function NemesesCard({
         if (cancelled) return
 
         console.error('Settlement Nemeses Fetch Error:', err)
-        toast.error('The darkness swallows your words. Please try again.')
+        toast.error(ERROR_MESSAGE())
       })
 
     return () => {
@@ -187,7 +188,7 @@ export function NemesesCard({
           // Revert the optimistic insert.
           setItems((prev) => prev.filter((item) => item.id !== tempId))
           console.error('Nemesis Add Error:', err)
-          toast.error('The darkness swallows your words. Please try again.')
+          toast.error(ERROR_MESSAGE())
         })
     },
     [selectedSettlementId, availableNemeses]
@@ -218,7 +219,7 @@ export function NemesesCard({
             return restored
           })
           console.error('Nemesis Remove Error:', err)
-          toast.error('The darkness swallows your words. Please try again.')
+          toast.error(ERROR_MESSAGE())
         })
     },
     [items]
@@ -253,7 +254,7 @@ export function NemesesCard({
             )
           )
           console.error('Nemesis Toggle Error:', err)
-          toast.error('The darkness swallows your words. Please try again.')
+          toast.error(ERROR_MESSAGE())
         })
     },
     [items]
@@ -288,7 +289,7 @@ export function NemesesCard({
             )
           )
           console.error('Nemesis Level Toggle Error:', err)
-          toast.error('The darkness swallows your words. Please try again.')
+          toast.error(ERROR_MESSAGE())
         }
       )
     },

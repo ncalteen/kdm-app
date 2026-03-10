@@ -15,6 +15,7 @@ import {
   updateSettlementQuarryUnlocked
 } from '@/lib/dal/settlement-quarry'
 import {
+  ERROR_MESSAGE,
   QUARRY_ADDED_MESSAGE,
   QUARRY_REMOVED_MESSAGE,
   QUARRY_UNLOCKED_MESSAGE
@@ -101,7 +102,7 @@ export function QuarriesCard({
         if (cancelled) return
 
         console.error('Settlement Quarries Fetch Error:', err)
-        toast.error('The darkness swallows your words. Please try again.')
+        toast.error(ERROR_MESSAGE())
       })
 
     return () => {
@@ -165,7 +166,7 @@ export function QuarriesCard({
           // Revert the optimistic insert.
           setItems((prev) => prev.filter((item) => item.id !== tempId))
           console.error('Quarry Add Error:', err)
-          toast.error('The darkness swallows your words. Please try again.')
+          toast.error(ERROR_MESSAGE())
         })
     },
     [selectedSettlementId, availableQuarries]
@@ -196,7 +197,7 @@ export function QuarriesCard({
             return restored
           })
           console.error('Quarry Remove Error:', err)
-          toast.error('The darkness swallows your words. Please try again.')
+          toast.error(ERROR_MESSAGE())
         })
     },
     [items]
@@ -233,7 +234,7 @@ export function QuarriesCard({
             )
           )
           console.error('Quarry Toggle Error:', err)
-          toast.error('The darkness swallows your words. Please try again.')
+          toast.error(ERROR_MESSAGE())
         })
     },
     [items]
