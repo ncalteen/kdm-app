@@ -14,7 +14,7 @@ create table quarry_timeline_year (
   entries varchar [] not null default '{}',
   year_number int not null check (
     year_number >= 0
-    and year_number <= 40
+    and year_number <= 50
   ),
   -- Constraints
   unique (quarry_id, year_number)

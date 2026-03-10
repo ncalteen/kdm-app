@@ -14,7 +14,7 @@ create table nemesis_timeline_year (
   nemesis_id uuid not null references nemesis(id) on delete cascade,
   year_number int not null check (
     year_number >= 0
-    and year_number <= 40
+    and year_number <= 50
   ),
   -- Constraints
   unique (nemesis_id, year_number)
