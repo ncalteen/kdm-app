@@ -5,6 +5,8 @@ import { SettlementCard } from '@/components/settlement/settlement-card'
 import { SiteHeader } from '@/components/side-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
+import { getSettlement } from '@/lib/dal/settlement'
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { ReactElement, Suspense, useEffect, useRef, useState } from 'react'
@@ -115,6 +117,25 @@ function MainPage(): ReactElement {
     updateLocal
   } = useLocal()
 
+  const [error, setError] = useState<string | null>(null)
+
+  const [selectedSettlement, setSelectedSettlement] =
+    useState<Tables<'settlement'> | null>(null)
+
+  useEffect(() => {
+    Promise.all([getSettlement(selectedSettlementId)])
+      .then(([settlement]) => {
+        setSelectedSettlement(settlement)
+      })
+      .catch((err: unknown) =>
+        setError(
+          err instanceof Error
+            ? `Page Load Error: ${err.message}`
+            : 'Page Load Error: Unknown Error'
+        )
+      )
+  }, [selectedSettlementId])
+
   return (
     <div className="[--header-height:calc(--spacing(10))] min-w-[450px]">
       <SidebarProvider>
@@ -122,6 +143,7 @@ function MainPage(): ReactElement {
 
         <AppSidebar
           selectedHuntId={selectedHuntId}
+          selectedSettlement={selectedSettlement}
           selectedSettlementId={selectedSettlementId}
           selectedSettlementPhaseId={selectedSettlementPhaseId}
           selectedShowdownId={selectedShowdownId}
@@ -139,6 +161,7 @@ function MainPage(): ReactElement {
               isCreatingNewSurvivor={isCreatingNewSurvivor}
               selectedHuntId={selectedHuntId}
               selectedHuntMonsterIndex={selectedHuntMonsterIndex}
+              selectedSettlement={selectedSettlement}
               selectedSettlementId={selectedSettlementId}
               selectedSettlementPhaseId={selectedSettlementPhaseId}
               selectedShowdownId={selectedShowdownId}

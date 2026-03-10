@@ -1,7 +1,11 @@
 'use client'
 
+import { ArrivalBonusesCard } from '@/components/settlement/arrival-bonuses/arrival-bonuses-card'
 import { CreateSettlementCard } from '@/components/settlement/create-settlement-card'
+import { DepartingBonusesCard } from '@/components/settlement/departing-bonuses/departing-bonuses-card'
 import { OverviewCard } from '@/components/settlement/overview/overview-card'
+import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
+import { Tables } from '@/lib/database.types'
 import { TabType } from '@/lib/enums'
 import { ReactElement } from 'react'
 
@@ -15,6 +19,8 @@ interface SettlementCardProps {
   selectedHuntId: string | null
   /** Selected Hunt Monster Index */
   selectedHuntMonsterIndex: number
+  /** Selected Settlement */
+  selectedSettlement: Tables<'settlement'> | null
   /** Selected Settlement ID */
   selectedSettlementId: string | null
   /** Selected Settlement Phase ID */
@@ -57,6 +63,7 @@ export function SettlementCard({
   isCreatingNewSurvivor,
   selectedHuntId,
   selectedHuntMonsterIndex,
+  selectedSettlement,
   selectedSettlementId,
   selectedSettlementPhaseId,
   selectedShowdownId,
@@ -95,6 +102,19 @@ export function SettlementCard({
               setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
               setSelectedSurvivorId={setSelectedSurvivorId}
             />
+          )}
+
+          {/* Timeline Tab */}
+          {selectedSettlementId && selectedTab === TabType.TIMELINE && (
+            <div className="flex flex-col lg:flex-row gap-2">
+              {/* Timeline */}
+              <div className="flex-1 order-2 lg:order-1">
+                <TimelineCard
+                  selectedSettlement={selectedSettlement}
+                  selectedSettlementId={selectedSettlementId}
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>
