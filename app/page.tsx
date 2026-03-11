@@ -123,10 +123,8 @@ function MainPage(): ReactElement {
     useState<Tables<'settlement'> | null>(null)
 
   useEffect(() => {
-    // Clear previous settlement immediately to avoid rendering stale data
-    setSelectedSettlement(null)
-
-    // Guard against out-of-order responses when selectedSettlementId changes quickly
+    // Guard against out-of-order responses when selectedSettlementId changes
+    // quickly
     let isCancelled = false
 
     // Skip fetch if there is no selected settlement id
@@ -143,6 +141,8 @@ function MainPage(): ReactElement {
       })
       .catch((err: unknown) => {
         if (isCancelled) return
+
+        setSelectedSettlement(null)
         setError(
           err instanceof Error
             ? `Page Load Error: ${err.message}`
