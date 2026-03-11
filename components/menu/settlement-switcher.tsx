@@ -86,7 +86,7 @@ export function SettlementSwitcher({
         setError(err instanceof Error ? err.message : 'Unknown Error')
       )
       .finally(() => setIsLoading(false))
-  }, [selectedSettlementId])
+  }, [])
 
   /**
    * Handle Settlement Selection
