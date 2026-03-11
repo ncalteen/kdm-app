@@ -15,18 +15,10 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { getCustomCampaignTemplate } from '@/lib/campaigns/custom'
-import { getPeopleOfTheDreamKeeperTemplate } from '@/lib/campaigns/potdk'
-import { getPeopleOfTheLanternTemplate } from '@/lib/campaigns/potl'
-import { getPeopleOfTheStarsTemplate } from '@/lib/campaigns/potstars'
-import { getPeopleOfTheSunTemplate } from '@/lib/campaigns/potsun'
-import { getSquiresOfTheCitadelTemplate } from '@/lib/campaigns/squires'
-import { getNemesisNodesById } from '@/lib/dal/nemesis'
-import { getQuarryNodesById } from '@/lib/dal/quarry'
+import { fetchTemplate } from '@/lib/campaigns'
 import { createSettlement } from '@/lib/dal/settlement'
 import { CampaignType, MonsterNode, SurvivorType } from '@/lib/enums'
 import { ERROR_MESSAGE, SETTLEMENT_CREATED_MESSAGE } from '@/lib/messages'
-import { CampaignTemplate } from '@/lib/types'
 import {
   NewSettlementInput,
   NewSettlementInputSchema
@@ -112,85 +104,13 @@ export function CreateSettlementCard({
     campaignType === CampaignType.PEOPLE_OF_THE_DREAM_KEEPER ||
     campaignType === CampaignType.SQUIRES_OF_THE_CITADEL
 
+  // Populate form fields from the template
   useEffect(() => {
-    /** Resolve the campaign template and survivor type for the selected type */
-    const fetchTemplate = async (): Promise<{
-      template: CampaignTemplate
-      survivorType: SurvivorType
-    }> => {
-      switch (campaignType) {
-        case CampaignType.CUSTOM:
-          return {
-            template: await getCustomCampaignTemplate(),
-            survivorType: SurvivorType.CORE
-          }
-        case CampaignType.PEOPLE_OF_THE_DREAM_KEEPER:
-          return {
-            template: await getPeopleOfTheDreamKeeperTemplate(),
-            survivorType: SurvivorType.ARC
-          }
-        case CampaignType.PEOPLE_OF_THE_LANTERN:
-          return {
-            template: await getPeopleOfTheLanternTemplate(),
-            survivorType: SurvivorType.CORE
-          }
-        case CampaignType.PEOPLE_OF_THE_STARS:
-          return {
-            template: await getPeopleOfTheStarsTemplate(),
-            survivorType: SurvivorType.CORE
-          }
-        case CampaignType.PEOPLE_OF_THE_SUN:
-          return {
-            template: await getPeopleOfTheSunTemplate(),
-            survivorType: SurvivorType.CORE
-          }
-        case CampaignType.SQUIRES_OF_THE_CITADEL:
-          return {
-            template: await getSquiresOfTheCitadelTemplate(),
-            survivorType: SurvivorType.CORE
-          }
-        default:
-          throw new Error(`Unsupported Campaign Type: ${campaignType}`)
-      }
-    }
-
-    fetchTemplate()
-      .then(async ({ template: t, survivorType: st }) => {
-        // Look up which node each quarry/nemesis belongs to
-        const [quarryNodes, nemesisNodes] = await Promise.all([
-          getQuarryNodesById(t.quarryIds),
-          getNemesisNodesById(t.nemesisIds)
-        ])
-
-        // Group monster IDs by node
-        const monsters: Record<string, string[]> = {
-          NQ1: [],
-          NQ2: [],
-          NQ3: [],
-          NQ4: [],
-          NN1: [],
-          NN2: [],
-          NN3: [],
-          CO: [],
-          FI: []
-        }
-
-        for (const q of quarryNodes)
-          if (monsters[q.node]) monsters[q.node].push(q.id)
-
-        for (const n of nemesisNodes)
-          if (monsters[n.node]) monsters[n.node].push(n.id)
-
-        // Populate form fields from the template
-        form.setValue('survivorType', st)
-        form.setValue('wandererIds', t.wandererIds)
-
-        // Set usesScouts based on campaign type
-        if (campaignType === CampaignType.PEOPLE_OF_THE_DREAM_KEEPER)
-          form.setValue('usesScouts', true)
-        else if (campaignType === CampaignType.SQUIRES_OF_THE_CITADEL)
-          form.setValue('usesScouts', false)
-
+    fetchTemplate(campaignType)
+      .then(async ({ template, survivorType, monsters, usesScouts }) => {
+        form.setValue('survivorType', survivorType)
+        form.setValue('wandererIds', template.wandererIds)
+        form.setValue('usesScouts', usesScouts)
         form.setValue('monsterIds', {
           NQ1: monsters[MonsterNode.NQ1],
           NQ2: monsters[MonsterNode.NQ2],
