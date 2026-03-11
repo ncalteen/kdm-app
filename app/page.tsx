@@ -6,6 +6,7 @@ import { SiteHeader } from '@/components/side-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
 import { getSettlement } from '@/lib/dal/settlement'
+import { getSurvivors } from '@/lib/dal/survivor'
 import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -121,6 +122,7 @@ function MainPage(): ReactElement {
 
   const [selectedSettlement, setSelectedSettlement] =
     useState<Tables<'settlement'> | null>(null)
+  const [survivors, setSurvivors] = useState<Tables<'survivor'>[]>([])
 
   useEffect(() => {
     // Guard against out-of-order responses when selectedSettlementId changes
@@ -134,15 +136,20 @@ function MainPage(): ReactElement {
       }
     }
 
-    Promise.all([getSettlement(selectedSettlementId)])
-      .then(([settlement]) => {
+    Promise.all([
+      getSettlement(selectedSettlementId),
+      getSurvivors(selectedSettlementId)
+    ])
+      .then(([settlement, survivors]) => {
         if (isCancelled) return
         setSelectedSettlement(settlement)
+        setSurvivors(survivors)
       })
       .catch((err: unknown) => {
         if (isCancelled) return
 
         setSelectedSettlement(null)
+        setSurvivors([])
         setError(
           err instanceof Error
             ? `Page Load Error: ${err.message}`
@@ -196,6 +203,8 @@ function MainPage(): ReactElement {
               setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
               setSelectedSurvivorId={setSelectedSurvivorId}
               setSelectedTab={setSelectedTab}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
           </div>
         </SidebarInset>

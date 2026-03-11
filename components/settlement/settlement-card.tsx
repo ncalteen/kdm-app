@@ -5,6 +5,8 @@ import { CreateSettlementCard } from '@/components/settlement/create-settlement-
 import { NemesesCard } from '@/components/settlement/nemeses/nemeses-card'
 import { OverviewCard } from '@/components/settlement/overview/overview-card'
 import { QuarriesCard } from '@/components/settlement/quarries/quarries-card'
+import { SquireProgressionCards } from '@/components/settlement/squires/squire-progression-cards'
+import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
 import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
 import {
   updateArrivalBonuses,
@@ -58,6 +60,10 @@ interface SettlementCardProps {
   setSelectedSurvivorId: (survivor: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
+  /** Set Survivors */
+  setSurvivors: (survivors: Tables<'survivor'>[]) => void
+  /** Survivors */
+  survivors: Tables<'survivor'>[]
 }
 
 /**
@@ -85,7 +91,9 @@ export function SettlementCard({
   setSelectedShowdownId,
   setSelectedShowdownMonsterIndex,
   setSelectedSurvivorId,
-  setSelectedTab
+  setSelectedTab,
+  setSurvivors,
+  survivors
 }: SettlementCardProps): ReactElement {
   const [campaignType, setCampaignType] = useState<CampaignType>(
     CampaignType.PEOPLE_OF_THE_LANTERN
@@ -192,6 +200,17 @@ export function SettlementCard({
           )}
 
           {/* Squires of the Citadel Tab */}
+          {selectedSettlement &&
+            selectedTab === TabType.SQUIRES &&
+            campaignType === CampaignType.SQUIRES_OF_THE_CITADEL && (
+              <>
+                <SquireSuspicionsCard
+                  setSurvivors={setSurvivors}
+                  survivors={survivors}
+                />
+                <SquireProgressionCards />
+              </>
+            )}
 
           {/* Survivors Tab */}
 
