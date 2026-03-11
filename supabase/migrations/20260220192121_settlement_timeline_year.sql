@@ -13,7 +13,7 @@ create table settlement_timeline_year (
   settlement_id uuid not null references settlement(id) on delete cascade,
   year_number int not null check (
     year_number >= 0
-    and year_number <= 40
+    and year_number <= 50
   ),
   -- Constraints
   unique (settlement_id, year_number)

@@ -14,8 +14,13 @@ import {
   SidebarMenuItem,
   SidebarRail
 } from '@/components/ui/sidebar'
-import { getCampaignType, getSurvivorType } from '@/lib/dal/settlement'
-import { CampaignType, SurvivorType, TabType } from '@/lib/enums'
+import { Tables } from '@/lib/database.types'
+import {
+  DatabaseCampaignType,
+  DatabaseSurvivorType,
+  TabType
+} from '@/lib/enums'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { generateSeedData } from '@/lib/seed'
 import {
   DatabaseIcon,
@@ -32,13 +37,7 @@ import {
   UsersIcon,
   WrenchIcon
 } from 'lucide-react'
-import {
-  ComponentProps,
-  ReactElement,
-  useEffect,
-  useState,
-  useTransition
-} from 'react'
+import { ComponentProps, ReactElement, useMemo, useTransition } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -151,6 +150,8 @@ const navSettings = [
 interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
   /** Selected Hunt ID */
   selectedHuntId: string | null
+  /** Selected Settlement */
+  selectedSettlement: Tables<'settlement'> | null
   /** Selected Settlement ID */
   selectedSettlementId: string | null
   /** Selected Settlement Phase ID */
@@ -181,6 +182,7 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
  */
 export function AppSidebar({
   selectedHuntId,
+  selectedSettlement,
   selectedSettlementId,
   selectedSettlementPhaseId,
   selectedShowdownId,
@@ -193,51 +195,29 @@ export function AppSidebar({
   setSelectedTab,
   ...props
 }: AppSidebarProps): ReactElement {
-  const [navItems, setNavItems] = useState(baseNavPrimary)
-  const [error, setError] = useState<string | null>(null)
   const [isSeeding, startSeedTransition] = useTransition()
 
-  useEffect(() => {
-    Promise.all([
-      getCampaignType(selectedSettlementId),
-      getSurvivorType(selectedSettlementId)
-    ])
-      .then(([campaignType, survivorType]) => {
-        const newNavItems =
-          campaignType === CampaignType.SQUIRES_OF_THE_CITADEL
-            ? [...navSquires]
-            : [...baseNavPrimary]
+  const navItems = useMemo(() => {
+    const items =
+      selectedSettlement?.campaign_type ===
+      DatabaseCampaignType['Squires of the Citadel']
+        ? [...navSquires]
+        : [...baseNavPrimary]
 
-        if (survivorType === SurvivorType.ARC) {
-          const notesIndex = newNavItems.findIndex(
-            (item) => item.tab === TabType.NOTES
-          )
+    if (selectedSettlement?.survivor_type === DatabaseSurvivorType['Arc']) {
+      const notesIndex = items.findIndex((item) => item.tab === TabType.NOTES)
 
-          if (notesIndex !== -1)
-            newNavItems.splice(notesIndex, 0, {
-              title: 'Arc',
-              tab: TabType.ARC,
-              icon: LightbulbIcon
-            })
-        }
+      if (notesIndex !== -1) {
+        items.splice(notesIndex, 0, {
+          title: 'Arc',
+          tab: TabType.ARC,
+          icon: LightbulbIcon
+        })
+      }
+    }
 
-        setNavItems(newNavItems)
-      })
-      .catch((err: unknown) =>
-        setError(
-          err instanceof Error
-            ? `Settlement Load Error: ${err.message}`
-            : 'Settlement Load Error: Unknown Error'
-        )
-      )
-  }, [selectedSettlementId])
-
-  if (error)
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-red-500">{error}</p>
-      </div>
-    )
+    return items
+  }, [selectedSettlement?.campaign_type, selectedSettlement?.survivor_type])
 
   return (
     <Sidebar
@@ -303,9 +283,7 @@ export function AppSidebar({
                         await generateSeedData()
                       } catch (err) {
                         console.error('Seed Data Error:', err)
-                        toast.error(
-                          'The darkness swallows your words. Please try again.'
-                        )
+                        toast.error(ERROR_MESSAGE())
                       }
                     })
                   }}>

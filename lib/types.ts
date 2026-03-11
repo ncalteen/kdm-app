@@ -1,4 +1,4 @@
-'use client'
+import { Tables } from '@/lib/database.types'
 
 /**
  * Campaign Template
@@ -32,4 +32,16 @@ export type CampaignTemplate = {
   }[]
   /** Wanderer IDs */
   wandererIds: string[]
+}
+
+/**
+ * Settlement List Item
+ *
+ * Used to populate the settlement switcher component.
+ */
+export type SettlementListItem = Pick<
+  Tables<'settlement'>,
+  'id' | 'settlement_name' | 'campaign_type'
+> & {
+  shared: boolean
 }

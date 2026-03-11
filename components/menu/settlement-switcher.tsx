@@ -19,8 +19,8 @@ import {
   getShowdownId
 } from '@/lib/dal/settlement'
 import { getSettlements } from '@/lib/dal/user'
-import { Tables } from '@/lib/database.types'
 import { CampaignType } from '@/lib/enums'
+import { SettlementListItem } from '@/lib/types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
 import { ComponentProps, ReactElement, useEffect, useState } from 'react'
 
@@ -70,18 +70,18 @@ export function SettlementSwitcher({
   setSelectedShowdownId,
   setSelectedSurvivorId
 }: SettlementSwitcherProps): ReactElement {
-  const [settlements, setSettlements] = useState<
-    (Tables<'settlement'> & { shared: boolean })[]
-  >([])
+  const [settlementList, setSettlementList] = useState<SettlementListItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   /**
-   * Handle Component Loading
+   * Load Component
+   *
+   * Gather the list of settlements available to the user.
    */
   useEffect(() => {
     getSettlements()
-      .then((data) => setSettlements(data))
+      .then((data) => setSettlementList(data))
       .catch((err: unknown) =>
         setError(err instanceof Error ? err.message : 'Unknown Error')
       )
@@ -91,7 +91,8 @@ export function SettlementSwitcher({
   /**
    * Handle Settlement Selection
    *
-   * Selects a settlement and loads its associated hunt and showdown.
+   * Selects a settlement and loads its associated hunt, showdown, settlement
+   * phase, etc.
    *
    * @param settlementId Settlement ID
    */
@@ -141,7 +142,7 @@ export function SettlementSwitcher({
     )
 
   const campaignType = selectedSettlementId
-    ? settlements.find((s) => s.id === selectedSettlementId)?.campaign_type
+    ? settlementList.find((s) => s.id === selectedSettlementId)?.campaign_type
     : null
 
   return (
@@ -167,7 +168,7 @@ export function SettlementSwitcher({
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="text-sm">
                   {selectedSettlementId
-                    ? settlements.find((s) => s.id === selectedSettlementId)
+                    ? settlementList.find((s) => s.id === selectedSettlementId)
                         ?.settlement_name || 'Unknown Settlement'
                     : 'Create a Settlement'}
                 </span>
@@ -204,7 +205,7 @@ export function SettlementSwitcher({
             <DropdownMenuSeparator />
 
             {/* Display existing settlements */}
-            {settlements.map((settlement) => (
+            {settlementList.map((settlement) => (
               <DropdownMenuItem
                 key={settlement.id}
                 onSelect={() => handleSettlementSelect(settlement.id)}>

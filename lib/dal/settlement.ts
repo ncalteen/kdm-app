@@ -240,6 +240,32 @@ export async function createSettlement(
 }
 
 /**
+ * Get Settlement
+ *
+ * Gets the base details for a settlement by ID.
+ *
+ * @param settlementId Settlement ID
+ * @returns Settlement Details (or null)
+ */
+export async function getSettlement(
+  settlementId: string | null
+): Promise<Tables<'settlement'> | null> {
+  if (!settlementId) return null
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('settlement')
+    .select('*')
+    .eq('id', settlementId)
+    .maybeSingle()
+
+  if (error) throw new Error(`Error Fetching Settlement: ${error.message}`)
+
+  return data
+}
+
+/**
  * Get Campaign Type
  *
  * Retrieves the selected settlement's campaign type.
@@ -612,4 +638,71 @@ export async function updateSurvivalLimit(
     .eq('id', settlementId)
 
   if (error) throw new Error(`Error Updating Survial Limit: ${error.message}`)
+}
+
+/**
+ * Update Arrival Bonuses
+ *
+ * @param settlementId Settlement ID
+ * @param bonuses Updated Bonuses
+ */
+export async function updateArrivalBonuses(
+  settlementId: string | null,
+  bonuses: string[]
+): Promise<void> {
+  if (!settlementId) return
+
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement')
+    .update({ arrival_bonuses: bonuses })
+    .eq('id', settlementId)
+
+  if (error) throw new Error(`Error Updating Arrival Bonuses: ${error.message}`)
+}
+
+/**
+ * Update Departure Bonuses
+ *
+ * @param settlementId Settlement ID
+ * @param bonuses Updated Bonuses
+ */
+export async function updateDepartureBonuses(
+  settlementId: string | null,
+  bonuses: string[]
+): Promise<void> {
+  if (!settlementId) return
+
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement')
+    .update({ departing_bonuses: bonuses })
+    .eq('id', settlementId)
+
+  if (error)
+    throw new Error(`Error Updating Departure Bonuses: ${error.message}`)
+}
+
+/**
+ * Update Monster Volumes
+ *
+ * @param settlementId Settlement ID
+ * @param volumes Updated Monster Volumes
+ */
+export async function updateMonsterVolumes(
+  settlementId: string | null,
+  volumes: string[]
+): Promise<void> {
+  if (!settlementId) return
+
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement')
+    .update({ monster_volumes: volumes })
+    .eq('id', settlementId)
+
+  if (error) throw new Error(`Error Updating Monster Volumes: ${error.message}`)
 }
