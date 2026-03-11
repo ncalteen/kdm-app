@@ -45,3 +45,12 @@ export type SettlementListItem = Pick<
 > & {
   shared: boolean
 }
+
+/**
+ * Survivor List Item
+ *
+ * Used to populate the survivor detail page.
+ */
+export type SurvivorDetail = Tables<'survivor'> & {
+  embarked: boolean
+}
