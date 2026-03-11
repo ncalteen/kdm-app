@@ -131,7 +131,7 @@ export function SettlementCard({
               {/* Timeline */}
               <div className="flex-1 order-2 lg:order-1">
                 <TimelineCard
-                  selectedSettlement={selectedSettlement}
+                  campaignType={campaignType}
                   selectedSettlementId={selectedSettlementId}
                 />
               </div>

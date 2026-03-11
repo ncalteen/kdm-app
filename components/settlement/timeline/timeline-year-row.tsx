@@ -134,7 +134,6 @@ export const TimelineYearRow = ({
                 />
               ) : null
             )}
-            {/* Add Event Button for mobile - inline with badges */}
             {!completed && (
               <Button
                 type="button"
@@ -149,7 +148,7 @@ export const TimelineYearRow = ({
           </div>
         )}
 
-        {/* Empty state */}
+        {/* Empty State */}
         {entries.length === 0 && (
           <div className="flex justify-between gap-2">
             <div className="text-xs text-muted-foreground italic leading-none">
@@ -212,7 +211,7 @@ export const TimelineYearRow = ({
         )}
       </div>
 
-      {/* Add Event Button - Desktop only */}
+      {/* Add Event Button (Desktop) */}
       {!completed && (
         <div className="justify-end pr-2 hidden sm:flex">
           <Button

@@ -10,7 +10,6 @@ import {
   saveTimelineEntry,
   toggleYearCompletionStatus
 } from '@/lib/dal/settlement-timeline-year'
-import { Tables } from '@/lib/database.types'
 import { CampaignType } from '@/lib/enums'
 import {
   ERROR_MESSAGE,
@@ -37,8 +36,8 @@ import { toast } from 'sonner'
  * Timeline Card Properties
  */
 interface TimelineCardProps {
-  /** Selected Settlement */
-  selectedSettlement: Tables<'settlement'> | null
+  /** Campaign Type */
+  campaignType: CampaignType
   /** Selected Settlement ID */
   selectedSettlementId: string
 }
@@ -54,22 +53,19 @@ interface TimelineCardProps {
  * @returns Timeline Card Component
  */
 export function TimelineCard({
-  selectedSettlement,
+  campaignType,
   selectedSettlementId
 }: TimelineCardProps): ReactElement {
   const [timeline, setTimeline] = useState<{
     [key: number]: { entries: string[]; completed: boolean }
   }>({})
-
   const [editingEvents, setEditingEvents] = useState<{
     [key: string]: boolean
   }>({})
+
   const inputRefs = useRef<{
     [key: string]: HTMLInputElement | null
   }>({})
-
-  const campaignType =
-    CampaignType[selectedSettlement?.campaign_type as keyof typeof CampaignType]
 
   useEffect(() => {
     let isCancelled = false
@@ -137,6 +133,7 @@ export function TimelineCard({
       // Check if any entry in this year is being edited
       const isEditing = Object.keys(editingEvents).some((key) => {
         const [keyYearNumber] = key.split('-').map(Number)
+
         return keyYearNumber === yearNumber && editingEvents[key]
       })
 
@@ -150,7 +147,8 @@ export function TimelineCard({
 
       const newEntryIndex = currentEntries.length
 
-      // Set this new event as being edited - this will trigger the input to show
+      // Set this new event as being edited, which will trigger the input to
+      // show for this event.
       setEditingEvents((prev) => ({
         ...prev,
         [`${yearNumber}-${newEntryIndex}`]: true
@@ -181,10 +179,10 @@ export function TimelineCard({
       // canceling the creation of a new entry, so we don't need to save
       if (eventIndex >= currentEntries.length) return
 
-      // Remove the entry from the database, then update local state with the
-      // new entries for this year.
+      // Remove the entry from the database
       removeTimelineEntry(selectedSettlementId, yearNumber, eventIndex)
         .then((updatedEntries) => {
+          // Update local state with the new entries for this year
           setTimeline({
             ...timeline,
             [yearNumber]: {
@@ -195,7 +193,8 @@ export function TimelineCard({
           toast.success(TIMELINE_EVENT_REMOVED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert the optimistic removal.
+          // Revert the optimistic removal by re-adding the entry to the
+          // timeline and setting it as being edited again.
           setTimeline((prev) => ({
             ...prev,
             [yearNumber]: {
@@ -206,6 +205,10 @@ export function TimelineCard({
                 ...prev[yearNumber].entries.slice(eventIndex)
               ]
             }
+          }))
+          setEditingEvents((prev) => ({
+            ...prev,
+            [inputKey]: true
           }))
 
           console.error('Timeline Event Remove Error:', err)
@@ -245,8 +248,7 @@ export function TimelineCard({
         return newEditingEvents
       })
 
-      // Save the entry to the database, then update local state with the new
-      // entries for this year.
+      // Save the entry to the database
       saveTimelineEntry(
         selectedSettlementId,
         yearNumber,
@@ -254,6 +256,7 @@ export function TimelineCard({
         entryIndex
       )
         .then((updatedEntries) => {
+          // Update local state with the new entries for this year
           setTimeline({
             ...timeline,
             [yearNumber]: {
@@ -301,10 +304,10 @@ export function TimelineCard({
     (yearNumber: number, completed: boolean) => {
       if (!selectedSettlementId) return
 
-      // Save the entry to the database, then update local state with the new
-      // status for this year.
+      // Save the entry to the database
       toggleYearCompletionStatus(selectedSettlementId, yearNumber, completed)
         .then(() => {
+          // Update local state with the new completion status for this year
           setTimeline({
             ...timeline,
             [yearNumber]: {
@@ -312,10 +315,12 @@ export function TimelineCard({
               entries: timeline[yearNumber].entries
             }
           })
+
           toast.success(TIMELINE_YEAR_COMPLETED_MESSAGE(completed))
         })
         .catch((err: unknown) => {
-          // Revert the optimistic update.
+          // Revert the optimistic update by toggling the completion status back
+          // to its previous value.
           setTimeline((prev) => ({
             ...prev,
             [yearNumber]: {
@@ -343,8 +348,10 @@ export function TimelineCard({
         ? 0
         : Math.max(...yearKeys.map((val) => parseInt(val, 10))) + 1
 
+    // Add the year to the database
     addYear(selectedSettlementId, yearNumber)
       .then(() => {
+        // Update local state with the new year
         setTimeline({
           ...timeline,
           [yearNumber]: { completed: false, entries: [] }
@@ -352,6 +359,13 @@ export function TimelineCard({
         toast.success(TIMELINE_YEAR_ADDED_MESSAGE())
       })
       .catch((err: unknown) => {
+        // Revert the optimistic update by removing the year from local state.
+        setTimeline((prev) => {
+          const newTimeline = { ...prev }
+          delete newTimeline[yearNumber]
+          return newTimeline
+        })
+
         console.error('Timeline Year Add Error:', err)
         toast.error(ERROR_MESSAGE())
       })
