@@ -304,9 +304,8 @@ export function TimelineCard({
         ...timeline,
         [yearNumber]: { completed: false, entries: [] }
       })
+      toast.success(TIMELINE_YEAR_ADDED_MESSAGE())
     })
-
-    toast.success(TIMELINE_YEAR_ADDED_MESSAGE())
   }, [selectedSettlementId, timeline])
 
   /**
