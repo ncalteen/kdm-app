@@ -1,4 +1,33 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+
+/**
+ * Get Settlement Phase
+ *
+ * @param settlementPhaseId Settlement Phase ID
+ * @param settlementId Settlement ID
+ * @returns Settlement Phase Data
+ */
+export async function getSettlementPhase(
+  settlementPhaseId: string | null,
+  settlementId: string | null
+): Promise<Tables<'settlement_phase'> | null> {
+  if (!settlementPhaseId || !settlementId) return null
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('settlement_phase')
+    .select('*')
+    .eq('id', settlementPhaseId)
+    .eq('settlement_id', settlementId)
+    .single()
+
+  if (error)
+    throw new Error(`Error Fetching Settlement Phase: ${error.message}`)
+
+  return data ?? null
+}
 
 /**
  * Get Endeavors
@@ -7,7 +36,7 @@ import { createClient } from '@/lib/supabase/client'
  * @returns Endeavors (or null)
  */
 export async function getEndeavors(
-  settlementPhaseId: string | null
+  settlementPhaseId: string | null | undefined
 ): Promise<number | null> {
   if (!settlementPhaseId) return null
 
@@ -31,7 +60,7 @@ export async function getEndeavors(
  * @param endeavors New Endeavors value
  */
 export async function updateEndeavors(
-  settlementPhaseId: string | null,
+  settlementPhaseId: string | null | undefined,
   endeavors: number
 ): Promise<void> {
   if (!settlementPhaseId) return
