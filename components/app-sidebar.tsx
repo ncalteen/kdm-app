@@ -148,16 +148,14 @@ const navSettings = [
  * Application Sidebar Properties
  */
 interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
-  /** Selected Hunt ID */
-  selectedHuntId: string | null
+  /** Selected Hunt */
+  selectedHunt: Tables<'hunt'> | null
   /** Selected Settlement */
   selectedSettlement: Tables<'settlement'> | null
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
-  /** Selected Settlement Phase ID */
-  selectedSettlementPhaseId: string | null
-  /** Selected Showdown ID */
-  selectedShowdownId: string | null
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: Tables<'settlement_phase'> | null
+  /** Selected Showdown */
+  selectedShowdown: Tables<'showdown'> | null
   /** Selected Tab */
   selectedTab: TabType
   /** Set Selected Hunt ID */
@@ -181,11 +179,10 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
  * @returns Application Sidebar Component
  */
 export function AppSidebar({
-  selectedHuntId,
+  selectedHunt,
   selectedSettlement,
-  selectedSettlementId,
-  selectedSettlementPhaseId,
-  selectedShowdownId,
+  selectedSettlementPhase,
+  selectedShowdown,
   selectedTab,
   setSelectedHuntId,
   setSelectedSettlementId,
@@ -226,10 +223,10 @@ export function AppSidebar({
       {...props}>
       <SidebarHeader>
         <SettlementSwitcher
-          selectedHuntId={selectedHuntId}
-          selectedSettlementId={selectedSettlementId}
-          selectedSettlementPhaseId={selectedSettlementPhaseId}
-          selectedShowdownId={selectedShowdownId}
+          selectedHunt={selectedHunt}
+          selectedSettlement={selectedSettlement}
+          selectedSettlementPhase={selectedSettlementPhase}
+          selectedShowdown={selectedShowdown}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlementId={setSelectedSettlementId}
           setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}

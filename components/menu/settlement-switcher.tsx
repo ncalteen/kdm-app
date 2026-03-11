@@ -19,6 +19,7 @@ import {
   getShowdownId
 } from '@/lib/dal/settlement'
 import { getSettlements } from '@/lib/dal/user'
+import { Tables } from '@/lib/database.types'
 import { CampaignType } from '@/lib/enums'
 import { SettlementListItem } from '@/lib/types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
@@ -28,14 +29,14 @@ import { ComponentProps, ReactElement, useEffect, useState } from 'react'
  * Settlement Switcher Properties
  */
 interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
-  /** Selected Hunt ID */
-  selectedHuntId: string | null
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
-  /** Selected Settlement Phase ID */
-  selectedSettlementPhaseId: string | null
-  /** Selected Showdown ID */
-  selectedShowdownId: string | null
+  /** Selected Hunt */
+  selectedHunt: Tables<'hunt'> | null
+  /** Selected Settlement */
+  selectedSettlement: Tables<'settlement'> | null
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: Tables<'settlement_phase'> | null
+  /** Selected Showdown */
+  selectedShowdown: Tables<'showdown'> | null
   /** Set Selected Hunt ID */
   setSelectedHuntId: (hunt: string | null) => void
   /** Set Selected Settlement ID */
@@ -60,10 +61,10 @@ interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
  * @returns Settlement Switcher Component
  */
 export function SettlementSwitcher({
-  selectedHuntId,
-  selectedSettlementId,
-  selectedSettlementPhaseId,
-  selectedShowdownId,
+  selectedHunt,
+  selectedSettlement,
+  selectedSettlementPhase,
+  selectedShowdown,
   setSelectedHuntId,
   setSelectedSettlementId,
   setSelectedSettlementPhaseId,
@@ -141,9 +142,7 @@ export function SettlementSwitcher({
       </SidebarMenu>
     )
 
-  const campaignType = selectedSettlementId
-    ? settlementList.find((s) => s.id === selectedSettlementId)?.campaign_type
-    : null
+  const campaignType = selectedSettlement?.campaign_type ?? null
 
   return (
     <SidebarMenu>
@@ -153,11 +152,11 @@ export function SettlementSwitcher({
             <SidebarMenuButton
               size="lg"
               className={`data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground ${
-                selectedHuntId
+                selectedHunt
                   ? 'bg-yellow-500/20 hover:bg-yellow-500/30'
-                  : selectedShowdownId
+                  : selectedShowdown
                     ? 'bg-red-500/20 hover:bg-red-500/30'
-                    : selectedSettlementPhaseId
+                    : selectedSettlementPhase
                       ? 'bg-green-500/20 hover:bg-green-500/30'
                       : ''
               }`}>
@@ -167,13 +166,12 @@ export function SettlementSwitcher({
 
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="text-sm">
-                  {selectedSettlementId
-                    ? settlementList.find((s) => s.id === selectedSettlementId)
-                        ?.settlement_name || 'Unknown Settlement'
-                    : 'Create a Settlement'}
+                  {(selectedSettlement?.settlement_name ??
+                    'Unknown Settlement') ||
+                    'Create a Settlement'}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {selectedSettlementId
+                  {selectedSettlement
                     ? (campaignType && CampaignType[campaignType]) ||
                       'Unknown Campaign Type'
                     : 'Choose your destiny'}
@@ -215,7 +213,7 @@ export function SettlementSwitcher({
                     {CampaignType[settlement.campaign_type]}
                   </span>
                 </div>
-                {settlement.id === selectedSettlementId && (
+                {settlement.id === selectedSettlement?.id && (
                   <Check className="ml-auto" />
                 )}
               </DropdownMenuItem>

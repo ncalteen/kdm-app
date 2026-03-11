@@ -262,7 +262,7 @@ export async function getSettlement(
 
   if (error) throw new Error(`Error Fetching Settlement: ${error.message}`)
 
-  return data
+  return data ?? null
 }
 
 /**
@@ -274,7 +274,7 @@ export async function getSettlement(
  * @returns Campaign Type (or null)
  */
 export async function getCampaignType(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<CampaignType | null> {
   if (!settlementId) return null
 
@@ -302,7 +302,7 @@ export async function getCampaignType(
  * @returns Collective Cognition (or null)
  */
 export async function getCollectiveCognition(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<number | null> {
   if (!settlementId) return null
 
@@ -363,7 +363,7 @@ export async function getCollectiveCognition(
  * @returns Death Count (or null)
  */
 export async function getDeathCount(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<number | null> {
   if (!settlementId) return null
 
@@ -413,7 +413,7 @@ export async function getHuntId(
  * @returns Lantern Research (or null)
  */
 export async function getLanternResearch(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<number | null> {
   if (!settlementId) return null
 
@@ -445,7 +445,7 @@ export async function getLanternResearch(
  * @returns Lost Settlement Count (or null)
  */
 export async function getLostSettlementCount(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<number | null> {
   if (!settlementId) return null
 
@@ -473,7 +473,7 @@ export async function getLostSettlementCount(
  * @returns Population (or null)
  */
 export async function getPopulation(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<number | null> {
   if (!settlementId) return null
 
@@ -550,7 +550,7 @@ export async function getShowdownId(
  * @returns Survival Limit (or null)
  */
 export async function getSurvivalLimit(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<number | null> {
   if (!settlementId) return null
 
@@ -576,7 +576,7 @@ export async function getSurvivalLimit(
  * @returns Survivor Type (or null)
  */
 export async function getSurvivorType(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<SurvivorType> {
   if (!settlementId) return SurvivorType.CORE
 
@@ -602,7 +602,7 @@ export async function getSurvivorType(
  * @param value Lantern Research Level
  */
 export async function updateLanternResearch(
-  settlementId: string | null,
+  settlementId: string | null | undefined,
   value: number
 ): Promise<void> {
   if (!settlementId) return
@@ -625,7 +625,7 @@ export async function updateLanternResearch(
  * @param value Survival Limit
  */
 export async function updateSurvivalLimit(
-  settlementId: string | null,
+  settlementId: string | null | undefined,
   value: number
 ): Promise<void> {
   if (!settlementId) return
