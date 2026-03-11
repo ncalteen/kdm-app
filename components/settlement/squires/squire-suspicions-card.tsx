@@ -13,12 +13,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { Tables } from '@/lib/database.types'
 import { ERROR_MESSAGE, SQUIRE_SUSPICION_UPDATED_MESSAGE } from '@/lib/messages'
 import {
   calculateSuspicionLevels,
   calculateTotalSuspicion
 } from '@/lib/settlement/squires'
+import { SurvivorDetail } from '@/lib/types'
 import { EyeIcon } from 'lucide-react'
 import { ReactElement, useState } from 'react'
 import { toast } from 'sonner'
@@ -28,9 +28,9 @@ import { toast } from 'sonner'
  */
 interface SquireSuspicionsCardProps {
   /** Set Survivors */
-  setSurvivors: (survivors: Tables<'survivor'>[]) => void
+  setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
-  survivors: Tables<'survivor'>[]
+  survivors: SurvivorDetail[]
 }
 
 /**
