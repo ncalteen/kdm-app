@@ -15,8 +15,12 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { Tables } from '@/lib/database.types'
 import { ERROR_MESSAGE, SQUIRE_SUSPICION_UPDATED_MESSAGE } from '@/lib/messages'
+import {
+  calculateSuspicionLevels,
+  calculateTotalSuspicion
+} from '@/lib/settlement/squires'
 import { EyeIcon } from 'lucide-react'
-import { ReactElement } from 'react'
+import { ReactElement, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -39,67 +43,9 @@ export function SquireSuspicionsCard({
   setSurvivors,
   survivors
 }: SquireSuspicionsCardProps): ReactElement {
-  // Calculate total suspicion level
-  const totalSuspicion = survivors.reduce((total, survivor) => {
-    let suspicionLevel = 0
-
-    if (survivor.squire_suspicion_level_1) suspicionLevel += 1
-    if (survivor.squire_suspicion_level_2) suspicionLevel += 1
-    if (survivor.squire_suspicion_level_3) suspicionLevel += 1
-    if (survivor.squire_suspicion_level_4) suspicionLevel += 1
-
-    return total + suspicionLevel
-  }, 0)
-
-  /**
-   * Compute Suspicion Levels
-   *
-   * Computes a consistent set of suspicion levels based on cascading rules:
-   * checking a higher level also checks all lower levels, and unchecking a
-   * lower level also unchecks all higher levels.
-   *
-   * @param survivor Survivor Record
-   * @param level Suspicion Level Being Changed
-   * @param checked New Checked State
-   * @returns Updated Suspicion Levels
-   */
-  const computeSuspicionLevels = (
-    survivor: Tables<'survivor'>,
-    level: number,
-    checked: boolean
-  ) => {
-    let level1 = survivor.squire_suspicion_level_1
-    let level2 = survivor.squire_suspicion_level_2
-    let level3 = survivor.squire_suspicion_level_3
-    let level4 = survivor.squire_suspicion_level_4
-
-    // Update the specified level
-    if (level === 1) level1 = checked
-    if (level === 2) level2 = checked
-    if (level === 3) level3 = checked
-    if (level === 4) level4 = checked
-
-    // If checking a higher level, also check all lower levels
-    if (checked) {
-      if (level >= 2) level1 = true
-      if (level >= 3) level2 = true
-      if (level >= 4) level3 = true
-    }
-
-    // If unchecking a lower level, also uncheck all higher levels
-    if (!checked) {
-      if (level <= 1) level2 = false
-      if (level <= 2) level3 = false
-      if (level <= 3) level4 = false
-    }
-
-    return {
-      squire_suspicion_level_1: level1,
-      squire_suspicion_level_2: level2,
-      squire_suspicion_level_3: level3,
-      squire_suspicion_level_4: level4
-    }
-  }
+  const [suspicion, setSuspicion] = useState<number>(
+    calculateTotalSuspicion(survivors)
+  )
 
   /**
    * Handle Suspicion Level Change
@@ -119,29 +65,28 @@ export function SquireSuspicionsCard({
     const survivor = survivors.find((s) => s.id === survivorId)
     if (!survivor) return
 
-    const updatedLevels = computeSuspicionLevels(survivor, level, checked)
-
-    // Snapshot previous state for rollback on error
-    const previousSurvivors = survivors
-
-    // Optimistically update local state
-    setSurvivors(
-      survivors.map((s) =>
-        s.id === survivorId ? { ...s, ...updatedLevels } : s
-      )
+    // Compute new suspicion levels based on the change
+    const updatedLevels = calculateSuspicionLevels(survivor, level, checked)
+    const updatedSurvivors = survivors.map((s) =>
+      s.id === survivorId ? { ...s, ...updatedLevels } : s
     )
 
+    // Optimistically update the UI
+    setSurvivors(updatedSurvivors)
+    setSuspicion(calculateTotalSuspicion(updatedSurvivors))
+
+    // Persist the change to the database
     updateSurvivor(survivorId, updatedLevels)
       .then(() => {
         toast.success(
-          SQUIRE_SUSPICION_UPDATED_MESSAGE(survivor.survivor_name || 'Squire')
+          SQUIRE_SUSPICION_UPDATED_MESSAGE(survivor.survivor_name ?? 'Squire')
         )
       })
-      .catch((error) => {
+      .catch(() => {
         // Revert to previous state on error
-        setSurvivors(previousSurvivors)
+        setSurvivors(survivors)
+        setSuspicion(calculateTotalSuspicion(survivors))
 
-        console.error('Suspicion Update Error:', error)
         toast.error(ERROR_MESSAGE())
       })
   }
@@ -164,11 +109,9 @@ export function SquireSuspicionsCard({
             <Input
               type="number"
               className={`w-12 h-12 text-center no-spinners focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                totalSuspicion >= 8
-                  ? 'text-red-500 font-bold border-red-500'
-                  : ''
+                suspicion >= 8 ? 'text-red-500 font-bold border-red-500' : ''
               }`}
-              value={totalSuspicion}
+              value={suspicion}
               readOnly
               disabled={false}
             />
