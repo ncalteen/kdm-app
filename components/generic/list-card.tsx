@@ -3,7 +3,7 @@
 import { ListItem, NewListItem } from '@/components/generic/list-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import {
   DndContext,
   DragEndEvent,
@@ -36,7 +36,7 @@ interface ListCardProps {
   /** Placeholder */
   placeholder: string
   /** Save List */
-  saveList: (updateData: string[]) => void
+  saveList: (updateData: string[]) => Promise<void>
   /** Selected Settlement ID */
   selectedSettlementId: string | null
 }
@@ -117,7 +117,14 @@ export function ListCard({
       })
 
       // Update the database with the new list order.
-      saveList(updated)
+      saveList(updated).catch((err: unknown) => {
+        // Revert to previous state on error.
+        setItems(items)
+        setEditingIndices(new Set())
+
+        console.error('Error Saving List:', err)
+        toast.error(ERROR_MESSAGE())
+      })
     },
     [items, saveList]
   )
@@ -139,7 +146,7 @@ export function ListCard({
 
       if (i !== undefined) {
         // Updating an existing value.
-        updated[i] = value
+        updated[i] = value.trim()
         setEditingIndices((prev) => {
           const next = new Set(prev)
           next.delete(i)
@@ -147,11 +154,19 @@ export function ListCard({
         })
       } else
         // Adding a new value.
-        updated.push(value)
+        updated.push(value.trim())
 
       setItems(updated)
-      saveList(updated)
       setIsAddingNew(false)
+
+      saveList(updated).catch((err: unknown) => {
+        // Revert to previous state on error.
+        setItems(items)
+        setEditingIndices(new Set())
+
+        console.error('Error Saving List:', err)
+        toast.error(ERROR_MESSAGE())
+      })
     },
     [items, itemName, saveList]
   )
@@ -215,7 +230,14 @@ export function ListCard({
           return next
         })
 
-        saveList(newOrder)
+        saveList(newOrder).catch((err: unknown) => {
+          // Revert to previous state on error.
+          setItems(items)
+          setEditingIndices(new Set())
+
+          console.error('Error Saving List:', err)
+          toast.error(ERROR_MESSAGE())
+        })
       }
     },
     [items, saveList]
