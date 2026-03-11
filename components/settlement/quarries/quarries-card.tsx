@@ -20,26 +20,10 @@ import {
   QUARRY_REMOVED_MESSAGE,
   QUARRY_UNLOCKED_MESSAGE
 } from '@/lib/messages'
+import { sortQuarries } from '@/lib/settlement/quarries'
 import { PlusIcon, SwordIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-
-/**
- * Sort Quarries
- *
- * Sorts quarries by monster node (ascending) first, then alphabetically by
- * monster name within the same node.
- *
- * @param rows Settlement Quarry Rows
- * @returns Sorted Settlement Quarry Rows
- */
-function sortQuarries(rows: SettlementQuarryRow[]): SettlementQuarryRow[] {
-  return [...rows].sort((a, b) => {
-    const nodeCmp = a.node.localeCompare(b.node)
-    if (nodeCmp !== 0) return nodeCmp
-    return a.monster_name.localeCompare(b.monster_name)
-  })
-}
 
 /**
  * Quarries Card Properties
@@ -81,10 +65,8 @@ export function QuarriesCard({
     setHasFetched(false)
   }
 
-  /**
-   * Fetch settlement quarries and available quarry options when the settlement
-   * changes. Both queries run in parallel to minimize load time.
-   */
+  // Fetch settlement quarries and available quarry options when settlement
+  // changes.
   useEffect(() => {
     if (!selectedSettlementId || hasFetched) return
 
@@ -100,6 +82,10 @@ export function QuarriesCard({
       })
       .catch((err: unknown) => {
         if (cancelled) return
+
+        setItems([])
+        setAvailableQuarries([])
+        setHasFetched(true)
 
         console.error('Settlement Quarries Fetch Error:', err)
         toast.error(ERROR_MESSAGE())
@@ -130,16 +116,10 @@ export function QuarriesCard({
    */
   const handleAdd = useCallback(
     (quarryId: string | undefined) => {
-      if (!quarryId || !selectedSettlementId) {
-        setIsAddingNew(false)
-        return
-      }
+      if (!quarryId || !selectedSettlementId) return setIsAddingNew(false)
 
       const quarryInfo = availableQuarries.find((q) => q.id === quarryId)
-      if (!quarryInfo) {
-        setIsAddingNew(false)
-        return
-      }
+      if (!quarryInfo) return setIsAddingNew(false)
 
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
@@ -160,11 +140,13 @@ export function QuarriesCard({
           setItems((prev) =>
             sortQuarries(prev.map((item) => (item.id === tempId ? row : item)))
           )
+
           toast.success(QUARRY_ADDED_MESSAGE())
         })
         .catch((err: unknown) => {
           // Revert the optimistic insert.
           setItems((prev) => prev.filter((item) => item.id !== tempId))
+
           console.error('Quarry Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -196,6 +178,7 @@ export function QuarriesCard({
             restored.splice(index, 0, removed)
             return restored
           })
+
           console.error('Quarry Remove Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -233,6 +216,7 @@ export function QuarriesCard({
               i === index ? { ...item, unlocked: !unlocked } : item
             )
           )
+
           console.error('Quarry Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
         })

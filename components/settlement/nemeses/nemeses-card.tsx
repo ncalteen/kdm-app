@@ -19,43 +19,14 @@ import {
 import {
   ERROR_MESSAGE,
   NEMESIS_ADDED_MESSAGE,
+  NEMESIS_DEFEATED_MESSAGE,
   NEMESIS_REMOVED_MESSAGE,
   NEMESIS_UNLOCKED_MESSAGE
 } from '@/lib/messages'
+import { sortNemeses } from '@/lib/settlement/nemeses'
 import { PlusIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-
-/**
- * Nemesis Node Sort Order
- *
- * Defines the display order for nemesis monster nodes.
- */
-const NODE_ORDER: Record<string, number> = {
-  NN1: 0,
-  NN2: 1,
-  NN3: 2,
-  CO: 3,
-  FI: 4
-}
-
-/**
- * Sort Nemeses
- *
- * Sorts nemeses by monster node in the defined order (NN1, NN2, NN3, CO, FI),
- * then alphabetically by monster name within the same node.
- *
- * @param rows Settlement Nemesis Rows
- * @returns Sorted Settlement Nemesis Rows
- */
-function sortNemeses(rows: SettlementNemesisRow[]): SettlementNemesisRow[] {
-  return [...rows].sort((a, b) => {
-    const aOrder = NODE_ORDER[a.node] ?? Number.MAX_SAFE_INTEGER
-    const bOrder = NODE_ORDER[b.node] ?? Number.MAX_SAFE_INTEGER
-    if (aOrder !== bOrder) return aOrder - bOrder
-    return a.monster_name.localeCompare(b.monster_name)
-  })
-}
 
 /**
  * Nemeses Card Properties
@@ -89,7 +60,9 @@ export function NemesesCard({
   >([])
 
   // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState(selectedSettlementId)
+  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
+    selectedSettlementId
+  )
 
   if (selectedSettlementId !== prevSettlementId) {
     setPrevSettlementId(selectedSettlementId)
@@ -147,16 +120,10 @@ export function NemesesCard({
    */
   const handleAdd = useCallback(
     (nemesisId: string | undefined) => {
-      if (!nemesisId || !selectedSettlementId) {
-        setIsAddingNew(false)
-        return
-      }
+      if (!nemesisId || !selectedSettlementId) return setIsAddingNew(false)
 
       const nemesisInfo = availableNemeses.find((n) => n.id === nemesisId)
-      if (!nemesisInfo) {
-        setIsAddingNew(false)
-        return
-      }
+      if (!nemesisInfo) return setIsAddingNew(false)
 
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
@@ -182,11 +149,13 @@ export function NemesesCard({
           setItems((prev) =>
             sortNemeses(prev.map((item) => (item.id === tempId ? row : item)))
           )
+
           toast.success(NEMESIS_ADDED_MESSAGE())
         })
         .catch((err: unknown) => {
           // Revert the optimistic insert.
           setItems((prev) => prev.filter((item) => item.id !== tempId))
+
           console.error('Nemesis Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -218,6 +187,7 @@ export function NemesesCard({
             restored.splice(index, 0, removed)
             return restored
           })
+
           console.error('Nemesis Remove Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -253,6 +223,7 @@ export function NemesesCard({
               i === index ? { ...item, unlocked: !unlocked } : item
             )
           )
+
           console.error('Nemesis Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -280,18 +251,19 @@ export function NemesesCard({
         )
       )
 
-      updateSettlementNemesisLevelDefeated(target.id, field, defeated).catch(
-        (err: unknown) => {
+      updateSettlementNemesisLevelDefeated(target.id, field, defeated)
+        .then(() => toast.success(NEMESIS_DEFEATED_MESSAGE()))
+        .catch((err: unknown) => {
           // Revert the optimistic toggle.
           setItems((prev) =>
             prev.map((item, i) =>
               i === index ? { ...item, [field]: !defeated } : item
             )
           )
+
           console.error('Nemesis Level Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
-        }
-      )
+        })
     },
     [items]
   )

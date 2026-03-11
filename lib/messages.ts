@@ -879,6 +879,14 @@ export const NAMELESS_OBJECT_ERROR_MESSAGE = (objType: string) =>
 export const NEMESIS_ADDED_MESSAGE = () => 'A new nemesis emerges.'
 
 /**
+ * Nemesis Defeated
+ *
+ * @returns Nemesis Defeated Message
+ */
+export const NEMESIS_DEFEATED_MESSAGE = () =>
+  'The nemesis has been defeated...for now.'
+
+/**
  * Nemesis Removed
  *
  * @returns Nemesis Removed Message

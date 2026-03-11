@@ -20,6 +20,10 @@ import {
   TIMELINE_YEAR_ADDED_MESSAGE,
   TIMELINE_YEAR_COMPLETED_MESSAGE
 } from '@/lib/messages'
+import {
+  showStoryEventIcon,
+  usesNormalNumbering
+} from '@/lib/settlement/timeline'
 import { PlusCircleIcon } from 'lucide-react'
 import {
   KeyboardEvent,
@@ -85,25 +89,6 @@ export function TimelineCard({
       isCancelled = true
     }
   }, [selectedSettlementId])
-
-  // Check if the campaign uses normal numbering (no Prologue). Prologue is
-  // only used in the People of the Lantern and People of the Dream Keeper
-  // campaigns (as well as custom campaigns).
-  const usesNormalNumbering = [
-    CampaignType.SQUIRES_OF_THE_CITADEL,
-    CampaignType.PEOPLE_OF_THE_STARS,
-    CampaignType.PEOPLE_OF_THE_SUN,
-    CampaignType.CUSTOM
-  ].includes(campaignType)
-
-  // Check if this campaign type should show the scroll icon. This is used to
-  // indicate that a story event card should be drawn when updating the
-  // settlement's timeline.
-  const showStoryEventIcon = [
-    CampaignType.PEOPLE_OF_THE_LANTERN,
-    CampaignType.PEOPLE_OF_THE_DREAM_KEEPER,
-    CampaignType.CUSTOM
-  ].includes(campaignType)
 
   /**
    * Is Event Being Edited
@@ -459,9 +444,9 @@ export function TimelineCard({
           handleSaveYearCompletion={handleSaveYearCompletion}
           isEventBeingEdited={isEventBeingEdited}
           setInputRef={setInputRef}
-          showStoryEventIcon={showStoryEventIcon}
+          showStoryEventIcon={showStoryEventIcon(campaignType)}
           timeline={timeline}
-          usesNormalNumbering={usesNormalNumbering}
+          usesNormalNumbering={usesNormalNumbering(campaignType)}
         />
 
         {/* Add Lantern Year Button */}

@@ -22,6 +22,7 @@ import { CampaignType, SurvivorType } from '@/lib/enums'
 import {
   ENDEAVORS_MINIMUM_ERROR_MESSAGE,
   ENDEAVORS_UPDATED_MESSAGE,
+  ERROR_MESSAGE,
   LANTERN_RESEARCH_LEVEL_MINIMUM_ERROR,
   LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE,
   SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE,
@@ -69,8 +70,6 @@ export function OverviewCard({
   const [survivorType, setSurvivorType] = useState<SurvivorType>(
     SurvivorType.CORE
   )
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
   /**
    * Handle Component Loading
@@ -112,14 +111,10 @@ export function OverviewCard({
           setSurvivorType(survivorType ?? SurvivorType.CORE)
         }
       )
-      .catch((err: unknown) =>
-        setError(
-          err instanceof Error
-            ? `Overview Load Error: ${err.message}`
-            : 'Overview Load Error: Unknown Error'
-        )
-      )
-      .finally(() => setIsLoading(false))
+      .catch((err: unknown) => {
+        console.error('Overview Load Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
   }, [selectedSettlementId, selectedSettlementPhaseId, setCampaignType])
 
   /**
@@ -128,15 +123,23 @@ export function OverviewCard({
    * @param value New Endeavors Value
    */
   const handleEndeavorsChange = useCallback(
-    async (value: number) => {
+    (value: number) => {
       if (isNaN(endeavors) || isNaN(value)) return
       if (endeavors === value) return
 
       if (value < 0) return toast.error(ENDEAVORS_MINIMUM_ERROR_MESSAGE())
 
-      await updateEndeavors(selectedSettlementPhaseId, value)
+      const previous = endeavors
+      setEndeavors(value)
 
-      toast.success(ENDEAVORS_UPDATED_MESSAGE(endeavors, value))
+      updateEndeavors(selectedSettlementPhaseId, value)
+        .then(() => toast.success(ENDEAVORS_UPDATED_MESSAGE(previous, value)))
+        .catch((error: unknown) => {
+          setEndeavors(previous)
+
+          console.error('Endeavors Update Error:', error)
+          toast.error(ERROR_MESSAGE())
+        })
     },
     [endeavors, selectedSettlementPhaseId]
   )
@@ -147,17 +150,26 @@ export function OverviewCard({
    * @param value New Lantern Research Level
    */
   const handleLanternResearchLevelChange = useCallback(
-    async (value: number) => {
+    (value: number) => {
       if (isNaN(lanternResearch) || isNaN(value)) return
       if (lanternResearch === value) return
 
       if (value < 0) return toast.error(LANTERN_RESEARCH_LEVEL_MINIMUM_ERROR())
 
-      await updateLanternResearch(selectedSettlementId, value)
+      const previous = lanternResearch
+      setLanternResearch(value)
 
-      toast.success(
-        LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE(lanternResearch, value)
-      )
+      updateLanternResearch(selectedSettlementId, value)
+        .then(() =>
+          toast.success(
+            LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE(previous, value)
+          )
+        )
+        .catch((error: unknown) => {
+          setLanternResearch(previous)
+          console.error('Lantern Research Update Error:', error)
+          toast.error(ERROR_MESSAGE())
+        })
     },
     [lanternResearch, selectedSettlementId]
   )
@@ -168,15 +180,24 @@ export function OverviewCard({
    * @param value New Survival Limit
    */
   const handleSurvivalLimitChange = useCallback(
-    async (value: number) => {
+    (value: number) => {
       if (isNaN(survivalLimit) || isNaN(value)) return
       if (survivalLimit === value) return
 
       if (value < 1) return toast.error(SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE())
 
-      await updateSurvivalLimit(selectedSettlementId, value)
+      const previous = survivalLimit
+      setSurvivalLimit(value)
 
-      toast.success(SURVIVAL_LIMIT_UPDATED_MESSAGE(survivalLimit, value))
+      updateSurvivalLimit(selectedSettlementId, value)
+        .then(() =>
+          toast.success(SURVIVAL_LIMIT_UPDATED_MESSAGE(previous, value))
+        )
+        .catch((error: unknown) => {
+          setSurvivalLimit(previous)
+          console.error('Survival Limit Update Error:', error)
+          toast.error(ERROR_MESSAGE())
+        })
     },
     [selectedSettlementId, survivalLimit]
   )

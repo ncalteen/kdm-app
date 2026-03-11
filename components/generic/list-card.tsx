@@ -102,7 +102,7 @@ export function ListCard({
     (index: number) => {
       const updated = items.filter((_, i) => i !== index)
 
-      // Update editing indices to reflect removed item.
+      // Optimistic update
       setItems(updated)
       setEditingIndices((prev) => {
         const next = new Set<number>()
@@ -110,7 +110,6 @@ export function ListCard({
         for (const idx of prev) {
           if (idx < index) next.add(idx)
           else if (idx > index) next.add(idx - 1)
-          // idx === index is removed — skip it
         }
 
         return next
