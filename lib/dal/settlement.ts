@@ -8,6 +8,7 @@ import { getInnovationNames } from '@/lib/dal/innovation'
 import { getLocationIds } from '@/lib/dal/location'
 import { getNemesisLocationIds } from '@/lib/dal/nemesis-location'
 import { getNemesisTimelineYears } from '@/lib/dal/nemesis-timeline-year'
+import { getPrincipleData } from '@/lib/dal/principle'
 import { getQuarryCollectiveCognitionRewardIds } from '@/lib/dal/quarry-collective-cognition-reward'
 import { getQuarryLocationIds } from '@/lib/dal/quarry-location'
 import { getQuarryTimelineYears } from '@/lib/dal/quarry-timeline-year'
@@ -319,6 +320,7 @@ export async function getSettlement(
   if (!settlement) return null
 
   const innovationNames = await getInnovationNames(settlementId)
+  const principleData = await getPrincipleData(settlementId)
 
   return {
     ...settlement,
@@ -327,6 +329,7 @@ export async function getSettlement(
     can_dash: canDash(innovationNames),
     can_fist_pump: canFistPump(innovationNames),
     can_endure: canEndure(innovationNames),
+    principle_data: principleData,
     survivors_born_with_understanding:
       survivorsBornWithUnderstanding(innovationNames)
   }
