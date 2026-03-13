@@ -19,6 +19,7 @@ import {
 } from '@/lib/types'
 import { BookOpenIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
 import { ReactElement } from 'react'
+import { SettlementSurvivorsCard } from './survivors/settlement-survivors-card'
 
 /**
  * Settlement Card Props
@@ -232,6 +233,15 @@ export function SettlementCard({
             )}
 
           {/* Survivors Tab */}
+          <SettlementSurvivorsCard
+            selectedSettlement={selectedSettlement}
+            selectedSettlementId={selectedSettlementId}
+            selectedSurvivorId={selectedSurvivorId}
+            setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
+            setSelectedSurvivorId={setSelectedSurvivorId}
+            setSurvivors={setSurvivors}
+            survivors={survivors}
+          />
 
           {/* Society Tab */}
 
