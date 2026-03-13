@@ -42,3 +42,50 @@ export async function getPrincipleIds(
 
   return data.map((principle) => principle.id)
 }
+
+/**
+ * Get Principle Data by Settlement ID
+ *
+ * Retrieves the names and options of principles associated with a settlement.
+ *
+ * @param settlementId Settlement ID
+ * @returns Principle Data
+ */
+export async function getPrincipleData(settlementId: string): Promise<
+  {
+    principle_name: string
+    option_1_name: string
+    option_1_selected: boolean
+    option_2_name: string
+    option_2_selected: boolean
+  }[]
+> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('settlement_principle')
+    .select(
+      'option_1_selected, option_2_selected, principle(option_1_name, option_2_name, principle_name)'
+    )
+    .eq('settlement_id', settlementId)
+
+  if (error)
+    throw new Error(`Error Fetching Settlement Principles: ${error.message}`)
+
+  const principleData =
+    data?.map((row) => {
+      const principle = Array.isArray(row.principle)
+        ? row.principle[0]
+        : row.principle
+
+      return {
+        principle_name: principle.principle_name,
+        option_1_name: principle.option_1_name,
+        option_1_selected: row.option_1_selected,
+        option_2_name: principle.option_2_name,
+        option_2_selected: row.option_2_selected
+      }
+    }) ?? []
+
+  return principleData
+}

@@ -59,6 +59,19 @@ export type SettlementDetail = Tables<'settlement'> & {
   can_fist_pump: boolean
   /** Can Endure */
   can_endure: boolean
+  /** Principle Data */
+  principle_data: {
+    /** Option 1 Name */
+    option_1_name: string
+    /** Option 1 Selected */
+    option_1_selected: boolean
+    /** Option 2 Name */
+    option_2_name: string
+    /** Option 2 Selected */
+    option_2_selected: boolean
+    /** Principle Name */
+    principle_name: string
+  }[]
   /** Shared Settlement */
   shared: boolean
   /** Survivors Born with +1 Understanding */
