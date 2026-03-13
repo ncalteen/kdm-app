@@ -9,6 +9,7 @@ import { SquireProgressionCards } from '@/components/settlement/squires/squire-p
 import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
 import { SettlementSurvivorsCard } from '@/components/settlement/survivors/settlement-survivors-card'
 import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
+import { CreateSurvivorForm } from '@/components/survivor/create-survivor-form'
 import { updateSettlement } from '@/lib/dal/settlement'
 import { DatabaseCampaignType, TabType } from '@/lib/enums'
 import {
@@ -242,6 +243,28 @@ export function SettlementCard({
             setSurvivors={setSurvivors}
             survivors={survivors}
           />
+          {/* Selected Survivor */}
+          {selectedSurvivor && !isCreatingNewSurvivor && (
+            // <SurvivorCard
+            //   mode={SurvivorCardMode.SURVIVOR_CARD}
+            //   saveSelectedShowdown={saveSelectedShowdown}
+            //   saveSelectedSurvivor={saveSelectedSurvivor}
+            //   selectedHunt={selectedHunt}
+            //   selectedSettlement={selectedSettlement}
+            //   selectedShowdown={selectedShowdown}
+            //   selectedSurvivor={selectedSurvivor}
+            // />
+            <> </>
+          )}
+          {/* Create Survivor */}
+          {isCreatingNewSurvivor && (
+            <CreateSurvivorForm
+              selectedSettlement={selectedSettlement}
+              selectedSettlementId={selectedSettlementId}
+              setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
+              setSelectedSurvivorId={setSelectedSurvivorId}
+            />
+          )}
 
           {/* Society Tab */}
 
