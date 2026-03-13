@@ -9,11 +9,7 @@ import { SquireProgressionCards } from '@/components/settlement/squires/squire-p
 import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
 import { SettlementSurvivorsCard } from '@/components/settlement/survivors/settlement-survivors-card'
 import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
-import {
-  updateArrivalBonuses,
-  updateDepartureBonuses,
-  updateMonsterVolumes
-} from '@/lib/dal/settlement'
+import { updateSettlement } from '@/lib/dal/settlement'
 import { DatabaseCampaignType, TabType } from '@/lib/enums'
 import {
   HuntDetail,
@@ -141,10 +137,9 @@ export function SettlementCard({
                       itemName="Departure Bonus"
                       placeholder="New departure bonus..."
                       saveList={(updateData) =>
-                        updateDepartureBonuses(
-                          selectedSettlement.id,
-                          updateData
-                        )
+                        updateSettlement(selectedSettlement.id, {
+                          departing_bonuses: updateData
+                        })
                       }
                       selectedSettlementId={selectedSettlement.id}
                     />
@@ -156,7 +151,9 @@ export function SettlementCard({
                       itemName="Arrival Bonus"
                       placeholder="New arrival bonus..."
                       saveList={(updateData) =>
-                        updateArrivalBonuses(selectedSettlement.id, updateData)
+                        updateSettlement(selectedSettlement.id, {
+                          arrival_bonuses: updateData
+                        })
                       }
                       selectedSettlementId={selectedSettlement.id}
                     />
@@ -191,7 +188,9 @@ export function SettlementCard({
                   itemName="Monster Volume"
                   placeholder="New monster volume..."
                   saveList={(updateData) =>
-                    updateMonsterVolumes(selectedSettlement.id, updateData)
+                    updateSettlement(selectedSettlement.id, {
+                      monster_volumes: updateData
+                    })
                   }
                   selectedSettlementId={selectedSettlement.id}
                 />

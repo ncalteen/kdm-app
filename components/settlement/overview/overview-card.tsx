@@ -10,8 +10,7 @@ import {
   getDeathCount,
   getLostSettlementCount,
   getPopulation,
-  updateLanternResearch,
-  updateSurvivalLimit
+  updateSettlement
 } from '@/lib/dal/settlement'
 import { updateEndeavors } from '@/lib/dal/settlement-phase'
 import { DatabaseCampaignType, DatabaseSurvivorType } from '@/lib/enums'
@@ -118,14 +117,14 @@ export function OverviewCard({
    */
   const handleLanternResearchLevelChange = useCallback(
     (value: number) => {
-      if (isNaN(value)) return
       if (selectedSettlement?.lantern_research === value) return
+      if (isNaN(value)) return
 
       if (value < 0) return toast.error(LANTERN_RESEARCH_LEVEL_MINIMUM_ERROR())
 
       const previous = selectedSettlement?.lantern_research ?? 0
 
-      updateLanternResearch(selectedSettlement?.id, value)
+      updateSettlement(selectedSettlement?.id, { lantern_research: value })
         .then(() =>
           toast.success(LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE(previous, value))
         )
@@ -144,13 +143,13 @@ export function OverviewCard({
    */
   const handleSurvivalLimitChange = useCallback(
     (value: number) => {
-      if (isNaN(value)) return
       if (selectedSettlement?.survival_limit === value) return
+      if (isNaN(value)) return
       if (value < 1) return toast.error(SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE())
 
       const previous = selectedSettlement?.survival_limit ?? 1
 
-      updateSurvivalLimit(selectedSettlement?.id, value)
+      updateSettlement(selectedSettlement?.id, { survival_limit: value })
         .then(() =>
           toast.success(SURVIVAL_LIMIT_UPDATED_MESSAGE(previous, value))
         )
