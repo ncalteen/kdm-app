@@ -462,3 +462,16 @@ export enum Philosophy {
   /** Wanderer - Preacher */
   WANDERER_PREACHER = 'Wanderer - Preacher'
 }
+
+/**
+ * Aenas State
+ *
+ * Used to track Aenas' state while in the settlement, which can be either
+ * Hungry or Content.
+ */
+export enum AenasState {
+  /** Content */
+  CONTENT = 'Content',
+  /** Hungry */
+  HUNGRY = 'Hungry'
+}

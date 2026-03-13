@@ -5,10 +5,9 @@ import { SurvivorDataTable } from '@/components/settlement/survivors/data-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { deleteSurvivor } from '@/lib/dal/survivor'
-import { Tables } from '@/lib/database.types'
 import { DatabaseSurvivorType } from '@/lib/enums'
 import { ERROR_MESSAGE, SURVIVOR_REMOVED_MESSAGE } from '@/lib/messages'
-import { SurvivorDetail } from '@/lib/types'
+import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -18,7 +17,7 @@ import { toast } from 'sonner'
  */
 interface SettlementSurvivorsCardProps {
   /** Selected Settlement */
-  selectedSettlement: Tables<'settlement'> | null
+  selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Is Creating New Survivor */
