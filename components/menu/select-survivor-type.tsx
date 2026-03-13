@@ -70,7 +70,7 @@ export function SelectSurvivorType({
 
     setOpen(false)
 
-    if (onChange && currentValue) onChange(currentValue as SurvivorType)
+    if (currentValue) onChange?.(currentValue as SurvivorType)
   }
 
   return (

@@ -67,7 +67,7 @@ export function SelectCampaignType({
     setValue(currentValue)
     setOpen(false)
 
-    if (onChange && currentValue) onChange(currentValue as CampaignType)
+    if (currentValue) onChange?.(currentValue as CampaignType)
   }
 
   return (

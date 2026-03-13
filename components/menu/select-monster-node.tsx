@@ -73,10 +73,8 @@ export function SelectMonsterNode({
   const handleToggle = (monsterId: string) => {
     if (!onChange) return
 
-    if (propValue.some((monster) => monster === monsterId)) {
-      onChange(propValue.filter((monster) => monster !== monsterId))
-      return
-    }
+    if (propValue.some((monster) => monster === monsterId))
+      return onChange(propValue.filter((monster) => monster !== monsterId))
 
     const monsterData = monsters.find((monster) => monster.id === monsterId)
     if (monsterData) onChange([...propValue, monsterData.id])
@@ -87,9 +85,8 @@ export function SelectMonsterNode({
    *
    * @param monsterId Monster ID to Remove
    */
-  const handleRemove = (monsterId: string) => {
-    if (onChange) onChange(propValue.filter((monster) => monster !== monsterId))
-  }
+  const handleRemove = (monsterId: string) =>
+    onChange?.(propValue.filter((monster) => monster !== monsterId))
 
   const selectedMonsters = useMemo(() => {
     return propValue

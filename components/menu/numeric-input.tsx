@@ -69,7 +69,6 @@ export function NumericInput({
    */
   const handleIncrement = () => {
     if (!onChange) return
-
     const newValue = value + step
 
     if (max === undefined || newValue <= max) onChange(newValue)
@@ -80,7 +79,6 @@ export function NumericInput({
    */
   const handleDecrement = () => {
     if (!onChange) return
-
     const newValue = value - step
 
     if (min === undefined || newValue >= min) onChange(newValue)
@@ -178,9 +176,7 @@ export function NumericInput({
     <Input
       type="number"
       value={value}
-      onChange={(e) => {
-        if (onChange) onChange(parseInt(e.target.value) ?? 0)
-      }}
+      onChange={(e) => onChange?.(parseInt(e.target.value) ?? 0)}
       max={max}
       min={min}
       className={cn('text-center no-spinners', className)}

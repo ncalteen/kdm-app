@@ -66,10 +66,8 @@ export function SelectWanderers({
   const handleToggle = (wandererId: string) => {
     if (!onChange) return
 
-    if (propValue.some((wanderer) => wanderer === wandererId)) {
-      onChange(propValue.filter((wanderer) => wanderer !== wandererId))
-      return
-    }
+    if (propValue.some((wanderer) => wanderer === wandererId))
+      return onChange(propValue.filter((wanderer) => wanderer !== wandererId))
 
     const wandererData = wanderers.find(
       (wanderer) => wanderer.id === wandererId
@@ -83,8 +81,7 @@ export function SelectWanderers({
    * @param wandererId Wanderer ID to Remove
    */
   const handleRemove = (wandererId: string) => {
-    if (onChange)
-      onChange(propValue.filter((wanderer) => wanderer !== wandererId))
+    onChange?.(propValue.filter((wanderer) => wanderer !== wandererId))
   }
 
   const selectedWanderers = useMemo(
