@@ -10,8 +10,9 @@ import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-sus
 import { SettlementSurvivorsCard } from '@/components/settlement/survivors/settlement-survivors-card'
 import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
 import { CreateSurvivorForm } from '@/components/survivor/create-survivor-form'
+import { SurvivorCard } from '@/components/survivor/survivor-card'
 import { updateSettlement } from '@/lib/dal/settlement'
-import { DatabaseCampaignType, TabType } from '@/lib/enums'
+import { DatabaseCampaignType, SurvivorCardMode, TabType } from '@/lib/enums'
 import {
   HuntDetail,
   SettlementDetail,
@@ -245,16 +246,19 @@ export function SettlementCard({
           />
           {/* Selected Survivor */}
           {selectedSurvivor && !isCreatingNewSurvivor && (
-            // <SurvivorCard
-            //   mode={SurvivorCardMode.SURVIVOR_CARD}
-            //   saveSelectedShowdown={saveSelectedShowdown}
-            //   saveSelectedSurvivor={saveSelectedSurvivor}
-            //   selectedHunt={selectedHunt}
-            //   selectedSettlement={selectedSettlement}
-            //   selectedShowdown={selectedShowdown}
-            //   selectedSurvivor={selectedSurvivor}
-            // />
-            <> </>
+            <SurvivorCard
+              mode={SurvivorCardMode.SURVIVOR_CARD}
+              selectedHunt={selectedHunt}
+              selectedHuntId={selectedHuntId}
+              selectedSettlement={selectedSettlement}
+              selectedSettlementId={selectedSettlementId}
+              selectedShowdown={selectedShowdown}
+              selectedShowdownId={selectedShowdownId}
+              selectedSurvivor={selectedSurvivor}
+              selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+            />
           )}
           {/* Create Survivor */}
           {isCreatingNewSurvivor && (

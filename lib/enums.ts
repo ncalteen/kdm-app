@@ -100,6 +100,16 @@ export enum Gender {
 }
 
 /**
+ * Survivor Gender
+ */
+export enum DatabaseGender {
+  /** Female */
+  F = 'FEMALE',
+  /** Male */
+  M = 'MALE'
+}
+
+/**
  * Resource Category
  */
 export enum ResourceCategory {
