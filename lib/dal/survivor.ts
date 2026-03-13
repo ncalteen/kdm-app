@@ -6,6 +6,7 @@ import {
 } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
 import { SurvivorDetail } from '@/lib/types'
+import { NewSurvivorInput } from '@/schemas/new-survivor-input'
 
 /**
  * Add Squires of the Citadel Survivors
@@ -242,4 +243,78 @@ export async function deleteSurvivor(
     throw new Error(`Error Fetching Survivors: ${survivorsError.message}`)
 
   return survivorsData ?? []
+}
+
+/**
+ * Create a Survivor
+ *
+ * @param options Input Options
+ */
+export async function createSurvivor(
+  options: NewSurvivorInput
+): Promise<string> {
+  if (!options.settlementId) throw new Error('Required: Settlement ID')
+
+  const supabase = createClient()
+
+  const survivor: Partial<Tables<'survivor'>> = {
+    abilities_impairments: options.abilitiesAndImpairments,
+    accuracy: options.accuracy,
+    can_dash: options.canDash,
+    can_dodge: options.canDodge,
+    can_fist_pump: options.canFistPump,
+    can_encourage: options.canEncourage,
+    can_surge: options.canSurge,
+    courage: options.courage,
+    disposition: options.disposition ?? null,
+    evasion: options.evasion,
+    fighting_arts: options.fightingArts,
+    gender: options.gender === 'M' ? 'MALE' : 'FEMALE',
+    hunt_xp: options.huntXP,
+    hunt_xp_rank_up: options.huntXPRankUp,
+    insanity: options.insanity,
+    luck: options.luck,
+    movement: options.movement,
+    settlement_id: options.settlementId,
+    speed: options.speed,
+    aenas_state: options.aenasState ?? null,
+    strength: options.strength,
+    survival: options.survival,
+    survivor_name: options.survivorName ?? null,
+    understanding: options.understanding,
+    wanderer: options.wanderer,
+    arm_broken: options.armBroken,
+    arm_contracture: options.armContracture,
+    arm_dismembered: options.armDismembered,
+    arm_ruptured_muscle: options.armRupturedMuscle,
+    body_broken_rib: options.bodyBrokenRib,
+    body_destroyed_back: options.bodyDestroyedBack,
+    body_gaping_chest_wound: options.bodyGapingChestWound,
+    head_blind: options.headBlind,
+    head_deaf: options.headDeaf,
+    head_intracranial_hemorrhage: options.headIntracranialHemorrhage,
+    head_shattered_jaw: options.headShatteredJaw,
+    leg_broken: options.legBroken,
+    leg_dismembered: options.legDismembered,
+    leg_hamstrung: options.legHamstrung,
+    waist_broken_hip: options.waistBrokenHip,
+    waist_destroyed_genitals: options.waistDestroyedGenitals,
+    waist_intestinal_prolapse: options.waistIntestinalProlapse,
+    waist_warped_pelvis: options.waistWarpedPelvis,
+    can_endure: options.canEndure,
+    lumi: options.lumi,
+    systemic_pressure: options.systemicPressure,
+    torment: options.torment
+  }
+
+  const { data, error } = await supabase
+    .from('survivor')
+    .insert(survivor)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(`Error Adding Squires to Settlement: ${error.message}`)
+
+  return data.id
 }
