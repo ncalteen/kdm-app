@@ -8,8 +8,12 @@ import { WandererDetail } from '@/lib/types'
  * @param rows Wanderer Rows
  * @returns Sorted Wanderer Rows
  */
-export function sortWanderers(rows: WandererDetail[]): WandererDetail[] {
-  return [...rows].sort((a, b) =>
-    a.wanderer_name.localeCompare(b.wanderer_name)
+export function sortWanderers(rows: { [key: string]: WandererDetail }): {
+  [key: string]: WandererDetail
+} {
+  return Object.fromEntries(
+    Object.entries(rows).sort(([, a], [, b]) =>
+      a.wanderer_name.localeCompare(b.wanderer_name)
+    )
   )
 }

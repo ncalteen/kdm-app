@@ -18,8 +18,10 @@ import { toast } from 'sonner'
 interface SettlementSurvivorsCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Survivor */
-  selectedSurvivor: SurvivorDetail | null
+  /** Selected Settlement ID */
+  selectedSettlementId: string | null
+  /* Selected Survivor ID */
+  selectedSurvivorId: string | null
   /** Set Is Creating New Survivor */
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
   /** Set Selected Survivor ID */
@@ -43,7 +45,8 @@ interface SettlementSurvivorsCardProps {
  */
 export function SettlementSurvivorsCard({
   selectedSettlement,
-  selectedSurvivor,
+  selectedSettlementId,
+  selectedSurvivorId,
   setIsCreatingNewSurvivor,
   setSelectedSurvivorId,
   setSurvivors,
@@ -85,8 +88,8 @@ export function SettlementSurvivorsCard({
       setSurvivors(updatedSurvivors)
 
       deleteSurvivor(
-        selectedSettlement?.id,
-        selectedSurvivor?.id,
+        selectedSettlementId,
+        selectedSurvivorId,
         setSelectedSurvivorId,
         survivorId
       )
@@ -107,8 +110,8 @@ export function SettlementSurvivorsCard({
     },
     [
       survivors,
-      selectedSettlement?.id,
-      selectedSurvivor?.id,
+      selectedSettlementId,
+      selectedSurvivorId,
       setSelectedSurvivorId,
       setSurvivors
     ]
@@ -154,7 +157,7 @@ export function SettlementSurvivorsCard({
           <SurvivorDataTable
             columns={columns}
             data={survivors.filter(
-              (survivor) => survivor.settlement_id === selectedSettlement?.id
+              (survivor) => survivor.settlement_id === selectedSettlementId
             )}
             initialColumnVisibility={columnVisibility}
             onNewSurvivor={handleNewSurvivor}
