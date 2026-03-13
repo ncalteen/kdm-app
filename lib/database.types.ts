@@ -3102,7 +3102,7 @@ export type Database = {
           waist_warped_pelvis: number
           wanderer: boolean
           weapon_proficiency: number
-          weapon_proficiency_type: string | null
+          weapon_type: Database["public"]["Tables"]["weapon_type"]["Row"] | null
         }
         Insert: {
           abilities_impairments?: string[]
@@ -3229,7 +3229,9 @@ export type Database = {
           waist_warped_pelvis?: number
           wanderer?: boolean
           weapon_proficiency?: number
-          weapon_proficiency_type?: string | null
+          weapon_type?:
+            | Database["public"]["Tables"]["weapon_type"]["Row"]
+            | null
         }
         Update: {
           abilities_impairments?: string[]
@@ -3356,7 +3358,9 @@ export type Database = {
           waist_warped_pelvis?: number
           wanderer?: boolean
           weapon_proficiency?: number
-          weapon_proficiency_type?: string | null
+          weapon_type?:
+            | Database["public"]["Tables"]["weapon_type"]["Row"]
+            | null
         }
         Relationships: [
           {

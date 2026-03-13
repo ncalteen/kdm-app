@@ -1,3 +1,4 @@
+import { Tables } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 
@@ -88,4 +89,75 @@ export async function getPrincipleData(settlementId: string): Promise<
     }) ?? []
 
   return principleData
+}
+
+/**
+ * Get Principles
+ *
+ * Retrieves all principles available to the authenticated user:
+ * - Built-in (non-custom) principles
+ * - Custom principles owned by the user
+ * - Custom principles shared with the user
+ *
+ * @returns Principles
+ */
+export async function getPrinciples(): Promise<
+  Omit<
+    Tables<'principle'>,
+    'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >[]
+> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const selectFields =
+    'id, principle_name, option_1_name, option_2_name, campaign_types'
+
+  // Built-in principles
+  const { data: builtIn, error: builtInError } = await supabase
+    .from('principle')
+    .select(selectFields)
+    .eq('custom', false)
+
+  if (builtInError)
+    throw new Error(
+      `Error Fetching Built-in Principles: ${builtInError.message}`
+    )
+
+  // Custom principles owned by the user
+  const { data: owned, error: ownedError } = await supabase
+    .from('principle')
+    .select(selectFields)
+    .eq('custom', true)
+    .eq('user_id', user.id)
+
+  if (ownedError)
+    throw new Error(`Error Fetching Owned Principles: ${ownedError.message}`)
+
+  // Custom principles shared with the user
+  const { data: shared, error: sharedError } = await supabase
+    .from('principle_shared_user')
+    .select(`principle(${selectFields})`)
+    .eq('shared_user_id', user.id)
+
+  if (sharedError)
+    throw new Error(`Error Fetching Shared Principles: ${sharedError.message}`)
+
+  const sharedItems = (shared ?? []).flatMap((row) => {
+    const item = Array.isArray(row.principle)
+      ? row.principle
+      : row.principle
+        ? [row.principle]
+        : []
+    return item
+  })
+
+  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
 }

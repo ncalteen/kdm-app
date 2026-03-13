@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  ColorChoice,
-  MonsterNode,
-  Philosophy,
-  SurvivorType,
-  WeaponType
-} from '@/lib/enums'
+import { ColorChoice, MonsterNode, Philosophy, SurvivorType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { toast } from 'sonner'
@@ -809,6 +803,12 @@ async function createSurvivorsForSettlement(
     'Sol'
   ]
 
+  const { data: weaponTypes, error: getWeaponTypesError } = await supabase
+    .from('weapon_type')
+    .select('id, weapon_type_name')
+
+  if (getWeaponTypesError) throw getWeaponTypesError
+
   for (let i = 0; i < 20; i++) {
     const isExperienced = i % 3 === 0
     const hasInjuries = i % 4 === 0
@@ -874,16 +874,17 @@ async function createSurvivorsForSettlement(
         understanding: isExperienced ? 2 : 0,
         wanderer: false,
         weapon_proficiency: isExperienced ? 5 : Math.min(i, 3),
-        weapon_proficiency_type: isExperienced
+        weapon_type_id: isExperienced
           ? i % 5 === 0
-            ? WeaponType.SWORD
+            ? weaponTypes.find((wt) => wt.weapon_type_name === 'SWORD')?.id
             : i % 5 === 1
-              ? WeaponType.AXE
+              ? weaponTypes.find((wt) => wt.weapon_type_name === 'AXE')?.id
               : i % 5 === 2
-                ? WeaponType.SPEAR
+                ? weaponTypes.find((wt) => wt.weapon_type_name === 'SPEAR')?.id
                 : i % 5 === 3
-                  ? WeaponType.BOW
-                  : WeaponType.KATANA
+                  ? weaponTypes.find((wt) => wt.weapon_type_name === 'BOW')?.id
+                  : weaponTypes.find((wt) => wt.weapon_type_name === 'KATANA')
+                      ?.id
           : undefined,
         arm_armor: 0,
         arm_light_damage: false,

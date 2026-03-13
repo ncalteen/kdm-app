@@ -1,3 +1,4 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -70,4 +71,74 @@ export async function getInnovationNames(
     }) ?? []
 
   return innovationNames
+}
+
+/**
+ * Get Innovations
+ *
+ * Retrieves all innovations available to the authenticated user:
+ * - Built-in (non-custom) innovations
+ * - Custom innovations owned by the user
+ * - Custom innovations shared with the user
+ *
+ * @returns Innovations
+ */
+export async function getInnovations(): Promise<
+  Omit<
+    Tables<'innovation'>,
+    'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >[]
+> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const selectFields = 'id, innovation_name'
+
+  // Built-in innovations
+  const { data: builtIn, error: builtInError } = await supabase
+    .from('innovation')
+    .select(selectFields)
+    .eq('custom', false)
+
+  if (builtInError)
+    throw new Error(
+      `Error Fetching Built-in Innovations: ${builtInError.message}`
+    )
+
+  // Custom innovations owned by the user
+  const { data: owned, error: ownedError } = await supabase
+    .from('innovation')
+    .select(selectFields)
+    .eq('custom', true)
+    .eq('user_id', user.id)
+
+  if (ownedError)
+    throw new Error(`Error Fetching Owned Innovations: ${ownedError.message}`)
+
+  // Custom innovations shared with the user
+  const { data: shared, error: sharedError } = await supabase
+    .from('innovation_shared_user')
+    .select(`innovation(${selectFields})`)
+    .eq('shared_user_id', user.id)
+
+  if (sharedError)
+    throw new Error(`Error Fetching Shared Innovations: ${sharedError.message}`)
+
+  const sharedItems = (shared ?? []).flatMap((row) => {
+    const item = Array.isArray(row.innovation)
+      ? row.innovation
+      : row.innovation
+        ? [row.innovation]
+        : []
+    return item
+  })
+
+  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
 }

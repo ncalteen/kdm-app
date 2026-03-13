@@ -366,48 +366,6 @@ export enum ShowdownType {
 }
 
 /**
- * Weapon Type
- */
-export enum WeaponType {
-  /** Axe */
-  AXE = 'Axe',
-  /** Bow */
-  BOW = 'Bow',
-  /** Cleaver */
-  CLEAVER = 'Cleaver',
-  /** Club */
-  CLUB = 'Club',
-  /** Dagger */
-  DAGGER = 'Dagger',
-  /** Fan */
-  FAN = 'Fan',
-  /** Fist and Tooth */
-  FIST_AND_TOOTH = 'Fist and Tooth',
-  /** Grand */
-  GRAND = 'Grand',
-  /** Katana */
-  KATANA = 'Katana',
-  /** Katar */
-  KATAR = 'Katar',
-  /** Lantern Armor */
-  LANTERN_ARMOR = 'Lantern Armor',
-  /** Scythe */
-  SCYTHE = 'Scythe',
-  /** Shield */
-  SHIELD = 'Shield',
-  /** Spear */
-  SPEAR = 'Spear',
-  /** Sword */
-  SWORD = 'Sword',
-  /** Sword - Willow */
-  SWORD_WILLOW = 'Sword - Willow',
-  /** Twilight Sword */
-  TWILIGHT_SWORD = 'Twilight Sword',
-  /** Whip */
-  WHIP = 'Whip'
-}
-
-/**
  * Philosophy
  */
 export enum Philosophy {
