@@ -14,7 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { getWandererNames } from '@/lib/dal/wanderer'
+import { getWanderers } from '@/lib/dal/wanderer'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, X } from 'lucide-react'
 import { type ReactElement, useEffect, useMemo, useState } from 'react'
@@ -55,7 +55,7 @@ export function SelectWanderers({
   >([])
 
   useEffect(() => {
-    getWandererNames().then((wanderers) => setWanderers(wanderers))
+    getWanderers().then((wanderers) => setWanderers(wanderers))
   }, [])
 
   /**

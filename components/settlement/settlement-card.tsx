@@ -14,11 +14,16 @@ import {
   updateDepartureBonuses,
   updateMonsterVolumes
 } from '@/lib/dal/settlement'
-import { Tables } from '@/lib/database.types'
-import { CampaignType, TabType } from '@/lib/enums'
-import { SurvivorDetail } from '@/lib/types'
+import { DatabaseCampaignType, TabType } from '@/lib/enums'
+import {
+  HuntDetail,
+  SettlementDetail,
+  SettlementPhaseDetail,
+  ShowdownDetail,
+  SurvivorDetail
+} from '@/lib/types'
 import { BookOpenIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
-import { ReactElement, useState } from 'react'
+import { ReactElement } from 'react'
 
 /**
  * Settlement Card Props
@@ -27,15 +32,15 @@ interface SettlementCardProps {
   /** New Survivor Being Created */
   isCreatingNewSurvivor: boolean
   /** Selected Hunt */
-  selectedHunt: Tables<'hunt'> | null
+  selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
   selectedHuntMonsterIndex: number
   /** Selected Settlement */
-  selectedSettlement: Tables<'settlement'> | null
+  selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
-  selectedSettlementPhase: Tables<'settlement_phase'> | null
+  selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Showdown */
-  selectedShowdown: Tables<'showdown'> | null
+  selectedShowdown: ShowdownDetail | null
   /** Selected Showdown Monster Index */
   selectedShowdownMonsterIndex: number
   /** Selected Survivor */
@@ -94,17 +99,11 @@ export function SettlementCard({
   setSurvivors,
   survivors
 }: SettlementCardProps): ReactElement {
-  const [campaignType, setCampaignType] = useState<CampaignType>(
-    CampaignType.PEOPLE_OF_THE_LANTERN
-  )
-
   return (
     <>
       <OverviewCard
-        campaignType={campaignType}
         selectedSettlement={selectedSettlement}
         selectedSettlementPhase={selectedSettlementPhase}
-        setCampaignType={setCampaignType}
       />
 
       <hr className="pt-2" />
@@ -129,10 +128,7 @@ export function SettlementCard({
             <div className="flex flex-col lg:flex-row gap-2">
               {/* Timeline */}
               <div className="flex-1 order-2 lg:order-1">
-                <TimelineCard
-                  campaignType={campaignType}
-                  selectedSettlementId={selectedSettlement.id}
-                />
+                <TimelineCard selectedSettlement={selectedSettlement} />
               </div>
 
               {/* Departure/Arrival Bonuses */}
@@ -185,8 +181,10 @@ export function SettlementCard({
               </div>
 
               {/* Monster Volumes (PotL and PotSun) */}
-              {(campaignType === CampaignType.PEOPLE_OF_THE_LANTERN ||
-                campaignType === CampaignType.PEOPLE_OF_THE_SUN) && (
+              {(selectedSettlement?.campaign_type ===
+                DatabaseCampaignType['People of the Lantern'] ||
+                selectedSettlement?.campaign_type ===
+                  DatabaseCampaignType['People of the Sun']) && (
                 <ListCard
                   icon={<BookOpenIcon className="h-4 w-4" />}
                   initialItems={selectedSettlement?.monster_volumes || []}
@@ -204,7 +202,8 @@ export function SettlementCard({
           {/* Squires of the Citadel Tab */}
           {selectedSettlement &&
             selectedTab === TabType.SQUIRES &&
-            campaignType === CampaignType.SQUIRES_OF_THE_CITADEL && (
+            selectedSettlement?.campaign_type ===
+              DatabaseCampaignType['Squires of the Citadel'] && (
               <>
                 <SquireSuspicionsCard
                   setSurvivors={setSurvivors}

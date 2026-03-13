@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { ShowdownDetail } from '@/lib/types'
 
 /**
  * Get Showdown
@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 export async function getShowdown(
   showdownId: string | null,
   settlementId: string | null
-): Promise<Tables<'showdown'> | null> {
+): Promise<ShowdownDetail | null> {
   if (!showdownId || !settlementId) return null
 
   const supabase = createClient()

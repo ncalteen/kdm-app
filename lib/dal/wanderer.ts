@@ -1,7 +1,8 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
- * Get Wanderer Names
+ * Get Wanderers
  *
  * Retrieves the wanderers a user has access to. This includes:
  *
@@ -11,9 +12,7 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Wanderer Data
  */
-export async function getWandererNames(): Promise<
-  { id: string; wanderer_name: string }[]
-> {
+export async function getWanderers(): Promise<Tables<'wanderer'>[]> {
   const supabase = createClient()
 
   const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -24,17 +23,17 @@ export async function getWandererNames(): Promise<
   // Fetch all three categories of wanderers in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     // Non-custom wanderers (available to all users)
-    supabase.from('wanderer').select('id, wanderer_name').eq('custom', false),
+    supabase.from('wanderer').select('*').eq('custom', false),
     // Custom wanderers created by the user
     supabase
       .from('wanderer')
-      .select('id, wanderer_name')
+      .select('*')
       .eq('custom', true)
       .eq('user_id', userData.user.id),
     // Custom wanderers shared with the user
     supabase
       .from('wanderer_shared_user')
-      .select('wanderer_id, wanderer:wanderer_id(id, wanderer_name)')
+      .select('wanderer(*)')
       .eq('shared_user_id', userData.user.id)
   ])
 
@@ -43,21 +42,16 @@ export async function getWandererNames(): Promise<
       throw new Error(`Error Fetching Wanderers: ${result.error.message}`)
 
   // Collect wanderers from all sources, deduplicating by ID
-  const wandererMap = new Map<string, { id: string; wanderer_name: string }>()
+  const wandererMap = new Map<string, Tables<'wanderer'>>()
 
-  for (const w of nonCustomResult.data ?? [])
-    wandererMap.set(w.id, { id: w.id, wanderer_name: w.wanderer_name })
+  for (const w of nonCustomResult.data ?? []) wandererMap.set(w.id, w)
 
-  for (const w of userCustomResult.data ?? [])
-    wandererMap.set(w.id, { id: w.id, wanderer_name: w.wanderer_name })
+  for (const w of userCustomResult.data ?? []) wandererMap.set(w.id, w)
 
   for (const row of sharedResult.data ?? []) {
-    const w = row.wanderer as unknown as {
-      id: string
-      wanderer_name: string
-    }
+    const w = row.wanderer as unknown as Tables<'wanderer'> | null
 
-    if (w) wandererMap.set(w.id, { id: w.id, wanderer_name: w.wanderer_name })
+    if (w) wandererMap.set(w.id, w)
   }
 
   if (wandererMap.size === 0) throw new Error('Wanderer(s) Not Found')

@@ -29,6 +29,7 @@ import {
   SurvivorType
 } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { SettlementDetail } from '@/lib/types'
 import { NewSettlementInput } from '@/schemas/new-settlement-input'
 
 /**
@@ -249,20 +250,55 @@ export async function createSettlement(
  */
 export async function getSettlement(
   settlementId: string | null
-): Promise<Tables<'settlement'> | null> {
+): Promise<SettlementDetail | null> {
   if (!settlementId) return null
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data: ownedSettlement, error: ownedError } = await supabase
     .from('settlement')
     .select('*')
     .eq('id', settlementId)
+    .eq('user_id', user.id)
     .maybeSingle()
 
-  if (error) throw new Error(`Error Fetching Settlement: ${error.message}`)
+  if (ownedError)
+    throw new Error(`Error Fetching Settlement: ${ownedError.message}`)
 
-  return data ?? null
+  if (ownedSettlement)
+    return {
+      ...ownedSettlement,
+      shared: false
+    }
+
+  const { data: sharedSettlementRow, error: sharedError } = await supabase
+    .from('settlement_shared_user')
+    .select('settlement(*)')
+    .eq('settlement_id', settlementId)
+    .eq('shared_user_id', user.id)
+    .maybeSingle()
+
+  if (sharedError)
+    throw new Error(`Error Fetching Shared Settlement: ${sharedError.message}`)
+
+  const sharedSettlement = Array.isArray(sharedSettlementRow?.settlement)
+    ? sharedSettlementRow.settlement[0]
+    : sharedSettlementRow?.settlement
+
+  if (!sharedSettlement) return null
+
+  return {
+    ...sharedSettlement,
+    shared: true
+  }
 }
 
 /**

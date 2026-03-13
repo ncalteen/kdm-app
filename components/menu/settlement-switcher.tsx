@@ -19,9 +19,13 @@ import {
   getShowdownId
 } from '@/lib/dal/settlement'
 import { getSettlements } from '@/lib/dal/user'
-import { Tables } from '@/lib/database.types'
 import { CampaignType } from '@/lib/enums'
-import { SettlementListItem } from '@/lib/types'
+import {
+  HuntDetail,
+  SettlementDetail,
+  SettlementPhaseDetail,
+  ShowdownDetail
+} from '@/lib/types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
 import { ComponentProps, ReactElement, useEffect, useState } from 'react'
 
@@ -30,13 +34,13 @@ import { ComponentProps, ReactElement, useEffect, useState } from 'react'
  */
 interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
   /** Selected Hunt */
-  selectedHunt: Tables<'hunt'> | null
+  selectedHunt: HuntDetail | null
   /** Selected Settlement */
-  selectedSettlement: Tables<'settlement'> | null
+  selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
-  selectedSettlementPhase: Tables<'settlement_phase'> | null
+  selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Showdown */
-  selectedShowdown: Tables<'showdown'> | null
+  selectedShowdown: ShowdownDetail | null
   /** Set Selected Hunt ID */
   setSelectedHuntId: (hunt: string | null) => void
   /** Set Selected Settlement ID */
@@ -71,7 +75,7 @@ export function SettlementSwitcher({
   setSelectedShowdownId,
   setSelectedSurvivorId
 }: SettlementSwitcherProps): ReactElement {
-  const [settlementList, setSettlementList] = useState<SettlementListItem[]>([])
+  const [settlementList, setSettlementList] = useState<SettlementDetail[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 

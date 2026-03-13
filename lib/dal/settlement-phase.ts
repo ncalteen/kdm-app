@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { SettlementPhaseDetail } from '@/lib/types'
 
 /**
  * Get Settlement Phase
@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 export async function getSettlementPhase(
   settlementPhaseId: string | null,
   settlementId: string | null
-): Promise<Tables<'settlement_phase'> | null> {
+): Promise<SettlementPhaseDetail | null> {
   if (!settlementPhaseId || !settlementId) return null
 
   const supabase = createClient()

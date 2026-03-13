@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import { SettlementListItem } from '@/lib/types'
+import { SettlementDetail } from '@/lib/types'
 
 /**
  * Get Settlements for the Authenticated User
@@ -9,7 +9,7 @@ import { SettlementListItem } from '@/lib/types'
  *
  * @returns List of Settlements (or empty array)
  */
-export async function getSettlements(): Promise<SettlementListItem[]> {
+export async function getSettlements(): Promise<SettlementDetail[]> {
   const supabase = createClient()
 
   // Get the authenticated user's ID
@@ -22,7 +22,7 @@ export async function getSettlements(): Promise<SettlementListItem[]> {
   // Get settlements owned by the user.
   const { data: owned, error: ownedError } = await supabase
     .from('settlement')
-    .select('id, settlement_name, campaign_type')
+    .select('*')
     .eq('user_id', user.id)
 
   if (ownedError)
@@ -37,7 +37,7 @@ export async function getSettlements(): Promise<SettlementListItem[]> {
   if (sharedError)
     throw new Error(`Error Fetching Shared Settlements: ${sharedError.message}`)
 
-  const results: SettlementListItem[] = []
+  const results: SettlementDetail[] = []
 
   for (const s of owned ?? [])
     results.push({

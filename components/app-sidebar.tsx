@@ -14,7 +14,6 @@ import {
   SidebarMenuItem,
   SidebarRail
 } from '@/components/ui/sidebar'
-import { Tables } from '@/lib/database.types'
 import {
   DatabaseCampaignType,
   DatabaseSurvivorType,
@@ -22,6 +21,12 @@ import {
 } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { generateSeedData } from '@/lib/seed'
+import {
+  HuntDetail,
+  SettlementDetail,
+  SettlementPhaseDetail,
+  ShowdownDetail
+} from '@/lib/types'
 import {
   DatabaseIcon,
   HourglassIcon,
@@ -149,13 +154,13 @@ const navSettings = [
  */
 interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
   /** Selected Hunt */
-  selectedHunt: Tables<'hunt'> | null
+  selectedHunt: HuntDetail | null
   /** Selected Settlement */
-  selectedSettlement: Tables<'settlement'> | null
+  selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
-  selectedSettlementPhase: Tables<'settlement_phase'> | null
+  selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Showdown */
-  selectedShowdown: Tables<'showdown'> | null
+  selectedShowdown: ShowdownDetail | null
   /** Selected Tab */
   selectedTab: TabType
   /** Set Selected Hunt ID */

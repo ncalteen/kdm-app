@@ -1,10 +1,11 @@
 import { SquiresOfTheCitadelSurvivors } from '@/lib/campaigns/squires'
 import { Tables } from '@/lib/database.types'
-import { createClient } from '@/lib/supabase/client'
 import {
   SURVIVOR_ON_HUNT_ERROR_MESSAGE,
   SURVIVOR_ON_SHOWDOWN_ERROR_MESSAGE
-} from '../messages'
+} from '@/lib/messages'
+import { createClient } from '@/lib/supabase/client'
+import { SurvivorDetail } from '@/lib/types'
 
 /**
  * Add Squires of the Citadel Survivors
@@ -44,7 +45,7 @@ export async function addSquiresOfTheCitadelSurvivors(
 export async function getSurvivor(
   survivorId: string | null,
   settlementId: string | null
-): Promise<(Tables<'survivor'> & { embarked: boolean }) | null> {
+): Promise<SurvivorDetail | null> {
   if (!survivorId || !settlementId) return null
 
   const supabase = createClient()
@@ -96,7 +97,7 @@ export async function getSurvivor(
  */
 export async function getSurvivors(
   settlementId: string | null
-): Promise<(Tables<'survivor'> & { embarked: boolean })[]> {
+): Promise<SurvivorDetail[]> {
   if (!settlementId) return []
 
   const supabase = createClient()

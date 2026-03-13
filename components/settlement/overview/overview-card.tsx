@@ -6,20 +6,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import {
-  getCampaignType,
   getCollectiveCognition,
   getDeathCount,
-  getLanternResearch,
   getLostSettlementCount,
   getPopulation,
-  getSurvivalLimit,
-  getSurvivorType,
   updateLanternResearch,
   updateSurvivalLimit
 } from '@/lib/dal/settlement'
-import { getEndeavors, updateEndeavors } from '@/lib/dal/settlement-phase'
-import { Tables } from '@/lib/database.types'
-import { CampaignType, SurvivorType } from '@/lib/enums'
+import { updateEndeavors } from '@/lib/dal/settlement-phase'
+import { DatabaseCampaignType, DatabaseSurvivorType } from '@/lib/enums'
 import {
   ENDEAVORS_MINIMUM_ERROR_MESSAGE,
   ENDEAVORS_UPDATED_MESSAGE,
@@ -29,6 +24,7 @@ import {
   SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE,
   SURVIVAL_LIMIT_UPDATED_MESSAGE
 } from '@/lib/messages'
+import { SettlementDetail, SettlementPhaseDetail } from '@/lib/types'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -36,14 +32,10 @@ import { toast } from 'sonner'
  * Overview Card Properties
  */
 interface OverviewCardProps {
-  /** Campaign Type */
-  campaignType: CampaignType
   /** Selected Settlement */
-  selectedSettlement: Tables<'settlement'> | null
+  selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
-  selectedSettlementPhase: Tables<'settlement_phase'> | null
-  /** Set Campaign Type */
-  setCampaignType: (campaignType: CampaignType) => void
+  selectedSettlementPhase: SettlementPhaseDetail | null
 }
 
 /**
@@ -56,21 +48,13 @@ interface OverviewCardProps {
  * @returns Overview Card Component
  */
 export function OverviewCard({
-  campaignType,
   selectedSettlement,
-  selectedSettlementPhase,
-  setCampaignType
+  selectedSettlementPhase
 }: OverviewCardProps): ReactElement {
   const [collectiveCognition, setCollectiveCognition] = useState<number>(0)
   const [deathCount, setDeathCount] = useState<number>(0)
-  const [endeavors, setEndeavors] = useState<number>(0)
-  const [lanternResearch, setLanternResearch] = useState<number>(0)
   const [lostSettlementCount, setLostSettlementCount] = useState<number>(0)
   const [population, setPopulation] = useState<number>(0)
-  const [survivalLimit, setSurvivalLimit] = useState<number>(0)
-  const [survivorType, setSurvivorType] = useState<SurvivorType>(
-    SurvivorType.CORE
-  )
 
   /**
    * Handle Component Loading
@@ -79,44 +63,29 @@ export function OverviewCard({
    */
   useEffect(() => {
     Promise.all([
-      getCampaignType(selectedSettlement?.id),
       getCollectiveCognition(selectedSettlement?.id),
       getDeathCount(selectedSettlement?.id),
-      getEndeavors(selectedSettlementPhase?.id),
-      getLanternResearch(selectedSettlement?.id),
       getLostSettlementCount(selectedSettlement?.id),
-      getPopulation(selectedSettlement?.id),
-      getSurvivalLimit(selectedSettlement?.id),
-      getSurvivorType(selectedSettlement?.id)
+      getPopulation(selectedSettlement?.id)
     ])
       .then(
         ([
-          campaignType,
           collectiveCognition,
           deathCount,
-          endeavors,
-          lanternResearch,
           lostSettlementCount,
-          population,
-          survivalLimit,
-          survivorType
+          population
         ]) => {
-          setCampaignType(campaignType ?? CampaignType.PEOPLE_OF_THE_LANTERN)
           setCollectiveCognition(collectiveCognition ?? 0)
           setDeathCount(deathCount ?? 0)
-          setEndeavors(endeavors ?? 0)
-          setLanternResearch(lanternResearch ?? 0)
           setLostSettlementCount(lostSettlementCount ?? 0)
           setPopulation(population ?? 0)
-          setSurvivalLimit(survivalLimit ?? 1)
-          setSurvivorType(survivorType ?? SurvivorType.CORE)
         }
       )
       .catch((err: unknown) => {
         console.error('Overview Load Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [selectedSettlement?.id, selectedSettlementPhase?.id, setCampaignType])
+  }, [selectedSettlement?.id, selectedSettlementPhase?.id])
 
   /**
    * Handle Endeavors Change
@@ -125,24 +94,21 @@ export function OverviewCard({
    */
   const handleEndeavorsChange = useCallback(
     (value: number) => {
-      if (isNaN(endeavors) || isNaN(value)) return
-      if (endeavors === value) return
+      if (isNaN(value)) return
+      if (selectedSettlementPhase?.endeavors === value) return
 
       if (value < 0) return toast.error(ENDEAVORS_MINIMUM_ERROR_MESSAGE())
 
-      const previous = endeavors
-      setEndeavors(value)
+      const previous = selectedSettlementPhase?.endeavors ?? 0
 
       updateEndeavors(selectedSettlementPhase?.id, value)
         .then(() => toast.success(ENDEAVORS_UPDATED_MESSAGE(previous, value)))
         .catch((error: unknown) => {
-          setEndeavors(previous)
-
           console.error('Endeavors Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [endeavors, selectedSettlementPhase?.id]
+    [selectedSettlementPhase?.endeavors, selectedSettlementPhase?.id]
   )
 
   /**
@@ -152,25 +118,23 @@ export function OverviewCard({
    */
   const handleLanternResearchLevelChange = useCallback(
     (value: number) => {
-      if (isNaN(lanternResearch) || isNaN(value)) return
-      if (lanternResearch === value) return
+      if (isNaN(value)) return
+      if (selectedSettlement?.lantern_research === value) return
 
       if (value < 0) return toast.error(LANTERN_RESEARCH_LEVEL_MINIMUM_ERROR())
 
-      const previous = lanternResearch
-      setLanternResearch(value)
+      const previous = selectedSettlement?.lantern_research ?? 0
 
       updateLanternResearch(selectedSettlement?.id, value)
         .then(() =>
           toast.success(LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE(previous, value))
         )
         .catch((error: unknown) => {
-          setLanternResearch(previous)
           console.error('Lantern Research Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [lanternResearch, selectedSettlement?.id]
+    [selectedSettlement?.lantern_research, selectedSettlement?.id]
   )
 
   /**
@@ -180,25 +144,22 @@ export function OverviewCard({
    */
   const handleSurvivalLimitChange = useCallback(
     (value: number) => {
-      if (isNaN(survivalLimit) || isNaN(value)) return
-      if (survivalLimit === value) return
-
+      if (isNaN(value)) return
+      if (selectedSettlement?.survival_limit === value) return
       if (value < 1) return toast.error(SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE())
 
-      const previous = survivalLimit
-      setSurvivalLimit(value)
+      const previous = selectedSettlement?.survival_limit ?? 1
 
       updateSurvivalLimit(selectedSettlement?.id, value)
         .then(() =>
           toast.success(SURVIVAL_LIMIT_UPDATED_MESSAGE(previous, value))
         )
         .catch((error: unknown) => {
-          setSurvivalLimit(previous)
           console.error('Survival Limit Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement?.id, survivalLimit]
+    [selectedSettlement?.id, selectedSettlement?.survival_limit]
   )
 
   return (
@@ -213,8 +174,8 @@ export function OverviewCard({
               min="1"
               placeholder="1"
               className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              defaultValue={survivalLimit}
-              key={`survival-limit-${selectedSettlement?.id ?? ''}-${survivalLimit}`}
+              defaultValue={selectedSettlement?.survival_limit ?? 1}
+              key={`survival-limit-${selectedSettlement?.id ?? ''}-${selectedSettlement?.survival_limit ?? 1}`}
               onBlur={(e) =>
                 handleSurvivalLimitChange(parseInt(e.target.value, 10))
               }
@@ -282,7 +243,8 @@ export function OverviewCard({
           </div>
 
           {/* Collective Cognition (ARC only) */}
-          {survivorType === SurvivorType.ARC && (
+          {selectedSettlement?.survivor_type ===
+            DatabaseSurvivorType['Arc'] && (
             <>
               <Separator
                 orientation="vertical"
@@ -306,8 +268,10 @@ export function OverviewCard({
           )}
 
           {/* Lantern Research Level (People of the Lantern/Sun only) */}
-          {(campaignType === CampaignType.PEOPLE_OF_THE_LANTERN ||
-            campaignType === CampaignType.PEOPLE_OF_THE_SUN) && (
+          {(selectedSettlement?.campaign_type ===
+            DatabaseCampaignType['People of the Lantern'] ||
+            selectedSettlement?.campaign_type ===
+              DatabaseCampaignType['People of the Sun']) && (
             <>
               <Separator
                 orientation="vertical"
@@ -320,8 +284,8 @@ export function OverviewCard({
                   min="0"
                   placeholder="0"
                   className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  defaultValue={lanternResearch}
-                  key={`lantern-research-${selectedSettlement?.id ?? ''}-${lanternResearch}`}
+                  defaultValue={selectedSettlement?.lantern_research ?? 0}
+                  key={`lantern-research-${selectedSettlement?.id ?? ''}-${selectedSettlement?.lantern_research ?? 0}`}
                   onBlur={(e) =>
                     handleLanternResearchLevelChange(
                       parseInt(e.target.value, 10)
@@ -349,8 +313,8 @@ export function OverviewCard({
                   min="0"
                   placeholder="0"
                   className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  defaultValue={endeavors}
-                  key={`endeavors-${selectedSettlement?.id ?? ''}-${selectedSettlementPhase?.id ?? ''}-${endeavors}`}
+                  defaultValue={selectedSettlementPhase?.endeavors ?? 0}
+                  key={`endeavors-${selectedSettlement?.id ?? ''}-${selectedSettlementPhase?.id ?? ''}-${selectedSettlementPhase?.endeavors ?? 0}`}
                   onBlur={(e) =>
                     handleEndeavorsChange(parseInt(e.target.value, 10))
                   }
@@ -370,7 +334,7 @@ export function OverviewCard({
             <Label className="text-sm">Survival Limit</Label>
             <NumericInput
               label="Survival Limit"
-              value={survivalLimit}
+              value={selectedSettlement?.survival_limit ?? 1}
               min={1}
               onChange={(value) => handleSurvivalLimitChange(value)}
               className="w-16 h-8 text-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -417,7 +381,8 @@ export function OverviewCard({
           </div>
 
           {/* Collective Cognition (ARC only) */}
-          {survivorType === SurvivorType.ARC && (
+          {selectedSettlement?.survivor_type ===
+            DatabaseSurvivorType['Arc'] && (
             <div className="flex items-center justify-between">
               <Label className="text-sm">Collective Cognition</Label>
               <Input
@@ -432,13 +397,15 @@ export function OverviewCard({
           )}
 
           {/* Lantern Research Level (People of the Lantern/Sun only) */}
-          {(campaignType === CampaignType.PEOPLE_OF_THE_LANTERN ||
-            campaignType === CampaignType.PEOPLE_OF_THE_SUN) && (
+          {(selectedSettlement?.campaign_type ===
+            DatabaseCampaignType['People of the Lantern'] ||
+            selectedSettlement?.campaign_type ===
+              DatabaseCampaignType['People of the Sun']) && (
             <div className="flex items-center justify-between">
               <Label className="text-sm">Lantern Research</Label>
               <NumericInput
                 label="Lantern Research"
-                value={lanternResearch}
+                value={selectedSettlement?.lantern_research ?? 0}
                 min={0}
                 onChange={(value) => handleLanternResearchLevelChange(value)}
                 className="w-16 h-8 text-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -452,7 +419,7 @@ export function OverviewCard({
               <Label className="text-sm">Endeavors</Label>
               <NumericInput
                 label="Endeavors"
-                value={endeavors}
+                value={selectedSettlementPhase?.endeavors ?? 0}
                 min={0}
                 onChange={(value) => handleEndeavorsChange(value)}
                 className="w-16 h-8 text-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"

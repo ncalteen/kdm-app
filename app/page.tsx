@@ -10,10 +10,15 @@ import { getSettlement } from '@/lib/dal/settlement'
 import { getSettlementPhase } from '@/lib/dal/settlement-phase'
 import { getShowdown } from '@/lib/dal/showdown'
 import { getSurvivor, getSurvivors } from '@/lib/dal/survivor'
-import { Tables } from '@/lib/database.types'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
-import { SurvivorDetail } from '@/lib/types'
+import {
+  HuntDetail,
+  SettlementDetail,
+  SettlementPhaseDetail,
+  ShowdownDetail,
+  SurvivorDetail
+} from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import { ReactElement, Suspense, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -124,13 +129,13 @@ function MainPage(): ReactElement {
     updateLocal
   } = useLocal()
 
-  const [selectedHunt, setSelectedHunt] = useState<Tables<'hunt'> | null>(null)
+  const [selectedHunt, setSelectedHunt] = useState<HuntDetail | null>(null)
   const [selectedSettlement, setSelectedSettlement] =
-    useState<Tables<'settlement'> | null>(null)
+    useState<SettlementDetail | null>(null)
   const [selectedSettlementPhase, setSelectedSettlementPhase] =
-    useState<Tables<'settlement_phase'> | null>(null)
+    useState<SettlementPhaseDetail | null>(null)
   const [selectedShowdown, setSelectedShowdown] =
-    useState<Tables<'showdown'> | null>(null)
+    useState<ShowdownDetail | null>(null)
   const [selectedSurvivor, setSelectedSurvivor] =
     useState<SurvivorDetail | null>(null)
   const [survivors, setSurvivors] = useState<SurvivorDetail[]>([])
