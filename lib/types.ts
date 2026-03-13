@@ -49,7 +49,20 @@ export type HuntDetail = Tables<'hunt'> & {}
  * Includes additional information not present in the settlement table.
  */
 export type SettlementDetail = Tables<'settlement'> & {
+  /** Can Encourage */
+  can_encourage: boolean
+  /** Can Surge */
+  can_surge: boolean
+  /** Can Dash */
+  can_dash: boolean
+  /** Can Fist Pump */
+  can_fist_pump: boolean
+  /** Can Endure */
+  can_endure: boolean
+  /** Shared Settlement */
   shared: boolean
+  /** Survivors Born with +1 Understanding */
+  survivors_born_with_understanding: boolean
 }
 
 /**

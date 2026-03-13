@@ -13,160 +13,79 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// /**
-//  * Get Campaign
-//  *
-//  * @returns Campaign
-//  */
-// export function getCampaign() {
-//   return JSON.parse(
-//     localStorage.getItem('campaign') ?? JSON.stringify(newCampaign)
-//   )
-// }
+/**
+ * Check if Settlement Can Encourage
+ *
+ * This is true if the settlement has the Language innovation.
+ *
+ * @param innovationNames Innovation Names
+ * @returns Settlement Can Encourage
+ */
+export function canEncourage(innovationNames: string[]): boolean {
+  return innovationNames.includes('Language')
+}
 
-// /**
-//  * Check if Settlement Can Encourage
-//  *
-//  * This is true if the settlement has the Language innovation.
-//  *
-//  * @param campaign Campaign
-//  * @param settlementId Settlement ID
-//  * @returns Settlement Can Encourage
-//  */
-// export function canEncourage(
-//   campaign: Campaign,
-//   settlementId: number
-// ): boolean {
-//   const settlement = campaign.settlements.find(
-//     (settlement) => settlement.id === settlementId
-//   )
+/**
+ * Check if Settlement Can Surge
+ *
+ * This is true if the settlement has the Inner Lantern innovation.
+ *
+ * @param innovationNames Innovation Names
+ * @returns Settlement Can Surge
+ */
+export function canSurge(innovationNames: string[]): boolean {
+  return innovationNames.includes('Inner Lantern')
+}
 
-//   if (!settlement) return false
+/**
+ * Check if Settlement Can Dash
+ *
+ * This is true if the settlement has the Paint innovation.
+ *
+ * @param innovationNames Innovation Names
+ * @returns Settlement Can Dash
+ */
+export function canDash(innovationNames: string[]): boolean {
+  return innovationNames.includes('Paint')
+}
 
-//   return (
-//     settlement.innovations.find((innovation) =>
-//       innovation.toLowerCase().includes('language')
-//     ) !== undefined
-//   )
-// }
+/**
+ * Check if Settlement Can Fist Pump
+ *
+ * This is true if the settlement has the Silent Dialect innovation.
+ *
+ * @param innovationNames Innovation Names
+ * @returns Settlement Can Fist Pump
+ */
+export function canFistPump(innovationNames: string[]): boolean {
+  return innovationNames.includes('Silent Dialect')
+}
 
-// /**
-//  * Check if Settlement Can Surge
-//  *
-//  * This is true if the settlement has the Inner Lantern innovation.
-//  *
-//  * @param campaign Campaign
-//  * @param settlementId Settlement ID
-//  * @returns Settlement Can Surge
-//  */
-// export function canSurge(campaign: Campaign, settlementId: number): boolean {
-//   const settlement = campaign.settlements.find(
-//     (settlement) => settlement.id === settlementId
-//   )
+/**
+ * Check if Settlement Can Endure
+ *
+ * This is true if the settlement has the Destiny innovation.
+ *
+ * @param innovationNames Innovation Names
+ * @returns Settlement Can Endure
+ */
+export function canEndure(innovationNames: string[]): boolean {
+  return innovationNames.includes('Destiny')
+}
 
-//   if (!settlement) return false
-
-//   return (
-//     settlement.innovations.find((innovation) =>
-//       innovation.toLowerCase().includes('inner lantern')
-//     ) !== undefined
-//   )
-// }
-
-// /**
-//  * Check if Settlement Can Dash
-//  *
-//  * This is true if the settlement has the Paint innovation.
-//  *
-//  * @param campaign Campaign
-//  * @param settlementId Settlement ID
-//  * @returns Settlement Can Dash
-//  */
-// export function canDash(campaign: Campaign, settlementId: number): boolean {
-//   const settlement = campaign.settlements.find(
-//     (settlement) => settlement.id === settlementId
-//   )
-
-//   if (!settlement) return false
-
-//   return (
-//     settlement.innovations.find(
-//       (innovation) => innovation.toLowerCase() === 'paint'
-//     ) !== undefined
-//   )
-// }
-
-// /**
-//  * Check if Settlement Can Fist Pump
-//  *
-//  * This is true if the settlement has the Silent Dialect innovation.
-//  *
-//  * @param campaign Campaign
-//  * @param settlementId Settlement ID
-//  * @returns Settlement Can Fist Pump
-//  */
-// export function canFistPump(campaign: Campaign, settlementId: number): boolean {
-//   const settlement = campaign.settlements.find(
-//     (settlement) => settlement.id === settlementId
-//   )
-
-//   if (!settlement) return false
-
-//   return (
-//     settlement.innovations.find((innovation) =>
-//       innovation.toLowerCase().includes('silent dialect')
-//     ) !== undefined
-//   )
-// }
-
-// /**
-//  * Check if Settlement Can Endure
-//  *
-//  * This is true if the settlement has the Destiny innovation.
-//  *
-//  * @param campaign Campaign
-//  * @param settlementId Settlement ID
-//  * @returns Settlement Can Endure
-//  */
-// export function canEndure(campaign: Campaign, settlementId: number): boolean {
-//   const settlement = campaign.settlements.find(
-//     (settlement) => settlement.id === settlementId
-//   )
-
-//   if (!settlement) return false
-
-//   return (
-//     settlement.innovations.find((innovation) =>
-//       innovation.toLowerCase().includes('destiny')
-//     ) !== undefined
-//   )
-// }
-
-// /**
-//  * Check if Settlement Survivors are Born with +1 Understanding
-//  *
-//  * This is true if the settlement has the Graves innovation.
-//  *
-//  * @param campaign Campaign
-//  * @param settlementId Settlement ID
-//  * @returns Settlement Survivors Born with Understanding
-//  */
-// export function bornWithUnderstanding(
-//   campaign: Campaign,
-//   settlementId: number
-// ): boolean {
-//   const settlement = campaign.settlements.find(
-//     (settlement) => settlement.id === settlementId
-//   )
-
-//   if (!settlement) return false
-
-//   return (
-//     settlement.innovations.find((innovation) =>
-//       innovation.toLowerCase().includes('graves')
-//     ) !== undefined
-//   )
-// }
+/**
+ * Check if Settlement Survivors are Born with +1 Understanding
+ *
+ * This is true if the settlement has the Graves innovation.
+ *
+ * @param innovationNames Innovation Names
+ * @returns Settlement Survivors Born with +1 Understanding
+ */
+export function survivorsBornWithUnderstanding(
+  innovationNames: string[]
+): boolean {
+  return innovationNames.includes('Graves')
+}
 
 /**
  * Get Color Style for Display
@@ -469,25 +388,6 @@ export function getOverwhelmingDarknessLabel(
     : 'Overwhelming Darkness'
 }
 
-// /**
-//  * Get the Survivors Color Choice
-//  *
-//  * @param campaign Campaign Data
-//  * @param survivorId Survivor ID
-//  * @returns Color Choice
-//  */
-// export function getSurvivorColorChoice(
-//   campaign: Campaign,
-//   survivorId: number | undefined
-// ): ColorChoice {
-//   if (!survivorId) return ColorChoice.SLATE
-
-//   return (
-//     campaign.survivors.find((survivor) => survivorId === survivor.id)?.color ??
-//     ColorChoice.SLATE
-//   )
-// }
-
 /**
  * Get Available Monster Nodes
  *
@@ -505,129 +405,6 @@ export const getAvailableNodes = (type: MonsterType): MonsterNode[] => {
       ]
     : [MonsterNode.NQ1, MonsterNode.NQ2, MonsterNode.NQ3, MonsterNode.NQ4]
 }
-
-// /**
-//  * Create Settlement Nemesis from Nemesis Data
-//  *
-//  * @param data Nemesis Data
-//  * @returns Settlement Nemesis
-//  */
-// export const createSettlementNemesisFromData = (
-//   selectedSettlement: Tables<'settlement'> | null,
-//   data: Tables<'nemesis'>
-// ): Tables<'settlement_nemesis'> => {
-//   const nemesis: Tables<'settlement_nemesis'> = {
-//     collective_cognition_level_1: false,
-//     collective_cognition_level_2: false,
-//     collective_cognition_level_3: false,
-//     monster_name: data.monster_name,
-//     monster_node: data.node,
-//     unlocked: false
-//   }
-
-//   if (data.level1) {
-//     nemesis.level1 = data.level1
-//     nemesis.level1Defeated = false
-//   }
-//   if (data.level2) {
-//     nemesis.level2 = data.level2
-//     nemesis.level2Defeated = false
-//   }
-//   if (data.level3) {
-//     nemesis.level3 = data.level3
-//     nemesis.level3Defeated = false
-//   }
-//   if (data.level4) {
-//     nemesis.level4 = data.level4
-//     nemesis.level4Defeated = false
-//   }
-//   if (data.vignette) nemesis.vignette = data.vignette
-
-//   // If the campaign is People of the Dream Keeper and the nemesis is The Hand,
-//   // add the Suspicious trait to all levels.
-//   if (
-//     selectedSettlement &&
-//     selectedSettlement.campaignType ===
-//       CampaignType.PEOPLE_OF_THE_DREAM_KEEPER &&
-//     data.name.toLowerCase() === 'the hand'
-//   ) {
-//     if (data.level1) nemesis.level1?.[0].traits.push('Suspicious')
-//     if (data.level2) nemesis.level2?.[0].traits.push('Suspicious')
-//     if (data.level3) nemesis.level3?.[0].traits.push('Suspicious')
-//     if (data.level4) nemesis.level4?.[0].traits.push('Suspicious')
-//   }
-
-//   return nemesis
-// }
-
-// /**
-//  * Create Settlement Quarry from Quarry Data
-//  *
-//  * @param data Quarry Data
-//  * @returns Settlement Quarry
-//  */
-// export const createSettlementQuarryFromData = (
-//   data: QuarryMonsterData
-// ): SettlementQuarry => {
-//   const quarry: SettlementQuarry = {
-//     ccLevel1: false,
-//     ccLevel2: [false, false],
-//     ccLevel3: [false, false, false],
-//     ccPrologue: false,
-//     huntBoard: data.huntBoard,
-//     name: data.name,
-//     node: data.node,
-//     unlocked: false
-//   }
-
-//   if (data.alternate) quarry.alternate = data.alternate
-//   if (data.level1) quarry.level1 = data.level1
-//   if (data.level2) quarry.level2 = data.level2
-//   if (data.level3) quarry.level3 = data.level3
-//   if (data.level4) quarry.level4 = data.level4
-//   if (data.vignette) quarry.vignette = data.vignette
-
-//   return quarry
-// }
-
-// /**
-//  * Check if Vignette Monster is Unlocked
-//  *
-//  * Checks the campaign data to confirm if a vignette monster has been unlocked.
-//  *
-//  * @param campaign Campaign
-//  * @param monsterName Vignette Monster Name
-//  * @returns Vignette Monster is Unlocked
-//  */
-// export const isVignetteMonsterUnlocked = (
-//   campaign: Campaign,
-//   monsterName: string | undefined
-// ): boolean => {
-//   if (!monsterName) return false
-
-//   // Killenium Butcher
-//   if (
-//     monsterName === KILLENIUM_BUTCHER.name &&
-//     campaign.settings.unlockedMonsters.killeniumButcher
-//   )
-//     return true
-
-//   // Screaming Nukalope
-//   if (
-//     monsterName === SCREAMING_NUKALOPE.name &&
-//     campaign.settings.unlockedMonsters.screamingNukalope
-//   )
-//     return true
-
-//   // White Gigalion
-//   if (
-//     monsterName === WHITE_GIGALION.name &&
-//     campaign.settings.unlockedMonsters.whiteGigalion
-//   )
-//     return true
-
-//   return false
-// }
 
 /**
  * Save to Local Storage

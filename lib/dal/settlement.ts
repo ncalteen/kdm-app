@@ -4,6 +4,7 @@ import { getPeopleOfTheLanternTemplate } from '@/lib/campaigns/potl'
 import { getPeopleOfTheStarsTemplate } from '@/lib/campaigns/potstars'
 import { getPeopleOfTheSunTemplate } from '@/lib/campaigns/potsun'
 import { getSquiresOfTheCitadelTemplate } from '@/lib/campaigns/squires'
+import { getInnovationNames } from '@/lib/dal/innovation'
 import { getLocationIds } from '@/lib/dal/location'
 import { getNemesisLocationIds } from '@/lib/dal/nemesis-location'
 import { getNemesisTimelineYears } from '@/lib/dal/nemesis-timeline-year'
@@ -30,6 +31,14 @@ import {
 } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
+import {
+  canDash,
+  canEncourage,
+  canEndure,
+  canFistPump,
+  canSurge,
+  survivorsBornWithUnderstanding
+} from '@/lib/utils'
 import { NewSettlementInput } from '@/schemas/new-settlement-input'
 
 /**
@@ -263,6 +272,9 @@ export async function getSettlement(
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
+  let settlement: SettlementDetail | null = null
+
+  // Check if the settlement is owned by the user directly.
   const { data: ownedSettlement, error: ownedError } = await supabase
     .from('settlement')
     .select('*')
@@ -274,30 +286,49 @@ export async function getSettlement(
     throw new Error(`Error Fetching Settlement: ${ownedError.message}`)
 
   if (ownedSettlement)
-    return {
+    settlement = {
       ...ownedSettlement,
       shared: false
     }
 
-  const { data: sharedSettlementRow, error: sharedError } = await supabase
-    .from('settlement_shared_user')
-    .select('settlement(*)')
-    .eq('settlement_id', settlementId)
-    .eq('shared_user_id', user.id)
-    .maybeSingle()
+  // Check if it is a shared settlement.
+  if (!settlement) {
+    const { data: sharedSettlementRow, error: sharedError } = await supabase
+      .from('settlement_shared_user')
+      .select('settlement(*)')
+      .eq('settlement_id', settlementId)
+      .eq('shared_user_id', user.id)
+      .maybeSingle()
 
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Settlement: ${sharedError.message}`)
+    if (sharedError)
+      throw new Error(
+        `Error Fetching Shared Settlement: ${sharedError.message}`
+      )
 
-  const sharedSettlement = Array.isArray(sharedSettlementRow?.settlement)
-    ? sharedSettlementRow.settlement[0]
-    : sharedSettlementRow?.settlement
+    const sharedSettlement = Array.isArray(sharedSettlementRow?.settlement)
+      ? sharedSettlementRow.settlement[0]
+      : sharedSettlementRow?.settlement
 
-  if (!sharedSettlement) return null
+    if (sharedSettlement)
+      settlement = {
+        ...sharedSettlement,
+        shared: true
+      }
+  }
+
+  if (!settlement) return null
+
+  const innovationNames = await getInnovationNames(settlementId)
 
   return {
-    ...sharedSettlement,
-    shared: true
+    ...settlement,
+    can_encourage: canEncourage(innovationNames),
+    can_surge: canSurge(innovationNames),
+    can_dash: canDash(innovationNames),
+    can_fist_pump: canFistPump(innovationNames),
+    can_endure: canEndure(innovationNames),
+    survivors_born_with_understanding:
+      survivorsBornWithUnderstanding(innovationNames)
   }
 }
 
