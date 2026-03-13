@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { WandererDetail } from '@/lib/types'
 
 /**
  * Get Wanderers
@@ -12,7 +12,9 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Wanderer Data
  */
-export async function getWanderers(): Promise<Tables<'wanderer'>[]> {
+export async function getWanderers(): Promise<{
+  [key: string]: WandererDetail
+}> {
   const supabase = createClient()
 
   const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -42,21 +44,17 @@ export async function getWanderers(): Promise<Tables<'wanderer'>[]> {
       throw new Error(`Error Fetching Wanderers: ${result.error.message}`)
 
   // Collect wanderers from all sources, deduplicating by ID
-  const wandererMap = new Map<string, Tables<'wanderer'>>()
+  const wandererMap: { [key: string]: WandererDetail } = {}
 
-  for (const w of nonCustomResult.data ?? []) wandererMap.set(w.id, w)
-
-  for (const w of userCustomResult.data ?? []) wandererMap.set(w.id, w)
-
+  for (const w of nonCustomResult.data ?? []) wandererMap[w.id] = w
+  for (const w of userCustomResult.data ?? []) wandererMap[w.id] = w
   for (const row of sharedResult.data ?? []) {
-    const w = row.wanderer as unknown as Tables<'wanderer'> | null
+    const w = row.wanderer as unknown as WandererDetail | null
 
-    if (w) wandererMap.set(w.id, w)
+    if (w) wandererMap[w.id] = w
   }
 
-  if (wandererMap.size === 0) throw new Error('Wanderer(s) Not Found')
-
-  return [...wandererMap.values()]
+  return wandererMap
 }
 
 /**

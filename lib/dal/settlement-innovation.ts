@@ -8,8 +8,10 @@ import { createClient } from '@/lib/supabase/client'
  */
 export async function addInnovationsToSettlement(
   innovationIds: string[],
-  settlementId: string
+  settlementId: string | null | undefined
 ): Promise<void> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   if (innovationIds.length === 0) return
 
   const supabase = createClient()

@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client'
  * @returns Quarry Timeline Years
  */
 export async function getQuarryTimelineYears(
-  quarryId: string,
+  quarryId: string | null | undefined,
   campaignType: CampaignType
 ): Promise<
   Omit<
@@ -20,6 +20,8 @@ export async function getQuarryTimelineYears(
     'created_at' | 'id' | 'updated_at' | 'campaign_types' | 'quarry_id'
   >[]
 > {
+  if (!quarryId) throw new Error('Required: Quarry ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase

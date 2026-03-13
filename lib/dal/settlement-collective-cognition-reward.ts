@@ -8,8 +8,10 @@ import { createClient } from '@/lib/supabase/client'
  */
 export async function addCollectiveCognitionRewardsToSettlement(
   rewardIds: string[],
-  settlementId: string
+  settlementId: string | null | undefined
 ): Promise<void> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   if (rewardIds.length === 0) return
 
   const supabase = createClient()

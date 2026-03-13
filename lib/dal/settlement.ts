@@ -251,7 +251,7 @@ export async function createSettlement(
 export async function getSettlement(
   settlementId: string | null
 ): Promise<SettlementDetail | null> {
-  if (!settlementId) return null
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
@@ -302,34 +302,6 @@ export async function getSettlement(
 }
 
 /**
- * Get Campaign Type
- *
- * Retrieves the selected settlement's campaign type.
- *
- * @param settlementId Settlement ID
- * @returns Campaign Type (or null)
- */
-export async function getCampaignType(
-  settlementId: string | null | undefined
-): Promise<CampaignType | null> {
-  if (!settlementId) return null
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('settlement')
-    .select('campaign_type')
-    .eq('id', settlementId)
-    .maybeSingle()
-
-  if (error) throw new Error(`Error Fetching Campaign Type: ${error.message}`)
-
-  return data?.campaign_type
-    ? CampaignType[data.campaign_type as keyof typeof CampaignType]
-    : null
-}
-
-/**
  * Get Collective Cognition
  *
  * Sums the collective cognition value based on settlement victories.
@@ -340,7 +312,7 @@ export async function getCampaignType(
 export async function getCollectiveCognition(
   settlementId: string | null | undefined
 ): Promise<number | null> {
-  if (!settlementId) return null
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   let total = 0
 
@@ -401,7 +373,7 @@ export async function getCollectiveCognition(
 export async function getDeathCount(
   settlementId: string | null | undefined
 ): Promise<number | null> {
-  if (!settlementId) return null
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
@@ -425,9 +397,9 @@ export async function getDeathCount(
  * @returns Hunt ID (or null)
  */
 export async function getHuntId(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<string | null> {
-  if (!settlementId) return null
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
@@ -440,31 +412,6 @@ export async function getHuntId(
   if (error) throw new Error(`Error Fetching Hunt ID: ${error.message}`)
 
   return data?.id || null
-}
-
-/**
- * Get Lantern Research
- *
- * @param settlementId Settlement ID
- * @returns Lantern Research (or null)
- */
-export async function getLanternResearch(
-  settlementId: string | null | undefined
-): Promise<number | null> {
-  if (!settlementId) return null
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('settlement')
-    .select('lantern_research')
-    .eq('id', settlementId)
-    .maybeSingle()
-
-  if (error)
-    throw new Error(`Error Fetching Lantern Research: ${error.message}`)
-
-  return data?.lantern_research ?? null
 }
 
 /**
@@ -483,7 +430,7 @@ export async function getLanternResearch(
 export async function getLostSettlementCount(
   settlementId: string | null | undefined
 ): Promise<number | null> {
-  if (!settlementId) return null
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
@@ -511,7 +458,7 @@ export async function getLostSettlementCount(
 export async function getPopulation(
   settlementId: string | null | undefined
 ): Promise<number | null> {
-  if (!settlementId) return null
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
@@ -535,9 +482,9 @@ export async function getPopulation(
  * @returns Settlement Phase ID (or null)
  */
 export async function getSettlementPhaseId(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<string | null> {
-  if (!settlementId) return null
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
@@ -562,9 +509,9 @@ export async function getSettlementPhaseId(
  * @returns Showdown ID (or null)
  */
 export async function getShowdownId(
-  settlementId: string | null
+  settlementId: string | null | undefined
 ): Promise<string | null> {
-  if (!settlementId) return null
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
@@ -580,165 +527,23 @@ export async function getShowdownId(
 }
 
 /**
- * Get Survival Limit
+ * Update Settlement
  *
- * @param settlementId Settlement ID
- * @returns Survival Limit (or null)
+ * @param settlementId SettlementId ID
+ * @param updates Settlement Updates
  */
-export async function getSurvivalLimit(
-  settlementId: string | null | undefined
-): Promise<number | null> {
-  if (!settlementId) return null
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('settlement')
-    .select('survival_limit')
-    .eq('id', settlementId)
-    .maybeSingle()
-
-  if (error) throw new Error(`Error Fetching Survival Limit: ${error.message}`)
-
-  return data?.survival_limit ?? null
-}
-
-/**
- * Get Survivor Type
- *
- * Retrieves the selected settlement's survivor type.
- *
- * @param settlementId Settlement ID
- * @returns Survivor Type (or null)
- */
-export async function getSurvivorType(
-  settlementId: string | null | undefined
-): Promise<SurvivorType> {
-  if (!settlementId) return SurvivorType.CORE
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('settlement')
-    .select('survivor_type')
-    .eq('id', settlementId)
-    .maybeSingle()
-
-  if (error) throw new Error(`Error Fetching Survivor Type: ${error.message}`)
-
-  return data?.survivor_type
-    ? SurvivorType[data.survivor_type as keyof typeof SurvivorType]
-    : SurvivorType.CORE
-}
-
-/**
- * Update Lantern Research Level
- *
- * @param settlementId Settlement ID
- * @param value Lantern Research Level
- */
-export async function updateLanternResearch(
+export async function updateSettlement(
   settlementId: string | null | undefined,
-  value: number
+  updates: Partial<Tables<'settlement'>>
 ): Promise<void> {
-  if (!settlementId) return
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
   const { error } = await supabase
     .from('settlement')
-    .update({ lantern_research: value })
+    .update(updates)
     .eq('id', settlementId)
 
-  if (error)
-    throw new Error(`Error Updating Lantern Research: ${error.message}`)
-}
-
-/**
- * Update Survival Limit
- *
- * @param settlementId Settlement ID
- * @param value Survival Limit
- */
-export async function updateSurvivalLimit(
-  settlementId: string | null | undefined,
-  value: number
-): Promise<void> {
-  if (!settlementId) return
-
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('settlement')
-    .update({ survival_limit: value })
-    .eq('id', settlementId)
-
-  if (error) throw new Error(`Error Updating Survial Limit: ${error.message}`)
-}
-
-/**
- * Update Arrival Bonuses
- *
- * @param settlementId Settlement ID
- * @param bonuses Updated Bonuses
- */
-export async function updateArrivalBonuses(
-  settlementId: string | null,
-  bonuses: string[]
-): Promise<void> {
-  if (!settlementId) return
-
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('settlement')
-    .update({ arrival_bonuses: bonuses })
-    .eq('id', settlementId)
-
-  if (error) throw new Error(`Error Updating Arrival Bonuses: ${error.message}`)
-}
-
-/**
- * Update Departure Bonuses
- *
- * @param settlementId Settlement ID
- * @param bonuses Updated Bonuses
- */
-export async function updateDepartureBonuses(
-  settlementId: string | null,
-  bonuses: string[]
-): Promise<void> {
-  if (!settlementId) return
-
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('settlement')
-    .update({ departing_bonuses: bonuses })
-    .eq('id', settlementId)
-
-  if (error)
-    throw new Error(`Error Updating Departure Bonuses: ${error.message}`)
-}
-
-/**
- * Update Monster Volumes
- *
- * @param settlementId Settlement ID
- * @param volumes Updated Monster Volumes
- */
-export async function updateMonsterVolumes(
-  settlementId: string | null,
-  volumes: string[]
-): Promise<void> {
-  if (!settlementId) return
-
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('settlement')
-    .update({ monster_volumes: volumes })
-    .eq('id', settlementId)
-
-  if (error) throw new Error(`Error Updating Monster Volumes: ${error.message}`)
+  if (error) throw new Error(`Error Updating Settlement: ${error.message}`)
 }

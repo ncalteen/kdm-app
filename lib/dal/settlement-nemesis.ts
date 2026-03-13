@@ -42,8 +42,10 @@ export interface SettlementNemesisRow {
  */
 export async function addNemesesToSettlement(
   nemesisIds: string[],
-  settlementId: string
+  settlementId: string | null | undefined
 ): Promise<void> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   if (nemesisIds.length === 0) return
 
   const supabase = createClient()
@@ -78,8 +80,10 @@ export async function addNemesesToSettlement(
  * @returns Settlement Nemesis Rows
  */
 export async function getSettlementNemeses(
-  settlementId: string
+  settlementId: string | null | undefined
 ): Promise<SettlementNemesisRow[]> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -148,9 +152,12 @@ export async function getSettlementNemeses(
  * @returns Settlement Nemesis Row
  */
 export async function addNemesisToSettlement(
-  nemesisId: string,
-  settlementId: string
+  nemesisId: string | null | undefined,
+  settlementId: string | null | undefined
 ): Promise<SettlementNemesisRow> {
+  if (!nemesisId || !settlementId)
+    throw new Error('Required: Nemesis ID, Settlement ID')
+
   const supabase = createClient()
 
   // Insert the settlement_nemesis row and fetch available levels in parallel.
@@ -221,8 +228,10 @@ export async function addNemesisToSettlement(
  * @param settlementNemesisId Settlement Nemesis ID
  */
 export async function removeNemesisFromSettlement(
-  settlementNemesisId: string
+  settlementNemesisId: string | null | undefined
 ): Promise<void> {
+  if (!settlementNemesisId) throw new Error('Required: Settlement Nemesis ID')
+
   const supabase = createClient()
 
   const { error } = await supabase
@@ -243,9 +252,11 @@ export async function removeNemesisFromSettlement(
  * @param unlocked Unlocked Status
  */
 export async function updateSettlementNemesisUnlocked(
-  settlementNemesisId: string,
+  settlementNemesisId: string | null | undefined,
   unlocked: boolean
 ): Promise<void> {
+  if (!settlementNemesisId) throw new Error('Required: Settlement Nemesis ID')
+
   const supabase = createClient()
 
   const { error } = await supabase
@@ -280,10 +291,12 @@ export type NemesisDefeatedField =
  * @param defeated Defeated Status
  */
 export async function updateSettlementNemesisLevelDefeated(
-  settlementNemesisId: string,
+  settlementNemesisId: string | null | undefined,
   field: NemesisDefeatedField,
   defeated: boolean
 ): Promise<void> {
+  if (!settlementNemesisId) throw new Error('Required: Settlement Nemesis ID')
+
   const supabase = createClient()
 
   const { error } = await supabase

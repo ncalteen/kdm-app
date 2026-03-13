@@ -16,8 +16,10 @@ import { SurvivorDetail } from '@/lib/types'
  * @param settlementId Settlement ID
  */
 export async function addSquiresOfTheCitadelSurvivors(
-  settlementId: string
+  settlementId: string | null | undefined
 ): Promise<void> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   const supabase = createClient()
 
   const { error } = await supabase.from('survivor').insert(
@@ -46,7 +48,8 @@ export async function getSurvivor(
   survivorId: string | null,
   settlementId: string | null
 ): Promise<SurvivorDetail | null> {
-  if (!survivorId || !settlementId) return null
+  if (!survivorId || !settlementId)
+    throw new Error('Required: Survivor ID, Settlement ID')
 
   const supabase = createClient()
 
@@ -98,7 +101,7 @@ export async function getSurvivor(
 export async function getSurvivors(
   settlementId: string | null
 ): Promise<SurvivorDetail[]> {
-  if (!settlementId) return []
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
@@ -153,9 +156,11 @@ export async function getSurvivors(
  * @param updates Survivor Updates
  */
 export async function updateSurvivor(
-  survivorId: string,
+  survivorId: string | null | undefined,
   updates: Partial<Tables<'survivor'>>
 ): Promise<void> {
+  if (!survivorId) throw new Error('Required: Survivor ID')
+
   const supabase = createClient()
 
   const { error } = await supabase
@@ -184,6 +189,9 @@ export async function deleteSurvivor(
   setSelectedSurvivorId: (survivor: string | null) => void,
   survivorId: string
 ): Promise<Tables<'survivor'>[]> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+  if (!survivorId) throw new Error('Required: Survivor ID')
+
   const supabase = createClient()
 
   // Check if there is a record in the hunt_survivor table with this survivor_id

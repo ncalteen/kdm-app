@@ -9,10 +9,11 @@ import { SettlementPhaseDetail } from '@/lib/types'
  * @returns Settlement Phase Data
  */
 export async function getSettlementPhase(
-  settlementPhaseId: string | null,
-  settlementId: string | null
+  settlementPhaseId: string | null | undefined,
+  settlementId: string | null | undefined
 ): Promise<SettlementPhaseDetail | null> {
-  if (!settlementPhaseId || !settlementId) return null
+  if (!settlementPhaseId || !settlementId)
+    throw new Error('Required: Settlement Phase ID, Settlement ID')
 
   const supabase = createClient()
 
@@ -38,7 +39,7 @@ export async function getSettlementPhase(
 export async function getEndeavors(
   settlementPhaseId: string | null | undefined
 ): Promise<number | null> {
-  if (!settlementPhaseId) return null
+  if (!settlementPhaseId) throw new Error('Required: Settlement Phase ID')
 
   const supabase = createClient()
 
@@ -63,7 +64,7 @@ export async function updateEndeavors(
   settlementPhaseId: string | null | undefined,
   endeavors: number
 ): Promise<void> {
-  if (!settlementPhaseId) return
+  if (!settlementPhaseId) throw new Error('Required: Settlement Phase ID')
 
   const supabase = createClient()
 

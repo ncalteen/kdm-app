@@ -45,7 +45,7 @@ export async function addTimelineYearsToSettlement(
 export async function getTimelineYears(
   settlementId: string | null | undefined
 ): Promise<{ [key: number]: { entries: string[]; completed: boolean } }> {
-  if (!settlementId) return {}
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
@@ -88,7 +88,7 @@ export async function removeTimelineEntry(
   yearNumber: number,
   entryIndex: number
 ): Promise<string[]> {
-  if (!settlementId) throw new Error('Settlement ID is Required')
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
@@ -144,11 +144,13 @@ export async function removeTimelineEntry(
  * @returns Updated List of Entries for the Year
  */
 export async function saveTimelineEntry(
-  settlementId: string,
+  settlementId: string | null | undefined,
   yearNumber: number,
   value: string,
   entryIndex: number
 ): Promise<string[]> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   const supabase = createClient()
 
   // Fetch the current entries for the specified year
@@ -205,10 +207,12 @@ export async function saveTimelineEntry(
  * @param completed New Completion Status
  */
 export async function toggleYearCompletionStatus(
-  settlementId: string,
+  settlementId: string | null | undefined,
   yearNumber: number,
   completed: boolean
 ): Promise<void> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   const supabase = createClient()
 
   const { error } = await supabase
@@ -232,9 +236,11 @@ export async function toggleYearCompletionStatus(
  * @param yearNumber Year Number
  */
 export async function addYear(
-  settlementId: string,
+  settlementId: string | null | undefined,
   yearNumber: number
 ): Promise<void> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   const supabase = createClient()
 
   const { error } = await supabase.from('settlement_timeline_year').insert({

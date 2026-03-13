@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client'
  * @returns Nemesis Timeline Years
  */
 export async function getNemesisTimelineYears(
-  nemesisId: string,
+  nemesisId: string | null | undefined,
   campaignType: CampaignType
 ): Promise<
   Omit<
@@ -20,6 +20,8 @@ export async function getNemesisTimelineYears(
     'created_at' | 'id' | 'updated_at' | 'campaign_types' | 'nemesis_id'
   >[]
 > {
+  if (!nemesisId) throw new Error('Required: Nemesis ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase

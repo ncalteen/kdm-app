@@ -31,8 +31,9 @@ export interface SettlementQuarryRow {
  */
 export async function addQuarriesToSettlement(
   quarryIds: string[],
-  settlementId: string
+  settlementId: string | null | undefined
 ): Promise<void> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
   if (quarryIds.length === 0) return
 
   const supabase = createClient()
@@ -63,8 +64,10 @@ export async function addQuarriesToSettlement(
  * @returns Settlement Quarry Rows
  */
 export async function getSettlementQuarries(
-  settlementId: string
+  settlementId: string | null | undefined
 ): Promise<SettlementQuarryRow[]> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -104,9 +107,12 @@ export async function getSettlementQuarries(
  * @returns Settlement Quarry Row
  */
 export async function addQuarryToSettlement(
-  quarryId: string,
-  settlementId: string
+  quarryId: string | null | undefined,
+  settlementId: string | null | undefined
 ): Promise<SettlementQuarryRow> {
+  if (!quarryId || !settlementId)
+    throw new Error('Required: Quarry ID, Settlement ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -150,8 +156,10 @@ export async function addQuarryToSettlement(
  * @param settlementQuarryId Settlement Quarry ID
  */
 export async function removeQuarryFromSettlement(
-  settlementQuarryId: string
+  settlementQuarryId: string | null | undefined
 ): Promise<void> {
+  if (!settlementQuarryId) throw new Error('Required: Settlement Quarry ID')
+
   const supabase = createClient()
 
   const { error } = await supabase
@@ -172,9 +180,11 @@ export async function removeQuarryFromSettlement(
  * @param unlocked Unlocked Status
  */
 export async function updateSettlementQuarryUnlocked(
-  settlementQuarryId: string,
+  settlementQuarryId: string | null | undefined,
   unlocked: boolean
 ): Promise<void> {
+  if (!settlementQuarryId) throw new Error('Required: Settlement Quarry ID')
+
   const supabase = createClient()
 
   const { error } = await supabase

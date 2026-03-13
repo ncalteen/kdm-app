@@ -12,7 +12,8 @@ export async function getShowdown(
   showdownId: string | null,
   settlementId: string | null
 ): Promise<ShowdownDetail | null> {
-  if (!showdownId || !settlementId) return null
+  if (!showdownId || !settlementId)
+    throw new Error('Required: Showdown ID, Settlement ID')
 
   const supabase = createClient()
 

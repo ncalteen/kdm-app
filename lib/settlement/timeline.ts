@@ -15,12 +15,14 @@ import { DatabaseCampaignType } from '@/lib/enums'
 export function usesNormalNumbering(
   campaignType: DatabaseCampaignType | null | undefined
 ): boolean {
+  if (!campaignType) throw new Error('Required: Campaign Type')
+
   return [
     DatabaseCampaignType['Squires of the Citadel'],
     DatabaseCampaignType['People of the Stars'],
     DatabaseCampaignType['People of the Sun'],
     DatabaseCampaignType['Custom']
-  ].includes(campaignType as DatabaseCampaignType)
+  ].includes(campaignType)
 }
 
 /**
@@ -36,9 +38,11 @@ export function usesNormalNumbering(
 export function showStoryEventIcon(
   campaignType: DatabaseCampaignType | null | undefined
 ): boolean {
+  if (!campaignType) throw new Error('Required: Campaign Type')
+
   return [
     DatabaseCampaignType['People of the Lantern'],
     DatabaseCampaignType['People of the Dream Keeper'],
     DatabaseCampaignType['Custom']
-  ].includes(campaignType as DatabaseCampaignType)
+  ].includes(campaignType)
 }

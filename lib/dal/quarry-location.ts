@@ -10,8 +10,10 @@ import { createClient } from '@/lib/supabase/client'
  * @returns Quarry Location IDs
  */
 export async function getQuarryLocationIds(
-  quarryId: string
+  quarryId: string | null | undefined
 ): Promise<string[]> {
+  if (!quarryId) throw new Error('Required: Quarry ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase

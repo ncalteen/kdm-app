@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { WandererDetail } from '@/lib/types'
 
 /**
  * Sort Wanderers
@@ -8,9 +8,7 @@ import { Tables } from '@/lib/database.types'
  * @param rows Wanderer Rows
  * @returns Sorted Wanderer Rows
  */
-export function sortWanderers(
-  rows: Tables<'wanderer'>[]
-): Tables<'wanderer'>[] {
+export function sortWanderers(rows: WandererDetail[]): WandererDetail[] {
   return [...rows].sort((a, b) =>
     a.wanderer_name.localeCompare(b.wanderer_name)
   )

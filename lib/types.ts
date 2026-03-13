@@ -77,3 +77,13 @@ export type ShowdownDetail = Tables<'showdown'> & {}
 export type SurvivorDetail = Tables<'survivor'> & {
   embarked: boolean
 }
+
+/**
+ * Wanderer Detail
+ *
+ * Used throughout the app to represent the currently selected wanderer.
+ * Includes additional information not present in the wanderer table.
+ */
+export type WandererDetail = Tables<'wanderer'> & {
+  embarked: boolean
+}

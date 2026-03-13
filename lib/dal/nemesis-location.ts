@@ -10,8 +10,10 @@ import { createClient } from '@/lib/supabase/client'
  * @returns Nemesis Location IDs
  */
 export async function getNemesisLocationIds(
-  nemesisId: string
+  nemesisId: string | null | undefined
 ): Promise<string[]> {
+  if (!nemesisId) throw new Error('Required: Nemesis ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase

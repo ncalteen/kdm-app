@@ -8,10 +8,12 @@ import { createClient } from '@/lib/supabase/client'
  * @returns Wanderer Timeline Years
  */
 export async function getWandererTimelineYears(
-  wandererId: string
+  wandererId: string | null | undefined
 ): Promise<
   Omit<Tables<'wanderer_timeline_year'>, 'created_at' | 'updated_at'>[]
 > {
+  if (!wandererId) throw new Error('Required: Wanderer ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase

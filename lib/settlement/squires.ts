@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { SurvivorDetail } from '@/lib/types'
 
 /**
  * Calculate Total Suspicion Level
@@ -9,9 +9,7 @@ import { Tables } from '@/lib/database.types'
  * @param survivors Array of Survivors
  * @return Total Suspicion Level
  */
-export function calculateTotalSuspicion(
-  survivors: Tables<'survivor'>[]
-): number {
+export function calculateTotalSuspicion(survivors: SurvivorDetail[]): number {
   return survivors.reduce((total, survivor) => {
     let suspicionLevel = 0
 
@@ -37,7 +35,7 @@ export function calculateTotalSuspicion(
  * @returns Updated Suspicion Levels
  */
 export function calculateSuspicionLevels(
-  survivor: Tables<'survivor'>,
+  survivor: SurvivorDetail,
   level: number,
   checked: boolean
 ): {

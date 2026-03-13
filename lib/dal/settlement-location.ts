@@ -11,8 +11,10 @@ import { createClient } from '@/lib/supabase/client'
  */
 export async function addLocationsToSettlement(
   locationIds: string[],
-  settlementId: string
+  settlementId: string | null | undefined
 ): Promise<void> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   if (locationIds.length === 0) return
 
   const supabase = createClient()
