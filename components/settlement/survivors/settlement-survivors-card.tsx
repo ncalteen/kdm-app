@@ -85,6 +85,8 @@ export function SettlementSurvivorsCard({
         return toast.error(ERROR_MESSAGE())
       }
 
+      if (selectedSurvivorId === deletedSurvivor.id) setSelectedSurvivorId(null)
+
       setSurvivors(updatedSurvivors)
 
       deleteSurvivor(

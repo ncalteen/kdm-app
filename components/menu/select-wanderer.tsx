@@ -59,7 +59,7 @@ export function SelectWanderer({
       </SelectTrigger>
       <SelectContent>
         {Object.values(wanderers).map((wanderer) => (
-          <SelectItem key={wanderer.id} value={wanderer.id}>
+          <SelectItem key={wanderer.id} value={wanderer.wanderer_name}>
             {wanderer.wanderer_name}
           </SelectItem>
         ))}

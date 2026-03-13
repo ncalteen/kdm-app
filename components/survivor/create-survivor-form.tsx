@@ -226,7 +226,7 @@ export function CreateSurvivorForm({
       insanity: wanderer.insanity,
       luck: wanderer.luck,
       movement: wanderer.movement,
-      name: wanderer.wanderer_name,
+      survivorName: wanderer.wanderer_name,
       speed: wanderer.speed,
       strength: wanderer.strength,
       survival: wanderer.survival,
