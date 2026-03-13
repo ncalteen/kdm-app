@@ -110,13 +110,14 @@ export function SurvivorCard({
                 survivors={survivors}
               />
             )}
-            {/* <HuntXPCard
+            <HuntXPCard
               selectedSettlement={selectedSettlement}
-              selectedSettlementId={selectedSettlementId}
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
-            <SurvivalCard
+            {/* <SurvivalCard
               mode={mode}
               selectedHunt={selectedHunt}
               selectedHuntId={selectedHuntId}
