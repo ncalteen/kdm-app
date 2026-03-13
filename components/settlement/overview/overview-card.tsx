@@ -12,7 +12,7 @@ import {
   getPopulation,
   updateSettlement
 } from '@/lib/dal/settlement'
-import { updateEndeavors } from '@/lib/dal/settlement-phase'
+import { updateSettlementPhase } from '@/lib/dal/settlement-phase'
 import { DatabaseCampaignType, DatabaseSurvivorType } from '@/lib/enums'
 import {
   ENDEAVORS_MINIMUM_ERROR_MESSAGE,
@@ -33,8 +33,12 @@ import { toast } from 'sonner'
 interface OverviewCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
+  /** Selected Settlement ID */
+  selectedSettlementId: string | null
   /** Selected Settlement Phase */
   selectedSettlementPhase: SettlementPhaseDetail | null
+  /** Selected Settlement Phase ID */
+  selectedSettlementPhaseId: string | null
 }
 
 /**
@@ -48,7 +52,9 @@ interface OverviewCardProps {
  */
 export function OverviewCard({
   selectedSettlement,
-  selectedSettlementPhase
+  selectedSettlementId,
+  selectedSettlementPhase,
+  selectedSettlementPhaseId
 }: OverviewCardProps): ReactElement {
   const [collectiveCognition, setCollectiveCognition] = useState<number>(0)
   const [deathCount, setDeathCount] = useState<number>(0)
@@ -62,10 +68,10 @@ export function OverviewCard({
    */
   useEffect(() => {
     Promise.all([
-      getCollectiveCognition(selectedSettlement?.id),
-      getDeathCount(selectedSettlement?.id),
-      getLostSettlementCount(selectedSettlement?.id),
-      getPopulation(selectedSettlement?.id)
+      getCollectiveCognition(selectedSettlementId),
+      getDeathCount(selectedSettlementId),
+      getLostSettlementCount(selectedSettlementId),
+      getPopulation(selectedSettlementId)
     ])
       .then(
         ([
@@ -84,7 +90,7 @@ export function OverviewCard({
         console.error('Overview Load Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [selectedSettlement?.id, selectedSettlementPhase?.id])
+  }, [selectedSettlementId])
 
   /**
    * Handle Endeavors Change
@@ -100,14 +106,16 @@ export function OverviewCard({
 
       const previous = selectedSettlementPhase?.endeavors ?? 0
 
-      updateEndeavors(selectedSettlementPhase?.id, value)
+      updateSettlementPhase(selectedSettlementPhaseId, {
+        endeavors: value
+      })
         .then(() => toast.success(ENDEAVORS_UPDATED_MESSAGE(previous, value)))
         .catch((error: unknown) => {
           console.error('Endeavors Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlementPhase?.endeavors, selectedSettlementPhase?.id]
+    [selectedSettlementPhase?.endeavors, selectedSettlementPhaseId]
   )
 
   /**
@@ -117,23 +125,23 @@ export function OverviewCard({
    */
   const handleLanternResearchLevelChange = useCallback(
     (value: number) => {
-      if (selectedSettlement?.lantern_research === value) return
       if (isNaN(value)) return
+      if (selectedSettlement?.lantern_research === value) return
 
       if (value < 0) return toast.error(LANTERN_RESEARCH_LEVEL_MINIMUM_ERROR())
 
       const previous = selectedSettlement?.lantern_research ?? 0
 
-      updateSettlement(selectedSettlement?.id, { lantern_research: value })
+      updateSettlement(selectedSettlementId, { lantern_research: value })
         .then(() =>
           toast.success(LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE(previous, value))
         )
         .catch((error: unknown) => {
-          console.error('Lantern Research Update Error:', error)
+          console.error('Lantern Research Level Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement?.lantern_research, selectedSettlement?.id]
+    [selectedSettlement?.lantern_research, selectedSettlementId]
   )
 
   /**
@@ -143,13 +151,14 @@ export function OverviewCard({
    */
   const handleSurvivalLimitChange = useCallback(
     (value: number) => {
-      if (selectedSettlement?.survival_limit === value) return
       if (isNaN(value)) return
+      if (selectedSettlement?.survival_limit === value) return
+
       if (value < 1) return toast.error(SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE())
 
-      const previous = selectedSettlement?.survival_limit ?? 1
+      const previous = selectedSettlement?.survival_limit ?? 0
 
-      updateSettlement(selectedSettlement?.id, { survival_limit: value })
+      updateSettlement(selectedSettlementId, { survival_limit: value })
         .then(() =>
           toast.success(SURVIVAL_LIMIT_UPDATED_MESSAGE(previous, value))
         )
@@ -158,7 +167,7 @@ export function OverviewCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement?.id, selectedSettlement?.survival_limit]
+    [selectedSettlement?.survival_limit, selectedSettlementId]
   )
 
   return (
@@ -174,7 +183,7 @@ export function OverviewCard({
               placeholder="1"
               className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               defaultValue={selectedSettlement?.survival_limit ?? 1}
-              key={`survival-limit-${selectedSettlement?.id ?? ''}-${selectedSettlement?.survival_limit ?? 1}`}
+              key={`survival-limit-${selectedSettlementId}-${selectedSettlement?.survival_limit ?? 1}`}
               onBlur={(e) =>
                 handleSurvivalLimitChange(parseInt(e.target.value, 10))
               }
@@ -233,7 +242,7 @@ export function OverviewCard({
               placeholder="0"
               className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               defaultValue={lostSettlementCount}
-              key={`lost-settlements-${selectedSettlement?.id ?? ''}-${lostSettlementCount}`}
+              key={`lost-settlements-${selectedSettlementId}-${lostSettlementCount}`}
               disabled
               name="lost-settlements-desktop"
               id="lost-settlements-desktop"
@@ -284,7 +293,7 @@ export function OverviewCard({
                   placeholder="0"
                   className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   defaultValue={selectedSettlement?.lantern_research ?? 0}
-                  key={`lantern-research-${selectedSettlement?.id ?? ''}-${selectedSettlement?.lantern_research ?? 0}`}
+                  key={`lantern-research-${selectedSettlementId}-${selectedSettlement?.lantern_research ?? 0}`}
                   onBlur={(e) =>
                     handleLanternResearchLevelChange(
                       parseInt(e.target.value, 10)
@@ -299,7 +308,7 @@ export function OverviewCard({
           )}
 
           {/* Endeavors (Settlement Phase Only) */}
-          {selectedSettlementPhase?.id && (
+          {selectedSettlementPhaseId && (
             <>
               <Separator
                 orientation="vertical"
@@ -313,7 +322,7 @@ export function OverviewCard({
                   placeholder="0"
                   className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   defaultValue={selectedSettlementPhase?.endeavors ?? 0}
-                  key={`endeavors-${selectedSettlement?.id ?? ''}-${selectedSettlementPhase?.id ?? ''}-${selectedSettlementPhase?.endeavors ?? 0}`}
+                  key={`endeavors-${selectedSettlementId}-${selectedSettlementPhaseId}-${selectedSettlementPhase?.endeavors ?? 0}`}
                   onBlur={(e) =>
                     handleEndeavorsChange(parseInt(e.target.value, 10))
                   }
@@ -413,7 +422,7 @@ export function OverviewCard({
           )}
 
           {/* Endeavors (Settlement Phase Only) */}
-          {selectedSettlementPhase?.id && (
+          {selectedSettlementPhaseId && (
             <div className="flex items-center justify-between">
               <Label className="text-sm">Endeavors</Label>
               <NumericInput

@@ -1,3 +1,4 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementPhaseDetail } from '@/lib/types'
 
@@ -31,47 +32,24 @@ export async function getSettlementPhase(
 }
 
 /**
- * Get Endeavors
- *
- * @param settlementPhaseId Settlement ID
- * @returns Endeavors (or null)
- */
-export async function getEndeavors(
-  settlementPhaseId: string | null | undefined
-): Promise<number | null> {
-  if (!settlementPhaseId) throw new Error('Required: Settlement Phase ID')
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('settlement_phase')
-    .select('endeavors')
-    .eq('id', settlementPhaseId)
-    .maybeSingle()
-
-  if (error) throw new Error(`Error Fetching Endeavors: ${error.message}`)
-
-  return data?.endeavors ?? null
-}
-
-/**
- * Update Endeavors
+ * Update Settlement Phase
  *
  * @param settlementPhaseId Settlement Phase ID
- * @param endeavors New Endeavors value
+ * @param updates Settlement Phase Updates
  */
-export async function updateEndeavors(
+export async function updateSettlementPhase(
   settlementPhaseId: string | null | undefined,
-  endeavors: number
+  updates: Partial<Tables<'settlement_phase'>>
 ): Promise<void> {
   if (!settlementPhaseId) throw new Error('Required: Settlement Phase ID')
 
   const supabase = createClient()
 
   const { error } = await supabase
-    .from('settlement_phase')
-    .update({ endeavors })
+    .from('settlement')
+    .update(updates)
     .eq('id', settlementPhaseId)
 
-  if (error) throw new Error(`Error Updating Endeavors: ${error.message}`)
+  if (error)
+    throw new Error(`Error Updating Settlement Phase: ${error.message}`)
 }

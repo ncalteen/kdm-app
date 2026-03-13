@@ -529,7 +529,7 @@ export async function getShowdownId(
 /**
  * Update Settlement
  *
- * @param settlementId SettlementId ID
+ * @param settlementId Settlement ID
  * @param updates Settlement Updates
  */
 export async function updateSettlement(

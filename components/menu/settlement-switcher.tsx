@@ -20,12 +20,7 @@ import {
 } from '@/lib/dal/settlement'
 import { getSettlements } from '@/lib/dal/user'
 import { CampaignType } from '@/lib/enums'
-import {
-  HuntDetail,
-  SettlementDetail,
-  SettlementPhaseDetail,
-  ShowdownDetail
-} from '@/lib/types'
+import { SettlementDetail } from '@/lib/types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
 import { ComponentProps, ReactElement, useEffect, useState } from 'react'
 
@@ -33,14 +28,16 @@ import { ComponentProps, ReactElement, useEffect, useState } from 'react'
  * Settlement Switcher Properties
  */
 interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
-  /** Selected Hunt */
-  selectedHunt: HuntDetail | null
+  /** Selected Hunt ID */
+  selectedHuntId: string | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Settlement Phase */
-  selectedSettlementPhase: SettlementPhaseDetail | null
-  /** Selected Showdown */
-  selectedShowdown: ShowdownDetail | null
+  /** Selected Settlement ID */
+  selectedSettlementId: string | null
+  /** Selected Settlement Phase ID */
+  selectedSettlementPhaseId: string | null
+  /** Selected Showdown ID */
+  selectedShowdownId: string | null
   /** Set Selected Hunt ID */
   setSelectedHuntId: (hunt: string | null) => void
   /** Set Selected Settlement ID */
@@ -65,10 +62,11 @@ interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
  * @returns Settlement Switcher Component
  */
 export function SettlementSwitcher({
-  selectedHunt,
+  selectedHuntId,
   selectedSettlement,
-  selectedSettlementPhase,
-  selectedShowdown,
+  selectedSettlementId,
+  selectedSettlementPhaseId,
+  selectedShowdownId,
   setSelectedHuntId,
   setSelectedSettlementId,
   setSelectedSettlementPhaseId,
@@ -91,7 +89,7 @@ export function SettlementSwitcher({
         setError(err instanceof Error ? err.message : 'Unknown Error')
       )
       .finally(() => setIsLoading(false))
-  }, [])
+  }, [selectedSettlementId])
 
   /**
    * Handle Settlement Selection
@@ -146,8 +144,6 @@ export function SettlementSwitcher({
       </SidebarMenu>
     )
 
-  const campaignType = selectedSettlement?.campaign_type ?? null
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -156,11 +152,11 @@ export function SettlementSwitcher({
             <SidebarMenuButton
               size="lg"
               className={`data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground ${
-                selectedHunt
+                selectedHuntId
                   ? 'bg-yellow-500/20 hover:bg-yellow-500/30'
-                  : selectedShowdown
+                  : selectedShowdownId
                     ? 'bg-red-500/20 hover:bg-red-500/30'
-                    : selectedSettlementPhase
+                    : selectedSettlementPhaseId
                       ? 'bg-green-500/20 hover:bg-green-500/30'
                       : ''
               }`}>
@@ -175,8 +171,9 @@ export function SettlementSwitcher({
                     'Create a Settlement'}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {selectedSettlement
-                    ? (campaignType && CampaignType[campaignType]) ||
+                  {selectedSettlementId
+                    ? (selectedSettlement?.campaign_type &&
+                        CampaignType[selectedSettlement?.campaign_type]) ||
                       'Unknown Campaign Type'
                     : 'Choose your destiny'}
                 </span>
@@ -217,7 +214,7 @@ export function SettlementSwitcher({
                     {CampaignType[settlement.campaign_type]}
                   </span>
                 </div>
-                {settlement.id === selectedSettlement?.id && (
+                {settlement.id === selectedSettlementId && (
                   <Check className="ml-auto" />
                 )}
               </DropdownMenuItem>

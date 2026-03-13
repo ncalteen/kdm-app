@@ -326,10 +326,11 @@ function MainPage(): ReactElement {
         <SiteHeader />
 
         <AppSidebar
-          selectedHunt={selectedHunt}
+          selectedHuntId={selectedHuntId}
           selectedSettlement={selectedSettlement}
-          selectedSettlementPhase={selectedSettlementPhase}
-          selectedShowdown={selectedShowdown}
+          selectedSettlementId={selectedSettlementId}
+          selectedSettlementPhaseId={selectedSettlementPhaseId}
+          selectedShowdownId={selectedShowdownId}
           selectedTab={selectedTab}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlementId={setSelectedSettlementId}
@@ -343,12 +344,17 @@ function MainPage(): ReactElement {
             <SettlementCard
               isCreatingNewSurvivor={isCreatingNewSurvivor}
               selectedHunt={selectedHunt}
+              selectedHuntId={selectedHuntId}
               selectedHuntMonsterIndex={selectedHuntMonsterIndex}
               selectedSettlement={selectedSettlement}
+              selectedSettlementId={selectedSettlementId}
               selectedSettlementPhase={selectedSettlementPhase}
+              selectedSettlementPhaseId={selectedSettlementPhaseId}
               selectedShowdown={selectedShowdown}
+              selectedShowdownId={selectedShowdownId}
               selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
               selectedSurvivor={selectedSurvivor}
+              selectedSurvivorId={selectedSurvivorId}
               selectedTab={selectedTab}
               setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
               setSelectedHuntId={setSelectedHuntId}

@@ -21,12 +21,7 @@ import {
 } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { generateSeedData } from '@/lib/seed'
-import {
-  HuntDetail,
-  SettlementDetail,
-  SettlementPhaseDetail,
-  ShowdownDetail
-} from '@/lib/types'
+import { SettlementDetail } from '@/lib/types'
 import {
   DatabaseIcon,
   HourglassIcon,
@@ -153,14 +148,16 @@ const navSettings = [
  * Application Sidebar Properties
  */
 interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
-  /** Selected Hunt */
-  selectedHunt: HuntDetail | null
+  /** Selected Hunt ID */
+  selectedHuntId: string | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Settlement Phase */
-  selectedSettlementPhase: SettlementPhaseDetail | null
-  /** Selected Showdown */
-  selectedShowdown: ShowdownDetail | null
+  /** Selected Settlement ID */
+  selectedSettlementId: string | null
+  /** Selected Settlement Phase ID */
+  selectedSettlementPhaseId: string | null
+  /** Selected Showdown ID */
+  selectedShowdownId: string | null
   /** Selected Tab */
   selectedTab: TabType
   /** Set Selected Hunt ID */
@@ -184,10 +181,11 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
  * @returns Application Sidebar Component
  */
 export function AppSidebar({
-  selectedHunt,
+  selectedHuntId,
   selectedSettlement,
-  selectedSettlementPhase,
-  selectedShowdown,
+  selectedSettlementId,
+  selectedSettlementPhaseId,
+  selectedShowdownId,
   selectedTab,
   setSelectedHuntId,
   setSelectedSettlementId,
@@ -228,10 +226,11 @@ export function AppSidebar({
       {...props}>
       <SidebarHeader>
         <SettlementSwitcher
-          selectedHunt={selectedHunt}
+          selectedHuntId={selectedHuntId}
           selectedSettlement={selectedSettlement}
-          selectedSettlementPhase={selectedSettlementPhase}
-          selectedShowdown={selectedShowdown}
+          selectedSettlementId={selectedSettlementId}
+          selectedSettlementPhaseId={selectedSettlementPhaseId}
+          selectedShowdownId={selectedShowdownId}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlementId={setSelectedSettlementId}
           setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
