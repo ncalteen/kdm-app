@@ -35,21 +35,44 @@ export type CampaignTemplate = {
 }
 
 /**
- * Settlement List Item
+ * Hunt Detail
  *
- * Used to populate the settlement switcher component.
+ * Used throughout the app to represent the currently selected hunt. Includes
+ * additional information not present in the hunt table.
  */
-export type SettlementListItem = Pick<
-  Tables<'settlement'>,
-  'id' | 'settlement_name' | 'campaign_type'
-> & {
+export type HuntDetail = Tables<'hunt'> & {}
+
+/**
+ * Settlement Detail
+ *
+ * Used throughout the app to represent the currently selected settlement.
+ * Includes additional information not present in the settlement table.
+ */
+export type SettlementDetail = Tables<'settlement'> & {
   shared: boolean
 }
 
 /**
- * Survivor List Item
+ * Settlement Phase Detail
  *
- * Used to populate the survivor detail page.
+ * Used throughout the app to represent the currently selected settlement phase.
+ * Includes additional information not present in the settlement_phase table.
+ */
+export type SettlementPhaseDetail = Tables<'settlement_phase'> & {}
+
+/**
+ * Showdown Detail
+ *
+ * Used throughout the app to represent the currently selected showdown.
+ * Includes additional information not present in the showdown table.
+ */
+export type ShowdownDetail = Tables<'showdown'> & {}
+
+/**
+ * Survivor Detail
+ *
+ * Used throughout the app to represent the currently selected survivor.
+ * Includes additional information not present in the survivor table.
  */
 export type SurvivorDetail = Tables<'survivor'> & {
   embarked: boolean
