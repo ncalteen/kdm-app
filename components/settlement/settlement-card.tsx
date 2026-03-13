@@ -7,6 +7,7 @@ import { OverviewCard } from '@/components/settlement/overview/overview-card'
 import { QuarriesCard } from '@/components/settlement/quarries/quarries-card'
 import { SquireProgressionCards } from '@/components/settlement/squires/squire-progression-cards'
 import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
+import { SettlementSurvivorsCard } from '@/components/settlement/survivors/settlement-survivors-card'
 import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
 import { updateSettlement } from '@/lib/dal/settlement'
 import { DatabaseCampaignType, TabType } from '@/lib/enums'
@@ -19,7 +20,6 @@ import {
 } from '@/lib/types'
 import { BookOpenIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
 import { ReactElement } from 'react'
-import { SettlementSurvivorsCard } from './survivors/settlement-survivors-card'
 
 /**
  * Settlement Card Props
