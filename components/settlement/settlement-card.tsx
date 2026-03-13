@@ -263,6 +263,8 @@ export function SettlementCard({
               selectedSettlementId={selectedSettlementId}
               setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
               setSelectedSurvivorId={setSelectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
           )}
 

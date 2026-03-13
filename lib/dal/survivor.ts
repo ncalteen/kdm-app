@@ -249,10 +249,11 @@ export async function deleteSurvivor(
  * Create a Survivor
  *
  * @param options Input Options
+ * @returns Created Survivor
  */
 export async function createSurvivor(
   options: NewSurvivorInput
-): Promise<string> {
+): Promise<SurvivorDetail> {
   if (!options.settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
@@ -310,11 +311,11 @@ export async function createSurvivor(
   const { data, error } = await supabase
     .from('survivor')
     .insert(survivor)
-    .select('id')
+    .select('*')
     .single()
 
   if (error)
-    throw new Error(`Error Adding Squires to Settlement: ${error.message}`)
+    throw new Error(`Error Creating Survivor: ${error.message}`)
 
-  return data.id
+  return { ...data, embarked: false }
 }

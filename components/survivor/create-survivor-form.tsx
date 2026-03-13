@@ -17,7 +17,7 @@ import { getWanderers } from '@/lib/dal/wanderer'
 import { AenasState, DatabaseSurvivorType, Gender } from '@/lib/enums'
 import { ERROR_MESSAGE, SURVIVOR_CREATED_MESSAGE } from '@/lib/messages'
 import { sortWanderers } from '@/lib/settlement/wanderers'
-import { SettlementDetail, WandererDetail } from '@/lib/types'
+import { SettlementDetail, SurvivorDetail, WandererDetail } from '@/lib/types'
 import {
   NewSurvivorInput,
   NewSurvivorInputSchema
@@ -39,6 +39,10 @@ interface CreateSurvivorFormProps {
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivor: string | null) => void
+  /** Set Survivors */
+  setSurvivors: (survivors: SurvivorDetail[]) => void
+  /** Survivors */
+  survivors: SurvivorDetail[]
 }
 
 /**
@@ -57,7 +61,9 @@ export function CreateSurvivorForm({
   selectedSettlement,
   selectedSettlementId,
   setIsCreatingNewSurvivor,
-  setSelectedSurvivorId
+  setSelectedSurvivorId,
+  setSurvivors,
+  survivors
 }: CreateSurvivorFormProps): ReactElement {
   const [activeTab, setActiveTab] = useState<'custom' | 'wanderer'>('custom')
   const [selectedWanderer, setSelectedWanderer] =
@@ -266,13 +272,37 @@ export function CreateSurvivorForm({
    * @param values Form Values
    */
   function onSubmit(values: NewSurvivorInput) {
+    const originalSurvivors = [...survivors]
+
+    // Optimistic placeholder row (uses a temporary ID).
+    const tempId = `temp-${crypto.randomUUID()}`
+    const optimisticSurvivor: SurvivorDetail = {
+      id: tempId,
+      settlement_id: values.settlementId ?? '',
+      survivor_name: values.survivorName ?? null,
+      gender: values.gender === 'M' ? 'MALE' : 'FEMALE',
+      hunt_xp: values.huntXP,
+      dead: false,
+      embarked: false
+    } as SurvivorDetail
+
+    setSurvivors([...survivors, optimisticSurvivor])
+
     createSurvivor(values)
-      .then((survivorId) => {
+      .then((survivor) => {
+        // Replace the placeholder with the real row from the DB.
+        setSurvivors(
+          [...originalSurvivors, survivor]
+        )
+
         toast.success(SURVIVOR_CREATED_MESSAGE())
-        setSelectedSurvivorId(survivorId)
+        setSelectedSurvivorId(survivor.id)
         setIsCreatingNewSurvivor(false)
       })
       .catch((err: unknown) => {
+        // Revert the optimistic insert.
+        setSurvivors(originalSurvivors)
+
         console.error('Create Survivor Error:', err)
         toast.error(ERROR_MESSAGE())
       })
