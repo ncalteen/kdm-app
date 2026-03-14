@@ -291,9 +291,7 @@ export function CreateSurvivorForm({
     createSurvivor(values)
       .then((survivor) => {
         // Replace the placeholder with the real row from the DB.
-        setSurvivors(
-          [...originalSurvivors, survivor]
-        )
+        setSurvivors([...originalSurvivors, survivor])
 
         toast.success(SURVIVOR_CREATED_MESSAGE())
         setSelectedSurvivorId(survivor.id)
