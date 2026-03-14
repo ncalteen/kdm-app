@@ -1,5 +1,3 @@
-'use client'
-
 import { TimelineYearRow } from '@/components/settlement/timeline/timeline-year-row'
 
 /**

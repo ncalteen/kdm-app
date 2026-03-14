@@ -1,5 +1,3 @@
-'use client'
-
 import { Badge } from '@/components/ui/badge'
 import { BookOpenIcon, SwordsIcon } from 'lucide-react'
 import { useCallback } from 'react'

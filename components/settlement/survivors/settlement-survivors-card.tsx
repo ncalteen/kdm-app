@@ -1,5 +1,3 @@
-'use client'
-
 import { createColumns } from '@/components/settlement/survivors/columns'
 import { SurvivorDataTable } from '@/components/settlement/survivors/data-table'
 import { Button } from '@/components/ui/button'

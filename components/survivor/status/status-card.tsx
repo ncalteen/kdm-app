@@ -40,7 +40,7 @@ interface StatusCardProps {
   /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
-  survivors: SurvivorDetail[]
+  survivors: SurvivorDetail[] | null
 }
 
 /**
@@ -107,15 +107,13 @@ export function StatusCard({
       e.preventDefault()
 
       const oldName = survivorName
-      const oldSurvivors = [...survivors]
+      const oldSurvivors = [...(survivors ?? [])]
 
       setSurvivorName(value)
       setSurvivors(
-        survivors.map((s) =>
-          s.id === selectedSurvivorId
-            ? { ...s, survivor_name: value }
-            : s
-        )
+        survivors?.map((s) =>
+          s.id === selectedSurvivorId ? { ...s, survivor_name: value } : s
+        ) ?? null
       )
 
       updateSurvivor(selectedSurvivorId, { survivor_name: value })

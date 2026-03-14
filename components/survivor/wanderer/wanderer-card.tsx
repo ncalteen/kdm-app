@@ -1,5 +1,3 @@
-'use client'
-
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'

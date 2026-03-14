@@ -1,5 +1,3 @@
-'use client'
-
 import { ListCard } from '@/components/generic/list-card'
 import { CreateSettlementCard } from '@/components/settlement/create-settlement-card'
 import { NemesesCard } from '@/components/settlement/nemeses/nemeses-card'

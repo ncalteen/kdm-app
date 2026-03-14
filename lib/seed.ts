@@ -1,10 +1,8 @@
-'use client'
-
 import { ColorChoice, MonsterNode, Philosophy, SurvivorType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { saveToLocalStorage } from '@/lib/utils'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { toast } from 'sonner'
-import { saveToLocalStorage } from './utils'
 
 /**
  * Generate Seed Data

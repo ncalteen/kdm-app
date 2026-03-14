@@ -1,5 +1,3 @@
-'use client'
-
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormItem } from '@/components/ui/form'

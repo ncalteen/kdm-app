@@ -1,5 +1,3 @@
-'use client'
-
 import { TimelineEventBadge } from '@/components/settlement/timeline/timeline-event-badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'

@@ -1,5 +1,3 @@
-'use client'
-
 import { ModeToggle } from '@/components/menu/mode-toggle'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'

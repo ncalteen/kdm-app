@@ -1,5 +1,3 @@
-'use client'
-
 import { SettlementSwitcher } from '@/components/menu/settlement-switcher'
 import { NavMain } from '@/components/nav-main'
 import {
