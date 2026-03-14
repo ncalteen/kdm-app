@@ -39,6 +39,8 @@ interface OverviewCardProps {
   selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Settlement Phase ID */
   selectedSettlementPhaseId: string | null
+  /** Set Selected Settlement */
+  setSelectedSettlement: (settlement: SettlementDetail | null) => void
 }
 
 /**
@@ -54,7 +56,8 @@ export function OverviewCard({
   selectedSettlement,
   selectedSettlementId,
   selectedSettlementPhase,
-  selectedSettlementPhaseId
+  selectedSettlementPhaseId,
+  setSelectedSettlement
 }: OverviewCardProps): ReactElement {
   const [collectiveCognition, setCollectiveCognition] = useState<number>(0)
   const [deathCount, setDeathCount] = useState<number>(0)
@@ -133,15 +136,20 @@ export function OverviewCard({
       const previous = selectedSettlement?.lantern_research ?? 0
 
       updateSettlement(selectedSettlementId, { lantern_research: value })
-        .then(() =>
+        .then(() => {
+          if (selectedSettlement)
+            setSelectedSettlement({
+              ...selectedSettlement,
+              lantern_research: value
+            })
           toast.success(LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE(previous, value))
-        )
+        })
         .catch((error: unknown) => {
           console.error('Lantern Research Level Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement?.lantern_research, selectedSettlementId]
+    [selectedSettlement, selectedSettlementId, setSelectedSettlement]
   )
 
   /**
@@ -159,15 +167,20 @@ export function OverviewCard({
       const previous = selectedSettlement?.survival_limit ?? 0
 
       updateSettlement(selectedSettlementId, { survival_limit: value })
-        .then(() =>
+        .then(() => {
+          if (selectedSettlement)
+            setSelectedSettlement({
+              ...selectedSettlement,
+              survival_limit: value
+            })
           toast.success(SURVIVAL_LIMIT_UPDATED_MESSAGE(previous, value))
-        )
+        })
         .catch((error: unknown) => {
           console.error('Survival Limit Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement?.survival_limit, selectedSettlementId]
+    [selectedSettlement, selectedSettlementId, setSelectedSettlement]
   )
 
   return (
