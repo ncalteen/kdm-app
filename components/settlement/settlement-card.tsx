@@ -61,20 +61,32 @@ interface SettlementCardProps {
   setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set New Survivor Being Created */
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
+  /** Set Selected Hunt */
+  setSelectedHunt: (hunt: HuntDetail | null) => void
   /** Set Selected Hunt ID */
-  setSelectedHuntId: (hunt: string | null) => void
+  setSelectedHuntId: (huntId: string | null) => void
   /** Set Selected Hunt Monster Index */
   setSelectedHuntMonsterIndex: (index: number) => void
+  /** Set Selected Settlement */
+  setSelectedSettlement: (settlement: SettlementDetail | null) => void
   /** Set Selected Settlement ID */
-  setSelectedSettlementId: (settlement: string | null) => void
+  setSelectedSettlementId: (settlementId: string | null) => void
+  /** Set Selected Settlement Phase */
+  setSelectedSettlementPhase: (
+    settlementPhase: SettlementPhaseDetail | null
+  ) => void
   /** Set Selected Settlement Phase ID */
-  setSelectedSettlementPhase: (settlementPhase: string | null) => void
+  setSelectedSettlementPhaseId: (settlementPhaseId: string | null) => void
+  /** Set Selected Showdown */
+  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
   /** Set Selected Showdown ID */
-  setSelectedShowdownId: (showdown: string | null) => void
+  setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Showdown Monster Index */
   setSelectedShowdownMonsterIndex: (index: number) => void
+  /** Set Selected Survivor */
+  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
   /** Set Selected Survivor ID */
-  setSelectedSurvivorId: (survivor: string | null) => void
+  setSelectedSurvivorId: (survivorId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
   /** Set Survivors */
@@ -107,12 +119,17 @@ export function SettlementCard({
   selectedTab,
   setIsCreatingNewSettlement,
   setIsCreatingNewSurvivor,
+  setSelectedHunt,
   setSelectedHuntId,
   setSelectedHuntMonsterIndex,
+  setSelectedSettlement,
   setSelectedSettlementId,
   setSelectedSettlementPhase,
+  setSelectedSettlementPhaseId,
+  setSelectedShowdown,
   setSelectedShowdownId,
   setSelectedShowdownMonsterIndex,
+  setSelectedSurvivor,
   setSelectedSurvivorId,
   setSelectedTab,
   setSurvivors,
@@ -155,6 +172,7 @@ export function SettlementCard({
         selectedSettlementId={selectedSettlementId}
         selectedSettlementPhase={selectedSettlementPhase}
         selectedSettlementPhaseId={selectedSettlementPhaseId}
+        setSelectedSettlement={setSelectedSettlement}
       />
 
       <hr className="pt-2" />
@@ -258,41 +276,48 @@ export function SettlementCard({
             )}
 
           {/* Survivors Tab */}
-          <SettlementSurvivorsCard
-            selectedSettlement={selectedSettlement}
-            selectedSettlementId={selectedSettlementId}
-            selectedSurvivorId={selectedSurvivorId}
-            setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
-            setSelectedSurvivorId={setSelectedSurvivorId}
-            setSurvivors={setSurvivors}
-            survivors={survivors}
-          />
-          {/* Selected Survivor */}
-          {selectedSurvivor && !isCreatingNewSurvivor && (
-            <SurvivorCard
-              mode={SurvivorCardMode.SURVIVOR_CARD}
-              selectedHunt={selectedHunt}
-              selectedHuntId={selectedHuntId}
-              selectedSettlement={selectedSettlement}
-              selectedSettlementId={selectedSettlementId}
-              selectedShowdown={selectedShowdown}
-              selectedShowdownId={selectedShowdownId}
-              selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
-              setSurvivors={setSurvivors}
-              survivors={survivors}
-            />
-          )}
-          {/* Create Survivor */}
-          {isCreatingNewSurvivor && (
-            <CreateSurvivorForm
-              selectedSettlement={selectedSettlement}
-              selectedSettlementId={selectedSettlementId}
-              setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
-              setSelectedSurvivorId={setSelectedSurvivorId}
-              setSurvivors={setSurvivors}
-              survivors={survivors}
-            />
+          {selectedSettlement && selectedTab === TabType.SURVIVORS && (
+            <>
+              {/* Survivors Table */}
+              <SettlementSurvivorsCard
+                selectedSettlement={selectedSettlement}
+                selectedSettlementId={selectedSettlementId}
+                selectedSurvivorId={selectedSurvivorId}
+                setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
+                setSelectedSurvivorId={setSelectedSurvivorId}
+                setSurvivors={setSurvivors}
+                survivors={survivors}
+              />
+
+              {/* Selected Survivor */}
+              {selectedSurvivor && !isCreatingNewSurvivor && (
+                <SurvivorCard
+                  mode={SurvivorCardMode.SURVIVOR_CARD}
+                  selectedHunt={selectedHunt}
+                  selectedHuntId={selectedHuntId}
+                  selectedSettlement={selectedSettlement}
+                  selectedSettlementId={selectedSettlementId}
+                  selectedShowdown={selectedShowdown}
+                  selectedShowdownId={selectedShowdownId}
+                  selectedSurvivor={selectedSurvivor}
+                  selectedSurvivorId={selectedSurvivorId}
+                  setSurvivors={setSurvivors}
+                  survivors={survivors}
+                />
+              )}
+
+              {/* Create Survivor */}
+              {isCreatingNewSurvivor && (
+                <CreateSurvivorForm
+                  selectedSettlement={selectedSettlement}
+                  selectedSettlementId={selectedSettlementId}
+                  setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
+                  setSelectedSurvivorId={setSelectedSurvivorId}
+                  setSurvivors={setSurvivors}
+                  survivors={survivors}
+                />
+              )}
+            </>
           )}
 
           {/* Society Tab */}
