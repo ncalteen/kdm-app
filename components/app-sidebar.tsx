@@ -154,6 +154,8 @@ const navSettings = [
  * Application Sidebar Properties
  */
 interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
+  /** Is Creating New Settlement */
+  isCreatingNewSettlement: boolean
   /** Selected Hunt ID */
   selectedHuntId: string | null
   /** Selected Settlement */
@@ -166,6 +168,8 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
   selectedShowdownId: string | null
   /** Selected Tab */
   selectedTab: TabType
+  /** Set Is Creating New Settlement */
+  setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set Selected Hunt */
   setSelectedHunt: (hunt: HuntDetail | null) => void
   /** Set Selected Hunt ID */
@@ -199,12 +203,14 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
  * @returns Application Sidebar Component
  */
 export function AppSidebar({
+  isCreatingNewSettlement,
   selectedHuntId,
   selectedSettlement,
   selectedSettlementId,
   selectedSettlementPhaseId,
   selectedShowdownId,
   selectedTab,
+  setIsCreatingNewSettlement,
   setSelectedHunt,
   setSelectedHuntId,
   setSelectedSettlement,
@@ -249,11 +255,13 @@ export function AppSidebar({
       {...props}>
       <SidebarHeader>
         <SettlementSwitcher
+          isCreatingNewSettlement={isCreatingNewSettlement}
           selectedHuntId={selectedHuntId}
           selectedSettlement={selectedSettlement}
           selectedSettlementId={selectedSettlementId}
           selectedSettlementPhaseId={selectedSettlementPhaseId}
           selectedShowdownId={selectedShowdownId}
+          setIsCreatingNewSettlement={setIsCreatingNewSettlement}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlementId={setSelectedSettlementId}
           setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}

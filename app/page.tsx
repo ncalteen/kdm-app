@@ -134,12 +134,14 @@ function MainPage(): ReactElement {
         <SiteHeader />
 
         <AppSidebar
+          isCreatingNewSettlement={isCreatingNewSettlement}
           selectedHuntId={selectedHuntId}
           selectedSettlement={selectedSettlement}
           selectedSettlementId={selectedSettlementId}
           selectedSettlementPhaseId={selectedSettlementPhaseId}
           selectedShowdownId={selectedShowdownId}
           selectedTab={selectedTab}
+          setIsCreatingNewSettlement={setIsCreatingNewSettlement}
           setSelectedHunt={setSelectedHunt}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlement={setSelectedSettlement}
@@ -155,6 +157,7 @@ function MainPage(): ReactElement {
         <SidebarInset>
           <div className="p-4 pt-(--header-height)">
             <SettlementCard
+              isCreatingNewSettlement={isCreatingNewSettlement}
               isCreatingNewSurvivor={isCreatingNewSurvivor}
               selectedHunt={selectedHunt}
               selectedHuntId={selectedHuntId}
@@ -169,6 +172,7 @@ function MainPage(): ReactElement {
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
               selectedTab={selectedTab}
+              setIsCreatingNewSettlement={setIsCreatingNewSettlement}
               setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
               setSelectedHunt={setSelectedHunt}
               setSelectedHuntId={setSelectedHuntId}

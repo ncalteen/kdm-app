@@ -32,6 +32,8 @@ import { toast } from 'sonner'
  * Create Settlement Card Properties
  */
 interface CreateSettlementCardProps {
+  /** Set Is Creating New Settlement */
+  setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set Selected Hunt ID */
   setSelectedHuntId: (hunt: string | null) => void
   /** Set Selected Hunt Monster Index */
@@ -59,6 +61,7 @@ interface CreateSettlementCardProps {
  * @returns Create Settlement Card Component
  */
 export function CreateSettlementCard({
+  setIsCreatingNewSettlement,
   setSelectedHuntId,
   setSelectedHuntMonsterIndex,
   setSelectedSettlementId,
@@ -136,6 +139,7 @@ export function CreateSettlementCard({
   function onSubmit(values: NewSettlementInput) {
     try {
       createSettlement(values).then((settlementId) => {
+        setIsCreatingNewSettlement(false)
         setSelectedHuntId(null)
         setSelectedHuntMonsterIndex(0)
         setSelectedSettlementId(settlementId)

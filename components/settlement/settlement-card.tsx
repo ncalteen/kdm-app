@@ -27,6 +27,8 @@ import { ReactElement } from 'react'
  * Settlement Card Props
  */
 interface SettlementCardProps {
+  /** Is Creating New Settlement */
+  isCreatingNewSettlement: boolean
   /** New Survivor Being Created */
   isCreatingNewSurvivor: boolean
   /** Selected Hunt */
@@ -55,6 +57,8 @@ interface SettlementCardProps {
   selectedSurvivorId: string | null
   /** Selected Tab */
   selectedTab: TabType
+  /** Set Is Creating New Settlement */
+  setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set New Survivor Being Created */
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
   /** Set Selected Hunt ID */
@@ -86,6 +90,7 @@ interface SettlementCardProps {
  * @returns Main Page Component
  */
 export function SettlementCard({
+  isCreatingNewSettlement,
   isCreatingNewSurvivor,
   selectedHunt,
   selectedHuntId,
@@ -100,6 +105,7 @@ export function SettlementCard({
   selectedSurvivor,
   selectedSurvivorId,
   selectedTab,
+  setIsCreatingNewSettlement,
   setIsCreatingNewSurvivor,
   setSelectedHuntId,
   setSelectedHuntMonsterIndex,
@@ -112,8 +118,38 @@ export function SettlementCard({
   setSurvivors,
   survivors
 }: SettlementCardProps): ReactElement {
+  // Settings tab is always accessible, regardless of settlement state.
+  if (selectedTab === TabType.SETTINGS)
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <p className="text-sm text-gray-500">Settings (coming soon)</p>
+      </div>
+    )
+
+  if (isCreatingNewSettlement)
+    return (
+      <CreateSettlementCard
+        setIsCreatingNewSettlement={setIsCreatingNewSettlement}
+        setSelectedHuntId={setSelectedHuntId}
+        setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
+        setSelectedSettlementId={setSelectedSettlementId}
+        setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
+        setSelectedShowdownId={setSelectedShowdownId}
+        setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
+        setSelectedSurvivorId={setSelectedSurvivorId}
+      />
+    )
+
+  if (!selectedSettlement || !selectedSettlementId)
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <p className="text-sm text-gray-500">No settlement selected</p>
+      </div>
+    )
+
   return (
     <>
+      {/* Overview Card */}
       <OverviewCard
         selectedSettlement={selectedSettlement}
         selectedSettlementId={selectedSettlementId}
@@ -125,19 +161,6 @@ export function SettlementCard({
 
       <div className="flex flex-1 flex-col h-full">
         <div className="flex flex-col gap-2 py-2 px-2 flex-1">
-          {/* Create Settlement Form */}
-          {!selectedSettlementId && selectedTab !== TabType.SETTINGS && (
-            <CreateSettlementCard
-              setSelectedHuntId={setSelectedHuntId}
-              setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
-              setSelectedSettlementId={setSelectedSettlementId}
-              setSelectedSettlementPhaseId={setSelectedSettlementPhase}
-              setSelectedShowdownId={setSelectedShowdownId}
-              setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
-              setSelectedSurvivorId={setSelectedSurvivorId}
-            />
-          )}
-
           {/* Timeline Tab */}
           {selectedSettlementId && selectedTab === TabType.TIMELINE && (
             <div className="flex flex-col lg:flex-row gap-2">

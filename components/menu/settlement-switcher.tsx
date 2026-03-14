@@ -28,6 +28,8 @@ import { ComponentProps, ReactElement, useEffect, useState } from 'react'
  * Settlement Switcher Properties
  */
 interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
+  /** Is Creating New Settlement */
+  isCreatingNewSettlement: boolean
   /** Selected Hunt ID */
   selectedHuntId: string | null
   /** Selected Settlement */
@@ -38,6 +40,8 @@ interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
   selectedSettlementPhaseId: string | null
   /** Selected Showdown ID */
   selectedShowdownId: string | null
+  /** Set Is Creating New Settlement */
+  setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set Selected Hunt ID */
   setSelectedHuntId: (hunt: string | null) => void
   /** Set Selected Settlement ID */
@@ -62,11 +66,13 @@ interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
  * @returns Settlement Switcher Component
  */
 export function SettlementSwitcher({
+  isCreatingNewSettlement,
   selectedHuntId,
   selectedSettlement,
   selectedSettlementId,
   selectedSettlementPhaseId,
   selectedShowdownId,
+  setIsCreatingNewSettlement,
   setSelectedHuntId,
   setSelectedSettlementId,
   setSelectedSettlementPhaseId,
@@ -100,6 +106,8 @@ export function SettlementSwitcher({
    * @param settlementId Settlement ID
    */
   const handleSettlementSelect = (settlementId: string) => {
+    setIsCreatingNewSettlement(false)
+
     Promise.all([
       getHuntId(settlementId),
       getSettlementPhaseId(settlementId),
@@ -166,9 +174,10 @@ export function SettlementSwitcher({
 
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="text-sm">
-                  {(selectedSettlement?.settlement_name ??
-                    'Unknown Settlement') ||
-                    'Create a Settlement'}
+                  {isCreatingNewSettlement
+                    ? 'Create a Settlement'
+                    : (selectedSettlement?.settlement_name ??
+                      'Unknown Settlement')}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {selectedSettlementId
@@ -189,6 +198,8 @@ export function SettlementSwitcher({
             {/* Always display the create settlement option */}
             <DropdownMenuItem
               onSelect={() => {
+                setIsCreatingNewSettlement(true)
+
                 setSelectedHuntId(null)
                 setSelectedSettlementId(null)
                 setSelectedSettlementPhaseId(null)
