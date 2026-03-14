@@ -1920,7 +1920,7 @@ export const SURVIVOR_TENET_KNOWLEDGE_OBSERVATION_RANK_UPDATED_MESSAGE = (
  * @returns Survivor Tenet Knowledge Rank Up Updated Message
  */
 export const SURVIVOR_TENET_KNOWLEDGE_RANK_UP_UPDATED_MESSAGE = (
-  value: number | undefined
+  value: number | null | undefined
 ) =>
   value !== undefined
     ? 'Tenet knowledge rank up milestone marked.'

@@ -5,23 +5,9 @@ import { SettlementCard } from '@/components/settlement/settlement-card'
 import { SiteHeader } from '@/components/side-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
-import { getHunt } from '@/lib/dal/hunt'
-import { getSettlement } from '@/lib/dal/settlement'
-import { getSettlementPhase } from '@/lib/dal/settlement-phase'
-import { getShowdown } from '@/lib/dal/showdown'
-import { getSurvivor, getSurvivors } from '@/lib/dal/survivor'
-import { ERROR_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
-import {
-  HuntDetail,
-  SettlementDetail,
-  SettlementPhaseDetail,
-  ShowdownDetail,
-  SurvivorDetail
-} from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import { ReactElement, Suspense, useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Main Page Component
@@ -103,12 +89,17 @@ function MainPage(): ReactElement {
     isCreatingNewShowdown,
     isCreatingNewSurvivor,
 
+    selectedHunt,
     selectedHuntId,
     selectedHuntMonsterIndex,
+    selectedSettlement,
     selectedSettlementId,
+    selectedSettlementPhase,
     selectedSettlementPhaseId,
+    selectedShowdown,
     selectedShowdownId,
     selectedShowdownMonsterIndex,
+    selectedSurvivor,
     selectedSurvivorId,
     selectedTab,
 
@@ -117,208 +108,25 @@ function MainPage(): ReactElement {
     setIsCreatingNewShowdown,
     setIsCreatingNewSurvivor,
 
+    setSelectedHunt,
     setSelectedHuntId,
     setSelectedHuntMonsterIndex,
+    setSelectedSettlement,
     setSelectedSettlementId,
+    setSelectedSettlementPhase,
     setSelectedSettlementPhaseId,
+    setSelectedShowdown,
     setSelectedShowdownId,
     setSelectedShowdownMonsterIndex,
+    setSelectedSurvivor,
     setSelectedSurvivorId,
     setSelectedTab,
 
+    setSurvivors,
+    survivors,
+
     updateLocal
   } = useLocal()
-
-  const [selectedHunt, setSelectedHunt] = useState<HuntDetail | null>(null)
-  const [selectedSettlement, setSelectedSettlement] =
-    useState<SettlementDetail | null>(null)
-  const [selectedSettlementPhase, setSelectedSettlementPhase] =
-    useState<SettlementPhaseDetail | null>(null)
-  const [selectedShowdown, setSelectedShowdown] =
-    useState<ShowdownDetail | null>(null)
-  const [selectedSurvivor, setSelectedSurvivor] =
-    useState<SurvivorDetail | null>(null)
-  const [survivors, setSurvivors] = useState<SurvivorDetail[]>([])
-
-  /**
-   * Fetch Hunt Data
-   *
-   * Triggered whenever the settlement or hunt selection changes. Uses a
-   * cancellation flag to prevent state updates on unmounted components or when
-   * selections change rapidly.
-   */
-  useEffect(() => {
-    let isCancelled = false
-
-    if (!selectedHuntId || !selectedSettlementId)
-      return () => {
-        isCancelled = true
-      }
-
-    getHunt(selectedHuntId, selectedSettlementId)
-      .then((hunt) => {
-        if (isCancelled) return
-
-        setSelectedHunt(hunt)
-      })
-      .catch((err: unknown) => {
-        if (isCancelled) return
-
-        setSelectedHunt(null)
-
-        console.error('Hunt Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      isCancelled = true
-    }
-  }, [selectedHuntId, selectedSettlementId])
-
-  /**
-   * Fetch Settlement & Survivors Data
-   *
-   * Triggered whenever the settlement selection changes. Uses a cancellation
-   * flag to prevent state updates on unmounted components or when selections
-   * change rapidly.
-   */
-  useEffect(() => {
-    let isCancelled = false
-
-    if (!selectedSettlementId)
-      return () => {
-        isCancelled = true
-      }
-
-    Promise.all([
-      getSettlement(selectedSettlementId),
-      getSurvivors(selectedSettlementId)
-    ])
-      .then(([settlement, survivors]) => {
-        if (isCancelled) return
-
-        setSelectedSettlement(settlement)
-        setSurvivors(survivors)
-      })
-      .catch((err: unknown) => {
-        if (isCancelled) return
-
-        setSelectedSettlement(null)
-        setSurvivors([])
-
-        console.error('Settlement Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      isCancelled = true
-    }
-  }, [selectedSettlementId])
-
-  /**
-   * Fetch Settlement Phase Data
-   *
-   * Triggered whenever the settlement or phase selection changes. Uses a
-   * cancellation flag to prevent state updates on unmounted components or when
-   * selections change rapidly.
-   */
-  useEffect(() => {
-    let isCancelled = false
-
-    if (!selectedSettlementId || !selectedSettlementPhaseId)
-      return () => {
-        isCancelled = true
-      }
-
-    getSettlementPhase(selectedSettlementPhaseId, selectedSettlementId)
-      .then((settlementPhase) => {
-        if (isCancelled) return
-
-        setSelectedSettlementPhase(settlementPhase)
-      })
-      .catch((err: unknown) => {
-        if (isCancelled) return
-
-        setSelectedSettlementPhase(null)
-
-        console.error('Settlement Phase Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      isCancelled = true
-    }
-  }, [selectedSettlementId, selectedSettlementPhaseId])
-
-  /**
-   * Fetch Showdown Data
-   *
-   * Triggered whenever the settlement or showdown selection changes. Uses a
-   * cancellation flag to prevent state updates on unmounted components or when
-   * selections change rapidly.
-   */
-  useEffect(() => {
-    let isCancelled = false
-
-    if (!selectedSettlementId || !selectedShowdownId)
-      return () => {
-        isCancelled = true
-      }
-
-    getShowdown(selectedShowdownId, selectedSettlementId)
-      .then((showdown) => {
-        if (isCancelled) return
-
-        setSelectedShowdown(showdown)
-      })
-      .catch((err: unknown) => {
-        if (isCancelled) return
-
-        setSelectedShowdown(null)
-
-        console.error('Showdown Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      isCancelled = true
-    }
-  }, [selectedSettlementId, selectedShowdownId])
-
-  /**
-   * Fetch Survivor Data
-   *
-   * Triggered whenever the settlement or survivor selection changes. Uses a
-   * cancellation flag to prevent state updates on unmounted components or when
-   * selections change rapidly.
-   */
-  useEffect(() => {
-    let isCancelled = false
-
-    if (!selectedSettlementId || !selectedSurvivorId)
-      return () => {
-        isCancelled = true
-      }
-
-    getSurvivor(selectedSurvivorId, selectedSettlementId)
-      .then((survivor) => {
-        if (isCancelled) return
-
-        setSelectedSurvivor(survivor)
-      })
-      .catch((err: unknown) => {
-        if (isCancelled) return
-
-        setSelectedSurvivor(null)
-
-        console.error('Survivor Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      isCancelled = true
-    }
-  }, [selectedSettlementId, selectedSurvivorId])
 
   return (
     <div className="[--header-height:calc(--spacing(10))] min-w-[450px]">
@@ -332,10 +140,15 @@ function MainPage(): ReactElement {
           selectedSettlementPhaseId={selectedSettlementPhaseId}
           selectedShowdownId={selectedShowdownId}
           selectedTab={selectedTab}
+          setSelectedHunt={setSelectedHunt}
           setSelectedHuntId={setSelectedHuntId}
+          setSelectedSettlement={setSelectedSettlement}
           setSelectedSettlementId={setSelectedSettlementId}
+          setSelectedSettlementPhase={setSelectedSettlementPhase}
           setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
+          setSelectedShowdown={setSelectedShowdown}
           setSelectedShowdownId={setSelectedShowdownId}
+          setSelectedSurvivor={setSelectedSurvivor}
           setSelectedSurvivorId={setSelectedSurvivorId}
           setSelectedTab={setSelectedTab}
         />
@@ -357,12 +170,17 @@ function MainPage(): ReactElement {
               selectedSurvivorId={selectedSurvivorId}
               selectedTab={selectedTab}
               setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
+              setSelectedHunt={setSelectedHunt}
               setSelectedHuntId={setSelectedHuntId}
               setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
+              setSelectedSettlement={setSelectedSettlement}
               setSelectedSettlementId={setSelectedSettlementId}
-              setSelectedSettlementPhase={setSelectedSettlementPhaseId}
+              setSelectedSettlementPhase={setSelectedSettlementPhase}
+              setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
+              setSelectedShowdown={setSelectedShowdown}
               setSelectedShowdownId={setSelectedShowdownId}
               setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
+              setSelectedSurvivor={setSelectedSurvivor}
               setSelectedSurvivorId={setSelectedSurvivorId}
               setSelectedTab={setSelectedTab}
               setSurvivors={setSurvivors}

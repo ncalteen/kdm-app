@@ -5,25 +5,23 @@ import { SettlementPhaseDetail } from '@/lib/types'
 /**
  * Get Settlement Phase
  *
- * @param settlementPhaseId Settlement Phase ID
+ * Gets the unique settlement phase for a given settlement.
+ *
  * @param settlementId Settlement ID
  * @returns Settlement Phase Data
  */
 export async function getSettlementPhase(
-  settlementPhaseId: string | null | undefined,
   settlementId: string | null | undefined
 ): Promise<SettlementPhaseDetail | null> {
-  if (!settlementPhaseId || !settlementId)
-    throw new Error('Required: Settlement Phase ID, Settlement ID')
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('settlement_phase')
     .select('*')
-    .eq('id', settlementPhaseId)
     .eq('settlement_id', settlementId)
-    .single()
+    .maybeSingle()
 
   if (error)
     throw new Error(`Error Fetching Settlement Phase: ${error.message}`)

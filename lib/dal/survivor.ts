@@ -42,15 +42,12 @@ export async function addSquiresOfTheCitadelSurvivors(
  * assigned to a hunt or showdown.
  *
  * @param survivorId Survivor ID
- * @param settlementId Settlement ID
  * @returns Survivor Data with Embarked Status
  */
 export async function getSurvivor(
-  survivorId: string | null,
-  settlementId: string | null
+  survivorId: string | null | undefined
 ): Promise<SurvivorDetail | null> {
-  if (!survivorId || !settlementId)
-    throw new Error('Required: Survivor ID, Settlement ID')
+  if (!survivorId) throw new Error('Required: Survivor ID')
 
   const supabase = createClient()
 
@@ -58,7 +55,6 @@ export async function getSurvivor(
     .from('survivor')
     .select('*')
     .eq('id', survivorId)
-    .eq('settlement_id', settlementId)
     .single()
 
   if (error) throw new Error(`Error Fetching Survivor: ${error.message}`)
@@ -314,8 +310,7 @@ export async function createSurvivor(
     .select('*')
     .single()
 
-  if (error)
-    throw new Error(`Error Creating Survivor: ${error.message}`)
+  if (error) throw new Error(`Error Creating Survivor: ${error.message}`)
 
   return { ...data, embarked: false }
 }

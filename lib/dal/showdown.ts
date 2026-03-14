@@ -4,25 +4,23 @@ import { ShowdownDetail } from '@/lib/types'
 /**
  * Get Showdown
  *
- * @param showdownId Showdown ID
+ * Gets the unique showdown for a specific settlement.
+ *
  * @param settlementId Settlement ID
  * @returns Showdown Data
  */
 export async function getShowdown(
-  showdownId: string | null,
   settlementId: string | null
 ): Promise<ShowdownDetail | null> {
-  if (!showdownId || !settlementId)
-    throw new Error('Required: Showdown ID, Settlement ID')
+  if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('showdown')
     .select('*')
-    .eq('id', showdownId)
     .eq('settlement_id', settlementId)
-    .single()
+    .maybeSingle()
 
   if (error) throw new Error(`Error Fetching Showdown: ${error.message}`)
 
