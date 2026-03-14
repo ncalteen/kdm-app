@@ -55,7 +55,7 @@ export async function getSurvivor(
     .from('survivor')
     .select('*')
     .eq('id', survivorId)
-    .single()
+    .maybeSingle()
 
   if (error) throw new Error(`Error Fetching Survivor: ${error.message}`)
   if (!data) return null

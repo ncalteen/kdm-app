@@ -117,53 +117,56 @@ export function SurvivorCard({
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
-            {/* <SurvivalCard
+            <SurvivalCard
               mode={mode}
-              selectedHunt={selectedHunt}
-              selectedHuntId={selectedHuntId}
               selectedSettlement={selectedSettlement}
-              selectedSettlementId={selectedSettlementId}
-              selectedShowdown={selectedShowdown}
-              selectedShowdownId={selectedShowdownId}
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <WeaponProficiencyCard
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <CourageUnderstandingCard
               selectedSettlement={selectedSettlement}
-              selectedSettlementId={selectedSettlementId}
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <DisordersCard
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <AbilitiesAndImpairmentsCard
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <OncePerLifetimeCard
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
-            /> */}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+            />
           </div>
 
           {/* Second Column - Combat */}
           <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px]">
-            {/* <AttributeCard
+            <AttributeCard
               mode={mode}
-              selectedHunt={selectedHunt}
-              selectedHuntId={selectedHuntId}
               selectedSettlement={selectedSettlement}
-              selectedSettlementId={selectedSettlementId}
-              selectedShowdown={selectedShowdown}
-              selectedShowdownId={selectedShowdownId}
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <SanityCard
               displayText={true}
@@ -177,57 +180,78 @@ export function SurvivorCard({
               selectedShowdownId={selectedShowdownId}
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <HeadCard
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <ArmsCard
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <BodyCard
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <WaistCard
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <LegsCard
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <FightingArtsCard
               selectedSettlement={selectedSettlement}
-              selectedSettlementId={selectedSettlementId}
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <CursedGearCard
               selectedSurvivor={selectedSurvivor}
               selectedSurvivorId={selectedSurvivorId}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             {mode === SurvivorCardMode.SURVIVOR_CARD && (
               <NextDepartureCard
                 selectedSurvivor={selectedSurvivor}
                 selectedSurvivorId={selectedSurvivorId}
+                setSurvivors={setSurvivors}
+                survivors={survivors}
               />
-            )} */}
+            )}
           </div>
 
           {/* Third Column - ARC */}
           {selectedSettlement?.survivor_type ===
             DatabaseSurvivorType['Arc'] && (
             <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px] order-3">
-              {/* <PhilosophyCard
+              <PhilosophyCard
                 selectedSurvivor={selectedSurvivor}
                 selectedSurvivorId={selectedSurvivorId}
+                setSurvivors={setSurvivors}
+                survivors={survivors}
               />
               <KnowledgeCard
                 selectedSurvivor={selectedSurvivor}
                 selectedSurvivorId={selectedSurvivorId}
-              /> */}
+                setSurvivors={setSurvivors}
+                survivors={survivors}
+              />
             </div>
           )}
         </div>
