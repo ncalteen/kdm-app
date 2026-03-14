@@ -21,7 +21,13 @@ import {
 } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { generateSeedData } from '@/lib/seed'
-import { SettlementDetail } from '@/lib/types'
+import {
+  HuntDetail,
+  SettlementDetail,
+  SettlementPhaseDetail,
+  ShowdownDetail,
+  SurvivorDetail
+} from '@/lib/types'
 import {
   DatabaseIcon,
   HourglassIcon,
@@ -160,16 +166,28 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
   selectedShowdownId: string | null
   /** Selected Tab */
   selectedTab: TabType
+  /** Set Selected Hunt */
+  setSelectedHunt: (hunt: HuntDetail | null) => void
   /** Set Selected Hunt ID */
-  setSelectedHuntId: (hunt: string | null) => void
+  setSelectedHuntId: (huntId: string | null) => void
+  /** Set Selected Settlement */
+  setSelectedSettlement: (settlement: SettlementDetail) => void
   /** Set Selected Settlement ID */
-  setSelectedSettlementId: (settlement: string | null) => void
+  setSelectedSettlementId: (settlementId: string | null) => void
+  /** Set Selected Settlement Phase */
+  setSelectedSettlementPhase: (
+    settlementPhase: SettlementPhaseDetail | null
+  ) => void
   /** Set Selected Settlement Phase ID */
-  setSelectedSettlementPhaseId: (settlementPhase: string | null) => void
+  setSelectedSettlementPhaseId: (settlementPhaseId: string | null) => void
+  /** Set Selected Showdown */
+  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
   /** Set Selected Showdown ID */
-  setSelectedShowdownId: (showdown: string | null) => void
+  setSelectedShowdownId: (showdownId: string | null) => void
+  /** Set Selected Survivor */
+  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
   /** Set Selected Survivor ID */
-  setSelectedSurvivorId: (survivor: string | null) => void
+  setSelectedSurvivorId: (survivorId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
 }
@@ -187,10 +205,15 @@ export function AppSidebar({
   selectedSettlementPhaseId,
   selectedShowdownId,
   selectedTab,
+  setSelectedHunt,
   setSelectedHuntId,
+  setSelectedSettlement,
   setSelectedSettlementId,
+  setSelectedSettlementPhase,
   setSelectedSettlementPhaseId,
+  setSelectedShowdown,
   setSelectedShowdownId,
+  setSelectedSurvivor,
   setSelectedSurvivorId,
   setSelectedTab,
   ...props
