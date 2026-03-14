@@ -1,3 +1,5 @@
+'use client'
+
 import { getHunt } from '@/lib/dal/hunt'
 import { getSettlement } from '@/lib/dal/settlement'
 import { getSettlementPhase } from '@/lib/dal/settlement-phase'
