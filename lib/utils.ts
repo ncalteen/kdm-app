@@ -2,6 +2,7 @@ import { ColorChoice, MonsterNode, MonsterType } from '@/lib/enums'
 import { clsx, type ClassValue } from 'clsx'
 import { CSSProperties } from 'react'
 import { twMerge } from 'tailwind-merge'
+import { SettlementDetail } from './types'
 
 /**
  * Class Names Utility
@@ -18,11 +19,17 @@ export function cn(...inputs: ClassValue[]) {
  *
  * This is true if the settlement has the Language innovation.
  *
- * @param innovationNames Innovation Names
+ * @param innovations Innovations
  * @returns Settlement Can Encourage
  */
-export function canEncourage(innovationNames: string[]): boolean {
-  return innovationNames.includes('Language')
+export function canEncourage(
+  innovations: SettlementDetail['innovations']
+): boolean {
+  return (
+    innovations.filter(
+      (innovation) => innovation.innovation_name === 'Language'
+    ).length > 0
+  )
 }
 
 /**
@@ -30,11 +37,17 @@ export function canEncourage(innovationNames: string[]): boolean {
  *
  * This is true if the settlement has the Inner Lantern innovation.
  *
- * @param innovationNames Innovation Names
+ * @param innovations Innovations
  * @returns Settlement Can Surge
  */
-export function canSurge(innovationNames: string[]): boolean {
-  return innovationNames.includes('Inner Lantern')
+export function canSurge(
+  innovations: SettlementDetail['innovations']
+): boolean {
+  return (
+    innovations.filter(
+      (innovation) => innovation.innovation_name === 'Inner Lantern'
+    ).length > 0
+  )
 }
 
 /**
@@ -42,11 +55,14 @@ export function canSurge(innovationNames: string[]): boolean {
  *
  * This is true if the settlement has the Paint innovation.
  *
- * @param innovationNames Innovation Names
+ * @param innovations Innovations
  * @returns Settlement Can Dash
  */
-export function canDash(innovationNames: string[]): boolean {
-  return innovationNames.includes('Paint')
+export function canDash(innovations: SettlementDetail['innovations']): boolean {
+  return (
+    innovations.filter((innovation) => innovation.innovation_name === 'Paint')
+      .length > 0
+  )
 }
 
 /**
@@ -54,11 +70,17 @@ export function canDash(innovationNames: string[]): boolean {
  *
  * This is true if the settlement has the Silent Dialect innovation.
  *
- * @param innovationNames Innovation Names
+ * @param innovations Innovations
  * @returns Settlement Can Fist Pump
  */
-export function canFistPump(innovationNames: string[]): boolean {
-  return innovationNames.includes('Silent Dialect')
+export function canFistPump(
+  innovations: SettlementDetail['innovations']
+): boolean {
+  return (
+    innovations.filter(
+      (innovation) => innovation.innovation_name === 'Silent Dialect'
+    ).length > 0
+  )
 }
 
 /**
@@ -66,11 +88,16 @@ export function canFistPump(innovationNames: string[]): boolean {
  *
  * This is true if the settlement has the Destiny innovation.
  *
- * @param innovationNames Innovation Names
+ * @param innovations Innovations
  * @returns Settlement Can Endure
  */
-export function canEndure(innovationNames: string[]): boolean {
-  return innovationNames.includes('Destiny')
+export function canEndure(
+  innovations: SettlementDetail['innovations']
+): boolean {
+  return (
+    innovations.filter((innovation) => innovation.innovation_name === 'Destiny')
+      .length > 0
+  )
 }
 
 /**
@@ -78,13 +105,16 @@ export function canEndure(innovationNames: string[]): boolean {
  *
  * This is true if the settlement has the Graves innovation.
  *
- * @param innovationNames Innovation Names
+ * @param innovations Innovations
  * @returns Settlement Survivors Born with +1 Understanding
  */
 export function survivorsBornWithUnderstanding(
-  innovationNames: string[]
+  innovations: SettlementDetail['innovations']
 ): boolean {
-  return innovationNames.includes('Graves')
+  return (
+    innovations.filter((innovation) => innovation.innovation_name === 'Graves')
+      .length > 0
+  )
 }
 
 /**
