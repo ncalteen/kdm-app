@@ -1,29 +1,24 @@
 --------------------------------------------------------------------------------
--- Showdown AI Deck Table
--- AI deck associated with a showdown monster. Initially copied from the
--- hunt AI deck (or directly from the monster data in special or nemesis
--- showdowns). It is stored separately to allow the user to change it without
--- affecting the original monster data.
+-- Junction Table: Settlement Seed Pattern
+-- Represents the many-to-many relationship between settlements and
+-- seed patterns.
 --------------------------------------------------------------------------------
-create table showdown_ai_deck (
+create table settlement_seed_pattern (
   -- Metadata
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  basic_cards int not null default 0,
-  advanced_cards int not null default 0,
-  legendary_cards int not null default 0,
-  overtone_cards int not null default 0,
   settlement_id uuid not null references settlement(id) on delete cascade,
-  showdown_id uuid not null references showdown(id) on delete cascade,
-  showdown_monster_id uuid not null references showdown_monster(id) on delete cascade
+  seed_pattern_id uuid not null references seed_pattern(id) on delete cascade,
+  -- Constraints
+  unique (settlement_id, seed_pattern_id)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
 --------------------------------------------------------------------------------
-alter table showdown_ai_deck enable row level security;
-create policy "Allow select for owner" on showdown_ai_deck for
+alter table settlement_seed_pattern enable row level security;
+create policy "Allow select for owner" on settlement_seed_pattern for
 select to authenticated using (
     exists (
       select 1
@@ -34,7 +29,7 @@ select to authenticated using (
         )
     )
   );
-create policy "Allow insert for owner" on showdown_ai_deck for
+create policy "Allow insert for owner" on settlement_seed_pattern for
 insert to authenticated with check (
     exists (
       select 1
@@ -45,7 +40,7 @@ insert to authenticated with check (
         )
     )
   );
-create policy "Allow update for owner" on showdown_ai_deck for
+create policy "Allow update for owner" on settlement_seed_pattern for
 update to authenticated using (
     exists (
       select 1
@@ -65,7 +60,7 @@ update to authenticated using (
         )
     )
   );
-create policy "Allow delete for owner" on showdown_ai_deck for delete to authenticated using (
+create policy "Allow delete for owner" on settlement_seed_pattern for delete to authenticated using (
   exists (
     select 1
     from settlement s
@@ -75,7 +70,7 @@ create policy "Allow delete for owner" on showdown_ai_deck for delete to authent
       )
   )
 );
-create policy "Allow select for shared" on showdown_ai_deck for
+create policy "Allow select for shared" on settlement_seed_pattern for
 select to authenticated using (
     exists (
       select 1
@@ -86,14 +81,14 @@ select to authenticated using (
         )
     )
   );
-create policy "Allow all for admin" on showdown_ai_deck for all using (is_admin()) with check (is_admin());
+create policy "Allow all for admin" on settlement_seed_pattern for all using (is_admin()) with check (is_admin());
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
-create index idx_showdown_ai_deck_settlement on showdown_ai_deck(settlement_id);
-create index idx_showdown_ai_deck_showdown on showdown_ai_deck(showdown_id);
+create index idx_settlement_seed_pattern_settlement on settlement_seed_pattern(settlement_id);
+create index idx_settlement_seed_pattern_seed_pattern on settlement_seed_pattern(seed_pattern_id);
 --------------------------------------------------------------------------------
 -- Triggers
 --------------------------------------------------------------------------------
 create trigger set_updated_at before
-update on showdown_ai_deck for each row execute function update_updated_at();
+update on settlement_seed_pattern for each row execute function update_updated_at();
