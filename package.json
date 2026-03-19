@@ -17,6 +17,9 @@
   "scripts": {
     "build": "next build",
     "ci-test": "vitest run",
+    "db:generate": "supabase gen types typescript --local > lib/database.types.ts",
+    "db:migrate": "supabase migration up",
+    "db:reset": "supabase db reset",
     "dev": "next dev",
     "format:check": "prettier --check '**'",
     "format:write": "prettier --write '**'",
