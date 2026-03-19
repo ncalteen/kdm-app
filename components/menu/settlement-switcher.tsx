@@ -18,8 +18,8 @@ import {
   getSettlementPhaseId,
   getShowdownId
 } from '@/lib/dal/settlement'
-import { getSettlements } from '@/lib/dal/user'
-import { CampaignType } from '@/lib/enums'
+import { getSettlementForUser } from '@/lib/dal/user'
+import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { SettlementDetail } from '@/lib/types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
 import { ComponentProps, ReactElement, useEffect, useState } from 'react'
@@ -79,7 +79,14 @@ export function SettlementSwitcher({
   setSelectedShowdownId,
   setSelectedSurvivorId
 }: SettlementSwitcherProps): ReactElement {
-  const [settlementList, setSettlementList] = useState<SettlementDetail[]>([])
+  const [settlementList, setSettlementList] = useState<
+    {
+      campaign_type: DatabaseCampaignType
+      id: string
+      settlement_name: string
+      shared: boolean
+    }[]
+  >([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -89,7 +96,7 @@ export function SettlementSwitcher({
    * Gather the list of settlements available to the user.
    */
   useEffect(() => {
-    getSettlements()
+    getSettlementForUser()
       .then((data) => setSettlementList(data))
       .catch((err: unknown) =>
         setError(err instanceof Error ? err.message : 'Unknown Error')

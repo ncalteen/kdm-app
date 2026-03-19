@@ -1,28 +1,69 @@
+import { DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
-import { SettlementDetail } from '@/lib/types'
+
+/**
+ * Get User Settings
+ *
+ * Fetches the user settings for the currently authenticated user from the
+ * `user_settings` table in Supabase. This includes information about which
+ * vignettes the user has unlocked.
+ *
+ * @returns User Settings (or null)
+ */
+export async function getUserSettings() {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('user_settings')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  if (error) throw new Error(`Error Fetching User Settings: ${error.message}`)
+
+  return data
+}
 
 /**
  * Get Settlements for the Authenticated User
  *
  * This will include settlements owned by the user, or settlements that have
- * been shared with the user via the settlement_shared_user table.
+ * been shared with the user via the settlement_shared_user table. This is used
+ * to populate the settlement switcher in the sidebar, so it includes minimal
+ * data.
  *
- * @returns List of Settlements (or empty array)
+ * @returns List of Settlement(s)
  */
-export async function getSettlements(): Promise<SettlementDetail[]> {
+export async function getSettlementForUser(): Promise<
+  {
+    campaign_type: DatabaseCampaignType
+    id: string
+    settlement_name: string
+    shared: boolean
+  }[]
+> {
   const supabase = createClient()
 
-  // Get the authenticated user's ID
   const {
-    data: { user }
+    data: { user },
+    error: userError
   } = await supabase.auth.getUser()
 
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
   // Get settlements owned by the user.
   const { data: owned, error: ownedError } = await supabase
     .from('settlement')
-    .select('*')
+    .select('campaign_type, id, settlement_name')
     .eq('user_id', user.id)
 
   if (ownedError)
@@ -37,7 +78,12 @@ export async function getSettlements(): Promise<SettlementDetail[]> {
   if (sharedError)
     throw new Error(`Error Fetching Shared Settlements: ${sharedError.message}`)
 
-  const results: SettlementDetail[] = []
+  const results: {
+    campaign_type: DatabaseCampaignType
+    id: string
+    settlement_name: string
+    shared: boolean
+  }[] = []
 
   for (const s of owned ?? [])
     results.push({
@@ -58,51 +104,4 @@ export async function getSettlements(): Promise<SettlementDetail[]> {
   }
 
   return results
-}
-
-/**
- * Get User Data
- *
- * Retrieves the current authenticated user's data from Supabase Auth. This is
- * used in various parts of the application to display user information and
- * manage user-specific settings.
- *
- * @returns User Data (or null)
- */
-export async function getUser() {
-  const supabase = createClient()
-
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
-  return user
-}
-
-/**
- * Get User Settings
- *
- * Fetches the user settings for the currently authenticated user from the
- * `user_settings` table in Supabase. This includes information about which
- * vignettes the user has unlocked.
- *
- * @returns User Settings (or null)
- */
-export async function getUserSettings() {
-  const supabase = createClient()
-
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data, error } = await supabase
-    .from('user_settings')
-    .select('*')
-    .eq('user_id', user.id)
-    .single()
-
-  if (error) throw new Error(`Error Fetching User Settings: ${error.message}`)
-
-  return data
 }
