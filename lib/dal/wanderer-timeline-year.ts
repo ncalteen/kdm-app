@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { WandererTimelineYearDetail } from '@/lib/types'
 
 /**
  * Get Wanderer Timeline Years
@@ -9,9 +9,7 @@ import { createClient } from '@/lib/supabase/client'
  */
 export async function getWandererTimelineYears(
   wandererId: string | null | undefined
-): Promise<
-  Omit<Tables<'wanderer_timeline_year'>, 'created_at' | 'updated_at'>[]
-> {
+): Promise<{ [key: string]: WandererTimelineYearDetail }> {
   if (!wandererId) throw new Error('Required: Wanderer ID')
 
   const supabase = createClient()
@@ -24,7 +22,9 @@ export async function getWandererTimelineYears(
   if (error)
     throw new Error(`Error Fetching Wanderer Timeline Years: ${error.message}`)
 
-  if (!data) throw new Error('Wanderer Timeline Year(s) Not Found')
+  const timelineYearMap: { [key: string]: WandererTimelineYearDetail } = {}
 
-  return data
+  for (const t of data ?? []) timelineYearMap[t.id] = t
+
+  return timelineYearMap
 }

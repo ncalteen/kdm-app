@@ -70,8 +70,19 @@ export type SettlementDetail = Tables<'settlement'> & {
   can_fist_pump: boolean
   /** Can Endure */
   can_endure: boolean
+  /** Gear */
+  gear: {
+    /** Gear ID */
+    id: string
+    /** Gear Name */
+    gear_name: string
+    /** Quantity */
+    quantity: number
+  }[]
   /** Principle Data */
   principle_data: {
+    /** Principle ID */
+    id: string
     /** Option 1 Name */
     option_1_name: string
     /** Option 1 Selected */
@@ -112,27 +123,92 @@ export type ShowdownDetail = Tables<'showdown'> & {}
  * Includes additional information not present in the survivor table.
  */
 export type SurvivorDetail = Tables<'survivor'> & {
-  /** Cursed Gear Names */
-  cursed_gear_names: string[]
-  /** Disorder Names */
-  disorder_names: string[]
+  /** Cursed Gear */
+  cursed_gear: {
+    /** Cursed Gear Name */
+    gear_name: string
+    /** Cursed Gear ID */
+    id: string
+  }[]
+  /** Disorders */
+  disorders: {
+    /** Disorder Name */
+    disorder_name: string
+    /** Disorder ID */
+    id: string
+  }[]
   /** Survivor Embarked on Hunt/Showdown */
   embarked: boolean
-  /** Fighting Art Names */
-  fighting_art_names: string[]
-  /** Knowledge 1 Name */
-  knowledge_1_name: string | null
-  /** Knowledge 2 Name */
-  knowledge_2_name: string | null
-  /** Neurosis Name */
-  neurosis_name: string | null
-  /** Philosophy Name */
-  philosophy_name: string | null
-  /** Secret Fighting Art Names */
-  secret_fighting_art_names: string[]
-  /** Tenet Knowledge Name */
-  tenet_knowledge_name: string | null
+  /** Fighting Arts */
+  fighting_arts: {
+    /** Fighting Art Name */
+    fighting_art_name: string
+    /** Fighting Art ID */
+    id: string
+  }[]
+  /** Knowledge 1 */
+  knowledge_1: {
+    /** Knowledge ID */
+    id: string
+    /** Knowledge Name */
+    knowledge_name: string
+  } | null
+  /** Knowledge 2 */
+  knowledge_2: {
+    /** Knowledge ID */
+    id: string
+    /** Knowledge Name */
+    knowledge_name: string
+  } | null
+  /** Neurosis */
+  neurosis: {
+    /** Neurosis ID */
+    id: string
+    /** Neurosis Name */
+    neurosis_name: string
+  } | null
+  /** Philosophy */
+  philosophy: {
+    /** Philosophy ID */
+    id: string
+    /** Philosophy Name */
+    philosophy_name: string
+  } | null
+  /** Secret Fighting Arts */
+  secret_fighting_arts: {
+    /** Secret Fighting Art ID */
+    id: string
+    /** Secret Fighting Art Name */
+    secret_fighting_art_name: string
+  }[]
+  /** Tenet Knowledge */
+  tenet_knowledge: {
+    /** Knowledge ID */
+    id: string
+    /** Knowledge Name */
+    knowledge_name: string
+  } | null
 }
+
+/**
+ * Neurosis Detail
+ *
+ * Used throughout the app to represent a neurosis.
+ */
+export type NeurosisDetail = Omit<
+  Tables<'neurosis'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Philosophy Detail
+ *
+ * Used throughout the app to represent a philosophy.
+ */
+export type PhilosophyDetail = Omit<
+  Tables<'philosophy'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
 
 /**
  * Wanderer Detail
@@ -146,3 +222,13 @@ export type WandererDetail = Omit<
 > & {
   embarked: boolean
 }
+
+/**
+ * Wanderer Timeline Year Detail
+ *
+ * Used throughout the app to represent a wanderer timeline year.
+ */
+export type WandererTimelineYearDetail = Omit<
+  Tables<'wanderer_timeline_year'>,
+  'created_at' | 'updated_at'
+>

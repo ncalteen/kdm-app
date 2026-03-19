@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { NeurosisDetail } from '@/lib/types'
 
 /**
  * Get Neuroses
@@ -11,9 +11,9 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Neuroses
  */
-export async function getNeuroses(): Promise<
-  Omit<Tables<'neurosis'>, 'created_at' | 'updated_at' | 'custom' | 'user_id'>[]
-> {
+export async function getNeuroses(): Promise<{
+  [key: string]: NeurosisDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -24,44 +24,40 @@ export async function getNeuroses(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, neurosis_name, philosophy_id'
+  // Fetch all three categories of neuroses in parallel
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    // Non-custom neuroses (available to all users)
+    supabase
+      .from('neurosis')
+      .select('id, neurosis_name, philosophy_id')
+      .eq('custom', false),
+    // Custom neuroses created by the user
+    supabase
+      .from('neurosis')
+      .select('id, neurosis_name, philosophy_id')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    // Custom neuroses shared with the user
+    supabase
+      .from('neurosis_shared_user')
+      .select('neurosis(id, neurosis_name, philosophy_id)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in neuroses
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('neurosis')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Neuroses: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(`Error Fetching Built-in Neuroses: ${builtInError.message}`)
+  // Collect neuroses from all sources, deduplicating by ID
+  const neurosisMap: { [key: string]: NeurosisDetail } = {}
 
-  // Custom neuroses owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('neurosis')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const n of nonCustomResult.data ?? []) neurosisMap[n.id] = n
+  for (const n of userCustomResult.data ?? []) neurosisMap[n.id] = n
+  for (const row of sharedResult.data ?? []) {
+    const n = row.neurosis as unknown as NeurosisDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Neuroses: ${ownedError.message}`)
+    if (n) neurosisMap[n.id] = n
+  }
 
-  // Custom neuroses shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('neurosis_shared_user')
-    .select(`neurosis(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Neuroses: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.neurosis)
-      ? row.neurosis
-      : row.neurosis
-        ? [row.neurosis]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return neurosisMap
 }

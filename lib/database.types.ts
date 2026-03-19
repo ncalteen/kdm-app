@@ -1231,7 +1231,6 @@ export type Database = {
           custom: boolean
           id: string
           pattern_name: string
-          seed_pattern: boolean
           updated_at: string
           user_id: string | null
         }
@@ -1240,7 +1239,6 @@ export type Database = {
           custom?: boolean
           id?: string
           pattern_name: string
-          seed_pattern?: boolean
           updated_at?: string
           user_id?: string | null
         }
@@ -1249,7 +1247,6 @@ export type Database = {
           custom?: boolean
           id?: string
           pattern_name?: string
-          seed_pattern?: boolean
           updated_at?: string
           user_id?: string | null
         }
@@ -1897,6 +1894,59 @@ export type Database = {
             columns: ["secret_fighting_art_id"]
             isOneToOne: false
             referencedRelation: "secret_fighting_art"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seed_pattern: {
+        Row: {
+          created_at: string
+          custom: boolean
+          id: string
+          seed_pattern_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          seed_pattern_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          seed_pattern_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      seed_pattern_shared_user: {
+        Row: {
+          seed_pattern_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Insert: {
+          seed_pattern_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Update: {
+          seed_pattern_id?: string
+          shared_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_shared_user_seed_pattern_id_fkey"
+            columns: ["seed_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "seed_pattern"
             referencedColumns: ["id"]
           },
         ]
@@ -3069,7 +3119,6 @@ export type Database = {
           color: Database["public"]["Enums"]["color_choice"]
           courage: number
           created_at: string
-          cursed_gear: string[]
           dead: boolean
           disposition: number | null
           evasion: number
@@ -3193,7 +3242,6 @@ export type Database = {
           color?: Database["public"]["Enums"]["color_choice"]
           courage?: number
           created_at?: string
-          cursed_gear?: string[]
           dead?: boolean
           disposition?: number | null
           evasion?: number
@@ -3317,7 +3365,6 @@ export type Database = {
           color?: Database["public"]["Enums"]["color_choice"]
           courage?: number
           created_at?: string
-          cursed_gear?: string[]
           dead?: boolean
           disposition?: number | null
           evasion?: number
@@ -3655,7 +3702,7 @@ export type Database = {
           custom: boolean
           disposition: number
           evasion: number
-          fighting_arts: string[]
+          fighting_art_ids: string[]
           gender: Database["public"]["Enums"]["gender"]
           hunt_xp: number
           hunt_xp_rank_up: number[]
@@ -3665,7 +3712,7 @@ export type Database = {
           lumi: number
           movement: number
           permanent_injuries: string[]
-          rare_gear: string[]
+          rare_gear_ids: string[]
           speed: number
           strength: number
           survival: number
@@ -3685,7 +3732,7 @@ export type Database = {
           custom?: boolean
           disposition?: number
           evasion?: number
-          fighting_arts?: string[]
+          fighting_art_ids?: string[]
           gender: Database["public"]["Enums"]["gender"]
           hunt_xp?: number
           hunt_xp_rank_up?: number[]
@@ -3695,7 +3742,7 @@ export type Database = {
           lumi?: number
           movement?: number
           permanent_injuries?: string[]
-          rare_gear?: string[]
+          rare_gear_ids?: string[]
           speed?: number
           strength?: number
           survival?: number
@@ -3715,7 +3762,7 @@ export type Database = {
           custom?: boolean
           disposition?: number
           evasion?: number
-          fighting_arts?: string[]
+          fighting_art_ids?: string[]
           gender?: Database["public"]["Enums"]["gender"]
           hunt_xp?: number
           hunt_xp_rank_up?: number[]
@@ -3725,7 +3772,7 @@ export type Database = {
           lumi?: number
           movement?: number
           permanent_injuries?: string[]
-          rare_gear?: string[]
+          rare_gear_ids?: string[]
           speed?: number
           strength?: number
           survival?: number

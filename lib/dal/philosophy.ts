@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { PhilosophyDetail } from '@/lib/types'
 
 /**
  * Get Philosophies
@@ -11,12 +11,9 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Philosophies
  */
-export async function getPhilosophies(): Promise<
-  Omit<
-    Tables<'philosophy'>,
-    'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >[]
-> {
+export async function getPhilosophies(): Promise<{
+  [key: string]: PhilosophyDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -27,48 +24,40 @@ export async function getPhilosophies(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, philosophy_name, neurosis_name'
+  // Fetch all three categories of philosophies in parallel
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    // Non-custom philosophies (available to all users)
+    supabase
+      .from('philosophy')
+      .select('id, neurosis_id, philosophy_name')
+      .eq('custom', false),
+    // Custom philosophies created by the user
+    supabase
+      .from('philosophy')
+      .select('id, neurosis_id, philosophy_name')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    // Custom philosophies shared with the user
+    supabase
+      .from('philosophy_shared_user')
+      .select('philosophy(id, neurosis_id, philosophy_name)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in philosophies
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('philosophy')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Philosophies: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Philosophies: ${builtInError.message}`
-    )
+  // Collect philosophies from all sources, deduplicating by ID
+  const philosophyMap: { [key: string]: PhilosophyDetail } = {}
 
-  // Custom philosophies owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('philosophy')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const p of nonCustomResult.data ?? []) philosophyMap[p.id] = p
+  for (const p of userCustomResult.data ?? []) philosophyMap[p.id] = p
+  for (const row of sharedResult.data ?? []) {
+    const p = row.philosophy as unknown as PhilosophyDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Philosophies: ${ownedError.message}`)
+    if (p) philosophyMap[p.id] = p
+  }
 
-  // Custom philosophies shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('philosophy_shared_user')
-    .select(`philosophy(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(
-      `Error Fetching Shared Philosophies: ${sharedError.message}`
-    )
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.philosophy)
-      ? row.philosophy
-      : row.philosophy
-        ? [row.philosophy]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return philosophyMap
 }
