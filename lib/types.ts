@@ -117,6 +117,26 @@ export type SettlementPhaseDetail = Tables<'settlement_phase'> & {}
 export type ShowdownDetail = Tables<'showdown'> & {}
 
 /**
+ * Showdown Monster Detail
+ *
+ * Used throughout the app to represent a monster in a showdown.
+ */
+export type ShowdownMonsterDetail = Omit<
+  Tables<'showdown_monster'>,
+  'created_at' | 'updated_at'
+>
+
+/**
+ * Showdown Survivor Detail
+ *
+ * Used throughout the app to represent a survivor in a showdown.
+ */
+export type ShowdownSurvivorDetail = Omit<
+  Tables<'showdown_survivor'>,
+  'created_at' | 'updated_at'
+>
+
+/**
  * Survivor Detail
  *
  * Used throughout the app to represent the currently selected survivor.
