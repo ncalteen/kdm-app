@@ -2,7 +2,7 @@ import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
- * Add Timeline Years to Settlement
+ * Add Settlement Timeline Years
  *
  * Insers timeline data for a settlement by adding records to the
  * settlement_timeline_year table.
@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @param timelineYears Timeline Year Data
  */
-export async function addTimelineYearsToSettlement(
+export async function addSettlementTimelineYears(
   timelineYears: Omit<
     Tables<'settlement_timeline_year'>,
     'created_at' | 'id' | 'updated_at'
@@ -33,7 +33,7 @@ export async function addTimelineYearsToSettlement(
 }
 
 /**
- * Get Timeline by Settlement ID
+ * Get Settlement Timeline Years
  *
  * Retrieves timeline year data for a settlement from the
  * settlement_timeline_year table. Mutates the data into an object keyed by year
@@ -42,7 +42,7 @@ export async function addTimelineYearsToSettlement(
  * @param settlementId Settlement ID
  * @returns Timeline Year Data
  */
-export async function getTimelineYears(
+export async function getSettlementTimelineYears(
   settlementId: string | null | undefined
 ): Promise<{ [key: number]: { entries: string[]; completed: boolean } }> {
   if (!settlementId) throw new Error('Required: Settlement ID')
@@ -83,7 +83,7 @@ export async function getTimelineYears(
  * @param entryIndex Entry Index
  * @returns Updated List of Entries for the Year
  */
-export async function removeTimelineEntry(
+export async function removeSettlementTimelineYearEntry(
   settlementId: string | null | undefined,
   yearNumber: number,
   entryIndex: number
@@ -143,7 +143,7 @@ export async function removeTimelineEntry(
  * @param entryIndex Entry Index
  * @returns Updated List of Entries for the Year
  */
-export async function saveTimelineEntry(
+export async function saveSettlementTimelineYearEntry(
   settlementId: string | null | undefined,
   yearNumber: number,
   value: string,
@@ -206,7 +206,7 @@ export async function saveTimelineEntry(
  * @param yearNumber Year Number
  * @param completed New Completion Status
  */
-export async function toggleYearCompletionStatus(
+export async function toggleSettlementYearCompletionStatus(
   settlementId: string | null | undefined,
   yearNumber: number,
   completed: boolean
@@ -235,7 +235,7 @@ export async function toggleYearCompletionStatus(
  * @param settlementId Settlement ID
  * @param yearNumber Year Number
  */
-export async function addYear(
+export async function addSettlementTimelineYear(
   settlementId: string | null | undefined,
   yearNumber: number
 ): Promise<void> {

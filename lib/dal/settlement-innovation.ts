@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import { SettlementDetail } from '../types'
+import { SettlementDetail } from '@/lib/types'
 
 /**
  * Get Settlement Innovations

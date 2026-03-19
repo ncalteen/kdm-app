@@ -1,8 +1,8 @@
 import { ColorChoice, MonsterNode, MonsterType } from '@/lib/enums'
+import { SettlementDetail } from '@/lib/types'
 import { clsx, type ClassValue } from 'clsx'
 import { CSSProperties } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { SettlementDetail } from './types'
 
 /**
  * Class Names Utility

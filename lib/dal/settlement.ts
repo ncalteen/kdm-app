@@ -21,16 +21,25 @@ import {
   addSettlementMilestones,
   getSettlementMilestones
 } from '@/lib/dal/settlement-milestone'
-import { addNemesesToSettlement } from '@/lib/dal/settlement-nemesis'
+import {
+  addSettlementNemeses,
+  getSettlementNemeses
+} from '@/lib/dal/settlement-nemesis'
 import { getSettlementPatterns } from '@/lib/dal/settlement-pattern'
 import {
   addSettlementPrinciples,
   getSettlementPrinciples
 } from '@/lib/dal/settlement-principle'
-import { addQuarriesToSettlement } from '@/lib/dal/settlement-quarry'
+import {
+  addSettlementQuarries,
+  getSettlementQuarries
+} from '@/lib/dal/settlement-quarry'
 import { getSettlementResources } from '@/lib/dal/settlement-resource'
 import { getSettlementSeedPatterns } from '@/lib/dal/settlement-seed-pattern'
-import { addTimelineYearsToSettlement } from '@/lib/dal/settlement-timeline-year'
+import {
+  addSettlementTimelineYears,
+  getSettlementTimelineYears
+} from '@/lib/dal/settlement-timeline-year'
 import { addWanderersToSettlement } from '@/lib/dal/settlement-wanderer'
 import { addSquiresOfTheCitadelSurvivors } from '@/lib/dal/survivor'
 import { getWandererTimelineYears } from '@/lib/dal/wanderer-timeline-year'
@@ -182,7 +191,7 @@ export async function createSettlement(
     options.monsterIds.CO,
     options.monsterIds.FI
   )
-  await addNemesesToSettlement(nemesisIds, settlementId)
+  await addSettlementNemeses(nemesisIds, settlementId)
 
   for (const nemesisId of nemesisIds) {
     // Append any timeline entries to the settlement timeline.
@@ -204,7 +213,7 @@ export async function createSettlement(
     options.monsterIds.NQ3,
     options.monsterIds.NQ4
   )
-  await addQuarriesToSettlement(quarryIds, settlementId)
+  await addSettlementQuarries(quarryIds, settlementId)
 
   for (const quarryId of quarryIds) {
     // Append any timeline entries to the settlement timeline.
@@ -250,7 +259,7 @@ export async function createSettlement(
   // Locations
   await addSettlementLocations(settlementLocationIds, settlementId)
   // Timeline Events
-  await addTimelineYearsToSettlement(settlementTimeline)
+  await addSettlementTimelineYears(settlementTimeline)
 
   //////////////////////////////////////////////////////////////////////////////
   // Any final additions or customizations based on the campaign type.
@@ -336,18 +345,24 @@ export async function getSettlement(
     gear,
     innovations,
     milestones,
+    nemeses,
     patterns,
     principles,
+    quarries,
     resources,
-    seedPatterns
+    seedPatterns,
+    timelineYears
   ] = await Promise.all([
     getSettlementGear(settlementId),
     getSettlementInnovations(settlementId),
     getSettlementMilestones(settlementId),
+    getSettlementNemeses(settlementId),
     getSettlementPatterns(settlementId),
     getSettlementPrinciples(settlementId),
+    getSettlementQuarries(settlementId),
     getSettlementResources(settlementId),
-    getSettlementSeedPatterns(settlementId)
+    getSettlementSeedPatterns(settlementId),
+    getSettlementTimelineYears(settlementId)
   ])
 
   return {
@@ -360,12 +375,15 @@ export async function getSettlement(
     gear,
     innovations,
     milestones,
+    nemeses,
     patterns,
     principles,
+    quarries,
     resources,
     seed_patterns: seedPatterns,
     survivors_born_with_understanding:
-      survivorsBornWithUnderstanding(innovations)
+      survivorsBornWithUnderstanding(innovations),
+    timeline: timelineYears
   }
 }
 

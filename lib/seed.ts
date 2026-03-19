@@ -354,7 +354,8 @@ async function addSettlementGear(
       .from('settlement_gear')
       .insert({
         settlement_id: settlementId,
-        gear_id: gearItem.id
+        gear_id: gearItem.id,
+        quantity: 1
       })
 
     if (createSettlementGearError) throw createSettlementGearError

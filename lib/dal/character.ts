@@ -1,6 +1,6 @@
 import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { CharacterDetail } from '../types'
+import { CharacterDetail } from '@/lib/types'
 
 /**
  * Get Characters

@@ -273,6 +273,31 @@ export type SettlementDetail = Tables<'settlement'> & {
     /** Milestone Name */
     milestone_name: string
   }[]
+  /** Nemeses */
+  nemeses: {
+    /** Collective Cognition Level 1 */
+    collective_cognition_level_1: boolean
+    /** Collective Cognition Level 2 */
+    collective_cognition_level_2: boolean
+    /** Collective Cognition Level 3 */
+    collective_cognition_level_3: boolean
+    /** Level 1 Defeated */
+    level_1_defeated: boolean
+    /** Level 2 Defeated */
+    level_2_defeated: boolean
+    /** Level 3 Defeated */
+    level_3_defeated: boolean
+    /** Level 4 Defeated */
+    level_4_defeated: boolean
+    /** Nemesis ID */
+    id: string
+    /** Unlocked */
+    unlocked: boolean
+    /** Monster Name */
+    monster_name: string
+    /** Node */
+    node: string
+  }[]
   /** Patterns */
   patterns: {
     /** Pattern ID */
@@ -294,6 +319,25 @@ export type SettlementDetail = Tables<'settlement'> & {
     option_2_selected: boolean
     /** Principle Name */
     principle_name: string
+  }[]
+  /** Quarries */
+  quarries: {
+    /** Collective Cognition Level 1 */
+    collective_cognition_level_1: boolean
+    /** Collective Cognition Level 2 */
+    collective_cognition_level_2: [boolean, boolean]
+    /** Collective Cognition Level 3 */
+    collective_cognition_level_3: [boolean, boolean, boolean]
+    /** Collective Cognition Prologue */
+    collective_cognition_prologue: boolean
+    /** Quarry ID */
+    id: string
+    /** Unlocked */
+    unlocked: boolean
+    /** Monster Name */
+    monster_name: string
+    /** Node */
+    node: string
   }[]
   /** Resources */
   resources: {
@@ -319,6 +363,16 @@ export type SettlementDetail = Tables<'settlement'> & {
   shared: boolean
   /** Survivors Born with +1 Understanding */
   survivors_born_with_understanding: boolean
+  /** Timeline */
+  timeline: {
+    /** Year Number */
+    [key: number]: {
+      /** Timeline Entries */
+      entries: string[]
+      /** Year Completed */
+      completed: boolean
+    }
+  }
 }
 
 /**
