@@ -4,21 +4,31 @@ import { getPeopleOfTheLanternTemplate } from '@/lib/campaigns/potl'
 import { getPeopleOfTheStarsTemplate } from '@/lib/campaigns/potstars'
 import { getPeopleOfTheSunTemplate } from '@/lib/campaigns/potsun'
 import { getSquiresOfTheCitadelTemplate } from '@/lib/campaigns/squires'
-import { getInnovationNames } from '@/lib/dal/innovation'
 import { getLocationIds } from '@/lib/dal/location'
 import { getNemesisLocationIds } from '@/lib/dal/nemesis-location'
 import { getNemesisTimelineYears } from '@/lib/dal/nemesis-timeline-year'
-import { getPrincipleData } from '@/lib/dal/principle'
 import { getQuarryCollectiveCognitionRewardIds } from '@/lib/dal/quarry-collective-cognition-reward'
 import { getQuarryLocationIds } from '@/lib/dal/quarry-location'
 import { getQuarryTimelineYears } from '@/lib/dal/quarry-timeline-year'
 import { addCollectiveCognitionRewardsToSettlement } from '@/lib/dal/settlement-collective-cognition-reward'
-import { addInnovationsToSettlement } from '@/lib/dal/settlement-innovation'
-import { addLocationsToSettlement } from '@/lib/dal/settlement-location'
-import { addMilestonesToSettlement } from '@/lib/dal/settlement-milestone'
+import { getSettlementGear } from '@/lib/dal/settlement-gear'
+import {
+  addSettlementInnovations,
+  getSettlementInnovations
+} from '@/lib/dal/settlement-innovation'
+import { addSettlementLocations } from '@/lib/dal/settlement-location'
+import {
+  addSettlementMilestones,
+  getSettlementMilestones
+} from '@/lib/dal/settlement-milestone'
 import { addNemesesToSettlement } from '@/lib/dal/settlement-nemesis'
-import { addPrinciplesToSettlement } from '@/lib/dal/settlement-principle'
+import { getSettlementPatterns } from '@/lib/dal/settlement-pattern'
+import {
+  addSettlementPrinciples,
+  getSettlementPrinciples
+} from '@/lib/dal/settlement-principle'
 import { addQuarriesToSettlement } from '@/lib/dal/settlement-quarry'
+import { getSettlementSeedPatterns } from '@/lib/dal/settlement-seed-pattern'
 import { addTimelineYearsToSettlement } from '@/lib/dal/settlement-timeline-year'
 import { addWanderersToSettlement } from '@/lib/dal/settlement-wanderer'
 import { addSquiresOfTheCitadelSurvivors } from '@/lib/dal/survivor'
@@ -120,11 +130,11 @@ export async function createSettlement(
   //////////////////////////////////////////////////////////////////////////////
 
   // Innovations
-  await addInnovationsToSettlement(template.innovationIds, settlementId)
+  await addSettlementInnovations(template.innovationIds, settlementId)
   // Milestones
-  await addMilestonesToSettlement(template.milestoneIds, settlementId)
+  await addSettlementMilestones(template.milestoneIds, settlementId)
   // Principles
-  await addPrinciplesToSettlement(template.principleIds, settlementId)
+  await addSettlementPrinciples(template.principleIds, settlementId)
 
   //////////////////////////////////////////////////////////////////////////////
   // The following shouldn't be added until the remaining creation logic is
@@ -220,7 +230,9 @@ export async function createSettlement(
 
   for (const wandererId of options.wandererIds)
     // Append any timeline entries to the settlement timeline.
-    for (const timelineYear of await getWandererTimelineYears(wandererId))
+    for (const timelineYear of Object.values(
+      await getWandererTimelineYears(wandererId)
+    ))
       settlementTimeline[timelineYear.year_number].entries.push(
         ...timelineYear.entries
       )
@@ -235,7 +247,7 @@ export async function createSettlement(
     settlementId
   )
   // Locations
-  await addLocationsToSettlement(settlementLocationIds, settlementId)
+  await addSettlementLocations(settlementLocationIds, settlementId)
   // Timeline Events
   await addTimelineYearsToSettlement(settlementTimeline)
 
@@ -319,19 +331,31 @@ export async function getSettlement(
 
   if (!settlement) return null
 
-  const innovationNames = await getInnovationNames(settlementId)
-  const principleData = await getPrincipleData(settlementId)
+  const [gear, innovations, milestones, patterns, principles, seedPatterns] =
+    await Promise.all([
+      getSettlementGear(settlementId),
+      getSettlementInnovations(settlementId),
+      getSettlementMilestones(settlementId),
+      getSettlementPatterns(settlementId),
+      getSettlementPrinciples(settlementId),
+      getSettlementSeedPatterns(settlementId)
+    ])
 
   return {
     ...settlement,
-    can_encourage: canEncourage(innovationNames),
-    can_surge: canSurge(innovationNames),
-    can_dash: canDash(innovationNames),
-    can_fist_pump: canFistPump(innovationNames),
-    can_endure: canEndure(innovationNames),
-    principle_data: principleData,
+    can_encourage: canEncourage(innovations),
+    can_surge: canSurge(innovations),
+    can_dash: canDash(innovations),
+    can_fist_pump: canFistPump(innovations),
+    can_endure: canEndure(innovations),
+    gear,
+    innovations,
+    milestones,
+    patterns,
+    principles,
+    seed_patterns: seedPatterns,
     survivors_born_with_understanding:
-      survivorsBornWithUnderstanding(innovationNames)
+      survivorsBornWithUnderstanding(innovations)
   }
 }
 
