@@ -20,7 +20,6 @@ create table survivor (
   can_use_fighting_arts_knowledges boolean not null default true,
   color color_choice not null default 'slate',
   courage int not null default 0 check (courage >= 0),
-  cursed_gear varchar [] not null default '{}',
   dead boolean not null default false,
   disposition int,
   evasion int not null default 0,

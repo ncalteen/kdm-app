@@ -1050,22 +1050,16 @@ async function createSurvivorsForSettlement(
       await supabase.from('survivor_fighting_art').insert({
         survivor_id: createSurvivorData.id,
         fighting_art_id: (
-          await supabase
-            .from('fighting_art')
-            .select('id')
-            .eq('secret_fighting_art', false)
-            .limit(1)
-            .single()
+          await supabase.from('fighting_art').select('id').limit(1).single()
         ).data?.id
       })
 
-      await supabase.from('survivor_fighting_art').insert({
+      await supabase.from('survivor_secret_fighting_art').insert({
         survivor_id: createSurvivorData.id,
-        fighting_art_id: (
+        secret_fighting_art_id: (
           await supabase
-            .from('fighting_art')
+            .from('secret_fighting_art')
             .select('id')
-            .eq('secret_fighting_art', true)
             .limit(1)
             .single()
         ).data?.id
