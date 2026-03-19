@@ -28,6 +28,7 @@ import {
   getSettlementPrinciples
 } from '@/lib/dal/settlement-principle'
 import { addQuarriesToSettlement } from '@/lib/dal/settlement-quarry'
+import { getSettlementResources } from '@/lib/dal/settlement-resource'
 import { getSettlementSeedPatterns } from '@/lib/dal/settlement-seed-pattern'
 import { addTimelineYearsToSettlement } from '@/lib/dal/settlement-timeline-year'
 import { addWanderersToSettlement } from '@/lib/dal/settlement-wanderer'
@@ -331,15 +332,23 @@ export async function getSettlement(
 
   if (!settlement) return null
 
-  const [gear, innovations, milestones, patterns, principles, seedPatterns] =
-    await Promise.all([
-      getSettlementGear(settlementId),
-      getSettlementInnovations(settlementId),
-      getSettlementMilestones(settlementId),
-      getSettlementPatterns(settlementId),
-      getSettlementPrinciples(settlementId),
-      getSettlementSeedPatterns(settlementId)
-    ])
+  const [
+    gear,
+    innovations,
+    milestones,
+    patterns,
+    principles,
+    resources,
+    seedPatterns
+  ] = await Promise.all([
+    getSettlementGear(settlementId),
+    getSettlementInnovations(settlementId),
+    getSettlementMilestones(settlementId),
+    getSettlementPatterns(settlementId),
+    getSettlementPrinciples(settlementId),
+    getSettlementResources(settlementId),
+    getSettlementSeedPatterns(settlementId)
+  ])
 
   return {
     ...settlement,
@@ -353,6 +362,7 @@ export async function getSettlement(
     milestones,
     patterns,
     principles,
+    resources,
     seed_patterns: seedPatterns,
     survivors_born_with_understanding:
       survivorsBornWithUnderstanding(innovations)

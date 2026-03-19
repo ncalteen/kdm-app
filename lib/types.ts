@@ -295,6 +295,19 @@ export type SettlementDetail = Tables<'settlement'> & {
     /** Principle Name */
     principle_name: string
   }[]
+  /** Resources */
+  resources: {
+    /** Resource ID */
+    id: string
+    /** Category */
+    category: string
+    /** Quarry ID */
+    quarry_id: string | null
+    /** Resource Name */
+    resource_name: string
+    /** Resource Types */
+    resource_types: string[]
+  }[]
   /** Seed Patterns */
   seed_patterns: {
     /** Pattern ID */
