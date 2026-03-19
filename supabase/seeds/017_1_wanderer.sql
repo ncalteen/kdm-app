@@ -8,7 +8,7 @@ insert into wanderer (
     courage,
     disposition,
     evasion,
-    fighting_arts,
+    fighting_art_ids,
     gender,
     hunt_xp,
     hunt_xp_rank_up,
@@ -18,7 +18,7 @@ insert into wanderer (
     movement,
     wanderer_name,
     permanent_injuries,
-    rare_gear,
+    rare_gear_ids,
     speed,
     strength,
     survival,
@@ -46,7 +46,11 @@ values -------------------------------------------------------------------------
     5,
     'Aenas',
     '{}',
-    '{"Moonwolf Charm"}',
+    (
+      select array_agg(id)
+      from gear
+      where gear_name in ('Moonwolf Charm')
+    ),
     0,
     2,
     3,
@@ -64,7 +68,11 @@ values -------------------------------------------------------------------------
     2,
     0,
     0,
-    '{"Phantom Friend"}',
+    (
+      select array_agg(id)
+      from fighting_art
+      where fighting_art_name = 'Phantom Friend'
+    ),
     'FEMALE',
     0,
     '{1, 3, 5, 12}',
@@ -74,7 +82,11 @@ values -------------------------------------------------------------------------
     6,
     'Candy & Cola',
     '{}',
-    '{"Gladiator Garb", "Sharpened Heel"}',
+    (
+      select array_agg(id)
+      from gear
+      where gear_name in ('Gladiator Garb', 'Sharpened Heel')
+    ),
     0,
     0,
     3,
@@ -102,7 +114,11 @@ values -------------------------------------------------------------------------
     5,
     'Death Drifter',
     '{}',
-    '{"Death Drifter Cloak"}',
+    (
+      select array_agg(id)
+      from gear
+      where gear_name in ('Death Drifter Cloak')
+    ),
     0,
     0,
     4,
@@ -130,7 +146,11 @@ values -------------------------------------------------------------------------
     5,
     'Goth',
     '{}',
-    '{"Common Katana", "Rapture Bracelet"}',
+    (
+      select array_agg(id)
+      from gear
+      where gear_name in ('Common Katana', 'Rapture Bracelet')
+    ),
     1,
     0,
     1,
@@ -158,7 +178,11 @@ values -------------------------------------------------------------------------
     5,
     'Luck',
     '{"headBlind"}',
-    '{"Luck''s Cloak", "Natural Cardinal Staff"}',
+    (
+      select array_agg(id)
+      from gear
+      where gear_name in ('Luck''s Cloak', 'Natural Cardinal Staff')
+    ),
     0,
     0,
     7,
@@ -186,7 +210,15 @@ values -------------------------------------------------------------------------
     5,
     'Preacher',
     '{}',
-    '{"Hammer of Judgement", "Holy Lantern", "Sanctified Rosary"}',
+    (
+      select array_agg(id)
+      from gear
+      where gear_name in (
+          'Hammer of Judgement',
+          'Holy Lantern',
+          'Sanctified Rosary'
+        )
+    ),
     1,
     0,
     5,
