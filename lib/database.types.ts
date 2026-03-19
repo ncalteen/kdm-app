@@ -202,7 +202,6 @@ export type Database = {
           custom: boolean
           fighting_art_name: string
           id: string
-          secret_fighting_art: boolean
           updated_at: string
           user_id: string | null
         }
@@ -211,7 +210,6 @@ export type Database = {
           custom?: boolean
           fighting_art_name: string
           id?: string
-          secret_fighting_art?: boolean
           updated_at?: string
           user_id?: string | null
         }
@@ -220,7 +218,6 @@ export type Database = {
           custom?: boolean
           fighting_art_name?: string
           id?: string
-          secret_fighting_art?: boolean
           updated_at?: string
           user_id?: string | null
         }
@@ -1851,6 +1848,59 @@ export type Database = {
           },
         ]
       }
+      secret_fighting_art: {
+        Row: {
+          created_at: string
+          custom: boolean
+          id: string
+          secret_fighting_art_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          secret_fighting_art_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          secret_fighting_art_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      secret_fighting_art_shared_user: {
+        Row: {
+          secret_fighting_art_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Insert: {
+          secret_fighting_art_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Update: {
+          secret_fighting_art_id?: string
+          shared_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secret_fighting_art_shared_user_secret_fighting_art_id_fkey"
+            columns: ["secret_fighting_art_id"]
+            isOneToOne: false
+            referencedRelation: "secret_fighting_art"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settlement: {
         Row: {
           arrival_bonuses: string[]
@@ -3090,7 +3140,7 @@ export type Database = {
           survival: number
           survivor_name: string | null
           systemic_pressure: number | null
-          tenet_knowledge: string | null
+          tenet_knowledge_id: string | null
           tenet_knowledge_observation_conditions: string | null
           tenet_knowledge_observation_rank: number | null
           tenet_knowledge_rank_up: number | null
@@ -3214,7 +3264,7 @@ export type Database = {
           survival?: number
           survivor_name?: string | null
           systemic_pressure?: number | null
-          tenet_knowledge?: string | null
+          tenet_knowledge_id?: string | null
           tenet_knowledge_observation_conditions?: string | null
           tenet_knowledge_observation_rank?: number | null
           tenet_knowledge_rank_up?: number | null
@@ -3338,7 +3388,7 @@ export type Database = {
           survival?: number
           survivor_name?: string | null
           systemic_pressure?: number | null
-          tenet_knowledge?: string | null
+          tenet_knowledge_id?: string | null
           tenet_knowledge_observation_conditions?: string | null
           tenet_knowledge_observation_rank?: number | null
           tenet_knowledge_rank_up?: number | null
@@ -3394,8 +3444,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "survivor_tenet_knowledge_fkey"
-            columns: ["tenet_knowledge"]
+            foreignKeyName: "survivor_tenet_knowledge_id_fkey"
+            columns: ["tenet_knowledge_id"]
             isOneToOne: false
             referencedRelation: "knowledge"
             referencedColumns: ["id"]
@@ -3519,6 +3569,45 @@ export type Database = {
           },
           {
             foreignKeyName: "survivor_fighting_art_survivor_id_fkey"
+            columns: ["survivor_id"]
+            isOneToOne: false
+            referencedRelation: "survivor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survivor_secret_fighting_art: {
+        Row: {
+          created_at: string
+          id: string
+          secret_fighting_art_id: string
+          survivor_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          secret_fighting_art_id: string
+          survivor_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          secret_fighting_art_id?: string
+          survivor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survivor_secret_fighting_art_secret_fighting_art_id_fkey"
+            columns: ["secret_fighting_art_id"]
+            isOneToOne: false
+            referencedRelation: "secret_fighting_art"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_secret_fighting_art_survivor_id_fkey"
             columns: ["survivor_id"]
             isOneToOne: false
             referencedRelation: "survivor"

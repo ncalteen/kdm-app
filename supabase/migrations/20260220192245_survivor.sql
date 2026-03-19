@@ -109,7 +109,7 @@ create table survivor (
   set null,
     philosophy_rank int,
     systemic_pressure int,
-    tenet_knowledge uuid references knowledge(id) on delete
+    tenet_knowledge_id uuid references knowledge(id) on delete
   set null,
     tenet_knowledge_observation_conditions text,
     tenet_knowledge_observation_rank int,

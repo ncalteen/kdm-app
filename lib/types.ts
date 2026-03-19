@@ -101,7 +101,26 @@ export type ShowdownDetail = Tables<'showdown'> & {}
  * Includes additional information not present in the survivor table.
  */
 export type SurvivorDetail = Tables<'survivor'> & {
+  /** Cursed Gear Names */
+  cursed_gear_names: string[]
+  /** Disorder Names */
+  disorder_names: string[]
+  /** Survivor Embarked on Hunt/Showdown */
   embarked: boolean
+  /** Fighting Art Names */
+  fighting_art_names: string[]
+  /** Knowledge 1 Name */
+  knowledge_1_name: string | null
+  /** Knowledge 2 Name */
+  knowledge_2_name: string | null
+  /** Neurosis Name */
+  neurosis_name: string | null
+  /** Philosophy Name */
+  philosophy_name: string | null
+  /** Secret Fighting Art Names */
+  secret_fighting_art_names: string[]
+  /** Tenet Knowledge Name */
+  tenet_knowledge_name: string | null
 }
 
 /**
