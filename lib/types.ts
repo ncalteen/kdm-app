@@ -46,12 +46,52 @@ export type CharacterDetail = Omit<
 > & {}
 
 /**
+ * Hunt AI Deck Detail
+ *
+ * Used throughout the app to represent a monster's AI deck in a hunt.
+ */
+export type HuntAIDeckDetail = Omit<
+  Tables<'hunt_ai_deck'>,
+  'created_at' | 'updated_at' | 'settlement_id' | 'hunt_id'
+>
+
+/**
  * Hunt Detail
  *
  * Used throughout the app to represent the currently selected hunt. Includes
  * additional information not present in the hunt table.
  */
 export type HuntDetail = Tables<'hunt'> & {}
+
+/**
+ * Hunt Hunt Board Detail
+ *
+ * Used throughout the app to represent a hunt board.
+ */
+export type HuntHuntBoardDetail = Omit<
+  Tables<'hunt_hunt_board'>,
+  'created_at' | 'updated_at'
+>
+
+/**
+ * Hunt Survivor Detail
+ *
+ * Used throughout the app to represent a survivor in a hunt.
+ */
+export type HuntSurvivorDetail = Omit<
+  Tables<'hunt_survivor'>,
+  'created_at' | 'updated_at'
+>
+
+/**
+ * Hunt Monster Detail
+ *
+ * Used throughout the app to represent a monster in a hunt.
+ */
+export type HuntMonsterDetail = Omit<
+  Tables<'hunt_monster'>,
+  'created_at' | 'updated_at'
+>
 
 /**
  * Settlement Detail
