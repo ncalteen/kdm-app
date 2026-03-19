@@ -18,7 +18,9 @@ export async function getShowdown(
 
   const { data, error } = await supabase
     .from('showdown')
-    .select('*')
+    .select(
+      'id, ambush, monster_level, settlement_id, showdown_type, turn'
+    )
     .eq('settlement_id', settlementId)
     .maybeSingle()
 

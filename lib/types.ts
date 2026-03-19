@@ -112,9 +112,11 @@ export type SettlementPhaseDetail = Tables<'settlement_phase'> & {}
  * Showdown Detail
  *
  * Used throughout the app to represent the currently selected showdown.
- * Includes additional information not present in the showdown table.
  */
-export type ShowdownDetail = Tables<'showdown'> & {}
+export type ShowdownDetail = Omit<
+  Tables<'showdown'>,
+  'created_at' | 'updated_at'
+>
 
 /**
  * Showdown Monster Detail
@@ -124,6 +126,16 @@ export type ShowdownDetail = Tables<'showdown'> & {}
 export type ShowdownMonsterDetail = Omit<
   Tables<'showdown_monster'>,
   'created_at' | 'updated_at'
+>
+
+/**
+ * Showdown AI Deck Detail
+ *
+ * Used throughout the app to represent a monster's AI deck in a showdown.
+ */
+export type ShowdownAIDeckDetail = Omit<
+  Tables<'showdown_ai_deck'>,
+  'created_at' | 'updated_at' | 'settlement_id' | 'showdown_id'
 >
 
 /**
