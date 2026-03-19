@@ -1,5 +1,6 @@
 import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { CharacterDetail } from '../types'
 
 /**
  * Get Characters
@@ -11,12 +12,12 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Characters
  */
-export async function getCharacters(): Promise<
-  Omit<
+export async function getCharacters(): Promise<{
+  [key: string]: Omit<
     Tables<'character'>,
     'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >[]
-> {
+  >
+}> {
   const supabase = createClient()
 
   const {
@@ -27,46 +28,34 @@ export async function getCharacters(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, character_name'
+  // Fetch all three categories of characters in parallel
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    // Non-custom characters (available to all users)
+    supabase.from('character').select('id, character_name').eq('custom', false),
+    // Custom characters created by the user
+    supabase
+      .from('character')
+      .select('id, character_name')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    // Custom characters shared with the user
+    supabase
+      .from('character_shared_user')
+      .select('character(id, character_name)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in characters
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('character')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Characters: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Characters: ${builtInError.message}`
-    )
+  // Collect characters from all sources, deduplicating by ID
+  const characterMap: { [key: string]: CharacterDetail } = {}
 
-  // Custom characters owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('character')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const c of nonCustomResult.data ?? []) characterMap[c.id] = c
+  for (const c of userCustomResult.data ?? []) characterMap[c.id] = c
+  for (const row of sharedResult.data ?? [])
+    characterMap[row.character[0].id] = row.character[0]
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Characters: ${ownedError.message}`)
-
-  // Custom characters shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('character_shared_user')
-    .select(`character(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Characters: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.character)
-      ? row.character
-      : row.character
-        ? [row.character]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return characterMap
 }

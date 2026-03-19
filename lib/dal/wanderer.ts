@@ -17,10 +17,13 @@ export async function getWanderers(): Promise<{
 }> {
   const supabase = createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
 
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!userData.user) throw new Error('User Not Authenticated')
+  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of wanderers in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
@@ -31,12 +34,12 @@ export async function getWanderers(): Promise<{
       .from('wanderer')
       .select('*')
       .eq('custom', true)
-      .eq('user_id', userData.user.id),
+      .eq('user_id', user.id),
     // Custom wanderers shared with the user
     supabase
       .from('wanderer_shared_user')
       .select('wanderer(*)')
-      .eq('shared_user_id', userData.user.id)
+      .eq('shared_user_id', user.id)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -48,19 +51,16 @@ export async function getWanderers(): Promise<{
 
   for (const w of nonCustomResult.data ?? []) wandererMap[w.id] = w
   for (const w of userCustomResult.data ?? []) wandererMap[w.id] = w
-  for (const row of sharedResult.data ?? []) {
-    const w = row.wanderer as unknown as WandererDetail | null
-
-    if (w) wandererMap[w.id] = w
-  }
+  for (const row of sharedResult.data ?? [])
+    wandererMap[row.wanderer[0].id] = row.wanderer[0]
 
   return wandererMap
 }
 
 /**
- * Get Wanderer IDs
+ * Get Wanderer ID
  *
- * Retrieves the IDs of wanderers. This depends on if they are custom
+ * Retrieves the ID of a wanderer. This depends on if they are custom
  * wanderers (requires the user ID if so).
  *
  * @param wandererNames Wanderer Names
@@ -74,6 +74,14 @@ export async function getWandererIds(
   userId?: string
 ): Promise<string[]> {
   const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
 
   const { data, error } = userId
     ? await supabase
@@ -89,7 +97,6 @@ export async function getWandererIds(
         .eq('custom', custom)
 
   if (error) throw new Error(`Error Fetching Wanderer ID(s): ${error.message}`)
-
   if (!data) throw new Error('Wanderer(s) Not Found')
 
   return data.map((wanderer) => wanderer.id)

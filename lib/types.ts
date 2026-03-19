@@ -35,6 +35,17 @@ export type CampaignTemplate = {
 }
 
 /**
+ * Character Detail
+ *
+ * Used throughout the app to represent a character object. Includes additional
+ * information not present in the character table.
+ */
+export type CharacterDetail = Omit<
+  Tables<'character'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+> & {}
+
+/**
  * Hunt Detail
  *
  * Used throughout the app to represent the currently selected hunt. Includes
@@ -129,6 +140,9 @@ export type SurvivorDetail = Tables<'survivor'> & {
  * Used throughout the app to represent the currently selected wanderer.
  * Includes additional information not present in the wanderer table.
  */
-export type WandererDetail = Tables<'wanderer'> & {
+export type WandererDetail = Omit<
+  Tables<'wanderer'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+> & {
   embarked: boolean
 }
