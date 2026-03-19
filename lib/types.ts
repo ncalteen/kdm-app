@@ -58,10 +58,9 @@ export type HuntAIDeckDetail = Omit<
 /**
  * Hunt Detail
  *
- * Used throughout the app to represent the currently selected hunt. Includes
- * additional information not present in the hunt table.
+ * Used throughout the app to represent the currently selected hunt.
  */
-export type HuntDetail = Tables<'hunt'> & {}
+export type HuntDetail = Omit<Tables<'hunt'>, 'created_at' | 'updated_at'>
 
 /**
  * Hunt Hunt Board Detail
@@ -144,9 +143,11 @@ export type SettlementDetail = Tables<'settlement'> & {
  * Settlement Phase Detail
  *
  * Used throughout the app to represent the currently selected settlement phase.
- * Includes additional information not present in the settlement_phase table.
  */
-export type SettlementPhaseDetail = Tables<'settlement_phase'> & {}
+export type SettlementPhaseDetail = Omit<
+  Tables<'settlement_phase'>,
+  'created_at' | 'updated_at'
+>
 
 /**
  * Showdown Detail

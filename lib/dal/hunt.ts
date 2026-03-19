@@ -18,7 +18,9 @@ export async function getHunt(
 
   const { data, error } = await supabase
     .from('hunt')
-    .select('*')
+    .select(
+      'id, monster_level, monster_position, settlement_id, survivor_position'
+    )
     .eq('settlement_id', settlementId)
     .maybeSingle()
 

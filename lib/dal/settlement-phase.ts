@@ -19,7 +19,7 @@ export async function getSettlementPhase(
 
   const { data, error } = await supabase
     .from('settlement_phase')
-    .select('*')
+    .select('id, endeavors, returning_scout_id, settlement_id, step')
     .eq('settlement_id', settlementId)
     .maybeSingle()
 
