@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { DisorderDetail } from '@/lib/types'
 
 /**
  * Get Disorders
@@ -11,9 +11,9 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Disorders
  */
-export async function getDisorders(): Promise<
-  Omit<Tables<'disorder'>, 'created_at' | 'updated_at' | 'custom' | 'user_id'>[]
-> {
+export async function getDisorders(): Promise<{
+  [key: string]: DisorderDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -24,46 +24,33 @@ export async function getDisorders(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, disorder_name'
+  // Fetch all three categories of disorders in parallel
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase.from('disorder').select('id, disorder_name').eq('custom', false),
+    supabase
+      .from('disorder')
+      .select('id, disorder_name')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('disorder_shared_user')
+      .select('disorder(id, disorder_name)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in disorders
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('disorder')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Disorders: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Disorders: ${builtInError.message}`
-    )
+  const disorderMap: { [key: string]: DisorderDetail } = {}
 
-  // Custom disorders owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('disorder')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const d of nonCustomResult.data ?? []) disorderMap[d.id] = d
+  for (const d of userCustomResult.data ?? []) disorderMap[d.id] = d
+  for (const row of sharedResult.data ?? []) {
+    const d = row.disorder as unknown as DisorderDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Disorders: ${ownedError.message}`)
+    if (d) disorderMap[d.id] = d
+  }
 
-  // Custom disorders shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('disorder_shared_user')
-    .select(`disorder(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Disorders: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.disorder)
-      ? row.disorder
-      : row.disorder
-        ? [row.disorder]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return disorderMap
 }

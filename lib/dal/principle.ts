@@ -1,6 +1,6 @@
-import { Tables } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { PrincipleDetail } from '@/lib/types'
 
 /**
  * Get Principle IDs
@@ -45,53 +45,6 @@ export async function getPrincipleIds(
 }
 
 /**
- * Get Principle Data by Settlement ID
- *
- * Retrieves the names and options of principles associated with a settlement.
- *
- * @param settlementId Settlement ID
- * @returns Principle Data
- */
-export async function getPrincipleData(settlementId: string): Promise<
-  {
-    principle_name: string
-    option_1_name: string
-    option_1_selected: boolean
-    option_2_name: string
-    option_2_selected: boolean
-  }[]
-> {
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('settlement_principle')
-    .select(
-      'option_1_selected, option_2_selected, principle(option_1_name, option_2_name, principle_name)'
-    )
-    .eq('settlement_id', settlementId)
-
-  if (error)
-    throw new Error(`Error Fetching Settlement Principles: ${error.message}`)
-
-  const principleData =
-    data?.map((row) => {
-      const principle = Array.isArray(row.principle)
-        ? row.principle[0]
-        : row.principle
-
-      return {
-        principle_name: principle.principle_name,
-        option_1_name: principle.option_1_name,
-        option_1_selected: row.option_1_selected,
-        option_2_name: principle.option_2_name,
-        option_2_selected: row.option_2_selected
-      }
-    }) ?? []
-
-  return principleData
-}
-
-/**
  * Get Principles
  *
  * Retrieves all principles available to the authenticated user:
@@ -101,12 +54,9 @@ export async function getPrincipleData(settlementId: string): Promise<
  *
  * @returns Principles
  */
-export async function getPrinciples(): Promise<
-  Omit<
-    Tables<'principle'>,
-    'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >[]
-> {
+export async function getPrinciples(): Promise<{
+  [key: string]: PrincipleDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -117,47 +67,41 @@ export async function getPrinciples(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields =
-    'id, principle_name, option_1_name, option_2_name, campaign_types'
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('principle')
+      .select(
+        'id, principle_name, option_1_name, option_2_name, campaign_types'
+      )
+      .eq('custom', false),
+    supabase
+      .from('principle')
+      .select(
+        'id, principle_name, option_1_name, option_2_name, campaign_types'
+      )
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('principle_shared_user')
+      .select(
+        'principle(id, principle_name, option_1_name, option_2_name, campaign_types)'
+      )
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in principles
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('principle')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Principles: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Principles: ${builtInError.message}`
-    )
+  const principleMap: { [key: string]: PrincipleDetail } = {}
 
-  // Custom principles owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('principle')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const p of nonCustomResult.data ?? []) principleMap[p.id] = p
+  for (const p of userCustomResult.data ?? []) principleMap[p.id] = p
+  for (const row of sharedResult.data ?? []) {
+    const p = row.principle as unknown as PrincipleDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Principles: ${ownedError.message}`)
+    if (p) principleMap[p.id] = p
+  }
 
-  // Custom principles shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('principle_shared_user')
-    .select(`principle(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Principles: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.principle)
-      ? row.principle
-      : row.principle
-        ? [row.principle]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return principleMap
 }

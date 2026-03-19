@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { FightingArtDetail } from '@/lib/types'
 
 /**
  * Get Fighting Arts
@@ -11,12 +11,9 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Fighting Arts
  */
-export async function getFightingArts(): Promise<
-  Omit<
-    Tables<'fighting_art'>,
-    'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >[]
-> {
+export async function getFightingArts(): Promise<{
+  [key: string]: FightingArtDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -27,48 +24,35 @@ export async function getFightingArts(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, fighting_art_name, secret_fighting_art'
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('fighting_art')
+      .select('id, fighting_art_name, secret_fighting_art')
+      .eq('custom', false),
+    supabase
+      .from('fighting_art')
+      .select('id, fighting_art_name, secret_fighting_art')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('fighting_art_shared_user')
+      .select('fighting_art(id, fighting_art_name, secret_fighting_art)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in fighting arts
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('fighting_art')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Fighting Arts: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Fighting Arts: ${builtInError.message}`
-    )
+  const fightingArtMap: { [key: string]: FightingArtDetail } = {}
 
-  // Custom fighting arts owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('fighting_art')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const f of nonCustomResult.data ?? []) fightingArtMap[f.id] = f
+  for (const f of userCustomResult.data ?? []) fightingArtMap[f.id] = f
+  for (const row of sharedResult.data ?? []) {
+    const f = row.fighting_art as unknown as FightingArtDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Fighting Arts: ${ownedError.message}`)
+    if (f) fightingArtMap[f.id] = f
+  }
 
-  // Custom fighting arts shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('fighting_art_shared_user')
-    .select(`fighting_art(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(
-      `Error Fetching Shared Fighting Arts: ${sharedError.message}`
-    )
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.fighting_art)
-      ? row.fighting_art
-      : row.fighting_art
-        ? [row.fighting_art]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return fightingArtMap
 }

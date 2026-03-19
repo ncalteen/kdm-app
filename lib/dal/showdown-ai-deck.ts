@@ -18,9 +18,7 @@ export async function getShowdownAIDecks(
 
   const { data, error } = await supabase
     .from('showdown_ai_deck')
-    .select(
-      'id, basic_cards, advanced_cards, legendary_cards, overtone_cards, showdown_monster_id'
-    )
+    .select('id, basic_cards, advanced_cards, legendary_cards, overtone_cards')
     .eq('showdown_id', showdownId)
 
   if (error)

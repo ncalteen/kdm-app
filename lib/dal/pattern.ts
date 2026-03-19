@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { PatternDetail } from '@/lib/types'
 
 /**
  * Get Patterns
@@ -11,9 +11,9 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Patterns
  */
-export async function getPatterns(): Promise<
-  Omit<Tables<'pattern'>, 'created_at' | 'updated_at' | 'custom' | 'user_id'>[]
-> {
+export async function getPatterns(): Promise<{
+  [key: string]: PatternDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -24,44 +24,35 @@ export async function getPatterns(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, pattern_name, seed_pattern'
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('pattern')
+      .select('id, pattern_name, seed_pattern')
+      .eq('custom', false),
+    supabase
+      .from('pattern')
+      .select('id, pattern_name, seed_pattern')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('pattern_shared_user')
+      .select('pattern(id, pattern_name, seed_pattern)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in patterns
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('pattern')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Patterns: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(`Error Fetching Built-in Patterns: ${builtInError.message}`)
+  const patternMap: { [key: string]: PatternDetail } = {}
 
-  // Custom patterns owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('pattern')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const p of nonCustomResult.data ?? []) patternMap[p.id] = p
+  for (const p of userCustomResult.data ?? []) patternMap[p.id] = p
+  for (const row of sharedResult.data ?? []) {
+    const p = row.pattern as unknown as PatternDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Patterns: ${ownedError.message}`)
+    if (p) patternMap[p.id] = p
+  }
 
-  // Custom patterns shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('pattern_shared_user')
-    .select(`pattern(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Patterns: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.pattern)
-      ? row.pattern
-      : row.pattern
-        ? [row.pattern]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return patternMap
 }

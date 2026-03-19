@@ -1,6 +1,6 @@
-import { Tables } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { MilestoneDetail } from '@/lib/types'
 
 /**
  * Get Milestone IDs
@@ -54,12 +54,9 @@ export async function getMilestoneIds(
  *
  * @returns Milestones
  */
-export async function getMilestones(): Promise<
-  Omit<
-    Tables<'milestone'>,
-    'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >[]
-> {
+export async function getMilestones(): Promise<{
+  [key: string]: MilestoneDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -70,46 +67,35 @@ export async function getMilestones(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, milestone_name, event_name, campaign_types'
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('milestone')
+      .select('id, milestone_name, event_name, campaign_types')
+      .eq('custom', false),
+    supabase
+      .from('milestone')
+      .select('id, milestone_name, event_name, campaign_types')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('milestone_shared_user')
+      .select('milestone(id, milestone_name, event_name, campaign_types)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in milestones
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('milestone')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Milestones: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Milestones: ${builtInError.message}`
-    )
+  const milestoneMap: { [key: string]: MilestoneDetail } = {}
 
-  // Custom milestones owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('milestone')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const m of nonCustomResult.data ?? []) milestoneMap[m.id] = m
+  for (const m of userCustomResult.data ?? []) milestoneMap[m.id] = m
+  for (const row of sharedResult.data ?? []) {
+    const m = row.milestone as unknown as MilestoneDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Milestones: ${ownedError.message}`)
+    if (m) milestoneMap[m.id] = m
+  }
 
-  // Custom milestones shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('milestone_shared_user')
-    .select(`milestone(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Milestones: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.milestone)
-      ? row.milestone
-      : row.milestone
-        ? [row.milestone]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return milestoneMap
 }

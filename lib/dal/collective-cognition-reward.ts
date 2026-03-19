@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { CollectiveCognitionRewardDetail } from '@/lib/types'
 
 /**
  * Get Collective Cognition Reward IDs
@@ -53,12 +53,9 @@ export async function getCollectiveCognitionRewardIds(
  *
  * @returns Collective Cognition Rewards
  */
-export async function getCollectiveCognitionRewards(): Promise<
-  Omit<
-    Tables<'collective_cognition_reward'>,
-    'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >[]
-> {
+export async function getCollectiveCognitionRewards(): Promise<{
+  [key: string]: CollectiveCognitionRewardDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -69,50 +66,45 @@ export async function getCollectiveCognitionRewards(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  // Built-in collective cognition rewards
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('collective_cognition_reward')
-    .select('id, reward_name, collective_cognition')
-    .eq('custom', false)
+  // Fetch all three categories of rewards in parallel
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    // Non-custom rewards (available to all users)
+    supabase
+      .from('collective_cognition_reward')
+      .select('id, reward_name, collective_cognition')
+      .eq('custom', false),
+    // Custom rewards created by the user
+    supabase
+      .from('collective_cognition_reward')
+      .select('id, reward_name, collective_cognition')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    // Custom rewards shared with the user
+    supabase
+      .from('collective_cognition_reward_shared_user')
+      .select(
+        'collective_cognition_reward(id, reward_name, collective_cognition)'
+      )
+      .eq('shared_user_id', user.id)
+  ])
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Collective Cognition Rewards: ${builtInError.message}`
-    )
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(
+        `Error Fetching Collective Cognition Rewards: ${result.error.message}`
+      )
 
-  // Custom rewards owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('collective_cognition_reward')
-    .select('id, reward_name, collective_cognition')
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  // Collect rewards from all sources, deduplicating by ID
+  const rewardMap: { [key: string]: CollectiveCognitionRewardDetail } = {}
 
-  if (ownedError)
-    throw new Error(
-      `Error Fetching Owned Collective Cognition Rewards: ${ownedError.message}`
-    )
+  for (const r of nonCustomResult.data ?? []) rewardMap[r.id] = r
+  for (const r of userCustomResult.data ?? []) rewardMap[r.id] = r
+  for (const row of sharedResult.data ?? []) {
+    const r =
+      row.collective_cognition_reward as unknown as CollectiveCognitionRewardDetail | null
 
-  // Custom rewards shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('collective_cognition_reward_shared_user')
-    .select(
-      'collective_cognition_reward(id, reward_name, collective_cognition)'
-    )
-    .eq('shared_user_id', user.id)
+    if (r) rewardMap[r.id] = r
+  }
 
-  if (sharedError)
-    throw new Error(
-      `Error Fetching Shared Collective Cognition Rewards: ${sharedError.message}`
-    )
-
-  const sharedRewards = (shared ?? []).flatMap((row) => {
-    const r = Array.isArray(row.collective_cognition_reward)
-      ? row.collective_cognition_reward
-      : row.collective_cognition_reward
-        ? [row.collective_cognition_reward]
-        : []
-    return r
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedRewards]
+  return rewardMap
 }

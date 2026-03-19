@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { KnowledgeDetail } from '@/lib/types'
 
 /**
  * Get Knowledges
@@ -11,12 +11,9 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Knowledges
  */
-export async function getKnowledges(): Promise<
-  Omit<
-    Tables<'knowledge'>,
-    'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >[]
-> {
+export async function getKnowledges(): Promise<{
+  [key: string]: KnowledgeDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -27,46 +24,35 @@ export async function getKnowledges(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, knowledge_name, philosophy_id'
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('knowledge')
+      .select('id, knowledge_name, philosophy_id')
+      .eq('custom', false),
+    supabase
+      .from('knowledge')
+      .select('id, knowledge_name, philosophy_id')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('knowledge_shared_user')
+      .select('knowledge(id, knowledge_name, philosophy_id)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in knowledges
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('knowledge')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Knowledges: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Knowledges: ${builtInError.message}`
-    )
+  const knowledgeMap: { [key: string]: KnowledgeDetail } = {}
 
-  // Custom knowledges owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('knowledge')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const k of nonCustomResult.data ?? []) knowledgeMap[k.id] = k
+  for (const k of userCustomResult.data ?? []) knowledgeMap[k.id] = k
+  for (const row of sharedResult.data ?? []) {
+    const k = row.knowledge as unknown as KnowledgeDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Knowledges: ${ownedError.message}`)
+    if (k) knowledgeMap[k.id] = k
+  }
 
-  // Custom knowledges shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('knowledge_shared_user')
-    .select(`knowledge(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Knowledges: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.knowledge)
-      ? row.knowledge
-      : row.knowledge
-        ? [row.knowledge]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return knowledgeMap
 }

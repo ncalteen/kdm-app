@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { LocationDetail } from '@/lib/types'
 
 /**
  * Get Location IDs
@@ -49,9 +49,9 @@ export async function getLocationIds(
  *
  * @returns Locations
  */
-export async function getLocations(): Promise<
-  Omit<Tables<'location'>, 'created_at' | 'updated_at' | 'custom' | 'user_id'>[]
-> {
+export async function getLocations(): Promise<{
+  [key: string]: LocationDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -62,46 +62,32 @@ export async function getLocations(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, location_name'
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase.from('location').select('id, location_name').eq('custom', false),
+    supabase
+      .from('location')
+      .select('id, location_name')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('location_shared_user')
+      .select('location(id, location_name)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in locations
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('location')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Locations: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Locations: ${builtInError.message}`
-    )
+  const locationMap: { [key: string]: LocationDetail } = {}
 
-  // Custom locations owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('location')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const l of nonCustomResult.data ?? []) locationMap[l.id] = l
+  for (const l of userCustomResult.data ?? []) locationMap[l.id] = l
+  for (const row of sharedResult.data ?? []) {
+    const l = row.location as unknown as LocationDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Locations: ${ownedError.message}`)
+    if (l) locationMap[l.id] = l
+  }
 
-  // Custom locations shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('location_shared_user')
-    .select(`location(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Locations: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.location)
-      ? row.location
-      : row.location
-        ? [row.location]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return locationMap
 }

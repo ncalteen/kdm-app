@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { InnovationDetail } from '@/lib/types'
 
 /**
  * Get Innovation IDs
@@ -41,39 +41,6 @@ export async function getInnovationIds(
 }
 
 /**
- * Get Innovation Names by Settlement ID
- *
- * Retrieves the names of innovations associated with a settlement.
- *
- * @param settlementId Settlement ID
- * @returns Innovation Names
- */
-export async function getInnovationNames(
-  settlementId: string
-): Promise<string[]> {
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('settlement_innovation')
-    .select('innovation(innovation_name)')
-    .eq('settlement_id', settlementId)
-
-  if (error)
-    throw new Error(`Error Fetching Settlement Innovations: ${error.message}`)
-
-  const innovationNames =
-    data?.map((row) => {
-      const innovation = Array.isArray(row.innovation)
-        ? row.innovation[0]
-        : row.innovation
-
-      return innovation?.innovation_name
-    }) ?? []
-
-  return innovationNames
-}
-
-/**
  * Get Innovations
  *
  * Retrieves all innovations available to the authenticated user:
@@ -83,12 +50,9 @@ export async function getInnovationNames(
  *
  * @returns Innovations
  */
-export async function getInnovations(): Promise<
-  Omit<
-    Tables<'innovation'>,
-    'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >[]
-> {
+export async function getInnovations(): Promise<{
+  [key: string]: InnovationDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -99,46 +63,35 @@ export async function getInnovations(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, innovation_name'
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('innovation')
+      .select('id, innovation_name')
+      .eq('custom', false),
+    supabase
+      .from('innovation')
+      .select('id, innovation_name')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('innovation_shared_user')
+      .select('innovation(id, innovation_name)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in innovations
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('innovation')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Innovations: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Innovations: ${builtInError.message}`
-    )
+  const innovationMap: { [key: string]: InnovationDetail } = {}
 
-  // Custom innovations owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('innovation')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const i of nonCustomResult.data ?? []) innovationMap[i.id] = i
+  for (const i of userCustomResult.data ?? []) innovationMap[i.id] = i
+  for (const row of sharedResult.data ?? []) {
+    const i = row.innovation as unknown as InnovationDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Innovations: ${ownedError.message}`)
+    if (i) innovationMap[i.id] = i
+  }
 
-  // Custom innovations shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('innovation_shared_user')
-    .select(`innovation(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Innovations: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.innovation)
-      ? row.innovation
-      : row.innovation
-        ? [row.innovation]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return innovationMap
 }

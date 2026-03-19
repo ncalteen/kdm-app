@@ -46,6 +46,46 @@ export type CharacterDetail = Omit<
 > & {}
 
 /**
+ * Collective Cognition Reward Detail
+ *
+ * Used throughout the app to represent a collective cognition reward.
+ */
+export type CollectiveCognitionRewardDetail = Omit<
+  Tables<'collective_cognition_reward'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Disorder Detail
+ *
+ * Used throughout the app to represent a disorder.
+ */
+export type DisorderDetail = Omit<
+  Tables<'disorder'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Fighting Art Detail
+ *
+ * Used throughout the app to represent a fighting art.
+ */
+export type FightingArtDetail = Omit<
+  Tables<'fighting_art'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Gear Detail
+ *
+ * Used throughout the app to represent a gear item.
+ */
+export type GearDetail = Omit<
+  Tables<'gear'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
  * Hunt AI Deck Detail
  *
  * Used throughout the app to represent a monster's AI deck in a hunt.
@@ -73,6 +113,16 @@ export type HuntHuntBoardDetail = Omit<
 >
 
 /**
+ * Hunt Monster Detail
+ *
+ * Used throughout the app to represent a monster in a hunt.
+ */
+export type HuntMonsterDetail = Omit<
+  Tables<'hunt_monster'>,
+  'created_at' | 'updated_at'
+>
+
+/**
  * Hunt Survivor Detail
  *
  * Used throughout the app to represent a survivor in a hunt.
@@ -83,13 +133,93 @@ export type HuntSurvivorDetail = Omit<
 >
 
 /**
- * Hunt Monster Detail
+ * Innovation Detail
  *
- * Used throughout the app to represent a monster in a hunt.
+ * Used throughout the app to represent an innovation.
  */
-export type HuntMonsterDetail = Omit<
-  Tables<'hunt_monster'>,
-  'created_at' | 'updated_at'
+export type InnovationDetail = Omit<
+  Tables<'innovation'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Knowledge Detail
+ *
+ * Used throughout the app to represent a knowledge.
+ */
+export type KnowledgeDetail = Omit<
+  Tables<'knowledge'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Location Detail
+ *
+ * Used throughout the app to represent a location.
+ */
+export type LocationDetail = Omit<
+  Tables<'location'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Milestone Detail
+ *
+ * Used throughout the app to represent a milestone.
+ */
+export type MilestoneDetail = Omit<
+  Tables<'milestone'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Neurosis Detail
+ *
+ * Used throughout the app to represent a neurosis.
+ */
+export type NeurosisDetail = Omit<
+  Tables<'neurosis'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Pattern Detail
+ *
+ * Used throughout the app to represent a pattern.
+ */
+export type PatternDetail = Omit<
+  Tables<'pattern'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Philosophy Detail
+ *
+ * Used throughout the app to represent a philosophy.
+ */
+export type PhilosophyDetail = Omit<
+  Tables<'philosophy'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Principle Detail
+ *
+ * Used throughout the app to represent a principle.
+ */
+export type PrincipleDetail = Omit<
+  Tables<'principle'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
+ * Resource Detail
+ *
+ * Used throughout the app to represent a resource.
+ */
+export type ResourceDetail = Omit<
+  Tables<'resource'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
 >
 
 /**
@@ -118,8 +248,40 @@ export type SettlementDetail = Tables<'settlement'> & {
     /** Quantity */
     quantity: number
   }[]
-  /** Principle Data */
-  principle_data: {
+  /** Innovations */
+  innovations: {
+    /** Innovation ID */
+    id: string
+    /** Innovation Name */
+    innovation_name: string
+  }[]
+  /** Locations */
+  locations: {
+    /** Location ID */
+    id: string
+    /** Location Name */
+    location_name: string
+    /** Unlocked */
+    unlocked: boolean
+  }[]
+  /** Milestones */
+  milestones: {
+    /** Complete */
+    complete: boolean
+    /** Milestone ID */
+    id: string
+    /** Milestone Name */
+    milestone_name: string
+  }[]
+  /** Patterns */
+  patterns: {
+    /** Pattern ID */
+    id: string
+    /** Pattern Name */
+    pattern_name: string
+  }[]
+  /** Principles */
+  principles: {
     /** Principle ID */
     id: string
     /** Option 1 Name */
@@ -132,6 +294,13 @@ export type SettlementDetail = Tables<'settlement'> & {
     option_2_selected: boolean
     /** Principle Name */
     principle_name: string
+  }[]
+  /** Seed Patterns */
+  seed_patterns: {
+    /** Pattern ID */
+    id: string
+    /** Pattern Name */
+    seed_pattern_name: string
   }[]
   /** Shared Settlement */
   shared: boolean
@@ -147,6 +316,16 @@ export type SettlementDetail = Tables<'settlement'> & {
 export type SettlementPhaseDetail = Omit<
   Tables<'settlement_phase'>,
   'created_at' | 'updated_at'
+>
+
+/**
+ * Showdown AI Deck Detail
+ *
+ * Used throughout the app to represent a monster's AI deck in a showdown.
+ */
+export type ShowdownAIDeckDetail = Omit<
+  Tables<'showdown_ai_deck'>,
+  'created_at' | 'updated_at' | 'settlement_id' | 'showdown_id'
 >
 
 /**
@@ -170,16 +349,6 @@ export type ShowdownMonsterDetail = Omit<
 >
 
 /**
- * Showdown AI Deck Detail
- *
- * Used throughout the app to represent a monster's AI deck in a showdown.
- */
-export type ShowdownAIDeckDetail = Omit<
-  Tables<'showdown_ai_deck'>,
-  'created_at' | 'updated_at' | 'settlement_id' | 'showdown_id'
->
-
-/**
  * Showdown Survivor Detail
  *
  * Used throughout the app to represent a survivor in a showdown.
@@ -187,6 +356,16 @@ export type ShowdownAIDeckDetail = Omit<
 export type ShowdownSurvivorDetail = Omit<
   Tables<'showdown_survivor'>,
   'created_at' | 'updated_at'
+>
+
+/**
+ * Strain Milestone Detail
+ *
+ * Used throughout the app to represent a strain milestone.
+ */
+export type StrainMilestoneDetail = Omit<
+  Tables<'strain_milestone'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
 >
 
 /**
@@ -264,26 +443,6 @@ export type SurvivorDetail = Tables<'survivor'> & {
 }
 
 /**
- * Neurosis Detail
- *
- * Used throughout the app to represent a neurosis.
- */
-export type NeurosisDetail = Omit<
-  Tables<'neurosis'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
->
-
-/**
- * Philosophy Detail
- *
- * Used throughout the app to represent a philosophy.
- */
-export type PhilosophyDetail = Omit<
-  Tables<'philosophy'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
->
-
-/**
  * Wanderer Detail
  *
  * Used throughout the app to represent the currently selected wanderer.
@@ -304,4 +463,14 @@ export type WandererDetail = Omit<
 export type WandererTimelineYearDetail = Omit<
   Tables<'wanderer_timeline_year'>,
   'created_at' | 'updated_at'
+>
+
+/**
+ * Weapon Type Detail
+ *
+ * Used throughout the app to represent a weapon type.
+ */
+export type WeaponTypeDetail = Omit<
+  Tables<'weapon_type'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
 >

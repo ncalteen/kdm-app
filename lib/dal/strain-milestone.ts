@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { StrainMilestoneDetail } from '@/lib/types'
 
 /**
  * Get Strain Milestones
@@ -11,12 +11,9 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Strain Milestones
  */
-export async function getStrainMilestones(): Promise<
-  Omit<
-    Tables<'strain_milestone'>,
-    'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >[]
-> {
+export async function getStrainMilestones(): Promise<{
+  [key: string]: StrainMilestoneDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -27,50 +24,37 @@ export async function getStrainMilestones(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, strain_milestone_name'
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('strain_milestone')
+      .select('id, strain_milestone_name')
+      .eq('custom', false),
+    supabase
+      .from('strain_milestone')
+      .select('id, strain_milestone_name')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('strain_milestone_shared_user')
+      .select('strain_milestone(id, strain_milestone_name)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in strain milestones
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('strain_milestone')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(
+        `Error Fetching Strain Milestones: ${result.error.message}`
+      )
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Strain Milestones: ${builtInError.message}`
-    )
+  const strainMilestoneMap: { [key: string]: StrainMilestoneDetail } = {}
 
-  // Custom strain milestones owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('strain_milestone')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const s of nonCustomResult.data ?? []) strainMilestoneMap[s.id] = s
+  for (const s of userCustomResult.data ?? []) strainMilestoneMap[s.id] = s
+  for (const row of sharedResult.data ?? []) {
+    const s = row.strain_milestone as unknown as StrainMilestoneDetail | null
 
-  if (ownedError)
-    throw new Error(
-      `Error Fetching Owned Strain Milestones: ${ownedError.message}`
-    )
+    if (s) strainMilestoneMap[s.id] = s
+  }
 
-  // Custom strain milestones shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('strain_milestone_shared_user')
-    .select(`strain_milestone(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(
-      `Error Fetching Shared Strain Milestones: ${sharedError.message}`
-    )
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.strain_milestone)
-      ? row.strain_milestone
-      : row.strain_milestone
-        ? [row.strain_milestone]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return strainMilestoneMap
 }

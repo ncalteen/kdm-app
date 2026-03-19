@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import { Tables } from '../database.types'
+import { WeaponTypeDetail } from '@/lib/types'
 
 /**
  * Get Weapon Types
@@ -11,12 +11,9 @@ import { Tables } from '../database.types'
  *
  * @returns Weapon Types
  */
-export async function getWeaponTypes(): Promise<
-  Omit<
-    Tables<'weapon_type'>,
-    'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >[]
-> {
+export async function getWeaponTypes(): Promise<{
+  [key: string]: WeaponTypeDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -27,46 +24,35 @@ export async function getWeaponTypes(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  // Built-in weapon types
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('weapon_type')
-    .select('id, weapon_type_name')
-    .eq('custom', false)
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('weapon_type')
+      .select('id, weapon_type_name')
+      .eq('custom', false),
+    supabase
+      .from('weapon_type')
+      .select('id, weapon_type_name')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('weapon_type_shared_user')
+      .select('weapon_type(id, weapon_type_name)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Weapon Types: ${builtInError.message}`
-    )
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Weapon Types: ${result.error.message}`)
 
-  // Custom weapon types owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('weapon_type')
-    .select('id, weapon_type_name')
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  const weaponTypeMap: { [key: string]: WeaponTypeDetail } = {}
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Weapon Types: ${ownedError.message}`)
+  for (const w of nonCustomResult.data ?? []) weaponTypeMap[w.id] = w
+  for (const w of userCustomResult.data ?? []) weaponTypeMap[w.id] = w
+  for (const row of sharedResult.data ?? []) {
+    const w = row.weapon_type as unknown as WeaponTypeDetail | null
 
-  // Custom weapon types shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('weapon_type_shared_user')
-    .select('weapon_type(id, weapon_type_name)')
-    .eq('shared_user_id', user.id)
+    if (w) weaponTypeMap[w.id] = w
+  }
 
-  if (sharedError)
-    throw new Error(
-      `Error Fetching Shared Weapon Types: ${sharedError.message}`
-    )
-
-  const sharedTypes = (shared ?? []).flatMap((row) => {
-    const wt = Array.isArray(row.weapon_type)
-      ? row.weapon_type
-      : row.weapon_type
-        ? [row.weapon_type]
-        : []
-    return wt
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedTypes]
+  return weaponTypeMap
 }

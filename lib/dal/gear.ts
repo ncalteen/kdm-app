@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { GearDetail } from '@/lib/types'
 
 /**
  * Get Gear
@@ -11,9 +11,9 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Gear
  */
-export async function getGear(): Promise<
-  Omit<Tables<'gear'>, 'created_at' | 'updated_at' | 'custom' | 'user_id'>[]
-> {
+export async function getGear(): Promise<{
+  [key: string]: GearDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -24,40 +24,35 @@ export async function getGear(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, gear_name, location_id'
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('gear')
+      .select('id, gear_name, location_id')
+      .eq('custom', false),
+    supabase
+      .from('gear')
+      .select('id, gear_name, location_id')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('gear_shared_user')
+      .select('gear(id, gear_name, location_id)')
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in gear
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('gear')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Gear: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(`Error Fetching Built-in Gear: ${builtInError.message}`)
+  const gearMap: { [key: string]: GearDetail } = {}
 
-  // Custom gear owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('gear')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const g of nonCustomResult.data ?? []) gearMap[g.id] = g
+  for (const g of userCustomResult.data ?? []) gearMap[g.id] = g
+  for (const row of sharedResult.data ?? []) {
+    const g = row.gear as unknown as GearDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Gear: ${ownedError.message}`)
+    if (g) gearMap[g.id] = g
+  }
 
-  // Custom gear shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('gear_shared_user')
-    .select(`gear(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Gear: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.gear) ? row.gear : row.gear ? [row.gear] : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return gearMap
 }

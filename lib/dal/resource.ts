@@ -1,5 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { ResourceDetail } from '@/lib/types'
 
 /**
  * Get Resources
@@ -11,9 +11,9 @@ import { createClient } from '@/lib/supabase/client'
  *
  * @returns Resources
  */
-export async function getResources(): Promise<
-  Omit<Tables<'resource'>, 'created_at' | 'updated_at' | 'custom' | 'user_id'>[]
-> {
+export async function getResources(): Promise<{
+  [key: string]: ResourceDetail
+}> {
   const supabase = createClient()
 
   const {
@@ -24,46 +24,37 @@ export async function getResources(): Promise<
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields = 'id, resource_name, category, quarry_id, resource_types'
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('resource')
+      .select('id, resource_name, category, quarry_id, resource_types')
+      .eq('custom', false),
+    supabase
+      .from('resource')
+      .select('id, resource_name, category, quarry_id, resource_types')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('resource_shared_user')
+      .select(
+        'resource(id, resource_name, category, quarry_id, resource_types)'
+      )
+      .eq('shared_user_id', user.id)
+  ])
 
-  // Built-in resources
-  const { data: builtIn, error: builtInError } = await supabase
-    .from('resource')
-    .select(selectFields)
-    .eq('custom', false)
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Resources: ${result.error.message}`)
 
-  if (builtInError)
-    throw new Error(
-      `Error Fetching Built-in Resources: ${builtInError.message}`
-    )
+  const resourceMap: { [key: string]: ResourceDetail } = {}
 
-  // Custom resources owned by the user
-  const { data: owned, error: ownedError } = await supabase
-    .from('resource')
-    .select(selectFields)
-    .eq('custom', true)
-    .eq('user_id', user.id)
+  for (const r of nonCustomResult.data ?? []) resourceMap[r.id] = r
+  for (const r of userCustomResult.data ?? []) resourceMap[r.id] = r
+  for (const row of sharedResult.data ?? []) {
+    const r = row.resource as unknown as ResourceDetail | null
 
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Resources: ${ownedError.message}`)
+    if (r) resourceMap[r.id] = r
+  }
 
-  // Custom resources shared with the user
-  const { data: shared, error: sharedError } = await supabase
-    .from('resource_shared_user')
-    .select(`resource(${selectFields})`)
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Resources: ${sharedError.message}`)
-
-  const sharedItems = (shared ?? []).flatMap((row) => {
-    const item = Array.isArray(row.resource)
-      ? row.resource
-      : row.resource
-        ? [row.resource]
-        : []
-    return item
-  })
-
-  return [...(builtIn ?? []), ...(owned ?? []), ...sharedItems]
+  return resourceMap
 }
