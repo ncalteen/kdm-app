@@ -16,7 +16,7 @@ export async function getSettlementMilestones(
 
   const { data, error } = await supabase
     .from('settlement_milestone')
-    .select('complete, milestone_id, milestone(milestones_name)')
+    .select('complete, milestone_id, milestone(milestone_name)')
     .eq('settlement_id', settlementId)
 
   if (error)
