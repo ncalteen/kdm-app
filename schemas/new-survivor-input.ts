@@ -44,7 +44,7 @@ export const NewSurvivorInputSchema = z.object({
   /** Evasion */
   evasion: z.number().default(0),
   /** Fighting Arts */
-  fightingArts: z
+  fightingArtIds: z
     .array(z.string().min(1, 'A nameless fighting art cannot be recorded.'))
     .default([]),
   /** Gender */

@@ -60,30 +60,196 @@ export async function getSurvivor(
   if (error) throw new Error(`Error Fetching Survivor: ${error.message}`)
   if (!data) return null
 
-  const [huntResult, showdownResult] = await Promise.all([
+  const [
+    cursedGearResult,
+    disorderResult,
+    fightingArtResult,
+    secretFightingArtResult,
+    huntResult,
+    showdownResult,
+    knowledge1Result,
+    knowledge2Result,
+    neurosisResult,
+    philosophyResult,
+    tenetKnowledgeResult
+  ] = await Promise.all([
+    // Cursed Gear
+    supabase
+      .from('survivor_cursed_gear')
+      .select('gear_id')
+      .eq('survivor_id', survivorId),
+    // Disorders
+    supabase
+      .from('survivor_disorder')
+      .select('disorder_id')
+      .eq('survivor_id', survivorId),
+    // Fighting Arts
+    supabase
+      .from('survivor_fighting_art')
+      .select('fighting_art_id')
+      .eq('survivor_id', survivorId),
+    // Secret Fighting Arts
+    supabase
+      .from('survivor_secret_fighting_art')
+      .select('secret_fighting_art_id')
+      .eq('survivor_id', survivorId),
+    // Hunt Survivor
     supabase
       .from('hunt_survivor')
       .select('survivor_id')
       .eq('survivor_id', survivorId)
       .limit(1),
+    // Showdown Survivor
     supabase
       .from('showdown_survivor')
       .select('survivor_id')
       .eq('survivor_id', survivorId)
+      .limit(1),
+    // Knowledge 1
+    supabase
+      .from('knowledge')
+      .select('knowledge_name')
+      .eq('id', data.knowledge_1_id)
+      .limit(1),
+    // Knowledge 2
+    supabase
+      .from('knowledge')
+      .select('knowledge_name')
+      .eq('id', data.knowledge_2_id)
+      .limit(1),
+    // Neurosis
+    supabase
+      .from('neurosis')
+      .select('neurosis_name')
+      .eq('id', data.neurosis_id)
+      .limit(1),
+    // Philosophy
+    supabase
+      .from('philosophy')
+      .select('philosophy_name')
+      .eq('id', data.philosophy_id)
+      .limit(1),
+    // Tenet Knowledge
+    supabase
+      .from('knowledge')
+      .select('knowledge_name')
+      .eq('id', data.tenet_knowledge_id)
       .limit(1)
   ])
 
+  if (cursedGearResult.error)
+    throw new Error(
+      `Error Fetching Cursed Gear: ${cursedGearResult.error.message}`
+    )
+  if (disorderResult.error)
+    throw new Error(`Error Fetching Disorders: ${disorderResult.error.message}`)
+  if (fightingArtResult.error)
+    throw new Error(
+      `Error Fetching Fighting Arts: ${fightingArtResult.error.message}`
+    )
+  if (secretFightingArtResult.error)
+    throw new Error(
+      `Error Fetching Secret Fighting Arts: ${secretFightingArtResult.error.message}`
+    )
   if (huntResult.error)
     throw new Error(`Error Checking Hunt Survivor: ${huntResult.error.message}`)
   if (showdownResult.error)
     throw new Error(
       `Error Checking Showdown Survivor: ${showdownResult.error.message}`
     )
+  if (knowledge1Result.error)
+    throw new Error(
+      `Error Fetching Knowledge 1: ${knowledge1Result.error.message}`
+    )
+  if (knowledge2Result.error)
+    throw new Error(
+      `Error Fetching Knowledge 2: ${knowledge2Result.error.message}`
+    )
+  if (neurosisResult.error)
+    throw new Error(`Error Fetching Neurosis: ${neurosisResult.error.message}`)
+  if (philosophyResult.error)
+    throw new Error(
+      `Error Fetching Philosophy: ${philosophyResult.error.message}`
+    )
+  if (tenetKnowledgeResult.error)
+    throw new Error(
+      `Error Fetching Tenet Knowledge: ${tenetKnowledgeResult.error.message}`
+    )
 
-  const embarked =
-    (huntResult.data?.length ?? 0) > 0 || (showdownResult.data?.length ?? 0) > 0
+  // Fetch names for junction table references in parallel.
+  const cursedGearIds = (cursedGearResult.data ?? []).map((x) => x.gear_id)
+  const disorderIds = (disorderResult.data ?? []).map((x) => x.disorder_id)
+  const fightingArtIds = (fightingArtResult.data ?? []).map(
+    (x) => x.fighting_art_id
+  )
+  const secretFightingArtIds = (secretFightingArtResult.data ?? []).map(
+    (x) => x.secret_fighting_art_id
+  )
 
-  return { ...data, embarked }
+  const [
+    gearNamesResult,
+    disorderNamesResult,
+    fightingArtNamesResult,
+    secretFightingArtNamesResult
+  ] = await Promise.all([
+    cursedGearIds.length > 0
+      ? supabase.from('gear').select('gear_name').in('id', cursedGearIds)
+      : { data: [] as { gear_name: string }[], error: null },
+    disorderIds.length > 0
+      ? supabase.from('disorder').select('disorder_name').in('id', disorderIds)
+      : { data: [] as { disorder_name: string }[], error: null },
+    fightingArtIds.length > 0
+      ? supabase
+          .from('fighting_art')
+          .select('fighting_art_name')
+          .in('id', fightingArtIds)
+      : { data: [] as { fighting_art_name: string }[], error: null },
+    secretFightingArtIds.length > 0
+      ? supabase
+          .from('secret_fighting_art')
+          .select('secret_fighting_art_name')
+          .in('id', secretFightingArtIds)
+      : { data: [] as { secret_fighting_art_name: string }[], error: null }
+  ])
+
+  if (gearNamesResult.error)
+    throw new Error(
+      `Error Fetching Gear Names: ${gearNamesResult.error.message}`
+    )
+  if (disorderNamesResult.error)
+    throw new Error(
+      `Error Fetching Disorder Names: ${disorderNamesResult.error.message}`
+    )
+  if (fightingArtNamesResult.error)
+    throw new Error(
+      `Error Fetching Fighting Art Names: ${fightingArtNamesResult.error.message}`
+    )
+  if (secretFightingArtNamesResult.error)
+    throw new Error(
+      `Error Fetching Secret Fighting Art Names: ${secretFightingArtNamesResult.error.message}`
+    )
+
+  return {
+    ...data,
+    cursed_gear_names: (gearNamesResult.data ?? []).map((x) => x.gear_name),
+    disorder_names: (disorderNamesResult.data ?? []).map(
+      (x) => x.disorder_name
+    ),
+    embarked:
+      (huntResult.data?.length ?? 0) > 0 ||
+      (showdownResult.data?.length ?? 0) > 0,
+    fighting_art_names: (fightingArtNamesResult.data ?? []).map(
+      (x) => x.fighting_art_name
+    ),
+    knowledge_1_name: knowledge1Result.data?.[0]?.knowledge_name ?? null,
+    knowledge_2_name: knowledge2Result.data?.[0]?.knowledge_name ?? null,
+    neurosis_name: neurosisResult.data?.[0]?.neurosis_name ?? null,
+    philosophy_name: philosophyResult.data?.[0]?.philosophy_name ?? null,
+    secret_fighting_art_names: (secretFightingArtNamesResult.data ?? []).map(
+      (x) => x.secret_fighting_art_name
+    ),
+    tenet_knowledge_name: tenetKnowledgeResult.data?.[0]?.knowledge_name ?? null
+  }
 }
 
 /**
@@ -115,17 +281,60 @@ export async function getSurvivors(
 
   const survivorIds = survivors.map((s) => s.id)
 
-  const [huntResult, showdownResult] = await Promise.all([
+  const [
+    cursedGearResult,
+    disorderResult,
+    fightingArtResult,
+    secretFightingArtResult,
+    huntResult,
+    showdownResult
+  ] = await Promise.all([
+    // Cursed Gear
+    supabase
+      .from('survivor_cursed_gear')
+      .select('survivor_id, gear_id')
+      .in('survivor_id', survivorIds),
+    // Disorders
+    supabase
+      .from('survivor_disorder')
+      .select('survivor_id, disorder_id')
+      .in('survivor_id', survivorIds),
+    // Fighting Arts
+    supabase
+      .from('survivor_fighting_art')
+      .select('survivor_id, fighting_art_id')
+      .in('survivor_id', survivorIds),
+    // Secret Fighting Arts
+    supabase
+      .from('survivor_secret_fighting_art')
+      .select('survivor_id, secret_fighting_art_id')
+      .in('survivor_id', survivorIds),
+    // Hunt Survivor
     supabase
       .from('hunt_survivor')
       .select('survivor_id')
       .in('survivor_id', survivorIds),
+    // Showdown Survivor
     supabase
       .from('showdown_survivor')
       .select('survivor_id')
       .in('survivor_id', survivorIds)
   ])
 
+  if (cursedGearResult.error)
+    throw new Error(
+      `Error Fetching Cursed Gear: ${cursedGearResult.error.message}`
+    )
+  if (disorderResult.error)
+    throw new Error(`Error Fetching Disorders: ${disorderResult.error.message}`)
+  if (fightingArtResult.error)
+    throw new Error(
+      `Error Fetching Fighting Arts: ${fightingArtResult.error.message}`
+    )
+  if (secretFightingArtResult.error)
+    throw new Error(
+      `Error Fetching Secret Fighting Arts: ${secretFightingArtResult.error.message}`
+    )
   if (huntResult.error)
     throw new Error(
       `Error Checking Hunt Survivors: ${huntResult.error.message}`
@@ -135,6 +344,192 @@ export async function getSurvivors(
       `Error Checking Showdown Survivors: ${showdownResult.error.message}`
     )
 
+  // Collect unique FK IDs across all survivors for batch lookups.
+  const allGearIds = [
+    ...new Set((cursedGearResult.data ?? []).map((r) => r.gear_id))
+  ]
+  const allDisorderIds = [
+    ...new Set((disorderResult.data ?? []).map((r) => r.disorder_id))
+  ]
+  const allFightingArtIds = [
+    ...new Set((fightingArtResult.data ?? []).map((r) => r.fighting_art_id))
+  ]
+  const allSecretFightingArtIds = [
+    ...new Set(
+      (secretFightingArtResult.data ?? []).map((r) => r.secret_fighting_art_id)
+    )
+  ]
+  const allKnowledgeIds = [
+    ...new Set(
+      survivors
+        .flatMap((s) => [
+          s.knowledge_1_id,
+          s.knowledge_2_id,
+          s.tenet_knowledge_id
+        ])
+        .filter((id): id is string => id != null)
+    )
+  ]
+  const allNeurosisIds = [
+    ...new Set(
+      survivors
+        .map((s) => s.neurosis_id)
+        .filter((id): id is string => id != null)
+    )
+  ]
+  const allPhilosophyIds = [
+    ...new Set(
+      survivors
+        .map((s) => s.philosophy_id)
+        .filter((id): id is string => id != null)
+    )
+  ]
+
+  // Batch-fetch all name lookups in parallel.
+  const [
+    gearNamesResult,
+    disorderNamesResult,
+    fightingArtNamesResult,
+    secretFightingArtNamesResult,
+    knowledgeNamesResult,
+    neurosisNamesResult,
+    philosophyNamesResult
+  ] = await Promise.all([
+    allGearIds.length > 0
+      ? supabase.from('gear').select('id, gear_name').in('id', allGearIds)
+      : { data: [] as { id: string; gear_name: string }[], error: null },
+    allDisorderIds.length > 0
+      ? supabase
+          .from('disorder')
+          .select('id, disorder_name')
+          .in('id', allDisorderIds)
+      : { data: [] as { id: string; disorder_name: string }[], error: null },
+    allFightingArtIds.length > 0
+      ? supabase
+          .from('fighting_art')
+          .select('id, fighting_art_name')
+          .in('id', allFightingArtIds)
+      : {
+          data: [] as { id: string; fighting_art_name: string }[],
+          error: null
+        },
+    allSecretFightingArtIds.length > 0
+      ? supabase
+          .from('secret_fighting_art')
+          .select('id, secret_fighting_art_name')
+          .in('id', allSecretFightingArtIds)
+      : {
+          data: [] as { id: string; secret_fighting_art_name: string }[],
+          error: null
+        },
+    allKnowledgeIds.length > 0
+      ? supabase
+          .from('knowledge')
+          .select('id, knowledge_name')
+          .in('id', allKnowledgeIds)
+      : { data: [] as { id: string; knowledge_name: string }[], error: null },
+    allNeurosisIds.length > 0
+      ? supabase
+          .from('neurosis')
+          .select('id, neurosis_name')
+          .in('id', allNeurosisIds)
+      : { data: [] as { id: string; neurosis_name: string }[], error: null },
+    allPhilosophyIds.length > 0
+      ? supabase
+          .from('philosophy')
+          .select('id, philosophy_name')
+          .in('id', allPhilosophyIds)
+      : { data: [] as { id: string; philosophy_name: string }[], error: null }
+  ])
+
+  if (gearNamesResult.error)
+    throw new Error(
+      `Error Fetching Gear Names: ${gearNamesResult.error.message}`
+    )
+  if (disorderNamesResult.error)
+    throw new Error(
+      `Error Fetching Disorder Names: ${disorderNamesResult.error.message}`
+    )
+  if (fightingArtNamesResult.error)
+    throw new Error(
+      `Error Fetching Fighting Art Names: ${fightingArtNamesResult.error.message}`
+    )
+  if (secretFightingArtNamesResult.error)
+    throw new Error(
+      `Error Fetching Secret Fighting Art Names: ${secretFightingArtNamesResult.error.message}`
+    )
+  if (knowledgeNamesResult.error)
+    throw new Error(
+      `Error Fetching Knowledge Names: ${knowledgeNamesResult.error.message}`
+    )
+  if (neurosisNamesResult.error)
+    throw new Error(
+      `Error Fetching Neurosis Names: ${neurosisNamesResult.error.message}`
+    )
+  if (philosophyNamesResult.error)
+    throw new Error(
+      `Error Fetching Philosophy Names: ${philosophyNamesResult.error.message}`
+    )
+
+  // Build lookup maps for name resolution.
+  const gearNameMap = new Map(
+    (gearNamesResult.data ?? []).map((g) => [g.id, g.gear_name])
+  )
+  const disorderNameMap = new Map(
+    (disorderNamesResult.data ?? []).map((d) => [d.id, d.disorder_name])
+  )
+  const fightingArtNameMap = new Map(
+    (fightingArtNamesResult.data ?? []).map((f) => [f.id, f.fighting_art_name])
+  )
+  const secretFightingArtNameMap = new Map(
+    (secretFightingArtNamesResult.data ?? []).map((s) => [
+      s.id,
+      s.secret_fighting_art_name
+    ])
+  )
+  const knowledgeNameMap = new Map(
+    (knowledgeNamesResult.data ?? []).map((k) => [k.id, k.knowledge_name])
+  )
+  const neurosisNameMap = new Map(
+    (neurosisNamesResult.data ?? []).map((n) => [n.id, n.neurosis_name])
+  )
+  const philosophyNameMap = new Map(
+    (philosophyNamesResult.data ?? []).map((p) => [p.id, p.philosophy_name])
+  )
+
+  // Group junction table results by survivor_id.
+  const cursedGearBySurvivor = new Map<string, string[]>()
+  for (const r of cursedGearResult.data ?? []) {
+    const names = cursedGearBySurvivor.get(r.survivor_id) ?? []
+    const name = gearNameMap.get(r.gear_id)
+    if (name) names.push(name)
+    cursedGearBySurvivor.set(r.survivor_id, names)
+  }
+
+  const disordersBySurvivor = new Map<string, string[]>()
+  for (const r of disorderResult.data ?? []) {
+    const names = disordersBySurvivor.get(r.survivor_id) ?? []
+    const name = disorderNameMap.get(r.disorder_id)
+    if (name) names.push(name)
+    disordersBySurvivor.set(r.survivor_id, names)
+  }
+
+  const fightingArtsBySurvivor = new Map<string, string[]>()
+  for (const r of fightingArtResult.data ?? []) {
+    const names = fightingArtsBySurvivor.get(r.survivor_id) ?? []
+    const name = fightingArtNameMap.get(r.fighting_art_id)
+    if (name) names.push(name)
+    fightingArtsBySurvivor.set(r.survivor_id, names)
+  }
+
+  const secretFightingArtsBySurvivor = new Map<string, string[]>()
+  for (const r of secretFightingArtResult.data ?? []) {
+    const names = secretFightingArtsBySurvivor.get(r.survivor_id) ?? []
+    const name = secretFightingArtNameMap.get(r.secret_fighting_art_id)
+    if (name) names.push(name)
+    secretFightingArtsBySurvivor.set(r.survivor_id, names)
+  }
+
   const embarkedIds = new Set([
     ...(huntResult.data ?? []).map((r) => r.survivor_id),
     ...(showdownResult.data ?? []).map((r) => r.survivor_id)
@@ -142,7 +537,27 @@ export async function getSurvivors(
 
   return survivors.map((survivor) => ({
     ...survivor,
-    embarked: embarkedIds.has(survivor.id)
+    cursed_gear_names: cursedGearBySurvivor.get(survivor.id) ?? [],
+    disorder_names: disordersBySurvivor.get(survivor.id) ?? [],
+    embarked: embarkedIds.has(survivor.id),
+    fighting_art_names: fightingArtsBySurvivor.get(survivor.id) ?? [],
+    knowledge_1_name: survivor.knowledge_1_id
+      ? (knowledgeNameMap.get(survivor.knowledge_1_id) ?? null)
+      : null,
+    knowledge_2_name: survivor.knowledge_2_id
+      ? (knowledgeNameMap.get(survivor.knowledge_2_id) ?? null)
+      : null,
+    neurosis_name: survivor.neurosis_id
+      ? (neurosisNameMap.get(survivor.neurosis_id) ?? null)
+      : null,
+    philosophy_name: survivor.philosophy_id
+      ? (philosophyNameMap.get(survivor.philosophy_id) ?? null)
+      : null,
+    secret_fighting_art_names:
+      secretFightingArtsBySurvivor.get(survivor.id) ?? [],
+    tenet_knowledge_name: survivor.tenet_knowledge_id
+      ? (knowledgeNameMap.get(survivor.tenet_knowledge_id) ?? null)
+      : null
   }))
 }
 
@@ -265,7 +680,6 @@ export async function createSurvivor(
     courage: options.courage,
     disposition: options.disposition ?? null,
     evasion: options.evasion,
-    fighting_arts: options.fightingArts,
     gender: options.gender === 'M' ? 'MALE' : 'FEMALE',
     hunt_xp: options.huntXP,
     hunt_xp_rank_up: options.huntXPRankUp,
@@ -311,6 +725,23 @@ export async function createSurvivor(
     .single()
 
   if (error) throw new Error(`Error Creating Survivor: ${error.message}`)
+
+  // If options.fightingArtIds is present, add the entries to the survivor_fighting_art table after inserting the survivor and getting the survivor ID. This is necessary because fighting arts are stored in a junction table and require the survivor ID as a foreign key.
+  if (options.fightingArtIds?.length) {
+    const { error: junctionError } = await supabase
+      .from('survivor_fighting_art')
+      .insert(
+        options.fightingArtIds.map((fightingArtId) => ({
+          survivor_id: data.id,
+          fighting_art_id: fightingArtId
+        }))
+      )
+
+    if (junctionError)
+      throw new Error(
+        `Error Adding Fighting Arts to Survivor: ${junctionError.message}`
+      )
+  }
 
   return { ...data, embarked: false }
 }
