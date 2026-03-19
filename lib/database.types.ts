@@ -1289,7 +1289,7 @@ export type Database = {
           created_at: string
           custom: boolean
           id: string
-          neurosis_name: string | null
+          neurosis_id: string | null
           philosophy_name: string
           updated_at: string
           user_id: string | null
@@ -1298,7 +1298,7 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
-          neurosis_name?: string | null
+          neurosis_id?: string | null
           philosophy_name: string
           updated_at?: string
           user_id?: string | null
@@ -1307,12 +1307,20 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
-          neurosis_name?: string | null
+          neurosis_id?: string | null
           philosophy_name?: string
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "philosophy_neurosis_id_fkey"
+            columns: ["neurosis_id"]
+            isOneToOne: false
+            referencedRelation: "neurosis"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       philosophy_shared_user: {
         Row: {
@@ -3013,10 +3021,8 @@ export type Database = {
           created_at: string
           cursed_gear: string[]
           dead: boolean
-          disorders: string[]
           disposition: number | null
           evasion: number
-          fighting_arts: string[]
           gambler_reaper: boolean | null
           gambler_rust: boolean | null
           gambler_storm: boolean | null
@@ -3042,12 +3048,12 @@ export type Database = {
           hunt_xp_rank_up: number[]
           id: string
           insanity: number
-          knowledge_1: string | null
+          knowledge_1_id: string | null
           knowledge_1_observation_conditions: string | null
           knowledge_1_observation_rank: number | null
           knowledge_1_rank_up: number | null
           knowledge_1_rules: string | null
-          knowledge_2: string | null
+          knowledge_2_id: string | null
           knowledge_2_observation_conditions: string | null
           knowledge_2_observation_rank: number | null
           knowledge_2_rank_up: number | null
@@ -3061,11 +3067,11 @@ export type Database = {
           luck: number
           lumi: number | null
           movement: number
-          neurosis: string | null
+          neurosis_id: string | null
           next_departure: string[]
           notes: string
           once_per_lifetime: string[]
-          philosophy: string | null
+          philosophy_id: string | null
           philosophy_rank: number | null
           reroll_used: boolean
           retired: boolean
@@ -3073,7 +3079,6 @@ export type Database = {
           sculptor_rust: boolean | null
           sculptor_storm: boolean | null
           sculptor_witch: boolean | null
-          secret_fighting_arts: string[]
           settlement_id: string
           skip_next_hunt: boolean
           speed: number
@@ -3102,7 +3107,7 @@ export type Database = {
           waist_warped_pelvis: number
           wanderer: boolean
           weapon_proficiency: number
-          weapon_type: Database["public"]["Tables"]["weapon_type"]["Row"] | null
+          weapon_type_id: string | null
         }
         Insert: {
           abilities_impairments?: string[]
@@ -3140,10 +3145,8 @@ export type Database = {
           created_at?: string
           cursed_gear?: string[]
           dead?: boolean
-          disorders?: string[]
           disposition?: number | null
           evasion?: number
-          fighting_arts?: string[]
           gambler_reaper?: boolean | null
           gambler_rust?: boolean | null
           gambler_storm?: boolean | null
@@ -3169,12 +3172,12 @@ export type Database = {
           hunt_xp_rank_up?: number[]
           id?: string
           insanity?: number
-          knowledge_1?: string | null
+          knowledge_1_id?: string | null
           knowledge_1_observation_conditions?: string | null
           knowledge_1_observation_rank?: number | null
           knowledge_1_rank_up?: number | null
           knowledge_1_rules?: string | null
-          knowledge_2?: string | null
+          knowledge_2_id?: string | null
           knowledge_2_observation_conditions?: string | null
           knowledge_2_observation_rank?: number | null
           knowledge_2_rank_up?: number | null
@@ -3188,11 +3191,11 @@ export type Database = {
           luck?: number
           lumi?: number | null
           movement?: number
-          neurosis?: string | null
+          neurosis_id?: string | null
           next_departure?: string[]
           notes?: string
           once_per_lifetime?: string[]
-          philosophy?: string | null
+          philosophy_id?: string | null
           philosophy_rank?: number | null
           reroll_used?: boolean
           retired?: boolean
@@ -3200,7 +3203,6 @@ export type Database = {
           sculptor_rust?: boolean | null
           sculptor_storm?: boolean | null
           sculptor_witch?: boolean | null
-          secret_fighting_arts?: string[]
           settlement_id: string
           skip_next_hunt?: boolean
           speed?: number
@@ -3229,9 +3231,7 @@ export type Database = {
           waist_warped_pelvis?: number
           wanderer?: boolean
           weapon_proficiency?: number
-          weapon_type?:
-            | Database["public"]["Tables"]["weapon_type"]["Row"]
-            | null
+          weapon_type_id?: string | null
         }
         Update: {
           abilities_impairments?: string[]
@@ -3269,10 +3269,8 @@ export type Database = {
           created_at?: string
           cursed_gear?: string[]
           dead?: boolean
-          disorders?: string[]
           disposition?: number | null
           evasion?: number
-          fighting_arts?: string[]
           gambler_reaper?: boolean | null
           gambler_rust?: boolean | null
           gambler_storm?: boolean | null
@@ -3298,12 +3296,12 @@ export type Database = {
           hunt_xp_rank_up?: number[]
           id?: string
           insanity?: number
-          knowledge_1?: string | null
+          knowledge_1_id?: string | null
           knowledge_1_observation_conditions?: string | null
           knowledge_1_observation_rank?: number | null
           knowledge_1_rank_up?: number | null
           knowledge_1_rules?: string | null
-          knowledge_2?: string | null
+          knowledge_2_id?: string | null
           knowledge_2_observation_conditions?: string | null
           knowledge_2_observation_rank?: number | null
           knowledge_2_rank_up?: number | null
@@ -3317,11 +3315,11 @@ export type Database = {
           luck?: number
           lumi?: number | null
           movement?: number
-          neurosis?: string | null
+          neurosis_id?: string | null
           next_departure?: string[]
           notes?: string
           once_per_lifetime?: string[]
-          philosophy?: string | null
+          philosophy_id?: string | null
           philosophy_rank?: number | null
           reroll_used?: boolean
           retired?: boolean
@@ -3329,7 +3327,6 @@ export type Database = {
           sculptor_rust?: boolean | null
           sculptor_storm?: boolean | null
           sculptor_witch?: boolean | null
-          secret_fighting_arts?: string[]
           settlement_id?: string
           skip_next_hunt?: boolean
           speed?: number
@@ -3358,16 +3355,173 @@ export type Database = {
           waist_warped_pelvis?: number
           wanderer?: boolean
           weapon_proficiency?: number
-          weapon_type?:
-            | Database["public"]["Tables"]["weapon_type"]["Row"]
-            | null
+          weapon_type_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "survivor_knowledge_1_id_fkey"
+            columns: ["knowledge_1_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_knowledge_2_id_fkey"
+            columns: ["knowledge_2_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_neurosis_id_fkey"
+            columns: ["neurosis_id"]
+            isOneToOne: false
+            referencedRelation: "neurosis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_philosophy_id_fkey"
+            columns: ["philosophy_id"]
+            isOneToOne: false
+            referencedRelation: "philosophy"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "survivor_settlement_id_fkey"
             columns: ["settlement_id"]
             isOneToOne: false
             referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_tenet_knowledge_fkey"
+            columns: ["tenet_knowledge"]
+            isOneToOne: false
+            referencedRelation: "knowledge"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_weapon_type_id_fkey"
+            columns: ["weapon_type_id"]
+            isOneToOne: false
+            referencedRelation: "weapon_type"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survivor_cursed_gear: {
+        Row: {
+          created_at: string
+          gear_id: string
+          id: string
+          survivor_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gear_id: string
+          id?: string
+          survivor_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gear_id?: string
+          id?: string
+          survivor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survivor_cursed_gear_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_cursed_gear_survivor_id_fkey"
+            columns: ["survivor_id"]
+            isOneToOne: false
+            referencedRelation: "survivor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survivor_disorder: {
+        Row: {
+          created_at: string
+          disorder_id: string
+          id: string
+          survivor_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          disorder_id: string
+          id?: string
+          survivor_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          disorder_id?: string
+          id?: string
+          survivor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survivor_disorder_disorder_id_fkey"
+            columns: ["disorder_id"]
+            isOneToOne: false
+            referencedRelation: "disorder"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_disorder_survivor_id_fkey"
+            columns: ["survivor_id"]
+            isOneToOne: false
+            referencedRelation: "survivor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survivor_fighting_art: {
+        Row: {
+          created_at: string
+          fighting_art_id: string
+          id: string
+          survivor_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fighting_art_id: string
+          id?: string
+          survivor_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fighting_art_id?: string
+          id?: string
+          survivor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survivor_fighting_art_fighting_art_id_fkey"
+            columns: ["fighting_art_id"]
+            isOneToOne: false
+            referencedRelation: "fighting_art"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_fighting_art_survivor_id_fkey"
+            columns: ["survivor_id"]
+            isOneToOne: false
+            referencedRelation: "survivor"
             referencedColumns: ["id"]
           },
         ]

@@ -142,6 +142,7 @@ create policy "Allow all for admin" on neurosis_shared_user for all using (is_ad
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_neurosis_philosophy on neurosis(philosophy_id);
 create index idx_neurosis_shared_user_neurosis on neurosis_shared_user(neurosis_id);
 create index idx_neurosis_shared_user_user on neurosis_shared_user(shared_user_id);
 --------------------------------------------------------------------------------
@@ -149,3 +150,11 @@ create index idx_neurosis_shared_user_user on neurosis_shared_user(shared_user_i
 --------------------------------------------------------------------------------
 create trigger set_updated_at before
 update on neurosis for each row execute function update_updated_at();
+--------------------------------------------------------------------------------
+-- Add neurosis_id to philosophy table
+-- A philosophy can have 0 or 1 neurosis. If the neurosis is deleted, the
+-- reference is cleared.
+--------------------------------------------------------------------------------
+alter table philosophy
+add column neurosis_id uuid references neurosis(id) on delete
+set null;

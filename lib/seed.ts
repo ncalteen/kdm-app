@@ -1,4 +1,4 @@
-import { ColorChoice, MonsterNode, Philosophy, SurvivorType } from '@/lib/enums'
+import { ColorChoice, MonsterNode, SurvivorType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { saveToLocalStorage } from '@/lib/utils'
 import { SupabaseClient } from '@supabase/supabase-js'
@@ -64,7 +64,8 @@ export async function generateSeedData() {
     await createSurvivorsForSettlement(
       supabase,
       settlement.id,
-      settlement.survivor_type
+      settlement.survivor_type,
+      settlement.philosophies
     )
 
     // Add hunt to some settlements
@@ -165,11 +166,12 @@ async function deleteUserData(supabase: SupabaseClient, userId: string) {
  *
  * @param supabase Supabase Client
  * @param settlementId Settlement ID
+ * @returns Array of Philosophies Added to the Settlement Arc
  */
 async function addSettlementArc(
   supabase: SupabaseClient,
   settlementId: string
-) {
+): Promise<{ id: string; philosophy_name: string }[]> {
   console.log(`Adding Arc Items for Settlement ${settlementId}...`)
 
   const { data: allPhilosophies, error: getPhilosophiesError } = await supabase
@@ -236,6 +238,8 @@ async function addSettlementArc(
 
     if (error) throw error
   }
+
+  return philosophies
 }
 
 /**
@@ -678,7 +682,11 @@ async function createSettlement(
     | 'PEOPLE_OF_THE_DREAM_KEEPER'
     | 'SQUIRES_OF_THE_CITADEL',
   variant: number
-): Promise<{ id: string; survivor_type: SurvivorType }> {
+): Promise<{
+  id: string
+  survivor_type: SurvivorType
+  philosophies: { id: string; philosophy_name: string }[]
+}> {
   const survivorType = Math.random() < 0.5 ? 'CORE' : 'ARC'
 
   const { data: settlement, error: createSettlementError } = await supabase
@@ -719,42 +727,48 @@ async function createSettlement(
   if (createSettlementError) throw createSettlementError
 
   // If this is an Arc settlement, add philosophies and knowledges.
-  if (survivorType === 'ARC') await addSettlementArc(supabase, settlement.id)
+  const updatedSettlement = {
+    ...settlement,
+    philosophies:
+      survivorType === 'ARC'
+        ? await addSettlementArc(supabase, settlement.id)
+        : []
+  }
 
   // Add wanderers
-  await addSettlementWanderers(supabase, settlement.id)
+  await addSettlementWanderers(supabase, updatedSettlement.id)
 
   // Add locations and gear
-  await addSettlementLocationsAndGear(supabase, settlement.id)
+  await addSettlementLocationsAndGear(supabase, updatedSettlement.id)
 
   // Add non-location settlement gear
-  await addSettlementGear(supabase, settlement.id)
+  await addSettlementGear(supabase, updatedSettlement.id)
 
   // Add innovations
-  await addSettlementInnovations(supabase, settlement.id)
+  await addSettlementInnovations(supabase, updatedSettlement.id)
 
   // Add patterns
-  await addSettlementPatterns(supabase, settlement.id)
+  await addSettlementPatterns(supabase, updatedSettlement.id)
 
   // Add milestones
-  await addSettlementMilestones(supabase, settlement.id, campaignType)
+  await addSettlementMilestones(supabase, updatedSettlement.id, campaignType)
 
   // Add principles
-  await addSettlementPrinciples(supabase, settlement.id, campaignType)
+  await addSettlementPrinciples(supabase, updatedSettlement.id, campaignType)
 
   // Add resources
-  await addSettlementResources(supabase, settlement.id)
+  await addSettlementResources(supabase, updatedSettlement.id)
 
   // Add nemeses
-  await addSettlementNemeses(supabase, settlement.id)
+  await addSettlementNemeses(supabase, updatedSettlement.id)
 
   // Add quarries
-  await addSettlementQuarries(supabase, settlement.id)
+  await addSettlementQuarries(supabase, updatedSettlement.id)
 
   // Add timeline entries
-  await addSettlementTimelineEntries(supabase, settlement.id, variant)
+  await addSettlementTimelineEntries(supabase, updatedSettlement.id, variant)
 
-  return settlement
+  return updatedSettlement
 }
 
 /**
@@ -763,12 +777,14 @@ async function createSettlement(
  * @param supabase Supabase Client
  * @param settlementId Settlement ID
  * @param survivorType Survivor Type
+ * @param philosophies Settlement Philosophies
  * @returns Array of Survivors
  */
 async function createSurvivorsForSettlement(
   supabase: SupabaseClient,
   settlementId: string,
-  survivorType: SurvivorType
+  survivorType: SurvivorType,
+  philosophies: { id: string; philosophy_name: string }[]
 ): Promise<void> {
   const names = [
     'Theron',
@@ -815,161 +831,252 @@ async function createSurvivorsForSettlement(
 
     console.log(`Creating Survivor ${i} for Settlement ${settlementId}...`)
 
-    const { error: createSurvivorError } = await supabase
-      .from('survivor')
-      .insert({
-        abilities_impairments: isExperienced ? ['Ability'] : ['Impairment'],
-        accuracy: isExperienced ? 2 : 0,
-        arc: survivorType === SurvivorType.ARC,
-        can_dash: isExperienced,
-        can_dodge: true,
-        can_fist_pump: false,
-        can_encourage: isExperienced,
-        can_spend_survival: true,
-        can_surge: false,
-        can_use_fighting_arts_knowledges: true,
-        color: isExperienced ? ColorChoice.BLUE : ColorChoice.SLATE,
-        courage: isExperienced ? 3 : 0,
-        cursed_gear: isExperienced ? ['Cursed Sword'] : [],
-        dead: isDead,
-        disorders: isExperienced ? ['Anxiety', 'Binge Eating Disorder'] : [],
-        evasion: isExperienced ? 1 : 0,
-        fighting_arts: isExperienced
-          ? ['Mighty Strike', 'Leader']
-          : i % 2 === 0
-            ? ['Mighty Strike']
-            : [],
-        gender: i % 2 === 0 ? 'MALE' : 'FEMALE',
-        has_analyze: false,
-        has_explore: isExperienced,
-        has_matchmaker: false,
-        has_prepared: isExperienced,
-        has_stalwart: false,
-        has_tinker: false,
-        hunt_xp: isExperienced ? 8 : i % 16,
-        hunt_xp_rank_up: isExperienced ? [2, 6] : [],
-        insanity: isExperienced ? 3 : 0,
-        luck: isExperienced ? 1 : 0,
-        movement: 5,
-        next_departure: isExperienced ? ['Next Departure Bonus'] : [],
-        notes: isExperienced
-          ? 'Veteran survivor with extensive experience'
-          : isDead
-            ? 'Fell in battle against overwhelming darkness'
-            : isRetired
-              ? 'Retired to support the settlement'
-              : undefined,
-        once_per_lifetime: isExperienced ? ['Once Per Lifetime Bonus'] : [],
-        reroll_used: false,
-        retired: isRetired,
-        secret_fighting_arts: isExperienced ? ['Counter-Weighted Axe'] : [],
-        settlement_id: settlementId,
-        skip_next_hunt: i % 7 === 0 && !isDead && !isRetired,
-        speed: isExperienced ? 1 : 0,
-        strength: isExperienced ? 2 : 0,
-        survival: 1 + (isExperienced ? 2 : 0),
-        survivor_name: names[i % names.length],
-        understanding: isExperienced ? 2 : 0,
-        wanderer: false,
-        weapon_proficiency: isExperienced ? 5 : Math.min(i, 3),
-        weapon_type_id: isExperienced
-          ? i % 5 === 0
-            ? weaponTypes.find((wt) => wt.weapon_type_name === 'SWORD')?.id
-            : i % 5 === 1
-              ? weaponTypes.find((wt) => wt.weapon_type_name === 'AXE')?.id
-              : i % 5 === 2
-                ? weaponTypes.find((wt) => wt.weapon_type_name === 'SPEAR')?.id
-                : i % 5 === 3
-                  ? weaponTypes.find((wt) => wt.weapon_type_name === 'BOW')?.id
-                  : weaponTypes.find((wt) => wt.weapon_type_name === 'KATANA')
+    const { data: createSurvivorData, error: createSurvivorError } =
+      await supabase
+        .from('survivor')
+        .insert({
+          abilities_impairments: isExperienced ? ['Ability'] : ['Impairment'],
+          accuracy: isExperienced ? 2 : 0,
+          arc: survivorType === SurvivorType.ARC,
+          can_dash: isExperienced,
+          can_dodge: true,
+          can_fist_pump: false,
+          can_encourage: isExperienced,
+          can_spend_survival: true,
+          can_surge: false,
+          can_use_fighting_arts_knowledges: true,
+          color: isExperienced ? ColorChoice.BLUE : ColorChoice.SLATE,
+          courage: isExperienced ? 3 : 0,
+          dead: isDead,
+          evasion: isExperienced ? 1 : 0,
+
+          gender: i % 2 === 0 ? 'MALE' : 'FEMALE',
+          has_analyze: false,
+          has_explore: isExperienced,
+          has_matchmaker: false,
+          has_prepared: isExperienced,
+          has_stalwart: false,
+          has_tinker: false,
+          hunt_xp: isExperienced ? 8 : i % 16,
+          hunt_xp_rank_up: isExperienced ? [2, 6] : [],
+          insanity: isExperienced ? 3 : 0,
+          luck: isExperienced ? 1 : 0,
+          movement: 5,
+          next_departure: isExperienced ? ['Next Departure Bonus'] : [],
+          notes: isExperienced
+            ? 'Veteran survivor with extensive experience'
+            : isDead
+              ? 'Fell in battle against overwhelming darkness'
+              : isRetired
+                ? 'Retired to support the settlement'
+                : undefined,
+          once_per_lifetime: isExperienced ? ['Once Per Lifetime Bonus'] : [],
+          reroll_used: false,
+          retired: isRetired,
+          settlement_id: settlementId,
+          skip_next_hunt: i % 7 === 0 && !isDead && !isRetired,
+          speed: isExperienced ? 1 : 0,
+          strength: isExperienced ? 2 : 0,
+          survival: 1 + (isExperienced ? 2 : 0),
+          survivor_name: names[i % names.length],
+          understanding: isExperienced ? 2 : 0,
+          wanderer: false,
+          weapon_proficiency: isExperienced ? 5 : Math.min(i, 3),
+          weapon_type_id: isExperienced
+            ? i % 5 === 0
+              ? weaponTypes.find((wt) => wt.weapon_type_name === 'SWORD')?.id
+              : i % 5 === 1
+                ? weaponTypes.find((wt) => wt.weapon_type_name === 'AXE')?.id
+                : i % 5 === 2
+                  ? weaponTypes.find((wt) => wt.weapon_type_name === 'SPEAR')
                       ?.id
-          : undefined,
-        arm_armor: 0,
-        arm_light_damage: false,
-        arm_heavy_damage: false,
-        body_armor: 0,
-        body_light_damage: false,
-        body_heavy_damage: false,
-        brain_light_damage: false,
-        head_armor: 0,
-        head_heavy_damage: false,
-        leg_armor: 0,
-        leg_light_damage: false,
-        leg_heavy_damage: false,
-        waist_armor: 0,
-        waist_light_damage: false,
-        waist_heavy_damage: false,
-        arm_broken: hasInjuries ? 1 : 0,
-        arm_contracture: hasInjuries ? 3 : 0,
-        arm_dismembered: hasInjuries ? 1 : 0,
-        arm_ruptured_muscle: false,
-        body_broken_rib: hasInjuries ? 2 : 0,
-        body_destroyed_back: false,
-        body_gaping_chest_wound: hasInjuries ? 3 : 0,
-        head_blind: hasInjuries ? 1 : 0,
-        head_deaf: false,
-        head_intracranial_hemorrhage: false,
-        head_shattered_jaw: false,
-        leg_broken: hasInjuries ? 1 : 0,
-        leg_dismembered: 0,
-        leg_hamstrung: false,
-        waist_broken_hip: false,
-        waist_destroyed_genitals: false,
-        waist_intestinal_prolapse: false,
-        waist_warped_pelvis: hasInjuries ? 3 : 0,
-        can_endure: isExperienced,
-        knowledge_1: isExperienced ? 'Anatomy' : undefined,
-        knowledge_1_observation_conditions: isExperienced
-          ? 'Observe during showdown'
-          : undefined,
-        knowledge_1_observation_rank: isExperienced ? 3 : 0,
-        knowledge_1_rank_up: isExperienced ? 2 : undefined,
-        knowledge_1_rules: isExperienced
-          ? 'Understanding of anatomy'
-          : undefined,
-        knowledge_2: isExperienced ? 'Symposium' : undefined,
-        knowledge_2_observation_conditions: isExperienced
-          ? 'Study texts'
-          : undefined,
-        knowledge_2_observation_rank: isExperienced ? 2 : 0,
-        knowledge_2_rank_up: isExperienced ? 1 : undefined,
-        knowledge_2_rules: isExperienced ? 'Philosophical insights' : undefined,
-        lumi: isExperienced ? 5 : i,
-        neurosis: isExperienced ? 'Fear of Darkness' : undefined,
-        philosophy: isExperienced ? Philosophy.COLLECTIVISM : null,
-        philosophy_rank: isExperienced ? 2 : 0,
-        systemic_pressure: isExperienced ? 2 : 0,
-        tenet_knowledge: isExperienced ? 'Tenet Knowledge Example' : undefined,
-        tenet_knowledge_observation_conditions: isExperienced
-          ? 'During hunts'
-          : undefined,
-        tenet_knowledge_observation_rank: isExperienced ? 1 : 0,
-        tenet_knowledge_rank_up: isExperienced ? 1 : undefined,
-        tenet_knowledge_rules: isExperienced
-          ? 'Insights into tenets'
-          : undefined,
-        torment: isExperienced ? 1 : 0,
-        absolute_reaper: i % 2 === 0,
-        absolute_rust: i % 3 === 0,
-        absolute_storm: i % 4 === 0,
-        absolute_witch: i % 5 === 0,
-        gambler_reaper: i % 2 === 0,
-        gambler_rust: i % 3 === 0,
-        gambler_storm: i % 4 === 0,
-        gambler_witch: i % 5 === 0,
-        goblin_reaper: i % 2 === 0,
-        goblin_rust: i % 3 === 0,
-        goblin_storm: i % 4 === 0,
-        goblin_witch: i % 5 === 0,
-        sculptor_reaper: i % 2 === 0,
-        sculptor_rust: i % 3 === 0,
-        sculptor_storm: i % 4 === 0,
-        sculptor_witch: i % 5 === 0
-      })
-      .select('id')
-      .single()
+                  : i % 5 === 3
+                    ? weaponTypes.find((wt) => wt.weapon_type_name === 'BOW')
+                        ?.id
+                    : weaponTypes.find((wt) => wt.weapon_type_name === 'KATANA')
+                        ?.id
+            : undefined,
+          arm_armor: 0,
+          arm_light_damage: false,
+          arm_heavy_damage: false,
+          body_armor: 0,
+          body_light_damage: false,
+          body_heavy_damage: false,
+          brain_light_damage: false,
+          head_armor: 0,
+          head_heavy_damage: false,
+          leg_armor: 0,
+          leg_light_damage: false,
+          leg_heavy_damage: false,
+          waist_armor: 0,
+          waist_light_damage: false,
+          waist_heavy_damage: false,
+          arm_broken: hasInjuries ? 1 : 0,
+          arm_contracture: hasInjuries ? 3 : 0,
+          arm_dismembered: hasInjuries ? 1 : 0,
+          arm_ruptured_muscle: false,
+          body_broken_rib: hasInjuries ? 2 : 0,
+          body_destroyed_back: false,
+          body_gaping_chest_wound: hasInjuries ? 3 : 0,
+          head_blind: hasInjuries ? 1 : 0,
+          head_deaf: false,
+          head_intracranial_hemorrhage: false,
+          head_shattered_jaw: false,
+          leg_broken: hasInjuries ? 1 : 0,
+          leg_dismembered: 0,
+          leg_hamstrung: false,
+          waist_broken_hip: false,
+          waist_destroyed_genitals: false,
+          waist_intestinal_prolapse: false,
+          waist_warped_pelvis: hasInjuries ? 3 : 0,
+          can_endure: isExperienced,
+          knowledge_1:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? await supabase
+                  .from('knowledge')
+                  .select('id')
+                  .eq('philosophy_id', philosophies[0].id)
+                  .limit(1)
+                  .maybeSingle()
+                  .then((res) => res.data?.id)
+              : undefined,
+          knowledge_1_observation_conditions:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? 'Observe during showdown'
+              : undefined,
+          knowledge_1_observation_rank:
+            isExperienced && survivorType === SurvivorType.ARC ? 3 : 0,
+          knowledge_1_rank_up:
+            isExperienced && survivorType === SurvivorType.ARC ? 2 : undefined,
+          knowledge_1_rules:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? 'Understanding of anatomy'
+              : undefined,
+          knowledge_2:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? await supabase
+                  .from('knowledge')
+                  .select('id')
+                  .eq('philosophy_id', philosophies[0].id)
+                  .limit(1)
+                  .maybeSingle()
+                  .then((res) => res.data?.id)
+              : undefined,
+          knowledge_2_observation_conditions:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? 'Study texts'
+              : undefined,
+          knowledge_2_observation_rank:
+            isExperienced && survivorType === SurvivorType.ARC ? 2 : 0,
+          knowledge_2_rank_up:
+            isExperienced && survivorType === SurvivorType.ARC ? 1 : undefined,
+          knowledge_2_rules:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? 'Philosophical insights'
+              : undefined,
+          lumi: isExperienced && survivorType === SurvivorType.ARC ? 5 : 0,
+          neurosis_id:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? await supabase
+                  .from('neurosis')
+                  .select('id')
+                  .eq('philosophy_id', philosophies[0].id)
+                  .maybeSingle()
+                  .then((res) => res.data?.id)
+              : undefined,
+          philosophy_id:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? philosophies[0].id
+              : null,
+          philosophy_rank:
+            isExperienced && survivorType === SurvivorType.ARC ? 2 : 0,
+          systemic_pressure:
+            isExperienced && survivorType === SurvivorType.ARC ? 2 : 0,
+          tenet_knowledge_id:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? await supabase
+                  .from('knowledge')
+                  .select('id')
+                  .eq('philosophy_id', philosophies[0].id)
+                  .limit(1)
+                  .maybeSingle()
+                  .then((res) => res.data?.id)
+              : undefined,
+          tenet_knowledge_observation_conditions:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? 'During hunts'
+              : undefined,
+          tenet_knowledge_observation_rank:
+            isExperienced && survivorType === SurvivorType.ARC ? 1 : 0,
+          tenet_knowledge_rank_up:
+            isExperienced && survivorType === SurvivorType.ARC ? 1 : undefined,
+          tenet_knowledge_rules:
+            isExperienced && survivorType === SurvivorType.ARC
+              ? 'Insights into tenets'
+              : undefined,
+          torment: isExperienced && survivorType === SurvivorType.ARC ? 1 : 0,
+          absolute_reaper: i % 2 === 0,
+          absolute_rust: i % 3 === 0,
+          absolute_storm: i % 4 === 0,
+          absolute_witch: i % 5 === 0,
+          gambler_reaper: i % 2 === 0,
+          gambler_rust: i % 3 === 0,
+          gambler_storm: i % 4 === 0,
+          gambler_witch: i % 5 === 0,
+          goblin_reaper: i % 2 === 0,
+          goblin_rust: i % 3 === 0,
+          goblin_storm: i % 4 === 0,
+          goblin_witch: i % 5 === 0,
+          sculptor_reaper: i % 2 === 0,
+          sculptor_rust: i % 3 === 0,
+          sculptor_storm: i % 4 === 0,
+          sculptor_witch: i % 5 === 0
+        })
+        .select('id')
+        .single()
 
     if (createSurvivorError) throw createSurvivorError
+
+    if (isExperienced) {
+      // Add disorders, fighting arts, cursed gear, and secret fighting arts for
+      // experienced survivors
+      await supabase.from('survivor_disorder').insert({
+        survivor_id: createSurvivorData.id,
+        disorder_id: (
+          await supabase.from('disorder').select('id').limit(1).single()
+        ).data?.id
+      })
+
+      await supabase.from('survivor_fighting_art').insert({
+        survivor_id: createSurvivorData.id,
+        fighting_art_id: (
+          await supabase
+            .from('fighting_art')
+            .select('id')
+            .eq('secret_fighting_art', false)
+            .limit(1)
+            .single()
+        ).data?.id
+      })
+
+      await supabase.from('survivor_fighting_art').insert({
+        survivor_id: createSurvivorData.id,
+        fighting_art_id: (
+          await supabase
+            .from('fighting_art')
+            .select('id')
+            .eq('secret_fighting_art', true)
+            .limit(1)
+            .single()
+        ).data?.id
+      })
+
+      await supabase.from('survivor_cursed_gear').insert({
+        survivor_id: createSurvivorData.id,
+        gear_id: (await supabase.from('gear').select('id').limit(1).single())
+          .data?.id
+      })
+    }
   }
 }
 
