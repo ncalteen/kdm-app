@@ -25,7 +25,9 @@ export async function getSettlementCollectiveCognitionRewards(
     .eq('settlement_id', settlementId)
 
   if (error)
-    throw new Error(`Error Fetching Settlement Innovations: ${error.message}`)
+    throw new Error(
+      `Error Fetching Settlement Collective Cognition Rewards: ${error.message}`
+    )
 
   return (
     data?.map((item) => ({

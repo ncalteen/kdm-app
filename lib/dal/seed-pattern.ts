@@ -57,7 +57,8 @@ export async function getSeedPatterns(): Promise<{
   for (const s of nonCustomResult.data ?? []) seedPatternMap[s.id] = s
   for (const s of userCustomResult.data ?? []) seedPatternMap[s.id] = s
   for (const row of sharedResult.data ?? [])
-    seedPatternMap[row.seed_pattern[0].id] = row.seed_pattern[0]
+    if (row.seed_pattern?.[0].id)
+      seedPatternMap[row.seed_pattern[0].id] = row.seed_pattern[0]
 
   return seedPatternMap
 }

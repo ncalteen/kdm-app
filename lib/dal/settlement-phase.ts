@@ -58,7 +58,7 @@ export async function updateSettlementPhase(
   const supabase = createClient()
 
   const { error } = await supabase
-    .from('settlement')
+    .from('settlement_phase')
     .update(updates)
     .eq('id', settlementPhaseId)
 

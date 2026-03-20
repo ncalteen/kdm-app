@@ -42,7 +42,7 @@ export async function getSettlementMilestones(
  * Adds milestones to a settlement by their IDs. This is used when adding
  * milestones to a settlement during settlement creation or editing.
  *
- * @param milestonIds Milestone IDs
+ * @param milestoneIds Milestone IDs
  * @param settlementId Settlement ID
  */
 export async function addSettlementMilestones(
