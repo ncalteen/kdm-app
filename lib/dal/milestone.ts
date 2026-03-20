@@ -149,3 +149,18 @@ export async function updateMilestone(
 
   return data
 }
+
+/**
+ * Remove Milestone
+ *
+ * Deletes a milestone record from the database.
+ *
+ * @param id Milestone ID
+ */
+export async function removeMilestone(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('milestone').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Milestone: ${error.message}`)
+}

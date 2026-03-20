@@ -151,3 +151,18 @@ export async function updateInnovation(
 
   return data
 }
+
+/**
+ * Remove Innovation
+ *
+ * Deletes an innovation record from the database.
+ *
+ * @param id Innovation ID
+ */
+export async function removeInnovation(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('innovation').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Innovation: ${error.message}`)
+}

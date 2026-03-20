@@ -106,3 +106,18 @@ export async function updateGear(
 
   return data
 }
+
+/**
+ * Remove Gear
+ *
+ * Deletes a gear record from the database.
+ *
+ * @param id Gear ID
+ */
+export async function removeGear(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('gear').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Gear: ${error.message}`)
+}

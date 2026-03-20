@@ -113,3 +113,18 @@ export async function updateWeaponType(
 
   return data
 }
+
+/**
+ * Remove Weapon Type
+ *
+ * Deletes a weapon type record from the database.
+ *
+ * @param id Weapon Type ID
+ */
+export async function removeWeaponType(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('weapon_type').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Weapon Type: ${error.message}`)
+}

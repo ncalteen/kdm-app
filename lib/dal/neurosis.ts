@@ -112,3 +112,18 @@ export async function updateNeurosis(
 
   return data
 }
+
+/**
+ * Remove Neurosis
+ *
+ * Deletes a neurosis record from the database.
+ *
+ * @param id Neurosis ID
+ */
+export async function removeNeurosis(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('neurosis').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Neurosis: ${error.message}`)
+}

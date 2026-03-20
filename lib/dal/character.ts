@@ -92,10 +92,7 @@ export async function addCharacter(
  */
 export async function updateCharacter(
   id: string,
-  character: Omit<
-    TablesUpdate<'character'>,
-    'id' | 'created_at' | 'updated_at'
-  >
+  character: Omit<TablesUpdate<'character'>, 'id' | 'created_at' | 'updated_at'>
 ): Promise<CharacterDetail> {
   const supabase = createClient()
 
@@ -110,4 +107,19 @@ export async function updateCharacter(
   if (!data) throw new Error('Character Not Found')
 
   return data
+}
+
+/**
+ * Remove Character
+ *
+ * Deletes a character record from the database.
+ *
+ * @param id Character ID
+ */
+export async function removeCharacter(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('character').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Character: ${error.message}`)
 }

@@ -195,3 +195,18 @@ export async function updateQuarry(
 
   return data
 }
+
+/**
+ * Remove Quarry
+ *
+ * Deletes a quarry record from the database.
+ *
+ * @param id Quarry ID
+ */
+export async function removeQuarry(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('quarry').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Quarry: ${error.message}`)
+}

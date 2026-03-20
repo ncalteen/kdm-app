@@ -168,3 +168,18 @@ export async function updateWanderer(
 
   return data
 }
+
+/**
+ * Remove Wanderer
+ *
+ * Deletes a wanderer record from the database.
+ *
+ * @param id Wanderer ID
+ */
+export async function removeWanderer(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('wanderer').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Wanderer: ${error.message}`)
+}

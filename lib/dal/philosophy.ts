@@ -117,3 +117,18 @@ export async function updatePhilosophy(
 
   return data
 }
+
+/**
+ * Remove Philosophy
+ *
+ * Deletes a philosophy record from the database.
+ *
+ * @param id Philosophy ID
+ */
+export async function removePhilosophy(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('philosophy').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Philosophy: ${error.message}`)
+}

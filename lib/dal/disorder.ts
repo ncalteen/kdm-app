@@ -88,10 +88,7 @@ export async function addDisorder(
  */
 export async function updateDisorder(
   id: string,
-  disorder: Omit<
-    TablesUpdate<'disorder'>,
-    'id' | 'created_at' | 'updated_at'
-  >
+  disorder: Omit<TablesUpdate<'disorder'>, 'id' | 'created_at' | 'updated_at'>
 ): Promise<DisorderDetail> {
   const supabase = createClient()
 
@@ -106,4 +103,19 @@ export async function updateDisorder(
   if (!data) throw new Error('Disorder Not Found')
 
   return data
+}
+
+/**
+ * Remove Disorder
+ *
+ * Deletes a disorder record from the database.
+ *
+ * @param id Disorder ID
+ */
+export async function removeDisorder(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('disorder').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Disorder: ${error.message}`)
 }

@@ -119,3 +119,18 @@ export async function updateSeedPattern(
 
   return data
 }
+
+/**
+ * Remove Seed Pattern
+ *
+ * Deletes a seed pattern record from the database.
+ *
+ * @param id Seed Pattern ID
+ */
+export async function removeSeedPattern(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('seed_pattern').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Seed Pattern: ${error.message}`)
+}

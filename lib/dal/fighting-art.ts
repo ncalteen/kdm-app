@@ -112,3 +112,18 @@ export async function updateFightingArt(
 
   return data
 }
+
+/**
+ * Remove Fighting Art
+ *
+ * Deletes a fighting art record from the database.
+ *
+ * @param id Fighting Art ID
+ */
+export async function removeFightingArt(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('fighting_art').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Fighting Art: ${error.message}`)
+}

@@ -108,3 +108,18 @@ export async function updateResource(
 
   return data
 }
+
+/**
+ * Remove Resource
+ *
+ * Deletes a resource record from the database.
+ *
+ * @param id Resource ID
+ */
+export async function removeResource(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('resource').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Resource: ${error.message}`)
+}

@@ -104,3 +104,18 @@ export async function updatePattern(
 
   return data
 }
+
+/**
+ * Remove Pattern
+ *
+ * Deletes a pattern record from the database.
+ *
+ * @param id Pattern ID
+ */
+export async function removePattern(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('pattern').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Pattern: ${error.message}`)
+}

@@ -155,3 +155,18 @@ export async function updatePrinciple(
 
   return data
 }
+
+/**
+ * Remove Principle
+ *
+ * Deletes a principle record from the database.
+ *
+ * @param id Principle ID
+ */
+export async function removePrinciple(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('principle').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Principle: ${error.message}`)
+}

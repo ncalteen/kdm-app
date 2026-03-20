@@ -106,3 +106,18 @@ export async function updateKnowledge(
 
   return data
 }
+
+/**
+ * Remove Knowledge
+ *
+ * Deletes a knowledge record from the database.
+ *
+ * @param id Knowledge ID
+ */
+export async function removeKnowledge(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('knowledge').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Knowledge: ${error.message}`)
+}

@@ -191,3 +191,18 @@ export async function updateNemesis(
 
   return data
 }
+
+/**
+ * Remove Nemesis
+ *
+ * Deletes a nemesis record from the database.
+ *
+ * @param id Nemesis ID
+ */
+export async function removeNemesis(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('nemesis').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Nemesis: ${error.message}`)
+}

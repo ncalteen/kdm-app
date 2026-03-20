@@ -141,3 +141,18 @@ export async function updateLocation(
 
   return data
 }
+
+/**
+ * Remove Location
+ *
+ * Deletes a location record from the database.
+ *
+ * @param id Location ID
+ */
+export async function removeLocation(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('location').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Location: ${error.message}`)
+}

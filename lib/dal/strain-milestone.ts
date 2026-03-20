@@ -116,3 +116,22 @@ export async function updateStrainMilestone(
 
   return data
 }
+
+/**
+ * Remove Strain Milestone
+ *
+ * Deletes a strain milestone record from the database.
+ *
+ * @param id Strain Milestone ID
+ */
+export async function removeStrainMilestone(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('strain_milestone')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Strain Milestone: ${error.message}`)
+}
