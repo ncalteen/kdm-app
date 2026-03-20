@@ -340,6 +340,15 @@ export type SettlementDetail = Tables<'settlement'> & {
     /** Pattern Name */
     pattern_name: string
   }[]
+  /** Philosophies */
+  philosophies: {
+    /** Settlement Philosophy ID */
+    id: string
+    /** Philosophy ID */
+    philosophy_id: string
+    /** Philosophy Name */
+    philosophy_name: string
+  }[]
   /** Principles */
   principles: {
     /** Settlement Principle ID */

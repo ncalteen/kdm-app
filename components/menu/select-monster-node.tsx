@@ -15,7 +15,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { getNemesisNames } from '@/lib/dal/nemesis'
-import { getQuarryNames } from '@/lib/dal/quarry'
+import { getQuarries } from '@/lib/dal/quarry'
 import { MonsterNode } from '@/lib/enums'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, X } from 'lucide-react'
@@ -61,8 +61,23 @@ export function SelectMonsterNode({
 
   useEffect(() => {
     if (nodeType.startsWith('NQ'))
-      getQuarryNames([nodeType]).then((quarries) => setMonsters(quarries))
-    else getNemesisNames([nodeType]).then((nemeses) => setMonsters(nemeses))
+      getQuarries([nodeType]).then((quarries) =>
+        setMonsters(
+          Object.values(quarries).map((q) => ({
+            id: q.id,
+            monster_name: q.monster_name
+          }))
+        )
+      )
+    else
+      getNemesisNames([nodeType]).then((nemeses) =>
+        setMonsters(
+          Object.values(nemeses).map((n) => ({
+            id: n.id,
+            monster_name: n.monster_name
+          }))
+        )
+      )
   }, [nodeType])
 
   /**
