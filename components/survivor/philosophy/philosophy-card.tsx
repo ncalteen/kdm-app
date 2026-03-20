@@ -533,13 +533,12 @@ export function PhilosophyCard({
         <div className="flex items-start gap-2 mt-1">
           <div className="flex-grow flex flex-col gap-1">
             <Select
-              value={tenetKnowledge?.id ?? ''}
+              value={tenetKnowledge?.id}
               onValueChange={(value) => handleTenetKnowledgeChange(value)}>
               <SelectTrigger className="border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
                 <SelectValue placeholder="Select tenet knowledge..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
                 {(selectedSettlement?.knowledges ?? []).map((k) => (
                   <SelectItem key={k.knowledge_id} value={k.knowledge_id}>
                     {k.knowledge_name}

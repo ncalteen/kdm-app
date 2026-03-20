@@ -675,13 +675,12 @@ export function KnowledgeCard({
           <div className="flex-grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
               <Select
-                value={knowledge1?.id ?? ''}
+                value={knowledge1?.id}
                 onValueChange={(value) => updateKnowledge1(value)}>
                 <SelectTrigger className="border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
                   <SelectValue placeholder="Select knowledge..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
                   {(selectedSettlement?.knowledges ?? []).map((k) => (
                     <SelectItem key={k.knowledge_id} value={k.knowledge_id}>
                       {k.knowledge_name}
@@ -765,13 +764,12 @@ export function KnowledgeCard({
           <div className="flex-grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
               <Select
-                value={knowledge2?.id ?? ''}
+                value={knowledge2?.id}
                 onValueChange={(value) => updateKnowledge2(value)}>
                 <SelectTrigger className="border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
                   <SelectValue placeholder="Select knowledge..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
                   {(selectedSettlement?.knowledges ?? []).map((k) => (
                     <SelectItem key={k.knowledge_id} value={k.knowledge_id}>
                       {k.knowledge_name}

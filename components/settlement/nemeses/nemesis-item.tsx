@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { NemesisDefeatedField } from '@/lib/dal/settlement-nemesis'
 import { CheckIcon, TrashIcon, XIcon } from 'lucide-react'
 import { memo, ReactElement, useState } from 'react'
 
@@ -39,7 +38,11 @@ export interface NemesisItemProps {
   /** On Toggle Level Defeated Handler */
   onToggleLevel: (
     index: number,
-    field: NemesisDefeatedField,
+    field:
+      | 'level_1_defeated'
+      | 'level_2_defeated'
+      | 'level_3_defeated'
+      | 'level_4_defeated',
     defeated: boolean
   ) => void
 }
@@ -63,7 +66,11 @@ export interface NewNemesisItemProps {
  */
 const LEVEL_CONFIG: {
   level: number
-  field: NemesisDefeatedField
+  field:
+    | 'level_1_defeated'
+    | 'level_2_defeated'
+    | 'level_3_defeated'
+    | 'level_4_defeated'
   label: string
 }[] = [
   { level: 1, field: 'level_1_defeated', label: 'L1' },

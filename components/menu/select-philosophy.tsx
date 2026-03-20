@@ -69,7 +69,6 @@ export function SelectPhilosophy({
   const handleKeyDown = (e: KeyboardEvent) => onKeyDown?.(e)
 
   const philosophyOptions = [
-    { value: '', label: 'None' },
     ...(selectedSettlement?.philosophies ?? []).map((p) => ({
       value: p.philosophy_id,
       label: p.philosophy_name

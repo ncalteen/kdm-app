@@ -43,12 +43,12 @@ export function SelectWeaponType({
   onChange,
   value
 }: SelectWeaponTypeProps): ReactElement {
-  const [weaponTypes, setWeaponTypes] = useState<
-    Omit<
+  const [weaponTypes, setWeaponTypes] = useState<{
+    [key: string]: Omit<
       Tables<'weapon_type'>,
       'created_at' | 'updated_at' | 'custom' | 'user_id'
-    >[]
-  >([])
+    >
+  }>({})
 
   useEffect(() => {
     getWeaponTypes()
@@ -90,7 +90,7 @@ export function SelectWeaponType({
           <CommandList>
             <CommandEmpty>No weapon types found.</CommandEmpty>
             <CommandGroup>
-              {weaponTypes.map((type) => (
+              {Object.values(weaponTypes).map((type) => (
                 <CommandItem
                   key={type.id}
                   value={type.id}
