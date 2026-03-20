@@ -15,7 +15,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { getWeaponTypes } from '@/lib/dal/weapon-type'
-import { Tables } from '@/lib/database.types'
+import { WeaponTypeDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { ReactElement, useEffect, useState } from 'react'
@@ -44,10 +44,7 @@ export function SelectWeaponType({
   value
 }: SelectWeaponTypeProps): ReactElement {
   const [weaponTypes, setWeaponTypes] = useState<{
-    [key: string]: Omit<
-      Tables<'weapon_type'>,
-      'created_at' | 'updated_at' | 'custom' | 'user_id'
-    >
+    [key: string]: WeaponTypeDetail
   }>({})
 
   useEffect(() => {
