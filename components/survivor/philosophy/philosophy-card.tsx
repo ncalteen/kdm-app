@@ -1,21 +1,8 @@
 import { NumericInput } from '@/components/menu/numeric-input'
-import { Button } from '@/components/ui/button'
+import { SelectPhilosophy } from '@/components/menu/select-philosophy'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from '@/components/ui/command'
 import { Label } from '@/components/ui/label'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -38,7 +25,6 @@ import {
 } from '@/lib/messages'
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { Check, ChevronsUpDown } from 'lucide-react'
 import { MouseEvent, ReactElement, useCallback, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -70,7 +56,6 @@ export function PhilosophyCard({
 }: PhilosophyCardProps): ReactElement {
   const survivorIdRef = useRef<string | undefined>(undefined)
 
-  const [open, setOpen] = useState(false)
   const [neurosis, setNeurosis] = useState<{
     id: string
     neurosis_name: string
@@ -91,13 +76,6 @@ export function PhilosophyCard({
   const [philosophyRank, setPhilosophyRank] = useState<number>(
     selectedSurvivor?.philosophy_rank ?? 0
   )
-
-  const philosophyOptions = [
-    ...(selectedSettlement?.philosophies ?? []).map((p) => ({
-      value: p.philosophy_id,
-      label: p.philosophy_name
-    }))
-  ]
 
   // Reset local state when survivor changes (different ID)
   if (survivorIdRef.current !== selectedSurvivor?.id) {
@@ -515,51 +493,11 @@ export function PhilosophyCard({
             <CardTitle className="text-sm flex flex-row items-center gap-1">
               Philosophy
             </CardTitle>
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className="w-[200px] justify-between">
-                  {philosophy?.id
-                    ? philosophyOptions.find((p) => p.value === philosophy?.id)
-                        ?.label
-                    : 'Select philosophy...'}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-
-              <PopoverContent className="p-0">
-                <Command>
-                  <CommandInput placeholder="Search philosophy..." />
-                  <CommandList>
-                    <CommandEmpty>No philosophy found.</CommandEmpty>
-                    <CommandGroup>
-                      {philosophyOptions.map((p) => (
-                        <CommandItem
-                          key={p.value ?? 'none'}
-                          value={p.value}
-                          onSelect={() => {
-                            setOpen(false)
-                            handlePhilosophyChange(p.value)
-                          }}>
-                          <Check
-                            className={cn(
-                              'mr-1 h-4 w-4',
-                              philosophy?.id === p.value
-                                ? 'opacity-100'
-                                : 'opacity-0'
-                            )}
-                          />
-                          {p.label}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <SelectPhilosophy
+              selectedSettlement={selectedSettlement}
+              value={philosophy?.id ?? ''}
+              onChange={handlePhilosophyChange}
+            />
           </div>
 
           {/* Rank */}
