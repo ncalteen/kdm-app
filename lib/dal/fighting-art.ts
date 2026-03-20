@@ -27,16 +27,16 @@ export async function getFightingArts(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('fighting_art')
-      .select('id, fighting_art_name, secret_fighting_art')
+      .select('id, fighting_art_name')
       .eq('custom', false),
     supabase
       .from('fighting_art')
-      .select('id, fighting_art_name, secret_fighting_art')
+      .select('id, fighting_art_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('fighting_art_shared_user')
-      .select('fighting_art(id, fighting_art_name, secret_fighting_art)')
+      .select('fighting_art(id, fighting_art_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -48,11 +48,8 @@ export async function getFightingArts(): Promise<{
 
   for (const f of nonCustomResult.data ?? []) fightingArtMap[f.id] = f
   for (const f of userCustomResult.data ?? []) fightingArtMap[f.id] = f
-  for (const row of sharedResult.data ?? []) {
-    const f = row.fighting_art as unknown as FightingArtDetail | null
-
-    if (f) fightingArtMap[f.id] = f
-  }
+  for (const row of sharedResult.data ?? [])
+    fightingArtMap[row.fighting_art[0].id] = row.fighting_art[0]
 
   return fightingArtMap
 }

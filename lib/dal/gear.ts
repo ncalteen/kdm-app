@@ -48,11 +48,8 @@ export async function getGear(): Promise<{
 
   for (const g of nonCustomResult.data ?? []) gearMap[g.id] = g
   for (const g of userCustomResult.data ?? []) gearMap[g.id] = g
-  for (const row of sharedResult.data ?? []) {
-    const g = row.gear as unknown as GearDetail | null
-
-    if (g) gearMap[g.id] = g
-  }
+  for (const row of sharedResult.data ?? [])
+    gearMap[row.gear[0].id] = row.gear[0]
 
   return gearMap
 }

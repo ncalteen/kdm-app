@@ -69,11 +69,8 @@ export async function getQuarries(
 
   for (const q of nonCustomResult.data ?? []) quarryMap[q.id] = q
   for (const q of userCustomResult.data ?? []) quarryMap[q.id] = q
-  for (const row of sharedResult.data ?? []) {
-    const q = row.quarry as unknown as QuarryDetail | null
-
-    if (q) quarryMap[q.id] = q
-  }
+  for (const row of sharedResult.data ?? [])
+    quarryMap[row.quarry[0].id] = row.quarry[0]
 
   return quarryMap
 }

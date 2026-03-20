@@ -49,11 +49,8 @@ export async function getPatterns(): Promise<{
 
   for (const p of nonCustomResult.data ?? []) patternMap[p.id] = p
   for (const p of userCustomResult.data ?? []) patternMap[p.id] = p
-  for (const row of sharedResult.data ?? []) {
-    const p = row.pattern as unknown as PatternDetail | null
-
-    if (p) patternMap[p.id] = p
-  }
+  for (const row of sharedResult.data ?? [])
+    patternMap[row.pattern[0].id] = row.pattern[0]
 
   return patternMap
 }

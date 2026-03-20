@@ -53,11 +53,8 @@ export async function getPhilosophies(): Promise<{
 
   for (const p of nonCustomResult.data ?? []) philosophyMap[p.id] = p
   for (const p of userCustomResult.data ?? []) philosophyMap[p.id] = p
-  for (const row of sharedResult.data ?? []) {
-    const p = row.philosophy as unknown as PhilosophyDetail | null
-
-    if (p) philosophyMap[p.id] = p
-  }
+  for (const row of sharedResult.data ?? [])
+    philosophyMap[row.philosophy[0].id] = row.philosophy[0]
 
   return philosophyMap
 }

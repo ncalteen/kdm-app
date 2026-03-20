@@ -54,11 +54,8 @@ export async function getNeuroses(): Promise<{
 
   for (const n of nonCustomResult.data ?? []) neurosisMap[n.id] = n
   for (const n of userCustomResult.data ?? []) neurosisMap[n.id] = n
-  for (const row of sharedResult.data ?? []) {
-    const n = row.neurosis as unknown as NeurosisDetail | null
-
-    if (n) neurosisMap[n.id] = n
-  }
+  for (const row of sharedResult.data ?? [])
+    neurosisMap[row.neurosis[0].id] = row.neurosis[0]
 
   return neurosisMap
 }

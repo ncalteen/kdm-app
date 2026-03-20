@@ -28,17 +28,26 @@ export async function getWanderers(): Promise<{
   // Fetch all three categories of wanderers in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     // Non-custom wanderers (available to all users)
-    supabase.from('wanderer').select('*').eq('custom', false),
+    supabase
+      .from('wanderer')
+      .select(
+        'id, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+      )
+      .eq('custom', false),
     // Custom wanderers created by the user
     supabase
       .from('wanderer')
-      .select('*')
+      .select(
+        'id, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+      )
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom wanderers shared with the user
     supabase
       .from('wanderer_shared_user')
-      .select('wanderer(*)')
+      .select(
+        'wanderer(id, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding)'
+      )
       .eq('shared_user_id', user.id)
   ])
 

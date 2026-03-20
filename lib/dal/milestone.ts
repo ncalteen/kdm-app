@@ -49,11 +49,8 @@ export async function getMilestones(): Promise<{
 
   for (const m of nonCustomResult.data ?? []) milestoneMap[m.id] = m
   for (const m of userCustomResult.data ?? []) milestoneMap[m.id] = m
-  for (const row of sharedResult.data ?? []) {
-    const m = row.milestone as unknown as MilestoneDetail | null
-
-    if (m) milestoneMap[m.id] = m
-  }
+  for (const row of sharedResult.data ?? [])
+    milestoneMap[row.milestone[0].id] = row.milestone[0]
 
   return milestoneMap
 }

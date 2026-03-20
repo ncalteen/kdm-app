@@ -70,11 +70,8 @@ export async function getNemeses(
 
   for (const n of nonCustomResult.data ?? []) nemesisMap[n.id] = n
   for (const n of userCustomResult.data ?? []) nemesisMap[n.id] = n
-  for (const row of sharedResult.data ?? []) {
-    const n = row.nemesis as unknown as NemesisDetail | null
-
-    if (n) nemesisMap[n.id] = n
-  }
+  for (const row of sharedResult.data ?? [])
+    nemesisMap[row.nemesis[0].id] = row.nemesis[0]
 
   return nemesisMap
 }

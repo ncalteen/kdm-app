@@ -86,6 +86,16 @@ export type SecretFightingArtDetail = Omit<
 >
 
 /**
+ * Seed Pattern Detail
+ *
+ * Used throughout the app to represent a seed pattern.
+ */
+export type SeedPatternDetail = Omit<
+  Tables<'seed_pattern'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
  * Gear Detail
  *
  * Used throughout the app to represent a gear item.
@@ -634,9 +644,7 @@ export type SurvivorDetail = Tables<'survivor'> & {
 export type WandererDetail = Omit<
   Tables<'wanderer'>,
   'created_at' | 'updated_at' | 'custom' | 'user_id'
-> & {
-  embarked: boolean
-}
+>
 
 /**
  * Wanderer Timeline Year Detail

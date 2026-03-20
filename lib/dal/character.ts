@@ -1,4 +1,3 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CharacterDetail } from '@/lib/types'
 
@@ -13,10 +12,7 @@ import { CharacterDetail } from '@/lib/types'
  * @returns Characters
  */
 export async function getCharacters(): Promise<{
-  [key: string]: Omit<
-    Tables<'character'>,
-    'created_at' | 'updated_at' | 'custom' | 'user_id'
-  >
+  [key: string]: CharacterDetail
 }> {
   const supabase = createClient()
 

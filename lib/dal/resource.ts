@@ -50,11 +50,8 @@ export async function getResources(): Promise<{
 
   for (const r of nonCustomResult.data ?? []) resourceMap[r.id] = r
   for (const r of userCustomResult.data ?? []) resourceMap[r.id] = r
-  for (const row of sharedResult.data ?? []) {
-    const r = row.resource as unknown as ResourceDetail | null
-
-    if (r) resourceMap[r.id] = r
-  }
+  for (const row of sharedResult.data ?? [])
+    resourceMap[row.resource[0].id] = row.resource[0]
 
   return resourceMap
 }

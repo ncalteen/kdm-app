@@ -48,11 +48,8 @@ export async function getInnovations(): Promise<{
 
   for (const i of nonCustomResult.data ?? []) innovationMap[i.id] = i
   for (const i of userCustomResult.data ?? []) innovationMap[i.id] = i
-  for (const row of sharedResult.data ?? []) {
-    const i = row.innovation as unknown as InnovationDetail | null
-
-    if (i) innovationMap[i.id] = i
-  }
+  for (const row of sharedResult.data ?? [])
+    innovationMap[row.innovation[0].id] = row.innovation[0]
 
   return innovationMap
 }

@@ -49,11 +49,8 @@ export async function getWeaponTypes(): Promise<{
 
   for (const w of nonCustomResult.data ?? []) weaponTypeMap[w.id] = w
   for (const w of userCustomResult.data ?? []) weaponTypeMap[w.id] = w
-  for (const row of sharedResult.data ?? []) {
-    const w = row.weapon_type as unknown as WeaponTypeDetail | null
-
-    if (w) weaponTypeMap[w.id] = w
-  }
+  for (const row of sharedResult.data ?? [])
+    weaponTypeMap[row.weapon_type[0].id] = row.weapon_type[0]
 
   return weaponTypeMap
 }

@@ -46,11 +46,8 @@ export async function getDisorders(): Promise<{
 
   for (const d of nonCustomResult.data ?? []) disorderMap[d.id] = d
   for (const d of userCustomResult.data ?? []) disorderMap[d.id] = d
-  for (const row of sharedResult.data ?? []) {
-    const d = row.disorder as unknown as DisorderDetail | null
-
-    if (d) disorderMap[d.id] = d
-  }
+  for (const row of sharedResult.data ?? [])
+    disorderMap[row.disorder[0].id] = row.disorder[0]
 
   return disorderMap
 }

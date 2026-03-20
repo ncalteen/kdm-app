@@ -51,11 +51,8 @@ export async function getStrainMilestones(): Promise<{
 
   for (const s of nonCustomResult.data ?? []) strainMilestoneMap[s.id] = s
   for (const s of userCustomResult.data ?? []) strainMilestoneMap[s.id] = s
-  for (const row of sharedResult.data ?? []) {
-    const s = row.strain_milestone as unknown as StrainMilestoneDetail | null
-
-    if (s) strainMilestoneMap[s.id] = s
-  }
+  for (const row of sharedResult.data ?? [])
+    strainMilestoneMap[row.strain_milestone[0].id] = row.strain_milestone[0]
 
   return strainMilestoneMap
 }

@@ -45,11 +45,8 @@ export async function getLocations(): Promise<{
 
   for (const l of nonCustomResult.data ?? []) locationMap[l.id] = l
   for (const l of userCustomResult.data ?? []) locationMap[l.id] = l
-  for (const row of sharedResult.data ?? []) {
-    const l = row.location as unknown as LocationDetail | null
-
-    if (l) locationMap[l.id] = l
-  }
+  for (const row of sharedResult.data ?? [])
+    locationMap[row.location[0].id] = row.location[0]
 
   return locationMap
 }

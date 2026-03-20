@@ -55,11 +55,8 @@ export async function getPrinciples(): Promise<{
 
   for (const p of nonCustomResult.data ?? []) principleMap[p.id] = p
   for (const p of userCustomResult.data ?? []) principleMap[p.id] = p
-  for (const row of sharedResult.data ?? []) {
-    const p = row.principle as unknown as PrincipleDetail | null
-
-    if (p) principleMap[p.id] = p
-  }
+  for (const row of sharedResult.data ?? [])
+    principleMap[row.principle[0].id] = row.principle[0]
 
   return principleMap
 }

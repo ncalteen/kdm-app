@@ -48,11 +48,8 @@ export async function getKnowledges(): Promise<{
 
   for (const k of nonCustomResult.data ?? []) knowledgeMap[k.id] = k
   for (const k of userCustomResult.data ?? []) knowledgeMap[k.id] = k
-  for (const row of sharedResult.data ?? []) {
-    const k = row.knowledge as unknown as KnowledgeDetail | null
-
-    if (k) knowledgeMap[k.id] = k
-  }
+  for (const row of sharedResult.data ?? [])
+    knowledgeMap[row.knowledge[0].id] = row.knowledge[0]
 
   return knowledgeMap
 }

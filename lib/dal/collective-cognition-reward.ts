@@ -58,12 +58,9 @@ export async function getCollectiveCognitionRewards(): Promise<{
 
   for (const r of nonCustomResult.data ?? []) rewardMap[r.id] = r
   for (const r of userCustomResult.data ?? []) rewardMap[r.id] = r
-  for (const row of sharedResult.data ?? []) {
-    const r =
-      row.collective_cognition_reward as unknown as CollectiveCognitionRewardDetail | null
-
-    if (r) rewardMap[r.id] = r
-  }
+  for (const row of sharedResult.data ?? [])
+    rewardMap[row.collective_cognition_reward[0].id] =
+      row.collective_cognition_reward[0]
 
   return rewardMap
 }
