@@ -103,7 +103,7 @@ export const ListItem = memo(function ListItem({
    * @param e Input Change Event
    */
   const handleChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setValue(e.target.value.trim()),
+    (e: ChangeEvent<HTMLInputElement>) => setValue(e.target.value),
     []
   )
 

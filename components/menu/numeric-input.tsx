@@ -174,7 +174,11 @@ export function NumericInput({
     <Input
       type="number"
       value={value}
-      onChange={(e) => onChange?.(parseInt(e.target.value) ?? 0)}
+      onChange={(e) =>
+        Number.isNaN(parseInt(e.target.value))
+          ? 0
+          : onChange?.(parseInt(e.target.value))
+      }
       max={max}
       min={min}
       className={cn('text-center no-spinners', className)}
