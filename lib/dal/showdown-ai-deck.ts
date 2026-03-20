@@ -82,3 +82,22 @@ export async function addShowdownAIDeck(
 
   return data
 }
+
+/**
+ * Remove Showdown AI Deck
+ *
+ * Deletes a showdown AI deck record from the database.
+ *
+ * @param id Showdown AI Deck ID
+ */
+export async function removeShowdownAIDeck(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('showdown_ai_deck')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Showdown AI Deck: ${error.message}`)
+}

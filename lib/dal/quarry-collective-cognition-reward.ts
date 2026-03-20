@@ -89,3 +89,26 @@ export async function updateQuarryCollectiveCognitionReward(
       `Error Updating Quarry Collective Cognition Reward: ${error.message}`
     )
 }
+
+/**
+ * Remove Quarry Collective Cognition Reward
+ *
+ * Deletes a quarry collective cognition reward record from the database.
+ *
+ * @param id Quarry Collective Cognition Reward ID
+ */
+export async function removeQuarryCollectiveCognitionReward(
+  id: string
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('quarry_collective_cognition_reward')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Quarry Collective Cognition Reward: ${error.message}`
+    )
+}

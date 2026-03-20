@@ -85,3 +85,22 @@ export async function addShowdownSurvivor(
 
   return data.id
 }
+
+/**
+ * Remove Showdown Survivor
+ *
+ * Deletes a showdown survivor record from the database.
+ *
+ * @param id Showdown Survivor ID
+ */
+export async function removeShowdownSurvivor(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('showdown_survivor')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Showdown Survivor: ${error.message}`)
+}

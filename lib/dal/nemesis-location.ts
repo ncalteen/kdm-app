@@ -82,3 +82,22 @@ export async function updateNemesisLocation(
   if (error)
     throw new Error(`Error Updating Nemesis Location: ${error.message}`)
 }
+
+/**
+ * Remove Nemesis Location
+ *
+ * Deletes a nemesis location record from the database.
+ *
+ * @param id Nemesis Location ID
+ */
+export async function removeNemesisLocation(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('nemesis_location')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Nemesis Location: ${error.message}`)
+}

@@ -105,3 +105,26 @@ export async function updateSettlementCollectiveCognitionReward(
       `Error Updating Settlement Collective Cognition Reward: ${error.message}`
     )
 }
+
+/**
+ * Remove Settlement Collective Cognition Reward
+ *
+ * Deletes a settlement collective cognition reward record from the database.
+ *
+ * @param id Settlement Collective Cognition Reward ID
+ */
+export async function removeSettlementCollectiveCognitionReward(
+  id: string
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_collective_cognition_reward')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Settlement Collective Cognition Reward: ${error.message}`
+    )
+}

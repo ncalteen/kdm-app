@@ -85,3 +85,22 @@ export async function updateSettlementWanderer(
   if (error)
     throw new Error(`Error Updating Settlement Wanderer: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Wanderer
+ *
+ * Deletes a settlement wanderer record from the database.
+ *
+ * @param id Settlement Wanderer ID
+ */
+export async function removeSettlementWanderer(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_wanderer')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Wanderer: ${error.message}`)
+}

@@ -85,3 +85,18 @@ export async function updateHuntHuntBoard(
 
   if (error) throw new Error(`Error Updating Hunt Board: ${error.message}`)
 }
+
+/**
+ * Remove Hunt Hunt Board
+ *
+ * Deletes a hunt board record from the database.
+ *
+ * @param id Hunt Board ID
+ */
+export async function removeHuntHuntBoard(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('hunt_hunt_board').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Hunt Board: ${error.message}`)
+}

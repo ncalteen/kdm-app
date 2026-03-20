@@ -88,3 +88,18 @@ export async function updateHuntMonster(
 
   if (error) throw new Error(`Error Updating Hunt Monster: ${error.message}`)
 }
+
+/**
+ * Remove Hunt Monster
+ *
+ * Deletes a hunt monster record from the database.
+ *
+ * @param id Hunt Monster ID
+ */
+export async function removeHuntMonster(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('hunt_monster').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Hunt Monster: ${error.message}`)
+}

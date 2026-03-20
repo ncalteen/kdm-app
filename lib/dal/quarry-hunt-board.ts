@@ -85,3 +85,22 @@ export async function updateQuarryHuntBoard(
   if (error)
     throw new Error(`Error Updating Quarry Hunt Board: ${error.message}`)
 }
+
+/**
+ * Remove Quarry Hunt Board
+ *
+ * Deletes a quarry hunt board record from the database.
+ *
+ * @param id Quarry Hunt Board ID
+ */
+export async function removeQuarryHuntBoard(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('quarry_hunt_board')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Quarry Hunt Board: ${error.message}`)
+}

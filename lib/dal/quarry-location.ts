@@ -81,3 +81,18 @@ export async function updateQuarryLocation(
 
   if (error) throw new Error(`Error Updating Quarry Location: ${error.message}`)
 }
+
+/**
+ * Remove Quarry Location
+ *
+ * Deletes a quarry location record from the database.
+ *
+ * @param id Quarry Location ID
+ */
+export async function removeQuarryLocation(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('quarry_location').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Quarry Location: ${error.message}`)
+}

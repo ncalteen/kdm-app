@@ -89,3 +89,22 @@ export async function addShowdownMonster(
 
   return data.id
 }
+
+/**
+ * Remove Showdown Monster
+ *
+ * Deletes a showdown monster record from the database.
+ *
+ * @param id Showdown Monster ID
+ */
+export async function removeShowdownMonster(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('showdown_monster')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Showdown Monster: ${error.message}`)
+}

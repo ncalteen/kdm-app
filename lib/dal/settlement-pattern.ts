@@ -89,3 +89,22 @@ export async function updateSettlementPattern(
   if (error)
     throw new Error(`Error Updating Settlement Pattern: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Pattern
+ *
+ * Deletes a settlement pattern record from the database.
+ *
+ * @param id Settlement Pattern ID
+ */
+export async function removeSettlementPattern(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_pattern')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Pattern: ${error.message}`)
+}

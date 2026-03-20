@@ -83,3 +83,22 @@ export async function updateWandererTimelineYear(
   if (error)
     throw new Error(`Error Updating Wanderer Timeline Year: ${error.message}`)
 }
+
+/**
+ * Remove Wanderer Timeline Year
+ *
+ * Deletes a wanderer timeline year record from the database.
+ *
+ * @param id Wanderer Timeline Year ID
+ */
+export async function removeWandererTimelineYear(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('wanderer_timeline_year')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Wanderer Timeline Year: ${error.message}`)
+}

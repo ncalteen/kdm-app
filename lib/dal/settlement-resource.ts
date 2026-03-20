@@ -98,3 +98,22 @@ export async function updateSettlementResource(
   if (error)
     throw new Error(`Error Updating Settlement Resource: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Resource
+ *
+ * Deletes a settlement resource record from the database.
+ *
+ * @param id Settlement Resource ID
+ */
+export async function removeSettlementResource(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_resource')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Resource: ${error.message}`)
+}

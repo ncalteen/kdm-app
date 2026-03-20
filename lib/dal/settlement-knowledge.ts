@@ -89,3 +89,22 @@ export async function updateSettlementKnowledge(
   if (error)
     throw new Error(`Error Updating Settlement Knowledge: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Knowledge
+ *
+ * Deletes a settlement knowledge record from the database.
+ *
+ * @param id Settlement Knowledge ID
+ */
+export async function removeSettlementKnowledge(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_knowledge')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Knowledge: ${error.message}`)
+}

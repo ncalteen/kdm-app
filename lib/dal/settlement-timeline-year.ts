@@ -281,3 +281,22 @@ export async function updateSettlementTimelineYear(
   if (error)
     throw new Error(`Error Updating Settlement Timeline Year: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Timeline Year
+ *
+ * Deletes a settlement timeline year record from the database.
+ *
+ * @param id Settlement Timeline Year ID
+ */
+export async function removeSettlementTimelineYear(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_timeline_year')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Timeline Year: ${error.message}`)
+}

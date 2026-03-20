@@ -91,3 +91,22 @@ export async function updateSettlementMilestone(
   if (error)
     throw new Error(`Error Updating Settlement Milestone: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Milestone
+ *
+ * Deletes a settlement milestone record from the database.
+ *
+ * @param id Settlement Milestone ID
+ */
+export async function removeSettlementMilestone(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_milestone')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Milestone: ${error.message}`)
+}

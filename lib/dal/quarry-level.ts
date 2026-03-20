@@ -81,3 +81,18 @@ export async function updateQuarryLevel(
 
   if (error) throw new Error(`Error Updating Quarry Level: ${error.message}`)
 }
+
+/**
+ * Remove Quarry Level
+ *
+ * Deletes a quarry level record from the database.
+ *
+ * @param id Quarry Level ID
+ */
+export async function removeQuarryLevel(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('quarry_level').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Quarry Level: ${error.message}`)
+}

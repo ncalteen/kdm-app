@@ -91,3 +91,22 @@ export async function updateNemesisTimelineYear(
   if (error)
     throw new Error(`Error Updating Nemesis Timeline Year: ${error.message}`)
 }
+
+/**
+ * Remove Nemesis Timeline Year
+ *
+ * Deletes a nemesis timeline year record from the database.
+ *
+ * @param id Nemesis Timeline Year ID
+ */
+export async function removeNemesisTimelineYear(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('nemesis_timeline_year')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Nemesis Timeline Year: ${error.message}`)
+}

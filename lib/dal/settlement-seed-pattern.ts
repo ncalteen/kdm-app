@@ -89,3 +89,22 @@ export async function updateSettlementSeedPattern(
   if (error)
     throw new Error(`Error Updating Settlement Seed Pattern: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Seed Pattern
+ *
+ * Deletes a settlement seed pattern record from the database.
+ *
+ * @param id Settlement Seed Pattern ID
+ */
+export async function removeSettlementSeedPattern(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_seed_pattern')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Seed Pattern: ${error.message}`)
+}

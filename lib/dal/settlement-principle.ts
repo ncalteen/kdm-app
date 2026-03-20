@@ -114,3 +114,22 @@ export async function updateSettlementPrinciple(
   if (error)
     throw new Error(`Error Updating Settlement Principle: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Principle
+ *
+ * Deletes a settlement principle record from the database.
+ *
+ * @param id Settlement Principle ID
+ */
+export async function removeSettlementPrinciple(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_principle')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Principle: ${error.message}`)
+}

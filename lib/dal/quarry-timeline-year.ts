@@ -91,3 +91,22 @@ export async function updateQuarryTimelineYear(
   if (error)
     throw new Error(`Error Updating Quarry Timeline Year: ${error.message}`)
 }
+
+/**
+ * Remove Quarry Timeline Year
+ *
+ * Deletes a quarry timeline year record from the database.
+ *
+ * @param id Quarry Timeline Year ID
+ */
+export async function removeQuarryTimelineYear(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('quarry_timeline_year')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Quarry Timeline Year: ${error.message}`)
+}

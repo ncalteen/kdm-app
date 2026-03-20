@@ -92,3 +92,22 @@ export async function updateSettlementPhilosophy(
   if (error)
     throw new Error(`Error Updating Settlement Philosophy: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Philosophy
+ *
+ * Deletes a settlement philosophy record from the database.
+ *
+ * @param id Settlement Philosophy ID
+ */
+export async function removeSettlementPhilosophy(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_philosophy')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Philosophy: ${error.message}`)
+}

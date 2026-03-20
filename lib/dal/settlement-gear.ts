@@ -85,3 +85,18 @@ export async function updateSettlementGear(
 
   if (error) throw new Error(`Error Updating Settlement Gear: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Gear
+ *
+ * Deletes a settlement gear record from the database.
+ *
+ * @param id Settlement Gear ID
+ */
+export async function removeSettlementGear(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('settlement_gear').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Settlement Gear: ${error.message}`)
+}

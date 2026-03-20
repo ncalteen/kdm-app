@@ -90,3 +90,22 @@ export async function updateSettlementInnovation(
   if (error)
     throw new Error(`Error Updating Settlement Innovation: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Innovation
+ *
+ * Deletes a settlement innovation record from the database.
+ *
+ * @param id Settlement Innovation ID
+ */
+export async function removeSettlementInnovation(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_innovation')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Innovation: ${error.message}`)
+}

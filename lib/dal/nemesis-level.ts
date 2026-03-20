@@ -81,3 +81,18 @@ export async function updateNemesisLevel(
 
   if (error) throw new Error(`Error Updating Nemesis Level: ${error.message}`)
 }
+
+/**
+ * Remove Nemesis Level
+ *
+ * Deletes a nemesis level record from the database.
+ *
+ * @param id Nemesis Level ID
+ */
+export async function removeNemesisLevel(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('nemesis_level').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Nemesis Level: ${error.message}`)
+}

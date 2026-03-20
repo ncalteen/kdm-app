@@ -91,3 +91,22 @@ export async function updateSettlementLocation(
   if (error)
     throw new Error(`Error Updating Settlement Location: ${error.message}`)
 }
+
+/**
+ * Remove Settlement Location
+ *
+ * Deletes a settlement location record from the database.
+ *
+ * @param id Settlement Location ID
+ */
+export async function removeSettlementLocation(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_location')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Location: ${error.message}`)
+}

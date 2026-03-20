@@ -83,3 +83,18 @@ export async function updateHuntAIDeck(
 
   if (error) throw new Error(`Error Updating Hunt AI Deck: ${error.message}`)
 }
+
+/**
+ * Remove Hunt AI Deck
+ *
+ * Deletes a hunt AI deck record from the database.
+ *
+ * @param id Hunt AI Deck ID
+ */
+export async function removeHuntAIDeck(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('hunt_ai_deck').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Hunt AI Deck: ${error.message}`)
+}
