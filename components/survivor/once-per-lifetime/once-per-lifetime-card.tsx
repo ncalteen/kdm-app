@@ -351,7 +351,7 @@ export function OncePerLifetimeCard({
                         [index]: false
                       }))
                     }
-                    selectedSurvivor={selectedSurvivor}
+                    value={event}
                   />
                 ))}
               </SortableContext>

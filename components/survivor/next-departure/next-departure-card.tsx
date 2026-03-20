@@ -309,7 +309,7 @@ export function NextDepartureCard({
                         [index]: false
                       }))
                     }
-                    selectedSurvivor={selectedSurvivor}
+                    value={item}
                   />
                 ))}
               </SortableContext>

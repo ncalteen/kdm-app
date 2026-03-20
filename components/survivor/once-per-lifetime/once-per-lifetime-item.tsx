@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SurvivorDetail } from '@/lib/types'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { CheckIcon, GripVertical, PencilIcon, TrashIcon } from 'lucide-react'
@@ -24,8 +23,8 @@ export interface OncePerLifetimeItemProps {
   onRemove: (index: number) => void
   /** OnSave Handler */
   onSave: (value?: string, index?: number) => void
-  /** Selected Survivor */
-  selectedSurvivor: SurvivorDetail | null
+  /** Value */
+  value: string
 }
 
 /**
@@ -51,7 +50,7 @@ export function OncePerLifetimeItem({
   onEdit,
   onRemove,
   onSave,
-  selectedSurvivor
+  value
 }: OncePerLifetimeItemProps): ReactElement {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id })
@@ -59,16 +58,8 @@ export function OncePerLifetimeItem({
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    console.debug(
-      '[OncePerLifetimeItem] Changed',
-      selectedSurvivor?.once_per_lifetime?.[index],
-      index
-    )
-
-    if (inputRef.current)
-      inputRef.current.value =
-        selectedSurvivor?.once_per_lifetime?.[index] ?? ''
-  }, [selectedSurvivor?.once_per_lifetime, index])
+    if (inputRef.current) inputRef.current.value = value ?? ''
+  }, [value])
 
   /**
    * Handle Key Down Event
@@ -100,14 +91,12 @@ export function OncePerLifetimeItem({
 
       {/* Input Field */}
       {isDisabled ? (
-        <span className="text-sm ml-1">
-          {selectedSurvivor?.once_per_lifetime?.[index]}
-        </span>
+        <span className="text-sm ml-1">{value}</span>
       ) : (
         <Input
           ref={inputRef}
           placeholder="Once Per Lifetime Event"
-          defaultValue={selectedSurvivor?.once_per_lifetime?.[index]}
+          defaultValue={value}
           disabled={isDisabled}
           onKeyDown={handleKeyDown}
         />

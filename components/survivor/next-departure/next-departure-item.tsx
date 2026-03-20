@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SurvivorDetail } from '@/lib/types'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { CheckIcon, GripVertical, PencilIcon, TrashIcon } from 'lucide-react'
@@ -24,8 +23,8 @@ export interface NextDepartureItemProps {
   onRemove: (index: number) => void
   /** OnSave Handler */
   onSave: (value?: string, index?: number) => void
-  /** Selected Survivor */
-  selectedSurvivor: SurvivorDetail | null
+  /** Value */
+  value: string
 }
 
 /**
@@ -51,7 +50,7 @@ export function NextDepartureItem({
   onEdit,
   onRemove,
   onSave,
-  selectedSurvivor
+  value
 }: NextDepartureItemProps): ReactElement {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id })
@@ -59,15 +58,8 @@ export function NextDepartureItem({
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    console.debug(
-      '[NextDepartureItem] Changed',
-      selectedSurvivor?.next_departure?.[index],
-      index
-    )
-
-    if (inputRef.current)
-      inputRef.current.value = selectedSurvivor?.next_departure?.[index] ?? ''
-  }, [selectedSurvivor?.next_departure, index])
+    if (inputRef.current) inputRef.current.value = value ?? ''
+  }, [value])
 
   /**
    * Handle Key Down Event
@@ -99,14 +91,12 @@ export function NextDepartureItem({
 
       {/* Input Field */}
       {isDisabled ? (
-        <span className="text-sm ml-1">
-          {selectedSurvivor?.next_departure?.[index]}
-        </span>
+        <span className="text-sm ml-1">{value}</span>
       ) : (
         <Input
           ref={inputRef}
           placeholder="Next Departure"
-          defaultValue={selectedSurvivor?.next_departure?.[index]}
+          defaultValue={value}
           disabled={isDisabled}
           onKeyDown={handleKeyDown}
         />

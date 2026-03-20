@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SurvivorDetail } from '@/lib/types'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { CheckIcon, GripVertical, PencilIcon, TrashIcon } from 'lucide-react'
@@ -22,8 +21,8 @@ export interface AbilityImpairmentItemProps {
   onRemove: (index: number) => void
   /** OnSave Handler */
   onSave: (value?: string, index?: number) => void
-  /** Selected Survivor */
-  selectedSurvivor: SurvivorDetail | null
+  /** Value */
+  value: string
 }
 
 /**
@@ -49,7 +48,7 @@ export function AbilityImpairmentItem({
   onEdit,
   onRemove,
   onSave,
-  selectedSurvivor
+  value
 }: AbilityImpairmentItemProps): ReactElement {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id })
@@ -57,15 +56,8 @@ export function AbilityImpairmentItem({
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    console.debug(
-      '[AbilityImpairmentItem] Changed',
-      selectedSurvivor?.abilities_impairments
-    )
-
-    if (inputRef.current)
-      inputRef.current.value =
-        selectedSurvivor?.abilities_impairments?.[index] ?? ''
-  }, [selectedSurvivor?.abilities_impairments, index])
+    if (inputRef.current) inputRef.current.value = value ?? ''
+  }, [value])
 
   /**
    * Handle Key Down Event
@@ -97,14 +89,12 @@ export function AbilityImpairmentItem({
 
       {/* Input Field */}
       {isDisabled ? (
-        <span className="text-sm ml-1">
-          {selectedSurvivor?.abilities_impairments?.[index]}
-        </span>
+        <span className="text-sm ml-1">{value}</span>
       ) : (
         <Input
           ref={inputRef}
           placeholder="Ability or Impairment"
-          defaultValue={selectedSurvivor?.abilities_impairments?.[index]}
+          defaultValue={value}
           disabled={isDisabled}
           onKeyDown={handleKeyDown}
         />

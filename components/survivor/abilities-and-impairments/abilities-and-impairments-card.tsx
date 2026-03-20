@@ -164,6 +164,7 @@ export function AbilitiesAndImpairmentsCard({
       } else {
         updated.push(value)
         setDisabledInputs((prev) => ({ ...prev, [updated.length - 1]: true }))
+        setIsAddingNew(false)
       }
 
       setAbilitiesImpairments(updated)
@@ -329,7 +330,7 @@ export function AbilitiesAndImpairmentsCard({
                         [index]: false
                       }))
                     }
-                    selectedSurvivor={selectedSurvivor}
+                    value={ability}
                   />
                 ))}
               </SortableContext>
