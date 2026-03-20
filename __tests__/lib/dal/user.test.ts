@@ -13,34 +13,10 @@ vi.mock('@/lib/supabase/client', () => ({
 }))
 
 // Import after mocking so the module picks up the mock.
-const { getUser, getUserSettings } = await import('@/lib/dal/user')
+const { getUserSettings } = await import('@/lib/dal/user')
 
 beforeEach(() => {
   vi.clearAllMocks()
-})
-
-describe('getUser', () => {
-  it('returns the authenticated user', async () => {
-    const mockUser = { id: 'user-1', email: 'test@example.com' }
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser }
-    })
-
-    const result = await getUser()
-
-    expect(mockSupabase.auth.getUser).toHaveBeenCalledOnce()
-    expect(result).toEqual(mockUser)
-  })
-
-  it('returns null when no user is authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: null }
-    })
-
-    const result = await getUser()
-
-    expect(result).toBeNull()
-  })
 })
 
 describe('getUserSettings', () => {
@@ -77,14 +53,12 @@ describe('getUserSettings', () => {
     expect(result).toEqual(mockSettings)
   })
 
-  it('returns null when no user is authenticated', async () => {
+  it('throws an error when no user is authenticated', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: null }
     })
 
-    const result = await getUserSettings()
-
-    expect(result).toBeNull()
+    await expect(getUserSettings()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
