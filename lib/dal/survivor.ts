@@ -106,35 +106,45 @@ export async function getSurvivor(
       .eq('survivor_id', survivorId)
       .limit(1),
     // Knowledge 1
-    supabase
-      .from('knowledge')
-      .select('id, knowledge_name')
-      .eq('id', data.knowledge_1_id)
-      .limit(1),
+    data.knowledge_1_id
+      ? supabase
+          .from('knowledge')
+          .select('id, knowledge_name')
+          .eq('id', data.knowledge_1_id)
+          .limit(1)
+      : { data: [], error: null },
     // Knowledge 2
-    supabase
-      .from('knowledge')
-      .select('id, knowledge_name')
-      .eq('id', data.knowledge_2_id)
-      .limit(1),
+    data.knowledge_2_id
+      ? supabase
+          .from('knowledge')
+          .select('id, knowledge_name')
+          .eq('id', data.knowledge_2_id)
+          .limit(1)
+      : { data: [], error: null },
     // Neurosis
-    supabase
-      .from('neurosis')
-      .select('id, neurosis_name')
-      .eq('id', data.neurosis_id)
-      .limit(1),
+    data.neurosis_id
+      ? supabase
+          .from('neurosis')
+          .select('id, neurosis_name')
+          .eq('id', data.neurosis_id)
+          .limit(1)
+      : { data: [], error: null },
     // Philosophy
-    supabase
-      .from('philosophy')
-      .select('id, philosophy_name')
-      .eq('id', data.philosophy_id)
-      .limit(1),
+    data.philosophy_id
+      ? supabase
+          .from('philosophy')
+          .select('id, philosophy_name')
+          .eq('id', data.philosophy_id)
+          .limit(1)
+      : { data: [], error: null },
     // Tenet Knowledge
-    supabase
-      .from('knowledge')
-      .select('id, knowledge_name')
-      .eq('id', data.tenet_knowledge_id)
-      .limit(1)
+    data.tenet_knowledge_id
+      ? supabase
+          .from('knowledge')
+          .select('id, knowledge_name')
+          .eq('id', data.tenet_knowledge_id)
+          .limit(1)
+      : { data: [], error: null }
   ])
 
   if (cursedGearResult.error)
@@ -609,7 +619,7 @@ export async function updateSurvivor(
 export async function deleteSurvivor(
   settlementId: string | null | undefined,
   selectedSurvivorId: string | null | undefined,
-  setSelectedSurvivorId: (survivor: string | null) => void,
+  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void,
   survivorId: string
 ): Promise<Tables<'survivor'>[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
@@ -643,7 +653,7 @@ export async function deleteSurvivor(
   if (showdownData) throw new Error(SURVIVOR_ON_SHOWDOWN_ERROR_MESSAGE())
 
   // If the survivor is currently selected, clear the selected survivor state
-  if (selectedSurvivorId === survivorId) setSelectedSurvivorId(null)
+  if (selectedSurvivorId === survivorId) setSelectedSurvivor(null)
 
   // Proceed with deletion if the survivor is not on a hunt or showdown and
   // return the updated list of survivors for this settlement

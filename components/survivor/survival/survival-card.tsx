@@ -46,8 +46,6 @@ interface SurvivalCardProps {
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
-  /** Selected Survivor ID */
-  selectedSurvivorId: string | null
   /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
@@ -70,7 +68,6 @@ export function SurvivalCard({
   mode,
   selectedSettlement,
   selectedSurvivor,
-  selectedSurvivorId,
   setSurvivors,
   survivors
 }: SurvivalCardProps): ReactElement {
@@ -113,12 +110,12 @@ export function SurvivalCard({
 
   // Get survival tokens from the showdown or hunt survivor table based on mode
   useEffect(() => {
-    if (!selectedSurvivorId) return
+    if (!selectedSurvivor?.id) return
 
     const tokens = survivalTokens
 
     if (mode === SurvivorCardMode.HUNT_CARD)
-      getHuntSurvivorSurvivalTokens(selectedSurvivorId).then(
+      getHuntSurvivorSurvivalTokens(selectedSurvivor?.id).then(
         (fetchedTokens) => {
           if (tokens === fetchedTokens) return
 
@@ -127,7 +124,7 @@ export function SurvivalCard({
         }
       )
     else if (mode === SurvivorCardMode.SHOWDOWN_CARD)
-      getShowdownSurvivorSurvivalTokens(selectedSurvivorId).then(
+      getShowdownSurvivorSurvivalTokens(selectedSurvivor?.id).then(
         (fetchedTokens) => {
           if (tokens === fetchedTokens) return
 
@@ -147,7 +144,7 @@ export function SurvivalCard({
    */
   const saveSurvivalTokens = useCallback(
     (value: number) => {
-      if (!selectedSurvivorId) return
+      if (!selectedSurvivor?.id) return
 
       const old = survivalTokens
 
@@ -158,7 +155,7 @@ export function SurvivalCard({
           ? updateHuntSurvivorSurvivalTokens
           : updateShowdownSurvivorSurvivalTokens
 
-      update(selectedSurvivorId, value)
+      update(selectedSurvivor?.id, value)
         .then(() =>
           toast.success(SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('survival'))
         )
@@ -168,7 +165,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [mode, selectedSurvivorId, survivalTokens]
+    [mode, selectedSurvivor?.id, survivalTokens]
   )
 
   /**
@@ -194,11 +191,11 @@ export function SurvivalCard({
       setSurvival(value)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, survival: value } : s
+          s.id === selectedSurvivor?.id ? { ...s, survival: value } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { survival: value })
+      updateSurvivor(selectedSurvivor?.id, { survival: value })
         .then(() =>
           toast.success(SURVIVOR_SURVIVAL_UPDATED_MESSAGE(old, value))
         )
@@ -207,7 +204,7 @@ export function SurvivalCard({
           setSurvival(old)
           setSurvivors(
             survivors.map((s) =>
-              s.id === selectedSurvivorId ? { ...s, survival: old } : s
+              s.id === selectedSurvivor?.id ? { ...s, survival: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
@@ -216,7 +213,7 @@ export function SurvivalCard({
     [
       selectedSettlement?.survival_limit,
       survival,
-      selectedSurvivorId,
+      selectedSurvivor?.id,
       setSurvivors,
       survivors
     ]
@@ -237,13 +234,13 @@ export function SurvivalCard({
       setCanSpendSurvival(!checked)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId
+          s.id === selectedSurvivor?.id
             ? { ...s, can_spend_survival: !checked }
             : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { can_spend_survival: !checked })
+      updateSurvivor(selectedSurvivor?.id, { can_spend_survival: !checked })
         .then(() =>
           toast.success(SURVIVOR_CAN_SPEND_SURVIVAL_UPDATED_MESSAGE(!checked))
         )
@@ -252,7 +249,7 @@ export function SurvivalCard({
           setCanSpendSurvival(old)
           setSurvivors(
             survivors.map((s) =>
-              s.id === selectedSurvivorId
+              s.id === selectedSurvivor?.id
                 ? { ...s, can_spend_survival: old }
                 : s
             )
@@ -260,7 +257,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canSpendSurvival, selectedSurvivorId, setSurvivors, survivors]
+    [canSpendSurvival, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   /**
@@ -275,11 +272,11 @@ export function SurvivalCard({
       setCanDodge(!!checked)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, can_dodge: !!checked } : s
+          s.id === selectedSurvivor?.id ? { ...s, can_dodge: !!checked } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { can_dodge: !!checked })
+      updateSurvivor(selectedSurvivor?.id, { can_dodge: !!checked })
         .then(() =>
           toast.success(SURVIVOR_CAN_DODGE_UPDATED_MESSAGE(!!checked))
         )
@@ -288,13 +285,13 @@ export function SurvivalCard({
           setCanDodge(old)
           setSurvivors(
             survivors.map((s) =>
-              s.id === selectedSurvivorId ? { ...s, can_dodge: old } : s
+              s.id === selectedSurvivor?.id ? { ...s, can_dodge: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canDodge, selectedSurvivorId, setSurvivors, survivors]
+    [canDodge, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   /**
@@ -309,11 +306,11 @@ export function SurvivalCard({
       setCanEncourage(!!checked)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, can_encourage: !!checked } : s
+          s.id === selectedSurvivor?.id ? { ...s, can_encourage: !!checked } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { can_encourage: !!checked })
+      updateSurvivor(selectedSurvivor?.id, { can_encourage: !!checked })
         .then(() =>
           toast.success(SURVIVOR_CAN_ENCOURAGE_UPDATED_MESSAGE(!!checked))
         )
@@ -322,13 +319,13 @@ export function SurvivalCard({
           setCanEncourage(old)
           setSurvivors(
             survivors.map((s) =>
-              s.id === selectedSurvivorId ? { ...s, can_encourage: old } : s
+              s.id === selectedSurvivor?.id ? { ...s, can_encourage: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canEncourage, selectedSurvivorId, setSurvivors, survivors]
+    [canEncourage, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   /**
@@ -343,11 +340,11 @@ export function SurvivalCard({
       setCanSurge(!!checked)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, can_surge: !!checked } : s
+          s.id === selectedSurvivor?.id ? { ...s, can_surge: !!checked } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { can_surge: !!checked })
+      updateSurvivor(selectedSurvivor?.id, { can_surge: !!checked })
         .then(() =>
           toast.success(SURVIVOR_CAN_SURGE_UPDATED_MESSAGE(!!checked))
         )
@@ -356,13 +353,13 @@ export function SurvivalCard({
           setCanSurge(old)
           setSurvivors(
             survivors.map((s) =>
-              s.id === selectedSurvivorId ? { ...s, can_surge: old } : s
+              s.id === selectedSurvivor?.id ? { ...s, can_surge: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canSurge, selectedSurvivorId, setSurvivors, survivors]
+    [canSurge, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   /**
@@ -377,24 +374,24 @@ export function SurvivalCard({
       setCanDash(!!checked)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, can_dash: !!checked } : s
+          s.id === selectedSurvivor?.id ? { ...s, can_dash: !!checked } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { can_dash: !!checked })
+      updateSurvivor(selectedSurvivor?.id, { can_dash: !!checked })
         .then(() => toast.success(SURVIVOR_CAN_DASH_UPDATED_MESSAGE(!!checked)))
         .catch((error) => {
           console.error('Can Dash Update Error:', error)
           setCanDash(old)
           setSurvivors(
             survivors.map((s) =>
-              s.id === selectedSurvivorId ? { ...s, can_dash: old } : s
+              s.id === selectedSurvivor?.id ? { ...s, can_dash: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canDash, selectedSurvivorId, setSurvivors, survivors]
+    [canDash, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   /**
@@ -409,11 +406,11 @@ export function SurvivalCard({
       setCanFistPump(!!checked)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, can_fist_pump: !!checked } : s
+          s.id === selectedSurvivor?.id ? { ...s, can_fist_pump: !!checked } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { can_fist_pump: !!checked })
+      updateSurvivor(selectedSurvivor?.id, { can_fist_pump: !!checked })
         .then(() =>
           toast.success(SURVIVOR_CAN_FIST_PUMP_UPDATED_MESSAGE(!!checked))
         )
@@ -422,13 +419,13 @@ export function SurvivalCard({
           setCanFistPump(old)
           setSurvivors(
             survivors.map((s) =>
-              s.id === selectedSurvivorId ? { ...s, can_fist_pump: old } : s
+              s.id === selectedSurvivor?.id ? { ...s, can_fist_pump: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canFistPump, selectedSurvivorId, setSurvivors, survivors]
+    [canFistPump, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   /**
@@ -447,24 +444,26 @@ export function SurvivalCard({
       setSystemicPressure(value)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, systemic_pressure: value } : s
+          s.id === selectedSurvivor?.id ? { ...s, systemic_pressure: value } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { systemic_pressure: value })
+      updateSurvivor(selectedSurvivor?.id, { systemic_pressure: value })
         .then(() => toast.success(SURVIVOR_SYSTEMIC_PRESSURE_UPDATED_MESSAGE()))
         .catch((error) => {
           console.error('Systemic Pressure Update Error:', error)
           setSystemicPressure(old)
           setSurvivors(
             survivors.map((s) =>
-              s.id === selectedSurvivorId ? { ...s, systemic_pressure: old } : s
+              s.id === selectedSurvivor?.id
+                ? { ...s, systemic_pressure: old }
+                : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [systemicPressure, selectedSurvivorId, setSurvivors, survivors]
+    [systemicPressure, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   /**
@@ -479,11 +478,11 @@ export function SurvivalCard({
       setCanEndure(!!checked)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, can_endure: !!checked } : s
+          s.id === selectedSurvivor?.id ? { ...s, can_endure: !!checked } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { can_endure: !!checked })
+      updateSurvivor(selectedSurvivor?.id, { can_endure: !!checked })
         .then(() =>
           toast.success(SURVIVOR_CAN_ENDURE_UPDATED_MESSAGE(!!checked))
         )
@@ -492,13 +491,13 @@ export function SurvivalCard({
           setCanEndure(old)
           setSurvivors(
             survivors.map((s) =>
-              s.id === selectedSurvivorId ? { ...s, can_endure: old } : s
+              s.id === selectedSurvivor?.id ? { ...s, can_endure: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canEndure, selectedSurvivorId, setSurvivors, survivors]
+    [canEndure, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   return (

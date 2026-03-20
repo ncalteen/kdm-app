@@ -29,8 +29,6 @@ import { toast } from 'sonner'
 interface QuarriesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
   /** Set Selected Settlement */
   setSelectedSettlement: (settlement: SettlementDetail | null) => void
 }
@@ -47,7 +45,6 @@ interface QuarriesCardProps {
  */
 export function QuarriesCard({
   selectedSettlement,
-  selectedSettlementId,
   setSelectedSettlement
 }: QuarriesCardProps): ReactElement {
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
@@ -59,10 +56,12 @@ export function QuarriesCard({
   }>({})
 
   // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState(selectedSettlementId)
+  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
+    selectedSettlement?.id ?? null
+  )
 
-  if (selectedSettlementId !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlementId)
+  if (selectedSettlement?.id !== prevSettlementId) {
+    setPrevSettlementId(selectedSettlement?.id ?? null)
     setIsAddingNew(false)
     setHasFetched(false)
   }
@@ -70,7 +69,7 @@ export function QuarriesCard({
   // Fetch settlement quarries and available quarry options when settlement
   // changes.
   useEffect(() => {
-    if (!selectedSettlementId || hasFetched) return
+    if (!selectedSettlement?.id || hasFetched) return
 
     let cancelled = false
 
@@ -94,7 +93,7 @@ export function QuarriesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlementId, hasFetched])
+  }, [selectedSettlement?.id, hasFetched])
 
   /**
    * Available Quarries Not Yet Added
@@ -145,7 +144,7 @@ export function QuarriesCard({
       })
       setIsAddingNew(false)
 
-      addSettlementQuarries([quarryId], selectedSettlementId)
+      addSettlementQuarries([quarryId], selectedSettlement?.id)
         .then((row) => {
           // Replace the placeholder with the real row from the DB.
           setSelectedSettlement({
@@ -175,12 +174,7 @@ export function QuarriesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      selectedSettlement,
-      availableQuarries,
-      setSelectedSettlement,
-      selectedSettlementId
-    ]
+    [selectedSettlement, availableQuarries, setSelectedSettlement]
   )
 
   /**
@@ -299,7 +293,7 @@ export function QuarriesCard({
                 </p>
               )}
 
-            {!hasFetched && selectedSettlementId && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading quarries...
               </p>

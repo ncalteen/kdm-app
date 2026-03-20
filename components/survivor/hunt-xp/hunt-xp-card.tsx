@@ -24,8 +24,6 @@ interface HuntXPCardProps {
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
-  /** Selected Survivor ID */
-  selectedSurvivorId: string | null
   /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
@@ -45,7 +43,6 @@ interface HuntXPCardProps {
 export function HuntXPCard({
   selectedSettlement,
   selectedSurvivor,
-  selectedSurvivorId,
   setSurvivors,
   survivors
 }: HuntXPCardProps): ReactElement {
@@ -80,11 +77,11 @@ export function HuntXPCard({
       setHuntXP(newHuntXP)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, hunt_xp: newHuntXP } : s
+          s.id === selectedSurvivor?.id ? { ...s, hunt_xp: newHuntXP } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { hunt_xp: newHuntXP })
+      updateSurvivor(selectedSurvivor?.id, { hunt_xp: newHuntXP })
         .then(() =>
           checked && huntXPRankUp.includes(index)
             ? toast.success(HUNT_XP_RANK_UP_ACHIEVED_MESSAGE())
@@ -96,7 +93,7 @@ export function HuntXPCard({
           setSurvivors(oldSurvivors)
         })
     },
-    [huntXP, huntXPRankUp, selectedSurvivorId, setSurvivors, survivors]
+    [huntXP, huntXPRankUp, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   /**
@@ -118,13 +115,13 @@ export function HuntXPCard({
         setHuntXPRankUp(currentRankUps)
         setSurvivors(
           survivors.map((s) =>
-            s.id === selectedSurvivorId
+            s.id === selectedSurvivor?.id
               ? { ...s, hunt_xp_rank_up: currentRankUps }
               : s
           )
         )
 
-        updateSurvivor(selectedSurvivorId, {
+        updateSurvivor(selectedSurvivor?.id, {
           hunt_xp_rank_up: currentRankUps
         })
           .then(() =>
@@ -143,13 +140,13 @@ export function HuntXPCard({
         setHuntXPRankUp(currentRankUps)
         setSurvivors(
           survivors.map((s) =>
-            s.id === selectedSurvivorId
+            s.id === selectedSurvivor?.id
               ? { ...s, hunt_xp_rank_up: currentRankUps }
               : s
           )
         )
 
-        updateSurvivor(selectedSurvivorId, {
+        updateSurvivor(selectedSurvivor?.id, {
           hunt_xp_rank_up: currentRankUps
         })
           .then(() => toast.success(HUNT_XP_RANK_UP_MILESTONE_ADDED_MESSAGE()))
@@ -162,7 +159,7 @@ export function HuntXPCard({
           })
       }
     },
-    [huntXPRankUp, selectedSurvivorId, setSurvivors, survivors]
+    [huntXPRankUp, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   /**

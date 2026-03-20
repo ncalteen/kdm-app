@@ -71,7 +71,7 @@ export function SelectPhilosophy({
   const philosophyOptions = [
     { value: '', label: 'None' },
     ...(selectedSettlement?.philosophies ?? []).map((p) => ({
-      value: p.philosophy_name,
+      value: p.philosophy_id,
       label: p.philosophy_name
     }))
   ]

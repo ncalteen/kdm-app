@@ -24,8 +24,6 @@ import { toast } from 'sonner'
 interface WandererCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
-  /** Selected Survivor ID */
-  selectedSurvivorId: string | null
   /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
@@ -44,7 +42,6 @@ interface WandererCardProps {
  */
 export function WandererCard({
   selectedSurvivor,
-  selectedSurvivorId,
   setSurvivors,
   survivors
 }: WandererCardProps): ReactElement {
@@ -70,7 +67,7 @@ export function WandererCard({
    */
   const handleStateChange = useCallback(
     (value: string) => {
-      if (!selectedSurvivorId || selectedSurvivor?.survivor_name !== 'Aenas')
+      if (!selectedSurvivor?.id || selectedSurvivor?.survivor_name !== 'Aenas')
         return
 
       const oldState = aenasState
@@ -79,13 +76,13 @@ export function WandererCard({
       setAenasState(value)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId
+          s.id === selectedSurvivor?.id
             ? { ...s, aenas_state: value as 'Content' | 'Hungry' }
             : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, {
+      updateSurvivor(selectedSurvivor?.id, {
         aenas_state: value as 'Content' | 'Hungry'
       })
         .then(() =>
@@ -105,7 +102,7 @@ export function WandererCard({
     [
       aenasState,
       selectedSurvivor?.survivor_name,
-      selectedSurvivorId,
+      selectedSurvivor?.id,
       setSurvivors,
       survivors
     ]
@@ -118,7 +115,7 @@ export function WandererCard({
    */
   const handleDispositionChange = useCallback(
     (value: number) => {
-      if (!selectedSurvivorId) return
+      if (!selectedSurvivor?.id) return
 
       const oldDisposition = disposition
       const oldSurvivors = [...survivors]
@@ -126,11 +123,11 @@ export function WandererCard({
       setDisposition(value)
       setSurvivors(
         survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, disposition: value } : s
+          s.id === selectedSurvivor?.id ? { ...s, disposition: value } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { disposition: value })
+      updateSurvivor(selectedSurvivor?.id, { disposition: value })
         .then(() => toast.success(SURVIVOR_DISPOSITION_UPDATED_MESSAGE()))
         .catch((error) => {
           setDisposition(oldDisposition)
@@ -138,7 +135,7 @@ export function WandererCard({
           console.error('Error Updating Survivor Disposition:', error)
         })
     },
-    [disposition, selectedSurvivorId, setSurvivors, survivors]
+    [disposition, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   return (

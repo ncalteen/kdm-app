@@ -31,8 +31,6 @@ import { toast } from 'sonner'
 interface NemesesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
   /** Set Selected Settlement */
   setSelectedSettlement: (settlement: SettlementDetail | null) => void
 }
@@ -50,7 +48,6 @@ interface NemesesCardProps {
  */
 export function NemesesCard({
   selectedSettlement,
-  selectedSettlementId,
   setSelectedSettlement
 }: NemesesCardProps): ReactElement {
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
@@ -63,11 +60,11 @@ export function NemesesCard({
 
   // Track the previous settlement ID to reset state on settlement change.
   const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlementId
+    selectedSettlement?.id ?? null
   )
 
-  if (selectedSettlementId !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlementId)
+  if (selectedSettlement?.id !== prevSettlementId) {
+    setPrevSettlementId(selectedSettlement?.id ?? null)
     setIsAddingNew(false)
     setHasFetched(false)
   }
@@ -77,7 +74,7 @@ export function NemesesCard({
    * changes. Both queries run in parallel to minimize load time.
    */
   useEffect(() => {
-    if (!selectedSettlementId || hasFetched) return
+    if (!selectedSettlement?.id || hasFetched) return
 
     let cancelled = false
 
@@ -101,7 +98,7 @@ export function NemesesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlementId, hasFetched])
+  }, [selectedSettlement?.id, hasFetched])
 
   /**
    * Available Nemeses Not Yet Added
@@ -156,7 +153,7 @@ export function NemesesCard({
       })
       setIsAddingNew(false)
 
-      addSettlementNemeses([nemesisId], selectedSettlementId)
+      addSettlementNemeses([nemesisId], selectedSettlement?.id)
         .then((row) => {
           // Replace the placeholder with the real row from the DB.
           setSelectedSettlement({
@@ -188,12 +185,7 @@ export function NemesesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      selectedSettlement,
-      availableNemeses,
-      setSelectedSettlement,
-      selectedSettlementId
-    ]
+    [selectedSettlement, availableNemeses, setSelectedSettlement]
   )
 
   /**
@@ -361,7 +353,7 @@ export function NemesesCard({
                 </p>
               )}
 
-            {!hasFetched && selectedSettlementId && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading nemeses...
               </p>

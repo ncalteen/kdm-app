@@ -42,20 +42,12 @@ interface SurvivorCardProps extends Partial<SurvivorDetail> {
   mode: SurvivorCardMode
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
-  /** Selected Hunt ID */
-  selectedHuntId: string | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
-  /** Selected Showdown ID */
-  selectedShowdownId: string | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
-  /** Selected Survivor ID */
-  selectedSurvivorId: string | null
   /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
@@ -73,13 +65,9 @@ interface SurvivorCardProps extends Partial<SurvivorDetail> {
 export function SurvivorCard({
   mode,
   selectedHunt,
-  selectedHuntId,
   selectedSettlement,
-  selectedSettlementId,
   selectedShowdown,
-  selectedShowdownId,
   selectedSurvivor,
-  selectedSurvivorId,
   setSurvivors,
   survivors
 }: SurvivorCardProps): ReactElement {
@@ -98,14 +86,12 @@ export function SurvivorCard({
           <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px]">
             <StatusCard
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             {selectedSurvivor?.wanderer && (
               <WandererCard
                 selectedSurvivor={selectedSurvivor}
-                selectedSurvivorId={selectedSurvivorId}
                 setSurvivors={setSurvivors}
                 survivors={survivors}
               />
@@ -113,7 +99,6 @@ export function SurvivorCard({
             <HuntXPCard
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
@@ -121,20 +106,17 @@ export function SurvivorCard({
               mode={mode}
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <WeaponProficiencyCard
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <CourageUnderstandingCard
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
@@ -146,13 +128,11 @@ export function SurvivorCard({
             />
             <AbilitiesAndImpairmentsCard
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <OncePerLifetimeCard
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
@@ -164,7 +144,6 @@ export function SurvivorCard({
               mode={mode}
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
@@ -173,43 +152,34 @@ export function SurvivorCard({
               displayTormentInput={true}
               mode={mode}
               selectedHunt={selectedHunt}
-              selectedHuntId={selectedHuntId}
               selectedSettlement={selectedSettlement}
-              selectedSettlementId={selectedSettlementId}
               selectedShowdown={selectedShowdown}
-              selectedShowdownId={selectedShowdownId}
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <HeadCard
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <ArmsCard
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <BodyCard
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <WaistCard
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <LegsCard
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
@@ -229,7 +199,6 @@ export function SurvivorCard({
             {mode === SurvivorCardMode.SURVIVOR_CARD && (
               <NextDepartureCard
                 selectedSurvivor={selectedSurvivor}
-                selectedSurvivorId={selectedSurvivorId}
                 setSurvivors={setSurvivors}
                 survivors={survivors}
               />
@@ -241,14 +210,14 @@ export function SurvivorCard({
             DatabaseSurvivorType['Arc'] && (
             <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px] order-3">
               <PhilosophyCard
+                selectedSettlement={selectedSettlement}
                 selectedSurvivor={selectedSurvivor}
-                selectedSurvivorId={selectedSurvivorId}
                 setSurvivors={setSurvivors}
                 survivors={survivors}
               />
               <KnowledgeCard
+                selectedSettlement={selectedSettlement}
                 selectedSurvivor={selectedSurvivor}
-                selectedSurvivorId={selectedSurvivorId}
                 setSurvivors={setSurvivors}
                 survivors={survivors}
               />

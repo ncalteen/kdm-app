@@ -31,28 +31,18 @@ interface SettlementCardProps {
   isCreatingNewSurvivor: boolean
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
-  /** Selected Hunt ID */
-  selectedHuntId: string | null
   /** Selected Hunt Monster Index */
   selectedHuntMonsterIndex: number
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
   /** Selected Settlement Phase */
   selectedSettlementPhase: SettlementPhaseDetail | null
-  /** Selected Settlement Phase ID */
-  selectedSettlementPhaseId: string | null
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
-  /** Selected Showdown ID */
-  selectedShowdownId: string | null
   /** Selected Showdown Monster Index */
   selectedShowdownMonsterIndex: number
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
-  /** Selected Survivor ID */
-  selectedSurvivorId: string | null
   /** Selected Tab */
   selectedTab: TabType
   /** Set Is Creating New Settlement */
@@ -103,17 +93,12 @@ export function SettlementCard({
   isCreatingNewSettlement,
   isCreatingNewSurvivor,
   selectedHunt,
-  selectedHuntId,
   selectedHuntMonsterIndex,
   selectedSettlement,
-  selectedSettlementId,
   selectedSettlementPhase,
-  selectedSettlementPhaseId,
   selectedShowdown,
-  selectedShowdownId,
   selectedShowdownMonsterIndex,
   selectedSurvivor,
-  selectedSurvivorId,
   selectedTab,
   setIsCreatingNewSettlement,
   setIsCreatingNewSurvivor,
@@ -155,7 +140,7 @@ export function SettlementCard({
       />
     )
 
-  if (!selectedSettlement || !selectedSettlementId)
+  if (!selectedSettlement)
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <p className="text-sm text-gray-500">No settlement selected</p>
@@ -167,9 +152,7 @@ export function SettlementCard({
       {/* Overview Card */}
       <OverviewCard
         selectedSettlement={selectedSettlement}
-        selectedSettlementId={selectedSettlementId}
         selectedSettlementPhase={selectedSettlementPhase}
-        selectedSettlementPhaseId={selectedSettlementPhaseId}
         setSelectedSettlement={setSelectedSettlement}
       />
 
@@ -178,7 +161,7 @@ export function SettlementCard({
       <div className="flex flex-1 flex-col h-full">
         <div className="flex flex-col gap-2 py-2 px-2 flex-1">
           {/* Timeline Tab */}
-          {selectedSettlementId && selectedTab === TabType.TIMELINE && (
+          {selectedSettlement && selectedTab === TabType.TIMELINE && (
             <div className="flex flex-col lg:flex-row gap-2">
               {/* Timeline */}
               <div className="flex-1 order-2 lg:order-1">
@@ -198,11 +181,11 @@ export function SettlementCard({
                       itemName="Departure Bonus"
                       placeholder="New departure bonus..."
                       saveList={(updateData) =>
-                        updateSettlement(selectedSettlementId, {
+                        updateSettlement(selectedSettlement?.id, {
                           departing_bonuses: updateData
                         })
                       }
-                      selectedSettlementId={selectedSettlementId}
+                      selectedSettlement={selectedSettlement}
                     />
                   </div>
                   <div className="flex-1">
@@ -212,11 +195,11 @@ export function SettlementCard({
                       itemName="Arrival Bonus"
                       placeholder="New arrival bonus..."
                       saveList={(updateData) =>
-                        updateSettlement(selectedSettlementId, {
+                        updateSettlement(selectedSettlement?.id, {
                           arrival_bonuses: updateData
                         })
                       }
-                      selectedSettlementId={selectedSettlementId}
+                      selectedSettlement={selectedSettlement}
                     />
                   </div>
                 </div>
@@ -230,11 +213,17 @@ export function SettlementCard({
               <div className="flex flex-col lg:flex-row gap-2">
                 {/* Quarries */}
                 <div className="flex-1">
-                  <QuarriesCard selectedSettlementId={selectedSettlementId} />
+                  <QuarriesCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
                 </div>
                 {/* Nemeses */}
                 <div className="flex-1">
-                  <NemesesCard selectedSettlementId={selectedSettlementId} />
+                  <NemesesCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
                 </div>
               </div>
 
@@ -249,11 +238,11 @@ export function SettlementCard({
                   itemName="Monster Volume"
                   placeholder="New monster volume..."
                   saveList={(updateData) =>
-                    updateSettlement(selectedSettlementId, {
+                    updateSettlement(selectedSettlement?.id, {
                       monster_volumes: updateData
                     })
                   }
-                  selectedSettlementId={selectedSettlementId}
+                  selectedSettlement={selectedSettlement}
                 />
               )}
             </div>
@@ -279,10 +268,9 @@ export function SettlementCard({
               {/* Survivors Table */}
               <SettlementSurvivorsCard
                 selectedSettlement={selectedSettlement}
-                selectedSettlementId={selectedSettlementId}
-                selectedSurvivorId={selectedSurvivorId}
+                selectedSurvivor={selectedSurvivor}
                 setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
-                setSelectedSurvivorId={setSelectedSurvivorId}
+                setSelectedSurvivor={setSelectedSurvivor}
                 setSurvivors={setSurvivors}
                 survivors={survivors}
               />
@@ -292,13 +280,9 @@ export function SettlementCard({
                 <SurvivorCard
                   mode={SurvivorCardMode.SURVIVOR_CARD}
                   selectedHunt={selectedHunt}
-                  selectedHuntId={selectedHuntId}
                   selectedSettlement={selectedSettlement}
-                  selectedSettlementId={selectedSettlementId}
                   selectedShowdown={selectedShowdown}
-                  selectedShowdownId={selectedShowdownId}
                   selectedSurvivor={selectedSurvivor}
-                  selectedSurvivorId={selectedSurvivorId}
                   setSurvivors={setSurvivors}
                   survivors={survivors}
                 />
@@ -308,7 +292,6 @@ export function SettlementCard({
               {isCreatingNewSurvivor && (
                 <CreateSurvivorForm
                   selectedSettlement={selectedSettlement}
-                  selectedSettlementId={selectedSettlementId}
                   setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
                   setSelectedSurvivorId={setSelectedSurvivorId}
                   setSurvivors={setSurvivors}

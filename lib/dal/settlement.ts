@@ -19,6 +19,7 @@ import {
   addSettlementInnovations,
   getSettlementInnovations
 } from '@/lib/dal/settlement-innovation'
+import { getSettlementKnowledges } from '@/lib/dal/settlement-knowledge'
 import { addSettlementLocations } from '@/lib/dal/settlement-location'
 import {
   addSettlementMilestones,
@@ -348,6 +349,7 @@ export async function getSettlement(
     collectiveCognitionRewards,
     gear,
     innovations,
+    knowledges,
     milestones,
     nemeses,
     patterns,
@@ -360,6 +362,7 @@ export async function getSettlement(
     getSettlementCollectiveCognitionRewards(settlementId),
     getSettlementGear(settlementId),
     getSettlementInnovations(settlementId),
+    getSettlementKnowledges(settlementId),
     getSettlementMilestones(settlementId),
     getSettlementNemeses(settlementId),
     getSettlementPatterns(settlementId),
@@ -380,6 +383,7 @@ export async function getSettlement(
     collective_cognition_rewards: collectiveCognitionRewards,
     gear,
     innovations,
+    knowledges,
     milestones,
     nemeses,
     patterns,

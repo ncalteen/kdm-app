@@ -76,6 +76,16 @@ export type FightingArtDetail = Omit<
 >
 
 /**
+ * Secret Fighting Art Detail
+ *
+ * Used throughout the app to represent a secret fighting art.
+ */
+export type SecretFightingArtDetail = Omit<
+  Tables<'secret_fighting_art'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
  * Gear Detail
  *
  * Used throughout the app to represent a gear item.
@@ -291,6 +301,15 @@ export type SettlementDetail = Tables<'settlement'> & {
     innovation_id: string
     /** Innovation Name */
     innovation_name: string
+  }[]
+  /** Knowledges */
+  knowledges: {
+    /** Settlement Knowledge ID */
+    id: string
+    /** Knowledge ID */
+    knowledge_id: string
+    /** Knowledge Name */
+    knowledge_name: string
   }[]
   /** Locations */
   locations: {

@@ -39,8 +39,8 @@ export interface ColumnProps {
   setDeleteId: (id: string | undefined) => void
   /** Set Is Delete Dialog Open */
   setIsDeleteDialogOpen: (open: boolean) => void
-  /** Set Selected Survivor ID */
-  setSelectedSurvivorId: (survivor: string) => void
+  /** Set Selected Survivor */
+  setSelectedSurvivor: (survivor: SurvivorDetail) => void
 }
 
 /**
@@ -55,7 +55,7 @@ export const createColumns = ({
   handleDeleteSurvivor,
   setDeleteId,
   setIsDeleteDialogOpen,
-  setSelectedSurvivorId
+  setSelectedSurvivor
 }: ColumnProps): ColumnDef<SurvivorDetail>[] => {
   return [
     {
@@ -78,7 +78,7 @@ export const createColumns = ({
             variant="outline"
             size="sm"
             title="View survivor"
-            onClick={() => setSelectedSurvivorId(row.original.id)}>
+            onClick={() => setSelectedSurvivor(row.original)}>
             <UserRoundSearchIcon className="h-4 w-4" />
           </Button>
           <AlertDialog

@@ -16,14 +16,12 @@ import { toast } from 'sonner'
 interface SettlementSurvivorsCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
-  /* Selected Survivor ID */
-  selectedSurvivorId: string | null
+  /* Selected Survivor */
+  selectedSurvivor: SurvivorDetail | null
   /** Set Is Creating New Survivor */
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
-  /** Set Selected Survivor ID */
-  setSelectedSurvivorId: (survivor: string | null) => void
+  /** Set Selected Survivor */
+  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
   /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
@@ -43,10 +41,9 @@ interface SettlementSurvivorsCardProps {
  */
 export function SettlementSurvivorsCard({
   selectedSettlement,
-  selectedSettlementId,
-  selectedSurvivorId,
+  selectedSurvivor,
   setIsCreatingNewSurvivor,
-  setSelectedSurvivorId,
+  setSelectedSurvivor,
   setSurvivors,
   survivors
 }: SettlementSurvivorsCardProps): ReactElement {
@@ -60,9 +57,9 @@ export function SettlementSurvivorsCard({
    * survivor is being created.
    */
   const handleNewSurvivor = useCallback(() => {
-    setSelectedSurvivorId(null)
+    setSelectedSurvivor(null)
     setIsCreatingNewSurvivor(true)
-  }, [setSelectedSurvivorId, setIsCreatingNewSurvivor])
+  }, [setSelectedSurvivor, setIsCreatingNewSurvivor])
 
   /**
    * Handle Delete Survivor
@@ -83,14 +80,14 @@ export function SettlementSurvivorsCard({
         return toast.error(ERROR_MESSAGE())
       }
 
-      if (selectedSurvivorId === deletedSurvivor.id) setSelectedSurvivorId(null)
+      if (selectedSurvivor?.id === deletedSurvivor.id) setSelectedSurvivor(null)
 
       setSurvivors(updatedSurvivors)
 
       deleteSurvivor(
-        selectedSettlementId,
-        selectedSurvivorId,
-        setSelectedSurvivorId,
+        selectedSettlement?.id,
+        selectedSurvivor?.id,
+        setSelectedSurvivor,
         survivorId
       )
         .then(() =>
@@ -110,9 +107,9 @@ export function SettlementSurvivorsCard({
     },
     [
       survivors,
-      selectedSettlementId,
-      selectedSurvivorId,
-      setSelectedSurvivorId,
+      selectedSettlement?.id,
+      selectedSurvivor?.id,
+      setSelectedSurvivor,
       setSurvivors
     ]
   )
@@ -123,7 +120,7 @@ export function SettlementSurvivorsCard({
     isDeleteDialogOpen,
     setDeleteId,
     setIsDeleteDialogOpen,
-    setSelectedSurvivorId
+    setSelectedSurvivor
   })
 
   // Only show the philosophy column if the settlement uses Arc survivors
@@ -157,7 +154,7 @@ export function SettlementSurvivorsCard({
           <SurvivorDataTable
             columns={columns}
             data={survivors.filter(
-              (survivor) => survivor.settlement_id === selectedSettlementId
+              (survivor) => survivor.settlement_id === selectedSettlement?.id
             )}
             initialColumnVisibility={columnVisibility}
             onNewSurvivor={handleNewSurvivor}

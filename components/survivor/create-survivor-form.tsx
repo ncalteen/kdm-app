@@ -33,8 +33,6 @@ import { toast } from 'sonner'
 interface CreateSurvivorFormProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
   /** Set Is Creating New Survivor */
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
   /** Set Selected Survivor ID */
@@ -59,7 +57,6 @@ interface CreateSurvivorFormProps {
  */
 export function CreateSurvivorForm({
   selectedSettlement,
-  selectedSettlementId,
   setIsCreatingNewSurvivor,
   setSelectedSurvivorId,
   setSurvivors,
@@ -75,11 +72,11 @@ export function CreateSurvivorForm({
 
   // Track the previous settlement ID to reset state on settlement change.
   const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlementId
+    selectedSettlement?.id ?? null
   )
 
-  if (selectedSettlementId !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlementId)
+  if (selectedSettlement?.id !== prevSettlementId) {
+    setPrevSettlementId(selectedSettlement?.id ?? null)
     setAvailableWanderers({})
     setHasFetched(false)
   }
@@ -88,7 +85,7 @@ export function CreateSurvivorForm({
    * Fetch wanderers when the settlement changes.
    */
   useEffect(() => {
-    if (!selectedSettlementId || hasFetched) return
+    if (!selectedSettlement?.id || hasFetched) return
 
     let cancelled = false
 
@@ -109,12 +106,12 @@ export function CreateSurvivorForm({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlementId, hasFetched])
+  }, [selectedSettlement?.id, hasFetched])
 
   const form = useForm<NewSurvivorInput>({
     resolver: zodResolver(NewSurvivorInputSchema) as Resolver<NewSurvivorInput>,
     defaultValues: NewSurvivorInputSchema.parse({
-      settlementId: selectedSettlementId
+      settlementId: selectedSettlement?.id
     })
   })
 
@@ -122,10 +119,10 @@ export function CreateSurvivorForm({
   useEffect(() => {
     console.debug('[CreateSurvivorForm] Initializing Form Values')
 
-    if (!selectedSettlementId) return
+    if (!selectedSettlement?.id) return
 
     const updatedValues = {
-      settlementId: selectedSettlementId,
+      settlementId: selectedSettlement?.id,
       canDash: selectedSettlement?.can_dash ?? false,
       canFistPump: selectedSettlement?.can_fist_pump ?? false,
       canEncourage: selectedSettlement?.can_encourage ?? false,
@@ -147,7 +144,7 @@ export function CreateSurvivorForm({
     })
   }, [
     form,
-    selectedSettlementId,
+    selectedSettlement?.id,
     selectedSettlement?.can_dash,
     selectedSettlement?.can_fist_pump,
     selectedSettlement?.can_encourage,
@@ -169,11 +166,11 @@ export function CreateSurvivorForm({
     setActiveTab(tab)
 
     // Reset form when switching to custom tab
-    if (tab === 'custom' && selectedSettlement && selectedSettlementId) {
+    if (tab === 'custom' && selectedSettlement && selectedSettlement?.id) {
       setSelectedWanderer(null)
       form.reset({
         ...NewSurvivorInputSchema.parse({
-          settlementId: selectedSettlementId
+          settlementId: selectedSettlement?.id
         }),
         canDash: selectedSettlement?.can_dash ?? false,
         canFistPump: selectedSettlement?.can_fist_pump ?? false,
@@ -199,13 +196,13 @@ export function CreateSurvivorForm({
    * @param wanderer Selected Wanderer
    */
   function handleWandererSelect(wanderer: WandererDetail | null) {
-    if (!wanderer || !selectedSettlementId) return
+    if (!wanderer || !selectedSettlement?.id) return
 
     setSelectedWanderer(wanderer)
 
     const newSurvivor = {
       ...NewSurvivorInputSchema.parse({
-        settlementId: selectedSettlementId
+        settlementId: selectedSettlement?.id
       }),
       canDash: selectedSettlement?.can_dash ?? false,
       canFistPump: selectedSettlement?.can_fist_pump ?? false,
@@ -219,7 +216,7 @@ export function CreateSurvivorForm({
       courage: wanderer.courage,
       disposition: wanderer.disposition,
       evasion: wanderer.evasion,
-      fightingArts: wanderer.fighting_arts,
+      fightingArtIds: wanderer.fighting_art_ids,
       gender: Gender[wanderer.gender],
       huntXP: wanderer.hunt_xp,
       huntXPRankUp: wanderer.hunt_xp_rank_up,
@@ -250,7 +247,7 @@ export function CreateSurvivorForm({
     // Cannibalize death principle, gain an additional disposition.
     if (
       wanderer.wanderer_name === 'Goth' &&
-      !selectedSettlement?.principle_data?.some(
+      !selectedSettlement?.principles?.some(
         (p) =>
           (p.option_1_name === 'Cannibalize' && p.option_1_selected) ||
           (p.option_2_name === 'Cannibalize' && p.option_2_selected)

@@ -2,6 +2,7 @@ import { ListItem, NewListItem } from '@/components/generic/list-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
+import { SettlementDetail } from '@/lib/types'
 import {
   DndContext,
   DragEndEvent,
@@ -35,8 +36,8 @@ interface ListCardProps {
   placeholder: string
   /** Save List */
   saveList: (updateData: string[]) => Promise<void>
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
+  /** Selected Settlement */
+  selectedSettlement: SettlementDetail | null
 }
 
 /**
@@ -54,7 +55,7 @@ export function ListCard({
   itemName,
   placeholder,
   saveList,
-  selectedSettlementId
+  selectedSettlement
 }: ListCardProps): ReactElement {
   const [editingIndices, setEditingIndices] = useState<Set<number>>(new Set())
   const [items, setItems] = useState<string[]>(initialItems)
@@ -64,14 +65,16 @@ export function ListCard({
   // data or settlement changes.
   const [prevInitialItems, setPrevInitialItems] =
     useState<string[]>(initialItems)
-  const [prevSettlementId, setPrevSettlementId] = useState(selectedSettlementId)
+  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
+    selectedSettlement?.id ?? null
+  )
 
   if (
     initialItems !== prevInitialItems ||
-    selectedSettlementId !== prevSettlementId
+    selectedSettlement?.id !== prevSettlementId
   ) {
     setPrevInitialItems(initialItems)
-    setPrevSettlementId(selectedSettlementId)
+    setPrevSettlementId(selectedSettlement?.id ?? null)
     setItems(initialItems)
     setEditingIndices(new Set())
     setIsAddingNew(false)

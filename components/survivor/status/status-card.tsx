@@ -35,8 +35,6 @@ import { toast } from 'sonner'
 interface StatusCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
-  /** Selected Survivor ID */
-  selectedSurvivorId: string | null
   /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
@@ -56,7 +54,6 @@ interface StatusCardProps {
  */
 export function StatusCard({
   selectedSurvivor,
-  selectedSurvivorId,
   setSurvivors,
   survivors
 }: StatusCardProps): ReactElement {
@@ -112,11 +109,11 @@ export function StatusCard({
       setSurvivorName(value)
       setSurvivors(
         survivors?.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, survivor_name: value } : s
-        ) ?? null
+          s.id === selectedSurvivor?.id ? { ...s, survivor_name: value } : s
+        ) ?? []
       )
 
-      updateSurvivor(selectedSurvivorId, { survivor_name: value })
+      updateSurvivor(selectedSurvivor?.id, { survivor_name: value })
         .then(() => toast.success(SURVIVOR_NAME_UPDATED_MESSAGE()))
         .catch((error) => {
           setSurvivorName(oldName)
@@ -135,16 +132,16 @@ export function StatusCard({
     (gender: Gender) => {
       const oldGender = survivorGender
       const dbGender = DatabaseGender[gender]
-      const oldSurvivors = [...survivors]
+      const oldSurvivors = [...(survivors ?? [])]
 
       setSurvivorGender(dbGender)
       setSurvivors(
-        survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, gender: dbGender } : s
+        (survivors ?? []).map((s) =>
+          s.id === selectedSurvivor?.id ? { ...s, gender: dbGender } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { gender: dbGender })
+      updateSurvivor(selectedSurvivor?.id, { gender: dbGender })
         .then(() => toast.success(SURVIVOR_GENDER_UPDATED_MESSAGE()))
         .catch((error) => {
           setSurvivorGender(oldGender)
@@ -152,7 +149,7 @@ export function StatusCard({
           console.error('Error Updating Survivor Gender:', error)
         })
     },
-    [selectedSurvivorId, survivorGender, survivors, setSurvivors]
+    [selectedSurvivor?.id, survivorGender, survivors, setSurvivors]
   )
 
   /**
@@ -163,16 +160,16 @@ export function StatusCard({
   const handleDeadToggle = useCallback(
     (checked: boolean) => {
       const oldDead = survivorDead
-      const oldSurvivors = [...survivors]
+      const oldSurvivors = [...(survivors ?? [])]
 
       setSurvivorDead(checked)
       setSurvivors(
-        survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, dead: checked } : s
+        (survivors ?? []).map((s) =>
+          s.id === selectedSurvivor?.id ? { ...s, dead: checked } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { dead: checked })
+      updateSurvivor(selectedSurvivor?.id, { dead: checked })
         .then(() =>
           toast.success(SURVIVOR_DEAD_STATUS_UPDATED_MESSAGE(checked))
         )
@@ -182,7 +179,7 @@ export function StatusCard({
           console.error('Error Updating Survivor Dead Status:', error)
         })
     },
-    [selectedSurvivorId, survivorDead, survivors, setSurvivors]
+    [selectedSurvivor?.id, survivorDead, survivors, setSurvivors]
   )
 
   /**
@@ -193,16 +190,16 @@ export function StatusCard({
   const handleRetiredToggle = useCallback(
     (checked: boolean) => {
       const oldRetired = survivorRetired
-      const oldSurvivors = [...survivors]
+      const oldSurvivors = [...(survivors ?? [])]
 
       setSurvivorRetired(checked)
       setSurvivors(
-        survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, retired: checked } : s
+        (survivors ?? []).map((s) =>
+          s.id === selectedSurvivor?.id ? { ...s, retired: checked } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { retired: checked })
+      updateSurvivor(selectedSurvivor?.id, { retired: checked })
         .then(() =>
           toast.success(SURVIVOR_RETIRED_STATUS_UPDATED_MESSAGE(checked))
         )
@@ -212,7 +209,7 @@ export function StatusCard({
           console.error('Error Updating Survivor Retired Status:', error)
         })
     },
-    [selectedSurvivorId, survivorRetired, survivors, setSurvivors]
+    [selectedSurvivor?.id, survivorRetired, survivors, setSurvivors]
   )
 
   /**
@@ -223,17 +220,17 @@ export function StatusCard({
   const handleColorChange = useCallback(
     (color: ColorChoice) => {
       const oldColor = survivorColor
-      const oldSurvivors = [...survivors]
+      const oldSurvivors = [...(survivors ?? [])]
 
       setSurvivorColor(color)
       setIsColorPickerOpen(false)
       setSurvivors(
-        survivors.map((s) =>
-          s.id === selectedSurvivorId ? { ...s, color } : s
+        (survivors ?? []).map((s) =>
+          s.id === selectedSurvivor?.id ? { ...s, color } : s
         )
       )
 
-      updateSurvivor(selectedSurvivorId, { color })
+      updateSurvivor(selectedSurvivor?.id, { color })
         .then(() => toast.success(SURVIVOR_COLOR_CHANGED_MESSAGE(color)))
         .catch((error) => {
           setSurvivorColor(oldColor)
@@ -241,7 +238,7 @@ export function StatusCard({
           console.error('Error Updating Survivor Color:', error)
         })
     },
-    [selectedSurvivorId, survivorColor, survivors, setSurvivors]
+    [selectedSurvivor?.id, survivorColor, survivors, setSurvivors]
   )
 
   return (
