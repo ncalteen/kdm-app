@@ -133,6 +133,7 @@ export function WandererCard({
           setDisposition(oldDisposition)
           setSurvivors(oldSurvivors)
           console.error('Error Updating Survivor Disposition:', error)
+          toast.error('The darkness swallows your words. Please try again.')
         })
     },
     [disposition, selectedSurvivor?.id, setSurvivors, survivors]
