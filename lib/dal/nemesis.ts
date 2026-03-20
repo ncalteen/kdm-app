@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { NemesisDetail } from '@/lib/types'
@@ -137,4 +138,28 @@ export async function getNemesisNodesById(
   if (error) throw new Error(`Error Fetching Nemesis Nodes: ${error.message}`)
 
   return (data ?? []).map((n) => ({ id: n.id, node: n.node as MonsterNode }))
+}
+
+/**
+ * Add Nemesis
+ *
+ * Adds a new nemesis record to the database.
+ *
+ * @param nemesis Nemesis Data
+ * @returns Inserted Nemesis
+ */
+export async function addNemesis(
+  nemesis: Omit<TablesInsert<'nemesis'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<NemesisDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('nemesis')
+    .insert(nemesis)
+    .select('id, alternate_id, monster_name, multi_monster, node, vignette_id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Nemesis: ${error.message}`)
+
+  return data
 }

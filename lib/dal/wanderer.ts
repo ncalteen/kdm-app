@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { WandererDetail } from '@/lib/types'
 
@@ -110,4 +111,30 @@ export async function getWandererIds(
   if (!data) throw new Error('Wanderer(s) Not Found')
 
   return data.map((wanderer) => wanderer.id)
+}
+
+/**
+ * Add Wanderer
+ *
+ * Adds a new wanderer record to the database.
+ *
+ * @param wanderer Wanderer Data
+ * @returns Inserted Wanderer
+ */
+export async function addWanderer(
+  wanderer: Omit<TablesInsert<'wanderer'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<WandererDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('wanderer')
+    .insert(wanderer)
+    .select(
+      'id, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+    )
+    .single()
+
+  if (error) throw new Error(`Error Adding Wanderer: ${error.message}`)
+
+  return data
 }

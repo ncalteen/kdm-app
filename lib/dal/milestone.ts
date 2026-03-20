@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { MilestoneDetail } from '@/lib/types'
@@ -95,4 +96,28 @@ export async function getMilestoneIds(
   if (!data) throw new Error('Milestone(s) Not Found')
 
   return data.map((milestone) => milestone.id)
+}
+
+/**
+ * Add Milestone
+ *
+ * Adds a new milestone record to the database.
+ *
+ * @param milestone Milestone Data
+ * @returns Inserted Milestone
+ */
+export async function addMilestone(
+  milestone: Omit<TablesInsert<'milestone'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<MilestoneDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('milestone')
+    .insert(milestone)
+    .select('id, campaign_types, event_name, milestone_name')
+    .single()
+
+  if (error) throw new Error(`Error Adding Milestone: ${error.message}`)
+
+  return data
 }

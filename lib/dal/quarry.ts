@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { QuarryDetail } from '@/lib/types'
@@ -137,4 +138,30 @@ export async function getQuarryNodesById(
   if (error) throw new Error(`Error Fetching Quarry Nodes: ${error.message}`)
 
   return (data ?? []).map((q) => ({ id: q.id, node: q.node as MonsterNode }))
+}
+
+/**
+ * Add Quarry
+ *
+ * Adds a new quarry record to the database.
+ *
+ * @param quarry Quarry Data
+ * @returns Inserted Quarry
+ */
+export async function addQuarry(
+  quarry: Omit<TablesInsert<'quarry'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<QuarryDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry')
+    .insert(quarry)
+    .select(
+      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+    )
+    .single()
+
+  if (error) throw new Error(`Error Adding Quarry: ${error.message}`)
+
+  return data
 }

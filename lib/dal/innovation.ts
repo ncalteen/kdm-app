@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { InnovationDetail } from '@/lib/types'
 
@@ -91,4 +92,31 @@ export async function getInnovationIds(
   if (!data) throw new Error('Innovation(s) Not Found')
 
   return data.map((innovation) => innovation.id)
+}
+
+/**
+ * Add Innovation
+ *
+ * Adds a new innovation record to the database.
+ *
+ * @param innovation Innovation Data
+ * @returns Inserted Innovation
+ */
+export async function addInnovation(
+  innovation: Omit<
+    TablesInsert<'innovation'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<InnovationDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('innovation')
+    .insert(innovation)
+    .select('id, innovation_name')
+    .single()
+
+  if (error) throw new Error(`Error Adding Innovation: ${error.message}`)
+
+  return data
 }

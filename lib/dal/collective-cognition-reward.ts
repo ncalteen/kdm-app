@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CollectiveCognitionRewardDetail } from '@/lib/types'
 
@@ -105,4 +106,34 @@ export async function getCollectiveCognitionRewardIds(
   if (!data) throw new Error('Collective Cognition Reward(s) Not Found')
 
   return data.map((reward) => reward.id)
+}
+
+/**
+ * Add Collective Cognition Reward
+ *
+ * Adds a new collective cognition reward record to the database.
+ *
+ * @param reward Collective Cognition Reward Data
+ * @returns Inserted Collective Cognition Reward
+ */
+export async function addCollectiveCognitionReward(
+  reward: Omit<
+    TablesInsert<'collective_cognition_reward'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<CollectiveCognitionRewardDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('collective_cognition_reward')
+    .insert(reward)
+    .select('id, collective_cognition, reward_name')
+    .single()
+
+  if (error)
+    throw new Error(
+      `Error Adding Collective Cognition Reward: ${error.message}`
+    )
+
+  return data
 }

@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { GearDetail } from '@/lib/types'
 
@@ -52,4 +53,28 @@ export async function getGear(): Promise<{
     gearMap[row.gear[0].id] = row.gear[0]
 
   return gearMap
+}
+
+/**
+ * Add Gear
+ *
+ * Adds a new gear record to the database.
+ *
+ * @param gear Gear Data
+ * @returns Inserted Gear
+ */
+export async function addGear(
+  gear: Omit<TablesInsert<'gear'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<GearDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('gear')
+    .insert(gear)
+    .select('id, gear_name, location_id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Gear: ${error.message}`)
+
+  return data
 }

@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { WeaponTypeDetail } from '@/lib/types'
 
@@ -53,4 +54,31 @@ export async function getWeaponTypes(): Promise<{
     weaponTypeMap[row.weapon_type[0].id] = row.weapon_type[0]
 
   return weaponTypeMap
+}
+
+/**
+ * Add Weapon Type
+ *
+ * Adds a new weapon type record to the database.
+ *
+ * @param weaponType Weapon Type Data
+ * @returns Inserted Weapon Type
+ */
+export async function addWeaponType(
+  weaponType: Omit<
+    TablesInsert<'weapon_type'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<WeaponTypeDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('weapon_type')
+    .insert(weaponType)
+    .select('id, weapon_type_name')
+    .single()
+
+  if (error) throw new Error(`Error Adding Weapon Type: ${error.message}`)
+
+  return data
 }

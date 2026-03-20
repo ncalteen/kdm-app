@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { DisorderDetail } from '@/lib/types'
 
@@ -50,4 +51,28 @@ export async function getDisorders(): Promise<{
     disorderMap[row.disorder[0].id] = row.disorder[0]
 
   return disorderMap
+}
+
+/**
+ * Add Disorder
+ *
+ * Adds a new disorder record to the database.
+ *
+ * @param disorder Disorder Data
+ * @returns Inserted Disorder
+ */
+export async function addDisorder(
+  disorder: Omit<TablesInsert<'disorder'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<DisorderDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('disorder')
+    .insert(disorder)
+    .select('id, disorder_name')
+    .single()
+
+  if (error) throw new Error(`Error Adding Disorder: ${error.message}`)
+
+  return data
 }

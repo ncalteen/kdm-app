@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { NeurosisDetail } from '@/lib/types'
 
@@ -58,4 +59,28 @@ export async function getNeuroses(): Promise<{
     neurosisMap[row.neurosis[0].id] = row.neurosis[0]
 
   return neurosisMap
+}
+
+/**
+ * Add Neurosis
+ *
+ * Adds a new neurosis record to the database.
+ *
+ * @param neurosis Neurosis Data
+ * @returns Inserted Neurosis
+ */
+export async function addNeurosis(
+  neurosis: Omit<TablesInsert<'neurosis'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<NeurosisDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('neurosis')
+    .insert(neurosis)
+    .select('id, neurosis_name, philosophy_id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Neurosis: ${error.message}`)
+
+  return data
 }

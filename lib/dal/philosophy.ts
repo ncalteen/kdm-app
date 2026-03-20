@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { PhilosophyDetail } from '@/lib/types'
 
@@ -57,4 +58,31 @@ export async function getPhilosophies(): Promise<{
     philosophyMap[row.philosophy[0].id] = row.philosophy[0]
 
   return philosophyMap
+}
+
+/**
+ * Add Philosophy
+ *
+ * Adds a new philosophy record to the database.
+ *
+ * @param philosophy Philosophy Data
+ * @returns Inserted Philosophy
+ */
+export async function addPhilosophy(
+  philosophy: Omit<
+    TablesInsert<'philosophy'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<PhilosophyDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('philosophy')
+    .insert(philosophy)
+    .select('id, neurosis_id, philosophy_name')
+    .single()
+
+  if (error) throw new Error(`Error Adding Philosophy: ${error.message}`)
+
+  return data
 }

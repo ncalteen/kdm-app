@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { LocationDetail } from '@/lib/types'
 
@@ -87,4 +88,28 @@ export async function getLocationIds(
   if (!data) throw new Error('Location(s) Not Found')
 
   return data.map((location) => location.id)
+}
+
+/**
+ * Add Location
+ *
+ * Adds a new location record to the database.
+ *
+ * @param location Location Data
+ * @returns Inserted Location
+ */
+export async function addLocation(
+  location: Omit<TablesInsert<'location'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<LocationDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('location')
+    .insert(location)
+    .select('id, location_name')
+    .single()
+
+  if (error) throw new Error(`Error Adding Location: ${error.message}`)
+
+  return data
 }

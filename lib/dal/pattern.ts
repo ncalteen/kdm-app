@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { PatternDetail } from '@/lib/types'
 
@@ -26,18 +27,15 @@ export async function getPatterns(): Promise<{
   if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase.from('pattern').select('id, pattern_name').eq('custom', false),
     supabase
       .from('pattern')
-      .select('id, pattern_name, seed_pattern')
-      .eq('custom', false),
-    supabase
-      .from('pattern')
-      .select('id, pattern_name, seed_pattern')
+      .select('id, pattern_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('pattern_shared_user')
-      .select('pattern(id, pattern_name, seed_pattern)')
+      .select('pattern(id, pattern_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -53,4 +51,28 @@ export async function getPatterns(): Promise<{
     patternMap[row.pattern[0].id] = row.pattern[0]
 
   return patternMap
+}
+
+/**
+ * Add Pattern
+ *
+ * Adds a new pattern record to the database.
+ *
+ * @param pattern Pattern Data
+ * @returns Inserted Pattern
+ */
+export async function addPattern(
+  pattern: Omit<TablesInsert<'pattern'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<PatternDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('pattern')
+    .insert(pattern)
+    .select('id, pattern_name')
+    .single()
+
+  if (error) throw new Error(`Error Adding Pattern: ${error.message}`)
+
+  return data
 }

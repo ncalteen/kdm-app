@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CharacterDetail } from '@/lib/types'
 
@@ -54,4 +55,28 @@ export async function getCharacters(): Promise<{
     characterMap[row.character[0].id] = row.character[0]
 
   return characterMap
+}
+
+/**
+ * Add Character
+ *
+ * Adds a new character record to the database.
+ *
+ * @param character Character Data
+ * @returns Inserted Character
+ */
+export async function addCharacter(
+  character: Omit<TablesInsert<'character'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<CharacterDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('character')
+    .insert(character)
+    .select('id, character_name')
+    .single()
+
+  if (error) throw new Error(`Error Adding Character: ${error.message}`)
+
+  return data
 }

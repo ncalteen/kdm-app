@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { PrincipleDetail } from '@/lib/types'
@@ -101,4 +102,28 @@ export async function getPrincipleIds(
   if (!data) throw new Error('Principle(s) Not Found')
 
   return data.map((principle) => principle.id)
+}
+
+/**
+ * Add Principle
+ *
+ * Adds a new principle record to the database.
+ *
+ * @param principle Principle Data
+ * @returns Inserted Principle
+ */
+export async function addPrinciple(
+  principle: Omit<TablesInsert<'principle'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<PrincipleDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('principle')
+    .insert(principle)
+    .select('id, principle_name, option_1_name, option_2_name, campaign_types')
+    .single()
+
+  if (error) throw new Error(`Error Adding Principle: ${error.message}`)
+
+  return data
 }

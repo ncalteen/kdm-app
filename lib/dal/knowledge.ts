@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { KnowledgeDetail } from '@/lib/types'
 
@@ -52,4 +53,28 @@ export async function getKnowledges(): Promise<{
     knowledgeMap[row.knowledge[0].id] = row.knowledge[0]
 
   return knowledgeMap
+}
+
+/**
+ * Add Knowledge
+ *
+ * Adds a new knowledge record to the database.
+ *
+ * @param knowledge Knowledge Data
+ * @returns Inserted Knowledge
+ */
+export async function addKnowledge(
+  knowledge: Omit<TablesInsert<'knowledge'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<KnowledgeDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('knowledge')
+    .insert(knowledge)
+    .select('id, knowledge_name, philosophy_id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Knowledge: ${error.message}`)
+
+  return data
 }
