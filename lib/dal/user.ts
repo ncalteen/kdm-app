@@ -1,3 +1,4 @@
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 
@@ -104,4 +105,71 @@ export async function getSettlementForUser(): Promise<
   }
 
   return results
+}
+
+/**
+ * Add User Settings
+ *
+ * Adds a new user settings record to the database.
+ *
+ * @param userSettings User Settings Data
+ * @returns Inserted User Settings ID
+ */
+export async function addUserSettings(
+  userSettings: Omit<
+    TablesInsert<'user_settings'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('user_settings')
+    .insert(userSettings)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Error Adding User Settings: ${error.message}`)
+
+  return data.id
+}
+
+/**
+ * Update User Settings
+ *
+ * Updates an existing user settings record in the database.
+ *
+ * @param id User Settings ID
+ * @param userSettings User Settings Data
+ */
+export async function updateUserSettings(
+  id: string,
+  userSettings: Omit<
+    TablesUpdate<'user_settings'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('user_settings')
+    .update(userSettings)
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Updating User Settings: ${error.message}`)
+}
+
+/**
+ * Remove User Settings
+ *
+ * Deletes a user settings record from the database.
+ *
+ * @param id User Settings ID
+ */
+export async function removeUserSettings(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('user_settings').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing User Settings: ${error.message}`)
 }
