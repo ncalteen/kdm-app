@@ -96,6 +96,7 @@ export function WandererCard({
           setAenasState(oldState)
           setSurvivors(oldSurvivors)
           console.error('Error Updating Survivor State:', error)
+          toast.error('The darkness swallows your words. Please try again.')
         })
     },
     [
