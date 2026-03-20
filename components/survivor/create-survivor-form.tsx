@@ -1,4 +1,3 @@
-import { SelectWanderer } from '@/components/menu/select-wanderer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -11,6 +10,13 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createSurvivor } from '@/lib/dal/survivor'
 import { getWanderers } from '@/lib/dal/wanderer'
@@ -402,11 +408,28 @@ export function CreateSurvivorForm({
                     <Label className="text-left whitespace-nowrap min-w-[120px]">
                       Wanderer
                     </Label>
-                    <SelectWanderer
-                      wanderers={availableWanderers}
-                      value={selectedWanderer?.wanderer_name ?? ''}
-                      onChange={handleWandererSelect}
-                    />
+                    <Select
+                      value={selectedWanderer?.wanderer_name}
+                      onValueChange={(value) =>
+                        handleWandererSelect(
+                          Object.values(availableWanderers).find(
+                            (w) => w.wanderer_name === value
+                          ) ?? null
+                        )
+                      }>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select wanderer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.values(availableWanderers).map((wanderer) => (
+                          <SelectItem
+                            key={wanderer.id}
+                            value={wanderer.wanderer_name}>
+                            {wanderer.wanderer_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {selectedWanderer && (

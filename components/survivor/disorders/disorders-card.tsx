@@ -1,8 +1,20 @@
 'use client'
 
-import { SelectDisorder } from '@/components/menu/select-disorder'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import { getDisorders } from '@/lib/dal/disorder'
 import {
   addSurvivorDisorder,
@@ -15,7 +27,7 @@ import {
   SURVIVOR_DISORDER_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { DisorderDetail, SurvivorDetail } from '@/lib/types'
-import { PlusIcon, TrashIcon } from 'lucide-react'
+import { ChevronsUpDown, PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -33,8 +45,6 @@ interface DisordersCardProps {
   survivors: SurvivorDetail[]
 }
 
-type DisorderItem = { id: string; disorder_name: string }
-
 /**
  * Disorders Card Component
  *
@@ -46,12 +56,13 @@ export function DisordersCard({
   setSurvivors,
   survivors
 }: DisordersCardProps): ReactElement {
+  const [open, setOpen] = useState(false)
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [availableDisorders, setAvailableDisorders] = useState<{
     [key: string]: DisorderDetail
   }>({})
-  const [disorders, setDisorders] = useState<DisorderItem[]>(
+  const [disorders, setDisorders] = useState<DisorderDetail[]>(
     selectedSurvivor?.disorders ?? []
   )
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
@@ -93,7 +104,7 @@ export function DisordersCard({
         return
       }
 
-      const optimisticItem: DisorderItem = {
+      const optimisticItem: DisorderDetail = {
         id: disorderId,
         disorder_name: detail.disorder_name
       }
@@ -209,11 +220,44 @@ export function DisordersCard({
 
           {isAddingNew && (
             <div className="flex items-center gap-2">
-              <SelectDisorder
-                disorders={availableDisorders}
-                onChange={handleAdd}
-                excludeIds={disorders.map((d) => d.id)}
-              />
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="justify-between text-sm min-w-[180px]">
+                    Select Disorder
+                    <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent className="p-0">
+                  <Command>
+                    <CommandInput placeholder="Search disorders..." />
+                    <CommandList>
+                      <CommandEmpty>No disorders found.</CommandEmpty>
+                      <CommandGroup>
+                        {Object.values(availableDisorders)
+                          .filter(
+                            (d) => !disorders.map((d) => d.id)?.includes(d.id)
+                          )
+                          .map((disorder) => (
+                            <CommandItem
+                              key={disorder.id}
+                              value={disorder.id}
+                              onSelect={() => {
+                                handleAdd(disorder.id)
+                                setOpen(false)
+                              }}>
+                              {disorder.disorder_name}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <Button
                 variant="ghost"
                 size="icon"
