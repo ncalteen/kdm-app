@@ -213,6 +213,16 @@ export type PrincipleDetail = Omit<
 >
 
 /**
+ * Quarry Detail
+ *
+ * Used throughout the app to represent a quarry.
+ */
+export type QuarryDetail = Omit<
+  Tables<'quarry'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
  * Resource Detail
  *
  * Used throughout the app to represent a resource.
@@ -239,10 +249,25 @@ export type SettlementDetail = Tables<'settlement'> & {
   can_fist_pump: boolean
   /** Can Endure */
   can_endure: boolean
+  /** Collective Cognition Rewards */
+  collective_cognition_rewards: {
+    /** Collective Cognition Reward Collective Cognition */
+    collective_cognition: string
+    /** Collective Cognition Reward ID */
+    collective_cognition_reward_id: string
+    /** Settlement Collective Cognition Reward ID */
+    id: string
+    /** Collective Cognition Reward Name */
+    reward_name: string
+    /** Unlocked */
+    unlocked: boolean
+  }[]
   /** Gear */
   gear: {
-    /** Gear ID */
+    /** Settlement Gear ID */
     id: string
+    /** Gear ID */
+    gear_id: string
     /** Gear Name */
     gear_name: string
     /** Quantity */
@@ -250,15 +275,19 @@ export type SettlementDetail = Tables<'settlement'> & {
   }[]
   /** Innovations */
   innovations: {
-    /** Innovation ID */
+    /** Settlement Innovation ID */
     id: string
+    /** Innovation ID */
+    innovation_id: string
     /** Innovation Name */
     innovation_name: string
   }[]
   /** Locations */
   locations: {
-    /** Location ID */
+    /** Settlement Location ID */
     id: string
+    /** Location ID */
+    location_id: string
     /** Location Name */
     location_name: string
     /** Unlocked */
@@ -268,8 +297,10 @@ export type SettlementDetail = Tables<'settlement'> & {
   milestones: {
     /** Complete */
     complete: boolean
-    /** Milestone ID */
+    /** Settlement Milestone ID */
     id: string
+    /** Milestone ID */
+    milestone_id: string
     /** Milestone Name */
     milestone_name: string
   }[]
@@ -281,6 +312,8 @@ export type SettlementDetail = Tables<'settlement'> & {
     collective_cognition_level_2: boolean
     /** Collective Cognition Level 3 */
     collective_cognition_level_3: boolean
+    /** Settlement Nemesis ID */
+    id: string
     /** Level 1 Defeated */
     level_1_defeated: boolean
     /** Level 2 Defeated */
@@ -290,7 +323,7 @@ export type SettlementDetail = Tables<'settlement'> & {
     /** Level 4 Defeated */
     level_4_defeated: boolean
     /** Nemesis ID */
-    id: string
+    nemesis_id: string
     /** Unlocked */
     unlocked: boolean
     /** Monster Name */
@@ -300,14 +333,16 @@ export type SettlementDetail = Tables<'settlement'> & {
   }[]
   /** Patterns */
   patterns: {
-    /** Pattern ID */
+    /** Settlement Pattern ID */
     id: string
+    /** Pattern ID */
+    pattern_id: string
     /** Pattern Name */
     pattern_name: string
   }[]
   /** Principles */
   principles: {
-    /** Principle ID */
+    /** Settlement Principle ID */
     id: string
     /** Option 1 Name */
     option_1_name: string
@@ -317,6 +352,8 @@ export type SettlementDetail = Tables<'settlement'> & {
     option_2_name: string
     /** Option 2 Selected */
     option_2_selected: boolean
+    /** Principle ID */
+    principle_id: string
     /** Principle Name */
     principle_name: string
   }[]
@@ -330,23 +367,27 @@ export type SettlementDetail = Tables<'settlement'> & {
     collective_cognition_level_3: [boolean, boolean, boolean]
     /** Collective Cognition Prologue */
     collective_cognition_prologue: boolean
-    /** Quarry ID */
+    /** Settlement Quarry ID */
     id: string
-    /** Unlocked */
-    unlocked: boolean
     /** Monster Name */
     monster_name: string
     /** Node */
     node: string
+    /** Quarry ID */
+    quarry_id: string
+    /** Unlocked */
+    unlocked: boolean
   }[]
   /** Resources */
   resources: {
-    /** Resource ID */
-    id: string
     /** Category */
     category: string
+    /** Settlement Resource ID */
+    id: string
     /** Quarry ID */
     quarry_id: string | null
+    /** Resource ID */
+    resource_id: string
     /** Resource Name */
     resource_name: string
     /** Resource Types */
@@ -354,23 +395,27 @@ export type SettlementDetail = Tables<'settlement'> & {
   }[]
   /** Seed Patterns */
   seed_patterns: {
-    /** Pattern ID */
+    /** Settlement Seed Pattern ID */
     id: string
-    /** Pattern Name */
+    /** Seed Pattern ID */
+    seed_pattern_id: string
+    /** Seed Pattern Name */
     seed_pattern_name: string
   }[]
   /** Shared Settlement */
   shared: boolean
   /** Survivors Born with +1 Understanding */
   survivors_born_with_understanding: boolean
-  /** Timeline */
+  /** Settlement Timeline */
   timeline: {
     /** Year Number */
     [key: number]: {
-      /** Timeline Entries */
-      entries: string[]
       /** Year Completed */
       completed: boolean
+      /** Settlement Timeline Year Entries */
+      entries: string[]
+      /** Settlement Timeline Year ID */
+      id: string
     }
   }
 }

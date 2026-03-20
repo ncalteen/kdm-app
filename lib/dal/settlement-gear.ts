@@ -16,15 +16,16 @@ export async function getSettlementGear(
 
   const { data, error } = await supabase
     .from('settlement_gear')
-    .select('gear_id, quantity, gear(gear_name)')
+    .select('gear_id, id, quantity, gear(gear_name)')
     .eq('settlement_id', settlementId)
 
   if (error) throw new Error(`Error Fetching Settlement Gear: ${error.message}`)
 
   return (
     data?.map((item) => ({
-      id: item.gear_id,
+      gear_id: item.gear_id,
       gear_name: (item.gear as unknown as { gear_name: string }).gear_name,
+      id: item.id,
       quantity: item.quantity
     })) ?? []
   )

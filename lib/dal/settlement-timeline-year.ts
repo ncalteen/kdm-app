@@ -1,5 +1,6 @@
 import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { SettlementDetail } from '@/lib/types'
 
 /**
  * Add Settlement Timeline Years
@@ -44,14 +45,14 @@ export async function addSettlementTimelineYears(
  */
 export async function getSettlementTimelineYears(
   settlementId: string | null | undefined
-): Promise<{ [key: number]: { entries: string[]; completed: boolean } }> {
+): Promise<SettlementDetail['timeline']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('settlement_timeline_year')
-    .select('year_number, entries, completed')
+    .select('completed, entries, id, year_number')
     .eq('settlement_id', settlementId)
     .order('year_number', { ascending: true })
 
@@ -60,13 +61,13 @@ export async function getSettlementTimelineYears(
       `Error Fetching Timeline Years for Settlement: ${error.message}`
     )
 
-  const timeline: { [key: number]: { entries: string[]; completed: boolean } } =
-    {}
+  const timeline: SettlementDetail['timeline'] = {}
 
   for (const item of data ?? [])
     timeline[item.year_number] = {
+      completed: item.completed,
       entries: item.entries,
-      completed: item.completed
+      id: item.id
     }
 
   return timeline
@@ -78,17 +79,16 @@ export async function getSettlementTimelineYears(
  * Removes an event entry from a timeline year by updating the corresponding
  * record in the settlement_timeline_year table.
  *
- * @param settlementId Settlement ID
- * @param yearNumber Year Number
+ * @param settlementTimelineYearId Settlement Timeline Year ID
  * @param entryIndex Entry Index
  * @returns Updated List of Entries for the Year
  */
 export async function removeSettlementTimelineYearEntry(
-  settlementId: string | null | undefined,
-  yearNumber: number,
+  settlementTimelineYearId: string | null | undefined,
   entryIndex: number
 ): Promise<string[]> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
+  if (!settlementTimelineYearId)
+    throw new Error('Required: Settlement Timeline Year ID')
 
   const supabase = createClient()
 
@@ -96,16 +96,16 @@ export async function removeSettlementTimelineYearEntry(
   const { data, error } = await supabase
     .from('settlement_timeline_year')
     .select('entries')
-    .eq('settlement_id', settlementId)
-    .eq('year_number', yearNumber)
+    .eq('id', settlementTimelineYearId)
     .single()
 
   if (error)
     throw new Error(
-      `Error Fetching Timeline Year for Entry Removal: ${error.message}`
+      `Error Fetching Settlement Timeline Year for Entry Removal: ${error.message}`
     )
 
-  if (!data) throw new Error('Timeline Year Not Found for Entry Removal')
+  if (!data)
+    throw new Error('Settlement Timeline Year Not Found for Entry Removal')
 
   // Remove the specified entry
   if (entryIndex < 0 || entryIndex >= data.entries.length)
@@ -120,12 +120,11 @@ export async function removeSettlementTimelineYearEntry(
   const { error: updateError } = await supabase
     .from('settlement_timeline_year')
     .update({ entries: updatedEntries })
-    .eq('settlement_id', settlementId)
-    .eq('year_number', yearNumber)
+    .eq('id', settlementTimelineYearId)
 
   if (updateError)
     throw new Error(
-      `Error Updating Timeline Year for Entry Removal: ${updateError.message}`
+      `Error Updating Settlement Timeline Year for Entry Removal: ${updateError.message}`
     )
 
   return updatedEntries
@@ -137,19 +136,18 @@ export async function removeSettlementTimelineYearEntry(
  * Adds or updates an event entry to a timeline year by updating the
  * corresponding record in the settlement_timeline_year table.
  *
- * @param settlementId Settlement ID
- * @param yearNumber Year Number
+ * @param settlementTimelineYearId Settlement Timeline Year ID
  * @param value Entry Value
  * @param entryIndex Entry Index
  * @returns Updated List of Entries for the Year
  */
 export async function saveSettlementTimelineYearEntry(
-  settlementId: string | null | undefined,
-  yearNumber: number,
+  settlementTimelineYearId: string | null | undefined,
   value: string,
   entryIndex: number
 ): Promise<string[]> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
+  if (!settlementTimelineYearId)
+    throw new Error('Required: Settlement Timeline Year ID')
 
   const supabase = createClient()
 
@@ -157,16 +155,16 @@ export async function saveSettlementTimelineYearEntry(
   const { data, error } = await supabase
     .from('settlement_timeline_year')
     .select('entries')
-    .eq('settlement_id', settlementId)
-    .eq('year_number', yearNumber)
+    .eq('id', settlementTimelineYearId)
     .single()
 
   if (error)
     throw new Error(
-      `Error Fetching Timeline Year for Entry Addition: ${error.message}`
+      `Error Fetching Settlement Timeline Year for Entry Addition: ${error.message}`
     )
 
-  if (!data) throw new Error('Timeline Year Not Found for Entry Addition')
+  if (!data)
+    throw new Error('Settlement Timeline Year Not Found for Entry Addition')
 
   // Add the specified entry if the index is equal to or greater than the
   // current length. Otherwise, replace the entry at the specified index.
@@ -185,12 +183,11 @@ export async function saveSettlementTimelineYearEntry(
   const { error: updateError } = await supabase
     .from('settlement_timeline_year')
     .update({ entries: updatedEntries })
-    .eq('settlement_id', settlementId)
-    .eq('year_number', yearNumber)
+    .eq('id', settlementTimelineYearId)
 
   if (updateError)
     throw new Error(
-      `Error Updating Timeline Year for Entry Addition: ${updateError.message}`
+      `Error Updating Settlement Timeline Year for Entry Addition: ${updateError.message}`
     )
 
   return updatedEntries
@@ -202,28 +199,27 @@ export async function saveSettlementTimelineYearEntry(
  * Toggles the completion status of a timeline year by updating the corresponding
  * record in the settlement_timeline_year table.
  *
- * @param settlementId Settlement ID
- * @param yearNumber Year Number
+ * @param settlementTimelineYearId Settlement Timeline Year ID
  * @param completed New Completion Status
  */
 export async function toggleSettlementYearCompletionStatus(
-  settlementId: string | null | undefined,
+  settlementTimelineYearId: string | null | undefined,
   yearNumber: number,
   completed: boolean
 ): Promise<void> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
+  if (!settlementTimelineYearId)
+    throw new Error('Required: Settlement Timeline Year ID')
 
   const supabase = createClient()
 
   const { error } = await supabase
     .from('settlement_timeline_year')
     .update({ completed })
-    .eq('settlement_id', settlementId)
-    .eq('year_number', yearNumber)
+    .eq('id', settlementTimelineYearId)
 
   if (error)
     throw new Error(
-      `Error Toggling Timeline Year Completion Status: ${error.message}`
+      `Error Toggling Settlement Timeline Year Completion Status: ${error.message}`
     )
 }
 
@@ -238,17 +234,24 @@ export async function toggleSettlementYearCompletionStatus(
 export async function addSettlementTimelineYear(
   settlementId: string | null | undefined,
   yearNumber: number
-): Promise<void> {
+): Promise<string> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_timeline_year').insert({
-    completed: false,
-    entries: [],
-    settlement_id: settlementId,
-    year_number: yearNumber
-  })
+  const { data, error } = await supabase
+    .from('settlement_timeline_year')
+    .insert({
+      completed: false,
+      entries: [],
+      settlement_id: settlementId,
+      year_number: yearNumber
+    })
+    .select('id')
+    .single()
 
-  if (error) throw new Error(`Error Adding Timeline Year: ${error.message}`)
+  if (error)
+    throw new Error(`Error Adding Settlement Timeline Year: ${error.message}`)
+
+  return data.id
 }

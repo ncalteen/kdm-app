@@ -16,7 +16,7 @@ export async function getSettlementMilestones(
 
   const { data, error } = await supabase
     .from('settlement_milestone')
-    .select('complete, milestone_id, milestone(milestone_name)')
+    .select('complete, id, milestone_id, milestone(milestone_name)')
     .eq('settlement_id', settlementId)
 
   if (error)
@@ -25,7 +25,8 @@ export async function getSettlementMilestones(
   return (
     data?.map((item) => ({
       complete: item.complete,
-      id: item.milestone_id,
+      id: item.id,
+      milestone_id: item.milestone_id,
       milestone_name: (item.milestone as unknown as { milestone_name: string })
         .milestone_name
     })) ?? []

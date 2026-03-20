@@ -16,7 +16,7 @@ export async function getSettlementInnovations(
 
   const { data, error } = await supabase
     .from('settlement_innovation')
-    .select('innovation_id, innovation(innovation_name)')
+    .select('id, innovation_id, innovation(innovation_name)')
     .eq('settlement_id', settlementId)
 
   if (error)
@@ -24,7 +24,8 @@ export async function getSettlementInnovations(
 
   return (
     data?.map((item) => ({
-      id: item.innovation_id,
+      id: item.id,
+      innovation_id: item.innovation_id,
       innovation_name: (
         item.innovation as unknown as { innovation_name: string }
       ).innovation_name

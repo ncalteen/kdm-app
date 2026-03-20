@@ -17,7 +17,7 @@ export async function getSettlementResources(
   const { data, error } = await supabase
     .from('settlement_resource')
     .select(
-      'resource_id, quantity, resource(category, quarry_id, resource_name, resource_types)'
+      'id, resource_id, quantity, resource(category, quarry_id, resource_name, resource_types)'
     )
     .eq('settlement_id', settlementId)
 
@@ -26,11 +26,12 @@ export async function getSettlementResources(
 
   return (
     data?.map((item) => ({
-      id: item.resource_id,
-      quantity: item.quantity,
       category: (item.resource as unknown as { category: string }).category,
+      id: item.id,
+      quantity: item.quantity,
       quarry_id: (item.resource as unknown as { quarry_id: string | null })
         .quarry_id,
+      resource_id: item.resource_id,
       resource_name: (item.resource as unknown as { resource_name: string })
         .resource_name,
       resource_types: (item.resource as unknown as { resource_types: string[] })

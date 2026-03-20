@@ -10,7 +10,10 @@ import { getNemesisTimelineYears } from '@/lib/dal/nemesis-timeline-year'
 import { getQuarryCollectiveCognitionRewardIds } from '@/lib/dal/quarry-collective-cognition-reward'
 import { getQuarryLocationIds } from '@/lib/dal/quarry-location'
 import { getQuarryTimelineYears } from '@/lib/dal/quarry-timeline-year'
-import { addCollectiveCognitionRewardsToSettlement } from '@/lib/dal/settlement-collective-cognition-reward'
+import {
+  addSettlementCollectiveCognitionRewards,
+  getSettlementCollectiveCognitionRewards
+} from '@/lib/dal/settlement-collective-cognition-reward'
 import { getSettlementGear } from '@/lib/dal/settlement-gear'
 import {
   addSettlementInnovations,
@@ -252,7 +255,7 @@ export async function createSettlement(
   //////////////////////////////////////////////////////////////////////////////
 
   // Collective Cognition Rewards
-  await addCollectiveCognitionRewardsToSettlement(
+  await addSettlementCollectiveCognitionRewards(
     settlementCollectiveCognitionRewardIds,
     settlementId
   )
@@ -342,6 +345,7 @@ export async function getSettlement(
   if (!settlement) return null
 
   const [
+    collectiveCognitionRewards,
     gear,
     innovations,
     milestones,
@@ -353,6 +357,7 @@ export async function getSettlement(
     seedPatterns,
     timelineYears
   ] = await Promise.all([
+    getSettlementCollectiveCognitionRewards(settlementId),
     getSettlementGear(settlementId),
     getSettlementInnovations(settlementId),
     getSettlementMilestones(settlementId),
@@ -372,6 +377,7 @@ export async function getSettlement(
     can_dash: canDash(innovations),
     can_fist_pump: canFistPump(innovations),
     can_endure: canEndure(innovations),
+    collective_cognition_rewards: collectiveCognitionRewards,
     gear,
     innovations,
     milestones,

@@ -17,7 +17,7 @@ export async function getSettlementNemeses(
   const { data, error } = await supabase
     .from('settlement_nemesis')
     .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(monster_name, node)'
+      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(monster_name, node)'
     )
     .eq('settlement_id', settlementId)
 
@@ -29,11 +29,12 @@ export async function getSettlementNemeses(
       collective_cognition_level_1: item.collective_cognition_level_1,
       collective_cognition_level_2: item.collective_cognition_level_2,
       collective_cognition_level_3: item.collective_cognition_level_3,
+      id: item.id,
       level_1_defeated: item.level_1_defeated,
       level_2_defeated: item.level_2_defeated,
       level_3_defeated: item.level_3_defeated,
       level_4_defeated: item.level_4_defeated,
-      id: item.nemesis_id,
+      nemesis_id: item.nemesis_id,
       unlocked: item.unlocked,
       monster_name: (item.nemesis as unknown as { monster_name: string })
         .monster_name,
@@ -77,4 +78,25 @@ export async function addSettlementNemeses(
 
   if (error)
     throw new Error(`Error Adding Settlement Nemeses: ${error.message}`)
+}
+
+/**
+ * Remove Settlement Nemesis
+ *
+ * @param settlementNemesisId Settlement Nemesis ID
+ */
+export async function removeSettlementNemesis(
+  settlementNemesisId: string | null | undefined
+): Promise<void> {
+  if (!settlementNemesisId) throw new Error('Required: Settlement Nemesis ID')
+
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_nemesis')
+    .delete()
+    .eq('id', settlementNemesisId)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Nemesis: ${error.message}`)
 }

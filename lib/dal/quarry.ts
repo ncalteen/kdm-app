@@ -1,8 +1,9 @@
 import { MonsterNode } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { QuarryDetail } from '@/lib/types'
 
 /**
- * Get Quarry Names
+ * Get Quarries
  *
  * Retrieves the quarries a user has access to. This includes:
  *
@@ -13,42 +14,50 @@ import { createClient } from '@/lib/supabase/client'
  * @param nodeTypes Optional Node Types Filter
  * @returns Quarry Data
  */
-export async function getQuarryNames(
+export async function getQuarries(
   nodeTypes: MonsterNode[] = [
     MonsterNode.NQ1,
     MonsterNode.NQ2,
     MonsterNode.NQ3,
     MonsterNode.NQ4
   ]
-): Promise<{ id: string; monster_name: string }[]> {
+): Promise<{ [key: string]: QuarryDetail }> {
   const supabase = createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
 
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!userData.user) throw new Error('User Not Authenticated')
+  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of quarries in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     // Non-custom quarries (available to all users)
     supabase
       .from('quarry')
-      .select('id, monster_name')
+      .select(
+        'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+      )
       .eq('custom', false)
       .in('node', nodeTypes),
     // Custom quarries created by the user
     supabase
       .from('quarry')
-      .select('id, monster_name')
+      .select(
+        'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+      )
       .eq('custom', true)
-      .eq('user_id', userData.user.id)
+      .eq('user_id', user.id)
       .in('node', nodeTypes),
     // Custom quarries shared with the user
     supabase
       .from('quarry_shared_user')
-      .select('quarry_id, quarry:quarry_id!inner(id, monster_name, node)')
-      .eq('shared_user_id', userData.user.id)
-      .in('quarry.node', nodeTypes)
+      .select(
+        'quarry(id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id)'
+      )
+      .eq('shared_user_id', user.id)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -56,26 +65,17 @@ export async function getQuarryNames(
       throw new Error(`Error Fetching Quarries: ${result.error.message}`)
 
   // Collect quarries from all sources, deduplicating by ID
-  const quarryMap = new Map<string, { id: string; monster_name: string }>()
+  const quarryMap: { [key: string]: QuarryDetail } = {}
 
-  for (const q of nonCustomResult.data ?? [])
-    quarryMap.set(q.id, { id: q.id, monster_name: q.monster_name })
-
-  for (const q of userCustomResult.data ?? [])
-    quarryMap.set(q.id, { id: q.id, monster_name: q.monster_name })
-
+  for (const q of nonCustomResult.data ?? []) quarryMap[q.id] = q
+  for (const q of userCustomResult.data ?? []) quarryMap[q.id] = q
   for (const row of sharedResult.data ?? []) {
-    const q = row.quarry as unknown as {
-      id: string
-      monster_name: string
-    }
+    const q = row.quarry as unknown as QuarryDetail | null
 
-    if (q) quarryMap.set(q.id, { id: q.id, monster_name: q.monster_name })
+    if (q) quarryMap[q.id] = q
   }
 
-  if (quarryMap.size === 0) throw new Error('Quarries(s) Not Found')
-
-  return [...quarryMap.values()]
+  return quarryMap
 }
 
 /**

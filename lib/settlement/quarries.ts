@@ -1,4 +1,4 @@
-import { SettlementQuarryRow } from '@/lib/dal/settlement-quarry'
+import { QuarryDetail } from '@/lib/types'
 
 /**
  * Sort Quarries
@@ -9,9 +9,7 @@ import { SettlementQuarryRow } from '@/lib/dal/settlement-quarry'
  * @param rows Settlement Quarry Rows
  * @returns Sorted Settlement Quarry Rows
  */
-export function sortQuarries(
-  rows: SettlementQuarryRow[]
-): SettlementQuarryRow[] {
+export function sortQuarries(rows: QuarryDetail[]): QuarryDetail[] {
   return [...rows].sort((a, b) => {
     const nodeCmp = a.node.localeCompare(b.node)
     if (nodeCmp !== 0) return nodeCmp

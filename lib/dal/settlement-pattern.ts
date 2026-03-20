@@ -16,7 +16,7 @@ export async function getSettlementPatterns(
 
   const { data, error } = await supabase
     .from('settlement_pattern')
-    .select('pattern_id, pattern(pattern_name)')
+    .select('id, pattern_id, pattern(pattern_name)')
     .eq('settlement_id', settlementId)
 
   if (error)
@@ -24,7 +24,8 @@ export async function getSettlementPatterns(
 
   return (
     data?.map((item) => ({
-      id: item.pattern_id,
+      id: item.id,
+      pattern_id: item.pattern_id,
       pattern_name: (item.pattern as unknown as { pattern_name: string })
         .pattern_name
     })) ?? []

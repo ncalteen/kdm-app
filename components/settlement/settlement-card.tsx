@@ -184,7 +184,7 @@ export function SettlementCard({
               <div className="flex-1 order-2 lg:order-1">
                 <TimelineCard
                   selectedSettlement={selectedSettlement}
-                  selectedSettlementId={selectedSettlementId}
+                  setSelectedSettlement={setSelectedSettlement}
                 />
               </div>
 

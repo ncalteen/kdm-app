@@ -17,7 +17,7 @@ export async function getSettlementQuarries(
   const { data, error } = await supabase
     .from('settlement_quarry')
     .select(
-      'quarry_id, collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, unlocked, quarry(monster_name, node)'
+      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(monster_name, node)'
     )
     .eq('settlement_id', settlementId)
 
@@ -26,15 +26,16 @@ export async function getSettlementQuarries(
 
   return (
     data?.map((item) => ({
-      id: item.quarry_id,
       collective_cognition_level_1: item.collective_cognition_level_1,
       collective_cognition_level_2: item.collective_cognition_level_2,
       collective_cognition_level_3: item.collective_cognition_level_3,
       collective_cognition_prologue: item.collective_cognition_prologue,
-      unlocked: item.unlocked,
+      id: item.id,
       monster_name: (item.quarry as unknown as { monster_name: string })
         .monster_name,
-      node: (item.quarry as unknown as { node: string }).node
+      node: (item.quarry as unknown as { node: string }).node,
+      quarry_id: item.quarry_id,
+      unlocked: item.unlocked
     })) ?? []
   )
 }

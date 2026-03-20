@@ -16,7 +16,7 @@ export async function getSettlementLocations(
 
   const { data, error } = await supabase
     .from('settlement_location')
-    .select('location_id, unlocked, location(location_name)')
+    .select('id, location_id, unlocked, location(location_name)')
     .eq('settlement_id', settlementId)
 
   if (error)
@@ -24,7 +24,8 @@ export async function getSettlementLocations(
 
   return (
     data?.map((item) => ({
-      id: item.location_id,
+      id: item.id,
+      location_id: item.location_id,
       location_name: (item.location as unknown as { location_name: string })
         .location_name,
       unlocked: item.unlocked

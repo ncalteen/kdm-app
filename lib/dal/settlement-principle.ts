@@ -17,7 +17,7 @@ export async function getSettlementPrinciples(
   const { data, error } = await supabase
     .from('settlement_principle')
     .select(
-      'principle_id, option_1_selected, option_2_selected, principle(principle_name, option_1_name, option_2_name)'
+      'id,  option_1_selected, option_2_selected, principle_id, principle(principle_name, option_1_name, option_2_name)'
     )
     .eq('settlement_id', settlementId)
 
@@ -26,16 +26,7 @@ export async function getSettlementPrinciples(
 
   return (
     data?.map((item) => ({
-      id: item.principle_id,
-      option_1_selected: item.option_1_selected,
-      option_2_selected: item.option_2_selected,
-      principle_name: (
-        item.principle as unknown as {
-          principle_name: string
-          option_1_name: string
-          option_2_name: string
-        }
-      ).principle_name,
+      id: item.id,
       option_1_name: (
         item.principle as unknown as {
           principle_name: string
@@ -43,13 +34,23 @@ export async function getSettlementPrinciples(
           option_2_name: string
         }
       ).option_1_name,
+      option_1_selected: item.option_1_selected,
       option_2_name: (
         item.principle as unknown as {
           principle_name: string
           option_1_name: string
           option_2_name: string
         }
-      ).option_2_name
+      ).option_2_name,
+      option_2_selected: item.option_2_selected,
+      principle_id: item.principle_id,
+      principle_name: (
+        item.principle as unknown as {
+          principle_name: string
+          option_1_name: string
+          option_2_name: string
+        }
+      ).principle_name
     })) ?? []
   )
 }
