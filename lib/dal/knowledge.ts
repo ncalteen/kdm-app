@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { KnowledgeDetail } from '@/lib/types'
 
@@ -75,6 +75,34 @@ export async function addKnowledge(
     .single()
 
   if (error) throw new Error(`Error Adding Knowledge: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Knowledge
+ *
+ * Updates an existing knowledge record in the database.
+ *
+ * @param id Knowledge ID
+ * @param knowledge Knowledge Data
+ * @returns Updated Knowledge
+ */
+export async function updateKnowledge(
+  id: string,
+  knowledge: Omit<TablesUpdate<'knowledge'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<KnowledgeDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('knowledge')
+    .update(knowledge)
+    .eq('id', id)
+    .select('id, knowledge_name, philosophy_id')
+    .single()
+
+  if (error) throw new Error(`Error Updating Knowledge: ${error.message}`)
+  if (!data) throw new Error('Knowledge Not Found')
 
   return data
 }

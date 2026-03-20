@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SeedPatternDetail } from '@/lib/types'
 
@@ -85,6 +85,37 @@ export async function addSeedPattern(
     .single()
 
   if (error) throw new Error(`Error Adding Seed Pattern: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Seed Pattern
+ *
+ * Updates an existing seed pattern record in the database.
+ *
+ * @param id Seed Pattern ID
+ * @param seedPattern Seed Pattern Data
+ * @returns Updated Seed Pattern
+ */
+export async function updateSeedPattern(
+  id: string,
+  seedPattern: Omit<
+    TablesUpdate<'seed_pattern'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<SeedPatternDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('seed_pattern')
+    .update(seedPattern)
+    .eq('id', id)
+    .select('id, seed_pattern_name')
+    .single()
+
+  if (error) throw new Error(`Error Updating Seed Pattern: ${error.message}`)
+  if (!data) throw new Error('Seed Pattern Not Found')
 
   return data
 }

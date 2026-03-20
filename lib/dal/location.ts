@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { LocationDetail } from '@/lib/types'
 
@@ -110,6 +110,34 @@ export async function addLocation(
     .single()
 
   if (error) throw new Error(`Error Adding Location: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Location
+ *
+ * Updates an existing location record in the database.
+ *
+ * @param id Location ID
+ * @param location Location Data
+ * @returns Updated Location
+ */
+export async function updateLocation(
+  id: string,
+  location: Omit<TablesUpdate<'location'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<LocationDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('location')
+    .update(location)
+    .eq('id', id)
+    .select('id, location_name')
+    .single()
+
+  if (error) throw new Error(`Error Updating Location: ${error.message}`)
+  if (!data) throw new Error('Location Not Found')
 
   return data
 }

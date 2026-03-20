@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { PhilosophyDetail } from '@/lib/types'
 
@@ -83,6 +83,37 @@ export async function addPhilosophy(
     .single()
 
   if (error) throw new Error(`Error Adding Philosophy: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Philosophy
+ *
+ * Updates an existing philosophy record in the database.
+ *
+ * @param id Philosophy ID
+ * @param philosophy Philosophy Data
+ * @returns Updated Philosophy
+ */
+export async function updatePhilosophy(
+  id: string,
+  philosophy: Omit<
+    TablesUpdate<'philosophy'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<PhilosophyDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('philosophy')
+    .update(philosophy)
+    .eq('id', id)
+    .select('id, neurosis_id, philosophy_name')
+    .single()
+
+  if (error) throw new Error(`Error Updating Philosophy: ${error.message}`)
+  if (!data) throw new Error('Philosophy Not Found')
 
   return data
 }

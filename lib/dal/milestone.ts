@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { MilestoneDetail } from '@/lib/types'
@@ -118,6 +118,34 @@ export async function addMilestone(
     .single()
 
   if (error) throw new Error(`Error Adding Milestone: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Milestone
+ *
+ * Updates an existing milestone record in the database.
+ *
+ * @param id Milestone ID
+ * @param milestone Milestone Data
+ * @returns Updated Milestone
+ */
+export async function updateMilestone(
+  id: string,
+  milestone: Omit<TablesUpdate<'milestone'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<MilestoneDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('milestone')
+    .update(milestone)
+    .eq('id', id)
+    .select('id, campaign_types, event_name, milestone_name')
+    .single()
+
+  if (error) throw new Error(`Error Updating Milestone: ${error.message}`)
+  if (!data) throw new Error('Milestone Not Found')
 
   return data
 }

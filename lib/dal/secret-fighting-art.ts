@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SecretFightingArtDetail } from '@/lib/types'
 
@@ -89,6 +89,38 @@ export async function addSecretFightingArt(
 
   if (error)
     throw new Error(`Error Adding Secret Fighting Art: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Secret Fighting Art
+ *
+ * Updates an existing secret fighting art record in the database.
+ *
+ * @param id Secret Fighting Art ID
+ * @param secretFightingArt Secret Fighting Art Data
+ * @returns Updated Secret Fighting Art
+ */
+export async function updateSecretFightingArt(
+  id: string,
+  secretFightingArt: Omit<
+    TablesUpdate<'secret_fighting_art'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<SecretFightingArtDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('secret_fighting_art')
+    .update(secretFightingArt)
+    .eq('id', id)
+    .select('id, secret_fighting_art_name')
+    .single()
+
+  if (error)
+    throw new Error(`Error Updating Secret Fighting Art: ${error.message}`)
+  if (!data) throw new Error('Secret Fighting Art Not Found')
 
   return data
 }

@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { PatternDetail } from '@/lib/types'
 
@@ -73,6 +73,34 @@ export async function addPattern(
     .single()
 
   if (error) throw new Error(`Error Adding Pattern: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Pattern
+ *
+ * Updates an existing pattern record in the database.
+ *
+ * @param id Pattern ID
+ * @param pattern Pattern Data
+ * @returns Updated Pattern
+ */
+export async function updatePattern(
+  id: string,
+  pattern: Omit<TablesUpdate<'pattern'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<PatternDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('pattern')
+    .update(pattern)
+    .eq('id', id)
+    .select('id, pattern_name')
+    .single()
+
+  if (error) throw new Error(`Error Updating Pattern: ${error.message}`)
+  if (!data) throw new Error('Pattern Not Found')
 
   return data
 }

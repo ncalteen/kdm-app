@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { StrainMilestoneDetail } from '@/lib/types'
 
@@ -81,6 +81,38 @@ export async function addStrainMilestone(
     .single()
 
   if (error) throw new Error(`Error Adding Strain Milestone: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Strain Milestone
+ *
+ * Updates an existing strain milestone record in the database.
+ *
+ * @param id Strain Milestone ID
+ * @param strainMilestone Strain Milestone Data
+ * @returns Updated Strain Milestone
+ */
+export async function updateStrainMilestone(
+  id: string,
+  strainMilestone: Omit<
+    TablesUpdate<'strain_milestone'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<StrainMilestoneDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('strain_milestone')
+    .update(strainMilestone)
+    .eq('id', id)
+    .select('id, strain_milestone_name')
+    .single()
+
+  if (error)
+    throw new Error(`Error Updating Strain Milestone: ${error.message}`)
+  if (!data) throw new Error('Strain Milestone Not Found')
 
   return data
 }

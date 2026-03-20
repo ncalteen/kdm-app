@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { DisorderDetail } from '@/lib/types'
 
@@ -73,6 +73,37 @@ export async function addDisorder(
     .single()
 
   if (error) throw new Error(`Error Adding Disorder: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Disorder
+ *
+ * Updates an existing disorder record in the database.
+ *
+ * @param id Disorder ID
+ * @param disorder Disorder Data
+ * @returns Updated Disorder
+ */
+export async function updateDisorder(
+  id: string,
+  disorder: Omit<
+    TablesUpdate<'disorder'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<DisorderDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('disorder')
+    .update(disorder)
+    .eq('id', id)
+    .select('id, disorder_name')
+    .single()
+
+  if (error) throw new Error(`Error Updating Disorder: ${error.message}`)
+  if (!data) throw new Error('Disorder Not Found')
 
   return data
 }

@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CharacterDetail } from '@/lib/types'
 
@@ -77,6 +77,37 @@ export async function addCharacter(
     .single()
 
   if (error) throw new Error(`Error Adding Character: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Character
+ *
+ * Updates an existing character record in the database.
+ *
+ * @param id Character ID
+ * @param character Character Data
+ * @returns Updated Character
+ */
+export async function updateCharacter(
+  id: string,
+  character: Omit<
+    TablesUpdate<'character'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<CharacterDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('character')
+    .update(character)
+    .eq('id', id)
+    .select('id, character_name')
+    .single()
+
+  if (error) throw new Error(`Error Updating Character: ${error.message}`)
+  if (!data) throw new Error('Character Not Found')
 
   return data
 }

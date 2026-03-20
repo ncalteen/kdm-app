@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { GearDetail } from '@/lib/types'
 
@@ -75,6 +75,34 @@ export async function addGear(
     .single()
 
   if (error) throw new Error(`Error Adding Gear: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Gear
+ *
+ * Updates an existing gear record in the database.
+ *
+ * @param id Gear ID
+ * @param gear Gear Data
+ * @returns Updated Gear
+ */
+export async function updateGear(
+  id: string,
+  gear: Omit<TablesUpdate<'gear'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<GearDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('gear')
+    .update(gear)
+    .eq('id', id)
+    .select('id, gear_name, location_id')
+    .single()
+
+  if (error) throw new Error(`Error Updating Gear: ${error.message}`)
+  if (!data) throw new Error('Gear Not Found')
 
   return data
 }

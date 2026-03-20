@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { QuarryDetail } from '@/lib/types'
@@ -162,6 +162,36 @@ export async function addQuarry(
     .single()
 
   if (error) throw new Error(`Error Adding Quarry: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Quarry
+ *
+ * Updates an existing quarry record in the database.
+ *
+ * @param id Quarry ID
+ * @param quarry Quarry Data
+ * @returns Updated Quarry
+ */
+export async function updateQuarry(
+  id: string,
+  quarry: Omit<TablesUpdate<'quarry'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<QuarryDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry')
+    .update(quarry)
+    .eq('id', id)
+    .select(
+      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+    )
+    .single()
+
+  if (error) throw new Error(`Error Updating Quarry: ${error.message}`)
+  if (!data) throw new Error('Quarry Not Found')
 
   return data
 }

@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { WeaponTypeDetail } from '@/lib/types'
 
@@ -79,6 +79,37 @@ export async function addWeaponType(
     .single()
 
   if (error) throw new Error(`Error Adding Weapon Type: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Weapon Type
+ *
+ * Updates an existing weapon type record in the database.
+ *
+ * @param id Weapon Type ID
+ * @param weaponType Weapon Type Data
+ * @returns Updated Weapon Type
+ */
+export async function updateWeaponType(
+  id: string,
+  weaponType: Omit<
+    TablesUpdate<'weapon_type'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<WeaponTypeDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('weapon_type')
+    .update(weaponType)
+    .eq('id', id)
+    .select('id, weapon_type_name')
+    .single()
+
+  if (error) throw new Error(`Error Updating Weapon Type: ${error.message}`)
+  if (!data) throw new Error('Weapon Type Not Found')
 
   return data
 }

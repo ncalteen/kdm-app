@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { NeurosisDetail } from '@/lib/types'
 
@@ -81,6 +81,34 @@ export async function addNeurosis(
     .single()
 
   if (error) throw new Error(`Error Adding Neurosis: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Neurosis
+ *
+ * Updates an existing neurosis record in the database.
+ *
+ * @param id Neurosis ID
+ * @param neurosis Neurosis Data
+ * @returns Updated Neurosis
+ */
+export async function updateNeurosis(
+  id: string,
+  neurosis: Omit<TablesUpdate<'neurosis'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<NeurosisDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('neurosis')
+    .update(neurosis)
+    .eq('id', id)
+    .select('id, neurosis_name, philosophy_id')
+    .single()
+
+  if (error) throw new Error(`Error Updating Neurosis: ${error.message}`)
+  if (!data) throw new Error('Neurosis Not Found')
 
   return data
 }

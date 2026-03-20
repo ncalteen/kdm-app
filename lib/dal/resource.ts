@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { ResourceDetail } from '@/lib/types'
 
@@ -77,6 +77,34 @@ export async function addResource(
     .single()
 
   if (error) throw new Error(`Error Adding Resource: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Resource
+ *
+ * Updates an existing resource record in the database.
+ *
+ * @param id Resource ID
+ * @param resource Resource Data
+ * @returns Updated Resource
+ */
+export async function updateResource(
+  id: string,
+  resource: Omit<TablesUpdate<'resource'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<ResourceDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('resource')
+    .update(resource)
+    .eq('id', id)
+    .select('id, resource_name, category, quarry_id, resource_types')
+    .single()
+
+  if (error) throw new Error(`Error Updating Resource: ${error.message}`)
+  if (!data) throw new Error('Resource Not Found')
 
   return data
 }

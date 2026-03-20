@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { PrincipleDetail } from '@/lib/types'
@@ -124,6 +124,34 @@ export async function addPrinciple(
     .single()
 
   if (error) throw new Error(`Error Adding Principle: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Principle
+ *
+ * Updates an existing principle record in the database.
+ *
+ * @param id Principle ID
+ * @param principle Principle Data
+ * @returns Updated Principle
+ */
+export async function updatePrinciple(
+  id: string,
+  principle: Omit<TablesUpdate<'principle'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<PrincipleDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('principle')
+    .update(principle)
+    .eq('id', id)
+    .select('id, principle_name, option_1_name, option_2_name, campaign_types')
+    .single()
+
+  if (error) throw new Error(`Error Updating Principle: ${error.message}`)
+  if (!data) throw new Error('Principle Not Found')
 
   return data
 }

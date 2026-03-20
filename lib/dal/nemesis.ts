@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { NemesisDetail } from '@/lib/types'
@@ -160,6 +160,34 @@ export async function addNemesis(
     .single()
 
   if (error) throw new Error(`Error Adding Nemesis: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Nemesis
+ *
+ * Updates an existing nemesis record in the database.
+ *
+ * @param id Nemesis ID
+ * @param nemesis Nemesis Data
+ * @returns Updated Nemesis
+ */
+export async function updateNemesis(
+  id: string,
+  nemesis: Omit<TablesUpdate<'nemesis'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<NemesisDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('nemesis')
+    .update(nemesis)
+    .eq('id', id)
+    .select('id, alternate_id, monster_name, multi_monster, node, vignette_id')
+    .single()
+
+  if (error) throw new Error(`Error Updating Nemesis: ${error.message}`)
+  if (!data) throw new Error('Nemesis Not Found')
 
   return data
 }

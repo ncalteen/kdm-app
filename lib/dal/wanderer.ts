@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { WandererDetail } from '@/lib/types'
 
@@ -135,6 +135,36 @@ export async function addWanderer(
     .single()
 
   if (error) throw new Error(`Error Adding Wanderer: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Wanderer
+ *
+ * Updates an existing wanderer record in the database.
+ *
+ * @param id Wanderer ID
+ * @param wanderer Wanderer Data
+ * @returns Updated Wanderer
+ */
+export async function updateWanderer(
+  id: string,
+  wanderer: Omit<TablesUpdate<'wanderer'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<WandererDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('wanderer')
+    .update(wanderer)
+    .eq('id', id)
+    .select(
+      'id, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+    )
+    .single()
+
+  if (error) throw new Error(`Error Updating Wanderer: ${error.message}`)
+  if (!data) throw new Error('Wanderer Not Found')
 
   return data
 }

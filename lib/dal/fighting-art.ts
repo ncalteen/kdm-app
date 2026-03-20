@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { FightingArtDetail } from '@/lib/types'
 
@@ -78,6 +78,37 @@ export async function addFightingArt(
     .single()
 
   if (error) throw new Error(`Error Adding Fighting Art: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Fighting Art
+ *
+ * Updates an existing fighting art record in the database.
+ *
+ * @param id Fighting Art ID
+ * @param fightingArt Fighting Art Data
+ * @returns Updated Fighting Art
+ */
+export async function updateFightingArt(
+  id: string,
+  fightingArt: Omit<
+    TablesUpdate<'fighting_art'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<FightingArtDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('fighting_art')
+    .update(fightingArt)
+    .eq('id', id)
+    .select('id, fighting_art_name')
+    .single()
+
+  if (error) throw new Error(`Error Updating Fighting Art: ${error.message}`)
+  if (!data) throw new Error('Fighting Art Not Found')
 
   return data
 }
