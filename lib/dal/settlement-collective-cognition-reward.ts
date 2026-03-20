@@ -12,6 +12,8 @@ import { SettlementDetail } from '@/lib/types'
 export async function getSettlementCollectiveCognitionRewards(
   settlementId: string | null | undefined
 ): Promise<SettlementDetail['collective_cognition_rewards']> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase

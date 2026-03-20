@@ -1,4 +1,36 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+
+/**
+ * Get Survivor Disorders
+ *
+ * Retrieves all disorders for a survivor.
+ *
+ * @param survivorId Survivor ID
+ * @returns Survivor Disorders
+ */
+export async function getSurvivorDisorders(
+  survivorId: string | null | undefined
+): Promise<
+  Omit<
+    Tables<'survivor_disorder'>,
+    'created_at' | 'updated_at' | 'survivor_id'
+  >[]
+> {
+  if (!survivorId) throw new Error('Required: Survivor ID')
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('survivor_disorder')
+    .select('id, disorder_id')
+    .eq('survivor_id', survivorId)
+
+  if (error)
+    throw new Error(`Error Fetching Survivor Disorders: ${error.message}`)
+
+  return data ?? []
+}
 
 /**
  * Add Survivor Disorder
@@ -21,8 +53,7 @@ export async function addSurvivorDisorder(
     .select('id')
     .single()
 
-  if (error)
-    throw new Error(`Error Adding Survivor Disorder: ${error.message}`)
+  if (error) throw new Error(`Error Adding Survivor Disorder: ${error.message}`)
 
   return data.id
 }

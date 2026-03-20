@@ -13,6 +13,8 @@ import { SettlementDetail } from '@/lib/types'
 export async function getSettlementNemeses(
   settlementId: string | null | undefined
 ): Promise<SettlementDetail['nemeses']> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase

@@ -1,4 +1,36 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+
+/**
+ * Get Survivor Cursed Gear
+ *
+ * Retrieves all cursed gear items for a survivor.
+ *
+ * @param survivorId Survivor ID
+ * @returns Survivor Cursed Gear
+ */
+export async function getSurvivorCursedGear(
+  survivorId: string | null | undefined
+): Promise<
+  Omit<
+    Tables<'survivor_cursed_gear'>,
+    'created_at' | 'updated_at' | 'survivor_id'
+  >[]
+> {
+  if (!survivorId) throw new Error('Required: Survivor ID')
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('survivor_cursed_gear')
+    .select('id, gear_id')
+    .eq('survivor_id', survivorId)
+
+  if (error)
+    throw new Error(`Error Fetching Survivor Cursed Gear: ${error.message}`)
+
+  return data ?? []
+}
 
 /**
  * Add Survivor Cursed Gear

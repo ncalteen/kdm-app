@@ -1,4 +1,36 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+
+/**
+ * Get Settlement Wanderers
+ *
+ * Retrieves all wanderers linked to a settlement.
+ *
+ * @param settlementId Settlement ID
+ * @returns Settlement Wanderers
+ */
+export async function getSettlementWanderers(
+  settlementId: string | null | undefined
+): Promise<
+  Omit<
+    Tables<'settlement_wanderer'>,
+    'created_at' | 'updated_at' | 'settlement_id'
+  >[]
+> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('settlement_wanderer')
+    .select('id, wanderer_id')
+    .eq('settlement_id', settlementId)
+
+  if (error)
+    throw new Error(`Error Fetching Settlement Wanderers: ${error.message}`)
+
+  return data ?? []
+}
 
 /**
  * Add Settlement Wanderers

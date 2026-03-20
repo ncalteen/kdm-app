@@ -1,4 +1,36 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+
+/**
+ * Get Survivor Fighting Arts
+ *
+ * Retrieves all fighting arts for a survivor.
+ *
+ * @param survivorId Survivor ID
+ * @returns Survivor Fighting Arts
+ */
+export async function getSurvivorFightingArts(
+  survivorId: string | null | undefined
+): Promise<
+  Omit<
+    Tables<'survivor_fighting_art'>,
+    'created_at' | 'updated_at' | 'survivor_id'
+  >[]
+> {
+  if (!survivorId) throw new Error('Required: Survivor ID')
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('survivor_fighting_art')
+    .select('id, fighting_art_id')
+    .eq('survivor_id', survivorId)
+
+  if (error)
+    throw new Error(`Error Fetching Survivor Fighting Arts: ${error.message}`)
+
+  return data ?? []
+}
 
 /**
  * Add Survivor Fighting Art
