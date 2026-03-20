@@ -106,7 +106,7 @@ export async function getQuarryNodesById(
 /**
  * Get Quarry IDs
  *
- * Retrieves the IDs of nemeses. This depends on if they are custom nemeses
+ * Retrieves the IDs of quarries. This depends on if they are custom quarries
  * (requires the user ID if so).
  *
  * @param quarryNames Quarry Names

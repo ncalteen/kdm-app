@@ -173,6 +173,16 @@ export type MilestoneDetail = Omit<
 >
 
 /**
+ * Nemesis Detail
+ *
+ * Used throughout the app to represent a nemesis.
+ */
+export type NemesisDetail = Omit<
+  Tables<'nemesis'>,
+  'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+/**
  * Neurosis Detail
  *
  * Used throughout the app to represent a neurosis.
@@ -306,6 +316,8 @@ export type SettlementDetail = Tables<'settlement'> & {
   }[]
   /** Nemeses */
   nemeses: {
+    /** Available Levels */
+    available_levels: number[]
     /** Collective Cognition Level 1 */
     collective_cognition_level_1: boolean
     /** Collective Cognition Level 2 */
@@ -437,6 +449,16 @@ export type SettlementDetail = Tables<'settlement'> & {
 export type SettlementPhaseDetail = Omit<
   Tables<'settlement_phase'>,
   'created_at' | 'updated_at'
+>
+
+/**
+ * Settlement Nemesis Detail
+ *
+ * Used throughout the app to represent a settlement nemesis.
+ */
+export type SettlementNemesisDetail = Omit<
+  Tables<'settlement_nemesis'>,
+  'created_at' | 'updated_at' | 'settlement_id'
 >
 
 /**

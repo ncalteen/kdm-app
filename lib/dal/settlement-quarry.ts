@@ -1,3 +1,4 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -48,28 +49,80 @@ export async function getSettlementQuarries(
  *
  * @param quarryIds Quarry IDs
  * @param settlementId Settlement ID
+ * @return Added Settlement Quarries Data
  */
 export async function addSettlementQuarries(
   quarryIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<{ id: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (quarryIds.length === 0) return
+  if (quarryIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_quarry').insert(
-    quarryIds.map((quarryId) => ({
-      collective_cognition_level_1: false,
-      collective_cognition_level_2: [false, false],
-      collective_cognition_level_3: [false, false, false],
-      collective_cognition_prologue: false,
-      quarry_id: quarryId,
-      settlement_id: settlementId,
-      unlocked: false
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_quarry')
+    .insert(
+      quarryIds.map((quarryId) => ({
+        collective_cognition_level_1: false,
+        collective_cognition_level_2: [false, false],
+        collective_cognition_level_3: [false, false, false],
+        collective_cognition_prologue: false,
+        quarry_id: quarryId,
+        settlement_id: settlementId,
+        unlocked: false
+      }))
+    )
+    .select('id')
 
   if (error)
     throw new Error(`Error Adding Settlement Quarries: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Remove Settlement Quarry
+ *
+ * @param settlementQuarryId Settlement Quarry ID
+ */
+export async function removeSettlementQuarry(
+  settlementQuarryId: string | null | undefined
+): Promise<void> {
+  if (!settlementQuarryId) throw new Error('Required: Settlement Quarry ID')
+
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_quarry')
+    .delete()
+    .eq('id', settlementQuarryId)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Quarry: ${error.message}`)
+}
+
+/**
+ * Update Settlement Quarry
+ *
+ * Updates the specified fields of a settlement quarry row.
+ *
+ * @param settlementQuarryId Settlement Quarry ID
+ * @param updates Partial Settlement Quarry Updates
+ */
+export async function updateSettlementQuarry(
+  settlementQuarryId: string | null | undefined,
+  updates: Partial<Tables<'settlement_quarry'>>
+): Promise<void> {
+  if (!settlementQuarryId) throw new Error('Required: Settlement Quarry ID')
+
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_quarry')
+    .update(updates)
+    .eq('id', settlementQuarryId)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Quarry: ${error.message}`)
 }

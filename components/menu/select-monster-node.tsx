@@ -14,7 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { getNemesisNames } from '@/lib/dal/nemesis'
+import { getNemeses } from '@/lib/dal/nemesis'
 import { getQuarries } from '@/lib/dal/quarry'
 import { MonsterNode } from '@/lib/enums'
 import { cn } from '@/lib/utils'
@@ -70,7 +70,7 @@ export function SelectMonsterNode({
         )
       )
     else
-      getNemesisNames([nodeType]).then((nemeses) =>
+      getNemeses([nodeType]).then((nemeses) =>
         setMonsters(
           Object.values(nemeses).map((n) => ({
             id: n.id,
