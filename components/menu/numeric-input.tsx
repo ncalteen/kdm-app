@@ -174,11 +174,24 @@ export function NumericInput({
     <Input
       type="number"
       value={value}
-      onChange={(e) =>
-        Number.isNaN(parseInt(e.target.value))
-          ? 0
-          : onChange?.(parseInt(e.target.value))
-      }
+      onChange={(e) => {
+        const rawValue = e.target.value
+
+        // Treat empty or non-numeric input as 0 so the controlled value updates
+        if (rawValue === '') {
+          onChange?.(0)
+          return
+        }
+
+        const parsedValue = parseInt(rawValue, 10)
+
+        if (Number.isNaN(parsedValue)) {
+          onChange?.(0)
+          return
+        }
+
+        onChange?.(parsedValue)
+      }}
       max={max}
       min={min}
       className={cn('text-center no-spinners', className)}
