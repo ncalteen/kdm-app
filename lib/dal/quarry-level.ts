@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { Tables, TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -25,8 +25,34 @@ export async function getQuarryLevels(
     )
     .eq('quarry_id', quarryId)
 
-  if (error)
-    throw new Error(`Error Fetching Quarry Levels: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Quarry Levels: ${error.message}`)
 
   return data ?? []
+}
+
+/**
+ * Add Quarry Level
+ *
+ * Adds a new level to a quarry.
+ *
+ * @param quarryLevel Quarry Level Data
+ * @returns Inserted Quarry Level ID
+ */
+export async function addQuarryLevel(
+  quarryLevel: Omit<
+    TablesInsert<'quarry_level'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry_level')
+    .insert(quarryLevel)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Quarry Level: ${error.message}`)
+
+  return data.id
 }

@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -27,4 +28,31 @@ export async function getQuarryLocationIds(
   if (!data) throw new Error('Quarry Location ID(s) Not Found')
 
   return data.map((item) => item.location_id)
+}
+
+/**
+ * Add Quarry Location
+ *
+ * Links a location to a quarry.
+ *
+ * @param quarryLocation Quarry Location Data
+ * @returns Inserted Quarry Location ID
+ */
+export async function addQuarryLocation(
+  quarryLocation: Omit<
+    TablesInsert<'quarry_location'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry_location')
+    .insert(quarryLocation)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Quarry Location: ${error.message}`)
+
+  return data.id
 }

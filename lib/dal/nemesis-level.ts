@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { Tables, TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -25,8 +25,34 @@ export async function getNemesisLevels(
     )
     .eq('nemesis_id', nemesisId)
 
-  if (error)
-    throw new Error(`Error Fetching Nemesis Levels: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Nemesis Levels: ${error.message}`)
 
   return data ?? []
+}
+
+/**
+ * Add Nemesis Level
+ *
+ * Adds a new level to a nemesis.
+ *
+ * @param nemesisLevel Nemesis Level Data
+ * @returns Inserted Nemesis Level ID
+ */
+export async function addNemesisLevel(
+  nemesisLevel: Omit<
+    TablesInsert<'nemesis_level'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('nemesis_level')
+    .insert(nemesisLevel)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Nemesis Level: ${error.message}`)
+
+  return data.id
 }

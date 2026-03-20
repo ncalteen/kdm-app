@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { WandererTimelineYearDetail } from '@/lib/types'
 
@@ -27,4 +28,32 @@ export async function getWandererTimelineYears(
   for (const t of data ?? []) timelineYearMap[t.id] = t
 
   return timelineYearMap
+}
+
+/**
+ * Add Wanderer Timeline Year
+ *
+ * Adds a new timeline year to a wanderer.
+ *
+ * @param wandererTimelineYear Wanderer Timeline Year Data
+ * @returns Inserted Wanderer Timeline Year ID
+ */
+export async function addWandererTimelineYear(
+  wandererTimelineYear: Omit<
+    TablesInsert<'wanderer_timeline_year'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('wanderer_timeline_year')
+    .insert(wandererTimelineYear)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(`Error Adding Wanderer Timeline Year: ${error.message}`)
+
+  return data.id
 }

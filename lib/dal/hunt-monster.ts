@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { HuntMonsterDetail } from '@/lib/types'
 
@@ -34,4 +35,31 @@ export async function getHuntMonsters(
   }
 
   return huntMonsterMap
+}
+
+/**
+ * Add Hunt Monster
+ *
+ * Adds a new monster to a hunt.
+ *
+ * @param huntMonster Hunt Monster Data
+ * @returns Inserted Hunt Monster ID
+ */
+export async function addHuntMonster(
+  huntMonster: Omit<
+    TablesInsert<'hunt_monster'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('hunt_monster')
+    .insert(huntMonster)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Hunt Monster: ${error.message}`)
+
+  return data.id
 }

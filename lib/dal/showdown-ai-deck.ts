@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { ShowdownAIDeckDetail } from '@/lib/types'
 
@@ -55,6 +56,33 @@ export async function updateShowdownAIDeck(
   if (error)
     throw new Error(`Error Updating Showdown AI Deck: ${error.message}`)
   if (!data) throw new Error('Showdown AI Deck Not Found')
+
+  return data
+}
+
+/**
+ * Add Showdown AI Deck
+ *
+ * Adds a new AI deck to a showdown.
+ *
+ * @param showdownAIDeck Showdown AI Deck Data
+ * @returns Inserted Showdown AI Deck
+ */
+export async function addShowdownAIDeck(
+  showdownAIDeck: Omit<
+    TablesInsert<'showdown_ai_deck'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<ShowdownAIDeckDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('showdown_ai_deck')
+    .insert(showdownAIDeck)
+    .select('id, basic_cards, advanced_cards, legendary_cards, overtone_cards')
+    .single()
+
+  if (error) throw new Error(`Error Adding Showdown AI Deck: ${error.message}`)
 
   return data
 }

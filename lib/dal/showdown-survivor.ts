@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { ShowdownSurvivorDetail } from '@/lib/types'
 
@@ -60,4 +61,31 @@ export async function updateShowdownSurvivor(
   if (!data) throw new Error('Showdown Survivor Not Found')
 
   return data
+}
+
+/**
+ * Add Showdown Survivor
+ *
+ * Adds a new survivor to a showdown.
+ *
+ * @param showdownSurvivor Showdown Survivor Data
+ * @returns Inserted Showdown Survivor ID
+ */
+export async function addShowdownSurvivor(
+  showdownSurvivor: Omit<
+    TablesInsert<'showdown_survivor'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('showdown_survivor')
+    .insert(showdownSurvivor)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Showdown Survivor: ${error.message}`)
+
+  return data.id
 }

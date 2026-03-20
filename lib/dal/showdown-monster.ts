@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { ShowdownMonsterDetail } from '@/lib/types'
 
@@ -64,4 +65,31 @@ export async function updateShowdownMonster(
   if (!data) throw new Error('Showdown Monster Not Found')
 
   return data
+}
+
+/**
+ * Add Showdown Monster
+ *
+ * Adds a new monster to a showdown.
+ *
+ * @param showdownMonster Showdown Monster Data
+ * @returns Inserted Showdown Monster ID
+ */
+export async function addShowdownMonster(
+  showdownMonster: Omit<
+    TablesInsert<'showdown_monster'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('showdown_monster')
+    .insert(showdownMonster)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Showdown Monster: ${error.message}`)
+
+  return data.id
 }

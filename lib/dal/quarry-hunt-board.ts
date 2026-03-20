@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { Tables, TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -11,9 +11,10 @@ import { createClient } from '@/lib/supabase/client'
  */
 export async function getQuarryHuntBoard(
   quarryId: string | null | undefined
-): Promise<
-  Omit<Tables<'quarry_hunt_board'>, 'created_at' | 'updated_at'> | null
-> {
+): Promise<Omit<
+  Tables<'quarry_hunt_board'>,
+  'created_at' | 'updated_at'
+> | null> {
   if (!quarryId) throw new Error('Required: Quarry ID')
 
   const supabase = createClient()
@@ -30,4 +31,31 @@ export async function getQuarryHuntBoard(
     throw new Error(`Error Fetching Quarry Hunt Board: ${error.message}`)
 
   return data
+}
+
+/**
+ * Add Quarry Hunt Board
+ *
+ * Adds a hunt board to a quarry.
+ *
+ * @param quarryHuntBoard Quarry Hunt Board Data
+ * @returns Inserted Quarry Hunt Board ID
+ */
+export async function addQuarryHuntBoard(
+  quarryHuntBoard: Omit<
+    TablesInsert<'quarry_hunt_board'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry_hunt_board')
+    .insert(quarryHuntBoard)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Quarry Hunt Board: ${error.message}`)
+
+  return data.id
 }

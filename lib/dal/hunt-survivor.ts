@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { HuntSurvivorDetail } from '@/lib/types'
 
@@ -31,4 +32,31 @@ export async function getHuntSurvivors(
   for (const s of data ?? []) huntSurvivorMap[s.id] = s
 
   return huntSurvivorMap
+}
+
+/**
+ * Add Hunt Survivor
+ *
+ * Adds a new survivor to a hunt.
+ *
+ * @param huntSurvivor Hunt Survivor Data
+ * @returns Inserted Hunt Survivor ID
+ */
+export async function addHuntSurvivor(
+  huntSurvivor: Omit<
+    TablesInsert<'hunt_survivor'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('hunt_survivor')
+    .insert(huntSurvivor)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Hunt Survivor: ${error.message}`)
+
+  return data.id
 }

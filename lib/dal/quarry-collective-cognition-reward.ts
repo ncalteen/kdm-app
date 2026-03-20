@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -29,4 +30,34 @@ export async function getQuarryCollectiveCognitionRewardIds(
   if (!data) throw new Error('Quarry Collective Cognition Reward(s) Not Found')
 
   return data.map((reward) => reward.collective_cognition_reward_id)
+}
+
+/**
+ * Add Quarry Collective Cognition Reward
+ *
+ * Links a collective cognition reward to a quarry.
+ *
+ * @param quarryCCR Quarry Collective Cognition Reward Data
+ * @returns Inserted ID
+ */
+export async function addQuarryCollectiveCognitionReward(
+  quarryCCR: Omit<
+    TablesInsert<'quarry_collective_cognition_reward'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry_collective_cognition_reward')
+    .insert(quarryCCR)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(
+      `Error Adding Quarry Collective Cognition Reward: ${error.message}`
+    )
+
+  return data.id
 }

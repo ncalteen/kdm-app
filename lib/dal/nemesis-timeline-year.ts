@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { Tables, TablesInsert } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 
@@ -36,4 +36,32 @@ export async function getNemesisTimelineYears(
   if (!data) throw new Error('Nemesis Timeline Year(s) Not Found')
 
   return data
+}
+
+/**
+ * Add Nemesis Timeline Year
+ *
+ * Adds a new timeline year to a nemesis.
+ *
+ * @param nemesisTimelineYear Nemesis Timeline Year Data
+ * @returns Inserted Nemesis Timeline Year ID
+ */
+export async function addNemesisTimelineYear(
+  nemesisTimelineYear: Omit<
+    TablesInsert<'nemesis_timeline_year'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('nemesis_timeline_year')
+    .insert(nemesisTimelineYear)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(`Error Adding Nemesis Timeline Year: ${error.message}`)
+
+  return data.id
 }

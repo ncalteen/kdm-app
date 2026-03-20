@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -31,4 +32,31 @@ export async function getSettlementGear(
       quantity: item.quantity
     })) ?? []
   )
+}
+
+/**
+ * Add Settlement Gear
+ *
+ * Adds a gear item to a settlement.
+ *
+ * @param settlementGear Settlement Gear Data
+ * @returns Inserted Settlement Gear ID
+ */
+export async function addSettlementGear(
+  settlementGear: Omit<
+    TablesInsert<'settlement_gear'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('settlement_gear')
+    .insert(settlementGear)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Settlement Gear: ${error.message}`)
+
+  return data.id
 }

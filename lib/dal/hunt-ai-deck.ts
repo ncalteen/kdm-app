@@ -1,3 +1,4 @@
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { HuntAIDeckDetail } from '@/lib/types'
 
@@ -28,4 +29,31 @@ export async function getHuntAIDecks(
   for (const m of data ?? []) huntAIDeckMap[m.id] = m
 
   return huntAIDeckMap
+}
+
+/**
+ * Add Hunt AI Deck
+ *
+ * Adds a new AI deck to a hunt.
+ *
+ * @param huntAIDeck Hunt AI Deck Data
+ * @returns Inserted Hunt AI Deck
+ */
+export async function addHuntAIDeck(
+  huntAIDeck: Omit<
+    TablesInsert<'hunt_ai_deck'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<HuntAIDeckDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('hunt_ai_deck')
+    .insert(huntAIDeck)
+    .select('id, basic_cards, advanced_cards, legendary_cards, overtone_cards')
+    .single()
+
+  if (error) throw new Error(`Error Adding Hunt AI Deck: ${error.message}`)
+
+  return data
 }
