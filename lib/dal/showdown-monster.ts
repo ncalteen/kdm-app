@@ -19,16 +19,49 @@ export async function getShowdownMonsters(
   const { data, error } = await supabase
     .from('showdown_monster')
     .select(
-      'id, accuracy, accuracy_tokens, ai_card_drawn, ai_deck_id, ai_deck_remaining, damage, damage_tokens, evasion, evasion_tokens, knocked_down, luck, luck_tokens, monster_name, moods, movement, movement_tokens, notes, settlement_id, showdown_id, speed, speed_tokens, strength, strength_tokens, toughness, traits, wounds'
+      'id, accuracy, accuracy_tokens, ai_card_drawn, ai_deck_id, ai_deck_remaining, damage, damage_tokens, evasion, evasion_tokens, knocked_down, luck, luck_tokens, monster_name, moods, movement, movement_tokens, notes, settlement_id, showdown_id, speed, speed_tokens, strength, strength_tokens, toughness, traits, wounds, showdown_ai_deck(id, advanced_cards, basic_cards, legendary_cards, overtone_cards)'
     )
     .eq('showdown_id', showdownId)
 
   if (error)
     throw new Error(`Error Fetching Showdown Monsters: ${error.message}`)
+  if (!data) throw new Error('Showdown Monsters Not Found')
 
   const showdownMonsterMap: { [key: string]: ShowdownMonsterDetail } = {}
 
-  for (const m of data ?? []) showdownMonsterMap[m.id] = m
+  for (const m of data ?? []) {
+    const aiDeck =
+      m.showdown_ai_deck as unknown as ShowdownMonsterDetail['ai_deck']
+    showdownMonsterMap[m.id] = { ...m, ai_deck: aiDeck ?? null }
+  }
 
   return showdownMonsterMap
+}
+
+/**
+ * Update Showdown Monster
+ *
+ * Updates a showdown monster's data.
+ *
+ * @param monsterId Monster ID
+ * @param updateData Data to update
+ * @returns Updated Showdown Monster Data
+ */
+export async function updateShowdownMonster(
+  monsterId: string,
+  updateData: Partial<ShowdownMonsterDetail>
+): Promise<ShowdownMonsterDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('showdown_monster')
+    .update(updateData)
+    .eq('id', monsterId)
+    .maybeSingle()
+
+  if (error)
+    throw new Error(`Error Updating Showdown Monster: ${error.message}`)
+  if (!data) throw new Error('Showdown Monster Not Found')
+
+  return data
 }

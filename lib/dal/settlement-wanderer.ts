@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/client'
 
 /**
- * Add Wanderers to Settlement
+ * Add Settlement Wanderers
  *
  * Links existing wanderer IDs to a settlement by inserting records into the
  * settlement_wanderer join table.
@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client'
  * @param wandererIds Wanderer IDs
  * @param settlementId Settlement ID
  */
-export async function addWanderersToSettlement(
+export async function addSettlementWanderers(
   wandererIds: string[],
   settlementId: string
 ): Promise<void> {

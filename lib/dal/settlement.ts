@@ -44,7 +44,7 @@ import {
   addSettlementTimelineYears,
   getSettlementTimelineYears
 } from '@/lib/dal/settlement-timeline-year'
-import { addWanderersToSettlement } from '@/lib/dal/settlement-wanderer'
+import { addSettlementWanderers } from '@/lib/dal/settlement-wanderer'
 import { addSquiresOfTheCitadelSurvivors } from '@/lib/dal/survivor'
 import { getWandererTimelineYears } from '@/lib/dal/wanderer-timeline-year'
 import { Tables } from '@/lib/database.types'
@@ -240,7 +240,7 @@ export async function createSettlement(
   }
 
   // Wanderers
-  await addWanderersToSettlement(options.wandererIds, settlementId)
+  await addSettlementWanderers(options.wandererIds, settlementId)
 
   for (const wandererId of options.wandererIds)
     // Append any timeline entries to the settlement timeline.

@@ -25,6 +25,7 @@ export async function getShowdownSurvivors(
 
   if (error)
     throw new Error(`Error Fetching Showdown Survivors: ${error.message}`)
+  if (!data) throw new Error('Showdown Survivors Not Found')
 
   const showdownSurvivorMap: { [key: string]: ShowdownSurvivorDetail } = {}
 
@@ -33,54 +34,30 @@ export async function getShowdownSurvivors(
   return showdownSurvivorMap
 }
 
-////////////////////////////////////////////////////////////
-// TODO: Consolidate the following into appropviate get/set functions for the whole showdown survivor
-////////////////////////////////////////////////////////////
-
 /**
- * Get Survival Tokens
+ * Update Showdown Survivor
+ *
+ * Updates a showdown survivor's data.
  *
  * @param survivorId Survivor ID
- * @returns Survival Tokens
+ * @param updateData Data to update
+ * @returns Updated Showdown Survivor Data
  */
-export async function getShowdownSurvivorSurvivalTokens(
-  survivorId: string
-): Promise<number | null> {
+export async function updateShowdownSurvivor(
+  survivorId: string,
+  updateData: Partial<ShowdownSurvivorDetail>
+): Promise<ShowdownSurvivorDetail> {
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('showdown_survivor')
-    .select('survival_tokens')
-    .eq('survivor_id', survivorId)
+    .update(updateData)
+    .eq('id', survivorId)
     .maybeSingle()
 
   if (error)
-    throw new Error(
-      `Error Fetching Showdown Survivor Survival Tokens: ${error.message}`
-    )
+    throw new Error(`Error Updating Showdown Survivor: ${error.message}`)
+  if (!data) throw new Error('Showdown Survivor Not Found')
 
-  return data?.survival_tokens ?? null
-}
-
-/**
- * Update Survival Tokens
- *
- * @param survivorId Survivor ID
- * @param survivalTokens New Survival Tokens Value
- */
-export async function updateShowdownSurvivorSurvivalTokens(
-  survivorId: string,
-  survivalTokens: number
-): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('showdown_survivor')
-    .update({ survival_tokens: survivalTokens })
-    .eq('survivor_id', survivorId)
-
-  if (error)
-    throw new Error(
-      `Error Updating Showdown Survivor Survival Tokens: ${error.message}`
-    )
+  return data
 }

@@ -5,6 +5,7 @@ import { PatternDetail } from '@/lib/types'
  * Get Patterns
  *
  * Retrieves all patterns available to the authenticated user:
+ *
  * - Built-in (non-custom) patterns
  * - Custom patterns owned by the user
  * - Custom patterns shared with the user

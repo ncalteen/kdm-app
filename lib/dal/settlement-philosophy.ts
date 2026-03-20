@@ -4,7 +4,7 @@ import { SettlementDetail } from '@/lib/types'
 /**
  * Get Settlement Philosophies
  *
- * Gets the settlement principles for a given settlement.
+ * Gets the settlement philosophies for a given settlement.
  *
  * @param settlementId Settlement ID
  * @returns Settlement Philosophies
@@ -36,32 +36,30 @@ export async function getSettlementPhilosophies(
 }
 
 /**
- * Add Settlement Principles
+ * Add Settlement Philosophies
  *
- * Adds principles to a settlement by their IDs. This is used when adding
- * principles to a settlement during settlement creation or editing.
+ * Adds philosophies to a settlement by their IDs. This is used when adding
+ * philosophies to a settlement during settlement creation or editing.
  *
- * @param principleIds Principle IDs
+ * @param philosophyIds Philosophy IDs
  * @param settlementId Settlement ID
  */
-export async function addSettlementPrinciples(
-  principleIds: string[],
+export async function addSettlementPhilosophies(
+  philosophyIds: string[],
   settlementId: string | null | undefined
 ): Promise<void> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (principleIds.length === 0) return
+  if (philosophyIds.length === 0) return
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_principle').insert(
-    principleIds.map((principleId) => ({
-      option_1_selected: false,
-      option_2_selected: false,
-      principle_id: principleId,
+  const { error } = await supabase.from('settlement_philosophy').insert(
+    philosophyIds.map((philosophyId) => ({
+      philosophy_id: philosophyId,
       settlement_id: settlementId
     }))
   )
 
   if (error)
-    throw new Error(`Error Adding Settlement Principles: ${error.message}`)
+    throw new Error(`Error Adding Settlement Philosophies: ${error.message}`)
 }

@@ -5,6 +5,7 @@ import { StrainMilestoneDetail } from '@/lib/types'
  * Get Strain Milestones
  *
  * Retrieves all strain milestones available to the authenticated user:
+ *
  * - Built-in (non-custom) strain milestones
  * - Custom strain milestones owned by the user
  * - Custom strain milestones shared with the user

@@ -11,7 +11,7 @@ import { HuntHuntBoardDetail } from '@/lib/types'
  */
 export async function getHuntHuntBoard(
   huntId: string | null | undefined
-): Promise<HuntHuntBoardDetail | null> {
+): Promise<HuntHuntBoardDetail> {
   if (!huntId) throw new Error('Required: Hunt ID')
 
   const supabase = createClient()
@@ -24,8 +24,8 @@ export async function getHuntHuntBoard(
     .eq('hunt_id', huntId)
     .maybeSingle()
 
-  if (error)
-    throw new Error(`Error Fetching Hunt Board: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Hunt Board: ${error.message}`)
+  if (!data) throw new Error('Hunt Board Not Found')
 
-  return data ?? null
+  return data
 }

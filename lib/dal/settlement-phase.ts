@@ -12,7 +12,7 @@ import { SettlementPhaseDetail } from '@/lib/types'
  */
 export async function getSettlementPhase(
   settlementId: string | null | undefined
-): Promise<SettlementPhaseDetail | null> {
+): Promise<SettlementPhaseDetail> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
@@ -25,8 +25,22 @@ export async function getSettlementPhase(
 
   if (error)
     throw new Error(`Error Fetching Settlement Phase: ${error.message}`)
+  if (!data) throw new Error('Settlement Phase Not Found')
 
-  return data ?? null
+  const { data: returningData, error: returningError } = await supabase
+    .from('settlement_phase_returning_survivor')
+    .select('survivor_id')
+    .eq('settlement_phase_id', data.id)
+
+  if (returningError)
+    throw new Error(
+      `Error Fetching Returning Survivors: ${returningError.message}`
+    )
+
+  return {
+    ...data,
+    returning_survivor_ids: (returningData ?? []).map((r) => r.survivor_id)
+  }
 }
 
 /**

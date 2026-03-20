@@ -36,10 +36,9 @@ export async function addSquiresOfTheCitadelSurvivors(
 }
 
 /**
- * Get Survivor for Settlement
+ * Get Survivor
  *
- * Includes an `embarked` boolean indicating whether the survivor is currently
- * assigned to a hunt or showdown.
+ * Includes all details for the survivor.
  *
  * @param survivorId Survivor ID
  * @returns Survivor Data with Embarked Status
@@ -263,10 +262,11 @@ export async function getSurvivor(
 }
 
 /**
- * Get Survivors for Settlement
+ * Get Survivors
  *
- * Includes an `embarked` boolean indicating whether the survivor is currently
- * assigned to a hunt or showdown.
+ * Includes all survivors for a settlement, along with their embarked status and
+ * names for related entities (gear, disorders, fighting arts, etc.) for easier
+ * consumption in the frontend.
  *
  * @param settlementId Settlement ID
  * @returns List of Survivors with Embarked Status

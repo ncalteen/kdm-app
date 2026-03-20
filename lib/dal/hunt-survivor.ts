@@ -23,8 +23,8 @@ export async function getHuntSurvivors(
     )
     .eq('hunt_id', huntId)
 
-  if (error)
-    throw new Error(`Error Fetching Hunt Survivors: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Hunt Survivors: ${error.message}`)
+  if (!data) throw new Error('Hunt Survivors Not Found')
 
   const huntSurvivorMap: { [key: string]: HuntSurvivorDetail } = {}
 

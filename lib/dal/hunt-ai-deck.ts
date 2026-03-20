@@ -18,9 +18,7 @@ export async function getHuntAIDecks(
 
   const { data, error } = await supabase
     .from('hunt_ai_deck')
-    .select(
-      'id, basic_cards, advanced_cards, legendary_cards, overtone_cards, hunt_monster_id'
-    )
+    .select('id, basic_cards, advanced_cards, legendary_cards, overtone_cards')
     .eq('hunt_id', huntId)
 
   if (error) throw new Error(`Error Fetching Hunt AI Decks: ${error.message}`)

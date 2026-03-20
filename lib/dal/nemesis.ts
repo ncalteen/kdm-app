@@ -80,31 +80,6 @@ export async function getNemeses(
 }
 
 /**
- * Get Nemesis Nodes by ID
- *
- * Given an array of nemesis IDs, returns each ID with its monster node.
- *
- * @param ids Nemesis IDs
- * @returns Nemesis ID/Node Pairs
- */
-export async function getNemesisNodesById(
-  ids: string[]
-): Promise<{ id: string; node: MonsterNode }[]> {
-  if (ids.length === 0) return []
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('nemesis')
-    .select('id, node')
-    .in('id', ids)
-
-  if (error) throw new Error(`Error Fetching Nemesis Nodes: ${error.message}`)
-
-  return (data ?? []).map((n) => ({ id: n.id, node: n.node as MonsterNode }))
-}
-
-/**
  * Get Nemesis IDs
  *
  * Retrieves the IDs of nemeses. This depends on if they are custom nemeses
@@ -140,4 +115,29 @@ export async function getNemesisIds(
   if (!data) throw new Error('Nemesis(es) Not Found')
 
   return data.map((nemesis) => nemesis.id)
+}
+
+/**
+ * Get Nemesis Nodes by ID
+ *
+ * Given an array of nemesis IDs, returns each ID with its monster node.
+ *
+ * @param ids Nemesis IDs
+ * @returns Nemesis ID/Node Pairs
+ */
+export async function getNemesisNodesById(
+  ids: string[]
+): Promise<{ id: string; node: MonsterNode }[]> {
+  if (ids.length === 0) return []
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('nemesis')
+    .select('id, node')
+    .in('id', ids)
+
+  if (error) throw new Error(`Error Fetching Nemesis Nodes: ${error.message}`)
+
+  return (data ?? []).map((n) => ({ id: n.id, node: n.node as MonsterNode }))
 }

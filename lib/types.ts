@@ -110,7 +110,14 @@ export type HuntAIDeckDetail = Omit<
  *
  * Used throughout the app to represent the currently selected hunt.
  */
-export type HuntDetail = Omit<Tables<'hunt'>, 'created_at' | 'updated_at'>
+export type HuntDetail = Omit<Tables<'hunt'>, 'created_at' | 'updated_at'> & {
+  /** Hunt Board */
+  hunt_board: HuntHuntBoardDetail
+  /** Hunt Monsters */
+  hunt_monsters: { [key: string]: HuntMonsterDetail }
+  /** Hunt Survivors */
+  hunt_survivors: { [key: string]: HuntSurvivorDetail }
+}
 
 /**
  * Hunt Hunt Board Detail
@@ -130,7 +137,10 @@ export type HuntHuntBoardDetail = Omit<
 export type HuntMonsterDetail = Omit<
   Tables<'hunt_monster'>,
   'created_at' | 'updated_at'
->
+> & {
+  /** AI Deck */
+  ai_deck: HuntAIDeckDetail
+}
 
 /**
  * Hunt Survivor Detail
@@ -468,7 +478,10 @@ export type SettlementDetail = Tables<'settlement'> & {
 export type SettlementPhaseDetail = Omit<
   Tables<'settlement_phase'>,
   'created_at' | 'updated_at'
->
+> & {
+  /** Returning Survivor IDs */
+  returning_survivor_ids: string[]
+}
 
 /**
  * Settlement Nemesis Detail
@@ -498,7 +511,12 @@ export type ShowdownAIDeckDetail = Omit<
 export type ShowdownDetail = Omit<
   Tables<'showdown'>,
   'created_at' | 'updated_at'
->
+> & {
+  /** Showdown Monsters */
+  showdown_monsters: { [key: string]: ShowdownMonsterDetail }
+  /** Showdown Survivors */
+  showdown_survivors: { [key: string]: ShowdownSurvivorDetail }
+}
 
 /**
  * Showdown Monster Detail
@@ -508,7 +526,10 @@ export type ShowdownDetail = Omit<
 export type ShowdownMonsterDetail = Omit<
   Tables<'showdown_monster'>,
   'created_at' | 'updated_at'
->
+> & {
+  /** AI Deck */
+  ai_deck: ShowdownAIDeckDetail
+}
 
 /**
  * Showdown Survivor Detail

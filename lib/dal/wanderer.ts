@@ -61,7 +61,8 @@ export async function getWanderers(): Promise<{
  * Get Wanderer ID
  *
  * Retrieves the ID of a wanderer. This depends on if they are custom
- * wanderers (requires the user ID if so).
+ * wanderers (requires the user ID if so). This is used to populate new
+ * settlements created from templates.
  *
  * @param wandererNames Wanderer Names
  * @param custom Custom

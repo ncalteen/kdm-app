@@ -79,35 +79,11 @@ export async function getQuarries(
 }
 
 /**
- * Get Quarry Nodes by ID
- *
- * Given an array of quarry IDs, returns each ID with its monster node.
- *
- * @param ids Quarry IDs
- * @returns Quarry ID/Node Pairs
- */
-export async function getQuarryNodesById(
-  ids: string[]
-): Promise<{ id: string; node: MonsterNode }[]> {
-  if (ids.length === 0) return []
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('quarry')
-    .select('id, node')
-    .in('id', ids)
-
-  if (error) throw new Error(`Error Fetching Quarry Nodes: ${error.message}`)
-
-  return (data ?? []).map((q) => ({ id: q.id, node: q.node as MonsterNode }))
-}
-
-/**
  * Get Quarry IDs
  *
  * Retrieves the IDs of quarries. This depends on if they are custom quarries
- * (requires the user ID if so).
+ * (requires the user ID if so). This is used to populate new hunts and
+ * showdowns created from templates.
  *
  * @param quarryNames Quarry Names
  * @param custom Custom
@@ -139,4 +115,29 @@ export async function getQuarryIds(
   if (!data) throw new Error('Quarry(ies) Not Found')
 
   return data.map((quarry) => quarry.id)
+}
+
+/**
+ * Get Quarry Nodes by ID
+ *
+ * Given an array of quarry IDs, returns each ID with its monster node.
+ *
+ * @param ids Quarry IDs
+ * @returns Quarry ID/Node Pairs
+ */
+export async function getQuarryNodesById(
+  ids: string[]
+): Promise<{ id: string; node: MonsterNode }[]> {
+  if (ids.length === 0) return []
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry')
+    .select('id, node')
+    .in('id', ids)
+
+  if (error) throw new Error(`Error Fetching Quarry Nodes: ${error.message}`)
+
+  return (data ?? []).map((q) => ({ id: q.id, node: q.node as MonsterNode }))
 }

@@ -1,3 +1,6 @@
+import { getHuntHuntBoard } from '@/lib/dal/hunt-hunt-board'
+import { getHuntMonsters } from '@/lib/dal/hunt-monster'
+import { getHuntSurvivors } from '@/lib/dal/hunt-survivor'
 import { createClient } from '@/lib/supabase/client'
 import { HuntDetail } from '@/lib/types'
 
@@ -11,7 +14,7 @@ import { HuntDetail } from '@/lib/types'
  */
 export async function getHunt(
   settlementId: string | null | undefined
-): Promise<HuntDetail | null> {
+): Promise<HuntDetail> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
@@ -25,6 +28,18 @@ export async function getHunt(
     .maybeSingle()
 
   if (error) throw new Error(`Error Fetching Hunt: ${error.message}`)
+  if (!data) throw new Error('Hunt Not Found')
 
-  return data ?? null
+  const [huntHuntBoard, huntMonsters, huntSurvivors] = await Promise.all([
+    getHuntHuntBoard(data.id),
+    getHuntMonsters(data.id),
+    getHuntSurvivors(data.id)
+  ])
+
+  return {
+    ...data,
+    hunt_board: huntHuntBoard,
+    hunt_monsters: huntMonsters,
+    hunt_survivors: huntSurvivors
+  }
 }

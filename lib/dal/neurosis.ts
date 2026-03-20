@@ -5,6 +5,7 @@ import { NeurosisDetail } from '@/lib/types'
  * Get Neuroses
  *
  * Retrieves all neuroses available to the authenticated user:
+ *
  * - Built-in (non-custom) neuroses
  * - Custom neuroses owned by the user
  * - Custom neuroses shared with the user

@@ -5,6 +5,7 @@ import { WeaponTypeDetail } from '@/lib/types'
  * Get Weapon Types
  *
  * Retrieves all weapon types available to the authenticated user:
+ *
  * - Built-in (non-custom) weapon types
  * - Custom weapon types owned by the user
  * - Custom weapon types shared with the user
