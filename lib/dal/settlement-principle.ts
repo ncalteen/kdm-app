@@ -1,3 +1,4 @@
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -86,4 +87,30 @@ export async function addSettlementPrinciples(
 
   if (error)
     throw new Error(`Error Adding Settlement Principles: ${error.message}`)
+}
+
+/**
+ * Update Settlement Principle
+ *
+ * Updates an existing settlement principle record.
+ *
+ * @param id Settlement Principle ID
+ * @param settlementPrinciple Settlement Principle Data
+ */
+export async function updateSettlementPrinciple(
+  id: string,
+  settlementPrinciple: Omit<
+    TablesUpdate<'settlement_principle'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_principle')
+    .update(settlementPrinciple)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Principle: ${error.message}`)
 }

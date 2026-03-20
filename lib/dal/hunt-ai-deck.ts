@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { HuntAIDeckDetail } from '@/lib/types'
 
@@ -56,4 +56,30 @@ export async function addHuntAIDeck(
   if (error) throw new Error(`Error Adding Hunt AI Deck: ${error.message}`)
 
   return data
+}
+
+/**
+ * Update Hunt AI Deck
+ *
+ * Updates an existing hunt AI deck record.
+ *
+ * @param id Hunt AI Deck ID
+ * @param huntAIDeck Hunt AI Deck Data
+ * @returns Updated Hunt AI Deck
+ */
+export async function updateHuntAIDeck(
+  id: string,
+  huntAIDeck: Omit<
+    TablesUpdate<'hunt_ai_deck'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('hunt_ai_deck')
+    .update(huntAIDeck)
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Updating Hunt AI Deck: ${error.message}`)
 }

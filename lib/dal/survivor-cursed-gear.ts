@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { Tables, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -81,4 +81,30 @@ export async function removeSurvivorCursedGear(
 
   if (error)
     throw new Error(`Error Removing Survivor Cursed Gear: ${error.message}`)
+}
+
+/**
+ * Update Survivor Cursed Gear
+ *
+ * Updates an existing survivor cursed gear record.
+ *
+ * @param id Survivor Cursed Gear ID
+ * @param survivorCursedGear Survivor Cursed Gear Data
+ */
+export async function updateSurvivorCursedGear(
+  id: string,
+  survivorCursedGear: Omit<
+    TablesUpdate<'survivor_cursed_gear'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('survivor_cursed_gear')
+    .update(survivorCursedGear)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Survivor Cursed Gear: ${error.message}`)
 }

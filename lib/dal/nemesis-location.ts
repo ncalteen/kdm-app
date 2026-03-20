@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -55,4 +55,30 @@ export async function addNemesisLocation(
   if (error) throw new Error(`Error Adding Nemesis Location: ${error.message}`)
 
   return data.id
+}
+
+/**
+ * Update Nemesis Location
+ *
+ * Updates an existing nemesis location record.
+ *
+ * @param id Nemesis Location ID
+ * @param nemesisLocation Nemesis Location Data
+ */
+export async function updateNemesisLocation(
+  id: string,
+  nemesisLocation: Omit<
+    TablesUpdate<'nemesis_location'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('nemesis_location')
+    .update(nemesisLocation)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Nemesis Location: ${error.message}`)
 }

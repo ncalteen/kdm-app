@@ -153,23 +153,18 @@ export async function updateCollectiveCognitionReward(
     TablesUpdate<'collective_cognition_reward'>,
     'id' | 'created_at' | 'updated_at'
   >
-): Promise<CollectiveCognitionRewardDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('collective_cognition_reward')
     .update(reward)
     .eq('id', id)
-    .select('id, collective_cognition, reward_name')
-    .single()
 
   if (error)
     throw new Error(
       `Error Updating Collective Cognition Reward: ${error.message}`
     )
-  if (!data) throw new Error('Collective Cognition Reward Not Found')
-
-  return data
 }
 
 /**

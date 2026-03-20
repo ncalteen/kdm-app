@@ -134,20 +134,15 @@ export async function addMilestone(
 export async function updateMilestone(
   id: string,
   milestone: Omit<TablesUpdate<'milestone'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<MilestoneDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('milestone')
     .update(milestone)
     .eq('id', id)
-    .select('id, campaign_types, event_name, milestone_name')
-    .single()
 
   if (error) throw new Error(`Error Updating Milestone: ${error.message}`)
-  if (!data) throw new Error('Milestone Not Found')
-
-  return data
 }
 
 /**

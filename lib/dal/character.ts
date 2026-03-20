@@ -93,20 +93,15 @@ export async function addCharacter(
 export async function updateCharacter(
   id: string,
   character: Omit<TablesUpdate<'character'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<CharacterDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('character')
     .update(character)
     .eq('id', id)
-    .select('id, character_name')
-    .single()
 
   if (error) throw new Error(`Error Updating Character: ${error.message}`)
-  if (!data) throw new Error('Character Not Found')
-
-  return data
 }
 
 /**

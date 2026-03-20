@@ -1,3 +1,4 @@
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -63,4 +64,30 @@ export async function addSettlementMilestones(
 
   if (error)
     throw new Error(`Error Adding Settlement Milestones: ${error.message}`)
+}
+
+/**
+ * Update Settlement Milestone
+ *
+ * Updates an existing settlement milestone record.
+ *
+ * @param id Settlement Milestone ID
+ * @param settlementMilestone Settlement Milestone Data
+ */
+export async function updateSettlementMilestone(
+  id: string,
+  settlementMilestone: Omit<
+    TablesUpdate<'settlement_milestone'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_milestone')
+    .update(settlementMilestone)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Milestone: ${error.message}`)
 }

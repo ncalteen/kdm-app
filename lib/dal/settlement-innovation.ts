@@ -1,3 +1,4 @@
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -62,4 +63,30 @@ export async function addSettlementInnovations(
 
   if (error)
     throw new Error(`Error Adding Settlement Innovations: ${error.message}`)
+}
+
+/**
+ * Update Settlement Innovation
+ *
+ * Updates an existing settlement innovation record.
+ *
+ * @param id Settlement Innovation ID
+ * @param settlementInnovation Settlement Innovation Data
+ */
+export async function updateSettlementInnovation(
+  id: string,
+  settlementInnovation: Omit<
+    TablesUpdate<'settlement_innovation'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_innovation')
+    .update(settlementInnovation)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Innovation: ${error.message}`)
 }

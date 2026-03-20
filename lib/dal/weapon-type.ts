@@ -98,20 +98,15 @@ export async function updateWeaponType(
     TablesUpdate<'weapon_type'>,
     'id' | 'created_at' | 'updated_at'
   >
-): Promise<WeaponTypeDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('weapon_type')
     .update(weaponType)
     .eq('id', id)
-    .select('id, weapon_type_name')
-    .single()
 
   if (error) throw new Error(`Error Updating Weapon Type: ${error.message}`)
-  if (!data) throw new Error('Weapon Type Not Found')
-
-  return data
 }
 
 /**

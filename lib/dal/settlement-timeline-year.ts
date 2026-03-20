@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { Tables, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -254,4 +254,30 @@ export async function toggleSettlementYearCompletionStatus(
     throw new Error(
       `Error Toggling Settlement Timeline Year Completion Status: ${error.message}`
     )
+}
+
+/**
+ * Update Settlement Timeline Year
+ *
+ * Updates an existing settlement timeline year record.
+ *
+ * @param id Settlement Timeline Year ID
+ * @param settlementTimelineYear Settlement Timeline Year Data
+ */
+export async function updateSettlementTimelineYear(
+  id: string,
+  settlementTimelineYear: Omit<
+    TablesUpdate<'settlement_timeline_year'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_timeline_year')
+    .update(settlementTimelineYear)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Timeline Year: ${error.message}`)
 }

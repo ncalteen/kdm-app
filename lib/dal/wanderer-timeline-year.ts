@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { WandererTimelineYearDetail } from '@/lib/types'
 
@@ -56,4 +56,30 @@ export async function addWandererTimelineYear(
     throw new Error(`Error Adding Wanderer Timeline Year: ${error.message}`)
 
   return data.id
+}
+
+/**
+ * Update Wanderer Timeline Year
+ *
+ * Updates an existing wanderer timeline year record.
+ *
+ * @param id Wanderer Timeline Year ID
+ * @param wandererTimelineYear Wanderer Timeline Year Data
+ */
+export async function updateWandererTimelineYear(
+  id: string,
+  wandererTimelineYear: Omit<
+    TablesUpdate<'wanderer_timeline_year'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('wanderer_timeline_year')
+    .update(wandererTimelineYear)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Wanderer Timeline Year: ${error.message}`)
 }

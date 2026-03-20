@@ -126,20 +126,15 @@ export async function addLocation(
 export async function updateLocation(
   id: string,
   location: Omit<TablesUpdate<'location'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<LocationDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('location')
     .update(location)
     .eq('id', id)
-    .select('id, location_name')
-    .single()
 
   if (error) throw new Error(`Error Updating Location: ${error.message}`)
-  if (!data) throw new Error('Location Not Found')
-
-  return data
 }
 
 /**

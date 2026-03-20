@@ -91,20 +91,15 @@ export async function addKnowledge(
 export async function updateKnowledge(
   id: string,
   knowledge: Omit<TablesUpdate<'knowledge'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<KnowledgeDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('knowledge')
     .update(knowledge)
     .eq('id', id)
-    .select('id, knowledge_name, philosophy_id')
-    .single()
 
   if (error) throw new Error(`Error Updating Knowledge: ${error.message}`)
-  if (!data) throw new Error('Knowledge Not Found')
-
-  return data
 }
 
 /**

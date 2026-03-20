@@ -1,3 +1,4 @@
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -61,4 +62,30 @@ export async function addSettlementKnowledges(
 
   if (error)
     throw new Error(`Error Adding Settlement Knowledges: ${error.message}`)
+}
+
+/**
+ * Update Settlement Knowledge
+ *
+ * Updates an existing settlement knowledge record.
+ *
+ * @param id Settlement Knowledge ID
+ * @param settlementKnowledge Settlement Knowledge Data
+ */
+export async function updateSettlementKnowledge(
+  id: string,
+  settlementKnowledge: Omit<
+    TablesUpdate<'settlement_knowledge'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_knowledge')
+    .update(settlementKnowledge)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Knowledge: ${error.message}`)
 }

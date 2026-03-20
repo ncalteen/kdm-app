@@ -178,22 +178,12 @@ export async function addQuarry(
 export async function updateQuarry(
   id: string,
   quarry: Omit<TablesUpdate<'quarry'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<QuarryDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('quarry')
-    .update(quarry)
-    .eq('id', id)
-    .select(
-      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
-    )
-    .single()
+  const { error } = await supabase.from('quarry').update(quarry).eq('id', id)
 
   if (error) throw new Error(`Error Updating Quarry: ${error.message}`)
-  if (!data) throw new Error('Quarry Not Found')
-
-  return data
 }
 
 /**

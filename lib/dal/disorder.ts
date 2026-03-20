@@ -89,20 +89,15 @@ export async function addDisorder(
 export async function updateDisorder(
   id: string,
   disorder: Omit<TablesUpdate<'disorder'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<DisorderDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('disorder')
     .update(disorder)
     .eq('id', id)
-    .select('id, disorder_name')
-    .single()
 
   if (error) throw new Error(`Error Updating Disorder: ${error.message}`)
-  if (!data) throw new Error('Disorder Not Found')
-
-  return data
 }
 
 /**

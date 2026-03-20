@@ -100,21 +100,16 @@ export async function updateStrainMilestone(
     TablesUpdate<'strain_milestone'>,
     'id' | 'created_at' | 'updated_at'
   >
-): Promise<StrainMilestoneDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('strain_milestone')
     .update(strainMilestone)
     .eq('id', id)
-    .select('id, strain_milestone_name')
-    .single()
 
   if (error)
     throw new Error(`Error Updating Strain Milestone: ${error.message}`)
-  if (!data) throw new Error('Strain Milestone Not Found')
-
-  return data
 }
 
 /**

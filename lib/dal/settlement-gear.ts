@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -59,4 +59,29 @@ export async function addSettlementGear(
   if (error) throw new Error(`Error Adding Settlement Gear: ${error.message}`)
 
   return data.id
+}
+
+/**
+ * Update Settlement Gear
+ *
+ * Updates an existing settlement gear record.
+ *
+ * @param id Settlement Gear ID
+ * @param settlementGear Settlement Gear Data
+ */
+export async function updateSettlementGear(
+  id: string,
+  settlementGear: Omit<
+    TablesUpdate<'settlement_gear'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_gear')
+    .update(settlementGear)
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Updating Settlement Gear: ${error.message}`)
 }

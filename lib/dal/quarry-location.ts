@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -55,4 +55,29 @@ export async function addQuarryLocation(
   if (error) throw new Error(`Error Adding Quarry Location: ${error.message}`)
 
   return data.id
+}
+
+/**
+ * Update Quarry Location
+ *
+ * Updates an existing quarry location record.
+ *
+ * @param id Quarry Location ID
+ * @param quarryLocation Quarry Location Data
+ */
+export async function updateQuarryLocation(
+  id: string,
+  quarryLocation: Omit<
+    TablesUpdate<'quarry_location'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('quarry_location')
+    .update(quarryLocation)
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Updating Quarry Location: ${error.message}`)
 }

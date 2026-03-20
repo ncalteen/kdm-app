@@ -1,4 +1,4 @@
-import { Tables, TablesInsert } from '@/lib/database.types'
+import { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -58,4 +58,30 @@ export async function addQuarryHuntBoard(
   if (error) throw new Error(`Error Adding Quarry Hunt Board: ${error.message}`)
 
   return data.id
+}
+
+/**
+ * Update Quarry Hunt Board
+ *
+ * Updates an existing quarry hunt board record.
+ *
+ * @param id Quarry Hunt Board ID
+ * @param quarryHuntBoard Quarry Hunt Board Data
+ */
+export async function updateQuarryHuntBoard(
+  id: string,
+  quarryHuntBoard: Omit<
+    TablesUpdate<'quarry_hunt_board'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('quarry_hunt_board')
+    .update(quarryHuntBoard)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Quarry Hunt Board: ${error.message}`)
 }

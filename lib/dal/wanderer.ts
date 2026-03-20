@@ -151,22 +151,15 @@ export async function addWanderer(
 export async function updateWanderer(
   id: string,
   wanderer: Omit<TablesUpdate<'wanderer'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<WandererDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('wanderer')
     .update(wanderer)
     .eq('id', id)
-    .select(
-      'id, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
-    )
-    .single()
 
   if (error) throw new Error(`Error Updating Wanderer: ${error.message}`)
-  if (!data) throw new Error('Wanderer Not Found')
-
-  return data
 }
 
 /**

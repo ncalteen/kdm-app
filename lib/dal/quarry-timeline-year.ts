@@ -1,4 +1,4 @@
-import { Tables, TablesInsert } from '@/lib/database.types'
+import { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 
@@ -64,4 +64,30 @@ export async function addQuarryTimelineYear(
     throw new Error(`Error Adding Quarry Timeline Year: ${error.message}`)
 
   return data.id
+}
+
+/**
+ * Update Quarry Timeline Year
+ *
+ * Updates an existing quarry timeline year record.
+ *
+ * @param id Quarry Timeline Year ID
+ * @param quarryTimelineYear Quarry Timeline Year Data
+ */
+export async function updateQuarryTimelineYear(
+  id: string,
+  quarryTimelineYear: Omit<
+    TablesUpdate<'quarry_timeline_year'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('quarry_timeline_year')
+    .update(quarryTimelineYear)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Quarry Timeline Year: ${error.message}`)
 }

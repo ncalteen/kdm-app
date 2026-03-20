@@ -1,3 +1,4 @@
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -74,5 +75,33 @@ export async function addSettlementCollectiveCognitionRewards(
   if (error)
     throw new Error(
       `Error Adding Collective Cognition Rewards to Settlement: ${error.message}`
+    )
+}
+
+/**
+ * Update Settlement Collective Cognition Reward
+ *
+ * Updates an existing settlement collective cognition reward record.
+ *
+ * @param id Settlement Collective Cognition Reward ID
+ * @param data Settlement Collective Cognition Reward Data
+ */
+export async function updateSettlementCollectiveCognitionReward(
+  id: string,
+  data: Omit<
+    TablesUpdate<'settlement_collective_cognition_reward'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_collective_cognition_reward')
+    .update(data)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(
+      `Error Updating Settlement Collective Cognition Reward: ${error.message}`
     )
 }

@@ -51,20 +51,16 @@ export async function getShowdownMonsters(
 export async function updateShowdownMonster(
   monsterId: string,
   updateData: Partial<ShowdownMonsterDetail>
-): Promise<ShowdownMonsterDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('showdown_monster')
     .update(updateData)
     .eq('id', monsterId)
-    .maybeSingle()
 
   if (error)
     throw new Error(`Error Updating Showdown Monster: ${error.message}`)
-  if (!data) throw new Error('Showdown Monster Not Found')
-
-  return data
 }
 
 /**

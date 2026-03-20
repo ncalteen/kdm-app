@@ -104,20 +104,15 @@ export async function updateSeedPattern(
     TablesUpdate<'seed_pattern'>,
     'id' | 'created_at' | 'updated_at'
   >
-): Promise<SeedPatternDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('seed_pattern')
     .update(seedPattern)
     .eq('id', id)
-    .select('id, seed_pattern_name')
-    .single()
 
   if (error) throw new Error(`Error Updating Seed Pattern: ${error.message}`)
-  if (!data) throw new Error('Seed Pattern Not Found')
-
-  return data
 }
 
 /**

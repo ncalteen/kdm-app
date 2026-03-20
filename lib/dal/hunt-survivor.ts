@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { HuntSurvivorDetail } from '@/lib/types'
 
@@ -59,4 +59,29 @@ export async function addHuntSurvivor(
   if (error) throw new Error(`Error Adding Hunt Survivor: ${error.message}`)
 
   return data.id
+}
+
+/**
+ * Update Hunt Survivor
+ *
+ * Updates an existing hunt survivor record.
+ *
+ * @param id Hunt Survivor ID
+ * @param huntSurvivor Hunt Survivor Data
+ */
+export async function updateHuntSurvivor(
+  id: string,
+  huntSurvivor: Omit<
+    TablesUpdate<'hunt_survivor'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('hunt_survivor')
+    .update(huntSurvivor)
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Updating Hunt Survivor: ${error.message}`)
 }

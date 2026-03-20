@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { HuntHuntBoardDetail } from '@/lib/types'
 
@@ -58,4 +58,30 @@ export async function addHuntHuntBoard(
   if (error) throw new Error(`Error Adding Hunt Board: ${error.message}`)
 
   return data
+}
+
+/**
+ * Update Hunt Hunt Board
+ *
+ * Updates an existing hunt board record.
+ *
+ * @param id Hunt Board ID
+ * @param huntHuntBoard Hunt Board Data
+ * @returns Updated Hunt Board
+ */
+export async function updateHuntHuntBoard(
+  id: string,
+  huntHuntBoard: Omit<
+    TablesUpdate<'hunt_hunt_board'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('hunt_hunt_board')
+    .update(huntHuntBoard)
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Updating Hunt Board: ${error.message}`)
 }

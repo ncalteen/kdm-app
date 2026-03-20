@@ -44,20 +44,16 @@ export async function getShowdownAIDecks(
 export async function updateShowdownAIDeck(
   aiDeckId: string,
   updateData: Partial<ShowdownAIDeckDetail>
-): Promise<ShowdownAIDeckDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('showdown_ai_deck')
     .update(updateData)
     .eq('id', aiDeckId)
-    .maybeSingle()
 
   if (error)
     throw new Error(`Error Updating Showdown AI Deck: ${error.message}`)
-  if (!data) throw new Error('Showdown AI Deck Not Found')
-
-  return data
 }
 
 /**

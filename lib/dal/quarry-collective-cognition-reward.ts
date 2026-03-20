@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -60,4 +60,32 @@ export async function addQuarryCollectiveCognitionReward(
     )
 
   return data.id
+}
+
+/**
+ * Update Quarry Collective Cognition Reward
+ *
+ * Updates an existing quarry collective cognition reward record.
+ *
+ * @param id Quarry Collective Cognition Reward ID
+ * @param quarryCCR Quarry Collective Cognition Reward Data
+ */
+export async function updateQuarryCollectiveCognitionReward(
+  id: string,
+  quarryCCR: Omit<
+    TablesUpdate<'quarry_collective_cognition_reward'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('quarry_collective_cognition_reward')
+    .update(quarryCCR)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(
+      `Error Updating Quarry Collective Cognition Reward: ${error.message}`
+    )
 }

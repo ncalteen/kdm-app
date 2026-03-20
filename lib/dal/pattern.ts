@@ -89,20 +89,12 @@ export async function addPattern(
 export async function updatePattern(
   id: string,
   pattern: Omit<TablesUpdate<'pattern'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<PatternDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('pattern')
-    .update(pattern)
-    .eq('id', id)
-    .select('id, pattern_name')
-    .single()
+  const { error } = await supabase.from('pattern').update(pattern).eq('id', id)
 
   if (error) throw new Error(`Error Updating Pattern: ${error.message}`)
-  if (!data) throw new Error('Pattern Not Found')
-
-  return data
 }
 
 /**

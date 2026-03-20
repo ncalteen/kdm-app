@@ -47,20 +47,16 @@ export async function getShowdownSurvivors(
 export async function updateShowdownSurvivor(
   survivorId: string,
   updateData: Partial<ShowdownSurvivorDetail>
-): Promise<ShowdownSurvivorDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('showdown_survivor')
     .update(updateData)
     .eq('id', survivorId)
-    .maybeSingle()
 
   if (error)
     throw new Error(`Error Updating Showdown Survivor: ${error.message}`)
-  if (!data) throw new Error('Showdown Survivor Not Found')
-
-  return data
 }
 
 /**

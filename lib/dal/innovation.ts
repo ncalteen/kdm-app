@@ -136,20 +136,15 @@ export async function updateInnovation(
     TablesUpdate<'innovation'>,
     'id' | 'created_at' | 'updated_at'
   >
-): Promise<InnovationDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('innovation')
     .update(innovation)
     .eq('id', id)
-    .select('id, innovation_name')
-    .single()
 
   if (error) throw new Error(`Error Updating Innovation: ${error.message}`)
-  if (!data) throw new Error('Innovation Not Found')
-
-  return data
 }
 
 /**

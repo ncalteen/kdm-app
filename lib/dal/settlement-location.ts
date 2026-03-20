@@ -1,3 +1,4 @@
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -63,4 +64,30 @@ export async function addSettlementLocations(
 
   if (error)
     throw new Error(`Error Adding Settlement Locations: ${error.message}`)
+}
+
+/**
+ * Update Settlement Location
+ *
+ * Updates an existing settlement location record.
+ *
+ * @param id Settlement Location ID
+ * @param settlementLocation Settlement Location Data
+ */
+export async function updateSettlementLocation(
+  id: string,
+  settlementLocation: Omit<
+    TablesUpdate<'settlement_location'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_location')
+    .update(settlementLocation)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Location: ${error.message}`)
 }

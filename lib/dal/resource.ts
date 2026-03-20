@@ -93,20 +93,15 @@ export async function addResource(
 export async function updateResource(
   id: string,
   resource: Omit<TablesUpdate<'resource'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<ResourceDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('resource')
     .update(resource)
     .eq('id', id)
-    .select('id, resource_name, category, quarry_id, resource_types')
-    .single()
 
   if (error) throw new Error(`Error Updating Resource: ${error.message}`)
-  if (!data) throw new Error('Resource Not Found')
-
-  return data
 }
 
 /**

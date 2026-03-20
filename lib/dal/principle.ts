@@ -140,20 +140,15 @@ export async function addPrinciple(
 export async function updatePrinciple(
   id: string,
   principle: Omit<TablesUpdate<'principle'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<PrincipleDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('principle')
     .update(principle)
     .eq('id', id)
-    .select('id, principle_name, option_1_name, option_2_name, campaign_types')
-    .single()
 
   if (error) throw new Error(`Error Updating Principle: ${error.message}`)
-  if (!data) throw new Error('Principle Not Found')
-
-  return data
 }
 
 /**

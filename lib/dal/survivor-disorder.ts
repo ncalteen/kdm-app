@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { Tables, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -80,4 +80,30 @@ export async function removeSurvivorDisorder(
 
   if (error)
     throw new Error(`Error Removing Survivor Disorder: ${error.message}`)
+}
+
+/**
+ * Update Survivor Disorder
+ *
+ * Updates an existing survivor disorder record.
+ *
+ * @param id Survivor Disorder ID
+ * @param survivorDisorder Survivor Disorder Data
+ */
+export async function updateSurvivorDisorder(
+  id: string,
+  survivorDisorder: Omit<
+    TablesUpdate<'survivor_disorder'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('survivor_disorder')
+    .update(survivorDisorder)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Survivor Disorder: ${error.message}`)
 }

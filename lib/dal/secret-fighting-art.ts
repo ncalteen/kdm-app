@@ -108,21 +108,16 @@ export async function updateSecretFightingArt(
     TablesUpdate<'secret_fighting_art'>,
     'id' | 'created_at' | 'updated_at'
   >
-): Promise<SecretFightingArtDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('secret_fighting_art')
     .update(secretFightingArt)
     .eq('id', id)
-    .select('id, secret_fighting_art_name')
-    .single()
 
   if (error)
     throw new Error(`Error Updating Secret Fighting Art: ${error.message}`)
-  if (!data) throw new Error('Secret Fighting Art Not Found')
-
-  return data
 }
 
 /**

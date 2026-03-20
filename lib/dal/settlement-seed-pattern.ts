@@ -63,3 +63,29 @@ export async function addSettlementSeedPatterns(
   if (error)
     throw new Error(`Error Adding Settlement Seed Patterns: ${error.message}`)
 }
+
+/**
+ * Update Settlement Seed Pattern
+ *
+ * Updates an existing settlement seed pattern record.
+ *
+ * @param id Settlement Seed Pattern ID
+ * @param settlementSeedPattern Settlement Seed Pattern Data
+ */
+export async function updateSettlementSeedPattern(
+  id: string,
+  settlementSeedPattern: {
+    seed_pattern_id?: string
+    settlement_id?: string
+  }
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_seed_pattern')
+    .update(settlementSeedPattern)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Seed Pattern: ${error.message}`)
+}

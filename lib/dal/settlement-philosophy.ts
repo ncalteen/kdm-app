@@ -1,3 +1,4 @@
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -64,4 +65,30 @@ export async function addSettlementPhilosophies(
 
   if (error)
     throw new Error(`Error Adding Settlement Philosophies: ${error.message}`)
+}
+
+/**
+ * Update Settlement Philosophy
+ *
+ * Updates an existing settlement philosophy record.
+ *
+ * @param id Settlement Philosophy ID
+ * @param settlementPhilosophy Settlement Philosophy Data
+ */
+export async function updateSettlementPhilosophy(
+  id: string,
+  settlementPhilosophy: Omit<
+    TablesUpdate<'settlement_philosophy'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_philosophy')
+    .update(settlementPhilosophy)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Philosophy: ${error.message}`)
 }

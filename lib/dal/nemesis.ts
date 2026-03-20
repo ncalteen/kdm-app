@@ -176,20 +176,12 @@ export async function addNemesis(
 export async function updateNemesis(
   id: string,
   nemesis: Omit<TablesUpdate<'nemesis'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<NemesisDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('nemesis')
-    .update(nemesis)
-    .eq('id', id)
-    .select('id, alternate_id, monster_name, multi_monster, node, vignette_id')
-    .single()
+  const { error } = await supabase.from('nemesis').update(nemesis).eq('id', id)
 
   if (error) throw new Error(`Error Updating Nemesis: ${error.message}`)
-  if (!data) throw new Error('Nemesis Not Found')
-
-  return data
 }
 
 /**

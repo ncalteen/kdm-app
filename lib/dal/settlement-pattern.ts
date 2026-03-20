@@ -1,3 +1,4 @@
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -61,4 +62,30 @@ export async function addSettlementPatterns(
 
   if (error)
     throw new Error(`Error Adding Settlement Patterns: ${error.message}`)
+}
+
+/**
+ * Update Settlement Pattern
+ *
+ * Updates an existing settlement pattern record.
+ *
+ * @param id Settlement Pattern ID
+ * @param settlementPattern Settlement Pattern Data
+ */
+export async function updateSettlementPattern(
+  id: string,
+  settlementPattern: Omit<
+    TablesUpdate<'settlement_pattern'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_pattern')
+    .update(settlementPattern)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Pattern: ${error.message}`)
 }

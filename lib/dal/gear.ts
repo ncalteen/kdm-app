@@ -91,20 +91,12 @@ export async function addGear(
 export async function updateGear(
   id: string,
   gear: Omit<TablesUpdate<'gear'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<GearDetail> {
+): Promise<void> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('gear')
-    .update(gear)
-    .eq('id', id)
-    .select('id, gear_name, location_id')
-    .single()
+  const { error } = await supabase.from('gear').update(gear).eq('id', id)
 
   if (error) throw new Error(`Error Updating Gear: ${error.message}`)
-  if (!data) throw new Error('Gear Not Found')
-
-  return data
 }
 
 /**
