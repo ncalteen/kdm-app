@@ -21,7 +21,7 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -63,24 +63,12 @@ export function ListCard({
   const [items, setItems] = useState<string[]>(initialItems)
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
 
-  // Track previous prop values to reset state during render when the source
-  // data or settlement changes.
-  const [prevInitialItems, setPrevInitialItems] =
-    useState<string[]>(initialItems)
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (
-    initialItems !== prevInitialItems ||
-    selectedSettlement?.id !== prevSettlementId
-  ) {
-    setPrevInitialItems(initialItems)
-    setPrevSettlementId(selectedSettlement?.id ?? null)
+  // Reset state when the source data or settlement changes.
+  useEffect(() => {
     setItems(initialItems)
     setEditingIndices(new Set())
     setIsAddingNew(false)
-  }
+  }, [initialItems, selectedSettlement?.id])
 
   const sensors = useSensors(
     useSensor(PointerSensor),
