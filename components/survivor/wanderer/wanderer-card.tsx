@@ -17,7 +17,7 @@ import {
   SURVIVOR_STATE_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -47,8 +47,6 @@ export function WandererCard({
   setSurvivors,
   survivors
 }: WandererCardProps): ReactElement {
-  const survivorIdRef = useRef<string | undefined>(undefined)
-
   const [aenasState, setAenasState] = useState<string>(
     selectedSurvivor?.aenas_state ?? AenasState.HUNGRY
   )
@@ -56,11 +54,10 @@ export function WandererCard({
     selectedSurvivor?.disposition ?? 0
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  useEffect(() => {
     setAenasState(selectedSurvivor?.aenas_state ?? AenasState.HUNGRY)
     setDisposition(selectedSurvivor?.disposition ?? 0)
-  }
+  }, [selectedSurvivor?.id, selectedSurvivor?.aenas_state, selectedSurvivor?.disposition])
 
   /**
    * Handles state selection changes (for Aenas).
