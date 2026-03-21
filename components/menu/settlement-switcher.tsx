@@ -13,11 +13,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
-import {
-  getHuntId,
-  getSettlementPhaseId,
-  getShowdownId
-} from '@/lib/dal/settlement'
 import { getSettlementForUser } from '@/lib/dal/user'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { SettlementDetail } from '@/lib/types'
@@ -114,23 +109,7 @@ export function SettlementSwitcher({
    */
   const handleSettlementSelect = (settlementId: string) => {
     setIsCreatingNewSettlement(false)
-
-    Promise.all([
-      getHuntId(settlementId),
-      getSettlementPhaseId(settlementId),
-      getShowdownId(settlementId)
-    ])
-      .then(([huntId, settlementPhaseId, showdownId]) => {
-        setSelectedSettlementId(settlementId)
-        setSelectedHuntId(huntId)
-        setSelectedSettlementPhaseId(settlementPhaseId)
-        setSelectedShowdownId(showdownId)
-        setSelectedSurvivorId(null)
-      })
-      .catch((err: unknown) => {
-        console.error('Settlement Select Error:', err)
-        setError(err instanceof Error ? err.message : 'Unknown Error')
-      })
+    setSelectedSettlementId(settlementId)
   }
 
   if (isLoading)
