@@ -270,7 +270,12 @@ export type QuarryDetail = Omit<
 export type ResourceDetail = Omit<
   Tables<'resource'>,
   'created_at' | 'updated_at' | 'custom' | 'user_id'
->
+> & {
+  /** Quarry Monster Name (joined from quarry table) */
+  quarry_monster_name: string | null
+  /** Quarry Node (joined from quarry table) */
+  quarry_node: string | null
+}
 
 /**
  * Settlement Detail
@@ -446,8 +451,14 @@ export type SettlementDetail = Tables<'settlement'> & {
     category: string
     /** Settlement Resource ID */
     id: string
+    /** Quantity */
+    quantity: number
     /** Quarry ID */
     quarry_id: string | null
+    /** Quarry Monster Name */
+    quarry_monster_name: string | null
+    /** Quarry Node */
+    quarry_node: string | null
     /** Resource ID */
     resource_id: string
     /** Resource Name */

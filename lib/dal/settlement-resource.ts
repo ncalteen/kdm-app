@@ -20,26 +20,59 @@ export async function getSettlementResources(
   const { data, error } = await supabase
     .from('settlement_resource')
     .select(
-      'id, resource_id, quantity, resource(category, quarry_id, resource_name, resource_types)'
+      'id, resource_id, quantity, resource(category, quarry_id, resource_name, resource_types, quarry(monster_name, node))'
     )
     .eq('settlement_id', settlementId)
 
   if (error)
     throw new Error(`Error Fetching Settlement Resources: ${error.message}`)
 
+  console.log(
+    data?.map((item) => {
+      const res = item.resource as unknown as {
+        category: string
+        quarry_id: string | null
+        resource_name: string
+        resource_types: string[]
+        quarry: { monster_name: string; node: string } | null
+      }
+
+      return {
+        category: res.category,
+        id: item.id,
+        quantity: item.quantity,
+        quarry_id: res.quarry_id,
+        quarry_monster_name: res.quarry?.monster_name ?? null,
+        quarry_node: res.quarry?.node ?? null,
+        resource_id: item.resource_id,
+        resource_name: res.resource_name,
+        resource_types: res.resource_types
+      }
+    })
+  )
+
   return (
-    data?.map((item) => ({
-      category: (item.resource as unknown as { category: string }).category,
-      id: item.id,
-      quantity: item.quantity,
-      quarry_id: (item.resource as unknown as { quarry_id: string | null })
-        .quarry_id,
-      resource_id: item.resource_id,
-      resource_name: (item.resource as unknown as { resource_name: string })
-        .resource_name,
-      resource_types: (item.resource as unknown as { resource_types: string[] })
-        .resource_types
-    })) ?? []
+    data?.map((item) => {
+      const res = item.resource as unknown as {
+        category: string
+        quarry_id: string | null
+        resource_name: string
+        resource_types: string[]
+        quarry: { monster_name: string; node: string } | null
+      }
+
+      return {
+        category: res.category,
+        id: item.id,
+        quantity: item.quantity,
+        quarry_id: res.quarry_id,
+        quarry_monster_name: res.quarry?.monster_name ?? null,
+        quarry_node: res.quarry?.node ?? null,
+        resource_id: item.resource_id,
+        resource_name: res.resource_name,
+        resource_types: res.resource_types
+      }
+    }) ?? []
   )
 }
 
@@ -55,22 +88,27 @@ export async function getSettlementResources(
 export async function addSettlementResources(
   resourceIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<{ id: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (resourceIds.length === 0) return
+  if (resourceIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_resource').insert(
-    resourceIds.map((resourceId) => ({
-      resource_id: resourceId,
-      settlement_id: settlementId,
-      quantity: 0
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_resource')
+    .insert(
+      resourceIds.map((resourceId) => ({
+        resource_id: resourceId,
+        settlement_id: settlementId,
+        quantity: 0
+      }))
+    )
+    .select('id')
 
   if (error)
     throw new Error(`Error Adding Settlement Resources: ${error.message}`)
+
+  return data
 }
 
 /**
