@@ -14,8 +14,8 @@ import { ShowdownDetail } from '@/lib/types'
  */
 export async function getShowdown(
   settlementId: string | null
-): Promise<ShowdownDetail> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
+): Promise<ShowdownDetail | null> {
+  if (!settlementId) return null
 
   const supabase = createClient()
 
@@ -26,7 +26,7 @@ export async function getShowdown(
     .maybeSingle()
 
   if (error) throw new Error(`Error Fetching Showdown: ${error.message}`)
-  if (!data) throw new Error('Showdown Not Found')
+  if (!data) return null
 
   const [showdownMonsters, showdownSurvivors] = await Promise.all([
     getShowdownMonsters(data.id),

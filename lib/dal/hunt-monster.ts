@@ -12,8 +12,8 @@ import { HuntMonsterDetail } from '@/lib/types'
  */
 export async function getHuntMonsters(
   huntId: string | null | undefined
-): Promise<{ [key: string]: HuntMonsterDetail }> {
-  if (!huntId) throw new Error('Required: Hunt ID')
+): Promise<{ [key: string]: HuntMonsterDetail } | null> {
+  if (!huntId) return null
 
   const supabase = createClient()
 
@@ -25,7 +25,7 @@ export async function getHuntMonsters(
     .eq('hunt_id', huntId)
 
   if (error) throw new Error(`Error Fetching Hunt Monsters: ${error.message}`)
-  if (!data) throw new Error('Hunt Monsters Not Found')
+  if (!data) return null
 
   const huntMonsterMap: { [key: string]: HuntMonsterDetail } = {}
 

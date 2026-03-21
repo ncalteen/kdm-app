@@ -12,8 +12,8 @@ import { ShowdownMonsterDetail } from '@/lib/types'
  */
 export async function getShowdownMonsters(
   showdownId: string | null | undefined
-): Promise<{ [key: string]: ShowdownMonsterDetail }> {
-  if (!showdownId) throw new Error('Required: Showdown ID')
+): Promise<{ [key: string]: ShowdownMonsterDetail } | null> {
+  if (!showdownId) return null
 
   const supabase = createClient()
 
@@ -26,7 +26,7 @@ export async function getShowdownMonsters(
 
   if (error)
     throw new Error(`Error Fetching Showdown Monsters: ${error.message}`)
-  if (!data) throw new Error('Showdown Monsters Not Found')
+  if (!data) return null
 
   const showdownMonsterMap: { [key: string]: ShowdownMonsterDetail } = {}
 

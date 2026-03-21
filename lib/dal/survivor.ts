@@ -273,8 +273,8 @@ export async function getSurvivor(
  */
 export async function getSurvivors(
   settlementId: string | null
-): Promise<SurvivorDetail[]> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
+): Promise<SurvivorDetail[] | null> {
+  if (!settlementId) return null
 
   const supabase = createClient()
 
@@ -287,7 +287,7 @@ export async function getSurvivors(
   if (survivorsError)
     throw new Error(`Error Fetching Survivors: ${survivorsError.message}`)
 
-  if (!survivors?.length) return []
+  if (!survivors?.length) return null
 
   const survivorIds = survivors.map((s) => s.id)
 

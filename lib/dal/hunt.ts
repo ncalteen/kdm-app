@@ -15,8 +15,8 @@ import { HuntDetail } from '@/lib/types'
  */
 export async function getHunt(
   settlementId: string | null | undefined
-): Promise<HuntDetail> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
+): Promise<HuntDetail | null> {
+  if (!settlementId) return null
 
   const supabase = createClient()
 
@@ -29,7 +29,7 @@ export async function getHunt(
     .maybeSingle()
 
   if (error) throw new Error(`Error Fetching Hunt: ${error.message}`)
-  if (!data) throw new Error('Hunt Not Found')
+  if (!data) return null
 
   const [huntHuntBoard, huntMonsters, huntSurvivors] = await Promise.all([
     getHuntHuntBoard(data.id),

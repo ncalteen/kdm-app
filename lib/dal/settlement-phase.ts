@@ -12,8 +12,8 @@ import { SettlementPhaseDetail } from '@/lib/types'
  */
 export async function getSettlementPhase(
   settlementId: string | null | undefined
-): Promise<SettlementPhaseDetail> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
+): Promise<SettlementPhaseDetail | null> {
+  if (!settlementId) return null
 
   const supabase = createClient()
 
@@ -25,7 +25,7 @@ export async function getSettlementPhase(
 
   if (error)
     throw new Error(`Error Fetching Settlement Phase: ${error.message}`)
-  if (!data) throw new Error('Settlement Phase Not Found')
+  if (!data) return null
 
   const { data: returningData, error: returningError } = await supabase
     .from('settlement_phase_returning_survivor')
