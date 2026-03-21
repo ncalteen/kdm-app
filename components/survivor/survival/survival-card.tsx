@@ -5,14 +5,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import {
-  getHuntSurvivorSurvivalTokens,
-  updateHuntSurvivorSurvivalTokens
-} from '@/lib/dal/hunt-survivor'
-import {
-  getShowdownSurvivorSurvivalTokens,
-  updateShowdownSurvivorSurvivalTokens
-} from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { DatabaseSurvivorType, SurvivorCardMode } from '@/lib/enums'
 import {

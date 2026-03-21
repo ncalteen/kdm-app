@@ -484,7 +484,10 @@ export function PhilosophyCard({
     <Card
       className={cn(
         'p-2 border-0',
-        !selectedSurvivor?.can_use_fighting_arts_knowledges && 'bg-red-500/40'
+        !(
+          survivors.find((s) => s.id === selectedSurvivor?.id)
+            ?.can_use_fighting_arts_knowledges ?? true
+        ) && 'bg-red-500/40'
       )}>
       {/* Title */}
       <CardHeader className="p-0">

@@ -71,8 +71,10 @@ export function KnowledgeCard({
     observation_rank: selectedSurvivor?.knowledge_2_observation_rank ?? 0,
     rank_up: selectedSurvivor?.knowledge_2_rank_up ?? null
   })
-  const [canUseFightingArtsKnowledges, setCanUseFightingArtsKnowledges] =
-    useState(selectedSurvivor?.can_use_fighting_arts_knowledges ?? true)
+
+  const canUseFightingArtsKnowledges =
+    survivors.find((s) => s.id === selectedSurvivor?.id)
+      ?.can_use_fighting_arts_knowledges ?? true
 
   // Reset local state when survivor changes (different ID)
   if (survivorIdRef.current !== selectedSurvivor?.id) {
@@ -96,9 +98,6 @@ export function KnowledgeCard({
       observation_rank: selectedSurvivor?.knowledge_2_observation_rank ?? 0,
       rank_up: selectedSurvivor?.knowledge_2_rank_up ?? null
     })
-    setCanUseFightingArtsKnowledges(
-      selectedSurvivor?.can_use_fighting_arts_knowledges ?? true
-    )
   }
 
   /**
@@ -154,8 +153,6 @@ export function KnowledgeCard({
       const newValue = !checked
       const oldValue = canUseFightingArtsKnowledges
 
-      setCanUseFightingArtsKnowledges(newValue)
-
       setSurvivors(
         survivors.map((s) =>
           s.id === selectedSurvivor?.id
@@ -175,7 +172,6 @@ export function KnowledgeCard({
           )
         )
         .catch((error) => {
-          setCanUseFightingArtsKnowledges(oldValue)
           setSurvivors(
             survivors.map((s) =>
               s.id === selectedSurvivor?.id
