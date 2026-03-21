@@ -92,7 +92,7 @@ export function SelectWeaponType({
               {Object.values(weaponTypes).map((type) => (
                 <CommandItem
                   key={type.id}
-                  value={type.id}
+                  value={type.weapon_type_name}
                   onSelect={() => handleTypeSelect(type.id)}>
                   <Check
                     className={cn(

@@ -67,7 +67,7 @@ export function SelectDisorder({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="justify-between text-sm min-w-[180px]"
+          className="justify-between text-sm min-w-[280px]"
           disabled={disabled}>
           {value && disorders[value]
             ? disorders[value].disorder_name
