@@ -150,7 +150,7 @@ export const NemesisItem = memo(function NemesisItem({
                 onCheckedChange={(checked) =>
                   onToggleLevel(index, field, !!checked)
                 }
-                disabled={!availableSet.has(level)}
+                disabled={!unlocked || !availableSet.has(level)}
               />
               <Label className="text-xs" htmlFor={`nemesis-${index}-${field}`}>
                 {label}
