@@ -748,9 +748,10 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     setSelectedSettlementState(settlement)
     setSelectedSettlementIdState(settlement ? settlement.id : null)
 
-    // If a settlement is selected, also attempt to fetch the hunt, settlement
-    // phase, and showdown details to update the state.
-    if (settlement)
+    // Only re-fetch related data when switching to a DIFFERENT settlement.
+    // Same-ID updates are optimistic UI mutations and must not trigger
+    // side-effects such as re-fetching or resetting the active tab.
+    if (settlement && settlement.id !== selectedSettlementId)
       Promise.all([
         getHunt(settlement.id),
         getSettlementPhase(settlement.id),
