@@ -1,3 +1,4 @@
+import { LOCAL_STORAGE_KEY } from '@/lib/common'
 import { ColorChoice, MonsterNode, MonsterType } from '@/lib/enums'
 import { SettlementDetail } from '@/lib/types'
 import { clsx, type ClassValue } from 'clsx'
@@ -442,5 +443,5 @@ export const getAvailableNodes = (type: MonsterType): MonsterNode[] => {
  * @param local Data to Save
  */
 export function saveToLocalStorage(local: unknown) {
-  localStorage.setItem('kdm-archivist-local', JSON.stringify(local))
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(local))
 }
