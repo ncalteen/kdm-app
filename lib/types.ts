@@ -346,6 +346,8 @@ export type SettlementDetail = Tables<'settlement'> & {
   milestones: {
     /** Complete */
     complete: boolean
+    /** Event Name */
+    event_name: string
     /** Settlement Milestone ID */
     id: string
     /** Milestone ID */
