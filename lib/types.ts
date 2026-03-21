@@ -122,11 +122,11 @@ export type HuntAIDeckDetail = Omit<
  */
 export type HuntDetail = Omit<Tables<'hunt'>, 'created_at' | 'updated_at'> & {
   /** Hunt Board */
-  hunt_board: HuntHuntBoardDetail
+  hunt_board: HuntHuntBoardDetail | null
   /** Hunt Monsters */
-  hunt_monsters: { [key: string]: HuntMonsterDetail }
+  hunt_monsters: { [key: string]: HuntMonsterDetail } | null
   /** Hunt Survivors */
-  hunt_survivors: { [key: string]: HuntSurvivorDetail }
+  hunt_survivors: { [key: string]: HuntSurvivorDetail } | null
 }
 
 /**
@@ -523,9 +523,9 @@ export type ShowdownDetail = Omit<
   'created_at' | 'updated_at'
 > & {
   /** Showdown Monsters */
-  showdown_monsters: { [key: string]: ShowdownMonsterDetail }
+  showdown_monsters: { [key: string]: ShowdownMonsterDetail } | null
   /** Showdown Survivors */
-  showdown_survivors: { [key: string]: ShowdownSurvivorDetail }
+  showdown_survivors: { [key: string]: ShowdownSurvivorDetail } | null
 }
 
 /**
