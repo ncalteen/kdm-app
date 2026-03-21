@@ -111,6 +111,25 @@ export function PrinciplesCard({
   }, [availablePrinciples, selectedSettlement?.principles])
 
   /**
+   * Sorted Principles
+   *
+   * Alphabetically sorted view of the settlement's principles, preserving
+   * original indices so handlers operate on the correct source array element.
+   */
+  const sortedPrinciples = useMemo(
+    () =>
+      (selectedSettlement?.principles ?? [])
+        .map((item, originalIndex) => ({
+          item,
+          originalIndex
+        }))
+        .sort((a, b) =>
+          a.item.principle_name.localeCompare(b.item.principle_name)
+        ),
+    [selectedSettlement?.principles]
+  )
+
+  /**
    * Handle Add Principle
    *
    * Optimistically adds a principle to the settlement, then persists to the
@@ -321,13 +340,13 @@ export function PrinciplesCard({
             )}
 
             {hasFetched &&
-              selectedSettlement?.principles.map((principle, index) => (
-                <div key={principle.id}>
+              sortedPrinciples.map(({ item, originalIndex }) => (
+                <div key={item.id}>
                   <PrincipleItem
-                    index={index}
+                    index={originalIndex}
                     onOptionSelect={handleOptionSelect}
                     onRemove={handleRemove}
-                    principle={principle}
+                    principle={item}
                   />
                   <Separator className="my-1" />
                 </div>

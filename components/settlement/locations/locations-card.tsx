@@ -108,6 +108,25 @@ export function LocationsCard({
   }, [availableLocations, selectedSettlement?.locations])
 
   /**
+   * Sorted Locations
+   *
+   * Alphabetically sorted view of the settlement's locations, preserving
+   * original indices so handlers operate on the correct source array element.
+   */
+  const sortedLocations = useMemo(
+    () =>
+      (selectedSettlement?.locations ?? [])
+        .map((item, originalIndex) => ({
+          item,
+          originalIndex
+        }))
+        .sort((a, b) =>
+          a.item.location_name.localeCompare(b.item.location_name)
+        ),
+    [selectedSettlement?.locations]
+  )
+
+  /**
    * Handle Add Location
    *
    * Optimistically adds a location to the settlement, then persists to the DB.
@@ -289,11 +308,11 @@ export function LocationsCard({
             )}
 
             {hasFetched &&
-              selectedSettlement?.locations.map((location, index) => (
+              sortedLocations.map(({ item, originalIndex }) => (
                 <LocationItem
-                  key={location.id}
-                  index={index}
-                  location={location}
+                  key={item.id}
+                  index={originalIndex}
+                  location={item}
                   onRemove={handleRemove}
                   onToggleUnlocked={handleToggleUnlocked}
                 />

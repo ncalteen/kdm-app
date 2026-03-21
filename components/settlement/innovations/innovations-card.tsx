@@ -15,7 +15,14 @@ import {
 } from '@/lib/messages'
 import { InnovationDetail, SettlementDetail } from '@/lib/types'
 import { LightbulbIcon, PlusIcon, TrashIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 import { toast } from 'sonner'
 
 /** Settlement innovation item with junction table and innovation details */
@@ -62,6 +69,25 @@ export function InnovationsCard({
     settlementIdRef.current = selectedSettlement?.id
     setInnovations(selectedSettlement?.innovations ?? [])
   }
+
+  /**
+   * Sorted Innovations
+   *
+   * Alphabetically sorted view of the settlement's innovations, preserving
+   * original indices so handlers operate on the correct source array element.
+   */
+  const sortedInnovations = useMemo(
+    () =>
+      innovations
+        .map((item, originalIndex) => ({
+          item,
+          originalIndex
+        }))
+        .sort((a, b) =>
+          a.item.innovation_name.localeCompare(b.item.innovation_name)
+        ),
+    [innovations]
+  )
 
   useEffect(() => {
     getInnovations()
@@ -188,9 +214,9 @@ export function InnovationsCard({
       <CardContent className="p-1 pb-0">
         <div className="flex flex-col h-[400px]">
           <div className="flex-1 overflow-y-auto">
-            {innovations.map((item, index) => (
+            {sortedInnovations.map(({ item, originalIndex }) => (
               <div
-                key={`${item.id}-${index}`}
+                key={`${item.id}-${originalIndex}`}
                 className="flex items-center gap-2">
                 <span className="text-sm ml-1 flex-grow">
                   {item.innovation_name}
@@ -199,7 +225,7 @@ export function InnovationsCard({
                   variant="ghost"
                   size="icon"
                   type="button"
-                  onClick={() => handleRemove(index)}>
+                  onClick={() => handleRemove(originalIndex)}>
                   <TrashIcon className="h-4 w-4" />
                 </Button>
               </div>
