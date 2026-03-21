@@ -70,23 +70,28 @@ export async function getSettlementPrinciples(
 export async function addSettlementPrinciples(
   principleIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<{ id: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (principleIds.length === 0) return
+  if (principleIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_principle').insert(
-    principleIds.map((principleId) => ({
-      option_1_selected: false,
-      option_2_selected: false,
-      principle_id: principleId,
-      settlement_id: settlementId
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_principle')
+    .insert(
+      principleIds.map((principleId) => ({
+        option_1_selected: false,
+        option_2_selected: false,
+        principle_id: principleId,
+        settlement_id: settlementId
+      }))
+    )
+    .select('id')
 
   if (error)
     throw new Error(`Error Adding Settlement Principles: ${error.message}`)
+
+  return data
 }
 
 /**
