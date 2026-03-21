@@ -781,8 +781,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
               selectedSettlementPhaseId: settlementPhase?.id ?? null,
               selectedShowdownId: showdown?.id ?? null,
               selectedShowdownMonsterIndex: 0,
-              selectedSurvivorId: null,
-              selectedTab: TabType.TIMELINE
+              selectedSurvivorId: null
             }
 
             saveToLocalStorage(updated)
@@ -811,8 +810,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
               selectedSettlementPhaseId: null,
               selectedShowdownId: null,
               selectedShowdownMonsterIndex: 0,
-              selectedSurvivorId: null,
-              selectedTab: TabType.TIMELINE
+              selectedSurvivorId: null
             }
 
             saveToLocalStorage(updated)
@@ -865,8 +863,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
             selectedSettlementPhaseId: settlementPhase?.id ?? null,
             selectedShowdownId: showdown?.id ?? null,
             selectedShowdownMonsterIndex: 0,
-            selectedSurvivorId: null,
-            selectedTab: TabType.TIMELINE
+            selectedSurvivorId: null
           }
 
           saveToLocalStorage(updated)
