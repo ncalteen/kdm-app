@@ -14,6 +14,11 @@ import {
 } from 'lucide-react'
 
 /**
+ * Local Storage Key
+ */
+export const LOCAL_STORAGE_KEY = 'kdm-archivist-local'
+
+/**
  * Basic Hunt Board Configuration
  */
 export const basicHuntBoard = {
