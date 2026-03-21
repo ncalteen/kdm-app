@@ -1,7 +1,11 @@
 import { ListCard } from '@/components/generic/list-card'
 import { CreateSettlementCard } from '@/components/settlement/create-settlement-card'
+import { InnovationsCard } from '@/components/settlement/innovations/innovations-card'
+import { LocationsCard } from '@/components/settlement/locations/locations-card'
+import { MilestonesCard } from '@/components/settlement/milestones/milestones-card'
 import { NemesesCard } from '@/components/settlement/nemeses/nemeses-card'
 import { OverviewCard } from '@/components/settlement/overview/overview-card'
+import { PrinciplesCard } from '@/components/settlement/principles/principles-card'
 import { QuarriesCard } from '@/components/settlement/quarries/quarries-card'
 import { SquireProgressionCards } from '@/components/settlement/squires/squire-progression-cards'
 import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
@@ -302,6 +306,46 @@ export function SettlementCard({
           )}
 
           {/* Society Tab */}
+          {selectedSettlement &&
+            selectedTab === TabType.SOCIETY &&
+            selectedSettlement.campaign_type !==
+              DatabaseCampaignType['Squires of the Citadel'] && (
+              <div className="flex flex-col gap-2 pl-2">
+                <div className="flex flex-col lg:flex-row gap-2">
+                  {/* Milestones */}
+                  <div className="flex-1">
+                    <MilestonesCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                  {/* Principles */}
+                  <div className="flex-1">
+                    <PrinciplesCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-2">
+                  {/* Innovations */}
+                  <div className="flex-1">
+                    <InnovationsCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                  {/* Locations */}
+                  <div className="flex-1">
+                    <LocationsCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
           {/* Society Tab - Squires of the Citadel */}
 

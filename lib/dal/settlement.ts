@@ -20,7 +20,10 @@ import {
   getSettlementInnovations
 } from '@/lib/dal/settlement-innovation'
 import { getSettlementKnowledges } from '@/lib/dal/settlement-knowledge'
-import { addSettlementLocations } from '@/lib/dal/settlement-location'
+import {
+  addSettlementLocations,
+  getSettlementLocations
+} from '@/lib/dal/settlement-location'
 import {
   addSettlementMilestones,
   getSettlementMilestones
@@ -350,6 +353,7 @@ export async function getSettlement(
     gear,
     innovations,
     knowledges,
+    locations,
     milestones,
     nemeses,
     patterns,
@@ -363,6 +367,7 @@ export async function getSettlement(
     getSettlementGear(settlementId),
     getSettlementInnovations(settlementId),
     getSettlementKnowledges(settlementId),
+    getSettlementLocations(settlementId),
     getSettlementMilestones(settlementId),
     getSettlementNemeses(settlementId),
     getSettlementPatterns(settlementId),
@@ -384,6 +389,7 @@ export async function getSettlement(
     gear,
     innovations,
     knowledges,
+    locations,
     milestones,
     nemeses,
     patterns,

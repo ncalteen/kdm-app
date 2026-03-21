@@ -48,22 +48,27 @@ export async function getSettlementLocations(
 export async function addSettlementLocations(
   locationIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<{ id: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (locationIds.length === 0) return
+  if (locationIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_location').insert(
-    locationIds.map((locationId) => ({
-      location_id: locationId,
-      settlement_id: settlementId,
-      unlocked: false
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_location')
+    .insert(
+      locationIds.map((locationId) => ({
+        location_id: locationId,
+        settlement_id: settlementId,
+        unlocked: false
+      }))
+    )
+    .select('id')
 
   if (error)
     throw new Error(`Error Adding Settlement Locations: ${error.message}`)
+
+  return data
 }
 
 /**
