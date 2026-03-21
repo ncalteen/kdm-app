@@ -50,22 +50,27 @@ export async function getSettlementMilestones(
 export async function addSettlementMilestones(
   milestoneIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<{ id: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (milestoneIds.length === 0) return
+  if (milestoneIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_milestone').insert(
-    milestoneIds.map((milestoneId) => ({
-      complete: false,
-      milestone_id: milestoneId,
-      settlement_id: settlementId
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_milestone')
+    .insert(
+      milestoneIds.map((milestoneId) => ({
+        complete: false,
+        milestone_id: milestoneId,
+        settlement_id: settlementId
+      }))
+    )
+    .select('id')
 
   if (error)
     throw new Error(`Error Adding Settlement Milestones: ${error.message}`)
+
+  return data
 }
 
 /**
