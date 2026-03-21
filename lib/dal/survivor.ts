@@ -250,7 +250,7 @@ export async function getSurvivor(
       (showdownResult.data?.length ?? 0) > 0,
     fighting_arts: (fightingArtNamesResult.data ?? []).map((x) => ({
       id: x.id,
-      name: x.fighting_art_name
+      fighting_art_name: x.fighting_art_name
     })),
     knowledge_1: knowledge1Result.data?.[0] ?? null,
     knowledge_2: knowledge2Result.data?.[0] ?? null,
@@ -502,37 +502,51 @@ export async function getSurvivors(
   )
 
   // Group junction table results by survivor_id.
-  type NameId = { id: string; name: string }
-
-  const cursedGearBySurvivor = new Map<string, NameId[]>()
+  const cursedGearBySurvivor = new Map<
+    string,
+    { id: string; gear_name: string }[]
+  >()
   for (const r of cursedGearResult.data ?? []) {
     const items = cursedGearBySurvivor.get(r.survivor_id) ?? []
-    const name = gearNameMap.get(r.gear_id)
-    if (name) items.push({ id: r.gear_id, name })
+    const gear_name = gearNameMap.get(r.gear_id)
+    if (gear_name) items.push({ id: r.gear_id, gear_name })
     cursedGearBySurvivor.set(r.survivor_id, items)
   }
 
-  const disordersBySurvivor = new Map<string, NameId[]>()
+  const disordersBySurvivor = new Map<
+    string,
+    { id: string; disorder_name: string }[]
+  >()
   for (const r of disorderResult.data ?? []) {
     const items = disordersBySurvivor.get(r.survivor_id) ?? []
-    const name = disorderNameMap.get(r.disorder_id)
-    if (name) items.push({ id: r.disorder_id, name })
+    const disorder_name = disorderNameMap.get(r.disorder_id)
+    if (disorder_name) items.push({ id: r.disorder_id, disorder_name })
     disordersBySurvivor.set(r.survivor_id, items)
   }
 
-  const fightingArtsBySurvivor = new Map<string, NameId[]>()
+  const fightingArtsBySurvivor = new Map<
+    string,
+    { id: string; fighting_art_name: string }[]
+  >()
   for (const r of fightingArtResult.data ?? []) {
     const items = fightingArtsBySurvivor.get(r.survivor_id) ?? []
-    const name = fightingArtNameMap.get(r.fighting_art_id)
-    if (name) items.push({ id: r.fighting_art_id, name })
+    const fighting_art_name = fightingArtNameMap.get(r.fighting_art_id)
+    if (fighting_art_name)
+      items.push({ id: r.fighting_art_id, fighting_art_name })
     fightingArtsBySurvivor.set(r.survivor_id, items)
   }
 
-  const secretFightingArtsBySurvivor = new Map<string, NameId[]>()
+  const secretFightingArtsBySurvivor = new Map<
+    string,
+    { id: string; secret_fighting_art_name: string }[]
+  >()
   for (const r of secretFightingArtResult.data ?? []) {
     const items = secretFightingArtsBySurvivor.get(r.survivor_id) ?? []
-    const name = secretFightingArtNameMap.get(r.secret_fighting_art_id)
-    if (name) items.push({ id: r.secret_fighting_art_id, name })
+    const secret_fighting_art_name = secretFightingArtNameMap.get(
+      r.secret_fighting_art_id
+    )
+    if (secret_fighting_art_name)
+      items.push({ id: r.secret_fighting_art_id, secret_fighting_art_name })
     secretFightingArtsBySurvivor.set(r.survivor_id, items)
   }
 
