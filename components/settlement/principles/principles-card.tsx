@@ -105,9 +105,9 @@ export function PrinciplesCard({
     const linkedIds = new Set(
       (selectedSettlement?.principles ?? []).map((p) => p.principle_id)
     )
-    return Object.values(availablePrinciples).filter(
-      (p) => !linkedIds.has(p.id)
-    )
+    return Object.values(availablePrinciples)
+      .filter((p) => !linkedIds.has(p.id))
+      .sort((a, b) => a.principle_name.localeCompare(b.principle_name))
   }, [availablePrinciples, selectedSettlement?.principles])
 
   /**

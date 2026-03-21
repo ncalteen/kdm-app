@@ -47,21 +47,26 @@ export async function getSettlementSeedPatterns(
 export async function addSettlementSeedPatterns(
   seedPatternIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<{ id: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (seedPatternIds.length === 0) return
+  if (seedPatternIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_seed_pattern').insert(
-    seedPatternIds.map((seedPatternId) => ({
-      seed_pattern_id: seedPatternId,
-      settlement_id: settlementId
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_seed_pattern')
+    .insert(
+      seedPatternIds.map((seedPatternId) => ({
+        seed_pattern_id: seedPatternId,
+        settlement_id: settlementId
+      }))
+    )
+    .select('id')
 
   if (error)
     throw new Error(`Error Adding Settlement Seed Patterns: ${error.message}`)
+
+  return data
 }
 
 /**

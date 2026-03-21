@@ -104,9 +104,9 @@ export function MilestonesCard({
     const linkedIds = new Set(
       (selectedSettlement?.milestones ?? []).map((m) => m.milestone_id)
     )
-    return Object.values(availableMilestones).filter(
-      (m) => !linkedIds.has(m.id)
-    )
+    return Object.values(availableMilestones)
+      .filter((m) => !linkedIds.has(m.id))
+      .sort((a, b) => a.milestone_name.localeCompare(b.milestone_name))
   }, [availableMilestones, selectedSettlement?.milestones])
 
   /**

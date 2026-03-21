@@ -1,12 +1,15 @@
 import { ListCard } from '@/components/generic/list-card'
 import { CreateSettlementCard } from '@/components/settlement/create-settlement-card'
+import { GearCard } from '@/components/settlement/gear/gear-card'
 import { InnovationsCard } from '@/components/settlement/innovations/innovations-card'
 import { LocationsCard } from '@/components/settlement/locations/locations-card'
 import { MilestonesCard } from '@/components/settlement/milestones/milestones-card'
 import { NemesesCard } from '@/components/settlement/nemeses/nemeses-card'
 import { OverviewCard } from '@/components/settlement/overview/overview-card'
+import { PatternsCard } from '@/components/settlement/patterns/patterns-card'
 import { PrinciplesCard } from '@/components/settlement/principles/principles-card'
 import { QuarriesCard } from '@/components/settlement/quarries/quarries-card'
+import { SeedPatternsCard } from '@/components/settlement/seed-patterns/seed-patterns-card'
 import { SquireProgressionCards } from '@/components/settlement/squires/squire-progression-cards'
 import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
 import { SettlementSurvivorsCard } from '@/components/settlement/survivors/settlement-survivors-card'
@@ -359,6 +362,39 @@ export function SettlementCard({
             )}
 
           {/* Crafting Tab */}
+          {selectedSettlement && selectedTab === TabType.CRAFTING && (
+            <div className="flex flex-col gap-2 pl-2">
+              {/* Resources */}
+              {/* <ResourcesCard
+                selectedSettlement={selectedSettlement}
+                setSelectedSettlement={setSelectedSettlement}
+              /> */}
+              {/* Gear */}
+              <GearCard
+                selectedSettlement={selectedSettlement}
+                setSelectedSettlement={setSelectedSettlement}
+              />
+
+              {/* Patterns/Seed Patterns */}
+              {selectedSettlement?.campaign_type !==
+                DatabaseCampaignType['Squires of the Citadel'] && (
+                <div className="flex flex-col md:flex-row gap-2">
+                  <div className="flex-1">
+                    <SeedPatternsCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <PatternsCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Arc Tab */}
 

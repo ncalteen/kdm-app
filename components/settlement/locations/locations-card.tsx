@@ -104,7 +104,9 @@ export function LocationsCard({
     const linkedIds = new Set(
       (selectedSettlement?.locations ?? []).map((l) => l.location_id)
     )
-    return Object.values(availableLocations).filter((l) => !linkedIds.has(l.id))
+    return Object.values(availableLocations)
+      .filter((l) => !linkedIds.has(l.id))
+      .sort((a, b) => a.location_name.localeCompare(b.location_name))
   }, [availableLocations, selectedSettlement?.locations])
 
   /**

@@ -47,21 +47,26 @@ export async function getSettlementPatterns(
 export async function addSettlementPatterns(
   patternIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<{ id: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (patternIds.length === 0) return
+  if (patternIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_pattern').insert(
-    patternIds.map((patternId) => ({
-      pattern_id: patternId,
-      settlement_id: settlementId
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_pattern')
+    .insert(
+      patternIds.map((patternId) => ({
+        pattern_id: patternId,
+        settlement_id: settlementId
+      }))
+    )
+    .select('id')
 
   if (error)
     throw new Error(`Error Adding Settlement Patterns: ${error.message}`)
+
+  return data
 }
 
 /**
