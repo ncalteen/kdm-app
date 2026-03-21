@@ -9,12 +9,14 @@ import { InnovationsCard } from '@/components/settlement/innovations/innovations
 import { LocationsCard } from '@/components/settlement/locations/locations-card'
 import { MilestonesCard } from '@/components/settlement/milestones/milestones-card'
 import { NemesesCard } from '@/components/settlement/nemeses/nemeses-card'
+import { NotesCard } from '@/components/settlement/notes/notes-card'
 import { OverviewCard } from '@/components/settlement/overview/overview-card'
 import { PatternsCard } from '@/components/settlement/patterns/patterns-card'
 import { PrinciplesCard } from '@/components/settlement/principles/principles-card'
 import { QuarriesCard } from '@/components/settlement/quarries/quarries-card'
 import { ResourcesCard } from '@/components/settlement/resources/resources-card'
 import { SeedPatternsCard } from '@/components/settlement/seed-patterns/seed-patterns-card'
+import { SettingsCard } from '@/components/settlement/settings/settings-card'
 import { SquireProgressionCards } from '@/components/settlement/squires/squire-progression-cards'
 import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
 import { SettlementSurvivorsCard } from '@/components/settlement/survivors/settlement-survivors-card'
@@ -138,9 +140,18 @@ export function SettlementCard({
   // Settings tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.SETTINGS)
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <p className="text-sm text-gray-500">Settings (coming soon)</p>
-      </div>
+      <SettingsCard
+        selectedHunt={selectedHunt}
+        selectedSettlement={selectedSettlement}
+        selectedShowdown={selectedShowdown}
+        setSelectedHunt={setSelectedHunt}
+        setSelectedHuntId={setSelectedHuntId}
+        setSelectedSettlement={setSelectedSettlement}
+        setSelectedSettlementId={setSelectedSettlementId}
+        setSelectedShowdown={setSelectedShowdown}
+        setSelectedShowdownId={setSelectedShowdownId}
+        setSelectedSurvivorId={setSelectedSurvivorId}
+      />
     )
 
   if (isCreatingNewSettlement)
@@ -441,8 +452,12 @@ export function SettlementCard({
             )}
 
           {/* Notes Tab */}
-
-          {/* Settings Tab */}
+          {selectedSettlement && selectedTab === TabType.NOTES && (
+            <NotesCard
+              selectedSettlement={selectedSettlement}
+              setSelectedSettlement={setSelectedSettlement}
+            />
+          )}
 
           {/* Hunt Tab */}
 

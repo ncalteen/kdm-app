@@ -3,13 +3,9 @@ import { NavMain } from '@/components/nav-main'
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail
 } from '@/components/ui/sidebar'
 import {
@@ -17,8 +13,6 @@ import {
   DatabaseSurvivorType,
   TabType
 } from '@/lib/enums'
-import { ERROR_MESSAGE } from '@/lib/messages'
-import { generateSeedData } from '@/lib/seed'
 import {
   HuntDetail,
   SettlementDetail,
@@ -27,10 +21,8 @@ import {
   SurvivorDetail
 } from '@/lib/types'
 import {
-  DatabaseIcon,
   HourglassIcon,
   LightbulbIcon,
-  LoaderCircleIcon,
   NotebookPenIcon,
   PawPrintIcon,
   School2Icon,
@@ -41,8 +33,7 @@ import {
   UsersIcon,
   WrenchIcon
 } from 'lucide-react'
-import { ComponentProps, ReactElement, useMemo, useTransition } from 'react'
-import { toast } from 'sonner'
+import { ComponentProps, ReactElement, useMemo } from 'react'
 
 /**
  * Primary Navigation Items
@@ -222,8 +213,6 @@ export function AppSidebar({
   setSelectedTab,
   ...props
 }: AppSidebarProps): ReactElement {
-  const [isSeeding, startSeedTransition] = useTransition()
-
   const navItems = useMemo(() => {
     const items =
       selectedSettlement?.campaign_type ===
@@ -298,39 +287,6 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarRail />
-
-      {process.env.NODE_ENV === 'development' && (
-        <SidebarFooter>
-          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-            <SidebarGroupLabel>Developer</SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  disabled={isSeeding}
-                  onClick={() => {
-                    startSeedTransition(async () => {
-                      try {
-                        await generateSeedData()
-                      } catch (err) {
-                        console.error('Seed Data Error:', err)
-                        toast.error(ERROR_MESSAGE())
-                      }
-                    })
-                  }}>
-                  {isSeeding ? (
-                    <LoaderCircleIcon className="animate-spin" />
-                  ) : (
-                    <DatabaseIcon />
-                  )}
-                  <span className="text-xs">
-                    {isSeeding ? 'Generating...' : 'Generate Seed Data'}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarFooter>
-      )}
     </Sidebar>
   )
 }
