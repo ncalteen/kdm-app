@@ -12,6 +12,7 @@ import {
   removeSettlementNemesis,
   updateSettlementNemesis
 } from '@/lib/dal/settlement-nemesis'
+import { MonsterNode } from '@/lib/enums'
 import {
   ERROR_MESSAGE,
   NEMESIS_ADDED_MESSAGE,
@@ -78,7 +79,20 @@ export function NemesesCard({
 
     let cancelled = false
 
-    Promise.all([getNemeses()])
+    Promise.all([
+      // Don't include alternates or vignettes in the dropdown
+      getNemeses(
+        [
+          MonsterNode.NN1,
+          MonsterNode.NN2,
+          MonsterNode.NN3,
+          MonsterNode.CO,
+          MonsterNode.FI
+        ],
+        false,
+        false
+      )
+    ])
       .then(([nemeses]) => {
         if (cancelled) return
 
@@ -363,22 +377,23 @@ export function NemesesCard({
               </p>
             )}
 
-            {selectedSettlement?.nemeses.map((nemesis, index) => (
-              <NemesisItem
-                key={nemesis.id}
-                index={index}
-                monsterName={nemesis.monster_name}
-                unlocked={nemesis.unlocked}
-                level1Defeated={nemesis.level_1_defeated}
-                level2Defeated={nemesis.level_2_defeated}
-                level3Defeated={nemesis.level_3_defeated}
-                level4Defeated={nemesis.level_4_defeated}
-                availableLevels={nemesis.available_levels}
-                onRemove={handleRemove}
-                onToggleUnlocked={handleToggleUnlocked}
-                onToggleLevel={handleToggleLevel}
-              />
-            ))}
+            {hasFetched &&
+              selectedSettlement?.nemeses.map((nemesis, index) => (
+                <NemesisItem
+                  key={nemesis.id}
+                  index={index}
+                  monsterName={nemesis.monster_name}
+                  unlocked={nemesis.unlocked}
+                  level1Defeated={nemesis.level_1_defeated}
+                  level2Defeated={nemesis.level_2_defeated}
+                  level3Defeated={nemesis.level_3_defeated}
+                  level4Defeated={nemesis.level_4_defeated}
+                  availableLevels={nemesis.available_levels}
+                  onRemove={handleRemove}
+                  onToggleUnlocked={handleToggleUnlocked}
+                  onToggleLevel={handleToggleLevel}
+                />
+              ))}
 
             {isAddingNew && (
               <NewNemesisItem

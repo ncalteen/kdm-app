@@ -12,12 +12,14 @@ import {
   removeSettlementQuarry,
   updateSettlementQuarry
 } from '@/lib/dal/settlement-quarry'
+import { MonsterNode } from '@/lib/enums'
 import {
   ERROR_MESSAGE,
   QUARRY_ADDED_MESSAGE,
   QUARRY_REMOVED_MESSAGE,
   QUARRY_UNLOCKED_MESSAGE
 } from '@/lib/messages'
+import { sortQuarries } from '@/lib/settlement/quarries'
 import { QuarryDetail, SettlementDetail } from '@/lib/types'
 import { PlusIcon, SwordIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
@@ -73,7 +75,14 @@ export function QuarriesCard({
 
     let cancelled = false
 
-    Promise.all([getQuarries()])
+    Promise.all([
+      // Don't include alternates or vignettes in the dropdown
+      getQuarries(
+        [MonsterNode.NQ1, MonsterNode.NQ2, MonsterNode.NQ3, MonsterNode.NQ4],
+        false,
+        false
+      )
+    ])
       .then(([quarries]) => {
         if (cancelled) return
 
@@ -153,15 +162,17 @@ export function QuarriesCard({
           // Replace the placeholder with the real row from the DB.
           setSelectedSettlement({
             ...selectedSettlement,
-            quarries: updatedQuarries.map((q) =>
-              q.id === tempId
-                ? {
-                    ...q,
-                    id: row[0].id,
-                    node: quarryInfo.node,
-                    prologue: quarryInfo.prologue
-                  }
-                : q
+            quarries: sortQuarries(
+              updatedQuarries.map((q) =>
+                q.id === tempId
+                  ? {
+                      ...q,
+                      id: row[0].id,
+                      node: quarryInfo.node,
+                      prologue: quarryInfo.prologue
+                    }
+                  : q
+              )
             )
           })
 
