@@ -91,8 +91,8 @@ export async function addSettlementNemeses(
     .insert(
       nemesisIds.map((nemesisId) => ({
         collective_cognition_level_1: false,
-        collective_cognition_level_2: [false, false],
-        collective_cognition_level_3: [false, false, false],
+        collective_cognition_level_2: false,
+        collective_cognition_level_3: false,
         level_1_defeated: false,
         level_2_defeated: false,
         level_3_defeated: false,
