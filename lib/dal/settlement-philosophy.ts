@@ -50,21 +50,26 @@ export async function getSettlementPhilosophies(
 export async function addSettlementPhilosophies(
   philosophyIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<{ id: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (philosophyIds.length === 0) return
+  if (philosophyIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_philosophy').insert(
-    philosophyIds.map((philosophyId) => ({
-      philosophy_id: philosophyId,
-      settlement_id: settlementId
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_philosophy')
+    .insert(
+      philosophyIds.map((philosophyId) => ({
+        philosophy_id: philosophyId,
+        settlement_id: settlementId
+      }))
+    )
+    .select('id')
 
   if (error)
     throw new Error(`Error Adding Settlement Philosophies: ${error.message}`)
+
+  return data
 }
 
 /**

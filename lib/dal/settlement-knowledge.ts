@@ -47,21 +47,26 @@ export async function getSettlementKnowledges(
 export async function addSettlementKnowledges(
   knowledgeIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<{ id: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (knowledgeIds.length === 0) return
+  if (knowledgeIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_knowledge').insert(
-    knowledgeIds.map((knowledgeId) => ({
-      knowledge_id: knowledgeId,
-      settlement_id: settlementId
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_knowledge')
+    .insert(
+      knowledgeIds.map((knowledgeId) => ({
+        knowledge_id: knowledgeId,
+        settlement_id: settlementId
+      }))
+    )
+    .select('id')
 
   if (error)
     throw new Error(`Error Adding Settlement Knowledges: ${error.message}`)
+
+  return data
 }
 
 /**

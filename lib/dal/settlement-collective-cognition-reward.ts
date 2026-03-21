@@ -57,14 +57,14 @@ export async function getSettlementCollectiveCognitionRewards(
 export async function addSettlementCollectiveCognitionRewards(
   rewardIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<{ id: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
-  if (rewardIds.length === 0) return
+  if (rewardIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('settlement_collective_cognition_reward')
     .insert(
       rewardIds.map((rewardId) => ({
@@ -73,11 +73,14 @@ export async function addSettlementCollectiveCognitionRewards(
         unlocked: false
       }))
     )
+    .select('id')
 
   if (error)
     throw new Error(
       `Error Adding Collective Cognition Rewards to Settlement: ${error.message}`
     )
+
+  return data
 }
 
 /**

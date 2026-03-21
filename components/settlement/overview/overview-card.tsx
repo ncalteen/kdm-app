@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import {
-  getCollectiveCognition,
   getDeathCount,
   getLostSettlementCount,
   getPopulation,
@@ -24,7 +23,7 @@ import {
   SURVIVAL_LIMIT_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { SettlementDetail, SettlementPhaseDetail } from '@/lib/types'
-import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -53,10 +52,36 @@ export function OverviewCard({
   selectedSettlementPhase,
   setSelectedSettlement
 }: OverviewCardProps): ReactElement {
-  const [collectiveCognition, setCollectiveCognition] = useState<number>(0)
   const [deathCount, setDeathCount] = useState<number>(0)
   const [lostSettlementCount, setLostSettlementCount] = useState<number>(0)
   const [population, setPopulation] = useState<number>(0)
+
+  /**
+   * Collective Cognition
+   *
+   * Computed locally from the settlement's quarry and nemesis CC fields so it
+   * updates reactively whenever victories are toggled.
+   */
+  const collectiveCognition = useMemo(() => {
+    if (!selectedSettlement) return 0
+
+    let total = 0
+
+    for (const nemesis of selectedSettlement.nemeses ?? []) {
+      if (nemesis.collective_cognition_level_1) total += 3
+      if (nemesis.collective_cognition_level_2) total += 3
+      if (nemesis.collective_cognition_level_3) total += 3
+    }
+
+    for (const quarry of selectedSettlement.quarries ?? []) {
+      if (quarry.collective_cognition_prologue) total += 1
+      if (quarry.collective_cognition_level_1) total += 1
+      for (const v of quarry.collective_cognition_level_2) if (v) total += 2
+      for (const v of quarry.collective_cognition_level_3) if (v) total += 3
+    }
+
+    return total
+  }, [selectedSettlement])
 
   /**
    * Handle Component Loading
@@ -65,19 +90,16 @@ export function OverviewCard({
    */
   useEffect(() => {
     Promise.all([
-      getCollectiveCognition(selectedSettlement?.id),
       getDeathCount(selectedSettlement?.id),
       getLostSettlementCount(selectedSettlement?.id),
       getPopulation(selectedSettlement?.id)
     ])
       .then(
         ([
-          collectiveCognition,
           deathCount,
           lostSettlementCount,
           population
         ]) => {
-          setCollectiveCognition(collectiveCognition ?? 0)
           setDeathCount(deathCount ?? 0)
           setLostSettlementCount(lostSettlementCount ?? 0)
           setPopulation(population ?? 0)

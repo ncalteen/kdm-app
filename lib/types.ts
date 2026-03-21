@@ -440,6 +440,8 @@ export type SettlementDetail = Tables<'settlement'> & {
     monster_name: string
     /** Node */
     node: string
+    /** Has Prologue Hunt */
+    prologue: boolean
     /** Quarry ID */
     quarry_id: string
     /** Unlocked */

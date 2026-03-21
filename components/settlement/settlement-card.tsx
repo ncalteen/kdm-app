@@ -1,4 +1,8 @@
 import { ListCard } from '@/components/generic/list-card'
+import { CollectiveCognitionRewardsCard } from '@/components/settlement/arc/collective-cognition-rewards-card'
+import { CollectiveCognitionVictoriesCard } from '@/components/settlement/arc/collective-cognition-victories-card'
+import { KnowledgesCard } from '@/components/settlement/arc/knowledges-card'
+import { PhilosophiesCard } from '@/components/settlement/arc/philosophies-card'
 import { CreateSettlementCard } from '@/components/settlement/create-settlement-card'
 import { GearCard } from '@/components/settlement/gear/gear-card'
 import { InnovationsCard } from '@/components/settlement/innovations/innovations-card'
@@ -18,7 +22,12 @@ import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
 import { CreateSurvivorForm } from '@/components/survivor/create-survivor-form'
 import { SurvivorCard } from '@/components/survivor/survivor-card'
 import { updateSettlement } from '@/lib/dal/settlement'
-import { DatabaseCampaignType, SurvivorCardMode, TabType } from '@/lib/enums'
+import {
+  DatabaseCampaignType,
+  DatabaseSurvivorType,
+  SurvivorCardMode,
+  TabType
+} from '@/lib/enums'
 import {
   HuntDetail,
   SettlementDetail,
@@ -398,6 +407,38 @@ export function SettlementCard({
           )}
 
           {/* Arc Tab */}
+          {selectedSettlement &&
+            selectedTab === TabType.ARC &&
+            selectedSettlement.survivor_type ===
+              DatabaseSurvivorType['Arc'] && (
+              <div className="flex flex-col gap-2 pl-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {/* Collective Cognition Victories */}
+                  <CollectiveCognitionVictoriesCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
+                  {/* Collective Cognition Rewards */}
+                  <CollectiveCognitionRewardsCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {/* Philosophies */}
+                  <PhilosophiesCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
+                  {/* Knowledges */}
+                  <KnowledgesCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
+                </div>
+              </div>
+            )}
 
           {/* Notes Tab */}
 

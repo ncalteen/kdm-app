@@ -111,6 +111,14 @@ export const COLLECTIVE_COGNITION_REWARD_NO_TARGET_ERROR_MESSAGE = () =>
   'A reward must have a collective cognition target.'
 
 /**
+ * Collective Cognition Reward Removed
+ *
+ * @returns Collective Cognition Reward Removed Message
+ */
+export const COLLECTIVE_COGNITION_REWARD_REMOVED_MESSAGE = () =>
+  'The dark gift fades into nothing.'
+
+/**
  * Collective Cognition Reward Saved
  *
  * @param unlocked Unlocked Status
