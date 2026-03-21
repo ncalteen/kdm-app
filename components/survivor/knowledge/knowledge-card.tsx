@@ -118,6 +118,11 @@ export function KnowledgeCard({
           ? knowledge1.observation_rank
           : knowledge2.observation_rank
 
+      // Optimistic update: local state
+      if (knowledge === 1)
+        setKnowledge1((prev) => ({ ...prev, observation_rank: rank }))
+      else setKnowledge2((prev) => ({ ...prev, observation_rank: rank }))
+
       setSurvivors(
         survivors.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, [fieldName]: rank } : s
@@ -130,6 +135,11 @@ export function KnowledgeCard({
         )
         .catch((error) => {
           // Revert on error
+          if (knowledge === 1)
+            setKnowledge1((prev) => ({ ...prev, observation_rank: oldRank }))
+          else
+            setKnowledge2((prev) => ({ ...prev, observation_rank: oldRank }))
+
           setSurvivors(
             survivors.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, [fieldName]: oldRank } : s
