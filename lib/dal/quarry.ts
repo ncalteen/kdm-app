@@ -13,6 +13,8 @@ import { QuarryDetail } from '@/lib/types'
  * - Custom quarries shared with the user (via the quarry_shared_user table)
  *
  * @param nodeTypes Optional Node Types Filter
+ * @param includeAlternates Whether to Include Alternate Quarries (Default: true)
+ * @param includeVignettes Whether to Include Vignette Quarries (Default: true)
  * @returns Quarry Data
  */
 export async function getQuarries(
@@ -21,7 +23,9 @@ export async function getQuarries(
     MonsterNode.NQ2,
     MonsterNode.NQ3,
     MonsterNode.NQ4
-  ]
+  ],
+  includeAlternates = true,
+  includeVignettes = true
 ): Promise<{ [key: string]: QuarryDetail }> {
   const supabase = createClient()
 
@@ -72,6 +76,23 @@ export async function getQuarries(
   for (const q of userCustomResult.data ?? []) quarryMap[q.id] = q
   for (const row of sharedResult.data ?? [])
     quarryMap[row.quarry[0].id] = row.quarry[0]
+
+  // Build sets of IDs that are referenced as alternates or vignettes by other
+  // records. When the corresponding flag is false, these IDs are excluded.
+  if (!includeAlternates || !includeVignettes) {
+    const alternateIds = new Set<string>()
+    const vignetteIds = new Set<string>()
+
+    for (const q of Object.values(quarryMap)) {
+      if (q.alternate_id) alternateIds.add(q.alternate_id)
+      if (q.vignette_id) vignetteIds.add(q.vignette_id)
+    }
+
+    for (const id of Object.keys(quarryMap)) {
+      if (!includeAlternates && alternateIds.has(id)) delete quarryMap[id]
+      if (!includeVignettes && vignetteIds.has(id)) delete quarryMap[id]
+    }
+  }
 
   return quarryMap
 }

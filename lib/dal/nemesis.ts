@@ -13,6 +13,8 @@ import { NemesisDetail } from '@/lib/types'
  * - Custom nemeses shared with the user (via the nemesis_shared_user table)
  *
  * @param nodeTypes Optional Node Types Filter
+ * @param includeAlternates Whether to Include Alternate Nemeses (Default: true)
+ * @param includeVignettes Whether to Include Vignette Nemeses (Default: true)
  * @returns Nemesis Data
  */
 export async function getNemeses(
@@ -22,7 +24,9 @@ export async function getNemeses(
     MonsterNode.NN3,
     MonsterNode.CO,
     MonsterNode.FI
-  ]
+  ],
+  includeAlternates = true,
+  includeVignettes = true
 ): Promise<{ [key: string]: NemesisDetail }> {
   const supabase = createClient()
 
@@ -73,6 +77,23 @@ export async function getNemeses(
   for (const n of userCustomResult.data ?? []) nemesisMap[n.id] = n
   for (const row of sharedResult.data ?? [])
     nemesisMap[row.nemesis[0].id] = row.nemesis[0]
+
+  // Build sets of IDs that are referenced as alternates or vignettes by other
+  // records. When the corresponding flag is false, these IDs are excluded.
+  if (!includeAlternates || !includeVignettes) {
+    const alternateIds = new Set<string>()
+    const vignetteIds = new Set<string>()
+
+    for (const n of Object.values(nemesisMap)) {
+      if (n.alternate_id) alternateIds.add(n.alternate_id)
+      if (n.vignette_id) vignetteIds.add(n.vignette_id)
+    }
+
+    for (const id of Object.keys(nemesisMap)) {
+      if (!includeAlternates && alternateIds.has(id)) delete nemesisMap[id]
+      if (!includeVignettes && vignetteIds.has(id)) delete nemesisMap[id]
+    }
+  }
 
   return nemesisMap
 }
