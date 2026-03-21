@@ -138,9 +138,13 @@ export function QuarriesCard({
         unlocked: false
       }
 
+      // Capture the updated quarries list so async callbacks reference it
+      // instead of the stale pre-update closure value.
+      const updatedQuarries = [...selectedSettlement.quarries, optimisticRow]
+
       setSelectedSettlement({
         ...selectedSettlement,
-        quarries: [...selectedSettlement.quarries, optimisticRow]
+        quarries: updatedQuarries
       })
       setIsAddingNew(false)
 
@@ -149,7 +153,7 @@ export function QuarriesCard({
           // Replace the placeholder with the real row from the DB.
           setSelectedSettlement({
             ...selectedSettlement,
-            quarries: selectedSettlement.quarries.map((q) =>
+            quarries: updatedQuarries.map((q) =>
               q.id === tempId
                 ? {
                     ...q,
@@ -164,10 +168,10 @@ export function QuarriesCard({
           toast.success(QUARRY_ADDED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert the optimistic insert.
+          // Revert to the original quarries (before the optimistic add).
           setSelectedSettlement({
             ...selectedSettlement,
-            quarries: selectedSettlement.quarries.filter((q) => q.id !== tempId)
+            quarries: selectedSettlement.quarries
           })
 
           console.error('Quarry Add Error:', err)
@@ -284,8 +288,8 @@ export function QuarriesCard({
       <CardContent className="p-1 pb-0">
         <div className="flex flex-col h-[240px]">
           <div className="flex-1 overflow-y-auto">
-            {(!selectedSettlement ||
-              selectedSettlement?.quarries.length === 0) &&
+            {(!selectedSettlement?.quarries ||
+              selectedSettlement.quarries.length === 0) &&
               !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
@@ -293,23 +297,24 @@ export function QuarriesCard({
                 </p>
               )}
 
-            {!hasFetched && selectedSettlement?.id && (
+            {!hasFetched && !selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading quarries...
               </p>
             )}
 
-            {selectedSettlement?.quarries.map((quarry, index) => (
-              <QuarryItem
-                key={quarry.id}
-                index={index}
-                monsterName={quarry.monster_name}
-                node={quarry.node}
-                onRemove={handleRemove}
-                onToggleUnlocked={handleToggleUnlocked}
-                unlocked={quarry.unlocked}
-              />
-            ))}
+            {hasFetched &&
+              selectedSettlement?.quarries.map((quarry, index) => (
+                <QuarryItem
+                  key={quarry.id}
+                  index={index}
+                  monsterName={quarry.monster_name}
+                  node={quarry.node}
+                  onRemove={handleRemove}
+                  onToggleUnlocked={handleToggleUnlocked}
+                  unlocked={quarry.unlocked}
+                />
+              ))}
 
             {isAddingNew && (
               <NewQuarryItem

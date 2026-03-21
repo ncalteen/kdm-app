@@ -147,9 +147,13 @@ export function NemesesCard({
         unlocked: false
       }
 
+      // Capture the updated nemeses list so async callbacks reference it
+      // instead of the stale pre-update closure value.
+      const updatedNemeses = [...selectedSettlement.nemeses, optimisticRow]
+
       setSelectedSettlement({
         ...selectedSettlement,
-        nemeses: [...selectedSettlement.nemeses, optimisticRow]
+        nemeses: updatedNemeses
       })
       setIsAddingNew(false)
 
@@ -159,7 +163,7 @@ export function NemesesCard({
           setSelectedSettlement({
             ...selectedSettlement,
             nemeses: sortNemeses(
-              selectedSettlement.nemeses.map((n) =>
+              updatedNemeses.map((n) =>
                 n.id === tempId
                   ? {
                       ...n,
@@ -175,10 +179,10 @@ export function NemesesCard({
           toast.success(NEMESIS_ADDED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert the optimistic insert.
+          // Revert to the original nemeses (before the optimistic add).
           setSelectedSettlement({
             ...selectedSettlement,
-            nemeses: selectedSettlement.nemeses.filter((n) => n.id !== tempId)
+            nemeses: selectedSettlement.nemeses
           })
 
           console.error('Nemesis Add Error:', err)
@@ -344,8 +348,8 @@ export function NemesesCard({
       <CardContent className="p-1 pb-0">
         <div className="flex flex-col h-[240px]">
           <div className="flex-1 overflow-y-auto">
-            {(!selectedSettlement ||
-              selectedSettlement?.nemeses.length === 0) &&
+            {(!selectedSettlement?.nemeses ||
+              selectedSettlement.nemeses.length === 0) &&
               !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
@@ -353,7 +357,7 @@ export function NemesesCard({
                 </p>
               )}
 
-            {!hasFetched && selectedSettlement?.id && (
+            {!hasFetched && !selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading nemeses...
               </p>
