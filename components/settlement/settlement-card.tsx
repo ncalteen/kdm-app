@@ -348,6 +348,15 @@ export function SettlementCard({
             )}
 
           {/* Society Tab - Squires of the Citadel */}
+          {selectedSettlement &&
+            selectedTab === TabType.SOCIETY &&
+            selectedSettlement.campaign_type ===
+              DatabaseCampaignType['Squires of the Citadel'] && (
+              <LocationsCard
+                selectedSettlement={selectedSettlement}
+                setSelectedSettlement={setSelectedSettlement}
+              />
+            )}
 
           {/* Crafting Tab */}
 
