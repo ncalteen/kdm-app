@@ -50,6 +50,10 @@ interface SurvivorCardProps extends Partial<SurvivorDetail> {
   selectedShowdown: ShowdownDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Hunt (for optimistic token updates) */
+  setSelectedHunt?: (hunt: HuntDetail | null) => void
+  /** Set Selected Showdown (for optimistic token updates) */
+  setSelectedShowdown?: (showdown: ShowdownDetail | null) => void
   /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
@@ -70,6 +74,8 @@ export function SurvivorCard({
   selectedSettlement,
   selectedShowdown,
   selectedSurvivor,
+  setSelectedHunt,
+  setSelectedShowdown,
   setSurvivors,
   survivors
 }: SurvivorCardProps): ReactElement {
@@ -106,8 +112,12 @@ export function SurvivorCard({
             />
             <SurvivalCard
               mode={mode}
+              selectedHunt={selectedHunt}
               selectedSettlement={selectedSettlement}
+              selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedHunt={setSelectedHunt}
+              setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
@@ -124,7 +134,6 @@ export function SurvivorCard({
             />
             <DisordersCard
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
@@ -144,8 +153,12 @@ export function SurvivorCard({
           <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px]">
             <AttributeCard
               mode={mode}
+              selectedHunt={selectedHunt}
               selectedSettlement={selectedSettlement}
+              selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedHunt={setSelectedHunt}
+              setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
@@ -157,6 +170,8 @@ export function SurvivorCard({
               selectedSettlement={selectedSettlement}
               selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedHunt={setSelectedHunt}
+              setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
@@ -188,13 +203,12 @@ export function SurvivorCard({
             <FightingArtsCard
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <CursedGearCard
+              selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />

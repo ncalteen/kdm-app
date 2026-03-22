@@ -98,6 +98,34 @@ export async function getQuarries(
 }
 
 /**
+ * Get Quarry
+ *
+ * Retrieves a single quarry by ID.
+ *
+ * @param quarryId Quarry ID
+ * @returns Quarry Detail or null
+ */
+export async function getQuarry(
+  quarryId: string | null | undefined
+): Promise<QuarryDetail | null> {
+  if (!quarryId) return null
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry')
+    .select(
+      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+    )
+    .eq('id', quarryId)
+    .maybeSingle()
+
+  if (error) throw new Error(`Error Fetching Quarry: ${error.message}`)
+
+  return data
+}
+
+/**
  * Get Quarry IDs
  *
  * Retrieves the IDs of quarries. This depends on if they are custom quarries

@@ -1,3 +1,5 @@
+'use client'
+
 import { AttributeCard } from '@/components/survivor/attributes/attribute-card'
 import { Avatar } from '@/components/ui/avatar'
 import { CardContent } from '@/components/ui/card'
@@ -75,6 +77,8 @@ export function SurvivorDetailsPanel({
           selectedSettlement={null}
           selectedShowdown={null}
           selectedSurvivor={survivor}
+          setSurvivors={() => {}}
+          survivors={[]}
           disabled={true}
         />
 
@@ -110,14 +114,14 @@ export function SurvivorDetailsPanel({
                   <div
                     key={index}
                     className="text-xs bg-background/60 rounded px-2 py-1">
-                    {art}
+                    {art.fighting_art_name}
                   </div>
                 ))}
                 {survivor.secret_fighting_arts.map((art, index) => (
                   <div
                     key={index}
                     className="text-xs bg-gradient-to-r from-yellow-100 to-yellow-50 dark:from-yellow-900/30 dark:to-yellow-800/20 border border-yellow-200/50 dark:border-yellow-700/30 rounded px-2 py-1">
-                    {art}
+                    {art.secret_fighting_art_name}
                   </div>
                 ))}
               </div>
@@ -135,7 +139,7 @@ export function SurvivorDetailsPanel({
                   <div
                     key={index}
                     className="text-xs bg-red-50 dark:bg-red-950/30 border border-red-200/50 dark:border-red-800/30 rounded px-2 py-1">
-                    {disorder}
+                    {disorder.disorder_name}
                   </div>
                 ))}
               </div>
@@ -171,7 +175,9 @@ export function SurvivorDetailsPanel({
               <div className="p-3 space-y-2">
                 <div className="bg-background/60 rounded px-2 py-1">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-medium">{survivor.philosophy}</span>
+                    <span className="font-medium">
+                      {survivor.philosophy.philosophy_name}
+                    </span>
                     <span className="text-muted-foreground">
                       Rank {survivor.philosophy_rank}
                     </span>
@@ -179,12 +185,12 @@ export function SurvivorDetailsPanel({
                 </div>
                 {survivor.tenet_knowledge && (
                   <div className="text-xs bg-background/40 rounded px-2 py-1">
-                    {survivor.tenet_knowledge}
+                    {survivor.tenet_knowledge.knowledge_name}
                   </div>
                 )}
                 {survivor.neurosis && (
                   <div className="text-xs bg-orange-50 dark:bg-orange-950/30 border border-orange-200/50 dark:border-orange-800/30 rounded px-2 py-1">
-                    {survivor.neurosis}
+                    {survivor.neurosis.neurosis_name}
                   </div>
                 )}
               </div>
@@ -200,12 +206,12 @@ export function SurvivorDetailsPanel({
               <div className="p-3 space-y-1">
                 {survivor.knowledge_1 && (
                   <div className="text-xs bg-blue-50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/30 rounded px-2 py-1">
-                    {survivor.knowledge_1}
+                    {survivor.knowledge_1.knowledge_name}
                   </div>
                 )}
                 {survivor.knowledge_2 && (
                   <div className="text-xs bg-blue-50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/30 rounded px-2 py-1">
-                    {survivor.knowledge_2}
+                    {survivor.knowledge_2.knowledge_name}
                   </div>
                 )}
               </div>
@@ -223,7 +229,7 @@ export function SurvivorDetailsPanel({
                   <div
                     key={index}
                     className="text-xs bg-gradient-to-r from-purple-100 to-purple-50 dark:from-purple-900/30 dark:to-purple-800/20 border border-purple-200/50 dark:border-purple-700/30 rounded px-2 py-1">
-                    {gear}
+                    {gear.gear_name}
                   </div>
                 ))}
               </div>

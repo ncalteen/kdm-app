@@ -263,6 +263,27 @@ export type QuarryDetail = Omit<
 >
 
 /**
+ * Quarry Hunt Board Detail
+ *
+ * Used throughout the app to represent a quarry's hunt board template.
+ */
+export type QuarryHuntBoardDetail = Omit<
+  Tables<'quarry_hunt_board'>,
+  'created_at' | 'updated_at'
+>
+
+/**
+ * Quarry Level Detail
+ *
+ * Used throughout the app to represent a quarry's level configuration
+ * including stats, AI deck, and hunt positions.
+ */
+export type QuarryLevelDetail = Omit<
+  Tables<'quarry_level'>,
+  'created_at' | 'updated_at' | 'quarry_id'
+>
+
+/**
  * Resource Detail
  *
  * Used throughout the app to represent a resource.

@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
+import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { DatabaseSurvivorType, SurvivorCardMode } from '@/lib/enums'
 import {
@@ -23,9 +25,14 @@ import {
   SURVIVOR_SYSTEMIC_PRESSURE_UPDATED_MESSAGE,
   SYSTEMIC_PRESSURE_MINIMUM_ERROR_MESSAGE
 } from '@/lib/messages'
-import { SettlementDetail, SurvivorDetail } from '@/lib/types'
+import {
+  HuntDetail,
+  SettlementDetail,
+  ShowdownDetail,
+  SurvivorDetail
+} from '@/lib/types'
 import { LockIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -34,10 +41,18 @@ import { toast } from 'sonner'
 interface SurvivalCardProps {
   /** Mode */
   mode: SurvivorCardMode
+  /** Selected Hunt */
+  selectedHunt: HuntDetail | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
+  /** Selected Showdown */
+  selectedShowdown: ShowdownDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Hunt (for optimistic token updates) */
+  setSelectedHunt?: (hunt: HuntDetail | null) => void
+  /** Set Selected Showdown (for optimistic token updates) */
+  setSelectedShowdown?: (showdown: ShowdownDetail | null) => void
   /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
@@ -58,8 +73,12 @@ interface SurvivalCardProps {
  */
 export function SurvivalCard({
   mode,
+  selectedHunt,
   selectedSettlement,
+  selectedShowdown,
   selectedSurvivor,
+  setSelectedHunt,
+  setSelectedShowdown,
   setSurvivors,
   survivors
 }: SurvivalCardProps): ReactElement {
@@ -81,7 +100,6 @@ export function SurvivalCard({
   const [canEndure, setCanEndure] = useState(
     selectedSurvivor?.can_endure ?? false
   )
-  const [survivalTokens, setSurvivalTokens] = useState<number>(0)
   const [systemicPressure, setSystemicPressure] = useState(
     selectedSurvivor?.systemic_pressure ?? 0
   )
@@ -100,31 +118,36 @@ export function SurvivalCard({
     setSystemicPressure(selectedSurvivor?.systemic_pressure ?? 0)
   }
 
-  // Get survival tokens from the showdown or hunt survivor table based on mode
-  useEffect(() => {
-    if (!selectedSurvivor?.id) return
+  /**
+   * Hunt/Showdown Survivor Record
+   *
+   * Finds the hunt or showdown survivor record for the current survivor based
+   * on the active mode. Used to read and write survival tokens.
+   */
+  const huntSurvivorRecord = useMemo(() => {
+    if (mode !== SurvivorCardMode.HUNT_CARD || !selectedHunt?.hunt_survivors)
+      return undefined
+    return Object.values(selectedHunt.hunt_survivors).find(
+      (hs) => hs.survivor_id === selectedSurvivor?.id
+    )
+  }, [mode, selectedHunt, selectedSurvivor?.id])
 
-    const tokens = survivalTokens
+  const showdownSurvivorRecord = useMemo(() => {
+    if (
+      mode !== SurvivorCardMode.SHOWDOWN_CARD ||
+      !selectedShowdown?.showdown_survivors
+    )
+      return undefined
+    return Object.values(selectedShowdown.showdown_survivors).find(
+      (ss) => ss.survivor_id === selectedSurvivor?.id
+    )
+  }, [mode, selectedShowdown, selectedSurvivor?.id])
 
-    if (mode === SurvivorCardMode.HUNT_CARD)
-      getHuntSurvivorSurvivalTokens(selectedSurvivor?.id).then(
-        (fetchedTokens) => {
-          if (tokens === fetchedTokens) return
-
-          setSurvivalTokens(fetchedTokens ?? 0)
-          SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('survival')
-        }
-      )
-    else if (mode === SurvivorCardMode.SHOWDOWN_CARD)
-      getShowdownSurvivorSurvivalTokens(selectedSurvivor?.id).then(
-        (fetchedTokens) => {
-          if (tokens === fetchedTokens) return
-
-          setSurvivalTokens(fetchedTokens ?? 0)
-          SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('survival')
-        }
-      )
-  })
+  /** Current survival tokens derived from hunt/showdown survivor record */
+  const survivalTokens =
+    huntSurvivorRecord?.survival_tokens ??
+    showdownSurvivorRecord?.survival_tokens ??
+    0
 
   /**
    * Save Survival Tokens
@@ -138,26 +161,100 @@ export function SurvivalCard({
     (value: number) => {
       if (!selectedSurvivor?.id) return
 
-      const old = survivalTokens
+      if (
+        mode === SurvivorCardMode.HUNT_CARD &&
+        huntSurvivorRecord &&
+        selectedHunt?.hunt_survivors &&
+        setSelectedHunt
+      ) {
+        const previousValue = huntSurvivorRecord.survival_tokens
+        const hsKey = Object.entries(selectedHunt.hunt_survivors).find(
+          ([, hs]) => hs.id === huntSurvivorRecord.id
+        )?.[0]
+        if (!hsKey) return
 
-      setSurvivalTokens(value)
-
-      const update =
-        mode === SurvivorCardMode.HUNT_CARD
-          ? updateHuntSurvivorSurvivalTokens
-          : updateShowdownSurvivorSurvivalTokens
-
-      update(selectedSurvivor?.id, value)
-        .then(() =>
-          toast.success(SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('survival'))
-        )
-        .catch((error) => {
-          console.error('Survival Tokens Update Error:', error)
-          setSurvivalTokens(old)
-          toast.error(ERROR_MESSAGE())
+        // Optimistic update
+        setSelectedHunt({
+          ...selectedHunt,
+          hunt_survivors: {
+            ...selectedHunt.hunt_survivors,
+            [hsKey]: { ...huntSurvivorRecord, survival_tokens: value }
+          }
         })
+
+        updateHuntSurvivor(huntSurvivorRecord.id, { survival_tokens: value })
+          .then(() =>
+            toast.success(SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('survival'))
+          )
+          .catch((error: unknown) => {
+            // Rollback
+            setSelectedHunt({
+              ...selectedHunt,
+              hunt_survivors: {
+                ...selectedHunt.hunt_survivors,
+                [hsKey]: {
+                  ...huntSurvivorRecord,
+                  survival_tokens: previousValue
+                }
+              }
+            })
+            console.error('Survival Tokens Update Error:', error)
+            toast.error(ERROR_MESSAGE())
+          })
+      } else if (
+        mode === SurvivorCardMode.SHOWDOWN_CARD &&
+        showdownSurvivorRecord &&
+        selectedShowdown?.showdown_survivors &&
+        setSelectedShowdown
+      ) {
+        const previousValue = showdownSurvivorRecord.survival_tokens
+        const ssKey = Object.entries(selectedShowdown.showdown_survivors).find(
+          ([, ss]) => ss.id === showdownSurvivorRecord.id
+        )?.[0]
+        if (!ssKey) return
+
+        // Optimistic update
+        setSelectedShowdown({
+          ...selectedShowdown,
+          showdown_survivors: {
+            ...selectedShowdown.showdown_survivors,
+            [ssKey]: { ...showdownSurvivorRecord, survival_tokens: value }
+          }
+        })
+
+        updateShowdownSurvivor(showdownSurvivorRecord.id, {
+          survival_tokens: value
+        })
+          .then(() =>
+            toast.success(SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('survival'))
+          )
+          .catch((error: unknown) => {
+            // Rollback
+            setSelectedShowdown({
+              ...selectedShowdown,
+              showdown_survivors: {
+                ...selectedShowdown.showdown_survivors,
+                [ssKey]: {
+                  ...showdownSurvivorRecord,
+                  survival_tokens: previousValue
+                }
+              }
+            })
+            console.error('Survival Tokens Update Error:', error)
+            toast.error(ERROR_MESSAGE())
+          })
+      }
     },
-    [mode, selectedSurvivor?.id, survivalTokens]
+    [
+      mode,
+      selectedSurvivor?.id,
+      selectedHunt,
+      selectedShowdown,
+      huntSurvivorRecord,
+      showdownSurvivorRecord,
+      setSelectedHunt,
+      setSelectedShowdown
+    ]
   )
 
   /**
