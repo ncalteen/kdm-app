@@ -99,6 +99,32 @@ export async function getNemeses(
 }
 
 /**
+ * Get Nemesis
+ *
+ * Retrieves a single nemesis by ID.
+ *
+ * @param nemesisId Nemesis ID
+ * @returns Nemesis Detail or null
+ */
+export async function getNemesis(
+  nemesisId: string | null | undefined
+): Promise<NemesisDetail | null> {
+  if (!nemesisId) return null
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('nemesis')
+    .select('id, alternate_id, monster_name, multi_monster, node, vignette_id')
+    .eq('id', nemesisId)
+    .maybeSingle()
+
+  if (error) throw new Error(`Error Fetching Nemesis: ${error.message}`)
+
+  return data
+}
+
+/**
  * Get Nemesis IDs
  *
  * Retrieves the IDs of nemeses. This depends on if they are custom nemeses

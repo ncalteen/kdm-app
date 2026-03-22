@@ -213,6 +213,17 @@ export type NemesisDetail = Omit<
 >
 
 /**
+ * Nemesis Level Detail
+ *
+ * Used throughout the app to represent a nemesis's level configuration
+ * including stats, AI deck, and life value.
+ */
+export type NemesisLevelDetail = Omit<
+  Tables<'nemesis_level'>,
+  'created_at' | 'updated_at' | 'nemesis_id'
+>
+
+/**
  * Neurosis Detail
  *
  * Used throughout the app to represent a neurosis.

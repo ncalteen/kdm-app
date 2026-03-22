@@ -24,6 +24,7 @@ import { SquireProgressionCards } from '@/components/settlement/squires/squire-p
 import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
 import { SettlementSurvivorsCard } from '@/components/settlement/survivors/settlement-survivors-card'
 import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
+import { ShowdownCard } from '@/components/showdown/showdown-card'
 import { CreateSurvivorForm } from '@/components/survivor/create-survivor-form'
 import { SurvivorCard } from '@/components/survivor/survivor-card'
 import { updateSettlement } from '@/lib/dal/settlement'
@@ -493,6 +494,21 @@ export function SettlementCard({
           )}
 
           {/* Showdown Tab */}
+          {selectedSettlement && selectedTab === TabType.SHOWDOWN && (
+            <ShowdownCard
+              selectedHunt={selectedHunt}
+              selectedShowdown={selectedShowdown}
+              selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
+              selectedSettlement={selectedSettlement}
+              selectedSurvivor={selectedSurvivor}
+              setSelectedShowdown={setSelectedShowdown}
+              setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
+              setSelectedSurvivor={setSelectedSurvivor}
+              setSelectedTab={setSelectedTab}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+            />
+          )}
 
           {/* Settlement Phase Tab */}
         </div>
