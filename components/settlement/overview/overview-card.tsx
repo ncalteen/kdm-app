@@ -6,9 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import {
-  getDeathCount,
   getLostSettlementCount,
-  getPopulation,
   updateSettlement
 } from '@/lib/dal/settlement'
 import { updateSettlementPhase } from '@/lib/dal/settlement-phase'
@@ -22,7 +20,7 @@ import {
   SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE,
   SURVIVAL_LIMIT_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SettlementDetail, SettlementPhaseDetail } from '@/lib/types'
+import { SettlementDetail, SettlementPhaseDetail, SurvivorDetail } from '@/lib/types'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -36,6 +34,8 @@ interface OverviewCardProps {
   selectedSettlementPhase: SettlementPhaseDetail | null
   /** Set Selected Settlement */
   setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  /** Survivors */
+  survivors: SurvivorDetail[]
 }
 
 /**
@@ -50,11 +50,28 @@ interface OverviewCardProps {
 export function OverviewCard({
   selectedSettlement,
   selectedSettlementPhase,
-  setSelectedSettlement
+  setSelectedSettlement,
+  survivors
 }: OverviewCardProps): ReactElement {
-  const [deathCount, setDeathCount] = useState<number>(0)
   const [lostSettlementCount, setLostSettlementCount] = useState<number>(0)
-  const [population, setPopulation] = useState<number>(0)
+
+  /** Death count derived from survivors array */
+  const deathCount = useMemo(
+    () =>
+      survivors.filter(
+        (s) => s.settlement_id === selectedSettlement?.id && s.dead
+      ).length,
+    [survivors, selectedSettlement?.id]
+  )
+
+  /** Population derived from survivors array */
+  const population = useMemo(
+    () =>
+      survivors.filter(
+        (s) => s.settlement_id === selectedSettlement?.id && !s.dead
+      ).length,
+    [survivors, selectedSettlement?.id]
+  )
 
   /**
    * Collective Cognition
@@ -89,22 +106,10 @@ export function OverviewCard({
    * Load the various data used in this component.
    */
   useEffect(() => {
-    Promise.all([
-      getDeathCount(selectedSettlement?.id),
-      getLostSettlementCount(selectedSettlement?.id),
-      getPopulation(selectedSettlement?.id)
-    ])
-      .then(
-        ([
-          deathCount,
-          lostSettlementCount,
-          population
-        ]) => {
-          setDeathCount(deathCount ?? 0)
-          setLostSettlementCount(lostSettlementCount ?? 0)
-          setPopulation(population ?? 0)
-        }
-      )
+    getLostSettlementCount(selectedSettlement?.id)
+      .then((count) => {
+        setLostSettlementCount(count ?? 0)
+      })
       .catch((err: unknown) => {
         console.error('Overview Load Error:', err)
         toast.error(ERROR_MESSAGE())

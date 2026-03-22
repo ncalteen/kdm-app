@@ -1,6 +1,7 @@
 'use client'
 
 import { ListCard } from '@/components/generic/list-card'
+import { HuntCard } from '@/components/hunt/hunt-card'
 import { CollectiveCognitionRewardsCard } from '@/components/settlement/arc/collective-cognition-rewards-card'
 import { CollectiveCognitionVictoriesCard } from '@/components/settlement/arc/collective-cognition-victories-card'
 import { KnowledgesCard } from '@/components/settlement/arc/knowledges-card'
@@ -37,7 +38,8 @@ import {
   SettlementDetail,
   SettlementPhaseDetail,
   ShowdownDetail,
-  SurvivorDetail
+  SurvivorDetail,
+  UserSettingsDetail
 } from '@/lib/types'
 import { BookOpenIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
 import { ReactElement } from 'react'
@@ -100,8 +102,12 @@ interface SettlementCardProps {
   setSelectedTab: (tab: TabType) => void
   /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
+  /** Set User Settings */
+  setUserSettings: (settings: UserSettingsDetail | null) => void
   /** Survivors */
   survivors: SurvivorDetail[]
+  /** User Settings */
+  userSettings: UserSettingsDetail | null
 }
 
 /**
@@ -137,7 +143,9 @@ export function SettlementCard({
   setSelectedSurvivorId,
   setSelectedTab,
   setSurvivors,
-  survivors
+  setUserSettings,
+  survivors,
+  userSettings
 }: SettlementCardProps): ReactElement {
   // Settings tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.SETTINGS)
@@ -153,6 +161,8 @@ export function SettlementCard({
         setSelectedShowdown={setSelectedShowdown}
         setSelectedShowdownId={setSelectedShowdownId}
         setSelectedSurvivorId={setSelectedSurvivorId}
+        setUserSettings={setUserSettings}
+        userSettings={userSettings}
       />
     )
 
@@ -184,6 +194,7 @@ export function SettlementCard({
         selectedSettlement={selectedSettlement}
         selectedSettlementPhase={selectedSettlementPhase}
         setSelectedSettlement={setSelectedSettlement}
+        survivors={survivors}
       />
 
       <hr className="pt-2" />
@@ -462,6 +473,24 @@ export function SettlementCard({
           )}
 
           {/* Hunt Tab */}
+          {selectedSettlement && selectedTab === TabType.HUNT && (
+            <HuntCard
+              selectedHunt={selectedHunt}
+              selectedHuntMonsterIndex={selectedHuntMonsterIndex}
+              selectedSettlement={selectedSettlement}
+              selectedShowdown={selectedShowdown}
+              selectedSurvivor={selectedSurvivor}
+              setSelectedHunt={setSelectedHunt}
+              setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
+              setSelectedShowdown={setSelectedShowdown}
+              setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
+              setSelectedSurvivor={setSelectedSurvivor}
+              setSelectedTab={setSelectedTab}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+              userSettings={userSettings}
+            />
+          )}
 
           {/* Showdown Tab */}
 
