@@ -98,6 +98,42 @@ export async function getQuarries(
 }
 
 /**
+ * Get User Custom Quarries
+ *
+ * Retrieves only custom quarries created by the current user.
+ *
+ * @returns Custom Quarry Data Map
+ */
+export async function getUserCustomQuarries(): Promise<{
+  [key: string]: QuarryDetail
+}> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('quarry')
+    .select(
+      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+    )
+    .eq('custom', true)
+    .eq('user_id', user.id)
+
+  if (error) throw new Error(`Error Fetching Custom Quarries: ${error.message}`)
+
+  const quarryMap: { [key: string]: QuarryDetail } = {}
+  for (const q of data ?? []) quarryMap[q.id] = q
+
+  return quarryMap
+}
+
+/**
  * Get Quarry
  *
  * Retrieves a single quarry by ID.

@@ -30,6 +30,7 @@ import {
   SettingsIcon,
   SkullIcon,
   SwordsIcon,
+  UserIcon,
   UsersIcon,
   WrenchIcon
 } from 'lucide-react'
@@ -132,6 +133,11 @@ const navEmbark = [
  * Settings Navigation Items
  */
 const navSettings = [
+  {
+    title: 'User',
+    tab: TabType.USER,
+    icon: UserIcon
+  },
   {
     title: 'Settings',
     tab: TabType.SETTINGS,

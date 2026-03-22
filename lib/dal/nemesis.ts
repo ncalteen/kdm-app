@@ -99,6 +99,40 @@ export async function getNemeses(
 }
 
 /**
+ * Get User Custom Nemeses
+ *
+ * Retrieves only custom nemeses created by the current user.
+ *
+ * @returns Custom Nemesis Data Map
+ */
+export async function getUserCustomNemeses(): Promise<{
+  [key: string]: NemesisDetail
+}> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('nemesis')
+    .select('id, alternate_id, monster_name, multi_monster, node, vignette_id')
+    .eq('custom', true)
+    .eq('user_id', user.id)
+
+  if (error) throw new Error(`Error Fetching Custom Nemeses: ${error.message}`)
+
+  const nemesisMap: { [key: string]: NemesisDetail } = {}
+  for (const n of data ?? []) nemesisMap[n.id] = n
+
+  return nemesisMap
+}
+
+/**
  * Get Nemesis
  *
  * Retrieves a single nemesis by ID.

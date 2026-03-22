@@ -2,6 +2,7 @@
 
 import { ListCard } from '@/components/generic/list-card'
 import { HuntCard } from '@/components/hunt/hunt-card'
+import { SettlementPhaseCard } from '@/components/settlement-phase/settlement-phase-card'
 import { CollectiveCognitionRewardsCard } from '@/components/settlement/arc/collective-cognition-rewards-card'
 import { CollectiveCognitionVictoriesCard } from '@/components/settlement/arc/collective-cognition-victories-card'
 import { KnowledgesCard } from '@/components/settlement/arc/knowledges-card'
@@ -511,6 +512,19 @@ export function SettlementCard({
           )}
 
           {/* Settlement Phase Tab */}
+          {selectedSettlement && selectedTab === TabType.SETTLEMENT_PHASE && (
+            <SettlementPhaseCard
+              selectedSettlement={selectedSettlement}
+              selectedSettlementPhase={selectedSettlementPhase}
+              selectedSurvivor={selectedSurvivor}
+              setSelectedSettlement={setSelectedSettlement}
+              setSelectedSettlementPhase={setSelectedSettlementPhase}
+              setSelectedSurvivor={setSelectedSurvivor}
+              setSelectedTab={setSelectedTab}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+            />
+          )}
         </div>
       </div>
     </>

@@ -86,7 +86,9 @@ export enum TabType {
   /** Survivors */
   SURVIVORS = 'survivors',
   /** Timeline */
-  TIMELINE = 'timeline'
+  TIMELINE = 'timeline',
+  /** User */
+  USER = 'user'
 }
 
 /**
@@ -364,6 +366,29 @@ export enum SettlementPhaseStep {
   /** End Settlement Phase */
   END_SETTLEMENT_PHASE = 'End Settlement Phase'
 }
+
+/**
+ * Database Settlement Phase Step Mapping
+ *
+ * Maps between the database enum values (uppercase identifiers) and the
+ * display-friendly SettlementPhaseStep enum values.
+ */
+export const DatabaseSettlementPhaseStep: Record<string, SettlementPhaseStep> =
+  {
+    SET_UP_SETTLEMENT: SettlementPhaseStep.SET_UP_SETTLEMENT,
+    SURVIVORS_RETURN: SettlementPhaseStep.SURVIVORS_RETURN,
+    GAIN_ENDEAVORS: SettlementPhaseStep.GAIN_ENDEAVORS,
+    UPDATE_TIMELINE: SettlementPhaseStep.UPDATE_TIMELINE,
+    UPDATE_DEATH_COUNT: SettlementPhaseStep.UPDATE_DEATH_COUNT,
+    CHECK_MILESTONES: SettlementPhaseStep.CHECK_MILESTONES,
+    DEVELOP: SettlementPhaseStep.DEVELOP,
+    PREPARE_DEPARTING_SURVIVORS:
+      SettlementPhaseStep.PREPARE_DEPARTING_SURVIVORS,
+    SPECIAL_SHOWDOWN: SettlementPhaseStep.SPECIAL_SHOWDOWN,
+    RECORD_AND_ARCHIVE_RESOURCES:
+      SettlementPhaseStep.RECORD_AND_ARCHIVE_RESOURCES,
+    END_SETTLEMENT_PHASE: SettlementPhaseStep.END_SETTLEMENT_PHASE
+  }
 
 /**
  * Showdown Types
