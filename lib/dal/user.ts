@@ -1,6 +1,7 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { UserSettingsDetail } from '@/lib/types'
 
 /**
  * Get User Settings
@@ -9,9 +10,9 @@ import { createClient } from '@/lib/supabase/client'
  * `user_settings` table in Supabase. This includes information about which
  * vignettes the user has unlocked.
  *
- * @returns User Settings (or null)
+ * @returns User Settings (or null if none exist yet)
  */
-export async function getUserSettings() {
+export async function getUserSettings(): Promise<UserSettingsDetail | null> {
   const supabase = createClient()
 
   const {
@@ -26,7 +27,7 @@ export async function getUserSettings() {
     .from('user_settings')
     .select('*')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (error) throw new Error(`Error Fetching User Settings: ${error.message}`)
 
@@ -120,18 +121,21 @@ export async function addUserSettings(
     TablesInsert<'user_settings'>,
     'id' | 'created_at' | 'updated_at'
   >
-): Promise<string> {
+): Promise<UserSettingsDetail> {
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('user_settings')
     .insert(userSettings)
-    .select('id')
+    .select(
+      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding User Settings: ${error.message}`)
+  if (!data) throw new Error('Error Adding User Settings: No Data Returned')
 
-  return data.id
+  return data
 }
 
 /**
@@ -172,4 +176,25 @@ export async function removeUserSettings(id: string): Promise<void> {
   const { error } = await supabase.from('user_settings').delete().eq('id', id)
 
   if (error) throw new Error(`Error Removing User Settings: ${error.message}`)
+}
+
+/**
+ * Get User ID
+ *
+ * Fetches the user ID of the currently authenticated user.
+ *
+ * @returns User ID (or null)
+ */
+export async function getUserId(): Promise<string> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  return user.id
 }

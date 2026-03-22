@@ -6,6 +6,7 @@ import { getSettlement } from '@/lib/dal/settlement'
 import { getSettlementPhase } from '@/lib/dal/settlement-phase'
 import { getShowdown } from '@/lib/dal/showdown'
 import { getSurvivor, getSurvivors } from '@/lib/dal/survivor'
+import { addUserSettings, getUserId, getUserSettings } from '@/lib/dal/user'
 import { TabType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -13,7 +14,8 @@ import {
   SettlementDetail,
   SettlementPhaseDetail,
   ShowdownDetail,
-  SurvivorDetail
+  SurvivorDetail,
+  UserSettingsDetail
 } from '@/lib/types'
 import { saveToLocalStorage } from '@/lib/utils'
 import {
@@ -121,6 +123,11 @@ interface LocalContextType {
 
   /** Update Local Context */
   updateLocal: (local: LocalContextType) => void
+
+  /** User Settings */
+  userSettings: UserSettingsDetail | null
+  /** Set User Settings */
+  setUserSettings: (settings: UserSettingsDetail | null) => void
 }
 
 /**
@@ -197,6 +204,10 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   const [selectedTab, setSelectedTabState] = useState<TabType>(
     () => local.selectedTab ?? TabType.TIMELINE
   )
+
+  // User Settings
+  const [userSettings, setUserSettingsState] =
+    useState<UserSettingsDetail | null>(null)
 
   const [isCreatingNewHunt, setIsCreatingNewHunt] = useState<boolean>(false)
   const [isCreatingNewSettlement, setIsCreatingNewSettlement] =
@@ -633,6 +644,65 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       isCancelled = true
     }
   }, [isAuthenticated, selectedSettlementId, selectedSurvivorId])
+
+  /**
+   * Fetch User Settings Data
+   */
+  useEffect(() => {
+    console.debug('Fetching User Settings Data')
+
+    let isCancelled = false
+
+    if (!isAuthenticated)
+      return () => {
+        isCancelled = true
+      }
+
+    getUserSettings()
+      .then((userSettingsData) => {
+        if (isCancelled) return
+
+        console.debug('User Settings:', userSettingsData)
+
+        setUserSettingsState(userSettingsData)
+
+        // If the user settings are not found, create them in the database and
+        // set to default values.
+        if (!userSettingsData) {
+          // Get the user ID
+          getUserId().then((userId) => {
+            addUserSettings({
+              unlocked_killenium_butcher: false,
+              unlocked_screaming_nukalope: false,
+              unlocked_white_gigalion: false,
+              user_id: userId
+            })
+              .then((newSettings) => {
+                if (isCancelled) return
+
+                console.debug('Created User Settings:', newSettings)
+                setUserSettingsState(newSettings)
+              })
+              .catch((error: unknown) => {
+                if (isCancelled) return
+
+                console.error('Error Creating User Settings:', error)
+              })
+          })
+        }
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('User Settings Fetch Error:', err)
+
+        setUserSettingsState(null)
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated])
 
   /**
    * Set Selected Hunt
@@ -1125,6 +1195,15 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   }
 
   /**
+   * Set User Settings
+   *
+   * @param settings User Settings
+   */
+  const setUserSettings = (settings: UserSettingsDetail | null) => {
+    setUserSettingsState(settings)
+  }
+
+  /**
    * Update Local State
    *
    * @param local Updated Local Data
@@ -1178,7 +1257,10 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSurvivors,
         survivors,
 
-        updateLocal
+        updateLocal,
+
+        userSettings,
+        setUserSettings
       }}>
       {children}
     </LocalContext.Provider>

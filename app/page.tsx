@@ -125,7 +125,10 @@ function MainPage(): ReactElement {
     setSurvivors,
     survivors,
 
-    updateLocal
+    updateLocal,
+
+    userSettings,
+    setUserSettings
   } = useLocal()
 
   return (
@@ -160,17 +163,12 @@ function MainPage(): ReactElement {
               isCreatingNewSettlement={isCreatingNewSettlement}
               isCreatingNewSurvivor={isCreatingNewSurvivor}
               selectedHunt={selectedHunt}
-              selectedHuntId={selectedHuntId}
               selectedHuntMonsterIndex={selectedHuntMonsterIndex}
               selectedSettlement={selectedSettlement}
-              selectedSettlementId={selectedSettlementId}
               selectedSettlementPhase={selectedSettlementPhase}
-              selectedSettlementPhaseId={selectedSettlementPhaseId}
               selectedShowdown={selectedShowdown}
-              selectedShowdownId={selectedShowdownId}
               selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
               selectedSurvivor={selectedSurvivor}
-              selectedSurvivorId={selectedSurvivorId}
               selectedTab={selectedTab}
               setIsCreatingNewSettlement={setIsCreatingNewSettlement}
               setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
@@ -188,7 +186,9 @@ function MainPage(): ReactElement {
               setSelectedSurvivorId={setSelectedSurvivorId}
               setSelectedTab={setSelectedTab}
               setSurvivors={setSurvivors}
+              setUserSettings={setUserSettings}
               survivors={survivors}
+              userSettings={userSettings}
             />
           </div>
         </SidebarInset>

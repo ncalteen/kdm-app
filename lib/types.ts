@@ -651,6 +651,16 @@ export type SurvivorDetail = Tables<'survivor'> & {
 }
 
 /**
+ * User Settings Detail
+ *
+ * Used throughout the app to represent the user's settings.
+ */
+export type UserSettingsDetail = Omit<
+  Tables<'user_settings'>,
+  'created_at' | 'updated_at'
+>
+
+/**
  * Wanderer Detail
  *
  * Used throughout the app to represent the currently selected wanderer.
