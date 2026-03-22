@@ -1,3 +1,5 @@
+'use client'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -137,8 +139,7 @@ export function KnowledgeCard({
           // Revert on error
           if (knowledge === 1)
             setKnowledge1((prev) => ({ ...prev, observation_rank: oldRank }))
-          else
-            setKnowledge2((prev) => ({ ...prev, observation_rank: oldRank }))
+          else setKnowledge2((prev) => ({ ...prev, observation_rank: oldRank }))
 
           setSurvivors(
             survivors.map((s) =>

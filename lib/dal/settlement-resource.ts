@@ -27,30 +27,6 @@ export async function getSettlementResources(
   if (error)
     throw new Error(`Error Fetching Settlement Resources: ${error.message}`)
 
-  console.log(
-    data?.map((item) => {
-      const res = item.resource as unknown as {
-        category: string
-        quarry_id: string | null
-        resource_name: string
-        resource_types: string[]
-        quarry: { monster_name: string; node: string } | null
-      }
-
-      return {
-        category: res.category,
-        id: item.id,
-        quantity: item.quantity,
-        quarry_id: res.quarry_id,
-        quarry_monster_name: res.quarry?.monster_name ?? null,
-        quarry_node: res.quarry?.node ?? null,
-        resource_id: item.resource_id,
-        resource_name: res.resource_name,
-        resource_types: res.resource_types
-      }
-    })
-  )
-
   return (
     data?.map((item) => {
       const res = item.resource as unknown as {
