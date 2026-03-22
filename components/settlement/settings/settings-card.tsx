@@ -469,6 +469,30 @@ export function SettingsCard({
           <CardTitle className="text-lg">Global Settings</CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
+          {/* <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-sm">Disable Notifications</div>
+              <div className="text-sm text-muted-foreground">
+                Silences success messages. Error messages will always be shown.
+              </div>
+            </div>
+            <Select
+              value={disableToasts.toString()}
+              onValueChange={handleDisableToastsChange}
+              name="disable-toasts"
+              aria-label="Disable Notifications">
+              <SelectTrigger className="w-24" id="disable-toasts">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="false">No</SelectItem>
+                <SelectItem value="true">Yes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Separator className="my-2" /> */}
+
           <div className="flex items-center justify-between">
             <div>
               <div className="font-medium text-sm">
@@ -558,6 +582,36 @@ export function SettingsCard({
       </Card>
 
       {/* Custom Monster Settings */}
+      {/* <Card className="p-0">
+        <CardHeader className="px-4 pt-3 pb-0">
+          <CardTitle className="text-lg">Custom Monsters</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-sm">Create & Manage</div>
+                <div className="text-sm text-muted-foreground">
+                  Create custom quarry or nemesis monsters for your campaign.
+                </div>
+              </div>
+              <CreateMonsterDialog
+                campaign={campaign}
+                onMonsterCreated={() =>
+                  setMonstersRefreshKey((prev) => prev + 1)
+                }
+                updateCampaign={updateCampaign}
+              />
+            </div>
+            <CustomMonstersTable
+              campaign={campaign}
+              key={monstersRefreshKey}
+              onMonstersChange={() => setMonstersRefreshKey((prev) => prev + 1)}
+              updateCampaign={updateCampaign}
+            />
+          </div>
+        </CardContent>
+      </Card> */}
 
       {/* Delete Selected Hunt */}
       {selectedHunt && (

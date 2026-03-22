@@ -28,6 +28,7 @@ import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
 import { ShowdownCard } from '@/components/showdown/showdown-card'
 import { CreateSurvivorForm } from '@/components/survivor/create-survivor-form'
 import { SurvivorCard } from '@/components/survivor/survivor-card'
+import { UserCard } from '@/components/user/user-card'
 import { updateSettlement } from '@/lib/dal/settlement'
 import {
   DatabaseCampaignType,
@@ -166,6 +167,12 @@ export function SettlementCard({
         setUserSettings={setUserSettings}
         userSettings={userSettings}
       />
+    )
+
+  // User tab is always accessible, regardless of settlement state.
+  if (selectedTab === TabType.USER)
+    return (
+      <UserCard setUserSettings={setUserSettings} userSettings={userSettings} />
     )
 
   if (isCreatingNewSettlement)
