@@ -1,3 +1,5 @@
+'use client'
+
 import { SelectWanderer } from '@/components/menu/select-wanderer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'

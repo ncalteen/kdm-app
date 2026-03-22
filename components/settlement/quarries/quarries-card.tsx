@@ -141,6 +141,7 @@ export function QuarriesCard({
         collective_cognition_level_3: [false, false, false],
         collective_cognition_prologue: false,
         id: tempId,
+        prologue: quarryInfo.prologue,
         quarry_id: quarryId,
         monster_name: quarryInfo.monster_name,
         node: '',

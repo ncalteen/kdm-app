@@ -1,3 +1,5 @@
+'use client'
+
 import { NumericInput } from '@/components/menu/numeric-input'
 import { SelectPhilosophy } from '@/components/menu/select-philosophy'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'

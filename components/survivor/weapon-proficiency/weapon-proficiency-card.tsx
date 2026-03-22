@@ -1,3 +1,5 @@
+'use client'
+
 import { SelectWeaponType } from '@/components/menu/select-weapon-type'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'

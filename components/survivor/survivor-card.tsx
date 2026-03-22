@@ -1,3 +1,5 @@
+'use client'
+
 import { AbilitiesAndImpairmentsCard } from '@/components/survivor/abilities-and-impairments/abilities-and-impairments-card'
 import { AttributeCard } from '@/components/survivor/attributes/attribute-card'
 import { ArmsCard } from '@/components/survivor/combat/arms-card'

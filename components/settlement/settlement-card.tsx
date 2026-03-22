@@ -1,3 +1,5 @@
+'use client'
+
 import { ListCard } from '@/components/generic/list-card'
 import { CollectiveCognitionRewardsCard } from '@/components/settlement/arc/collective-cognition-rewards-card'
 import { CollectiveCognitionVictoriesCard } from '@/components/settlement/arc/collective-cognition-victories-card'

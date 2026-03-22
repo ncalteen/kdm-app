@@ -1,3 +1,5 @@
+'use client'
+
 import { CourageUnderstandingAbilities } from '@/components/survivor/courage-understanding/courage-understanding-abilities'
 import { FacesInTheSky } from '@/components/survivor/courage-understanding/faces-in-the-sky'
 import { Card, CardContent } from '@/components/ui/card'

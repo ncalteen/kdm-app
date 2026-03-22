@@ -1,3 +1,5 @@
+'use client'
+
 import { TimelineContent } from '@/components/settlement/timeline/timeline-content'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
