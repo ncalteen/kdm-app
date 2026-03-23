@@ -86,12 +86,7 @@ export function SettlementSurvivorsCard({
 
       setSurvivors(updatedSurvivors)
 
-      deleteSurvivor(
-        selectedSettlement?.id,
-        selectedSurvivor?.id,
-        setSelectedSurvivor,
-        survivorId
-      )
+      deleteSurvivor(selectedSettlement?.id, survivorId)
         .then(() =>
           toast.success(
             SURVIVOR_REMOVED_MESSAGE(
