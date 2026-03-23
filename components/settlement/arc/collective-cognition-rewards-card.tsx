@@ -188,15 +188,16 @@ export function CollectiveCognitionRewardsCard({
     (index: number) => {
       if (!selectedSettlement) return
 
-      const removed = (selectedSettlement.collective_cognition_rewards ?? [])[index]
+      const removed = (selectedSettlement.collective_cognition_rewards ?? [])[
+        index
+      ]
       if (!removed) return
 
       setSelectedSettlement({
         ...selectedSettlement,
-        collective_cognition_rewards:
-          (selectedSettlement.collective_cognition_rewards ?? []).filter(
-            (r) => r.id !== removed.id
-          )
+        collective_cognition_rewards: (
+          selectedSettlement.collective_cognition_rewards ?? []
+        ).filter((r) => r.id !== removed.id)
       })
 
       removeSettlementCollectiveCognitionReward(removed.id)
@@ -213,7 +214,9 @@ export function CollectiveCognitionRewardsCard({
                 index
               ),
               removed,
-              ...(selectedSettlement.collective_cognition_rewards ?? []).slice(index)
+              ...(selectedSettlement.collective_cognition_rewards ?? []).slice(
+                index
+              )
             ]
           })
 
