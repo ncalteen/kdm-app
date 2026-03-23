@@ -38,7 +38,8 @@ export async function addSquiresOfTheCitadelSurvivors(
 /**
  * Get Survivor
  *
- * Includes all details for the survivor.
+ * Includes all details for the survivor, including junction-table data
+ * (disorders, fighting arts, etc.) resolved to their display names.
  *
  * @param survivorId Survivor ID
  * @returns Survivor Data with Embarked Status
@@ -59,6 +60,7 @@ export async function getSurvivor(
   if (error) throw new Error(`Error Fetching Survivor: ${error.message}`)
   if (!data) return null
 
+  // Batch all junction-table and FK lookups in parallel.
   const [
     cursedGearResult,
     disorderResult,
@@ -110,82 +112,62 @@ export async function getSurvivor(
           .from('knowledge')
           .select('id, knowledge_name')
           .eq('id', data.knowledge_1_id)
-          .limit(1)
-      : { data: [], error: null },
+          .single()
+      : Promise.resolve({ data: null, error: null }),
     // Knowledge 2
     data.knowledge_2_id
       ? supabase
           .from('knowledge')
           .select('id, knowledge_name')
           .eq('id', data.knowledge_2_id)
-          .limit(1)
-      : { data: [], error: null },
+          .single()
+      : Promise.resolve({ data: null, error: null }),
     // Neurosis
     data.neurosis_id
       ? supabase
           .from('neurosis')
           .select('id, neurosis_name')
           .eq('id', data.neurosis_id)
-          .limit(1)
-      : { data: [], error: null },
+          .single()
+      : Promise.resolve({ data: null, error: null }),
     // Philosophy
     data.philosophy_id
       ? supabase
           .from('philosophy')
           .select('id, philosophy_name')
           .eq('id', data.philosophy_id)
-          .limit(1)
-      : { data: [], error: null },
+          .single()
+      : Promise.resolve({ data: null, error: null }),
     // Tenet Knowledge
     data.tenet_knowledge_id
       ? supabase
           .from('knowledge')
           .select('id, knowledge_name')
           .eq('id', data.tenet_knowledge_id)
-          .limit(1)
-      : { data: [], error: null }
+          .single()
+      : Promise.resolve({ data: null, error: null })
   ])
 
-  if (cursedGearResult.error)
-    throw new Error(
-      `Error Fetching Cursed Gear: ${cursedGearResult.error.message}`
-    )
-  if (disorderResult.error)
-    throw new Error(`Error Fetching Disorders: ${disorderResult.error.message}`)
-  if (fightingArtResult.error)
-    throw new Error(
-      `Error Fetching Fighting Arts: ${fightingArtResult.error.message}`
-    )
-  if (secretFightingArtResult.error)
-    throw new Error(
-      `Error Fetching Secret Fighting Arts: ${secretFightingArtResult.error.message}`
-    )
-  if (huntResult.error)
-    throw new Error(`Error Checking Hunt Survivor: ${huntResult.error.message}`)
-  if (showdownResult.error)
-    throw new Error(
-      `Error Checking Showdown Survivor: ${showdownResult.error.message}`
-    )
-  if (knowledge1Result.error)
-    throw new Error(
-      `Error Fetching Knowledge 1: ${knowledge1Result.error.message}`
-    )
-  if (knowledge2Result.error)
-    throw new Error(
-      `Error Fetching Knowledge 2: ${knowledge2Result.error.message}`
-    )
-  if (neurosisResult.error)
-    throw new Error(`Error Fetching Neurosis: ${neurosisResult.error.message}`)
-  if (philosophyResult.error)
-    throw new Error(
-      `Error Fetching Philosophy: ${philosophyResult.error.message}`
-    )
-  if (tenetKnowledgeResult.error)
-    throw new Error(
-      `Error Fetching Tenet Knowledge: ${tenetKnowledgeResult.error.message}`
-    )
+  // Validate all results.
+  const results = [
+    { name: 'Cursed Gear', result: cursedGearResult },
+    { name: 'Disorders', result: disorderResult },
+    { name: 'Fighting Arts', result: fightingArtResult },
+    { name: 'Secret Fighting Arts', result: secretFightingArtResult },
+    { name: 'Hunt Survivor', result: huntResult },
+    { name: 'Showdown Survivor', result: showdownResult },
+    { name: 'Knowledge 1', result: knowledge1Result },
+    { name: 'Knowledge 2', result: knowledge2Result },
+    { name: 'Neurosis', result: neurosisResult },
+    { name: 'Philosophy', result: philosophyResult },
+    { name: 'Tenet Knowledge', result: tenetKnowledgeResult }
+  ]
 
-  // Fetch names for junction table references in parallel.
+  for (const { name, result } of results)
+    if (result.error)
+      throw new Error(`Error Fetching ${name}: ${result.error.message}`)
+
+  // Resolve junction-table FK IDs to display names.
   const cursedGearIds = (cursedGearResult.data ?? []).map((x) => x.gear_id)
   const disorderIds = (disorderResult.data ?? []).map((x) => x.disorder_id)
   const fightingArtIds = (fightingArtResult.data ?? []).map(
@@ -203,43 +185,47 @@ export async function getSurvivor(
   ] = await Promise.all([
     cursedGearIds.length > 0
       ? supabase.from('gear').select('id, gear_name').in('id', cursedGearIds)
-      : { data: [], error: null },
+      : Promise.resolve({
+          data: [] as { id: string; gear_name: string }[],
+          error: null
+        }),
     disorderIds.length > 0
       ? supabase
           .from('disorder')
           .select('id, disorder_name')
           .in('id', disorderIds)
-      : { data: [], error: null },
+      : Promise.resolve({
+          data: [] as { id: string; disorder_name: string }[],
+          error: null
+        }),
     fightingArtIds.length > 0
       ? supabase
           .from('fighting_art')
           .select('id, fighting_art_name')
           .in('id', fightingArtIds)
-      : { data: [], error: null },
+      : Promise.resolve({
+          data: [] as { id: string; fighting_art_name: string }[],
+          error: null
+        }),
     secretFightingArtIds.length > 0
       ? supabase
           .from('secret_fighting_art')
           .select('id, secret_fighting_art_name')
           .in('id', secretFightingArtIds)
-      : { data: [], error: null }
+      : Promise.resolve({
+          data: [] as { id: string; secret_fighting_art_name: string }[],
+          error: null
+        })
   ])
 
-  if (gearNamesResult.error)
-    throw new Error(
-      `Error Fetching Gear Names: ${gearNamesResult.error.message}`
-    )
-  if (disorderNamesResult.error)
-    throw new Error(
-      `Error Fetching Disorder Names: ${disorderNamesResult.error.message}`
-    )
-  if (fightingArtNamesResult.error)
-    throw new Error(
-      `Error Fetching Fighting Art Names: ${fightingArtNamesResult.error.message}`
-    )
-  if (secretFightingArtNamesResult.error)
-    throw new Error(
-      `Error Fetching Secret Fighting Art Names: ${secretFightingArtNamesResult.error.message}`
-    )
+  for (const { name, result } of [
+    { name: 'Gear Names', result: gearNamesResult },
+    { name: 'Disorder Names', result: disorderNamesResult },
+    { name: 'Fighting Art Names', result: fightingArtNamesResult },
+    { name: 'Secret Fighting Art Names', result: secretFightingArtNamesResult }
+  ])
+    if (result.error)
+      throw new Error(`Error Fetching ${name}: ${result.error.message}`)
 
   return {
     ...data,
@@ -252,21 +238,20 @@ export async function getSurvivor(
       id: x.id,
       fighting_art_name: x.fighting_art_name
     })),
-    knowledge_1: knowledge1Result.data?.[0] ?? null,
-    knowledge_2: knowledge2Result.data?.[0] ?? null,
-    neurosis: neurosisResult.data?.[0] ?? null,
-    philosophy: philosophyResult.data?.[0] ?? null,
+    knowledge_1: knowledge1Result.data ?? null,
+    knowledge_2: knowledge2Result.data ?? null,
+    neurosis: neurosisResult.data ?? null,
+    philosophy: philosophyResult.data ?? null,
     secret_fighting_arts: secretFightingArtNamesResult.data ?? [],
-    tenet_knowledge: tenetKnowledgeResult.data?.[0] ?? null
+    tenet_knowledge: tenetKnowledgeResult.data ?? null
   }
 }
 
 /**
  * Get Survivors
  *
- * Includes all survivors for a settlement, along with their embarked status and
- * names for related entities (gear, disorders, fighting arts, etc.) for easier
- * consumption in the frontend.
+ * Includes all survivors for a settlement with their related entity names.
+ * Uses batch lookups to avoid N+1 query patterns.
  *
  * @param settlementId Settlement ID
  * @returns List of Survivors with Embarked Status
@@ -291,6 +276,7 @@ export async function getSurvivors(
 
   const survivorIds = survivors.map((s) => s.id)
 
+  // Batch all junction-table lookups in parallel.
   const [
     cursedGearResult,
     disorderResult,
@@ -331,30 +317,18 @@ export async function getSurvivors(
       .in('survivor_id', survivorIds)
   ])
 
-  if (cursedGearResult.error)
-    throw new Error(
-      `Error Fetching Cursed Gear: ${cursedGearResult.error.message}`
-    )
-  if (disorderResult.error)
-    throw new Error(`Error Fetching Disorders: ${disorderResult.error.message}`)
-  if (fightingArtResult.error)
-    throw new Error(
-      `Error Fetching Fighting Arts: ${fightingArtResult.error.message}`
-    )
-  if (secretFightingArtResult.error)
-    throw new Error(
-      `Error Fetching Secret Fighting Arts: ${secretFightingArtResult.error.message}`
-    )
-  if (huntResult.error)
-    throw new Error(
-      `Error Checking Hunt Survivors: ${huntResult.error.message}`
-    )
-  if (showdownResult.error)
-    throw new Error(
-      `Error Checking Showdown Survivors: ${showdownResult.error.message}`
-    )
+  for (const { name, result } of [
+    { name: 'Cursed Gear', result: cursedGearResult },
+    { name: 'Disorders', result: disorderResult },
+    { name: 'Fighting Arts', result: fightingArtResult },
+    { name: 'Secret Fighting Arts', result: secretFightingArtResult },
+    { name: 'Hunt Survivors', result: huntResult },
+    { name: 'Showdown Survivors', result: showdownResult }
+  ])
+    if (result.error)
+      throw new Error(`Error Fetching ${name}: ${result.error.message}`)
 
-  // Collect unique FK IDs across all survivors for batch lookups.
+  // Collect unique FK IDs across all survivors for batch name lookups.
   const allGearIds = [
     ...new Set((cursedGearResult.data ?? []).map((r) => r.gear_id))
   ]
@@ -407,73 +381,77 @@ export async function getSurvivors(
   ] = await Promise.all([
     allGearIds.length > 0
       ? supabase.from('gear').select('id, gear_name').in('id', allGearIds)
-      : { data: [], error: null },
+      : Promise.resolve({
+          data: [] as { id: string; gear_name: string }[],
+          error: null
+        }),
     allDisorderIds.length > 0
       ? supabase
           .from('disorder')
           .select('id, disorder_name')
           .in('id', allDisorderIds)
-      : { data: [], error: null },
+      : Promise.resolve({
+          data: [] as { id: string; disorder_name: string }[],
+          error: null
+        }),
     allFightingArtIds.length > 0
       ? supabase
           .from('fighting_art')
           .select('id, fighting_art_name')
           .in('id', allFightingArtIds)
-      : { data: [], error: null },
+      : Promise.resolve({
+          data: [] as { id: string; fighting_art_name: string }[],
+          error: null
+        }),
     allSecretFightingArtIds.length > 0
       ? supabase
           .from('secret_fighting_art')
           .select('id, secret_fighting_art_name')
           .in('id', allSecretFightingArtIds)
-      : { data: [], error: null },
+      : Promise.resolve({
+          data: [] as { id: string; secret_fighting_art_name: string }[],
+          error: null
+        }),
     allKnowledgeIds.length > 0
       ? supabase
           .from('knowledge')
           .select('id, knowledge_name')
           .in('id', allKnowledgeIds)
-      : { data: [], error: null },
+      : Promise.resolve({
+          data: [] as { id: string; knowledge_name: string }[],
+          error: null
+        }),
     allNeurosisIds.length > 0
       ? supabase
           .from('neurosis')
           .select('id, neurosis_name')
           .in('id', allNeurosisIds)
-      : { data: [], error: null },
+      : Promise.resolve({
+          data: [] as { id: string; neurosis_name: string }[],
+          error: null
+        }),
     allPhilosophyIds.length > 0
       ? supabase
           .from('philosophy')
           .select('id, philosophy_name')
           .in('id', allPhilosophyIds)
-      : { data: [], error: null }
+      : Promise.resolve({
+          data: [] as { id: string; philosophy_name: string }[],
+          error: null
+        })
   ])
 
-  if (gearNamesResult.error)
-    throw new Error(
-      `Error Fetching Gear Names: ${gearNamesResult.error.message}`
-    )
-  if (disorderNamesResult.error)
-    throw new Error(
-      `Error Fetching Disorder Names: ${disorderNamesResult.error.message}`
-    )
-  if (fightingArtNamesResult.error)
-    throw new Error(
-      `Error Fetching Fighting Art Names: ${fightingArtNamesResult.error.message}`
-    )
-  if (secretFightingArtNamesResult.error)
-    throw new Error(
-      `Error Fetching Secret Fighting Art Names: ${secretFightingArtNamesResult.error.message}`
-    )
-  if (knowledgeNamesResult.error)
-    throw new Error(
-      `Error Fetching Knowledge Names: ${knowledgeNamesResult.error.message}`
-    )
-  if (neurosisNamesResult.error)
-    throw new Error(
-      `Error Fetching Neurosis Names: ${neurosisNamesResult.error.message}`
-    )
-  if (philosophyNamesResult.error)
-    throw new Error(
-      `Error Fetching Philosophy Names: ${philosophyNamesResult.error.message}`
-    )
+  for (const { name, result } of [
+    { name: 'Gear Names', result: gearNamesResult },
+    { name: 'Disorder Names', result: disorderNamesResult },
+    { name: 'Fighting Art Names', result: fightingArtNamesResult },
+    { name: 'Secret Fighting Art Names', result: secretFightingArtNamesResult },
+    { name: 'Knowledge Names', result: knowledgeNamesResult },
+    { name: 'Neurosis Names', result: neurosisNamesResult },
+    { name: 'Philosophy Names', result: philosophyNamesResult }
+  ])
+    if (result.error)
+      throw new Error(`Error Fetching ${name}: ${result.error.message}`)
 
   // Build lookup maps for name resolution.
   const gearNameMap = new Map(
@@ -622,18 +600,17 @@ export async function updateSurvivor(
  * Delete Survivor
  *
  * Checks if a survivor can be deleted (not on a hunt or showdown) before
- * removing them from the database. Also handles any necessary cleanup, such as
- * removing the survivor from the selected state if they are currently selected.
+ * removing them from the database. Returns the updated list of survivors.
+ *
+ * This is a pure data operation — UI state management (clearing selected
+ * survivor) should be handled by the caller.
  *
  * @param settlementId Settlement ID
- * @param selectedSurvivorId Currently Selected Survivor ID
- * @param setSelectedSurvivorId Function to Update Selected Survivor ID State
- * @param survivorId Survivor ID
+ * @param survivorId Survivor ID to delete
+ * @returns Updated list of survivors for the settlement
  */
 export async function deleteSurvivor(
   settlementId: string | null | undefined,
-  selectedSurvivorId: string | null | undefined,
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void,
   survivorId: string
 ): Promise<Tables<'survivor'>[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
@@ -641,36 +618,32 @@ export async function deleteSurvivor(
 
   const supabase = createClient()
 
-  // Check if there is a record in the hunt_survivor table with this survivor_id
-  const { data: huntData, error: huntError } = await supabase
-    .from('hunt_survivor')
-    .select('id')
-    .eq('survivor_id', survivorId)
-    .maybeSingle()
+  // Check hunt and showdown participation in parallel.
+  const [huntResult, showdownResult] = await Promise.all([
+    supabase
+      .from('hunt_survivor')
+      .select('id')
+      .eq('survivor_id', survivorId)
+      .maybeSingle(),
+    supabase
+      .from('showdown_survivor')
+      .select('id')
+      .eq('survivor_id', survivorId)
+      .maybeSingle()
+  ])
 
-  if (huntError)
-    throw new Error(`Error Checking Survivor Hunts: ${huntError.message}`)
-  if (huntData) throw new Error(SURVIVOR_ON_HUNT_ERROR_MESSAGE())
-
-  // Check if there is a record in the showdown_survivor table with this
-  // survivor_id
-  const { data: showdownData, error: showdownError } = await supabase
-    .from('showdown_survivor')
-    .select('id')
-    .eq('survivor_id', survivorId)
-    .maybeSingle()
-
-  if (showdownError)
+  if (huntResult.error)
     throw new Error(
-      `Error Checking Survivor Showdowns: ${showdownError.message}`
+      `Error Checking Survivor Hunts: ${huntResult.error.message}`
     )
-  if (showdownData) throw new Error(SURVIVOR_ON_SHOWDOWN_ERROR_MESSAGE())
+  if (huntResult.data) throw new Error(SURVIVOR_ON_HUNT_ERROR_MESSAGE())
 
-  // If the survivor is currently selected, clear the selected survivor state
-  if (selectedSurvivorId === survivorId) setSelectedSurvivor(null)
+  if (showdownResult.error)
+    throw new Error(
+      `Error Checking Survivor Showdowns: ${showdownResult.error.message}`
+    )
+  if (showdownResult.data) throw new Error(SURVIVOR_ON_SHOWDOWN_ERROR_MESSAGE())
 
-  // Proceed with deletion if the survivor is not on a hunt or showdown and
-  // return the updated list of survivors for this settlement
   const { error: deleteError } = await supabase
     .from('survivor')
     .delete()
@@ -761,7 +734,7 @@ export async function createSurvivor(
 
   if (error) throw new Error(`Error Creating Survivor: ${error.message}`)
 
-  // If options.fightingArtIds is present, add the entries to the survivor_fighting_art table after inserting the survivor and getting the survivor ID. This is necessary because fighting arts are stored in a junction table and require the survivor ID as a foreign key.
+  // Add fighting arts via junction table if provided.
   if (options.fightingArtIds?.length) {
     const { error: junctionError } = await supabase
       .from('survivor_fighting_art')
