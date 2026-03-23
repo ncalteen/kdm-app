@@ -45,11 +45,17 @@ create table survivor (
   speed int not null default 0,
   aenas_state aenas_state,
   strength int not null default 0,
-  survival int not null default 0,
-  survivor_name varchar,
+  survival int not null default 0 check (survival >= 0),
+  survivor_name varchar check (
+    survivor_name is null
+    or char_length(survivor_name) <= 100
+  ),
   understanding int not null default 0,
   wanderer boolean not null default false,
-  weapon_proficiency int not null default 0 check (weapon_proficiency >= 0),
+  weapon_proficiency int not null default 0 check (
+    weapon_proficiency >= 0
+    and weapon_proficiency <= 8
+  ),
   weapon_type_id uuid references weapon_type(id) on delete
   set null,
     -- Hunt/Showdown Attributes
