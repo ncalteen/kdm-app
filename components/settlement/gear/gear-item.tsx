@@ -14,9 +14,6 @@ import { GearDetail, SettlementDetail } from '@/lib/types'
 import { CheckIcon, TrashIcon, XIcon } from 'lucide-react'
 import { memo, ReactElement, useState } from 'react'
 
-/** Settlement gear row from SettlementDetail */
-type GearRow = SettlementDetail['gear'][0]
-
 /**
  * Gear Item Component Properties
  */
@@ -24,7 +21,7 @@ export interface GearItemProps {
   /** Index */
   index: number
   /** Gear Row */
-  gear: GearRow
+  gear: SettlementDetail['gear'][0]
   /** On Quantity Change Handler */
   onQuantityChange: (index: number, quantity: number) => void
   /** On Remove Handler */

@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Separator } from '@/components/ui/separator'
 import {
   Table,
   TableBody,
@@ -322,6 +323,8 @@ export function CollectiveCognitionVictoriesCard({
               </TableBody>
             </Table>
           </div>
+
+          <Separator className="my-2" />
 
           {/* Nemeses Table */}
           <div className="pt-1">

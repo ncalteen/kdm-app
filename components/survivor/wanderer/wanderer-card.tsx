@@ -17,7 +17,7 @@ import {
   SURVIVOR_STATE_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
-import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -54,10 +54,19 @@ export function WandererCard({
     selectedSurvivor?.disposition ?? 0
   )
 
-  useEffect(() => {
+  // Reset state when the selected survivor changes (render-time comparison
+  // to avoid cascading renders from useEffect).
+  const [prevSurvivorKey, setPrevSurvivorKey] = useState(
+    () =>
+      `${selectedSurvivor?.id}-${selectedSurvivor?.aenas_state}-${selectedSurvivor?.disposition}`
+  )
+  const currentSurvivorKey = `${selectedSurvivor?.id}-${selectedSurvivor?.aenas_state}-${selectedSurvivor?.disposition}`
+
+  if (prevSurvivorKey !== currentSurvivorKey) {
+    setPrevSurvivorKey(currentSurvivorKey)
     setAenasState(selectedSurvivor?.aenas_state ?? AenasState.HUNGRY)
     setDisposition(selectedSurvivor?.disposition ?? 0)
-  }, [selectedSurvivor?.id, selectedSurvivor?.aenas_state, selectedSurvivor?.disposition])
+  }
 
   /**
    * Handles state selection changes (for Aenas).

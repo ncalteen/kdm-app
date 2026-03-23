@@ -13,6 +13,7 @@ import {
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { ColorChoice, DatabaseGender, Gender } from '@/lib/enums'
 import {
+  ERROR_MESSAGE,
   SURVIVOR_COLOR_CHANGED_MESSAGE,
   SURVIVOR_DEAD_STATUS_UPDATED_MESSAGE,
   SURVIVOR_GENDER_UPDATED_MESSAGE,
@@ -46,10 +47,10 @@ interface StatusCardProps {
 /**
  * Survivor Name, Gender, and Status Card Component
  *
- * This component allows the user to set the name, gender, and status of a survivor.
- * The form includes a text input for the name, checkboxes for male/female gender
- * selection, and checkboxes for dead/retired status. When a survivor is named,
- * they gain +1 survival.
+ * Allows the user to set the name, gender, and status of a survivor. Includes
+ * a text input for the name, checkboxes for male/female gender selection, and
+ * checkboxes for dead/retired status. Uses optimistic UI updates with rollback
+ * on database failure.
  *
  * @param props Status Card Properties
  * @returns Status Card Component
@@ -93,7 +94,7 @@ export function StatusCard({
   /**
    * Handle Name Input Changes
    *
-   * Saves on Enter key press.
+   * Saves on Enter key press with optimistic update and rollback on failure.
    *
    * @param e Keyboard Event
    * @param value Current Input Value
@@ -117,10 +118,11 @@ export function StatusCard({
 
       updateSurvivor(selectedSurvivor?.id, { survivor_name: value })
         .then(() => toast.success(SURVIVOR_NAME_UPDATED_MESSAGE()))
-        .catch((error) => {
+        .catch((error: unknown) => {
           setSurvivorName(oldName)
           setSurvivors(oldSurvivors)
-          console.error('Error Updating Survivor Name:', error)
+          console.error('Survivor Name Update Error:', error)
+          toast.error(ERROR_MESSAGE())
         })
     }
   }
@@ -145,10 +147,11 @@ export function StatusCard({
 
       updateSurvivor(selectedSurvivor?.id, { gender: dbGender })
         .then(() => toast.success(SURVIVOR_GENDER_UPDATED_MESSAGE()))
-        .catch((error) => {
+        .catch((error: unknown) => {
           setSurvivorGender(oldGender)
           setSurvivors(oldSurvivors)
-          console.error('Error Updating Survivor Gender:', error)
+          console.error('Survivor Gender Update Error:', error)
+          toast.error(ERROR_MESSAGE())
         })
     },
     [selectedSurvivor?.id, survivorGender, survivors, setSurvivors]
@@ -175,10 +178,11 @@ export function StatusCard({
         .then(() =>
           toast.success(SURVIVOR_DEAD_STATUS_UPDATED_MESSAGE(checked))
         )
-        .catch((error) => {
+        .catch((error: unknown) => {
           setSurvivorDead(oldDead)
           setSurvivors(oldSurvivors)
-          console.error('Error Updating Survivor Dead Status:', error)
+          console.error('Survivor Dead Status Update Error:', error)
+          toast.error(ERROR_MESSAGE())
         })
     },
     [selectedSurvivor?.id, survivorDead, survivors, setSurvivors]
@@ -205,10 +209,11 @@ export function StatusCard({
         .then(() =>
           toast.success(SURVIVOR_RETIRED_STATUS_UPDATED_MESSAGE(checked))
         )
-        .catch((error) => {
+        .catch((error: unknown) => {
           setSurvivorRetired(oldRetired)
           setSurvivors(oldSurvivors)
-          console.error('Error Updating Survivor Retired Status:', error)
+          console.error('Survivor Retired Status Update Error:', error)
+          toast.error(ERROR_MESSAGE())
         })
     },
     [selectedSurvivor?.id, survivorRetired, survivors, setSurvivors]
@@ -234,10 +239,11 @@ export function StatusCard({
 
       updateSurvivor(selectedSurvivor?.id, { color })
         .then(() => toast.success(SURVIVOR_COLOR_CHANGED_MESSAGE(color)))
-        .catch((error) => {
+        .catch((error: unknown) => {
           setSurvivorColor(oldColor)
           setSurvivors(oldSurvivors)
-          console.error('Error Updating Survivor Color:', error)
+          console.error('Survivor Color Update Error:', error)
+          toast.error(ERROR_MESSAGE())
         })
     },
     [selectedSurvivor?.id, survivorColor, survivors, setSurvivors]
@@ -263,7 +269,7 @@ export function StatusCard({
                   className={`h-8 w-8 ${getColorStyle(survivorColor, 'bg')} items-center justify-center cursor-pointer`}
                   onClick={() => setIsColorPickerOpen(true)}
                   onContextMenu={(e) => {
-                    e.preventDefault() // Prevent default right-click menu
+                    e.preventDefault()
                     setIsColorPickerOpen(true)
                   }}>
                   <AvatarFallback className="bg-transparent">
@@ -288,6 +294,7 @@ export function StatusCard({
                         } transition-all duration-200`}
                         onClick={() => handleColorChange(color)}
                         title={color.charAt(0).toUpperCase() + color.slice(1)}
+                        aria-label={`Select ${color} color`}
                       />
                     )
                   })}

@@ -33,6 +33,7 @@ import {
   getSettlementNemeses
 } from '@/lib/dal/settlement-nemesis'
 import { getSettlementPatterns } from '@/lib/dal/settlement-pattern'
+import { getSettlementPhilosophies } from '@/lib/dal/settlement-philosophy'
 import {
   addSettlementPrinciples,
   getSettlementPrinciples
@@ -357,6 +358,7 @@ export async function getSettlement(
     milestones,
     nemeses,
     patterns,
+    philosophies,
     principles,
     quarries,
     resources,
@@ -371,6 +373,7 @@ export async function getSettlement(
     getSettlementMilestones(settlementId),
     getSettlementNemeses(settlementId),
     getSettlementPatterns(settlementId),
+    getSettlementPhilosophies(settlementId),
     getSettlementPrinciples(settlementId),
     getSettlementQuarries(settlementId),
     getSettlementResources(settlementId),
@@ -393,6 +396,7 @@ export async function getSettlement(
     milestones,
     nemeses,
     patterns,
+    philosophies,
     principles,
     quarries,
     resources,

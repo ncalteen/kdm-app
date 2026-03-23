@@ -21,10 +21,15 @@ import {
 } from '@/components/ui/popover'
 import { removeHunt, updateHunt } from '@/lib/dal/hunt'
 import { updateHuntHuntBoard } from '@/lib/dal/hunt-hunt-board'
+import { addShowdown } from '@/lib/dal/showdown'
+import { addShowdownAIDeck } from '@/lib/dal/showdown-ai-deck'
+import { addShowdownMonster } from '@/lib/dal/showdown-monster'
+import { addShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import {
   DatabaseSurvivorType,
   HuntEventCount,
   HuntEventType,
+  MonsterType,
   SurvivorType,
   TabType
 } from '@/lib/enums'
@@ -32,6 +37,7 @@ import {
   ERROR_MESSAGE,
   HUNT_DELETED_MESSAGE,
   MONSTER_MOVED_MESSAGE,
+  SHOWDOWN_CREATED_MESSAGE,
   SURVIVORS_MOVED_MESSAGE
 } from '@/lib/messages'
 import {
@@ -39,6 +45,8 @@ import {
   HuntHuntBoardDetail,
   SettlementDetail,
   ShowdownDetail,
+  ShowdownMonsterDetail,
+  ShowdownSurvivorDetail,
   SurvivorDetail
 } from '@/lib/types'
 import { ChevronRightIcon, DicesIcon, XIcon } from 'lucide-react'
@@ -92,12 +100,17 @@ export function ActiveHuntCard({
   selectedSurvivor,
   setSelectedHunt,
   setSelectedHuntMonsterIndex,
+  setSelectedShowdown,
+  setSelectedShowdownMonsterIndex,
   setSelectedSurvivor,
+  setSelectedTab,
   setSurvivors,
   survivors
 }: ActiveHuntCardProps): ReactElement {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState<boolean>(false)
   const [isShowdownDialogOpen, setIsShowdownDialogOpen] =
+    useState<boolean>(false)
+  const [isProceedingToShowdown, setIsProceedingToShowdown] =
     useState<boolean>(false)
   const [huntEventPopoverOpen, setHuntEventPopoverOpen] =
     useState<boolean>(false)
@@ -255,12 +268,216 @@ export function ActiveHuntCard({
   /**
    * Handle Proceed to Showdown
    *
-   * @todo Implement showdown creation from hunt data
+   * Creates a new showdown from the current hunt data:
+   * 1. Creates the showdown record
+   * 2. Creates showdown AI decks from hunt AI deck data
+   * 3. Creates showdown monsters from hunt monsters (with AI deck references)
+   * 4. Creates showdown survivors from hunt survivors (carrying over tokens)
+   * 5. Deletes the hunt (cascade removes hunt_monster, hunt_survivor, etc.)
+   * 6. Updates local state to reflect the new showdown
    */
-  const handleProceedToShowdown = useCallback(() => {
-    toast.error('Proceed to showdown is not yet implemented.')
-    setIsShowdownDialogOpen(false)
-  }, [])
+  const handleProceedToShowdown = useCallback(async () => {
+    if (!selectedHunt || !selectedSettlement) return
+
+    const huntMonsters = selectedHunt.hunt_monsters
+    const huntSurvivors = selectedHunt.hunt_survivors
+
+    if (!huntMonsters || !huntSurvivors) {
+      toast.error(ERROR_MESSAGE())
+      return
+    }
+
+    setIsProceedingToShowdown(true)
+
+    try {
+      // 1. Create the showdown record
+      const showdownId = await addShowdown({
+        ambush: 'NONE',
+        monster_level: selectedHunt.monster_level,
+        settlement_id: selectedSettlement.id,
+        showdown_type: 'REGULAR',
+        turn: 'MONSTER'
+      })
+
+      // 2-3. Create showdown AI decks and monsters for each hunt monster
+      const showdownMonsters: { [key: string]: ShowdownMonsterDetail } = {}
+
+      for (const huntMonster of Object.values(huntMonsters)) {
+        // Create showdown AI deck from the hunt monster's AI deck
+        const showdownAIDeck = await addShowdownAIDeck({
+          basic_cards: huntMonster.ai_deck.basic_cards,
+          advanced_cards: huntMonster.ai_deck.advanced_cards,
+          legendary_cards: huntMonster.ai_deck.legendary_cards,
+          overtone_cards: huntMonster.ai_deck.overtone_cards,
+          settlement_id: selectedSettlement.id,
+          showdown_id: showdownId
+        })
+
+        // Create showdown monster with all stats carried over from hunt
+        const showdownMonsterId = await addShowdownMonster({
+          accuracy: huntMonster.accuracy,
+          accuracy_tokens: huntMonster.accuracy_tokens,
+          ai_card_drawn: false,
+          ai_deck_id: showdownAIDeck.id,
+          ai_deck_remaining: huntMonster.ai_deck_remaining,
+          damage: huntMonster.damage,
+          damage_tokens: huntMonster.damage_tokens,
+          evasion: huntMonster.evasion,
+          evasion_tokens: huntMonster.evasion_tokens,
+          knocked_down: huntMonster.knocked_down,
+          luck: huntMonster.luck,
+          luck_tokens: huntMonster.luck_tokens,
+          monster_name: huntMonster.monster_name,
+          moods: huntMonster.moods,
+          movement: huntMonster.movement,
+          movement_tokens: huntMonster.movement_tokens,
+          notes: huntMonster.notes,
+          settlement_id: selectedSettlement.id,
+          showdown_id: showdownId,
+          speed: huntMonster.speed,
+          speed_tokens: huntMonster.speed_tokens,
+          strength: huntMonster.strength,
+          strength_tokens: huntMonster.strength_tokens,
+          toughness: huntMonster.toughness,
+          traits: huntMonster.traits,
+          wounds: huntMonster.wounds
+        })
+
+        showdownMonsters[showdownMonsterId] = {
+          id: showdownMonsterId,
+          accuracy: huntMonster.accuracy,
+          accuracy_tokens: huntMonster.accuracy_tokens,
+          ai_card_drawn: false,
+          ai_deck_id: showdownAIDeck.id,
+          ai_deck_remaining: huntMonster.ai_deck_remaining,
+          damage: huntMonster.damage,
+          damage_tokens: huntMonster.damage_tokens,
+          evasion: huntMonster.evasion,
+          evasion_tokens: huntMonster.evasion_tokens,
+          knocked_down: huntMonster.knocked_down,
+          luck: huntMonster.luck,
+          luck_tokens: huntMonster.luck_tokens,
+          monster_name: huntMonster.monster_name,
+          moods: huntMonster.moods,
+          movement: huntMonster.movement,
+          movement_tokens: huntMonster.movement_tokens,
+          notes: huntMonster.notes,
+          settlement_id: selectedSettlement.id,
+          showdown_id: showdownId,
+          speed: huntMonster.speed,
+          speed_tokens: huntMonster.speed_tokens,
+          strength: huntMonster.strength,
+          strength_tokens: huntMonster.strength_tokens,
+          toughness: huntMonster.toughness,
+          traits: huntMonster.traits,
+          wounds: huntMonster.wounds,
+          ai_deck: showdownAIDeck
+        }
+      }
+
+      // 4. Create showdown survivors from hunt survivors
+      const showdownSurvivors: { [key: string]: ShowdownSurvivorDetail } = {}
+
+      for (const huntSurvivor of Object.values(huntSurvivors)) {
+        const showdownSurvivorId = await addShowdownSurvivor({
+          accuracy_tokens: huntSurvivor.accuracy_tokens,
+          activation_used: false,
+          bleeding_tokens: 0,
+          block_tokens: 0,
+          deflect_tokens: 0,
+          evasion_tokens: huntSurvivor.evasion_tokens,
+          insanity_tokens: huntSurvivor.insanity_tokens,
+          knocked_down: false,
+          luck_tokens: huntSurvivor.luck_tokens,
+          movement_tokens: huntSurvivor.movement_tokens,
+          movement_used: false,
+          notes: huntSurvivor.notes,
+          priority_target: false,
+          scout: huntSurvivor.scout,
+          settlement_id: selectedSettlement.id,
+          showdown_id: showdownId,
+          speed_tokens: huntSurvivor.speed_tokens,
+          strength_tokens: huntSurvivor.strength_tokens,
+          survival_tokens: huntSurvivor.survival_tokens,
+          survivor_id: huntSurvivor.survivor_id
+        })
+
+        showdownSurvivors[showdownSurvivorId] = {
+          id: showdownSurvivorId,
+          accuracy_tokens: huntSurvivor.accuracy_tokens,
+          activation_used: false,
+          bleeding_tokens: 0,
+          block_tokens: 0,
+          deflect_tokens: 0,
+          evasion_tokens: huntSurvivor.evasion_tokens,
+          insanity_tokens: huntSurvivor.insanity_tokens,
+          knocked_down: false,
+          luck_tokens: huntSurvivor.luck_tokens,
+          movement_tokens: huntSurvivor.movement_tokens,
+          movement_used: false,
+          notes: huntSurvivor.notes,
+          priority_target: false,
+          scout: huntSurvivor.scout,
+          settlement_id: selectedSettlement.id,
+          showdown_id: showdownId,
+          speed_tokens: huntSurvivor.speed_tokens,
+          strength_tokens: huntSurvivor.strength_tokens,
+          survival_tokens: huntSurvivor.survival_tokens,
+          survivor_id: huntSurvivor.survivor_id
+        }
+      }
+
+      // 5. Delete the hunt (cascade removes all hunt-related records)
+      await removeHunt(selectedHunt.id)
+
+      // 6. Build the ShowdownDetail and update local state
+      const showdownDetail: ShowdownDetail = {
+        id: showdownId,
+        ambush: 'NONE',
+        monster_level: selectedHunt.monster_level,
+        settlement_id: selectedSettlement.id,
+        showdown_type: 'REGULAR',
+        turn: 'MONSTER',
+        showdown_monsters: showdownMonsters,
+        showdown_survivors: showdownSurvivors
+      }
+
+      // Clear hunt state
+      setSelectedHunt(null)
+      setSelectedHuntMonsterIndex(0)
+
+      // Set showdown state
+      setSelectedShowdown(showdownDetail)
+      setSelectedShowdownMonsterIndex(0)
+
+      // Switch to the showdown tab
+      setSelectedTab(TabType.SHOWDOWN)
+
+      setIsShowdownDialogOpen(false)
+
+      // Get the first monster name for the toast message
+      const firstMonster = Object.values(showdownMonsters)[0]
+      toast.success(
+        SHOWDOWN_CREATED_MESSAGE(
+          firstMonster?.monster_name ?? 'Unknown Monster',
+          MonsterType.QUARRY
+        )
+      )
+    } catch (error: unknown) {
+      console.error('Proceed to Showdown Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setIsProceedingToShowdown(false)
+    }
+  }, [
+    selectedHunt,
+    selectedSettlement,
+    setSelectedHunt,
+    setSelectedHuntMonsterIndex,
+    setSelectedShowdown,
+    setSelectedShowdownMonsterIndex,
+    setSelectedTab
+  ])
 
   return (
     <div className="flex flex-col gap-2 h-full relative">
@@ -413,8 +630,10 @@ export function ActiveHuntCard({
 
           <AlertDialogFooter>
             <AlertDialogCancel>Go Back</AlertDialogCancel>
-            <AlertDialogAction onClick={handleProceedToShowdown}>
-              Proceed
+            <AlertDialogAction
+              onClick={handleProceedToShowdown}
+              disabled={isProceedingToShowdown}>
+              {isProceedingToShowdown ? 'Proceeding...' : 'Proceed'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

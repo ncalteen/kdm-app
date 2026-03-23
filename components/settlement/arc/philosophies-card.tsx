@@ -126,6 +126,15 @@ export function PhilosophiesCard({
       const philosophyInfo = availablePhilosophies[philosophyId]
       if (!philosophyInfo) return setIsAddingNew(false)
 
+      // Prevent duplicates — check if this philosophy is already added.
+      const alreadyAdded = (selectedSettlement.philosophies ?? []).some(
+        (p) => p.philosophy_id === philosophyId
+      )
+      if (alreadyAdded) {
+        setIsAddingNew(false)
+        return
+      }
+
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
       const optimisticRow: SettlementDetail['philosophies'][0] = {

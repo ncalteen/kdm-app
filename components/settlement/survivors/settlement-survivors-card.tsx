@@ -141,7 +141,7 @@ export function SettlementSurvivorsCard({
         {survivors.length === 0 ? (
           <div className="flex flex-col gap-2 justify-center items-center p-4">
             <div className="text-center text-muted-foreground py-4">
-              Silence echoes through the darkness. No survivors present.
+              Lanterns illuminate a silent settlement. No survivors found.
             </div>
             <Button
               variant="outline"

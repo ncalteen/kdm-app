@@ -211,7 +211,7 @@ export const createColumns = ({
       },
       cell: ({ row }) => (
         <div className="text-left text-sm hidden md:block">
-          {row.getValue('philosophy')}
+          {row.original.philosophy?.philosophy_name}
         </div>
       ),
       meta: {
