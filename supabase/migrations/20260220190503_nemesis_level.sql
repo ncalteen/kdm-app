@@ -129,6 +129,7 @@ create policy "Allow all for admin" on nemesis_level for all using (is_admin()) 
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_nemesis_level_nemesis on nemesis_level(nemesis_id);
+create index idx_nemesis_level_nemesis_level on nemesis_level(nemesis_id, level_number);
 --------------------------------------------------------------------------------
 -- Triggers
 --------------------------------------------------------------------------------

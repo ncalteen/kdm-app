@@ -210,8 +210,8 @@ create policy "Allow all for admin" on survivor for all using (is_admin()) with 
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_survivor_settlement on survivor(settlement_id);
-create index idx_survivor_dead on survivor(dead);
-create index idx_survivor_retired on survivor(retired);
+create index idx_survivor_settlement_dead on survivor(settlement_id, dead);
+create index idx_survivor_settlement_retired on survivor(settlement_id, retired);
 --------------------------------------------------------------------------------
 -- Triggers
 --------------------------------------------------------------------------------

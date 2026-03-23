@@ -143,6 +143,7 @@ create policy "Allow all for admin" on resource_shared_user for all using (is_ad
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_resource_custom_user on resource(custom, user_id);
 create index idx_resource_shared_user_resource on resource_shared_user(resource_id);
 create index idx_resource_shared_user_user on resource_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

@@ -141,6 +141,7 @@ create policy "Allow all for admin" on pattern_shared_user for all using (is_adm
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_pattern_custom_user on pattern(custom, user_id);
 create index idx_pattern_shared_user_pattern on pattern_shared_user(pattern_id);
 create index idx_pattern_shared_user_user on pattern_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

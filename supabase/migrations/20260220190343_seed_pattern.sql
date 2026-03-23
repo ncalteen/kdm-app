@@ -141,6 +141,7 @@ create policy "Allow all for admin" on seed_pattern_shared_user for all using (i
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_seed_pattern_custom_user on seed_pattern(custom, user_id);
 create index idx_seed_pattern_shared_user_seed_pattern on seed_pattern_shared_user(seed_pattern_id);
 create index idx_seed_pattern_shared_user_user on seed_pattern_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

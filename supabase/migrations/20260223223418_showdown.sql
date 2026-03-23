@@ -11,7 +11,7 @@ create table showdown (
   -- Data
   ambush ambush_type not null default 'NONE',
   monster_level int not null,
-  settlement_id uuid references settlement(id) on delete cascade,
+  settlement_id uuid not null unique references settlement(id) on delete cascade,
   showdown_type showdown_type not null default 'REGULAR',
   turn showdown_turn not null default 'MONSTER'
 );

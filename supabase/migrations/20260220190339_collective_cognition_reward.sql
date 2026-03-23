@@ -146,6 +146,7 @@ create policy "Allow all for admin" on collective_cognition_reward_shared_user f
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_collective_cognition_reward_custom_user on collective_cognition_reward(custom, user_id);
 create index idx_collective_cognition_reward_shared_user_collective_cognition_reward on collective_cognition_reward_shared_user(collective_cognition_reward_id);
 create index idx_collective_cognition_reward_shared_user_user on collective_cognition_reward_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

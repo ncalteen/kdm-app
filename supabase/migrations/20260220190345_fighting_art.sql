@@ -141,6 +141,7 @@ create policy "Allow all for admin" on fighting_art_shared_user for all using (i
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_fighting_art_custom_user on fighting_art(custom, user_id);
 create index idx_fighting_art_shared_user_fighting_art on fighting_art_shared_user(fighting_art_id);
 create index idx_fighting_art_shared_user_user on fighting_art_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

@@ -141,6 +141,7 @@ create policy "Allow all for admin" on character_shared_user for all using (is_a
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_character_custom_user on character(custom, user_id);
 create index idx_character_shared_user_character on character_shared_user(character_id);
 create index idx_character_shared_user_user on character_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

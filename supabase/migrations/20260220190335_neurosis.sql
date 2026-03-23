@@ -142,6 +142,7 @@ create policy "Allow all for admin" on neurosis_shared_user for all using (is_ad
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_neurosis_custom_user on neurosis(custom, user_id);
 create index idx_neurosis_philosophy on neurosis(philosophy_id);
 create index idx_neurosis_shared_user_neurosis on neurosis_shared_user(neurosis_id);
 create index idx_neurosis_shared_user_user on neurosis_shared_user(shared_user_id);
