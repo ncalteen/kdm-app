@@ -14,8 +14,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { getNemesisNames } from '@/lib/dal/nemesis'
-import { getQuarryNames } from '@/lib/dal/quarry'
+import { getNemeses } from '@/lib/dal/nemesis'
+import { getQuarries } from '@/lib/dal/quarry'
 import { MonsterNode } from '@/lib/enums'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, X } from 'lucide-react'
@@ -40,9 +40,9 @@ export interface SelectMonsterNodeProps {
 /**
  * Select Monster Node Component
  *
- * This component allows the user to select one or more monsters for a specific
- * node type. It uses a popover to display the options and allows for searching
- * through them. Multiple monsters can be selected.
+ * Allows the user to select one or more monsters for a specific node type.
+ * Uses a popover with search to display options. Multiple monsters can be
+ * selected.
  *
  * @param props Component Properties
  * @returns Select Monster Node Component
@@ -60,9 +60,40 @@ export function SelectMonsterNode({
   >([])
 
   useEffect(() => {
-    if (nodeType.startsWith('NQ'))
-      getQuarryNames([nodeType]).then((quarries) => setMonsters(quarries))
-    else getNemesisNames([nodeType]).then((nemeses) => setMonsters(nemeses))
+    let isCancelled = false
+
+    const fetchMonsters = async () => {
+      try {
+        if (nodeType.startsWith('NQ')) {
+          const quarries = await getQuarries([nodeType])
+          if (isCancelled) return
+          setMonsters(
+            Object.values(quarries).map((q) => ({
+              id: q.id,
+              monster_name: q.monster_name
+            }))
+          )
+        } else {
+          const nemeses = await getNemeses([nodeType])
+          if (isCancelled) return
+          setMonsters(
+            Object.values(nemeses).map((n) => ({
+              id: n.id,
+              monster_name: n.monster_name
+            }))
+          )
+        }
+      } catch (error: unknown) {
+        if (isCancelled) return
+        console.error('Monster Node Fetch Error:', error)
+      }
+    }
+
+    fetchMonsters()
+
+    return () => {
+      isCancelled = true
+    }
   }, [nodeType])
 
   /**
@@ -73,23 +104,20 @@ export function SelectMonsterNode({
   const handleToggle = (monsterId: string) => {
     if (!onChange) return
 
-    if (propValue.some((monster) => monster === monsterId)) {
-      onChange(propValue.filter((monster) => monster !== monsterId))
-      return
-    }
+    if (propValue.some((monster) => monster === monsterId))
+      return onChange(propValue.filter((monster) => monster !== monsterId))
 
     const monsterData = monsters.find((monster) => monster.id === monsterId)
     if (monsterData) onChange([...propValue, monsterData.id])
   }
 
   /**
-   * Remove Monster from Selection.
+   * Remove Monster from Selection
    *
    * @param monsterId Monster ID to Remove
    */
-  const handleRemove = (monsterId: string) => {
-    if (onChange) onChange(propValue.filter((monster) => monster !== monsterId))
-  }
+  const handleRemove = (monsterId: string) =>
+    onChange?.(propValue.filter((monster) => monster !== monsterId))
 
   const selectedMonsters = useMemo(() => {
     return propValue
@@ -158,7 +186,8 @@ export function SelectMonsterNode({
                 <button
                   type="button"
                   onClick={() => handleRemove(monster.id)}
-                  className="hover:bg-secondary-foreground/20 rounded-sm p-0.5 shrink-0">
+                  className="hover:bg-secondary-foreground/20 rounded-sm p-0.5 shrink-0"
+                  aria-label={`Remove ${monster.monster_name}`}>
                   <X className="h-3 w-3" />
                 </button>
               )}

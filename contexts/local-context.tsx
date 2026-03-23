@@ -1,12 +1,29 @@
 'use client'
 
+import { LOCAL_STORAGE_KEY } from '@/lib/common'
+import { getHunt } from '@/lib/dal/hunt'
+import { getSettlement } from '@/lib/dal/settlement'
+import { getSettlementPhase } from '@/lib/dal/settlement-phase'
+import { getShowdown } from '@/lib/dal/showdown'
+import { getSurvivor, getSurvivors } from '@/lib/dal/survivor'
+import { addUserSettings, getUserId, getUserSettings } from '@/lib/dal/user'
 import { TabType } from '@/lib/enums'
+import { createClient } from '@/lib/supabase/client'
+import {
+  HuntDetail,
+  SettlementDetail,
+  SettlementPhaseDetail,
+  ShowdownDetail,
+  SurvivorDetail,
+  UserSettingsDetail
+} from '@/lib/types'
 import { saveToLocalStorage } from '@/lib/utils'
 import {
   createContext,
   ReactElement,
   ReactNode,
   useContext,
+  useEffect,
   useState
 } from 'react'
 
@@ -34,18 +51,28 @@ interface LocalContextType {
   /** Is Creating New Survivor */
   isCreatingNewSurvivor: boolean
 
+  /** Selected Hunt */
+  selectedHunt: HuntDetail | null
   /** Selected Hunt ID */
   selectedHuntId: string | null
   /** Selected Hunt Monster Index */
   selectedHuntMonsterIndex: number
+  /** Selected Settlement */
+  selectedSettlement: SettlementDetail | null
   /** Selected Settlement ID */
   selectedSettlementId: string | null
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Settlement Phase ID */
   selectedSettlementPhaseId: string | null
+  /** Selected Showdown */
+  selectedShowdown: ShowdownDetail | null
   /** Selected Showdown ID */
   selectedShowdownId: string | null
   /** Selected Showdown Monster Index */
   selectedShowdownMonsterIndex: number
+  /** Selected Survivor */
+  selectedSurvivor: SurvivorDetail | null
   /** Selected Survivor ID */
   selectedSurvivorId: string | null
   /** Selected Tab */
@@ -60,25 +87,47 @@ interface LocalContextType {
   /** Set Is Creating New Survivor */
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
 
+  /** Set Selected Hunt */
+  setSelectedHunt: (hunt: HuntDetail | null) => void
   /** Set Selected Hunt ID */
-  setSelectedHuntId: (hunt: string | null) => void
+  setSelectedHuntId: (huntId: string | null) => void
   /** Set Selected Hunt Monster Index */
   setSelectedHuntMonsterIndex: (index: number) => void
+  /** Set Selected Settlement */
+  setSelectedSettlement: (settlement: SettlementDetail | null) => void
   /** Set Selected Settlement ID */
-  setSelectedSettlementId: (settlement: string | null) => void
+  setSelectedSettlementId: (settlementId: string | null) => void
+  /** Set Selected Settlement Phase */
+  setSelectedSettlementPhase: (
+    settlementPhase: SettlementPhaseDetail | null
+  ) => void
   /** Set Selected Settlement Phase ID */
-  setSelectedSettlementPhaseId: (settlement: string | null) => void
+  setSelectedSettlementPhaseId: (settlementPhaseId: string | null) => void
+  /** Set Selected Showdown */
+  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
   /** Set Selected Showdown ID */
-  setSelectedShowdownId: (showdown: string | null) => void
+  setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Showdown Monster Index */
   setSelectedShowdownMonsterIndex: (index: number) => void
+  /** Set Selected Survivor */
+  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
   /** Set Selected Survivor ID */
-  setSelectedSurvivorId: (survivor: string | null) => void
+  setSelectedSurvivorId: (survivorId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
 
+  /** Set Survivors */
+  setSurvivors: (survivors: SurvivorDetail[]) => void
+  /** Survivors */
+  survivors: SurvivorDetail[]
+
   /** Update Local Context */
   updateLocal: (local: LocalContextType) => void
+
+  /** User Settings */
+  userSettings: UserSettingsDetail | null
+  /** Set User Settings */
+  setUserSettings: (settings: UserSettingsDetail | null) => void
 }
 
 /**
@@ -101,36 +150,64 @@ const LocalContext = createContext<LocalContextType | undefined>(undefined)
  * @returns Local Context Provider Component
  */
 export function LocalProvider({ children }: LocalProviderProps): ReactElement {
+  // Get the local state information from local storage, or set to default if
+  // not present.
   const [local, setLocalState] = useState<LocalContextType>(() =>
     typeof window === 'undefined'
       ? newLocal
       : JSON.parse(
-          localStorage.getItem('kdm-archivist-local') ??
-            JSON.stringify(newLocal)
+          localStorage.getItem(LOCAL_STORAGE_KEY) ?? JSON.stringify(newLocal)
         )
   )
 
+  // Hunt
+  const [selectedHunt, setSelectedHuntState] = useState<HuntDetail | null>(null)
   const [selectedHuntId, setSelectedHuntIdState] = useState<string | null>(
     () => local.selectedHuntId ?? null
   )
   const [selectedHuntMonsterIndex, setSelectedHuntMonsterIndexState] =
     useState<number>(() => local.selectedHuntMonsterIndex)
+
+  // Settlement
+  const [selectedSettlement, setSelectedSettlementState] =
+    useState<SettlementDetail | null>(null)
   const [selectedSettlementId, setSelectedSettlementIdState] = useState<
     string | null
   >(() => local.selectedSettlementId ?? null)
+
+  // Settlement Phase
+  const [selectedSettlementPhase, setSelectedSettlementPhaseState] =
+    useState<SettlementPhaseDetail | null>(null)
   const [selectedSettlementPhaseId, setSelectedSettlementPhaseIdState] =
     useState<string | null>(() => local.selectedSettlementPhaseId ?? null)
+
+  // Showdown
+  const [selectedShowdown, setSelectedShowdownState] =
+    useState<ShowdownDetail | null>(null)
   const [selectedShowdownId, setSelectedShowdownIdState] = useState<
     string | null
   >(() => local.selectedShowdownId ?? null)
   const [selectedShowdownMonsterIndex, setSelectedShowdownMonsterIndexState] =
     useState<number>(() => local.selectedShowdownMonsterIndex)
+
+  // Survivor
+  const [selectedSurvivor, setSelectedSurvivorState] =
+    useState<SurvivorDetail | null>(null)
   const [selectedSurvivorId, setSelectedSurvivorIdState] = useState<
     string | null
   >(() => local.selectedSurvivorId ?? null)
+
+  // Survivors (all for Settlement)
+  const [survivors, setSurvivors] = useState<SurvivorDetail[]>([])
+
+  // Tab
   const [selectedTab, setSelectedTabState] = useState<TabType>(
     () => local.selectedTab ?? TabType.TIMELINE
   )
+
+  // User Settings
+  const [userSettings, setUserSettingsState] =
+    useState<UserSettingsDetail | null>(null)
 
   const [isCreatingNewHunt, setIsCreatingNewHunt] = useState<boolean>(false)
   const [isCreatingNewSettlement, setIsCreatingNewSettlement] =
@@ -140,17 +217,512 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   const [isCreatingNewSurvivor, setIsCreatingNewSurvivor] =
     useState<boolean>(false)
 
+  // Wait for authentication before fetching any data.
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+
+  useEffect(() => {
+    let isCancelled = false
+
+    const supabase = createClient()
+
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (isCancelled) return
+      setIsAuthenticated(!error && !!data?.user)
+    })
+
+    // Re-evaluate when the auth state changes (e.g. login/logout).
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isCancelled) return
+      setIsAuthenticated(!!session?.user)
+    })
+
+    return () => {
+      isCancelled = true
+      subscription.unsubscribe()
+    }
+  }, [])
+
   /**
-   * Set Selected Hunt ID
+   * Fetch Hunt Data
    *
-   * @param hunt Selected Hunt ID
+   * Triggered whenever the settlement or hunt selection changes. Uses a
+   * cancellation flag to prevent state updates on unmounted components or when
+   * selections change rapidly.
    */
-  const setSelectedHuntId = (hunt: string | null) => {
-    setSelectedHuntIdState(hunt)
+  useEffect(() => {
+    console.debug('Fetching Hunt Data')
+
+    let isCancelled = false
+
+    if (!isAuthenticated || !selectedHuntId || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    getHunt(selectedSettlementId)
+      .then((hunt) => {
+        if (isCancelled) return
+
+        console.debug('Hunt Data:', hunt)
+        setSelectedHuntState(hunt)
+
+        if (!hunt) {
+          setSelectedHuntIdState(null)
+          setSelectedHuntMonsterIndexState(0)
+
+          setLocalState((prev) => {
+            const updated = {
+              ...prev,
+              selectedHuntId: null,
+              selectedHuntMonsterIndex: 0
+            }
+
+            saveToLocalStorage(updated)
+
+            return updated
+          })
+        }
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+        console.error('Hunt Fetch Error:', err)
+
+        setSelectedHuntState(null)
+        setSelectedHuntIdState(null)
+        setSelectedHuntMonsterIndexState(0)
+
+        setLocalState((prev) => {
+          const updated = {
+            ...prev,
+            selectedHuntId: null,
+            selectedHuntMonsterIndex: 0
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated, selectedHuntId, selectedSettlementId])
+
+  /**
+   * Fetch Settlement Data
+   *
+   * Triggered whenever the settlement selection changes. Uses a cancellation
+   * flag to prevent state updates on unmounted components or when selections
+   * change rapidly.
+   */
+  useEffect(() => {
+    console.debug('Fetching Settlement Data')
+
+    let isCancelled = false
+
+    if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    getSettlement(selectedSettlementId)
+      .then((settlement) => {
+        if (isCancelled) return
+
+        console.debug('Settlement Data:', settlement)
+
+        setSelectedSettlementState(settlement)
+
+        // Settlement not found — clear all dependent data.
+        if (!settlement) {
+          setSelectedSettlementIdState(null)
+          setSelectedHuntState(null)
+          setSelectedHuntIdState(null)
+          setSelectedHuntMonsterIndexState(0)
+          setSelectedSettlementPhaseState(null)
+          setSelectedSettlementPhaseIdState(null)
+          setSelectedShowdownState(null)
+          setSelectedShowdownIdState(null)
+          setSelectedShowdownMonsterIndexState(0)
+          setSelectedSurvivorState(null)
+          setSelectedSurvivorIdState(null)
+          setSurvivors([])
+
+          setLocalState((prev) => {
+            const updated = {
+              ...prev,
+              selectedSettlementId: null,
+              selectedHuntId: null,
+              selectedHuntMonsterIndex: 0,
+              selectedSettlementPhaseId: null,
+              selectedShowdownId: null,
+              selectedShowdownMonsterIndex: 0,
+              selectedSurvivorId: null
+            }
+
+            saveToLocalStorage(updated)
+
+            return updated
+          })
+        }
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('Settlement Fetch Error:', err)
+
+        setSelectedSettlementState(null)
+        setSelectedSettlementIdState(null)
+        setSelectedHuntState(null)
+        setSelectedHuntIdState(null)
+        setSelectedHuntMonsterIndexState(0)
+        setSelectedSettlementPhaseState(null)
+        setSelectedSettlementPhaseIdState(null)
+        setSelectedShowdownState(null)
+        setSelectedShowdownIdState(null)
+        setSelectedShowdownMonsterIndexState(0)
+        setSelectedSurvivorState(null)
+        setSelectedSurvivorIdState(null)
+        setSurvivors([])
+
+        setLocalState((prev) => {
+          const updated = {
+            ...prev,
+            selectedSettlementId: null,
+            selectedHuntId: null,
+            selectedHuntMonsterIndex: 0,
+            selectedSettlementPhaseId: null,
+            selectedShowdownId: null,
+            selectedShowdownMonsterIndex: 0,
+            selectedSurvivorId: null
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated, selectedSettlementId])
+
+  /**
+   * Fetch Survivors Data
+   *
+   * Triggered whenever the settlement selection changes. Uses a cancellation
+   * flag to prevent state updates on unmounted components or when selections
+   * change rapidly.
+   */
+  useEffect(() => {
+    console.debug('Fetching Survivors Data')
+
+    let isCancelled = false
+
+    if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    getSurvivors(selectedSettlementId)
+      .then((survivors) => {
+        if (isCancelled) return
+
+        console.debug('Survivors Data:', survivors)
+        setSurvivors(survivors ?? [])
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('Survivors Fetch Error:', err)
+        setSurvivors([])
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated, selectedSettlementId])
+
+  /**
+   * Fetch Settlement Phase Data
+   *
+   * Triggered whenever the settlement selection changes. Uses a cancellation
+   * flag to prevent state updates on unmounted components or when selections
+   * change rapidly.
+   */
+  useEffect(() => {
+    console.debug('Fetching Settlement Phase Data')
+
+    let isCancelled = false
+
+    if (!isAuthenticated || !selectedSettlementId || !selectedSettlementPhaseId)
+      return () => {
+        isCancelled = true
+      }
+
+    getSettlementPhase(selectedSettlementId)
+      .then((settlementPhase) => {
+        if (isCancelled) return
+
+        console.debug('Settlement Phase Data:', settlementPhase)
+        setSelectedSettlementPhaseState(settlementPhase)
+
+        if (!settlementPhase) {
+          setSelectedSettlementPhaseIdState(null)
+
+          setLocalState((prev) => {
+            const updated = {
+              ...prev,
+              selectedSettlementPhaseId: null
+            }
+
+            saveToLocalStorage(updated)
+
+            return updated
+          })
+        }
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('Settlement Phase Fetch Error:', err)
+
+        setSelectedSettlementPhaseState(null)
+        setSelectedSettlementPhaseIdState(null)
+
+        setLocalState((prev) => {
+          const updated = {
+            ...prev,
+            selectedSettlementPhaseId: null
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated, selectedSettlementId, selectedSettlementPhaseId])
+
+  /**
+   * Fetch Showdown Data
+   *
+   * Triggered whenever the settlement selection changes. Uses a cancellation
+   * flag to prevent state updates on unmounted components or when selections
+   * change rapidly.
+   */
+  useEffect(() => {
+    console.debug('Fetching Showdown Data')
+
+    let isCancelled = false
+
+    if (!isAuthenticated || !selectedSettlementId || !selectedShowdownId)
+      return () => {
+        isCancelled = true
+      }
+
+    getShowdown(selectedSettlementId)
+      .then((showdown) => {
+        if (isCancelled) return
+
+        console.debug('Showdown Data:', showdown)
+
+        setSelectedShowdownState(showdown)
+
+        if (!showdown) {
+          setSelectedShowdownIdState(null)
+          setSelectedShowdownMonsterIndexState(0)
+
+          setLocalState((prev) => {
+            const updated = {
+              ...prev,
+              selectedShowdownId: null,
+              selectedShowdownMonsterIndex: 0
+            }
+
+            saveToLocalStorage(updated)
+
+            return updated
+          })
+        }
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('Showdown Fetch Error:', err)
+
+        setSelectedShowdownState(null)
+        setSelectedShowdownIdState(null)
+        setSelectedShowdownMonsterIndexState(0)
+
+        setLocalState((prev) => {
+          const updated = {
+            ...prev,
+            selectedShowdownId: null,
+            selectedShowdownMonsterIndex: 0
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated, selectedSettlementId, selectedShowdownId])
+
+  /**
+   * Fetch Survivor Data
+   *
+   * Triggered whenever the settlement or survivor selection changes. Uses a
+   * cancellation flag to prevent state updates on unmounted components or when
+   * selections change rapidly.
+   */
+  useEffect(() => {
+    console.debug('Fetching Survivor Data')
+
+    let isCancelled = false
+
+    if (!isAuthenticated || !selectedSettlementId || !selectedSurvivorId)
+      return () => {
+        isCancelled = true
+      }
+
+    getSurvivor(selectedSurvivorId)
+      .then((survivor) => {
+        if (isCancelled) return
+
+        console.debug('Survivor Data:', survivor)
+
+        setSelectedSurvivorState(survivor)
+
+        if (!survivor) {
+          setSelectedSurvivorIdState(null)
+
+          setLocalState((prev) => {
+            const updated = {
+              ...prev,
+              selectedSurvivorId: null
+            }
+
+            saveToLocalStorage(updated)
+
+            return updated
+          })
+        }
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('Survivor Fetch Error:', err)
+
+        setSelectedSurvivorState(null)
+        setSelectedSurvivorIdState(null)
+
+        setLocalState((prev) => {
+          const updated = {
+            ...prev,
+            selectedSurvivorId: null
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated, selectedSettlementId, selectedSurvivorId])
+
+  /**
+   * Fetch User Settings Data
+   */
+  useEffect(() => {
+    console.debug('Fetching User Settings Data')
+
+    let isCancelled = false
+
+    if (!isAuthenticated)
+      return () => {
+        isCancelled = true
+      }
+
+    getUserSettings()
+      .then((userSettingsData) => {
+        if (isCancelled) return
+
+        console.debug('User Settings:', userSettingsData)
+
+        setUserSettingsState(userSettingsData)
+
+        // If the user settings are not found, create them in the database and
+        // set to default values.
+        if (!userSettingsData) {
+          // Get the user ID
+          getUserId().then((userId) => {
+            addUserSettings({
+              unlocked_killenium_butcher: false,
+              unlocked_screaming_nukalope: false,
+              unlocked_white_gigalion: false,
+              user_id: userId
+            })
+              .then((newSettings) => {
+                if (isCancelled) return
+
+                console.debug('Created User Settings:', newSettings)
+                setUserSettingsState(newSettings)
+              })
+              .catch((error: unknown) => {
+                if (isCancelled) return
+
+                console.error('Error Creating User Settings:', error)
+              })
+          })
+        }
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('User Settings Fetch Error:', err)
+
+        setUserSettingsState(null)
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated])
+
+  /**
+   * Set Selected Hunt
+   *
+   * @param hunt Selected Hunt
+   */
+  const setSelectedHunt = (hunt: HuntDetail | null) => {
+    // When selecting a hunt, stop creation mode
+    if (hunt) setIsCreatingNewHunt(false)
+
+    // Update the state to reflect the changes.
+    setSelectedHuntState(hunt)
+    setSelectedHuntIdState(hunt ? hunt.id : null)
+    setSelectedHuntMonsterIndexState(0)
+
+    // Save the change to local storage.
     setLocalState((local) => {
       const updated = {
         ...local,
-        selectedHuntId: hunt ?? null,
+        selectedHuntId: hunt ? hunt.id : null,
         selectedHuntMonsterIndex: 0
       }
 
@@ -158,9 +730,59 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
       return updated
     })
+  }
 
+  /**
+   * Set Selected Hunt ID
+   *
+   * @param hunt Selected Hunt ID
+   */
+  const setSelectedHuntId = (huntId: string | null) => {
     // When selecting a hunt, stop creation mode
-    if (hunt) setIsCreatingNewHunt(false)
+    if (huntId) setIsCreatingNewHunt(false)
+
+    // The hunt monster index will always reset.
+    setSelectedHuntMonsterIndexState(0)
+
+    // Try to get a hunt with this ID and the current settlement ID. If found,
+    // set the selected hunt details. Otherwise, clear the hunt and hunt ID.
+    getHunt(selectedSettlementId)
+      .then((hunt) => {
+        // If no hunt is found, clear the selected hunt ID as well to prevent
+        // stale data.
+        if (!hunt) setSelectedHuntIdState(null)
+
+        setSelectedHuntState(hunt)
+
+        setLocalState((local) => {
+          const updated = {
+            ...local,
+            selectedHuntId: hunt ? hunt.id : null,
+            selectedHuntMonsterIndex: 0
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
+      .catch(() => {
+        setSelectedHuntState(null)
+        setSelectedHuntIdState(null)
+
+        // Clear the local state as well to prevent stale data.
+        setLocalState((local) => {
+          const updated = {
+            ...local,
+            selectedHuntId: null,
+            selectedHuntMonsterIndex: 0
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
   }
 
   /**
@@ -170,6 +792,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    */
   const setSelectedHuntMonsterIndex = (index: number) => {
     setSelectedHuntMonsterIndexState(index)
+
     setLocalState((local) => {
       const updated = {
         ...local,
@@ -185,36 +808,164 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Settlement
    *
-   * @param settlement Selected Settlement ID
+   * @param settlement Selected Settlement
    */
-  const setSelectedSettlementId = (settlement: string | null) => {
+  const setSelectedSettlement = (settlement: SettlementDetail | null) => {
+    // When selecting a settlement, stop creation mode
+    if (settlement) setIsCreatingNewSettlement(false)
+
+    // Update the state to reflect the changes.
+    setSelectedSettlementState(settlement)
+    setSelectedSettlementIdState(settlement ? settlement.id : null)
+
+    // Only re-fetch related data when switching to a DIFFERENT settlement.
+    // Same-ID updates are optimistic UI mutations and must not trigger
+    // side-effects such as re-fetching or resetting the active tab.
+    if (settlement && settlement.id !== selectedSettlementId)
+      Promise.all([
+        getHunt(settlement.id),
+        getSettlementPhase(settlement.id),
+        getShowdown(settlement.id),
+        getSurvivors(settlement.id)
+      ])
+        .then(([hunt, settlementPhase, showdown, survivors]) => {
+          setSelectedHuntState(hunt)
+          setSelectedHuntIdState(hunt ? hunt.id : null)
+          setSelectedHuntMonsterIndexState(0)
+          setSelectedSettlementPhaseState(settlementPhase)
+          setSelectedSettlementPhaseIdState(
+            settlementPhase ? settlementPhase.id : null
+          )
+          setSelectedShowdownState(showdown)
+          setSelectedShowdownIdState(showdown ? showdown.id : null)
+          setSelectedShowdownMonsterIndexState(0)
+          setSurvivors(survivors ?? [])
+
+          // Save the change to local storage.
+          setLocalState((local) => {
+            const updated = {
+              ...local,
+              selectedHuntId: hunt?.id ?? null,
+              selectedHuntMonsterIndex: 0,
+              selectedSettlementId: settlement?.id ?? null,
+              selectedSettlementPhaseId: settlementPhase?.id ?? null,
+              selectedShowdownId: showdown?.id ?? null,
+              selectedShowdownMonsterIndex: 0,
+              selectedSurvivorId: null
+            }
+
+            saveToLocalStorage(updated)
+
+            return updated
+          })
+        })
+        .catch(() => {
+          setSelectedHuntState(null)
+          setSelectedHuntIdState(null)
+          setSelectedHuntMonsterIndexState(0)
+          setSelectedSettlementPhaseState(null)
+          setSelectedSettlementPhaseIdState(null)
+          setSelectedShowdownState(null)
+          setSelectedShowdownIdState(null)
+          setSelectedShowdownMonsterIndexState(0)
+          setSurvivors([])
+
+          // Save the change to local storage.
+          setLocalState((local) => {
+            const updated = {
+              ...local,
+              selectedHuntId: null,
+              selectedHuntMonsterIndex: 0,
+              selectedSettlementId: null,
+              selectedSettlementPhaseId: null,
+              selectedShowdownId: null,
+              selectedShowdownMonsterIndex: 0,
+              selectedSurvivorId: null
+            }
+
+            saveToLocalStorage(updated)
+
+            return updated
+          })
+        })
+  }
+
+  /**
+   * Set Selected Settlement ID
+   *
+   * @param settlementId Selected Settlement ID
+   */
+  const setSelectedSettlementId = (settlementId: string | null) => {
+    // When selecting a settlement, stop creation mode
+    if (settlementId) setIsCreatingNewSettlement(false)
+
+    // Update the state to reflect the changes.
+    setSelectedSettlementIdState(settlementId)
+
+    // If a settlement is selected, also attempt to fetch the hunt, settlement
+    // phase, and showdown details to update the state.
+    if (settlementId)
+      Promise.all([
+        getHunt(settlementId),
+        getSettlement(settlementId),
+        getSettlementPhase(settlementId),
+        getShowdown(settlementId),
+        getSurvivors(settlementId)
+      ]).then(([hunt, settlement, settlementPhase, showdown, survivors]) => {
+        setSelectedHuntState(hunt)
+        setSelectedHuntIdState(hunt?.id ?? null)
+        setSelectedHuntMonsterIndexState(0)
+        setSelectedSettlementState(settlement)
+        setSelectedSettlementPhaseState(settlementPhase)
+        setSelectedSettlementPhaseIdState(settlementPhase?.id ?? null)
+        setSelectedShowdownState(showdown)
+        setSelectedShowdownIdState(showdown?.id ?? null)
+        setSelectedShowdownMonsterIndexState(0)
+        setSurvivors(survivors ?? [])
+
+        // Save the change to local storage.
+        setLocalState((local) => {
+          const updated = {
+            ...local,
+            selectedHuntId: hunt?.id ?? null,
+            selectedHuntMonsterIndex: 0,
+            selectedSettlementId: settlementId,
+            selectedSettlementPhaseId: settlementPhase?.id ?? null,
+            selectedShowdownId: showdown?.id ?? null,
+            selectedShowdownMonsterIndex: 0,
+            selectedSurvivorId: null
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
+  }
+
+  /**
+   * Set Selected Settlement Phase
+   *
+   * @param settlementPhase Selected Settlement Phase
+   */
+  const setSelectedSettlementPhase = (
+    settlementPhase: SettlementPhaseDetail | null
+  ) => {
+    setSelectedSettlementPhaseState(settlementPhase)
+    setSelectedSettlementPhaseIdState(
+      settlementPhase ? settlementPhase.id : null
+    )
+
     setLocalState((local) => {
-      const currentSettlementId = local.selectedSettlementId
       const updated = {
         ...local,
-        selectedSettlementId: settlement ?? null
+        selectedSettlementPhaseId: settlementPhase ? settlementPhase.id : null
       }
 
       saveToLocalStorage(updated)
 
-      // If the selected settlement changed, also clear selected hunt, showdown,
-      // etc.
-      if (currentSettlementId !== settlement) {
-        setSelectedHuntIdState(null)
-        setSelectedHuntMonsterIndexState(0)
-        setSelectedSettlementPhaseIdState(null)
-        setSelectedShowdownIdState(null)
-        setSelectedShowdownMonsterIndexState(0)
-        setSelectedSurvivorIdState(null)
-      }
-
       return updated
     })
-
-    setSelectedSettlementIdState(settlement)
-
-    // Stop creation mode
-    if (settlement) setIsCreatingNewSettlement(false)
   }
 
   /**
@@ -222,12 +973,62 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    *
    * @param settlementPhaseId Selected Settlement Phase ID
    */
-  const setSelectedSettlementPhaseId = (settlementPhase: string | null) => {
-    setSelectedSettlementPhaseIdState(settlementPhase)
+  const setSelectedSettlementPhaseId = (settlementPhaseId: string | null) => {
+    setSelectedSettlementPhaseIdState(settlementPhaseId)
+
+    if (settlementPhaseId)
+      getSettlementPhase(settlementPhaseId)
+        .then((settlementPhase) => {
+          setSelectedSettlementPhaseState(settlementPhase)
+
+          setLocalState((local) => {
+            const updated = {
+              ...local,
+              selectedSettlementPhaseId: settlementPhaseId
+            }
+
+            saveToLocalStorage(updated)
+
+            return updated
+          })
+        })
+        .catch(() => {
+          setSelectedSettlementPhaseState(null)
+          setSelectedSettlementPhaseIdState(null)
+
+          setLocalState((local) => {
+            const updated = {
+              ...local,
+              selectedSettlementPhaseId: null
+            }
+
+            saveToLocalStorage(updated)
+
+            return updated
+          })
+        })
+  }
+
+  /**
+   * Set Selected Showdown
+   *
+   * @param showdown Selected Showdown
+   */
+  const setSelectedShowdown = (showdown: ShowdownDetail | null) => {
+    // When selecting a showdown, stop creation mode
+    if (showdown) setIsCreatingNewShowdown(false)
+
+    // Update the state to reflect the changes.
+    setSelectedShowdownState(showdown)
+    setSelectedShowdownIdState(showdown ? showdown.id : null)
+    setSelectedShowdownMonsterIndexState(0)
+
+    // Save the change to local storage.
     setLocalState((local) => {
       const updated = {
         ...local,
-        selectedSettlementPhaseId: settlementPhase ?? null
+        selectedShowdownId: showdown ? showdown.id : null,
+        selectedShowdownMonsterIndex: 0
       }
 
       saveToLocalStorage(updated)
@@ -239,24 +1040,52 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Showdown ID
    *
-   * @param showdown Selected Showdown ID
+   * @param showdownId Selected Showdown ID
    */
-  const setSelectedShowdownId = (showdown: string | null) => {
-    setSelectedShowdownIdState(showdown)
-    setLocalState((local) => {
-      const updated = {
-        ...local,
-        selectedShowdownId: showdown ?? null,
-        selectedShowdownMonsterIndex: 0
-      }
-
-      saveToLocalStorage(updated)
-
-      return updated
-    })
-
+  const setSelectedShowdownId = (showdownId: string | null) => {
     // When selecting a showdown, stop creation mode
-    if (showdown) setIsCreatingNewShowdown(false)
+    if (showdownId) setIsCreatingNewShowdown(false)
+
+    // Try to get a showdown with this ID. If found, set the selected showdown
+    // details. Otherwise, clear the showdown and showdown ID.
+    getShowdown(showdownId)
+      .then((showdown) => {
+        // If no showdown is found, clear the selected showdown ID as well to
+        // prevent stale data.
+        if (!showdown) setSelectedShowdownIdState(null)
+        setSelectedShowdownState(showdown)
+        setSelectedShowdownMonsterIndexState(0)
+
+        setLocalState((local) => {
+          const updated = {
+            ...local,
+            selectedShowdownId: showdown ? showdown.id : null,
+            selectedShowdownMonsterIndex: 0
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
+      .catch(() => {
+        setSelectedShowdownState(null)
+        setSelectedShowdownIdState(null)
+        setSelectedShowdownMonsterIndexState(0)
+
+        // Clear the local state as well to prevent stale data.
+        setLocalState((local) => {
+          const updated = {
+            ...local,
+            selectedShowdownId: null,
+            selectedShowdownMonsterIndex: 0
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
   }
 
   /**
@@ -266,6 +1095,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    */
   const setSelectedShowdownMonsterIndex = (index: number) => {
     setSelectedShowdownMonsterIndexState(index)
+
     setLocalState((local) => {
       const updated = {
         ...local,
@@ -279,25 +1109,69 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   }
 
   /**
-   * Set Selected Survivor ID
+   * Set Selected Survivor
    *
-   * @param survivor Selected Survivor ID
+   * @param survivor Selected Survivor
    */
-  const setSelectedSurvivorId = (survivor: string | null) => {
-    setSelectedSurvivorIdState(survivor)
+  const setSelectedSurvivor = (survivor: SurvivorDetail | null) => {
+    // When selecting a survivor, stop creation mode
+    if (survivor) setIsCreatingNewSurvivor(false)
+
+    setSelectedSurvivorState(survivor)
+    setSelectedSurvivorIdState(survivor ? survivor.id : null)
+
     setLocalState((local) => {
       const updated = {
         ...local,
-        selectedSurvivorId: survivor ?? null
+        selectedSurvivorId: survivor ? survivor.id : null
       }
 
       saveToLocalStorage(updated)
 
       return updated
     })
+  }
 
+  /**
+   * Set Selected Survivor ID
+   *
+   * @param survivorId Selected Survivor ID
+   */
+  const setSelectedSurvivorId = (survivorId: string | null) => {
     // When selecting a survivor, stop creation mode
-    if (survivor) setIsCreatingNewSurvivor(false)
+    if (survivorId) setIsCreatingNewSurvivor(false)
+
+    getSurvivor(survivorId)
+      .then((survivor) => {
+        setSelectedSurvivorState(survivor)
+        setSelectedSurvivorIdState(survivorId)
+
+        setLocalState((local) => {
+          const updated = {
+            ...local,
+            selectedSurvivorId: survivorId
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
+      .catch(() => {
+        setSelectedSurvivorState(null)
+        setSelectedSurvivorIdState(null)
+
+        setLocalState((local) => {
+          const updated = {
+            ...local,
+            selectedSurvivorId: null
+          }
+
+          saveToLocalStorage(updated)
+
+          return updated
+        })
+      })
   }
 
   /**
@@ -307,6 +1181,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    */
   const setSelectedTab = (tab: TabType) => {
     setSelectedTabState(tab)
+
     setLocalState((local) => {
       const updated = {
         ...local,
@@ -317,6 +1192,15 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
       return updated
     })
+  }
+
+  /**
+   * Set User Settings
+   *
+   * @param settings User Settings
+   */
+  const setUserSettings = (settings: UserSettingsDetail | null) => {
+    setUserSettingsState(settings)
   }
 
   /**
@@ -337,12 +1221,17 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         isCreatingNewShowdown,
         isCreatingNewSurvivor,
 
+        selectedHunt,
         selectedHuntId,
         selectedHuntMonsterIndex,
+        selectedSettlement,
         selectedSettlementId,
+        selectedSettlementPhase,
         selectedSettlementPhaseId,
+        selectedShowdown,
         selectedShowdownId,
         selectedShowdownMonsterIndex,
+        selectedSurvivor,
         selectedSurvivorId,
         selectedTab,
 
@@ -351,16 +1240,27 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setIsCreatingNewShowdown,
         setIsCreatingNewSurvivor,
 
+        setSelectedHunt,
         setSelectedHuntId,
         setSelectedHuntMonsterIndex,
+        setSelectedSettlement,
         setSelectedSettlementId,
+        setSelectedSettlementPhase,
         setSelectedSettlementPhaseId,
+        setSelectedShowdown,
         setSelectedShowdownId,
         setSelectedShowdownMonsterIndex,
+        setSelectedSurvivor,
         setSelectedSurvivorId,
         setSelectedTab,
 
-        updateLocal
+        setSurvivors,
+        survivors,
+
+        updateLocal,
+
+        userSettings,
+        setUserSettings
       }}>
       {children}
     </LocalContext.Provider>

@@ -142,6 +142,7 @@ create policy "Allow all for admin" on knowledge_shared_user for all using (is_a
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_knowledge_custom_user on knowledge(custom, user_id);
 create index idx_knowledge_shared_user_knowledge on knowledge_shared_user(knowledge_id);
 create index idx_knowledge_shared_user_user on knowledge_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

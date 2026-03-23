@@ -1,29 +1,117 @@
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { SettlementDetail } from '@/lib/types'
 
 /**
- * Add Locations to Settlement
+ * Get Settlement Locations
  *
- * Links existing location IDs to a settlement by inserting records into the
- * settlement_location join table.
+ * Retrieves the locations associated with a settlement.
+ *
+ * @param settlementId Settlement ID
+ * @returns Settlement Location Data
+ */
+export async function getSettlementLocations(
+  settlementId: string | null | undefined
+): Promise<SettlementDetail['locations']> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('settlement_location')
+    .select('id, location_id, unlocked, location(location_name)')
+    .eq('settlement_id', settlementId)
+
+  if (error)
+    throw new Error(`Error Fetching Settlement Locations: ${error.message}`)
+
+  return (
+    data?.map((item) => ({
+      id: item.id,
+      location_id: item.location_id,
+      location_name: (item.location as unknown as { location_name: string })
+        .location_name,
+      unlocked: item.unlocked
+    })) ?? []
+  )
+}
+
+/**
+ * Add Settlement Locations
+ *
+ * Adds locations to a settlement by their IDs. This is used when adding
+ * locations to a settlement during settlement creation or editing.
  *
  * @param locationIds Location IDs
  * @param settlementId Settlement ID
  */
-export async function addLocationsToSettlement(
+export async function addSettlementLocations(
   locationIds: string[],
-  settlementId: string
-): Promise<void> {
-  if (locationIds.length === 0) return
+  settlementId: string | null | undefined
+): Promise<{ id: string }[]> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+  if (locationIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_location').insert(
-    locationIds.map((locationId) => ({
-      location_id: locationId,
-      settlement_id: settlementId
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_location')
+    .insert(
+      locationIds.map((locationId) => ({
+        location_id: locationId,
+        settlement_id: settlementId,
+        unlocked: false
+      }))
+    )
+    .select('id')
 
   if (error)
-    throw new Error(`Error Adding Locations to Settlement: ${error.message}`)
+    throw new Error(`Error Adding Settlement Locations: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Settlement Location
+ *
+ * Updates an existing settlement location record.
+ *
+ * @param id Settlement Location ID
+ * @param settlementLocation Settlement Location Data
+ */
+export async function updateSettlementLocation(
+  id: string,
+  settlementLocation: Omit<
+    TablesUpdate<'settlement_location'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_location')
+    .update(settlementLocation)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Settlement Location: ${error.message}`)
+}
+
+/**
+ * Remove Settlement Location
+ *
+ * Deletes a settlement location record from the database.
+ *
+ * @param id Settlement Location ID
+ */
+export async function removeSettlementLocation(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('settlement_location')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Settlement Location: ${error.message}`)
 }

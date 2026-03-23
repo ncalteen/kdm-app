@@ -9,7 +9,7 @@ create table settlement_gear (
   updated_at timestamptz not null default now(),
   -- Data
   gear_id uuid not null references gear(id) on delete cascade,
-  quantity integer not null default 0,
+  quantity integer not null default 0 check (quantity >= 0),
   settlement_id uuid not null references settlement(id) on delete cascade
 );
 --------------------------------------------------------------------------------

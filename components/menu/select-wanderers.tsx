@@ -14,7 +14,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { getWandererNames } from '@/lib/dal/wanderer'
+import { getWanderers } from '@/lib/dal/wanderer'
+import { WandererDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, X } from 'lucide-react'
 import { type ReactElement, useEffect, useMemo, useState } from 'react'
@@ -36,9 +37,8 @@ export interface SelectWanderersProps {
 /**
  * Select Wanderers Component
  *
- * This component allows the user to select zero or more wanderers to add to
- * their settlement. It uses a popover to display the options and allows for
- * searching through them.
+ * Allows the user to select zero or more wanderers to add to their settlement.
+ * Uses a popover with search to display options.
  *
  * @param props Component Properties
  * @returns Select Wanderers Component
@@ -50,12 +50,24 @@ export function SelectWanderers({
   value: propValue = []
 }: SelectWanderersProps): ReactElement {
   const [open, setOpen] = useState(false)
-  const [wanderers, setWanderers] = useState<
-    { id: string; wanderer_name: string }[]
-  >([])
+  const [wanderers, setWanderers] = useState<{ [key: string]: WandererDetail }>(
+    {}
+  )
 
   useEffect(() => {
-    getWandererNames().then((wanderers) => setWanderers(wanderers))
+    let isCancelled = false
+
+    getWanderers()
+      .then((wanderers) => {
+        if (!isCancelled) setWanderers(wanderers)
+      })
+      .catch((error: unknown) => {
+        if (!isCancelled) console.error('Wanderers Fetch Error:', error)
+      })
+
+    return () => {
+      isCancelled = true
+    }
   }, [])
 
   /**
@@ -66,14 +78,10 @@ export function SelectWanderers({
   const handleToggle = (wandererId: string) => {
     if (!onChange) return
 
-    if (propValue.some((wanderer) => wanderer === wandererId)) {
-      onChange(propValue.filter((wanderer) => wanderer !== wandererId))
-      return
-    }
+    if (propValue.some((wanderer) => wanderer === wandererId))
+      return onChange(propValue.filter((wanderer) => wanderer !== wandererId))
 
-    const wandererData = wanderers.find(
-      (wanderer) => wanderer.id === wandererId
-    )
+    const wandererData = wanderers[wandererId]
     if (wandererData) onChange([...propValue, wandererData.id])
   }
 
@@ -83,14 +91,13 @@ export function SelectWanderers({
    * @param wandererId Wanderer ID to Remove
    */
   const handleRemove = (wandererId: string) => {
-    if (onChange)
-      onChange(propValue.filter((wanderer) => wanderer !== wandererId))
+    onChange?.(propValue.filter((wanderer) => wanderer !== wandererId))
   }
 
   const selectedWanderers = useMemo(
     () =>
       propValue
-        .map((wanderer) => wanderers.find((w) => w.id === wanderer))
+        .map((wanderer) => Object.keys(wanderers).find((w) => w === wanderer))
         .filter((w) => w !== undefined),
     [propValue, wanderers]
   )
@@ -123,7 +130,7 @@ export function SelectWanderers({
             <CommandList>
               <CommandEmpty>No wanderers found.</CommandEmpty>
               <CommandGroup>
-                {wanderers.map((wanderer) => (
+                {Object.values(wanderers).map((wanderer) => (
                   <CommandItem
                     key={wanderer.id}
                     value={wanderer.wanderer_name}
@@ -147,16 +154,19 @@ export function SelectWanderers({
 
       {selectedWanderers.length > 0 && (
         <div className="flex flex-col gap-1">
-          {selectedWanderers.map((wanderer) => (
+          {selectedWanderers.map((wandererId) => (
             <div
-              key={wanderer.id}
+              key={wandererId}
               className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
-              <span className="truncate flex-1">{wanderer.wanderer_name}</span>
+              <span className="truncate flex-1">
+                {wanderers[wandererId].wanderer_name}
+              </span>
               {!disabled && (
                 <button
                   type="button"
-                  onClick={() => handleRemove(wanderer.id)}
-                  className="hover:bg-secondary-foreground/20 rounded-sm p-0.5 shrink-0">
+                  onClick={() => handleRemove(wandererId)}
+                  className="hover:bg-secondary-foreground/20 rounded-sm p-0.5 shrink-0"
+                  aria-label={`Remove ${wanderers[wandererId].wanderer_name}`}>
                   <X className="h-3 w-3" />
                 </button>
               )}

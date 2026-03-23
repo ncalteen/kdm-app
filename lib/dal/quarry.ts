@@ -1,8 +1,10 @@
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { QuarryDetail } from '@/lib/types'
 
 /**
- * Get Quarry Names
+ * Get Quarries
  *
  * Retrieves the quarries a user has access to. This includes:
  *
@@ -11,44 +13,56 @@ import { createClient } from '@/lib/supabase/client'
  * - Custom quarries shared with the user (via the quarry_shared_user table)
  *
  * @param nodeTypes Optional Node Types Filter
+ * @param includeAlternates Whether to Include Alternate Quarries (Default: true)
+ * @param includeVignettes Whether to Include Vignette Quarries (Default: true)
  * @returns Quarry Data
  */
-export async function getQuarryNames(
+export async function getQuarries(
   nodeTypes: MonsterNode[] = [
     MonsterNode.NQ1,
     MonsterNode.NQ2,
     MonsterNode.NQ3,
     MonsterNode.NQ4
-  ]
-): Promise<{ id: string; monster_name: string }[]> {
+  ],
+  includeAlternates = true,
+  includeVignettes = true
+): Promise<{ [key: string]: QuarryDetail }> {
   const supabase = createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
 
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!userData.user) throw new Error('User Not Authenticated')
+  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of quarries in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     // Non-custom quarries (available to all users)
     supabase
       .from('quarry')
-      .select('id, monster_name')
+      .select(
+        'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+      )
       .eq('custom', false)
       .in('node', nodeTypes),
     // Custom quarries created by the user
     supabase
       .from('quarry')
-      .select('id, monster_name')
+      .select(
+        'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+      )
       .eq('custom', true)
-      .eq('user_id', userData.user.id)
+      .eq('user_id', user.id)
       .in('node', nodeTypes),
     // Custom quarries shared with the user
     supabase
       .from('quarry_shared_user')
-      .select('quarry_id, quarry:quarry_id!inner(id, monster_name, node)')
-      .eq('shared_user_id', userData.user.id)
-      .in('quarry.node', nodeTypes)
+      .select(
+        'quarry(id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id)'
+      )
+      .eq('shared_user_id', user.id)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -56,58 +70,103 @@ export async function getQuarryNames(
       throw new Error(`Error Fetching Quarries: ${result.error.message}`)
 
   // Collect quarries from all sources, deduplicating by ID
-  const quarryMap = new Map<string, { id: string; monster_name: string }>()
+  const quarryMap: { [key: string]: QuarryDetail } = {}
 
-  for (const q of nonCustomResult.data ?? [])
-    quarryMap.set(q.id, { id: q.id, monster_name: q.monster_name })
+  for (const q of nonCustomResult.data ?? []) quarryMap[q.id] = q
+  for (const q of userCustomResult.data ?? []) quarryMap[q.id] = q
+  for (const row of sharedResult.data ?? [])
+    quarryMap[row.quarry[0].id] = row.quarry[0]
 
-  for (const q of userCustomResult.data ?? [])
-    quarryMap.set(q.id, { id: q.id, monster_name: q.monster_name })
+  // Build sets of IDs that are referenced as alternates or vignettes by other
+  // records. When the corresponding flag is false, these IDs are excluded.
+  if (!includeAlternates || !includeVignettes) {
+    const alternateIds = new Set<string>()
+    const vignetteIds = new Set<string>()
 
-  for (const row of sharedResult.data ?? []) {
-    const q = row.quarry as unknown as {
-      id: string
-      monster_name: string
+    for (const q of Object.values(quarryMap)) {
+      if (q.alternate_id) alternateIds.add(q.alternate_id)
+      if (q.vignette_id) vignetteIds.add(q.vignette_id)
     }
 
-    if (q) quarryMap.set(q.id, { id: q.id, monster_name: q.monster_name })
+    for (const id of Object.keys(quarryMap)) {
+      if (!includeAlternates && alternateIds.has(id)) delete quarryMap[id]
+      if (!includeVignettes && vignetteIds.has(id)) delete quarryMap[id]
+    }
   }
 
-  if (quarryMap.size === 0) throw new Error('Quarries(s) Not Found')
-
-  return [...quarryMap.values()]
+  return quarryMap
 }
 
 /**
- * Get Quarry Nodes by ID
+ * Get User Custom Quarries
  *
- * Given an array of quarry IDs, returns each ID with its monster node.
+ * Retrieves only custom quarries created by the current user.
  *
- * @param ids Quarry IDs
- * @returns Quarry ID/Node Pairs
+ * @returns Custom Quarry Data Map
  */
-export async function getQuarryNodesById(
-  ids: string[]
-): Promise<{ id: string; node: MonsterNode }[]> {
-  if (ids.length === 0) return []
+export async function getUserCustomQuarries(): Promise<{
+  [key: string]: QuarryDetail
+}> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('quarry')
+    .select(
+      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+    )
+    .eq('custom', true)
+    .eq('user_id', user.id)
+
+  if (error) throw new Error(`Error Fetching Custom Quarries: ${error.message}`)
+
+  const quarryMap: { [key: string]: QuarryDetail } = {}
+  for (const q of data ?? []) quarryMap[q.id] = q
+
+  return quarryMap
+}
+
+/**
+ * Get Quarry
+ *
+ * Retrieves a single quarry by ID.
+ *
+ * @param quarryId Quarry ID
+ * @returns Quarry Detail or null
+ */
+export async function getQuarry(
+  quarryId: string | null | undefined
+): Promise<QuarryDetail | null> {
+  if (!quarryId) return null
 
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('quarry')
-    .select('id, node')
-    .in('id', ids)
+    .select(
+      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+    )
+    .eq('id', quarryId)
+    .maybeSingle()
 
-  if (error) throw new Error(`Error Fetching Quarry Nodes: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Quarry: ${error.message}`)
 
-  return (data ?? []).map((q) => ({ id: q.id, node: q.node as MonsterNode }))
+  return data
 }
 
 /**
  * Get Quarry IDs
  *
- * Retrieves the IDs of nemeses. This depends on if they are custom nemeses
- * (requires the user ID if so).
+ * Retrieves the IDs of quarries. This depends on if they are custom quarries
+ * (requires the user ID if so). This is used to populate new hunts and
+ * showdowns created from templates.
  *
  * @param quarryNames Quarry Names
  * @param custom Custom
@@ -139,4 +198,101 @@ export async function getQuarryIds(
   if (!data) throw new Error('Quarry(ies) Not Found')
 
   return data.map((quarry) => quarry.id)
+}
+
+/**
+ * Get Quarry Nodes by ID
+ *
+ * Given an array of quarry IDs, returns each ID with its monster node.
+ *
+ * @param ids Quarry IDs
+ * @returns Quarry ID/Node Pairs
+ */
+export async function getQuarryNodesById(
+  ids: string[]
+): Promise<{ id: string; node: MonsterNode }[]> {
+  if (ids.length === 0) return []
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry')
+    .select('id, node')
+    .in('id', ids)
+
+  if (error) throw new Error(`Error Fetching Quarry Nodes: ${error.message}`)
+
+  return (data ?? []).map((q) => ({ id: q.id, node: q.node as MonsterNode }))
+}
+
+/**
+ * Add Quarry
+ *
+ * Adds a new quarry record to the database.
+ *
+ * @param quarry Quarry Data
+ * @returns Inserted Quarry
+ */
+export async function addQuarry(
+  quarry: Omit<
+    TablesInsert<'quarry'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
+): Promise<QuarryDetail> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Auth Error: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('quarry')
+    .insert({ ...quarry, user_id: user.id })
+    .select(
+      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+    )
+    .single()
+
+  if (error) throw new Error(`Error Adding Quarry: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Quarry
+ *
+ * Updates an existing quarry record in the database.
+ *
+ * @param id Quarry ID
+ * @param quarry Quarry Data
+ * @returns Updated Quarry
+ */
+export async function updateQuarry(
+  id: string,
+  quarry: Omit<TablesUpdate<'quarry'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('quarry').update(quarry).eq('id', id)
+
+  if (error) throw new Error(`Error Updating Quarry: ${error.message}`)
+}
+
+/**
+ * Remove Quarry
+ *
+ * Deletes a quarry record from the database.
+ *
+ * @param id Quarry ID
+ */
+export async function removeQuarry(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('quarry').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Quarry: ${error.message}`)
 }

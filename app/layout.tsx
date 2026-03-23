@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Kingdom Death: Monster - Record Keeper'
+  title: 'Kingdom Death: Monster - Archivist'
 }
 
 /**

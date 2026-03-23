@@ -141,6 +141,7 @@ create policy "Allow all for admin" on weapon_type_shared_user for all using (is
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_weapon_type_custom_user on weapon_type(custom, user_id);
 create index idx_weapon_type_shared_user_weapon_type on weapon_type_shared_user(weapon_type_id);
 create index idx_weapon_type_shared_user_user on weapon_type_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

@@ -144,6 +144,7 @@ create policy "Allow all for admin" on principle_shared_user for all using (is_a
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_principle_custom_user on principle(custom, user_id);
 create index idx_principle_shared_user_principle on principle_shared_user(principle_id);
 create index idx_principle_shared_user_user on principle_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Core Collective Cognition Reward Names
  */

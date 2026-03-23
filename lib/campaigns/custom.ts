@@ -1,5 +1,3 @@
-'use client'
-
 import { coreMilestones } from '@/lib/campaigns/common'
 import { getMilestoneIds } from '@/lib/dal/milestone'
 import { CampaignType } from '@/lib/enums'

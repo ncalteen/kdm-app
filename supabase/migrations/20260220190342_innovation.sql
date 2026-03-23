@@ -141,6 +141,7 @@ create policy "Allow all for admin" on innovation_shared_user for all using (is_
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_innovation_custom_user on innovation(custom, user_id);
 create index idx_innovation_shared_user_innovation on innovation_shared_user(innovation_id);
 create index idx_innovation_shared_user_user on innovation_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

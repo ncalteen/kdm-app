@@ -10,7 +10,7 @@ create table settlement_phase (
   -- Data
   endeavors int not null default 0 check (endeavors >= 0),
   returning_scout_id uuid references survivor(id) on delete cascade,
-  settlement_id uuid not null references settlement(id) on delete cascade,
+  settlement_id uuid not null unique references settlement(id) on delete cascade,
   step settlement_phase_step not null default 'SET_UP_SETTLEMENT'
 );
 --------------------------------------------------------------------------------
@@ -91,6 +91,17 @@ select to authenticated using (
   );
 create policy "Allow all for admin" on settlement_phase for all using (is_admin()) with check (is_admin());
 alter table settlement_phase_returning_survivor enable row level security;
+create policy "Allow insert for owner" on settlement_phase_returning_survivor for
+insert to authenticated with check (
+    exists (
+      select 1
+      from settlement s
+      where s.id = settlement_id
+        and s.user_id = (
+          select auth.uid()
+        )
+    )
+  );
 create policy "Allow select for owner" on settlement_phase_returning_survivor for
 select to authenticated using (
     exists (

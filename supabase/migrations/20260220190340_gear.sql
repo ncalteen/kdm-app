@@ -142,6 +142,7 @@ create policy "Allow all for admin" on gear_shared_user for all using (is_admin(
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_gear_custom_user on gear(custom, user_id);
 create index idx_gear_shared_user_gear on gear_shared_user(gear_id);
 create index idx_gear_shared_user_user on gear_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

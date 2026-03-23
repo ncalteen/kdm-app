@@ -1,63 +1,118 @@
 'use client'
 
 import { ListCard } from '@/components/generic/list-card'
+import { HuntCard } from '@/components/hunt/hunt-card'
+import { SettlementPhaseCard } from '@/components/settlement-phase/settlement-phase-card'
+import { CollectiveCognitionRewardsCard } from '@/components/settlement/arc/collective-cognition-rewards-card'
+import { CollectiveCognitionVictoriesCard } from '@/components/settlement/arc/collective-cognition-victories-card'
+import { KnowledgesCard } from '@/components/settlement/arc/knowledges-card'
+import { PhilosophiesCard } from '@/components/settlement/arc/philosophies-card'
 import { CreateSettlementCard } from '@/components/settlement/create-settlement-card'
+import { GearCard } from '@/components/settlement/gear/gear-card'
+import { InnovationsCard } from '@/components/settlement/innovations/innovations-card'
+import { LocationsCard } from '@/components/settlement/locations/locations-card'
+import { MilestonesCard } from '@/components/settlement/milestones/milestones-card'
 import { NemesesCard } from '@/components/settlement/nemeses/nemeses-card'
+import { NotesCard } from '@/components/settlement/notes/notes-card'
 import { OverviewCard } from '@/components/settlement/overview/overview-card'
+import { PatternsCard } from '@/components/settlement/patterns/patterns-card'
+import { PrinciplesCard } from '@/components/settlement/principles/principles-card'
 import { QuarriesCard } from '@/components/settlement/quarries/quarries-card'
+import { ResourcesCard } from '@/components/settlement/resources/resources-card'
+import { SeedPatternsCard } from '@/components/settlement/seed-patterns/seed-patterns-card'
+import { SettingsCard } from '@/components/settlement/settings/settings-card'
+import { SquireProgressionCards } from '@/components/settlement/squires/squire-progression-cards'
+import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
+import { SettlementSurvivorsCard } from '@/components/settlement/survivors/settlement-survivors-card'
 import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
+import { ShowdownCard } from '@/components/showdown/showdown-card'
+import { CreateSurvivorForm } from '@/components/survivor/create-survivor-form'
+import { SurvivorCard } from '@/components/survivor/survivor-card'
+import { UserCard } from '@/components/user/user-card'
+import { updateSettlement } from '@/lib/dal/settlement'
 import {
-  updateArrivalBonuses,
-  updateDepartureBonuses,
-  updateMonsterVolumes
-} from '@/lib/dal/settlement'
-import { Tables } from '@/lib/database.types'
-import { CampaignType, TabType } from '@/lib/enums'
+  CampaignType,
+  DatabaseCampaignType,
+  DatabaseSurvivorType,
+  SurvivorCardMode,
+  SurvivorType,
+  TabType
+} from '@/lib/enums'
+import {
+  HuntDetail,
+  SettlementDetail,
+  SettlementPhaseDetail,
+  ShowdownDetail,
+  SurvivorDetail,
+  UserSettingsDetail
+} from '@/lib/types'
 import { BookOpenIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
-import { ReactElement, useState } from 'react'
+import { ReactElement } from 'react'
 
 /**
  * Settlement Card Props
  */
 interface SettlementCardProps {
+  /** Is Creating New Settlement */
+  isCreatingNewSettlement: boolean
   /** New Survivor Being Created */
   isCreatingNewSurvivor: boolean
-  /** Selected Hunt ID */
-  selectedHuntId: string | null
+  /** Selected Hunt */
+  selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
   selectedHuntMonsterIndex: number
   /** Selected Settlement */
-  selectedSettlement: Tables<'settlement'> | null
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
-  /** Selected Settlement Phase ID */
-  selectedSettlementPhaseId: string | null
-  /** Selected Showdown ID */
-  selectedShowdownId: string | null
+  selectedSettlement: SettlementDetail | null
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: SettlementPhaseDetail | null
+  /** Selected Showdown */
+  selectedShowdown: ShowdownDetail | null
   /** Selected Showdown Monster Index */
   selectedShowdownMonsterIndex: number
-  /** Selected Survivor ID */
-  selectedSurvivorId: string | null
+  /** Selected Survivor */
+  selectedSurvivor: SurvivorDetail | null
   /** Selected Tab */
   selectedTab: TabType
+  /** Set Is Creating New Settlement */
+  setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set New Survivor Being Created */
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
+  /** Set Selected Hunt */
+  setSelectedHunt: (hunt: HuntDetail | null) => void
   /** Set Selected Hunt ID */
-  setSelectedHuntId: (hunt: string | null) => void
+  setSelectedHuntId: (huntId: string | null) => void
   /** Set Selected Hunt Monster Index */
   setSelectedHuntMonsterIndex: (index: number) => void
+  /** Set Selected Settlement */
+  setSelectedSettlement: (settlement: SettlementDetail | null) => void
   /** Set Selected Settlement ID */
-  setSelectedSettlementId: (settlement: string | null) => void
+  setSelectedSettlementId: (settlementId: string | null) => void
+  /** Set Selected Settlement Phase */
+  setSelectedSettlementPhase: (
+    settlementPhase: SettlementPhaseDetail | null
+  ) => void
   /** Set Selected Settlement Phase ID */
-  setSelectedSettlementPhase: (settlementPhase: string | null) => void
+  setSelectedSettlementPhaseId: (settlementPhaseId: string | null) => void
+  /** Set Selected Showdown */
+  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
   /** Set Selected Showdown ID */
-  setSelectedShowdownId: (showdown: string | null) => void
+  setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Showdown Monster Index */
   setSelectedShowdownMonsterIndex: (index: number) => void
+  /** Set Selected Survivor */
+  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
   /** Set Selected Survivor ID */
-  setSelectedSurvivorId: (survivor: string | null) => void
+  setSelectedSurvivorId: (survivorId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
+  /** Set Survivors */
+  setSurvivors: (survivors: SurvivorDetail[]) => void
+  /** Set User Settings */
+  setUserSettings: (settings: UserSettingsDetail | null) => void
+  /** Survivors */
+  survivors: SurvivorDetail[]
+  /** User Settings */
+  userSettings: UserSettingsDetail | null
 }
 
 /**
@@ -67,64 +122,103 @@ interface SettlementCardProps {
  * @returns Main Page Component
  */
 export function SettlementCard({
+  isCreatingNewSettlement,
   isCreatingNewSurvivor,
-  selectedHuntId,
+  selectedHunt,
   selectedHuntMonsterIndex,
   selectedSettlement,
-  selectedSettlementId,
-  selectedSettlementPhaseId,
-  selectedShowdownId,
+  selectedSettlementPhase,
+  selectedShowdown,
   selectedShowdownMonsterIndex,
-  selectedSurvivorId,
+  selectedSurvivor,
   selectedTab,
+  setIsCreatingNewSettlement,
   setIsCreatingNewSurvivor,
+  setSelectedHunt,
   setSelectedHuntId,
   setSelectedHuntMonsterIndex,
+  setSelectedSettlement,
   setSelectedSettlementId,
   setSelectedSettlementPhase,
+  setSelectedSettlementPhaseId,
+  setSelectedShowdown,
   setSelectedShowdownId,
   setSelectedShowdownMonsterIndex,
+  setSelectedSurvivor,
   setSelectedSurvivorId,
-  setSelectedTab
+  setSelectedTab,
+  setSurvivors,
+  setUserSettings,
+  survivors,
+  userSettings
 }: SettlementCardProps): ReactElement {
-  const [campaignType, setCampaignType] = useState<CampaignType>(
-    CampaignType.PEOPLE_OF_THE_LANTERN
-  )
+  // Settings tab is always accessible, regardless of settlement state.
+  if (selectedTab === TabType.SETTINGS)
+    return (
+      <SettingsCard
+        selectedHunt={selectedHunt}
+        selectedSettlement={selectedSettlement}
+        selectedShowdown={selectedShowdown}
+        setSelectedHunt={setSelectedHunt}
+        setSelectedHuntId={setSelectedHuntId}
+        setSelectedSettlement={setSelectedSettlement}
+        setSelectedSettlementId={setSelectedSettlementId}
+        setSelectedShowdown={setSelectedShowdown}
+        setSelectedShowdownId={setSelectedShowdownId}
+        setSelectedSurvivorId={setSelectedSurvivorId}
+      />
+    )
+
+  // User tab is always accessible, regardless of settlement state.
+  if (selectedTab === TabType.USER)
+    return (
+      <UserCard setUserSettings={setUserSettings} userSettings={userSettings} />
+    )
+
+  if (isCreatingNewSettlement)
+    return (
+      <CreateSettlementCard
+        setIsCreatingNewSettlement={setIsCreatingNewSettlement}
+        setSelectedHuntId={setSelectedHuntId}
+        setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
+        setSelectedSettlementId={setSelectedSettlementId}
+        setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
+        setSelectedShowdownId={setSelectedShowdownId}
+        setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
+        setSelectedSurvivorId={setSelectedSurvivorId}
+      />
+    )
+
+  if (!selectedSettlement)
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <p className="text-sm text-gray-500">No settlement selected</p>
+      </div>
+    )
 
   return (
     <>
+      {/* Overview Card */}
       <OverviewCard
-        campaignType={campaignType}
-        selectedSettlementId={selectedSettlementId}
-        selectedSettlementPhaseId={selectedSettlementPhaseId}
-        setCampaignType={setCampaignType}
+        selectedSettlement={selectedSettlement}
+        selectedSettlementPhase={selectedSettlementPhase}
+        setSelectedSettlement={setSelectedSettlement}
+        setSelectedSettlementPhase={setSelectedSettlementPhase}
+        survivors={survivors}
       />
 
       <hr className="pt-2" />
 
       <div className="flex flex-1 flex-col h-full">
         <div className="flex flex-col gap-2 py-2 px-2 flex-1">
-          {/* Create Settlement Form */}
-          {!selectedSettlementId && selectedTab !== TabType.SETTINGS && (
-            <CreateSettlementCard
-              setSelectedHuntId={setSelectedHuntId}
-              setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
-              setSelectedSettlementId={setSelectedSettlementId}
-              setSelectedSettlementPhaseId={setSelectedSettlementPhase}
-              setSelectedShowdownId={setSelectedShowdownId}
-              setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
-              setSelectedSurvivorId={setSelectedSurvivorId}
-            />
-          )}
-
           {/* Timeline Tab */}
-          {selectedSettlementId && selectedTab === TabType.TIMELINE && (
+          {selectedSettlement && selectedTab === TabType.TIMELINE && (
             <div className="flex flex-col lg:flex-row gap-2">
               {/* Timeline */}
               <div className="flex-1 order-2 lg:order-1">
                 <TimelineCard
                   selectedSettlement={selectedSettlement}
-                  selectedSettlementId={selectedSettlementId}
+                  setSelectedSettlement={setSelectedSettlement}
                 />
               </div>
 
@@ -138,9 +232,11 @@ export function SettlementCard({
                       itemName="Departure Bonus"
                       placeholder="New departure bonus..."
                       saveList={(updateData) =>
-                        updateDepartureBonuses(selectedSettlementId, updateData)
+                        updateSettlement(selectedSettlement?.id, {
+                          departing_bonuses: updateData
+                        })
                       }
-                      selectedSettlementId={selectedSettlementId}
+                      selectedSettlement={selectedSettlement}
                     />
                   </div>
                   <div className="flex-1">
@@ -150,9 +246,11 @@ export function SettlementCard({
                       itemName="Arrival Bonus"
                       placeholder="New arrival bonus..."
                       saveList={(updateData) =>
-                        updateArrivalBonuses(selectedSettlementId, updateData)
+                        updateSettlement(selectedSettlement?.id, {
+                          arrival_bonuses: updateData
+                        })
                       }
-                      selectedSettlementId={selectedSettlementId}
+                      selectedSettlement={selectedSettlement}
                     />
                   </div>
                 </div>
@@ -166,52 +264,275 @@ export function SettlementCard({
               <div className="flex flex-col lg:flex-row gap-2">
                 {/* Quarries */}
                 <div className="flex-1">
-                  <QuarriesCard selectedSettlementId={selectedSettlementId} />
+                  <QuarriesCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
                 </div>
                 {/* Nemeses */}
                 <div className="flex-1">
-                  <NemesesCard selectedSettlementId={selectedSettlementId} />
+                  <NemesesCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
                 </div>
               </div>
 
               {/* Monster Volumes (PotL and PotSun) */}
-              {(campaignType === CampaignType.PEOPLE_OF_THE_LANTERN ||
-                campaignType === CampaignType.PEOPLE_OF_THE_SUN) && (
+              {(selectedSettlement?.campaign_type ===
+                DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_LANTERN] ||
+                selectedSettlement?.campaign_type ===
+                  DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_SUN]) && (
                 <ListCard
                   icon={<BookOpenIcon className="h-4 w-4" />}
                   initialItems={selectedSettlement?.monster_volumes || []}
                   itemName="Monster Volume"
                   placeholder="New monster volume..."
                   saveList={(updateData) =>
-                    updateMonsterVolumes(selectedSettlementId, updateData)
+                    updateSettlement(selectedSettlement?.id, {
+                      monster_volumes: updateData
+                    })
                   }
-                  selectedSettlementId={selectedSettlementId}
+                  selectedSettlement={selectedSettlement}
                 />
               )}
             </div>
           )}
 
           {/* Squires of the Citadel Tab */}
+          {selectedSettlement &&
+            selectedTab === TabType.SQUIRES &&
+            selectedSettlement?.campaign_type ===
+              DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
+              <>
+                <SquireSuspicionsCard
+                  setSurvivors={setSurvivors}
+                  survivors={survivors}
+                />
+                <SquireProgressionCards />
+              </>
+            )}
 
           {/* Survivors Tab */}
+          {selectedSettlement && selectedTab === TabType.SURVIVORS && (
+            <>
+              {/* Survivors Table */}
+              <SettlementSurvivorsCard
+                selectedSettlement={selectedSettlement}
+                selectedSurvivor={selectedSurvivor}
+                setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
+                setSelectedSurvivor={setSelectedSurvivor}
+                setSurvivors={setSurvivors}
+                survivors={survivors}
+              />
+
+              {/* Selected Survivor */}
+              {selectedSurvivor && !isCreatingNewSurvivor && (
+                <SurvivorCard
+                  mode={SurvivorCardMode.SURVIVOR_CARD}
+                  selectedHunt={selectedHunt}
+                  selectedSettlement={selectedSettlement}
+                  selectedShowdown={selectedShowdown}
+                  selectedSurvivor={selectedSurvivor}
+                  setSurvivors={setSurvivors}
+                  survivors={survivors}
+                />
+              )}
+
+              {/* Create Survivor */}
+              {isCreatingNewSurvivor && (
+                <CreateSurvivorForm
+                  selectedSettlement={selectedSettlement}
+                  setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
+                  setSelectedSurvivorId={setSelectedSurvivorId}
+                  setSurvivors={setSurvivors}
+                  survivors={survivors}
+                />
+              )}
+            </>
+          )}
 
           {/* Society Tab */}
+          {selectedSettlement &&
+            selectedTab === TabType.SOCIETY &&
+            selectedSettlement.campaign_type !==
+              DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
+              <div className="flex flex-col gap-2 pl-2">
+                <div className="flex flex-col lg:flex-row gap-2">
+                  {/* Milestones */}
+                  <div className="flex-1">
+                    <MilestonesCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                  {/* Principles */}
+                  <div className="flex-1">
+                    <PrinciplesCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-2">
+                  {/* Innovations */}
+                  <div className="flex-1">
+                    <InnovationsCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                  {/* Locations */}
+                  <div className="flex-1">
+                    <LocationsCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
           {/* Society Tab - Squires of the Citadel */}
+          {selectedSettlement &&
+            selectedTab === TabType.SOCIETY &&
+            selectedSettlement.campaign_type ===
+              DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
+              <LocationsCard
+                selectedSettlement={selectedSettlement}
+                setSelectedSettlement={setSelectedSettlement}
+              />
+            )}
 
           {/* Crafting Tab */}
+          {selectedSettlement && selectedTab === TabType.CRAFTING && (
+            <div className="flex flex-col gap-2 pl-2">
+              {/* Resources */}
+              <ResourcesCard
+                selectedSettlement={selectedSettlement}
+                setSelectedSettlement={setSelectedSettlement}
+              />
+              {/* Gear */}
+              <GearCard
+                selectedSettlement={selectedSettlement}
+                setSelectedSettlement={setSelectedSettlement}
+              />
+
+              {/* Patterns/Seed Patterns */}
+              {selectedSettlement?.campaign_type !==
+                DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
+                <div className="flex flex-col md:flex-row gap-2">
+                  <div className="flex-1">
+                    <SeedPatternsCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <PatternsCard
+                      selectedSettlement={selectedSettlement}
+                      setSelectedSettlement={setSelectedSettlement}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Arc Tab */}
+          {selectedSettlement &&
+            selectedTab === TabType.ARC &&
+            selectedSettlement.survivor_type ===
+              DatabaseSurvivorType[SurvivorType.ARC] && (
+              <div className="flex flex-col gap-2 pl-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {/* Collective Cognition Victories */}
+                  <CollectiveCognitionVictoriesCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
+                  {/* Collective Cognition Rewards */}
+                  <CollectiveCognitionRewardsCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {/* Philosophies */}
+                  <PhilosophiesCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
+                  {/* Knowledges */}
+                  <KnowledgesCard
+                    selectedSettlement={selectedSettlement}
+                    setSelectedSettlement={setSelectedSettlement}
+                  />
+                </div>
+              </div>
+            )}
 
           {/* Notes Tab */}
-
-          {/* Settings Tab */}
+          {selectedSettlement && selectedTab === TabType.NOTES && (
+            <NotesCard
+              selectedSettlement={selectedSettlement}
+              setSelectedSettlement={setSelectedSettlement}
+            />
+          )}
 
           {/* Hunt Tab */}
+          {selectedSettlement && selectedTab === TabType.HUNT && (
+            <HuntCard
+              selectedHunt={selectedHunt}
+              selectedHuntMonsterIndex={selectedHuntMonsterIndex}
+              selectedSettlement={selectedSettlement}
+              selectedShowdown={selectedShowdown}
+              selectedSurvivor={selectedSurvivor}
+              setSelectedHunt={setSelectedHunt}
+              setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
+              setSelectedShowdown={setSelectedShowdown}
+              setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
+              setSelectedSurvivor={setSelectedSurvivor}
+              setSelectedTab={setSelectedTab}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+              userSettings={userSettings}
+            />
+          )}
 
           {/* Showdown Tab */}
+          {selectedSettlement && selectedTab === TabType.SHOWDOWN && (
+            <ShowdownCard
+              selectedHunt={selectedHunt}
+              selectedShowdown={selectedShowdown}
+              selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
+              selectedSettlement={selectedSettlement}
+              selectedSurvivor={selectedSurvivor}
+              setSelectedShowdown={setSelectedShowdown}
+              setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
+              setSelectedSurvivor={setSelectedSurvivor}
+              setSelectedTab={setSelectedTab}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+            />
+          )}
 
           {/* Settlement Phase Tab */}
+          {selectedSettlement && selectedTab === TabType.SETTLEMENT_PHASE && (
+            <SettlementPhaseCard
+              selectedSettlement={selectedSettlement}
+              selectedSettlementPhase={selectedSettlementPhase}
+              selectedSurvivor={selectedSurvivor}
+              setSelectedSettlement={setSelectedSettlement}
+              setSelectedSettlementPhase={setSelectedSettlementPhase}
+              setSelectedSurvivor={setSelectedSurvivor}
+              setSelectedTab={setSelectedTab}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+            />
+          )}
         </div>
       </div>
     </>

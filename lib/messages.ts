@@ -111,6 +111,14 @@ export const COLLECTIVE_COGNITION_REWARD_NO_TARGET_ERROR_MESSAGE = () =>
   'A reward must have a collective cognition target.'
 
 /**
+ * Collective Cognition Reward Removed
+ *
+ * @returns Collective Cognition Reward Removed Message
+ */
+export const COLLECTIVE_COGNITION_REWARD_REMOVED_MESSAGE = () =>
+  'The dark gift fades into nothing.'
+
+/**
  * Collective Cognition Reward Saved
  *
  * @param unlocked Unlocked Status
@@ -877,6 +885,14 @@ export const NAMELESS_OBJECT_ERROR_MESSAGE = (objType: string) =>
  * @returns Nemesis Added Message
  */
 export const NEMESIS_ADDED_MESSAGE = () => 'A new nemesis emerges.'
+
+/**
+ * Nemesis Defeated
+ *
+ * @returns Nemesis Defeated Message
+ */
+export const NEMESIS_DEFEATED_MESSAGE = () =>
+  'The nemesis has been defeated...for now.'
 
 /**
  * Nemesis Removed
@@ -1912,7 +1928,7 @@ export const SURVIVOR_TENET_KNOWLEDGE_OBSERVATION_RANK_UPDATED_MESSAGE = (
  * @returns Survivor Tenet Knowledge Rank Up Updated Message
  */
 export const SURVIVOR_TENET_KNOWLEDGE_RANK_UP_UPDATED_MESSAGE = (
-  value: number | undefined
+  value: number | null | undefined
 ) =>
   value !== undefined
     ? 'Tenet knowledge rank up milestone marked.'

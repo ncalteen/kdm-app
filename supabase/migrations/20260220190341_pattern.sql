@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 -- Pattern Table
--- Built-in and custom patterns/seed patterns.
+-- Built-in and custom patterns.
 --------------------------------------------------------------------------------
 create table pattern (
   -- Metadata
@@ -11,8 +11,7 @@ create table pattern (
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
   -- Data
-  pattern_name varchar not null,
-  seed_pattern boolean not null default false
+  pattern_name varchar not null
 );
 --------------------------------------------------------------------------------
 -- Junction Table: Shared Users
@@ -142,6 +141,7 @@ create policy "Allow all for admin" on pattern_shared_user for all using (is_adm
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_pattern_custom_user on pattern(custom, user_id);
 create index idx_pattern_shared_user_pattern on pattern_shared_user(pattern_id);
 create index idx_pattern_shared_user_user on pattern_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

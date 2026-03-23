@@ -1,157 +1,99 @@
+import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-
-/**
- * Settlement Quarry Row with Joined Quarry Details
- *
- * Represents a row from the settlement_quarry table with the quarry's display
- * name and monster node joined from the quarry table.
- */
-export interface SettlementQuarryRow {
-  /** Settlement Quarry ID */
-  id: string
-  /** Quarry ID (Foreign Key to quarry Table) */
-  quarry_id: string
-  /** Quarry Monster Name (quarry Table) */
-  monster_name: string
-  /** Quarry Monster Node (quarry Table) */
-  node: string
-  /** Whether the Quarry is Unlocked for This Settlement */
-  unlocked: boolean
-}
-
-/**
- * Add Quarries to Settlement
- *
- * Links existing quarry IDs to a settlement by inserting records into the
- * settlement_quarry join table. Initial values for quarry progress and
- * collective cognition victories are set to false.
- *
- * @param quarryIds Quarry IDs
- * @param settlementId Settlement ID
- */
-export async function addQuarriesToSettlement(
-  quarryIds: string[],
-  settlementId: string
-): Promise<void> {
-  if (quarryIds.length === 0) return
-
-  const supabase = createClient()
-
-  const { error } = await supabase.from('settlement_quarry').insert(
-    quarryIds.map((quarryId) => ({
-      collective_cognition_level_1: false,
-      collective_cognition_level_2: [false, false],
-      collective_cognition_level_3: [false, false, false],
-      collective_cognition_prologue: false,
-      quarry_id: quarryId,
-      settlement_id: settlementId,
-      unlocked: false
-    }))
-  )
-
-  if (error)
-    throw new Error(`Error Adding Quarries to Settlement: ${error.message}`)
-}
+import { SettlementDetail } from '@/lib/types'
 
 /**
  * Get Settlement Quarries
  *
- * Fetches all quarries linked to a settlement, joining the quarry table to
- * include the monster name and node for display.
+ * Retrieves the quarries associated with a settlement.
  *
  * @param settlementId Settlement ID
- * @returns Settlement Quarry Rows
+ * @returns Settlement Quarry Data
  */
 export async function getSettlementQuarries(
-  settlementId: string
-): Promise<SettlementQuarryRow[]> {
+  settlementId: string | null | undefined
+): Promise<SettlementDetail['quarries']> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('settlement_quarry')
     .select(
-      'id, quarry_id, unlocked, quarry:quarry_id!inner(monster_name, node)'
+      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(monster_name, node, prologue)'
     )
     .eq('settlement_id', settlementId)
 
   if (error)
     throw new Error(`Error Fetching Settlement Quarries: ${error.message}`)
 
-  return (data ?? []).map((row) => {
-    const quarry = row.quarry as unknown as {
-      monster_name: string
-      node: string
-    }
-
-    return {
-      id: row.id,
-      quarry_id: row.quarry_id,
-      monster_name: quarry.monster_name,
-      node: quarry.node,
-      unlocked: row.unlocked
-    }
-  })
+  return (
+    data?.map((item) => ({
+      collective_cognition_level_1: item.collective_cognition_level_1,
+      collective_cognition_level_2: item.collective_cognition_level_2,
+      collective_cognition_level_3: item.collective_cognition_level_3,
+      collective_cognition_prologue: item.collective_cognition_prologue,
+      id: item.id,
+      monster_name: (item.quarry as unknown as { monster_name: string })
+        .monster_name,
+      node: (item.quarry as unknown as { node: string }).node,
+      prologue: (item.quarry as unknown as { prologue: boolean }).prologue,
+      quarry_id: item.quarry_id,
+      unlocked: item.unlocked
+    })) ?? []
+  )
 }
 
 /**
- * Add Quarry to Settlement
+ * Add Settlement Quarries
  *
- * Adds a single quarry to a settlement and returns the new settlement_quarry
- * row with joined quarry details.
+ * Adds quarries to a settlement by their IDs. This is used when adding quarries
+ * to a settlement during settlement creation or editing.
  *
- * @param quarryId Quarry ID
+ * @param quarryIds Quarry IDs
  * @param settlementId Settlement ID
- * @returns Settlement Quarry Row
+ * @return Added Settlement Quarries Data
  */
-export async function addQuarryToSettlement(
-  quarryId: string,
-  settlementId: string
-): Promise<SettlementQuarryRow> {
+export async function addSettlementQuarries(
+  quarryIds: string[],
+  settlementId: string | null | undefined
+): Promise<{ id: string }[]> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+  if (quarryIds.length === 0) return []
+
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('settlement_quarry')
-    .insert({
-      collective_cognition_level_1: false,
-      collective_cognition_level_2: [false, false],
-      collective_cognition_level_3: [false, false, false],
-      collective_cognition_prologue: false,
-      quarry_id: quarryId,
-      settlement_id: settlementId,
-      unlocked: false
-    })
-    .select(
-      'id, quarry_id, unlocked, quarry:quarry_id!inner(monster_name, node)'
+    .insert(
+      quarryIds.map((quarryId) => ({
+        collective_cognition_level_1: false,
+        collective_cognition_level_2: [false, false],
+        collective_cognition_level_3: [false, false, false],
+        collective_cognition_prologue: false,
+        quarry_id: quarryId,
+        settlement_id: settlementId,
+        unlocked: false
+      }))
     )
-    .single()
+    .select('id')
 
   if (error)
-    throw new Error(`Error Adding Quarry to Settlement: ${error.message}`)
+    throw new Error(`Error Adding Settlement Quarries: ${error.message}`)
 
-  const quarry = data.quarry as unknown as {
-    monster_name: string
-    node: string
-  }
-
-  return {
-    id: data.id,
-    quarry_id: data.quarry_id,
-    monster_name: quarry.monster_name,
-    node: quarry.node,
-    unlocked: data.unlocked
-  }
+  return data
 }
 
 /**
- * Remove Quarry from Settlement
- *
- * Removes a settlement_quarry record by its ID.
+ * Remove Settlement Quarry
  *
  * @param settlementQuarryId Settlement Quarry ID
  */
-export async function removeQuarryFromSettlement(
-  settlementQuarryId: string
+export async function removeSettlementQuarry(
+  settlementQuarryId: string | null | undefined
 ): Promise<void> {
+  if (!settlementQuarryId) throw new Error('Required: Settlement Quarry ID')
+
   const supabase = createClient()
 
   const { error } = await supabase
@@ -160,30 +102,30 @@ export async function removeQuarryFromSettlement(
     .eq('id', settlementQuarryId)
 
   if (error)
-    throw new Error(`Error Removing Quarry from Settlement: ${error.message}`)
+    throw new Error(`Error Removing Settlement Quarry: ${error.message}`)
 }
 
 /**
- * Update Settlement Quarry Unlocked
+ * Update Settlement Quarry
  *
- * Toggles the unlocked status of a quarry for a settlement.
+ * Updates the specified fields of a settlement quarry row.
  *
  * @param settlementQuarryId Settlement Quarry ID
- * @param unlocked Unlocked Status
+ * @param updates Partial Settlement Quarry Updates
  */
-export async function updateSettlementQuarryUnlocked(
-  settlementQuarryId: string,
-  unlocked: boolean
+export async function updateSettlementQuarry(
+  settlementQuarryId: string | null | undefined,
+  updates: Partial<Tables<'settlement_quarry'>>
 ): Promise<void> {
+  if (!settlementQuarryId) throw new Error('Required: Settlement Quarry ID')
+
   const supabase = createClient()
 
   const { error } = await supabase
     .from('settlement_quarry')
-    .update({ unlocked })
+    .update(updates)
     .eq('id', settlementQuarryId)
 
   if (error)
-    throw new Error(
-      `Error Updating Settlement Quarry Unlocked: ${error.message}`
-    )
+    throw new Error(`Error Updating Settlement Quarry: ${error.message}`)
 }

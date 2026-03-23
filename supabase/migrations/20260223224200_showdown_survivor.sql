@@ -8,8 +8,8 @@ create table showdown_survivor (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  activation_used boolean not null default false,
   accuracy_tokens integer not null default 0,
+  activation_used boolean not null default false,
   bleeding_tokens integer not null default 0,
   block_tokens integer not null default 0,
   deflect_tokens integer not null default 0,
