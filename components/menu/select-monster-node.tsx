@@ -40,9 +40,9 @@ export interface SelectMonsterNodeProps {
 /**
  * Select Monster Node Component
  *
- * This component allows the user to select one or more monsters for a specific
- * node type. It uses a popover to display the options and allows for searching
- * through them. Multiple monsters can be selected.
+ * Allows the user to select one or more monsters for a specific node type.
+ * Uses a popover with search to display options. Multiple monsters can be
+ * selected.
  *
  * @param props Component Properties
  * @returns Select Monster Node Component
@@ -60,24 +60,40 @@ export function SelectMonsterNode({
   >([])
 
   useEffect(() => {
-    if (nodeType.startsWith('NQ'))
-      getQuarries([nodeType]).then((quarries) =>
-        setMonsters(
-          Object.values(quarries).map((q) => ({
-            id: q.id,
-            monster_name: q.monster_name
-          }))
-        )
-      )
-    else
-      getNemeses([nodeType]).then((nemeses) =>
-        setMonsters(
-          Object.values(nemeses).map((n) => ({
-            id: n.id,
-            monster_name: n.monster_name
-          }))
-        )
-      )
+    let isCancelled = false
+
+    const fetchMonsters = async () => {
+      try {
+        if (nodeType.startsWith('NQ')) {
+          const quarries = await getQuarries([nodeType])
+          if (isCancelled) return
+          setMonsters(
+            Object.values(quarries).map((q) => ({
+              id: q.id,
+              monster_name: q.monster_name
+            }))
+          )
+        } else {
+          const nemeses = await getNemeses([nodeType])
+          if (isCancelled) return
+          setMonsters(
+            Object.values(nemeses).map((n) => ({
+              id: n.id,
+              monster_name: n.monster_name
+            }))
+          )
+        }
+      } catch (error: unknown) {
+        if (isCancelled) return
+        console.error('Monster Node Fetch Error:', error)
+      }
+    }
+
+    fetchMonsters()
+
+    return () => {
+      isCancelled = true
+    }
   }, [nodeType])
 
   /**
@@ -96,7 +112,7 @@ export function SelectMonsterNode({
   }
 
   /**
-   * Remove Monster from Selection.
+   * Remove Monster from Selection
    *
    * @param monsterId Monster ID to Remove
    */
@@ -170,7 +186,8 @@ export function SelectMonsterNode({
                 <button
                   type="button"
                   onClick={() => handleRemove(monster.id)}
-                  className="hover:bg-secondary-foreground/20 rounded-sm p-0.5 shrink-0">
+                  className="hover:bg-secondary-foreground/20 rounded-sm p-0.5 shrink-0"
+                  aria-label={`Remove ${monster.monster_name}`}>
                   <X className="h-3 w-3" />
                 </button>
               )}

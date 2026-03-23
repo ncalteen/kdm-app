@@ -230,13 +230,24 @@ export async function getNemesisNodesById(
  * @returns Inserted Nemesis
  */
 export async function addNemesis(
-  nemesis: Omit<TablesInsert<'nemesis'>, 'id' | 'created_at' | 'updated_at'>
+  nemesis: Omit<
+    TablesInsert<'nemesis'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<NemesisDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Auth Error: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('nemesis')
-    .insert(nemesis)
+    .insert({ ...nemesis, user_id: user.id })
     .select('id, alternate_id, monster_name, multi_monster, node, vignette_id')
     .single()
 

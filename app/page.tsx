@@ -90,14 +90,14 @@ function MainPage(): ReactElement {
     isCreatingNewSurvivor,
 
     selectedHunt,
-    // selectedHuntId,
+    selectedHuntId,
     selectedHuntMonsterIndex,
     selectedSettlement,
-    // selectedSettlementId,
+    selectedSettlementId,
     selectedSettlementPhase,
-    // selectedSettlementPhaseId,
+    selectedSettlementPhaseId,
     selectedShowdown,
-    // selectedShowdownId,
+    selectedShowdownId,
     selectedShowdownMonsterIndex,
     selectedSurvivor,
     // selectedSurvivorId,
@@ -138,10 +138,11 @@ function MainPage(): ReactElement {
 
         <AppSidebar
           isCreatingNewSettlement={isCreatingNewSettlement}
-          selectedHunt={selectedHunt}
+          selectedHuntId={selectedHuntId}
           selectedSettlement={selectedSettlement}
-          selectedSettlementPhase={selectedSettlementPhase}
-          selectedShowdown={selectedShowdown}
+          selectedSettlementId={selectedSettlementId}
+          selectedSettlementPhaseId={selectedSettlementPhaseId}
+          selectedShowdownId={selectedShowdownId}
           selectedTab={selectedTab}
           setIsCreatingNewSettlement={setIsCreatingNewSettlement}
           setSelectedHuntId={setSelectedHuntId}

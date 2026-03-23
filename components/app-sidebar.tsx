@@ -15,12 +15,7 @@ import {
   SurvivorType,
   TabType
 } from '@/lib/enums'
-import {
-  HuntDetail,
-  SettlementDetail,
-  SettlementPhaseDetail,
-  ShowdownDetail
-} from '@/lib/types'
+import { SettlementDetail } from '@/lib/types'
 import {
   HourglassIcon,
   LightbulbIcon,
@@ -153,13 +148,15 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
   /** Is Creating New Settlement */
   isCreatingNewSettlement: boolean
   /** Selected Hunt ID */
-  selectedHunt: HuntDetail | null
+  selectedHuntId: string | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Settlement Phase */
-  selectedSettlementPhase: SettlementPhaseDetail | null
+  /** Selected Settlement ID */
+  selectedSettlementId: string | null
+  /** Selected Settlement Phase ID */
+  selectedSettlementPhaseId: string | null
   /** Selected Showdown ID */
-  selectedShowdown: ShowdownDetail | null
+  selectedShowdownId: string | null
   /** Selected Tab */
   selectedTab: TabType
   /** Set Is Creating New Settlement */
@@ -186,10 +183,11 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
  */
 export function AppSidebar({
   isCreatingNewSettlement,
-  selectedHunt,
+  selectedHuntId,
   selectedSettlement,
-  selectedSettlementPhase,
-  selectedShowdown,
+  selectedSettlementId,
+  selectedSettlementPhaseId,
+  selectedShowdownId,
   selectedTab,
   setIsCreatingNewSettlement,
   setSelectedHuntId,
@@ -234,10 +232,11 @@ export function AppSidebar({
       <SidebarHeader>
         <SettlementSwitcher
           isCreatingNewSettlement={isCreatingNewSettlement}
-          selectedHunt={selectedHunt}
+          selectedHuntId={selectedHuntId}
           selectedSettlement={selectedSettlement}
-          selectedSettlementPhase={selectedSettlementPhase}
-          selectedShowdown={selectedShowdown}
+          selectedSettlementId={selectedSettlementId}
+          selectedSettlementPhaseId={selectedSettlementPhaseId}
+          selectedShowdownId={selectedShowdownId}
           setIsCreatingNewSettlement={setIsCreatingNewSettlement}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlementId={setSelectedSettlementId}

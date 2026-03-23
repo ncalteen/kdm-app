@@ -45,20 +45,36 @@ interface LevelFormData {
   overtoneCards: number
   /** Accuracy */
   accuracy: number
+  /** Accuracy Tokens */
+  accuracyTokens: number
   /** Damage */
   damage: number
+  /** Damage Tokens */
+  damageTokens: number
   /** Evasion */
   evasion: number
+  /** Evasion Tokens */
+  evasionTokens: number
   /** Luck */
   luck: number
+  /** Luck Tokens */
+  luckTokens: number
   /** Movement */
   movement: number
+  /** Movement Tokens */
+  movementTokens: number
   /** Speed */
   speed: number
+  /** Speed Tokens */
+  speedTokens: number
   /** Strength */
   strength: number
+  /** Strength Tokens */
+  strengthTokens: number
   /** Toughness */
   toughness: number
+  /** Toughness Tokens */
+  toughnessTokens: number
   /** Hunt Position (quarry only) */
   huntPos: number
   /** Survivor Hunt Position (quarry only) */
@@ -79,19 +95,39 @@ const defaultLevelData = (): LevelFormData => ({
   legendaryCards: 0,
   overtoneCards: 0,
   accuracy: 0,
+  accuracyTokens: 0,
   damage: 0,
+  damageTokens: 0,
   evasion: 0,
+  evasionTokens: 0,
   luck: 0,
+  luckTokens: 0,
   movement: 1,
+  movementTokens: 0,
   speed: 0,
+  speedTokens: 0,
   strength: 0,
+  strengthTokens: 0,
   toughness: 0,
+  toughnessTokens: 0,
   huntPos: 12,
   survivorHuntPos: 0,
   life: 0,
   traits: [],
   moods: []
 })
+
+/** Attribute definitions for the showdown-style grid */
+const MONSTER_ATTRIBUTES = [
+  { key: 'movement', tokenKey: 'movementTokens', label: 'Movement' },
+  { key: 'accuracy', tokenKey: 'accuracyTokens', label: 'Accuracy' },
+  { key: 'damage', tokenKey: 'damageTokens', label: 'Damage' },
+  { key: 'strength', tokenKey: 'strengthTokens', label: 'Strength' },
+  { key: 'evasion', tokenKey: 'evasionTokens', label: 'Evasion' },
+  { key: 'luck', tokenKey: 'luckTokens', label: 'Luck' },
+  { key: 'speed', tokenKey: 'speedTokens', label: 'Speed' },
+  { key: 'toughness', tokenKey: 'toughnessTokens', label: 'Toughness' }
+] as const
 
 /** Hunt board position type */
 type HuntEventType = 'ARC' | 'BASIC' | 'MONSTER' | 'SCOUT'
@@ -315,13 +351,21 @@ export function CreateMonsterCard({
                 sub.legendaryCards +
                 sub.overtoneCards,
               accuracy: sub.accuracy,
+              accuracy_tokens: sub.accuracyTokens,
               damage: sub.damage,
+              damage_tokens: sub.damageTokens,
               evasion: sub.evasion,
+              evasion_tokens: sub.evasionTokens,
               luck: sub.luck,
+              luck_tokens: sub.luckTokens,
               movement: sub.movement,
+              movement_tokens: sub.movementTokens,
               speed: sub.speed,
+              speed_tokens: sub.speedTokens,
               strength: sub.strength,
+              strength_tokens: sub.strengthTokens,
               toughness: sub.toughness,
+              toughness_tokens: sub.toughnessTokens,
               hunt_pos: sub.huntPos,
               survivor_hunt_pos: sub.survivorHuntPos,
               traits: sub.traits,
@@ -356,13 +400,21 @@ export function CreateMonsterCard({
                 sub.legendaryCards +
                 sub.overtoneCards,
               accuracy: sub.accuracy,
+              accuracy_tokens: sub.accuracyTokens,
               damage: sub.damage,
+              damage_tokens: sub.damageTokens,
               evasion: sub.evasion,
+              evasion_tokens: sub.evasionTokens,
               luck: sub.luck,
+              luck_tokens: sub.luckTokens,
               movement: sub.movement,
+              movement_tokens: sub.movementTokens,
               speed: sub.speed,
+              speed_tokens: sub.speedTokens,
               strength: sub.strength,
+              strength_tokens: sub.strengthTokens,
               toughness: sub.toughness,
+              toughness_tokens: sub.toughnessTokens,
               life: sub.life || null,
               traits: sub.traits,
               moods: sub.moods
@@ -504,17 +556,24 @@ export function CreateMonsterCard({
                   </span>
                   <div className="flex items-center gap-2">
                     {!levelData && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation()
                           addSubMonster(levelNum)
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            addSubMonster(levelNum)
+                          }
                         }}>
                         <PlusIcon className="h-3 w-3 mr-1" />
                         Add
-                      </Button>
+                      </span>
                     )}
                     <ChevronDownIcon
                       className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -523,7 +582,7 @@ export function CreateMonsterCard({
                 </button>
 
                 {isExpanded && levelData && (
-                  <div className="p-3 pt-0 space-y-3">
+                  <div className="p-3 pt-2 space-y-3">
                     {levelData.map((sub, subIdx) => (
                       <div
                         key={subIdx}
@@ -559,7 +618,9 @@ export function CreateMonsterCard({
                           </Label>
                           <div className="grid grid-cols-4 gap-2 mt-1">
                             <div className="space-y-1">
-                              <Label className="text-xs">B</Label>
+                              <Label className="text-xs text-center block">
+                                B
+                              </Label>
                               <NumericInput
                                 label="Basic"
                                 value={sub.basicCards}
@@ -572,7 +633,9 @@ export function CreateMonsterCard({
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs">A</Label>
+                              <Label className="text-xs text-center block">
+                                A
+                              </Label>
                               <NumericInput
                                 label="Advanced"
                                 value={sub.advancedCards}
@@ -585,7 +648,9 @@ export function CreateMonsterCard({
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs">L</Label>
+                              <Label className="text-xs text-center block">
+                                L
+                              </Label>
                               <NumericInput
                                 label="Legendary"
                                 value={sub.legendaryCards}
@@ -598,7 +663,9 @@ export function CreateMonsterCard({
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs">O</Label>
+                              <Label className="text-xs text-center block">
+                                O
+                              </Label>
                               <NumericInput
                                 label="Overtone"
                                 value={sub.overtoneCards}
@@ -618,31 +685,67 @@ export function CreateMonsterCard({
                           <Label className="text-xs text-muted-foreground">
                             Attributes
                           </Label>
-                          <div className="grid grid-cols-4 gap-2 mt-1">
-                            {[
-                              'movement',
-                              'accuracy',
-                              'damage',
-                              'strength',
-                              'evasion',
-                              'luck',
-                              'speed',
-                              'toughness'
-                            ].map((attr) => (
-                              <div key={attr} className="space-y-1">
-                                <Label className="text-xs capitalize">
-                                  {attr}
+                          <div className="flex flex-col gap-1 mt-1">
+                            <div className="flex flex-row items-center gap-2">
+                              <div className="w-20" />
+                              <Label className="text-xs w-20 justify-center">
+                                Base
+                              </Label>
+                              <Label className="text-xs w-20 justify-center">
+                                Tokens
+                              </Label>
+                              <Label className="text-xs w-20 justify-center">
+                                Total
+                              </Label>
+                            </div>
+
+                            {MONSTER_ATTRIBUTES.map((attr) => (
+                              <div
+                                key={attr.key}
+                                className="flex flex-row items-center gap-2">
+                                <Label className="text-xs w-20">
+                                  {attr.label}
                                 </Label>
                                 <NumericInput
-                                  label={attr}
+                                  label={attr.label}
                                   value={
-                                    sub[attr as keyof LevelFormData] as number
+                                    sub[
+                                      attr.key as keyof LevelFormData
+                                    ] as number
                                   }
                                   onChange={(v) =>
                                     updateSubMonster(levelNum, subIdx, {
-                                      [attr]: v
+                                      [attr.key]: v
                                     })
                                   }
+                                  className="w-20"
+                                />
+                                <NumericInput
+                                  label={`${attr.label} Tokens`}
+                                  value={
+                                    sub[
+                                      attr.tokenKey as keyof LevelFormData
+                                    ] as number
+                                  }
+                                  onChange={(v) =>
+                                    updateSubMonster(levelNum, subIdx, {
+                                      [attr.tokenKey]: v
+                                    })
+                                  }
+                                  className="w-20 bg-muted!"
+                                />
+                                <NumericInput
+                                  label={`${attr.label} Total`}
+                                  value={
+                                    (sub[
+                                      attr.key as keyof LevelFormData
+                                    ] as number) +
+                                    (sub[
+                                      attr.tokenKey as keyof LevelFormData
+                                    ] as number)
+                                  }
+                                  disabled
+                                  className="w-20"
                                 />
                               </div>
                             ))}
@@ -653,7 +756,9 @@ export function CreateMonsterCard({
                         {monsterType === MonsterType.QUARRY && (
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <Label className="text-xs">Hunt Position</Label>
+                              <Label className="text-xs text-center block">
+                                Hunt Position
+                              </Label>
                               <NumericInput
                                 label="Hunt Position"
                                 value={sub.huntPos}
@@ -667,7 +772,7 @@ export function CreateMonsterCard({
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs">
+                              <Label className="text-xs text-center block">
                                 Survivor Hunt Position
                               </Label>
                               <NumericInput
@@ -688,7 +793,9 @@ export function CreateMonsterCard({
                         {/* Nemesis: Life */}
                         {monsterType === MonsterType.NEMESIS && (
                           <div className="space-y-1">
-                            <Label className="text-xs">Life</Label>
+                            <Label className="text-xs text-center block">
+                              Life
+                            </Label>
                             <NumericInput
                               label="Life"
                               value={sub.life}

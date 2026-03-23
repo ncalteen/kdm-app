@@ -234,13 +234,24 @@ export async function getQuarryNodesById(
  * @returns Inserted Quarry
  */
 export async function addQuarry(
-  quarry: Omit<TablesInsert<'quarry'>, 'id' | 'created_at' | 'updated_at'>
+  quarry: Omit<
+    TablesInsert<'quarry'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<QuarryDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Auth Error: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('quarry')
-    .insert(quarry)
+    .insert({ ...quarry, user_id: user.id })
     .select(
       'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
     )

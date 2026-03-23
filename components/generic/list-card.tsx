@@ -21,7 +21,7 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -64,11 +64,18 @@ export function ListCard({
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
 
   // Reset state when the source data or settlement changes.
-  useEffect(() => {
+  // Uses render-time comparison instead of useEffect to avoid cascading renders.
+  const [prevResetKey, setPrevResetKey] = useState(
+    () => `${selectedSettlement?.id}-${JSON.stringify(initialItems)}`
+  )
+  const currentResetKey = `${selectedSettlement?.id}-${JSON.stringify(initialItems)}`
+
+  if (prevResetKey !== currentResetKey) {
+    setPrevResetKey(currentResetKey)
     setItems(initialItems)
     setEditingIndices(new Set())
     setIsAddingNew(false)
-  }, [initialItems, selectedSettlement?.id])
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -168,9 +175,10 @@ export function ListCard({
    *
    * @param index Item Index
    */
-  const handleEdit = useCallback((index: number) => {
-    setEditingIndices((prev) => new Set(prev).add(index))
-  }, [])
+  const handleEdit = useCallback(
+    (index: number) => setEditingIndices((prev) => new Set(prev).add(index)),
+    []
+  )
 
   /**
    * Handle Cancel Edit

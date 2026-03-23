@@ -37,9 +37,8 @@ export interface SelectWanderersProps {
 /**
  * Select Wanderers Component
  *
- * This component allows the user to select zero or more wanderers to add to
- * their settlement. It uses a popover to display the options and allows for
- * searching through them.
+ * Allows the user to select zero or more wanderers to add to their settlement.
+ * Uses a popover with search to display options.
  *
  * @param props Component Properties
  * @returns Select Wanderers Component
@@ -56,7 +55,19 @@ export function SelectWanderers({
   )
 
   useEffect(() => {
-    getWanderers().then((wanderers) => setWanderers(wanderers))
+    let isCancelled = false
+
+    getWanderers()
+      .then((wanderers) => {
+        if (!isCancelled) setWanderers(wanderers)
+      })
+      .catch((error: unknown) => {
+        if (!isCancelled) console.error('Wanderers Fetch Error:', error)
+      })
+
+    return () => {
+      isCancelled = true
+    }
   }, [])
 
   /**
@@ -154,7 +165,8 @@ export function SelectWanderers({
                 <button
                   type="button"
                   onClick={() => handleRemove(wandererId)}
-                  className="hover:bg-secondary-foreground/20 rounded-sm p-0.5 shrink-0">
+                  className="hover:bg-secondary-foreground/20 rounded-sm p-0.5 shrink-0"
+                  aria-label={`Remove ${wanderers[wandererId].wanderer_name}`}>
                   <X className="h-3 w-3" />
                 </button>
               )}
