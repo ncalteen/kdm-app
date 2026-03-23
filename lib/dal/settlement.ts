@@ -50,6 +50,7 @@ import {
 } from '@/lib/dal/settlement-timeline-year'
 import { addSettlementWanderers } from '@/lib/dal/settlement-wanderer'
 import { addSquiresOfTheCitadelSurvivors } from '@/lib/dal/survivor'
+import { getUserId } from '@/lib/dal/user'
 import { getWandererTimelineYears } from '@/lib/dal/wanderer-timeline-year'
 import { Tables } from '@/lib/database.types'
 import {
@@ -74,23 +75,18 @@ import { NewSettlementInput } from '@/schemas/new-settlement-input'
  * Create Settlement
  *
  * Takes either the preselected campaign or custom campaign data and uses it to
- * create a new settlement.
+ * create a new settlement. Parallelizes independent data lookups for nemesis,
+ * quarry, and wanderer timeline/location data to reduce latency.
  *
- * @param data Settlement Input Data
+ * @param options Settlement Input Data
  * @returns Settlement ID
  */
 export async function createSettlement(
   options: NewSettlementInput
 ): Promise<string> {
+  const userId = await getUserId()
   const supabase = createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!userData.user) throw new Error('User Not Authenticated')
-
-  // Get the template based on the campaign type. This will call various helper
-  // functions to get the necessary data for creating the settlement.
   const template = await {
     [CampaignType.CUSTOM]: getCustomCampaignTemplate,
     [CampaignType.PEOPLE_OF_THE_DREAM_KEEPER]:
@@ -101,8 +97,7 @@ export async function createSettlement(
     [CampaignType.SQUIRES_OF_THE_CITADEL]: getSquiresOfTheCitadelTemplate
   }[options.campaignType]()
 
-  // Create the settlement record. This is must happen first to generate the
-  // settlement ID.
+  // Create the settlement record first to generate the settlement ID.
   const settlement: Omit<
     Tables<'settlement'>,
     'created_at' | 'id' | 'updated_at'
@@ -118,7 +113,7 @@ export async function createSettlement(
     uses_scouts: options.usesScouts,
     lantern_research: 0,
     monster_volumes: [],
-    user_id: userData.user.id
+    user_id: userId
   }
 
   const { data: settlementData, error: settlementError } = await supabase
@@ -133,147 +128,133 @@ export async function createSettlement(
 
   const settlementId = settlementData.id
 
-  //////////////////////////////////////////////////////////////////////////////
-  // The following do not need to be added for a new settlement.
-  // - Knowledges
-  // - Philosophies
-  // - Gear
-  // - Patterns
-  // - Resources
-  //////////////////////////////////////////////////////////////////////////////
+  // Simple parallel inserts that don't affect other tables.
+  await Promise.all([
+    addSettlementInnovations(template.innovationIds, settlementId),
+    addSettlementMilestones(template.milestoneIds, settlementId),
+    addSettlementPrinciples(template.principleIds, settlementId)
+  ])
 
-  //////////////////////////////////////////////////////////////////////////////
-  // The following are "simple" additions. They don't require any additional
-  // logic beyond creating in the database.
-  //////////////////////////////////////////////////////////////////////////////
-
-  // Innovations
-  await addSettlementInnovations(template.innovationIds, settlementId)
-  // Milestones
-  await addSettlementMilestones(template.milestoneIds, settlementId)
-  // Principles
-  await addSettlementPrinciples(template.principleIds, settlementId)
-
-  //////////////////////////////////////////////////////////////////////////////
-  // The following shouldn't be added until the remaining creation logic is
-  // done, as they will be updated based on the other inputs. Instead, they
-  // will be built up as the settlement is created, and then added at the end.
-  //////////////////////////////////////////////////////////////////////////////
-
-  // Collective Cognition Rewards
-  const settlementCollectiveCognitionRewardIds =
-    template.collectiveCognitionRewardIds
-  // Locations
-  const settlementLocationIds = template.locationIds
-  // Timeline Events (data, not IDs)
+  // Accumulators for data that depends on nemesis/quarry/wanderer lookups.
+  const settlementCollectiveCognitionRewardIds = [
+    ...template.collectiveCognitionRewardIds
+  ]
+  const settlementLocationIds = [...template.locationIds]
   const settlementTimeline: Omit<
     Tables<'settlement_timeline_year'>,
     'created_at' | 'id' | 'updated_at'
   >[] = template.timeline.map(({ entries, year_number }) => ({
     completed: false,
-    entries,
+    entries: [...entries],
     settlement_id: settlementId,
     year_number
   }))
 
-  // If the settlement uses Arc survivors, add the Forum location.
+  // Conditional locations (Arc forum, scout outskirts).
+  const conditionalLocationNames: string[] = []
   if (options.survivorType === SurvivorType.ARC)
-    settlementLocationIds.push(
-      ...(await getLocationIds(['Forum'], false, undefined))
-    )
-  // If the settlement uses scouts, get the Outskirts location.
-  if (options.usesScouts)
-    settlementLocationIds.push(
-      ...(await getLocationIds(['Outskirts'], false, undefined))
-    )
+    conditionalLocationNames.push('Forum')
+  if (options.usesScouts) conditionalLocationNames.push('Outskirts')
 
-  //////////////////////////////////////////////////////////////////////////////
-  // The following are more complex, as they will affect other tables like
-  // locations and timelines.
-  //////////////////////////////////////////////////////////////////////////////
+  if (conditionalLocationNames.length > 0)
+    settlementLocationIds.push(
+      ...(await getLocationIds(conditionalLocationNames, false, undefined))
+    )
 
   // Nemeses
-  const nemesisIds = options.monsterIds.NN1.concat(
-    options.monsterIds.NN2,
-    options.monsterIds.NN3,
-    options.monsterIds.CO,
-    options.monsterIds.FI
-  )
-  await addSettlementNemeses(nemesisIds, settlementId)
-
-  for (const nemesisId of nemesisIds) {
-    // Append any timeline entries to the settlement timeline.
-    for (const timelineYear of await getNemesisTimelineYears(
-      nemesisId,
-      options.campaignType
-    ))
-      settlementTimeline[timelineYear.year_number].entries.push(
-        ...timelineYear.entries
-      )
-
-    // Add any locations to the settlement locations.
-    settlementLocationIds.push(...(await getNemesisLocationIds(nemesisId)))
-  }
+  const nemesisIds = [
+    ...options.monsterIds.NN1,
+    ...options.monsterIds.NN2,
+    ...options.monsterIds.NN3,
+    ...options.monsterIds.CO,
+    ...options.monsterIds.FI
+  ]
 
   // Quarries
-  const quarryIds = options.monsterIds.NQ1.concat(
-    options.monsterIds.NQ2,
-    options.monsterIds.NQ3,
-    options.monsterIds.NQ4
-  )
-  await addSettlementQuarries(quarryIds, settlementId)
+  const quarryIds = [
+    ...options.monsterIds.NQ1,
+    ...options.monsterIds.NQ2,
+    ...options.monsterIds.NQ3,
+    ...options.monsterIds.NQ4
+  ]
 
-  for (const quarryId of quarryIds) {
-    // Append any timeline entries to the settlement timeline.
-    for (const timelineYear of await getQuarryTimelineYears(
-      quarryId,
-      options.campaignType
-    ))
-      settlementTimeline[timelineYear.year_number].entries.push(
-        ...timelineYear.entries
+  // Insert nemeses, quarries, and wanderers in parallel.
+  await Promise.all([
+    addSettlementNemeses(nemesisIds, settlementId),
+    addSettlementQuarries(quarryIds, settlementId),
+    addSettlementWanderers(options.wandererIds, settlementId)
+  ])
+
+  // Fetch all timeline/location/collective-cognition-reward data in parallel
+  // per-entity.
+  const [nemesisDataResults, quarryDataResults, wandererDataResults] =
+    await Promise.all([
+      // All nemesis lookups in parallel
+      Promise.all(
+        nemesisIds.map(async (nemesisId) => {
+          const [timelineYears, locationIds] = await Promise.all([
+            getNemesisTimelineYears(nemesisId, options.campaignType),
+            getNemesisLocationIds(nemesisId)
+          ])
+          return { timelineYears, locationIds }
+        })
+      ),
+      // All quarry lookups in parallel
+      Promise.all(
+        quarryIds.map(async (quarryId) => {
+          const [timelineYears, locationIds, collectiveCognitionRewardIds] =
+            await Promise.all([
+              getQuarryTimelineYears(quarryId, options.campaignType),
+              getQuarryLocationIds(quarryId),
+              getQuarryCollectiveCognitionRewardIds(quarryId)
+            ])
+          return { timelineYears, locationIds, collectiveCognitionRewardIds }
+        })
+      ),
+      // All wanderer lookups in parallel
+      Promise.all(
+        options.wandererIds.map(async (wandererId) => {
+          const timelineYears = await getWandererTimelineYears(wandererId)
+          return { timelineYears }
+        })
       )
+    ])
 
-    // Add any locations to the settlement locations.
-    settlementLocationIds.push(...(await getQuarryLocationIds(quarryId)))
-
-    // Add any collective cognition rewards to the settlement collective
-    // cognition rewards.
-    settlementCollectiveCognitionRewardIds.push(
-      ...(await getQuarryCollectiveCognitionRewardIds(quarryId))
-    )
+  // Merge nemesis data into accumulators.
+  for (const { timelineYears, locationIds } of nemesisDataResults) {
+    for (const ty of timelineYears)
+      settlementTimeline[ty.year_number].entries.push(...ty.entries)
+    settlementLocationIds.push(...locationIds)
   }
 
-  // Wanderers
-  await addSettlementWanderers(options.wandererIds, settlementId)
+  // Merge quarry data into accumulators.
+  for (const {
+    timelineYears,
+    locationIds,
+    collectiveCognitionRewardIds
+  } of quarryDataResults) {
+    for (const ty of timelineYears)
+      settlementTimeline[ty.year_number].entries.push(...ty.entries)
+    settlementLocationIds.push(...locationIds)
+    settlementCollectiveCognitionRewardIds.push(...collectiveCognitionRewardIds)
+  }
 
-  for (const wandererId of options.wandererIds)
-    // Append any timeline entries to the settlement timeline.
-    for (const timelineYear of Object.values(
-      await getWandererTimelineYears(wandererId)
-    ))
-      settlementTimeline[timelineYear.year_number].entries.push(
-        ...timelineYear.entries
-      )
+  // Merge wanderer data into accumulators.
+  for (const { timelineYears } of wandererDataResults)
+    for (const ty of Object.values(timelineYears))
+      settlementTimeline[ty.year_number].entries.push(...ty.entries)
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Main creation logic is done. Add the built up data to the settlement.
-  //////////////////////////////////////////////////////////////////////////////
+  // Final parallel inserts for accumulated data.
+  await Promise.all([
+    addSettlementCollectiveCognitionRewards(
+      settlementCollectiveCognitionRewardIds,
+      settlementId
+    ),
+    addSettlementLocations(settlementLocationIds, settlementId),
+    addSettlementTimelineYears(settlementTimeline)
+  ])
 
-  // Collective Cognition Rewards
-  await addSettlementCollectiveCognitionRewards(
-    settlementCollectiveCognitionRewardIds,
-    settlementId
-  )
-  // Locations
-  await addSettlementLocations(settlementLocationIds, settlementId)
-  // Timeline Events
-  await addSettlementTimelineYears(settlementTimeline)
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Any final additions or customizations based on the campaign type.
-  //////////////////////////////////////////////////////////////////////////////
-
-  // Squires of the Citadel
+  // Campaign-specific additions.
   if (options.campaignType === CampaignType.SQUIRES_OF_THE_CITADEL)
     await addSquiresOfTheCitadelSurvivors(settlementId)
 
@@ -283,7 +264,8 @@ export async function createSettlement(
 /**
  * Get Settlement
  *
- * Gets the base details for a settlement by ID.
+ * Gets the base details for a settlement by ID. Checks ownership first, then
+ * falls back to shared access. Fetches all related data in parallel.
  *
  * @param settlementId Settlement ID
  * @returns Settlement Details (or null)
@@ -293,15 +275,8 @@ export async function getSettlement(
 ): Promise<SettlementDetail | null> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   let settlement: SettlementDetail | null = null
 
@@ -310,17 +285,13 @@ export async function getSettlement(
     .from('settlement')
     .select('*')
     .eq('id', settlementId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .maybeSingle()
 
   if (ownedError)
     throw new Error(`Error Fetching Settlement: ${ownedError.message}`)
 
-  if (ownedSettlement)
-    settlement = {
-      ...ownedSettlement,
-      shared: false
-    }
+  if (ownedSettlement) settlement = { ...ownedSettlement, shared: false }
 
   // Check if it is a shared settlement.
   if (!settlement) {
@@ -328,7 +299,7 @@ export async function getSettlement(
       .from('settlement_shared_user')
       .select('settlement(*)')
       .eq('settlement_id', settlementId)
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
       .maybeSingle()
 
     if (sharedError)
@@ -340,11 +311,7 @@ export async function getSettlement(
       ? sharedSettlementRow.settlement[0]
       : sharedSettlementRow?.settlement
 
-    if (sharedSettlement)
-      settlement = {
-        ...sharedSettlement,
-        shared: true
-      }
+    if (sharedSettlement) settlement = { ...sharedSettlement, shared: true }
   }
 
   if (!settlement) return null
@@ -410,7 +377,8 @@ export async function getSettlement(
 /**
  * Get Collective Cognition
  *
- * Sums the collective cognition value based on settlement victories.
+ * Sums the collective cognition value based on settlement victories. Fetches
+ * nemesis and quarry collective cognition data in parallel.
  *
  * @param settlementId Settlement ID
  * @returns Collective Cognition (or null)
@@ -420,48 +388,47 @@ export async function getCollectiveCognition(
 ): Promise<number | null> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
-  let total = 0
-
   const supabase = createClient()
 
-  // Each settlement nemesis victory gives 3 CC.
-  const { data, error: getNemesesError } = await supabase
-    .from('settlement_nemesis')
-    .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3'
+  // Fetch nemesis and quarry collective cognition data in parallel.
+  const [nemesisResult, quarryResult] = await Promise.all([
+    supabase
+      .from('settlement_nemesis')
+      .select(
+        'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3'
+      )
+      .eq('settlement_id', settlementId),
+    supabase
+      .from('settlement_quarry')
+      .select(
+        'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue'
+      )
+      .eq('settlement_id', settlementId)
+  ])
+
+  if (nemesisResult.error)
+    throw new Error(
+      `Error Fetching Settlement Nemeses: ${nemesisResult.error.message}`
     )
-    .eq('settlement_id', settlementId)
+  if (quarryResult.error)
+    throw new Error(
+      `Error Fetching Settlement Quarries: ${quarryResult.error.message}`
+    )
 
-  if (getNemesesError)
-    throw new Error(`Error Fetching Settlement Nemeses: ${getNemesesError}`)
+  let total = 0
 
-  for (const nemesis of data as Tables<'settlement_nemesis'>[]) {
+  for (const nemesis of nemesisResult.data ?? []) {
     if (nemesis.collective_cognition_level_1) total += 3
     if (nemesis.collective_cognition_level_2) total += 3
     if (nemesis.collective_cognition_level_3) total += 3
   }
 
-  // Each settlement quarry gives CC based on the victory level:
-  // Prologue (1 CC), Level 1 (1 CC), Level 2 (2 CC), Level 3 (3 CC).
-  const { data: quarries, error: getQuarriesError } = await supabase
-    .from('settlement_quarry')
-    .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue'
-    )
-    .eq('settlement_id', settlementId)
-
-  if (getQuarriesError)
-    throw new Error(`Error Fetching Settlement Quarries: ${getQuarriesError}`)
-
-  for (const quarry of quarries as Tables<'settlement_quarry'>[]) {
-    // Prologue and level 1 can grant CC one time each
+  for (const quarry of quarryResult.data ?? []) {
     if (quarry.collective_cognition_prologue) total += 1
     if (quarry.collective_cognition_level_1) total += 1
-
-    // Level 2 and level 3 can grant CC multiple times
-    for (const level2 of quarry.collective_cognition_level_2)
+    for (const level2 of quarry.collective_cognition_level_2 as boolean[])
       if (level2) total += 2
-    for (const level3 of quarry.collective_cognition_level_3)
+    for (const level3 of quarry.collective_cognition_level_3 as boolean[])
       if (level3) total += 3
   }
 
@@ -471,7 +438,8 @@ export async function getCollectiveCognition(
 /**
  * Get Death Count
  *
- * Only includes survivors who are dead.
+ * Only includes survivors who are dead. Uses `select('id')` instead of
+ * `select('*')` to minimize data transferred with `head: true`.
  *
  * @param settlementId Settlement ID
  * @returns Death Count (or null)
@@ -485,7 +453,7 @@ export async function getDeathCount(
 
   const { count, error } = await supabase
     .from('survivor')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('settlement_id', settlementId)
     .eq('dead', true)
 
@@ -517,18 +485,15 @@ export async function getHuntId(
 
   if (error) throw new Error(`Error Fetching Hunt ID: ${error.message}`)
 
-  return data?.id || null
+  return data?.id ?? null
 }
 
 /**
  * Get Lost Settlement Count
  *
- * This is determined by evaluating the settlement's milestones. If there is a
- * milestone with the event name 'Game Over', and it is marked as complete, that
- * settlement has been lost.
- *
- * This does not include any settlements that have been shared with the user.
- * Only their unique settlements are included.
+ * Determined by evaluating the settlement's milestones. If there is a milestone
+ * with the event name 'Game Over' marked as complete, that settlement has been
+ * lost.
  *
  * @param settlementId Settlement ID
  * @returns Lost Settlement Count (or null)
@@ -556,7 +521,7 @@ export async function getLostSettlementCount(
 /**
  * Get Population
  *
- * Only includes survivors who are not dead or retired.
+ * Only includes survivors who are not dead.
  *
  * @param settlementId Settlement ID
  * @returns Population (or null)
@@ -603,7 +568,7 @@ export async function getSettlementPhaseId(
   if (error)
     throw new Error(`Error Fetching Settlement Phase ID: ${error.message}`)
 
-  return data?.id || null
+  return data?.id ?? null
 }
 
 /**
@@ -629,7 +594,7 @@ export async function getShowdownId(
 
   if (error) throw new Error(`Error Fetching Showdown ID: ${error.message}`)
 
-  return data?.id || null
+  return data?.id ?? null
 }
 
 /**
