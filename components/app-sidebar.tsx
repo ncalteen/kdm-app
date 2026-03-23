@@ -9,8 +9,10 @@ import {
   SidebarRail
 } from '@/components/ui/sidebar'
 import {
+  CampaignType,
   DatabaseCampaignType,
   DatabaseSurvivorType,
+  SurvivorType,
   TabType
 } from '@/lib/enums'
 import {
@@ -201,11 +203,15 @@ export function AppSidebar({
   const navItems = useMemo(() => {
     const items =
       selectedSettlement?.campaign_type ===
-      DatabaseCampaignType['Squires of the Citadel']
+      DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL]
         ? [...navSquires]
         : [...baseNavPrimary]
 
-    if (selectedSettlement?.survivor_type === DatabaseSurvivorType['Arc']) {
+    // Add Arc tab for ARC survivors (before the Notes tab)
+    if (
+      selectedSettlement?.survivor_type ===
+      DatabaseSurvivorType[SurvivorType.ARC]
+    ) {
       const notesIndex = items.findIndex((item) => item.tab === TabType.NOTES)
 
       if (notesIndex !== -1) {

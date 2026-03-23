@@ -9,7 +9,7 @@ import {
   saveSettlementTimelineYearEntry,
   toggleSettlementYearCompletionStatus
 } from '@/lib/dal/settlement-timeline-year'
-import { DatabaseCampaignType } from '@/lib/enums'
+import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import {
   ERROR_MESSAGE,
   TIMELINE_EVENT_EMPTY_ERROR_MESSAGE,
@@ -482,7 +482,7 @@ export function TimelineCard({
 
         {/* Add Lantern Year Button */}
         {selectedSettlement?.campaign_type !==
-          DatabaseCampaignType['Squires of the Citadel'] && (
+          DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
           <Button
             type="button"
             variant="outline"

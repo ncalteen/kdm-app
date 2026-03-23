@@ -8,7 +8,11 @@ import { Separator } from '@/components/ui/separator'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { DatabaseSurvivorType, SurvivorCardMode } from '@/lib/enums'
+import {
+  DatabaseSurvivorType,
+  SurvivorCardMode,
+  SurvivorType
+} from '@/lib/enums'
 import {
   ERROR_MESSAGE,
   SURVIVAL_LIMIT_EXCEEDED_ERROR_MESSAGE,
@@ -712,7 +716,7 @@ export function SurvivalCard({
 
               {/* Conditional rendering for Arc-specific attributes */}
               {selectedSettlement?.survivor_type ===
-              DatabaseSurvivorType['Arc'] ? (
+              DatabaseSurvivorType[SurvivorType.ARC] ? (
                 <div className="flex gap-2">
                   <Checkbox
                     checked={canFistPump}
@@ -743,7 +747,7 @@ export function SurvivalCard({
 
             {/* Right - (Arc) Systemic pressure */}
             {selectedSettlement?.survivor_type ===
-              DatabaseSurvivorType['Arc'] && (
+              DatabaseSurvivorType[SurvivorType.ARC] && (
               <>
                 <Separator orientation="vertical" className="mx-2.5" />
 

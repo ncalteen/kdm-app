@@ -31,9 +31,11 @@ import { SurvivorCard } from '@/components/survivor/survivor-card'
 import { UserCard } from '@/components/user/user-card'
 import { updateSettlement } from '@/lib/dal/settlement'
 import {
+  CampaignType,
   DatabaseCampaignType,
   DatabaseSurvivorType,
   SurvivorCardMode,
+  SurvivorType,
   TabType
 } from '@/lib/enums'
 import {
@@ -279,9 +281,9 @@ export function SettlementCard({
 
               {/* Monster Volumes (PotL and PotSun) */}
               {(selectedSettlement?.campaign_type ===
-                DatabaseCampaignType['People of the Lantern'] ||
+                DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_LANTERN] ||
                 selectedSettlement?.campaign_type ===
-                  DatabaseCampaignType['People of the Sun']) && (
+                  DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_SUN]) && (
                 <ListCard
                   icon={<BookOpenIcon className="h-4 w-4" />}
                   initialItems={selectedSettlement?.monster_volumes || []}
@@ -302,7 +304,7 @@ export function SettlementCard({
           {selectedSettlement &&
             selectedTab === TabType.SQUIRES &&
             selectedSettlement?.campaign_type ===
-              DatabaseCampaignType['Squires of the Citadel'] && (
+              DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
               <>
                 <SquireSuspicionsCard
                   setSurvivors={setSurvivors}
@@ -355,7 +357,7 @@ export function SettlementCard({
           {selectedSettlement &&
             selectedTab === TabType.SOCIETY &&
             selectedSettlement.campaign_type !==
-              DatabaseCampaignType['Squires of the Citadel'] && (
+              DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
               <div className="flex flex-col gap-2 pl-2">
                 <div className="flex flex-col lg:flex-row gap-2">
                   {/* Milestones */}
@@ -397,7 +399,7 @@ export function SettlementCard({
           {selectedSettlement &&
             selectedTab === TabType.SOCIETY &&
             selectedSettlement.campaign_type ===
-              DatabaseCampaignType['Squires of the Citadel'] && (
+              DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
               <LocationsCard
                 selectedSettlement={selectedSettlement}
                 setSelectedSettlement={setSelectedSettlement}
@@ -420,7 +422,7 @@ export function SettlementCard({
 
               {/* Patterns/Seed Patterns */}
               {selectedSettlement?.campaign_type !==
-                DatabaseCampaignType['Squires of the Citadel'] && (
+                DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
                 <div className="flex flex-col md:flex-row gap-2">
                   <div className="flex-1">
                     <SeedPatternsCard
@@ -443,7 +445,7 @@ export function SettlementCard({
           {selectedSettlement &&
             selectedTab === TabType.ARC &&
             selectedSettlement.survivor_type ===
-              DatabaseSurvivorType['Arc'] && (
+              DatabaseSurvivorType[SurvivorType.ARC] && (
               <div className="flex flex-col gap-2 pl-2">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                   {/* Collective Cognition Victories */}

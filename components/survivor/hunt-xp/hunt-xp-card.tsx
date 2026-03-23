@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { FormItem } from '@/components/ui/form'
 import { Label } from '@/components/ui/label'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { DatabaseSurvivorType } from '@/lib/enums'
+import { DatabaseSurvivorType, SurvivorType } from '@/lib/enums'
 import {
   HUNT_XP_RANK_UP_ACHIEVED_MESSAGE,
   HUNT_XP_RANK_UP_MILESTONE_ADDED_MESSAGE,
@@ -227,7 +227,7 @@ export function HuntXPCard({
               ))}
               <span className="text-xs text-muted-foreground">
                 {selectedSettlement?.survivor_type ===
-                DatabaseSurvivorType['Core'] ? (
+                DatabaseSurvivorType[SurvivorType.CORE] ? (
                   <div className="flex items-center gap-1">
                     <BookOpenIcon className="h-4 w-4" /> Age
                   </div>

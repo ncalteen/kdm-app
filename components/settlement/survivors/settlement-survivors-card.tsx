@@ -5,7 +5,7 @@ import { SurvivorDataTable } from '@/components/settlement/survivors/data-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { deleteSurvivor } from '@/lib/dal/survivor'
-import { DatabaseSurvivorType } from '@/lib/enums'
+import { DatabaseSurvivorType, SurvivorType } from '@/lib/enums'
 import { ERROR_MESSAGE, SURVIVOR_REMOVED_MESSAGE } from '@/lib/messages'
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { PlusIcon } from 'lucide-react'
@@ -129,7 +129,8 @@ export function SettlementSurvivorsCard({
   const columnVisibility = useMemo(
     () => ({
       philosophy:
-        selectedSettlement?.survivor_type === DatabaseSurvivorType['Arc']
+        selectedSettlement?.survivor_type ===
+        DatabaseSurvivorType[SurvivorType.ARC]
     }),
     [selectedSettlement?.survivor_type]
   )

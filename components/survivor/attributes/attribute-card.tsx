@@ -6,7 +6,11 @@ import { Label } from '@/components/ui/label'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { DatabaseSurvivorType, SurvivorCardMode } from '@/lib/enums'
+import {
+  DatabaseSurvivorType,
+  SurvivorCardMode,
+  SurvivorType
+} from '@/lib/enums'
 import {
   ERROR_MESSAGE,
   SURVIVOR_ACCURACY_UPDATED_MESSAGE,
@@ -233,7 +237,7 @@ export function AttributeCard({
   )
 
   const columnCount =
-    selectedSettlement?.survivor_type === DatabaseSurvivorType['Arc']
+    selectedSettlement?.survivor_type === DatabaseSurvivorType[SurvivorType.ARC]
       ? mode === SurvivorCardMode.SHOWDOWN_CARD ||
         mode === SurvivorCardMode.HUNT_CARD
         ? 'grid-cols-8'
@@ -335,7 +339,8 @@ export function AttributeCard({
         <div className="flex items-center justify-center">
           <Label className="text-xs">Speed</Label>
         </div>
-        {selectedSettlement?.survivor_type === DatabaseSurvivorType['Arc'] && (
+        {selectedSettlement?.survivor_type ===
+          DatabaseSurvivorType[SurvivorType.ARC] && (
           <div className="flex items-center justify-center">
             <Label className="text-xs">Lumi</Label>
           </div>
@@ -464,7 +469,8 @@ export function AttributeCard({
         </div>
 
         {/* Lumi (Arc) */}
-        {selectedSettlement?.survivor_type === DatabaseSurvivorType['Arc'] && (
+        {selectedSettlement?.survivor_type ===
+          DatabaseSurvivorType[SurvivorType.ARC] && (
           <div className="flex flex-col items-center gap-1">
             <NumericInput
               label="Lumi"
@@ -560,7 +566,7 @@ export function AttributeCard({
 
             {/* Lumi (Arc) - No Tokens */}
             {selectedSettlement?.survivor_type ===
-              DatabaseSurvivorType['Arc'] && <div />}
+              DatabaseSurvivorType[SurvivorType.ARC] && <div />}
           </>
         )}
       </CardContent>

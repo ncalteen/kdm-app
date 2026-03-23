@@ -5,12 +5,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import {
-  getLostSettlementCount,
-  updateSettlement
-} from '@/lib/dal/settlement'
+import { getLostSettlementCount, updateSettlement } from '@/lib/dal/settlement'
 import { updateSettlementPhase } from '@/lib/dal/settlement-phase'
-import { DatabaseCampaignType, DatabaseSurvivorType } from '@/lib/enums'
+import {
+  CampaignType,
+  DatabaseCampaignType,
+  DatabaseSurvivorType,
+  SurvivorType
+} from '@/lib/enums'
 import {
   ENDEAVORS_MINIMUM_ERROR_MESSAGE,
   ENDEAVORS_UPDATED_MESSAGE,
@@ -20,7 +22,11 @@ import {
   SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE,
   SURVIVAL_LIMIT_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SettlementDetail, SettlementPhaseDetail, SurvivorDetail } from '@/lib/types'
+import {
+  SettlementDetail,
+  SettlementPhaseDetail,
+  SurvivorDetail
+} from '@/lib/types'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -286,7 +292,7 @@ export function OverviewCard({
 
           {/* Collective Cognition (ARC only) */}
           {selectedSettlement?.survivor_type ===
-            DatabaseSurvivorType['Arc'] && (
+            DatabaseSurvivorType[SurvivorType.ARC] && (
             <>
               <Separator
                 orientation="vertical"
@@ -311,9 +317,9 @@ export function OverviewCard({
 
           {/* Lantern Research Level (People of the Lantern/Sun only) */}
           {(selectedSettlement?.campaign_type ===
-            DatabaseCampaignType['People of the Lantern'] ||
+            DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_LANTERN] ||
             selectedSettlement?.campaign_type ===
-              DatabaseCampaignType['People of the Sun']) && (
+              DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_SUN]) && (
             <>
               <Separator
                 orientation="vertical"
@@ -424,7 +430,7 @@ export function OverviewCard({
 
           {/* Collective Cognition (ARC only) */}
           {selectedSettlement?.survivor_type ===
-            DatabaseSurvivorType['Arc'] && (
+            DatabaseSurvivorType[SurvivorType.ARC] && (
             <div className="flex items-center justify-between">
               <Label className="text-sm">Collective Cognition</Label>
               <Input
@@ -440,9 +446,9 @@ export function OverviewCard({
 
           {/* Lantern Research Level (People of the Lantern/Sun only) */}
           {(selectedSettlement?.campaign_type ===
-            DatabaseCampaignType['People of the Lantern'] ||
+            DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_LANTERN] ||
             selectedSettlement?.campaign_type ===
-              DatabaseCampaignType['People of the Sun']) && (
+              DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_SUN]) && (
             <div className="flex items-center justify-between">
               <Label className="text-sm">Lantern Research</Label>
               <NumericInput

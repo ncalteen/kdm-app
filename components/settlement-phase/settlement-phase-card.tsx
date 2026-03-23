@@ -30,10 +30,12 @@ import { settlementPhaseSteps } from '@/lib/common'
 import { updateSettlement } from '@/lib/dal/settlement'
 import { updateSettlementPhase } from '@/lib/dal/settlement-phase'
 import {
+  CampaignType,
   DatabaseCampaignType,
   DatabaseSettlementPhaseStep,
   DatabaseSurvivorType,
   SettlementPhaseStep,
+  SurvivorType,
   TabType
 } from '@/lib/enums'
 import {
@@ -264,7 +266,7 @@ export function SettlementPhaseCard({
               <TabsTrigger value="innovate">Innovate</TabsTrigger>
               <TabsTrigger value="craft">Craft</TabsTrigger>
               {selectedSettlement?.survivor_type ===
-                DatabaseSurvivorType['Arc'] && (
+                DatabaseSurvivorType[SurvivorType.ARC] && (
                 <TabsTrigger value="ponder">Ponder</TabsTrigger>
               )}
             </TabsList>
@@ -295,7 +297,7 @@ export function SettlementPhaseCard({
                   setSelectedSettlement={setSelectedSettlement}
                 />
                 {selectedSettlement?.campaign_type !==
-                  DatabaseCampaignType['Squires of the Citadel'] && (
+                  DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                     <PatternsCard
                       selectedSettlement={selectedSettlement}

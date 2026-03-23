@@ -25,7 +25,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import {
   ColorChoice,
   DatabaseSurvivorType,
-  SurvivorCardMode
+  SurvivorCardMode,
+  SurvivorType
 } from '@/lib/enums'
 import {
   HuntDetail,
@@ -223,7 +224,7 @@ export function SurvivorCard({
 
           {/* Third Column - ARC */}
           {selectedSettlement?.survivor_type ===
-            DatabaseSurvivorType['Arc'] && (
+            DatabaseSurvivorType[SurvivorType.ARC] && (
             <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px] order-3">
               <PhilosophyCard
                 selectedSettlement={selectedSettlement}

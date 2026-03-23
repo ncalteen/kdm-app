@@ -1,5 +1,5 @@
 import { Tables } from '@/lib/database.types'
-import { DatabaseCampaignType } from '@/lib/enums'
+import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 
 /**
  * Timeline Uses Normal Numbering
@@ -19,10 +19,10 @@ export function usesNormalNumbering(
   if (!campaignType) return true
 
   return [
-    DatabaseCampaignType['Squires of the Citadel'],
-    DatabaseCampaignType['People of the Stars'],
-    DatabaseCampaignType['People of the Sun'],
-    DatabaseCampaignType['Custom']
+    DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL],
+    DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_STARS],
+    DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_SUN],
+    DatabaseCampaignType[CampaignType.CUSTOM]
   ].includes(campaignType as DatabaseCampaignType)
 }
 
@@ -42,8 +42,8 @@ export function showStoryEventIcon(
   if (!campaignType) return true
 
   return [
-    DatabaseCampaignType['People of the Lantern'],
-    DatabaseCampaignType['People of the Dream Keeper'],
-    DatabaseCampaignType['Custom']
+    DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_LANTERN],
+    DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_DREAM_KEEPER],
+    DatabaseCampaignType[CampaignType.CUSTOM]
   ].includes(campaignType as DatabaseCampaignType)
 }

@@ -7,7 +7,11 @@ import { Label } from '@/components/ui/label'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { DatabaseSurvivorType, SurvivorCardMode } from '@/lib/enums'
+import {
+  DatabaseSurvivorType,
+  SurvivorCardMode,
+  SurvivorType
+} from '@/lib/enums'
 import {
   ERROR_MESSAGE,
   INSANITY_MINIMUM_ERROR_MESSAGE,
@@ -408,7 +412,8 @@ export function SanityCard({
           </div>
 
           {/* Torment (Arc) */}
-          {selectedSettlement?.survivor_type === DatabaseSurvivorType['Arc'] &&
+          {selectedSettlement?.survivor_type ===
+            DatabaseSurvivorType[SurvivorType.ARC] &&
             displayTormentInput && (
               <div className="flex flex-col items-center gap-1">
                 <Label className="text-xs">Torment</Label>

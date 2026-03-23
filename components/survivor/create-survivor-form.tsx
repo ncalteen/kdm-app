@@ -16,7 +16,12 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createSurvivor } from '@/lib/dal/survivor'
 import { getWanderers } from '@/lib/dal/wanderer'
-import { AenasState, DatabaseSurvivorType, Gender } from '@/lib/enums'
+import {
+  AenasState,
+  DatabaseSurvivorType,
+  Gender,
+  SurvivorType
+} from '@/lib/enums'
 import { ERROR_MESSAGE, SURVIVOR_CREATED_MESSAGE } from '@/lib/messages'
 import { sortWanderers } from '@/lib/settlement/wanderers'
 import { SettlementDetail, SurvivorDetail, WandererDetail } from '@/lib/types'
@@ -131,7 +136,8 @@ export function CreateSurvivorForm({
       canEndure: selectedSettlement?.can_endure ?? false,
       canSurge: selectedSettlement?.can_surge ?? false,
       huntXPRankUp:
-        selectedSettlement?.survivor_type !== DatabaseSurvivorType['Arc']
+        selectedSettlement?.survivor_type !==
+        DatabaseSurvivorType[SurvivorType.ARC]
           ? [2, 6, 10, 15] // Core
           : [2], // Arc
       understanding: selectedSettlement?.survivors_born_with_understanding
@@ -180,7 +186,8 @@ export function CreateSurvivorForm({
         canEndure: selectedSettlement?.can_endure ?? false,
         canSurge: selectedSettlement?.can_surge ?? false,
         huntXPRankUp:
-          selectedSettlement.survivor_type !== DatabaseSurvivorType['Arc']
+          selectedSettlement.survivor_type !==
+          DatabaseSurvivorType[SurvivorType.ARC]
             ? [2, 6, 10, 15]
             : [2],
         understanding: selectedSettlement?.survivors_born_with_understanding
@@ -234,7 +241,10 @@ export function CreateSurvivorForm({
     }
 
     // If this is an Arc settlement, set Arc-specific fields
-    if (selectedSettlement?.survivor_type === DatabaseSurvivorType['Arc']) {
+    if (
+      selectedSettlement?.survivor_type ===
+      DatabaseSurvivorType[SurvivorType.ARC]
+    ) {
       newSurvivor.lumi = wanderer.lumi
       newSurvivor.systemicPressure = wanderer.systemic_pressure
       newSurvivor.torment = wanderer.torment

@@ -25,6 +25,7 @@ import {
   DatabaseSurvivorType,
   HuntEventCount,
   HuntEventType,
+  SurvivorType,
   TabType
 } from '@/lib/enums'
 import {
@@ -275,7 +276,8 @@ export function ActiveHuntCard({
           End Hunt
         </Button>
 
-        {selectedSettlement?.survivor_type === DatabaseSurvivorType['Arc'] ||
+        {selectedSettlement?.survivor_type ===
+          DatabaseSurvivorType[SurvivorType.ARC] ||
         selectedSettlement?.uses_scouts ? (
           <Popover
             open={huntEventPopoverOpen}
@@ -299,7 +301,7 @@ export function ActiveHuntCard({
                   Basic
                 </Button>
                 {selectedSettlement?.survivor_type ===
-                  DatabaseSurvivorType['Arc'] && (
+                  DatabaseSurvivorType[SurvivorType.ARC] && (
                   <Button
                     variant="ghost"
                     size="sm"
