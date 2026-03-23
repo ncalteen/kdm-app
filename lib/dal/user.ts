@@ -4,29 +4,47 @@ import { createClient } from '@/lib/supabase/client'
 import { UserSettingsDetail } from '@/lib/types'
 
 /**
- * Get User Settings
+ * Get Authenticated User ID
  *
- * Fetches the user settings for the currently authenticated user from the
- * `user_settings` table in Supabase. This includes information about which
- * vignettes the user has unlocked.
+ * Fetches the user ID of the currently authenticated user. Centralizes the
+ * auth check so callers don't each need to query `supabase.auth.getUser()`.
  *
- * @returns User Settings (or null if none exist yet)
+ * @returns User ID
+ * @throws If not authenticated or if fetching fails
  */
-export async function getUserSettings(): Promise<UserSettingsDetail | null> {
+export async function getUserId(): Promise<string> {
   const supabase = createClient()
 
   const {
     data: { user },
-    error: userError
+    error
   } = await supabase.auth.getUser()
 
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (error) throw new Error(`Auth Error: ${error.message}`)
   if (!user) throw new Error('Not Authenticated')
+
+  return user.id
+}
+
+/**
+ * Get User Settings
+ *
+ * Fetches the user settings for the currently authenticated user from the
+ * `user_settings` table. This includes information about which vignettes
+ * the user has unlocked.
+ *
+ * @returns User Settings (or null if none exist yet)
+ */
+export async function getUserSettings(): Promise<UserSettingsDetail | null> {
+  const userId = await getUserId()
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from('user_settings')
-    .select('*')
-    .eq('user_id', user.id)
+    .select(
+      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id'
+    )
+    .eq('user_id', userId)
     .maybeSingle()
 
   if (error) throw new Error(`Error Fetching User Settings: ${error.message}`)
@@ -37,10 +55,9 @@ export async function getUserSettings(): Promise<UserSettingsDetail | null> {
 /**
  * Get Settlements for the Authenticated User
  *
- * This will include settlements owned by the user, or settlements that have
- * been shared with the user via the settlement_shared_user table. This is used
- * to populate the settlement switcher in the sidebar, so it includes minimal
- * data.
+ * Includes settlements owned by the user and settlements shared with the user
+ * via the `settlement_shared_user` table. Returns minimal data for the
+ * settlement switcher sidebar.
  *
  * @returns List of Settlement(s)
  */
@@ -52,33 +69,29 @@ export async function getSettlementForUser(): Promise<
     shared: boolean
   }[]
 > {
+  const userId = await getUserId()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
+  // Fetch owned and shared settlements in parallel.
+  const [ownedResult, sharedResult] = await Promise.all([
+    supabase
+      .from('settlement')
+      .select('campaign_type, id, settlement_name')
+      .eq('user_id', userId),
+    supabase
+      .from('settlement_shared_user')
+      .select('settlement(campaign_type, id, settlement_name)')
+      .eq('shared_user_id', userId)
+  ])
 
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
-
-  // Get settlements owned by the user.
-  const { data: owned, error: ownedError } = await supabase
-    .from('settlement')
-    .select('campaign_type, id, settlement_name')
-    .eq('user_id', user.id)
-
-  if (ownedError)
-    throw new Error(`Error Fetching Owned Settlements: ${ownedError.message}`)
-
-  // Get settlements shared with the user via the junction table.
-  const { data: shared, error: sharedError } = await supabase
-    .from('settlement_shared_user')
-    .select('settlement(*)')
-    .eq('shared_user_id', user.id)
-
-  if (sharedError)
-    throw new Error(`Error Fetching Shared Settlements: ${sharedError.message}`)
+  if (ownedResult.error)
+    throw new Error(
+      `Error Fetching Owned Settlements: ${ownedResult.error.message}`
+    )
+  if (sharedResult.error)
+    throw new Error(
+      `Error Fetching Shared Settlements: ${sharedResult.error.message}`
+    )
 
   const results: {
     campaign_type: DatabaseCampaignType
@@ -87,22 +100,12 @@ export async function getSettlementForUser(): Promise<
     shared: boolean
   }[] = []
 
-  for (const s of owned ?? [])
-    results.push({
-      ...s,
-      shared: false
-    })
+  for (const s of ownedResult.data ?? []) results.push({ ...s, shared: false })
 
-  for (const row of shared ?? []) {
-    // The join returns an array type, but each shared_user row references
-    // exactly one settlement. Access the first (and only) element.
+  for (const row of sharedResult.data ?? []) {
     const s = Array.isArray(row.settlement) ? row.settlement[0] : row.settlement
 
-    if (s)
-      results.push({
-        ...s,
-        shared: true
-      })
+    if (s) results.push({ ...s, shared: true })
   }
 
   return results
@@ -114,7 +117,7 @@ export async function getSettlementForUser(): Promise<
  * Adds a new user settings record to the database.
  *
  * @param userSettings User Settings Data
- * @returns Inserted User Settings ID
+ * @returns Inserted User Settings
  */
 export async function addUserSettings(
   userSettings: Omit<
@@ -176,25 +179,4 @@ export async function removeUserSettings(id: string): Promise<void> {
   const { error } = await supabase.from('user_settings').delete().eq('id', id)
 
   if (error) throw new Error(`Error Removing User Settings: ${error.message}`)
-}
-
-/**
- * Get User ID
- *
- * Fetches the user ID of the currently authenticated user.
- *
- * @returns User ID (or null)
- */
-export async function getUserId(): Promise<string> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
-
-  return user.id
 }
