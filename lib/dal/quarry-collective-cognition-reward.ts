@@ -37,11 +37,11 @@ export async function getQuarryCollectiveCognitionRewardIds(
  *
  * Links a collective cognition reward to a quarry.
  *
- * @param quarryCCR Quarry Collective Cognition Reward Data
+ * @param quarryCollectiveCognitionReward Quarry Collective Cognition Reward Data
  * @returns Inserted ID
  */
 export async function addQuarryCollectiveCognitionReward(
-  quarryCCR: Omit<
+  quarryCollectiveCognitionReward: Omit<
     TablesInsert<'quarry_collective_cognition_reward'>,
     'id' | 'created_at' | 'updated_at'
   >
@@ -50,7 +50,7 @@ export async function addQuarryCollectiveCognitionReward(
 
   const { data, error } = await supabase
     .from('quarry_collective_cognition_reward')
-    .insert(quarryCCR)
+    .insert(quarryCollectiveCognitionReward)
     .select('id')
     .single()
 
@@ -68,11 +68,11 @@ export async function addQuarryCollectiveCognitionReward(
  * Updates an existing quarry collective cognition reward record.
  *
  * @param id Quarry Collective Cognition Reward ID
- * @param quarryCCR Quarry Collective Cognition Reward Data
+ * @param quarryCollectiveCognitionReward Quarry Collective Cognition Reward Data
  */
 export async function updateQuarryCollectiveCognitionReward(
   id: string,
-  quarryCCR: Omit<
+  quarryCollectiveCognitionReward: Omit<
     TablesUpdate<'quarry_collective_cognition_reward'>,
     'id' | 'created_at' | 'updated_at'
   >
@@ -81,7 +81,7 @@ export async function updateQuarryCollectiveCognitionReward(
 
   const { error } = await supabase
     .from('quarry_collective_cognition_reward')
-    .update(quarryCCR)
+    .update(quarryCollectiveCognitionReward)
     .eq('id', id)
 
   if (error)

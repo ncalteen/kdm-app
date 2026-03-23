@@ -46,7 +46,8 @@ export interface NewRewardItemProps {
  * Reward Item Component
  *
  * Displays a single collective cognition reward linked to a settlement with
- * its unlocked state, CC value badge, name, and a remove button.
+ * its unlocked state, collective cognition value badge, name, and a remove
+ * button.
  *
  * @param props Reward Item Component Properties
  * @returns Reward Item Component
@@ -74,7 +75,7 @@ export const RewardItem = memo(function RewardItem({
         {reward.reward_name}
       </Label>
 
-      {/* CC Badge and Remove Button */}
+      {/* Collective Cognition Badge and Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">
         <Badge variant="secondary" className="h-8 w-16">
           <BrainIcon className="h-4 w-4" />

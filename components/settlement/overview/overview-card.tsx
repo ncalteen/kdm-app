@@ -40,6 +40,8 @@ interface OverviewCardProps {
   selectedSettlementPhase: SettlementPhaseDetail | null
   /** Set Selected Settlement */
   setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  /** Set Selected Settlement Phase */
+  setSelectedSettlementPhase: (phase: SettlementPhaseDetail | null) => void
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -48,7 +50,8 @@ interface OverviewCardProps {
  * Overview Card Component
  *
  * Displays and manages high-level information for the settlement including
- * survival limit, population count, death count, and lost settlements.
+ * survival limit, population count, death count, and lost settlements. Uses
+ * optimistic UI updates with rollback on database failure.
  *
  * @param props Overview Card Properties
  * @returns Overview Card Component
@@ -57,6 +60,7 @@ export function OverviewCard({
   selectedSettlement,
   selectedSettlementPhase,
   setSelectedSettlement,
+  setSelectedSettlementPhase,
   survivors
 }: OverviewCardProps): ReactElement {
   const [lostSettlementCount, setLostSettlementCount] = useState<number>(0)
@@ -82,8 +86,8 @@ export function OverviewCard({
   /**
    * Collective Cognition
    *
-   * Computed locally from the settlement's quarry and nemesis CC fields so it
-   * updates reactively whenever victories are toggled.
+   * Computed locally from the settlement's quarry and nemesis collective
+   * cognition fields so it updates reactively whenever victories are toggled.
    */
   const collectiveCognition = useMemo(() => {
     if (!selectedSettlement) return 0
@@ -112,66 +116,99 @@ export function OverviewCard({
    * Load the various data used in this component.
    */
   useEffect(() => {
+    let isCancelled = false
+
     getLostSettlementCount(selectedSettlement?.id)
       .then((count) => {
-        setLostSettlementCount(count ?? 0)
+        if (!isCancelled) setLostSettlementCount(count ?? 0)
       })
       .catch((err: unknown) => {
-        console.error('Overview Load Error:', err)
-        toast.error(ERROR_MESSAGE())
+        if (!isCancelled) {
+          console.error('Overview Load Error:', err)
+          toast.error(ERROR_MESSAGE())
+        }
       })
+
+    return () => {
+      isCancelled = true
+    }
   }, [selectedSettlement?.id])
 
   /**
    * Handle Endeavors Change
+   *
+   * Optimistically updates the endeavor count, then persists to the DB.
+   * Rolls back on failure.
    *
    * @param value New Endeavors Value
    */
   const handleEndeavorsChange = useCallback(
     (value: number) => {
       if (isNaN(value)) return
-      if (selectedSettlementPhase?.endeavors === value) return
+      if (!selectedSettlementPhase) return
+      if (selectedSettlementPhase.endeavors === value) return
 
       if (value < 0) return toast.error(ENDEAVORS_MINIMUM_ERROR_MESSAGE())
 
-      const previous = selectedSettlementPhase?.endeavors ?? 0
+      const previous = selectedSettlementPhase.endeavors
 
-      updateSettlementPhase(selectedSettlementPhase?.id, {
+      // Optimistic update
+      setSelectedSettlementPhase({
+        ...selectedSettlementPhase,
+        endeavors: value
+      })
+
+      updateSettlementPhase(selectedSettlementPhase.id, {
         endeavors: value
       })
         .then(() => toast.success(ENDEAVORS_UPDATED_MESSAGE(previous, value)))
         .catch((error: unknown) => {
+          // Rollback
+          setSelectedSettlementPhase({
+            ...selectedSettlementPhase,
+            endeavors: previous
+          })
           console.error('Endeavors Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlementPhase?.endeavors, selectedSettlementPhase?.id]
+    [selectedSettlementPhase, setSelectedSettlementPhase]
   )
 
   /**
    * Handle Lantern Research Level Change
+   *
+   * Optimistically updates the lantern research level, then persists to the
+   * DB. Rolls back on failure.
    *
    * @param value New Lantern Research Level
    */
   const handleLanternResearchLevelChange = useCallback(
     (value: number) => {
       if (isNaN(value)) return
-      if (selectedSettlement?.lantern_research === value) return
+      if (!selectedSettlement) return
+      if (selectedSettlement.lantern_research === value) return
 
       if (value < 0) return toast.error(LANTERN_RESEARCH_LEVEL_MINIMUM_ERROR())
 
-      const previous = selectedSettlement?.lantern_research ?? 0
+      const previous = selectedSettlement.lantern_research
 
-      updateSettlement(selectedSettlement?.id, { lantern_research: value })
-        .then(() => {
-          if (selectedSettlement)
-            setSelectedSettlement({
-              ...selectedSettlement,
-              lantern_research: value
-            })
+      // Optimistic update
+      setSelectedSettlement({
+        ...selectedSettlement,
+        lantern_research: value
+      })
+
+      updateSettlement(selectedSettlement.id, { lantern_research: value })
+        .then(() =>
           toast.success(LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE(previous, value))
-        })
+        )
         .catch((error: unknown) => {
+          // Rollback
+          setSelectedSettlement({
+            ...selectedSettlement,
+            lantern_research: previous
+          })
           console.error('Lantern Research Level Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })
@@ -182,27 +219,37 @@ export function OverviewCard({
   /**
    * Handle Survival Limit Change
    *
+   * Optimistically updates the survival limit, then persists to the DB.
+   * Rolls back on failure.
+   *
    * @param value New Survival Limit
    */
   const handleSurvivalLimitChange = useCallback(
     (value: number) => {
       if (isNaN(value)) return
-      if (selectedSettlement?.survival_limit === value) return
+      if (!selectedSettlement) return
+      if (selectedSettlement.survival_limit === value) return
 
       if (value < 1) return toast.error(SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE())
 
-      const previous = selectedSettlement?.survival_limit ?? 0
+      const previous = selectedSettlement.survival_limit
 
-      updateSettlement(selectedSettlement?.id, { survival_limit: value })
-        .then(() => {
-          if (selectedSettlement)
-            setSelectedSettlement({
-              ...selectedSettlement,
-              survival_limit: value
-            })
+      // Optimistic update
+      setSelectedSettlement({
+        ...selectedSettlement,
+        survival_limit: value
+      })
+
+      updateSettlement(selectedSettlement.id, { survival_limit: value })
+        .then(() =>
           toast.success(SURVIVAL_LIMIT_UPDATED_MESSAGE(previous, value))
-        })
+        )
         .catch((error: unknown) => {
+          // Rollback
+          setSelectedSettlement({
+            ...selectedSettlement,
+            survival_limit: previous
+          })
           console.error('Survival Limit Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })

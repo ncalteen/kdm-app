@@ -45,17 +45,17 @@ export function CollectiveCognitionVictoriesCard({
   setSelectedSettlement
 }: CollectiveCognitionVictoriesCardProps): ReactElement {
   /**
-   * Handle Quarry CC Toggle
+   * Handle Quarry Collective Cognition Toggle
    *
    * Optimistically updates a quarry's collective cognition checkbox, persists
    * to the DB, and rolls back on failure.
    *
    * @param quarryIndex Quarry Index
-   * @param field CC Field Name
+   * @param field Collective Cognition Field Name
    * @param checked New Checked State
    * @param subIndex Sub-index for array fields (level 2/3)
    */
-  const handleQuarryCCToggle = useCallback(
+  const handleQuarryCollectiveCognitionToggle = useCallback(
     (
       quarryIndex: number,
       field:
@@ -72,7 +72,10 @@ export function CollectiveCognitionVictoriesCard({
       if (!quarry) return
 
       // Build the updated field value.
-      let updatedValue: boolean | [boolean, boolean] | [boolean, boolean, boolean]
+      let updatedValue:
+        | boolean
+        | [boolean, boolean]
+        | [boolean, boolean, boolean]
 
       if (field === 'collective_cognition_level_2' && subIndex !== undefined) {
         const arr: [boolean, boolean] = [...quarry.collective_cognition_level_2]
@@ -112,7 +115,7 @@ export function CollectiveCognitionVictoriesCard({
             quarries: selectedSettlement.quarries
           })
 
-          console.error('Quarry CC Toggle Error:', err)
+          console.error('Quarry Collective Cognition Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
         })
     },
@@ -120,16 +123,16 @@ export function CollectiveCognitionVictoriesCard({
   )
 
   /**
-   * Handle Nemesis CC Toggle
+   * Handle Nemesis Collective Cognition Toggle
    *
    * Optimistically updates a nemesis' collective cognition checkbox, persists
    * to the DB, and rolls back on failure.
    *
    * @param nemesisIndex Nemesis Index
-   * @param field CC Field Name
+   * @param field Collective Cognition Field Name
    * @param checked New Checked State
    */
-  const handleNemesisCCToggle = useCallback(
+  const handleNemesisCollectiveCognitionToggle = useCallback(
     (
       nemesisIndex: number,
       field:
@@ -164,7 +167,7 @@ export function CollectiveCognitionVictoriesCard({
             nemeses: selectedSettlement.nemeses
           })
 
-          console.error('Nemesis CC Toggle Error:', err)
+          console.error('Nemesis Collective Cognition Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
         })
     },
@@ -227,14 +230,14 @@ export function CollectiveCognitionVictoriesCard({
                             checked={quarry.collective_cognition_prologue}
                             onCheckedChange={(checked) => {
                               if (checked !== 'indeterminate')
-                                handleQuarryCCToggle(
+                                handleQuarryCollectiveCognitionToggle(
                                   index,
                                   'collective_cognition_prologue',
                                   checked
                                 )
                             }}
-                            id={`quarries-${index}-cc-prologue`}
-                            name={`quarries.${index}.cc-prologue`}
+                            id={`quarries-${index}-collective-cognition-prologue`}
+                            name={`quarries.${index}.collective-cognition-prologue`}
                           />
                         )}
                       </div>
@@ -247,14 +250,14 @@ export function CollectiveCognitionVictoriesCard({
                           checked={quarry.collective_cognition_level_1}
                           onCheckedChange={(checked) => {
                             if (checked !== 'indeterminate')
-                              handleQuarryCCToggle(
+                              handleQuarryCollectiveCognitionToggle(
                                 index,
                                 'collective_cognition_level_1',
                                 checked
                               )
                           }}
-                          id={`quarries-${index}-cc-level-1`}
-                          name={`quarries.${index}.cc-level-1`}
+                          id={`quarries-${index}-collective-cognition-level-1`}
+                          name={`quarries.${index}.collective-cognition-level-1`}
                         />
                       </div>
                     </TableCell>
@@ -266,20 +269,20 @@ export function CollectiveCognitionVictoriesCard({
                           (checked, lvl2Index) => (
                             <div
                               className="flex items-center justify-center"
-                              key={`cc-level-2-${lvl2Index}`}>
+                              key={`collective-cognition-level-2-${lvl2Index}`}>
                               <Checkbox
                                 checked={checked}
                                 onCheckedChange={(value) => {
                                   if (value !== 'indeterminate')
-                                    handleQuarryCCToggle(
+                                    handleQuarryCollectiveCognitionToggle(
                                       index,
                                       'collective_cognition_level_2',
                                       value,
                                       lvl2Index
                                     )
                                 }}
-                                id={`quarries-${index}-cc-level-2-${lvl2Index}`}
-                                name={`quarries.${index}.cc-level-2.${lvl2Index}`}
+                                id={`quarries-${index}-collective-cognition-level-2-${lvl2Index}`}
+                                name={`quarries.${index}.collective-cognition-level-2.${lvl2Index}`}
                               />
                             </div>
                           )
@@ -293,21 +296,21 @@ export function CollectiveCognitionVictoriesCard({
                         {quarry.collective_cognition_level_3.map(
                           (checked, lvl3Index) => (
                             <div
-                              key={`cc-level-3-${lvl3Index}`}
+                              key={`collective-cognition-level-3-${lvl3Index}`}
                               className="flex items-center justify-center">
                               <Checkbox
                                 checked={checked}
                                 onCheckedChange={(value) => {
                                   if (value !== 'indeterminate')
-                                    handleQuarryCCToggle(
+                                    handleQuarryCollectiveCognitionToggle(
                                       index,
                                       'collective_cognition_level_3',
                                       value,
                                       lvl3Index
                                     )
                                 }}
-                                id={`quarries-${index}-cc-level-3-${lvl3Index}`}
-                                name={`quarries.${index}.cc-level-3.${lvl3Index}`}
+                                id={`quarries-${index}-collective-cognition-level-3-${lvl3Index}`}
+                                name={`quarries.${index}.collective-cognition-level-3.${lvl3Index}`}
                               />
                             </div>
                           )
@@ -361,14 +364,14 @@ export function CollectiveCognitionVictoriesCard({
                           checked={nemesis.collective_cognition_level_1}
                           onCheckedChange={(checked) => {
                             if (checked !== 'indeterminate')
-                              handleNemesisCCToggle(
+                              handleNemesisCollectiveCognitionToggle(
                                 index,
                                 'collective_cognition_level_1',
                                 checked
                               )
                           }}
-                          id={`nemesis-${index}-cc-level-1`}
-                          name={`nemeses.${index}.cc-level-1`}
+                          id={`nemesis-${index}-collective-cognition-level-1`}
+                          name={`nemeses.${index}.collective-cognition-level-1`}
                         />
                       </div>
                     </TableCell>
@@ -380,14 +383,14 @@ export function CollectiveCognitionVictoriesCard({
                           checked={nemesis.collective_cognition_level_2}
                           onCheckedChange={(checked) => {
                             if (checked !== 'indeterminate')
-                              handleNemesisCCToggle(
+                              handleNemesisCollectiveCognitionToggle(
                                 index,
                                 'collective_cognition_level_2',
                                 checked
                               )
                           }}
-                          id={`nemesis-${index}-cc-level-2`}
-                          name={`nemeses.${index}.cc-level-2`}
+                          id={`nemesis-${index}-collective-cognition-level-2`}
+                          name={`nemeses.${index}.collective-cognition-level-2`}
                         />
                       </div>
                     </TableCell>
@@ -399,14 +402,14 @@ export function CollectiveCognitionVictoriesCard({
                           checked={nemesis.collective_cognition_level_3}
                           onCheckedChange={(checked) => {
                             if (checked !== 'indeterminate')
-                              handleNemesisCCToggle(
+                              handleNemesisCollectiveCognitionToggle(
                                 index,
                                 'collective_cognition_level_3',
                                 checked
                               )
                           }}
-                          id={`nemesis-${index}-cc-level-3`}
-                          name={`nemeses.${index}.cc-level-3`}
+                          id={`nemesis-${index}-collective-cognition-level-3`}
+                          name={`nemeses.${index}.collective-cognition-level-3`}
                         />
                       </div>
                     </TableCell>

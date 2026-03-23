@@ -6,9 +6,6 @@ import { PhilosophyDetail, SettlementDetail } from '@/lib/types'
 import { CheckIcon, TrashIcon, XIcon } from 'lucide-react'
 import { memo, ReactElement, useState } from 'react'
 
-/** Settlement philosophy row from SettlementDetail */
-type PhilosophyRow = SettlementDetail['philosophies'][0]
-
 /**
  * Philosophy Item Component Properties
  */
@@ -18,7 +15,7 @@ export interface PhilosophyItemProps {
   /** On Remove Handler */
   onRemove: (index: number) => void
   /** Philosophy Row */
-  philosophy: PhilosophyRow
+  philosophy: SettlementDetail['philosophies'][0]
 }
 
 /**

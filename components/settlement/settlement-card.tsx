@@ -166,8 +166,6 @@ export function SettlementCard({
         setSelectedShowdown={setSelectedShowdown}
         setSelectedShowdownId={setSelectedShowdownId}
         setSelectedSurvivorId={setSelectedSurvivorId}
-        setUserSettings={setUserSettings}
-        userSettings={userSettings}
       />
     )
 
@@ -205,6 +203,7 @@ export function SettlementCard({
         selectedSettlement={selectedSettlement}
         selectedSettlementPhase={selectedSettlementPhase}
         setSelectedSettlement={setSelectedSettlement}
+        setSelectedSettlementPhase={setSelectedSettlementPhase}
         survivors={survivors}
       />
 

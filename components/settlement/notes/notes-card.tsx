@@ -76,6 +76,7 @@ export function NotesCard({
           ...selectedSettlement,
           notes: previousNotes
         })
+
         setDraft(previousNotes ?? '')
         setIsDirty(true)
 

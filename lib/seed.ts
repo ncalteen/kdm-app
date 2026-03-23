@@ -217,13 +217,15 @@ async function addSettlementArc(
   }
 
   // Add collective cognition rewards
-  const { data: allCCRewards, error: getCCRewardsError } = await supabase
-    .from('collective_cognition_reward')
-    .select('id')
+  const {
+    data: allCollectiveCognitionRewards,
+    error: getCollectiveCognitionRewardsError
+  } = await supabase.from('collective_cognition_reward').select('id')
 
-  if (getCCRewardsError) throw getCCRewardsError
+  if (getCollectiveCognitionRewardsError)
+    throw getCollectiveCognitionRewardsError
 
-  const collectiveCognitionRewards = allCCRewards
+  const collectiveCognitionRewards = allCollectiveCognitionRewards
     .sort(() => Math.random() - 0.5)
     .slice(0, 5)
 
@@ -1839,28 +1841,31 @@ async function createCustomQuarries(
 
   if (createIronWyrmLevel2Error) throw createIronWyrmLevel2Error
 
-  const { data: ironWyrmCCReward, error: createIronWyrmCCRewardError } =
-    await supabase
-      .from('collective_cognition_reward')
-      .insert({
-        custom: true,
-        user_id: userId,
-        collective_cognition: 0,
-        reward_name: 'Metalworking'
-      })
-      .select('id')
-      .single()
-
-  if (createIronWyrmCCRewardError) throw createIronWyrmCCRewardError
-
-  const { error: createIronWyrmQuarryCCRewardError } = await supabase
-    .from('quarry_collective_cognition_reward')
+  const {
+    data: ironWyrmCollectiveCognitionReward,
+    error: createIronWyrmCollectiveCognitionRewardError
+  } = await supabase
+    .from('collective_cognition_reward')
     .insert({
-      collective_cognition_reward_id: ironWyrmCCReward.id,
+      custom: true,
+      user_id: userId,
+      collective_cognition: 0,
+      reward_name: 'Metalworking'
+    })
+    .select('id')
+    .single()
+
+  if (createIronWyrmCollectiveCognitionRewardError)
+    throw createIronWyrmCollectiveCognitionRewardError
+
+  const { error: createIronWyrmQuarryCollectiveCognitionRewardError } =
+    await supabase.from('quarry_collective_cognition_reward').insert({
+      collective_cognition_reward_id: ironWyrmCollectiveCognitionReward.id,
       quarry_id: ironWyrm.id
     })
 
-  if (createIronWyrmQuarryCCRewardError) throw createIronWyrmQuarryCCRewardError
+  if (createIronWyrmQuarryCollectiveCognitionRewardError)
+    throw createIronWyrmQuarryCollectiveCognitionRewardError
 
   const { error: createIronWyrmTimelineError } = await supabase
     .from('quarry_timeline_year')
@@ -2188,52 +2193,57 @@ async function createCustomQuarries(
 
   if (createDarkHorsesLevel3Error) throw createDarkHorsesLevel3Error
 
-  const { data: darkHorsesCCReward, error: createDarkHorsesCCRewardError } =
-    await supabase
-      .from('collective_cognition_reward')
-      .insert([
-        {
-          custom: true,
-          user_id: userId,
-          collective_cognition: 0,
-          reward_name: 'Venom Study'
-        },
-        {
-          custom: true,
-          user_id: userId,
-          collective_cognition: 0,
-          reward_name: 'Herd Tactics'
-        },
-        {
-          custom: true,
-          user_id: userId,
-          collective_cognition: 0,
-          reward_name: 'Equine Empathy'
-        }
-      ])
-      .select('id')
-
-  if (createDarkHorsesCCRewardError) throw createDarkHorsesCCRewardError
-
-  const { error: createDarkHorsesQuarryCCRewardError } = await supabase
-    .from('quarry_collective_cognition_reward')
+  const {
+    data: darkHorsesCollectiveCognitionReward,
+    error: createDarkHorsesCollectiveCognitionRewardError
+  } = await supabase
+    .from('collective_cognition_reward')
     .insert([
       {
-        collective_cognition_reward_id: darkHorsesCCReward[0].id,
+        custom: true,
+        user_id: userId,
+        collective_cognition: 0,
+        reward_name: 'Venom Study'
+      },
+      {
+        custom: true,
+        user_id: userId,
+        collective_cognition: 0,
+        reward_name: 'Herd Tactics'
+      },
+      {
+        custom: true,
+        user_id: userId,
+        collective_cognition: 0,
+        reward_name: 'Equine Empathy'
+      }
+    ])
+    .select('id')
+
+  if (createDarkHorsesCollectiveCognitionRewardError)
+    throw createDarkHorsesCollectiveCognitionRewardError
+
+  const { error: createDarkHorsesQuarryCollectiveCognitionRewardError } =
+    await supabase.from('quarry_collective_cognition_reward').insert([
+      {
+        collective_cognition_reward_id:
+          darkHorsesCollectiveCognitionReward[0].id,
         quarry_id: darkHorses.id
       },
       {
-        collective_cognition_reward_id: darkHorsesCCReward[1].id,
+        collective_cognition_reward_id:
+          darkHorsesCollectiveCognitionReward[1].id,
         quarry_id: darkHorses.id
       },
       {
-        collective_cognition_reward_id: darkHorsesCCReward[2].id,
+        collective_cognition_reward_id:
+          darkHorsesCollectiveCognitionReward[2].id,
         quarry_id: darkHorses.id
       }
     ])
 
-  if (createDarkHorsesQuarryCCRewardError)
-    throw createDarkHorsesQuarryCCRewardError
+  if (createDarkHorsesQuarryCollectiveCognitionRewardError)
+    throw createDarkHorsesQuarryCollectiveCognitionRewardError
 }
 
 /**
