@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -50,10 +51,7 @@ export function LoginForm({
         router.push('/')
         return null
       } catch (error: unknown) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : 'The darkness swallows your words. Please try again.'
+        const message = error instanceof Error ? error.message : ERROR_MESSAGE()
 
         console.error('Login Error:', error)
         toast.error(message)

@@ -13,6 +13,7 @@ import {
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { AenasState } from '@/lib/enums'
 import {
+  ERROR_MESSAGE,
   SURVIVOR_DISPOSITION_UPDATED_MESSAGE,
   SURVIVOR_STATE_UPDATED_MESSAGE
 } from '@/lib/messages'
@@ -105,7 +106,7 @@ export function WandererCard({
           setAenasState(oldState)
           setSurvivors(oldSurvivors)
           console.error('Error Updating Survivor State:', error)
-          toast.error('The darkness swallows your words. Please try again.')
+          toast.error(ERROR_MESSAGE())
         })
     },
     [
@@ -142,7 +143,7 @@ export function WandererCard({
           setDisposition(oldDisposition)
           setSurvivors(oldSurvivors)
           console.error('Error Updating Survivor Disposition:', error)
-          toast.error('The darkness swallows your words. Please try again.')
+          toast.error(ERROR_MESSAGE())
         })
     },
     [disposition, selectedSurvivor?.id, setSurvivors, survivors]

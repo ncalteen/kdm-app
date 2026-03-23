@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar'
 import { getSettlementForUser } from '@/lib/dal/user'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { SettlementDetail } from '@/lib/types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
 import {
@@ -114,7 +115,7 @@ export function SettlementSwitcher({
       .catch((err: unknown) => {
         if (isCancelled) return
         console.error('Settlement List Fetch Error:', err)
-        toast.error('The darkness swallows your words. Please try again.')
+        toast.error(ERROR_MESSAGE())
       })
       .finally(() => {
         if (!isCancelled) setIsLoading(false)

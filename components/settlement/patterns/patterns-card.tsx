@@ -209,7 +209,7 @@ export function PatternsCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading patterns...
               </p>

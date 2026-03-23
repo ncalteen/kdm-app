@@ -1,4 +1,4 @@
-import { SettlementNemesisRow } from '@/lib/dal/settlement-nemesis'
+import { NemesisDetail } from '@/lib/types'
 
 /**
  * Nemesis Node Sort Order
@@ -22,9 +22,7 @@ const NODE_ORDER: Record<string, number> = {
  * @param rows Settlement Nemesis Rows
  * @returns Sorted Settlement Nemesis Rows
  */
-export function sortNemeses(
-  rows: SettlementNemesisRow[]
-): SettlementNemesisRow[] {
+export function sortNemeses(rows: NemesisDetail[]): NemesisDetail[] {
   return [...rows].sort((a, b) => {
     const aOrder = NODE_ORDER[a.node] ?? Number.MAX_SAFE_INTEGER
     const bOrder = NODE_ORDER[b.node] ?? Number.MAX_SAFE_INTEGER

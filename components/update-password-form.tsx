@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
@@ -48,10 +49,7 @@ export function UpdatePasswordForm({
         router.push('/')
         return null
       } catch (error: unknown) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : 'The darkness swallows your words. Please try again.'
+        const message = error instanceof Error ? error.message : ERROR_MESSAGE()
 
         console.error('Update Password Error:', error)
         toast.error(message)
