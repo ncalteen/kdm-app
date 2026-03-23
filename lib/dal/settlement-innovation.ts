@@ -5,7 +5,8 @@ import { SettlementDetail } from '@/lib/types'
 /**
  * Get Settlement Innovations
  *
- * Retrieves the innovations associated with a settlement.
+ * Retrieves the innovations associated with a settlement. Uses a join to
+ * resolve innovation names. Safely handles the Supabase join result shape.
  *
  * @param settlementId Settlement ID
  * @returns Settlement Innovation Data
@@ -26,21 +27,26 @@ export async function getSettlementInnovations(
     throw new Error(`Error Fetching Settlement Innovations: ${error.message}`)
 
   return (
-    data?.map((item) => ({
-      id: item.id,
-      innovation_id: item.innovation_id,
-      innovation_name: (
-        item.innovation as unknown as { innovation_name: string }
-      ).innovation_name
-    })) ?? []
+    data?.map((item) => {
+      // Supabase returns joined tables as objects or arrays depending on
+      // the relationship. Safely handle both cases.
+      const innovation = Array.isArray(item.innovation)
+        ? item.innovation[0]
+        : item.innovation
+
+      return {
+        id: item.id,
+        innovation_id: item.innovation_id,
+        innovation_name: innovation?.innovation_name ?? ''
+      }
+    }) ?? []
   )
 }
 
 /**
  * Add Settlement Innovations
  *
- * Adds innovations to a settlement by their IDs. This is used when adding
- * innovations to a settlement during settlement creation or editing.
+ * Adds innovations to a settlement by their IDs.
  *
  * @param innovationIds Innovation IDs
  * @param settlementId Settlement ID
