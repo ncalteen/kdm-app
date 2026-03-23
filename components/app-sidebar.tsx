@@ -17,8 +17,7 @@ import {
   HuntDetail,
   SettlementDetail,
   SettlementPhaseDetail,
-  ShowdownDetail,
-  SurvivorDetail
+  ShowdownDetail
 } from '@/lib/types'
 import {
   HourglassIcon,
@@ -152,39 +151,25 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
   /** Is Creating New Settlement */
   isCreatingNewSettlement: boolean
   /** Selected Hunt ID */
-  selectedHuntId: string | null
+  selectedHunt: HuntDetail | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
-  /** Selected Settlement Phase ID */
-  selectedSettlementPhaseId: string | null
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Showdown ID */
-  selectedShowdownId: string | null
+  selectedShowdown: ShowdownDetail | null
   /** Selected Tab */
   selectedTab: TabType
   /** Set Is Creating New Settlement */
   setIsCreatingNewSettlement: (isCreating: boolean) => void
-  /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
   /** Set Selected Hunt ID */
   setSelectedHuntId: (huntId: string | null) => void
-  /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail) => void
   /** Set Selected Settlement ID */
   setSelectedSettlementId: (settlementId: string | null) => void
-  /** Set Selected Settlement Phase */
-  setSelectedSettlementPhase: (
-    settlementPhase: SettlementPhaseDetail | null
-  ) => void
   /** Set Selected Settlement Phase ID */
   setSelectedSettlementPhaseId: (settlementPhaseId: string | null) => void
-  /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
   /** Set Selected Showdown ID */
   setSelectedShowdownId: (showdownId: string | null) => void
-  /** Set Selected Survivor */
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
   /** Set Selected Tab */
@@ -199,22 +184,16 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
  */
 export function AppSidebar({
   isCreatingNewSettlement,
-  selectedHuntId,
+  selectedHunt,
   selectedSettlement,
-  selectedSettlementId,
-  selectedSettlementPhaseId,
-  selectedShowdownId,
+  selectedSettlementPhase,
+  selectedShowdown,
   selectedTab,
   setIsCreatingNewSettlement,
-  setSelectedHunt,
   setSelectedHuntId,
-  setSelectedSettlement,
   setSelectedSettlementId,
-  setSelectedSettlementPhase,
   setSelectedSettlementPhaseId,
-  setSelectedShowdown,
   setSelectedShowdownId,
-  setSelectedSurvivor,
   setSelectedSurvivorId,
   setSelectedTab,
   ...props
@@ -249,11 +228,10 @@ export function AppSidebar({
       <SidebarHeader>
         <SettlementSwitcher
           isCreatingNewSettlement={isCreatingNewSettlement}
-          selectedHuntId={selectedHuntId}
+          selectedHunt={selectedHunt}
           selectedSettlement={selectedSettlement}
-          selectedSettlementId={selectedSettlementId}
-          selectedSettlementPhaseId={selectedSettlementPhaseId}
-          selectedShowdownId={selectedShowdownId}
+          selectedSettlementPhase={selectedSettlementPhase}
+          selectedShowdown={selectedShowdown}
           setIsCreatingNewSettlement={setIsCreatingNewSettlement}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlementId={setSelectedSettlementId}

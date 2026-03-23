@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { Suspense } from 'react'
 
 /**
@@ -52,9 +53,7 @@ export default function Page({
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">
-                Sorry, something went wrong.
-              </CardTitle>
+              <CardTitle className="text-2xl">{ERROR_MESSAGE()}</CardTitle>
             </CardHeader>
             <CardContent>
               <Suspense>

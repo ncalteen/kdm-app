@@ -36,7 +36,7 @@ function MainPageLoading(): ReactElement {
         Loading...
       </h1>
       <p className="text-md text-center">
-        All-seeing eyes pierce the darkness, looking for settlements.
+        Faces in the sky peer down on your settlements.
       </p>
     </div>
   )
@@ -84,28 +84,28 @@ function MainPageContent(): ReactElement {
  */
 function MainPage(): ReactElement {
   const {
-    isCreatingNewHunt,
+    // isCreatingNewHunt,
     isCreatingNewSettlement,
-    isCreatingNewShowdown,
+    // isCreatingNewShowdown,
     isCreatingNewSurvivor,
 
     selectedHunt,
-    selectedHuntId,
+    // selectedHuntId,
     selectedHuntMonsterIndex,
     selectedSettlement,
-    selectedSettlementId,
+    // selectedSettlementId,
     selectedSettlementPhase,
-    selectedSettlementPhaseId,
+    // selectedSettlementPhaseId,
     selectedShowdown,
-    selectedShowdownId,
+    // selectedShowdownId,
     selectedShowdownMonsterIndex,
     selectedSurvivor,
-    selectedSurvivorId,
+    // selectedSurvivorId,
     selectedTab,
 
-    setIsCreatingNewHunt,
+    // setIsCreatingNewHunt,
     setIsCreatingNewSettlement,
-    setIsCreatingNewShowdown,
+    // setIsCreatingNewShowdown,
     setIsCreatingNewSurvivor,
 
     setSelectedHunt,
@@ -125,7 +125,7 @@ function MainPage(): ReactElement {
     setSurvivors,
     survivors,
 
-    updateLocal,
+    // updateLocal,
 
     userSettings,
     setUserSettings
@@ -138,22 +138,16 @@ function MainPage(): ReactElement {
 
         <AppSidebar
           isCreatingNewSettlement={isCreatingNewSettlement}
-          selectedHuntId={selectedHuntId}
+          selectedHunt={selectedHunt}
           selectedSettlement={selectedSettlement}
-          selectedSettlementId={selectedSettlementId}
-          selectedSettlementPhaseId={selectedSettlementPhaseId}
-          selectedShowdownId={selectedShowdownId}
+          selectedSettlementPhase={selectedSettlementPhase}
+          selectedShowdown={selectedShowdown}
           selectedTab={selectedTab}
           setIsCreatingNewSettlement={setIsCreatingNewSettlement}
-          setSelectedHunt={setSelectedHunt}
           setSelectedHuntId={setSelectedHuntId}
-          setSelectedSettlement={setSelectedSettlement}
           setSelectedSettlementId={setSelectedSettlementId}
-          setSelectedSettlementPhase={setSelectedSettlementPhase}
           setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
-          setSelectedShowdown={setSelectedShowdown}
           setSelectedShowdownId={setSelectedShowdownId}
-          setSelectedSurvivor={setSelectedSurvivor}
           setSelectedSurvivorId={setSelectedSurvivorId}
           setSelectedTab={setSelectedTab}
         />

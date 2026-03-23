@@ -43,7 +43,9 @@ export function ForgotPasswordForm({
    */
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault()
+
     const supabase = createClient()
+
     setIsLoading(true)
     setError(null)
 
@@ -57,7 +59,9 @@ export function ForgotPasswordForm({
           redirectTo: `${window.location.origin}/auth/update-password`
         }
       )
+
       if (resetError) throw resetError
+
       setSuccess(true)
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')

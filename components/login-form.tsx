@@ -33,6 +33,7 @@ export function LoginForm({
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+
   const router = useRouter()
 
   /**
@@ -45,7 +46,9 @@ export function LoginForm({
    */
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
+
     const supabase = createClient()
+
     setIsLoading(true)
     setError(null)
 
@@ -54,6 +57,7 @@ export function LoginForm({
         email,
         password
       })
+
       if (error) throw error
 
       router.push('/')
