@@ -49,10 +49,8 @@ export function ForgotPasswordForm({
         toast.success('Password reset instructions sent to your email.')
         return 'success' as const
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : ERROR_MESSAGE()
-
         console.error('Forgot Password Error:', error)
-        toast.error(message)
+        toast.error(ERROR_MESSAGE())
         return 'error' as const
       }
     },

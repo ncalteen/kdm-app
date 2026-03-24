@@ -49,11 +49,9 @@ export function UpdatePasswordForm({
         router.push('/')
         return null
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : ERROR_MESSAGE()
-
         console.error('Update Password Error:', error)
-        toast.error(message)
-        return message
+        toast.error(ERROR_MESSAGE())
+        return ERROR_MESSAGE()
       }
     },
     null

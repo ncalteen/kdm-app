@@ -51,11 +51,9 @@ export function LoginForm({
         router.push('/')
         return null
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : ERROR_MESSAGE()
-
         console.error('Login Error:', error)
-        toast.error(message)
-        return message
+        toast.error(ERROR_MESSAGE())
+        return ERROR_MESSAGE()
       }
     },
     null

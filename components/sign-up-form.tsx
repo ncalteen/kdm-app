@@ -61,11 +61,9 @@ export function SignUpForm({
         router.push('/auth/sign-up-success')
         return null
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : ERROR_MESSAGE()
-
         console.error('Sign Up Error:', error)
-        toast.error(message)
-        return message
+        toast.error(ERROR_MESSAGE())
+        return ERROR_MESSAGE()
       }
     },
     null
