@@ -206,7 +206,7 @@ export function SettlementPhaseCard({
 
       {/* Survivors Return */}
       {currentStep === SettlementPhaseStep.SURVIVORS_RETURN && (
-        <>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
           <ListCard
             icon={<HousePlusIcon className="h-4 w-4" />}
             initialItems={selectedSettlement?.arrival_bonuses || []}
@@ -224,7 +224,7 @@ export function SettlementPhaseCard({
             selectedSettlement={selectedSettlement}
             setSelectedSettlement={setSelectedSettlement}
           />
-        </>
+        </div>
       )}
 
       {/* Gain Endeavors */}

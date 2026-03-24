@@ -231,11 +231,30 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     })
 
     // Re-evaluate when the auth state changes (e.g. login/logout).
+    // Use server-verified getUser() instead of trusting the session's user
+    // object, which can reference a deleted user (e.g. after a DB reset).
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (isCancelled) return
-      setIsAuthenticated(!!session?.user)
+
+      if (!session?.user) {
+        setIsAuthenticated(false)
+        return
+      }
+
+      supabase.auth.getUser().then(({ data, error }) => {
+        if (isCancelled) return
+
+        if (error || !data?.user) {
+          // Stale session — sign out to clear the invalid token.
+          supabase.auth.signOut()
+          setIsAuthenticated(false)
+          return
+        }
+
+        setIsAuthenticated(true)
+      })
     })
 
     return () => {

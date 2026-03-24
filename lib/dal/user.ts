@@ -8,6 +8,8 @@ import { UserSettingsDetail } from '@/lib/types'
  *
  * Fetches the user ID of the currently authenticated user. Centralizes the
  * auth check so callers don't each need to query `supabase.auth.getUser()`.
+ * If the session references a user that no longer exists (e.g. after a DB
+ * reset), the stale session is cleared automatically.
  *
  * @returns User ID
  * @throws If not authenticated or if fetching fails
@@ -20,7 +22,11 @@ export async function getUserId(): Promise<string> {
     error
   } = await supabase.auth.getUser()
 
-  if (error) throw new Error(`Auth Error: ${error.message}`)
+  if (error) {
+    // Clear any stale session so subsequent calls don't keep failing.
+    await supabase.auth.signOut()
+    throw new Error(`Auth Error: ${error.message}`)
+  }
   if (!user) throw new Error('Not Authenticated')
 
   return user.id

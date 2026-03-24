@@ -272,7 +272,7 @@ export function SettingsCard({
                     <AlertDialogAction
                       onClick={handleGenerateSeedData}
                       className="bg-blue-600 text-white hover:bg-blue-700">
-                      Generate Test Data
+                      Generate Seed Data
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

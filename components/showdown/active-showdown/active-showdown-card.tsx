@@ -22,7 +22,6 @@ import {
   SETTLEMENT_PHASE_STARTED_MESSAGE,
   SHOWDOWN_DELETED_MESSAGE
 } from '@/lib/messages'
-import { createClient } from '@/lib/supabase/client'
 import {
   SettlementDetail,
   SettlementPhaseDetail,
@@ -133,10 +132,9 @@ export function ActiveShowdownCard({
    * Handle Proceed to Settlement Phase
    *
    * Creates a new settlement phase from the current showdown data:
-   * 1. Creates the settlement phase record
-   * 2. Inserts returning survivors into the junction table
-   * 3. Deletes the showdown (cascade removes showdown-related records)
-   * 4. Updates local state to reflect the new settlement phase
+   * 1. Creates the settlement phase record and returning survivors
+   * 2. Deletes the showdown (cascade removes showdown-related records)
+   * 3. Updates local state to reflect the new settlement phase
    */
   const handleProceedToSettlementPhase = useCallback(async () => {
     if (!selectedShowdown || !selectedSettlement) return
@@ -155,39 +153,24 @@ export function ActiveShowdownCard({
         (s) => s.scout
       )
 
-      // 1. Create the settlement phase record.
-      const settlementPhaseId = await addSettlementPhase({
-        endeavors: 0,
-        returning_scout_id: scoutSurvivor?.survivor_id ?? null,
-        settlement_id: selectedSettlement.id
-      })
-
-      // 2. Insert returning survivors into the junction table.
+      // 1. Create the settlement phase record and returning survivors.
       const returningSurvivorIds = Object.values(showdownSurvivors).map(
         (s) => s.survivor_id
       )
 
-      if (returningSurvivorIds.length > 0) {
-        const supabase = createClient()
+      const settlementPhaseId = await addSettlementPhase(
+        {
+          endeavors: 0,
+          returning_scout_id: scoutSurvivor?.survivor_id ?? null,
+          settlement_id: selectedSettlement.id
+        },
+        returningSurvivorIds
+      )
 
-        const { error } = await supabase
-          .from('settlement_phase_returning_survivor')
-          .insert(
-            returningSurvivorIds.map((survivorId) => ({
-              settlement_id: selectedSettlement.id,
-              settlement_phase_id: settlementPhaseId,
-              survivor_id: survivorId
-            }))
-          )
-
-        if (error)
-          throw new Error(`Error Adding Returning Survivors: ${error.message}`)
-      }
-
-      // 3. Delete the showdown (cascade removes all showdown-related records).
+      // 2. Delete the showdown (cascade removes all showdown-related records).
       await removeShowdown(selectedShowdown.id)
 
-      // 4. Build the SettlementPhaseDetail and update local state.
+      // 3. Build the SettlementPhaseDetail and update local state.
       const settlementPhaseDetail: SettlementPhaseDetail = {
         id: settlementPhaseId,
         endeavors: 0,

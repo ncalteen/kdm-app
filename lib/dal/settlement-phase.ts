@@ -106,10 +106,19 @@ export async function addSettlementPhase(
         }))
       )
 
-    if (survivorError)
+    if (survivorError) {
+      // Clean up the orphaned settlement_phase record to avoid leaving the
+      // settlement in an unrecoverable state (UNIQUE constraint on
+      // settlement_id would prevent retries).
+      await supabase
+        .from('settlement_phase')
+        .delete()
+        .eq('id', settlementPhaseId)
+
       throw new Error(
         `Error Adding Returning Survivors: ${survivorError.message}`
       )
+    }
   }
 
   return settlementPhaseId
