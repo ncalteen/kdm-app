@@ -25,7 +25,7 @@ create table hunt_hunt_board (
   pos_10 hunt_event_type not null default 'BASIC',
   pos_11 hunt_event_type not null default 'BASIC',
   hunt_id uuid not null unique references hunt(id) on delete cascade,
-  settlement_id uuid references settlement(id) on delete cascade
+  settlement_id uuid not null unique references settlement(id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
