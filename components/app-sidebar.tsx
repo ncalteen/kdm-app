@@ -1,8 +1,10 @@
+import { LogoutButton } from '@/components/logout-button'
 import { SettlementSwitcher } from '@/components/menu/settlement-switcher'
 import { NavMain } from '@/components/nav-main'
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
@@ -274,6 +276,10 @@ export function AppSidebar({
           />
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter>
+        <LogoutButton />
+      </SidebarFooter>
 
       <SidebarRail />
     </Sidebar>
