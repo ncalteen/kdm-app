@@ -510,6 +510,7 @@ export function SettlementCard({
               selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
+              setSelectedSettlementPhase={setSelectedSettlementPhase}
               setSelectedShowdown={setSelectedShowdown}
               setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
               setSelectedSurvivor={setSelectedSurvivor}

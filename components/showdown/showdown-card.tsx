@@ -6,6 +6,7 @@ import { TabType } from '@/lib/enums'
 import {
   HuntDetail,
   SettlementDetail,
+  SettlementPhaseDetail,
   ShowdownDetail,
   SurvivorDetail
 } from '@/lib/types'
@@ -25,6 +26,10 @@ interface ShowdownCardProps {
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Settlement Phase */
+  setSelectedSettlementPhase: (
+    settlementPhase: SettlementPhaseDetail | null
+  ) => void
   /** Set Selected Showdown */
   setSelectedShowdown: (showdown: ShowdownDetail | null) => void
   /** Set Selected Showdown Monster Index */
@@ -55,6 +60,7 @@ export function ShowdownCard({
   selectedShowdownMonsterIndex,
   selectedSettlement,
   selectedSurvivor,
+  setSelectedSettlementPhase,
   setSelectedShowdown,
   setSelectedShowdownMonsterIndex,
   setSelectedSurvivor,
@@ -68,6 +74,7 @@ export function ShowdownCard({
       selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
       selectedSettlement={selectedSettlement}
       selectedSurvivor={selectedSurvivor}
+      setSelectedSettlementPhase={setSelectedSettlementPhase}
       setSelectedShowdown={setSelectedShowdown}
       setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
       setSelectedSurvivor={setSelectedSurvivor}

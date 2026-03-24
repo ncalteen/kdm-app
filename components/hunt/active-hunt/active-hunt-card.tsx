@@ -260,8 +260,6 @@ export function ActiveHuntCard({
 
   /**
    * Handle Showdown (open confirmation dialog)
-   *
-   * @todo Implement proceed to showdown functionality
    */
   const handleShowdown = useCallback(() => setIsShowdownDialogOpen(true), [])
 

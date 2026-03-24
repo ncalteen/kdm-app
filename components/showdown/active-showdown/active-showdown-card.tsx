@@ -14,10 +14,21 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { addSettlementPhase } from '@/lib/dal/settlement-phase'
 import { removeShowdown } from '@/lib/dal/showdown'
 import { TabType } from '@/lib/enums'
-import { ERROR_MESSAGE, SHOWDOWN_DELETED_MESSAGE } from '@/lib/messages'
-import { SettlementDetail, ShowdownDetail, SurvivorDetail } from '@/lib/types'
+import {
+  ERROR_MESSAGE,
+  SETTLEMENT_PHASE_STARTED_MESSAGE,
+  SHOWDOWN_DELETED_MESSAGE
+} from '@/lib/messages'
+import { createClient } from '@/lib/supabase/client'
+import {
+  SettlementDetail,
+  SettlementPhaseDetail,
+  ShowdownDetail,
+  SurvivorDetail
+} from '@/lib/types'
 import { ChevronRightIcon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
 import { toast } from 'sonner'
@@ -34,6 +45,10 @@ interface ActiveShowdownCardProps {
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Settlement Phase */
+  setSelectedSettlementPhase: (
+    settlementPhase: SettlementPhaseDetail | null
+  ) => void
   /** Set Selected Showdown */
   setSelectedShowdown: (showdown: ShowdownDetail | null) => void
   /** Set Selected Showdown Monster Index */
@@ -63,13 +78,19 @@ export function ActiveShowdownCard({
   selectedShowdownMonsterIndex,
   selectedSettlement,
   selectedSurvivor,
+  setSelectedSettlementPhase,
   setSelectedShowdown,
   setSelectedShowdownMonsterIndex,
   setSelectedSurvivor,
+  setSelectedTab,
   setSurvivors,
   survivors
 }: ActiveShowdownCardProps): ReactElement {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState<boolean>(false)
+  const [isSettlementPhaseDialogOpen, setIsSettlementPhaseDialogOpen] =
+    useState<boolean>(false)
+  const [isProceedingToSettlementPhase, setIsProceedingToSettlementPhase] =
+    useState<boolean>(false)
 
   /**
    * Handle Cancel Showdown (open confirmation dialog)
@@ -101,14 +122,107 @@ export function ActiveShowdownCard({
   }, [selectedShowdown, setSelectedShowdown, setSelectedShowdownMonsterIndex])
 
   /**
+   * Handle Proceed to Settlement Phase (open confirmation dialog)
+   */
+  const handleSettlementPhase = useCallback(
+    () => setIsSettlementPhaseDialogOpen(true),
+    []
+  )
+
+  /**
    * Handle Proceed to Settlement Phase
    *
-   * @todo Implement settlement phase creation from showdown data
+   * Creates a new settlement phase from the current showdown data:
+   * 1. Creates the settlement phase record
+   * 2. Inserts returning survivors into the junction table
+   * 3. Deletes the showdown (cascade removes showdown-related records)
+   * 4. Updates local state to reflect the new settlement phase
    */
-  const handleProceedToSettlementPhase = useCallback(() => {
-    // TODO: Implement proceed to settlement phase
-    toast.error('Proceed to settlement phase is not yet implemented.')
-  }, [])
+  const handleProceedToSettlementPhase = useCallback(async () => {
+    if (!selectedShowdown || !selectedSettlement) return
+
+    const showdownSurvivors = selectedShowdown.showdown_survivors
+    if (!showdownSurvivors) {
+      toast.error(ERROR_MESSAGE())
+      return
+    }
+
+    setIsProceedingToSettlementPhase(true)
+
+    try {
+      // Determine the returning scout (if any).
+      const scoutSurvivor = Object.values(showdownSurvivors).find(
+        (s) => s.scout
+      )
+
+      // 1. Create the settlement phase record.
+      const settlementPhaseId = await addSettlementPhase({
+        endeavors: 0,
+        returning_scout_id: scoutSurvivor?.survivor_id ?? null,
+        settlement_id: selectedSettlement.id
+      })
+
+      // 2. Insert returning survivors into the junction table.
+      const returningSurvivorIds = Object.values(showdownSurvivors).map(
+        (s) => s.survivor_id
+      )
+
+      if (returningSurvivorIds.length > 0) {
+        const supabase = createClient()
+
+        const { error } = await supabase
+          .from('settlement_phase_returning_survivor')
+          .insert(
+            returningSurvivorIds.map((survivorId) => ({
+              settlement_id: selectedSettlement.id,
+              settlement_phase_id: settlementPhaseId,
+              survivor_id: survivorId
+            }))
+          )
+
+        if (error)
+          throw new Error(`Error Adding Returning Survivors: ${error.message}`)
+      }
+
+      // 3. Delete the showdown (cascade removes all showdown-related records).
+      await removeShowdown(selectedShowdown.id)
+
+      // 4. Build the SettlementPhaseDetail and update local state.
+      const settlementPhaseDetail: SettlementPhaseDetail = {
+        id: settlementPhaseId,
+        endeavors: 0,
+        returning_scout_id: scoutSurvivor?.survivor_id ?? null,
+        settlement_id: selectedSettlement.id,
+        step: 'SET_UP_SETTLEMENT',
+        returning_survivor_ids: returningSurvivorIds
+      }
+
+      // Clear showdown state.
+      setSelectedShowdown(null)
+      setSelectedShowdownMonsterIndex(0)
+
+      // Set settlement phase state.
+      setSelectedSettlementPhase(settlementPhaseDetail)
+
+      // Switch to the settlement phase tab.
+      setSelectedTab(TabType.SETTLEMENT_PHASE)
+
+      setIsSettlementPhaseDialogOpen(false)
+      toast.success(SETTLEMENT_PHASE_STARTED_MESSAGE())
+    } catch (error: unknown) {
+      console.error('Proceed to Settlement Phase Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setIsProceedingToSettlementPhase(false)
+    }
+  }, [
+    selectedShowdown,
+    selectedSettlement,
+    setSelectedShowdown,
+    setSelectedShowdownMonsterIndex,
+    setSelectedSettlementPhase,
+    setSelectedTab
+  ])
 
   return (
     <div className="flex flex-col gap-2 h-full relative">
@@ -126,7 +240,7 @@ export function ActiveShowdownCard({
         <Button
           variant="default"
           size="sm"
-          onClick={handleProceedToSettlementPhase}
+          onClick={handleSettlementPhase}
           className="pointer-events-auto"
           title="Settlement Phase">
           {selectedShowdown?.showdown_type === 'SPECIAL'
@@ -186,6 +300,37 @@ export function ActiveShowdownCard({
               onClick={handleDeleteShowdown}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               End Showdown
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Settlement Phase Confirmation Dialog */}
+      <AlertDialog
+        open={isSettlementPhaseDialogOpen}
+        onOpenChange={setIsSettlementPhaseDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {selectedShowdown?.showdown_type === 'SPECIAL'
+                ? 'Return to Settlement Phase'
+                : 'Begin Settlement Phase'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              The showdown will end and surviving members of the hunt party will
+              return to the settlement.{' '}
+              <strong>
+                This action cannot be undone. Any changes to the settlement,
+                survivors, or monster will be retained.
+              </strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go Back</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleProceedToSettlementPhase}
+              disabled={isProceedingToSettlementPhase}>
+              {isProceedingToSettlementPhase ? 'Proceeding...' : 'Proceed'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
