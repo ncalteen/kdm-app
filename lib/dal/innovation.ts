@@ -1,4 +1,59 @@
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { InnovationDetail } from '@/lib/types'
+
+/**
+ * Get Innovations
+ *
+ * Retrieves all innovations available to the authenticated user:
+ * - Built-in (non-custom) innovations
+ * - Custom innovations owned by the user
+ * - Custom innovations shared with the user
+ *
+ * @returns Innovations
+ */
+export async function getInnovations(): Promise<{
+  [key: string]: InnovationDetail
+}> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
+    supabase
+      .from('innovation')
+      .select('id, innovation_name')
+      .eq('custom', false),
+    supabase
+      .from('innovation')
+      .select('id, innovation_name')
+      .eq('custom', true)
+      .eq('user_id', user.id),
+    supabase
+      .from('innovation_shared_user')
+      .select('innovation(id, innovation_name)')
+      .eq('shared_user_id', user.id)
+  ])
+
+  for (const result of [nonCustomResult, userCustomResult, sharedResult])
+    if (result.error)
+      throw new Error(`Error Fetching Innovations: ${result.error.message}`)
+
+  const innovationMap: { [key: string]: InnovationDetail } = {}
+
+  for (const i of nonCustomResult.data ?? []) innovationMap[i.id] = i
+  for (const i of userCustomResult.data ?? []) innovationMap[i.id] = i
+  for (const row of sharedResult.data ?? [])
+    innovationMap[row.innovation[0].id] = row.innovation[0]
+
+  return innovationMap
+}
 
 /**
  * Get Innovation IDs
@@ -37,4 +92,72 @@ export async function getInnovationIds(
   if (!data) throw new Error('Innovation(s) Not Found')
 
   return data.map((innovation) => innovation.id)
+}
+
+/**
+ * Add Innovation
+ *
+ * Adds a new innovation record to the database.
+ *
+ * @param innovation Innovation Data
+ * @returns Inserted Innovation
+ */
+export async function addInnovation(
+  innovation: Omit<
+    TablesInsert<'innovation'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<InnovationDetail> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('innovation')
+    .insert(innovation)
+    .select('id, innovation_name')
+    .single()
+
+  if (error) throw new Error(`Error Adding Innovation: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Innovation
+ *
+ * Updates an existing innovation record in the database.
+ *
+ * @param id Innovation ID
+ * @param innovation Innovation Data
+ * @returns Updated Innovation
+ */
+export async function updateInnovation(
+  id: string,
+  innovation: Omit<
+    TablesUpdate<'innovation'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('innovation')
+    .update(innovation)
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Updating Innovation: ${error.message}`)
+}
+
+/**
+ * Remove Innovation
+ *
+ * Deletes an innovation record from the database.
+ *
+ * @param id Innovation ID
+ */
+export async function removeInnovation(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('innovation').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Innovation: ${error.message}`)
 }

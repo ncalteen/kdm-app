@@ -1,6 +1,6 @@
 {
   "name": "kdm",
-  "description": "Kingdom Death: Monster (KDM) Tracker",
+  "description": "Kingdom Death: Monster (KDM) - Archivist",
   "author": "Nick Alteen <ncalteen@gmail.com>",
   "version": "0.21.0",
   "type": "module",
@@ -17,6 +17,9 @@
   "scripts": {
     "build": "next build",
     "ci-test": "vitest run",
+    "db:generate": "supabase gen types typescript --local > lib/database.types.ts",
+    "db:migrate": "supabase migration up",
+    "db:reset": "supabase db reset",
     "dev": "next dev",
     "format:check": "prettier --check '**'",
     "format:write": "prettier --write '**'",

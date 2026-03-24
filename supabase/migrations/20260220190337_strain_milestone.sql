@@ -141,6 +141,7 @@ create policy "Allow all for admin" on strain_milestone_shared_user for all usin
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_strain_milestone_custom_user on strain_milestone(custom, user_id);
 create index idx_strain_milestone_shared_user_strain_milestone on strain_milestone_shared_user(strain_milestone_id);
 create index idx_strain_milestone_shared_user_user on strain_milestone_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

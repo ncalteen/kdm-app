@@ -1,5 +1,3 @@
-'use client'
-
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -69,7 +67,6 @@ export function NumericInput({
    */
   const handleIncrement = () => {
     if (!onChange) return
-
     const newValue = value + step
 
     if (max === undefined || newValue <= max) onChange(newValue)
@@ -80,7 +77,6 @@ export function NumericInput({
    */
   const handleDecrement = () => {
     if (!onChange) return
-
     const newValue = value - step
 
     if (min === undefined || newValue >= min) onChange(newValue)
@@ -179,7 +175,22 @@ export function NumericInput({
       type="number"
       value={value}
       onChange={(e) => {
-        if (onChange) onChange(parseInt(e.target.value) ?? 0)
+        const rawValue = e.target.value
+
+        // Treat empty or non-numeric input as 0 so the controlled value updates
+        if (rawValue === '') {
+          onChange?.(0)
+          return
+        }
+
+        const parsedValue = parseInt(rawValue, 10)
+
+        if (Number.isNaN(parsedValue)) {
+          onChange?.(0)
+          return
+        }
+
+        onChange?.(parsedValue)
       }}
       max={max}
       min={min}

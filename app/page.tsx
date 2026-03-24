@@ -5,8 +5,6 @@ import { SettlementCard } from '@/components/settlement/settlement-card'
 import { SiteHeader } from '@/components/side-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
-import { getSettlement } from '@/lib/dal/settlement'
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { ReactElement, Suspense, useEffect, useRef, useState } from 'react'
@@ -38,7 +36,7 @@ function MainPageLoading(): ReactElement {
         Loading...
       </h1>
       <p className="text-md text-center">
-        All-seeing eyes pierce the darkness, looking for settlements.
+        Faces in the sky peer down on your settlements.
       </p>
     </div>
   )
@@ -86,74 +84,52 @@ function MainPageContent(): ReactElement {
  */
 function MainPage(): ReactElement {
   const {
-    isCreatingNewHunt,
+    // isCreatingNewHunt,
     isCreatingNewSettlement,
-    isCreatingNewShowdown,
+    // isCreatingNewShowdown,
     isCreatingNewSurvivor,
 
+    selectedHunt,
     selectedHuntId,
     selectedHuntMonsterIndex,
+    selectedSettlement,
     selectedSettlementId,
+    selectedSettlementPhase,
     selectedSettlementPhaseId,
+    selectedShowdown,
     selectedShowdownId,
     selectedShowdownMonsterIndex,
-    selectedSurvivorId,
+    selectedSurvivor,
+    // selectedSurvivorId,
     selectedTab,
 
-    setIsCreatingNewHunt,
+    // setIsCreatingNewHunt,
     setIsCreatingNewSettlement,
-    setIsCreatingNewShowdown,
+    // setIsCreatingNewShowdown,
     setIsCreatingNewSurvivor,
 
+    setSelectedHunt,
     setSelectedHuntId,
     setSelectedHuntMonsterIndex,
+    setSelectedSettlement,
     setSelectedSettlementId,
+    setSelectedSettlementPhase,
     setSelectedSettlementPhaseId,
+    setSelectedShowdown,
     setSelectedShowdownId,
     setSelectedShowdownMonsterIndex,
+    setSelectedSurvivor,
     setSelectedSurvivorId,
     setSelectedTab,
 
-    updateLocal
+    setSurvivors,
+    survivors,
+
+    // updateLocal,
+
+    userSettings,
+    setUserSettings
   } = useLocal()
-
-  const [error, setError] = useState<string | null>(null)
-
-  const [selectedSettlement, setSelectedSettlement] =
-    useState<Tables<'settlement'> | null>(null)
-
-  useEffect(() => {
-    // Guard against out-of-order responses when selectedSettlementId changes
-    // quickly
-    let isCancelled = false
-
-    // Skip fetch if there is no selected settlement id
-    if (!selectedSettlementId) {
-      return () => {
-        isCancelled = true
-      }
-    }
-
-    Promise.all([getSettlement(selectedSettlementId)])
-      .then(([settlement]) => {
-        if (isCancelled) return
-        setSelectedSettlement(settlement)
-      })
-      .catch((err: unknown) => {
-        if (isCancelled) return
-
-        setSelectedSettlement(null)
-        setError(
-          err instanceof Error
-            ? `Page Load Error: ${err.message}`
-            : 'Page Load Error: Unknown Error'
-        )
-      })
-
-    return () => {
-      isCancelled = true
-    }
-  }, [selectedSettlementId])
 
   return (
     <div className="[--header-height:calc(--spacing(10))] min-w-[450px]">
@@ -161,12 +137,14 @@ function MainPage(): ReactElement {
         <SiteHeader />
 
         <AppSidebar
+          isCreatingNewSettlement={isCreatingNewSettlement}
           selectedHuntId={selectedHuntId}
           selectedSettlement={selectedSettlement}
           selectedSettlementId={selectedSettlementId}
           selectedSettlementPhaseId={selectedSettlementPhaseId}
           selectedShowdownId={selectedShowdownId}
           selectedTab={selectedTab}
+          setIsCreatingNewSettlement={setIsCreatingNewSettlement}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlementId={setSelectedSettlementId}
           setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
@@ -177,25 +155,35 @@ function MainPage(): ReactElement {
         <SidebarInset>
           <div className="p-4 pt-(--header-height)">
             <SettlementCard
+              isCreatingNewSettlement={isCreatingNewSettlement}
               isCreatingNewSurvivor={isCreatingNewSurvivor}
-              selectedHuntId={selectedHuntId}
+              selectedHunt={selectedHunt}
               selectedHuntMonsterIndex={selectedHuntMonsterIndex}
               selectedSettlement={selectedSettlement}
-              selectedSettlementId={selectedSettlementId}
-              selectedSettlementPhaseId={selectedSettlementPhaseId}
-              selectedShowdownId={selectedShowdownId}
+              selectedSettlementPhase={selectedSettlementPhase}
+              selectedShowdown={selectedShowdown}
               selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
-              selectedSurvivorId={selectedSurvivorId}
+              selectedSurvivor={selectedSurvivor}
               selectedTab={selectedTab}
+              setIsCreatingNewSettlement={setIsCreatingNewSettlement}
               setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
+              setSelectedHunt={setSelectedHunt}
               setSelectedHuntId={setSelectedHuntId}
               setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
+              setSelectedSettlement={setSelectedSettlement}
               setSelectedSettlementId={setSelectedSettlementId}
-              setSelectedSettlementPhase={setSelectedSettlementPhaseId}
+              setSelectedSettlementPhase={setSelectedSettlementPhase}
+              setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
+              setSelectedShowdown={setSelectedShowdown}
               setSelectedShowdownId={setSelectedShowdownId}
               setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
+              setSelectedSurvivor={setSelectedSurvivor}
               setSelectedSurvivorId={setSelectedSurvivorId}
               setSelectedTab={setSelectedTab}
+              setSurvivors={setSurvivors}
+              setUserSettings={setUserSettings}
+              survivors={survivors}
+              userSettings={userSettings}
             />
           </div>
         </SidebarInset>

@@ -3,7 +3,8 @@
 import { ListItem, NewListItem } from '@/components/generic/list-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
+import { SettlementDetail } from '@/lib/types'
 import {
   DndContext,
   DragEndEvent,
@@ -36,9 +37,9 @@ interface ListCardProps {
   /** Placeholder */
   placeholder: string
   /** Save List */
-  saveList: (updateData: string[]) => void
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
+  saveList: (updateData: string[]) => Promise<void>
+  /** Selected Settlement */
+  selectedSettlement: SettlementDetail | null
 }
 
 /**
@@ -56,24 +57,21 @@ export function ListCard({
   itemName,
   placeholder,
   saveList,
-  selectedSettlementId
+  selectedSettlement
 }: ListCardProps): ReactElement {
   const [editingIndices, setEditingIndices] = useState<Set<number>>(new Set())
   const [items, setItems] = useState<string[]>(initialItems)
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
 
-  // Track previous prop values to reset state during render when the source
-  // data or settlement changes.
-  const [prevInitialItems, setPrevInitialItems] =
-    useState<string[]>(initialItems)
-  const [prevSettlementId, setPrevSettlementId] = useState(selectedSettlementId)
+  // Reset state when the source data or settlement changes.
+  // Uses render-time comparison instead of useEffect to avoid cascading renders.
+  const [prevResetKey, setPrevResetKey] = useState(
+    () => `${selectedSettlement?.id}-${JSON.stringify(initialItems)}`
+  )
+  const currentResetKey = `${selectedSettlement?.id}-${JSON.stringify(initialItems)}`
 
-  if (
-    initialItems !== prevInitialItems ||
-    selectedSettlementId !== prevSettlementId
-  ) {
-    setPrevInitialItems(initialItems)
-    setPrevSettlementId(selectedSettlementId)
+  if (prevResetKey !== currentResetKey) {
+    setPrevResetKey(currentResetKey)
     setItems(initialItems)
     setEditingIndices(new Set())
     setIsAddingNew(false)
@@ -102,7 +100,7 @@ export function ListCard({
     (index: number) => {
       const updated = items.filter((_, i) => i !== index)
 
-      // Update editing indices to reflect removed item.
+      // Optimistic update
       setItems(updated)
       setEditingIndices((prev) => {
         const next = new Set<number>()
@@ -110,14 +108,20 @@ export function ListCard({
         for (const idx of prev) {
           if (idx < index) next.add(idx)
           else if (idx > index) next.add(idx - 1)
-          // idx === index is removed — skip it
         }
 
         return next
       })
 
       // Update the database with the new list order.
-      saveList(updated)
+      saveList(updated).catch((err: unknown) => {
+        // Revert to previous state on error.
+        setItems(items)
+        setEditingIndices(new Set())
+
+        console.error('Error Saving List:', err)
+        toast.error(ERROR_MESSAGE())
+      })
     },
     [items, saveList]
   )
@@ -139,7 +143,7 @@ export function ListCard({
 
       if (i !== undefined) {
         // Updating an existing value.
-        updated[i] = value
+        updated[i] = value.trim()
         setEditingIndices((prev) => {
           const next = new Set(prev)
           next.delete(i)
@@ -147,11 +151,19 @@ export function ListCard({
         })
       } else
         // Adding a new value.
-        updated.push(value)
+        updated.push(value.trim())
 
       setItems(updated)
-      saveList(updated)
       setIsAddingNew(false)
+
+      saveList(updated).catch((err: unknown) => {
+        // Revert to previous state on error.
+        setItems(items)
+        setEditingIndices(new Set())
+
+        console.error('Error Saving List:', err)
+        toast.error(ERROR_MESSAGE())
+      })
     },
     [items, itemName, saveList]
   )
@@ -163,9 +175,10 @@ export function ListCard({
    *
    * @param index Item Index
    */
-  const handleEdit = useCallback((index: number) => {
-    setEditingIndices((prev) => new Set(prev).add(index))
-  }, [])
+  const handleEdit = useCallback(
+    (index: number) => setEditingIndices((prev) => new Set(prev).add(index)),
+    []
+  )
 
   /**
    * Handle Cancel Edit
@@ -215,7 +228,14 @@ export function ListCard({
           return next
         })
 
-        saveList(newOrder)
+        saveList(newOrder).catch((err: unknown) => {
+          // Revert to previous state on error.
+          setItems(items)
+          setEditingIndices(new Set())
+
+          console.error('Error Saving List:', err)
+          toast.error(ERROR_MESSAGE())
+        })
       }
     },
     [items, saveList]

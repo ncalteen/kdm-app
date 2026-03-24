@@ -117,7 +117,7 @@ export const NewQuarryItem = memo(function NewQuarryItem({
 
   return (
     <div className="flex items-center gap-2 pl-2">
-      {/* Unlocked Checkbox (disabled for new items) */}
+      {/* Unlocked Checkbox (Disabled) */}
       <Checkbox
         checked={false}
         disabled={true}

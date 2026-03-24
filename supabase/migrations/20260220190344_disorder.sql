@@ -141,6 +141,7 @@ create policy "Allow all for admin" on disorder_shared_user for all using (is_ad
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_disorder_custom_user on disorder(custom, user_id);
 create index idx_disorder_shared_user_disorder on disorder_shared_user(disorder_id);
 create index idx_disorder_shared_user_user on disorder_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

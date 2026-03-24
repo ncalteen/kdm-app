@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 
@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client'
  * @returns Nemesis Timeline Years
  */
 export async function getNemesisTimelineYears(
-  nemesisId: string,
+  nemesisId: string | null | undefined,
   campaignType: CampaignType
 ): Promise<
   Omit<
@@ -20,6 +20,8 @@ export async function getNemesisTimelineYears(
     'created_at' | 'id' | 'updated_at' | 'campaign_types' | 'nemesis_id'
   >[]
 > {
+  if (!nemesisId) throw new Error('Required: Nemesis ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -34,4 +36,77 @@ export async function getNemesisTimelineYears(
   if (!data) throw new Error('Nemesis Timeline Year(s) Not Found')
 
   return data
+}
+
+/**
+ * Add Nemesis Timeline Year
+ *
+ * Adds a new timeline year to a nemesis.
+ *
+ * @param nemesisTimelineYear Nemesis Timeline Year Data
+ * @returns Inserted Nemesis Timeline Year ID
+ */
+export async function addNemesisTimelineYear(
+  nemesisTimelineYear: Omit<
+    TablesInsert<'nemesis_timeline_year'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('nemesis_timeline_year')
+    .insert(nemesisTimelineYear)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(`Error Adding Nemesis Timeline Year: ${error.message}`)
+
+  return data.id
+}
+
+/**
+ * Update Nemesis Timeline Year
+ *
+ * Updates an existing nemesis timeline year record.
+ *
+ * @param id Nemesis Timeline Year ID
+ * @param nemesisTimelineYear Nemesis Timeline Year Data
+ */
+export async function updateNemesisTimelineYear(
+  id: string,
+  nemesisTimelineYear: Omit<
+    TablesUpdate<'nemesis_timeline_year'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('nemesis_timeline_year')
+    .update(nemesisTimelineYear)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Nemesis Timeline Year: ${error.message}`)
+}
+
+/**
+ * Remove Nemesis Timeline Year
+ *
+ * Deletes a nemesis timeline year record from the database.
+ *
+ * @param id Nemesis Timeline Year ID
+ */
+export async function removeNemesisTimelineYear(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('nemesis_timeline_year')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Nemesis Timeline Year: ${error.message}`)
 }

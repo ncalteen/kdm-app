@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { NemesisDefeatedField } from '@/lib/dal/settlement-nemesis'
 import { CheckIcon, TrashIcon, XIcon } from 'lucide-react'
 import { memo, ReactElement, useState } from 'react'
 
@@ -41,7 +40,11 @@ export interface NemesisItemProps {
   /** On Toggle Level Defeated Handler */
   onToggleLevel: (
     index: number,
-    field: NemesisDefeatedField,
+    field:
+      | 'level_1_defeated'
+      | 'level_2_defeated'
+      | 'level_3_defeated'
+      | 'level_4_defeated',
     defeated: boolean
   ) => void
 }
@@ -65,7 +68,11 @@ export interface NewNemesisItemProps {
  */
 const LEVEL_CONFIG: {
   level: number
-  field: NemesisDefeatedField
+  field:
+    | 'level_1_defeated'
+    | 'level_2_defeated'
+    | 'level_3_defeated'
+    | 'level_4_defeated'
   label: string
 }[] = [
   { level: 1, field: 'level_1_defeated', label: 'L1' },
@@ -143,7 +150,7 @@ export const NemesisItem = memo(function NemesisItem({
                 onCheckedChange={(checked) =>
                   onToggleLevel(index, field, !!checked)
                 }
-                disabled={!availableSet.has(level)}
+                disabled={!unlocked || !availableSet.has(level)}
               />
               <Label className="text-xs" htmlFor={`nemesis-${index}-${field}`}>
                 {label}
@@ -184,7 +191,7 @@ export const NewNemesisItem = memo(function NewNemesisItem({
 
   return (
     <div className="flex items-center gap-2 pl-2">
-      {/* Unlocked Checkbox (disabled for new items) */}
+      {/* Unlocked Checkbox (Disabled) */}
       <Checkbox
         checked={false}
         disabled={true}

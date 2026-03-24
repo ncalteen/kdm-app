@@ -9,9 +9,9 @@ create table hunt (
   updated_at timestamptz not null default now(),
   -- Data
   monster_level int not null,
-  monster_position int not null default 12,
-  settlement_id uuid references settlement(id) on delete cascade,
-  survivor_position int not null default 0
+  monster_position int not null default 12 check (monster_position >= 0 and monster_position <= 12),
+  settlement_id uuid not null unique references settlement(id) on delete cascade,
+  survivor_position int not null default 0 check (survivor_position >= 0 and survivor_position <= 12)
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies

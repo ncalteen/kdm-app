@@ -1,8 +1,10 @@
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { NemesisDetail } from '@/lib/types'
 
 /**
- * Get Nemesis Names
+ * Get Nemeses
  *
  * Retrieves the nemeses a user has access to. This includes:
  *
@@ -11,45 +13,57 @@ import { createClient } from '@/lib/supabase/client'
  * - Custom nemeses shared with the user (via the nemesis_shared_user table)
  *
  * @param nodeTypes Optional Node Types Filter
+ * @param includeAlternates Whether to Include Alternate Nemeses (Default: true)
+ * @param includeVignettes Whether to Include Vignette Nemeses (Default: true)
  * @returns Nemesis Data
  */
-export async function getNemesisNames(
+export async function getNemeses(
   nodeTypes: MonsterNode[] = [
     MonsterNode.NN1,
     MonsterNode.NN2,
     MonsterNode.NN3,
     MonsterNode.CO,
     MonsterNode.FI
-  ]
-): Promise<{ id: string; monster_name: string }[]> {
+  ],
+  includeAlternates = true,
+  includeVignettes = true
+): Promise<{ [key: string]: NemesisDetail }> {
   const supabase = createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
 
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!userData.user) throw new Error('User Not Authenticated')
+  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of nemeses in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     // Non-custom nemeses (available to all users)
     supabase
       .from('nemesis')
-      .select('id, monster_name')
+      .select(
+        'id, alternate_id, monster_name, multi_monster, node, vignette_id'
+      )
       .eq('custom', false)
       .in('node', nodeTypes),
     // Custom nemeses created by the user
     supabase
       .from('nemesis')
-      .select('id, monster_name')
+      .select(
+        'id, alternate_id, monster_name, multi_monster, node, vignette_id'
+      )
       .eq('custom', true)
-      .eq('user_id', userData.user.id)
+      .eq('user_id', user.id)
       .in('node', nodeTypes),
     // Custom nemeses shared with the user
     supabase
       .from('nemesis_shared_user')
-      .select('nemesis_id, nemesis:nemesis_id!inner(id, monster_name, node)')
-      .eq('shared_user_id', userData.user.id)
-      .in('nemesis.node', nodeTypes)
+      .select(
+        'nemesis(id, alternate_id, monster_name, multi_monster, node, vignette_id)'
+      )
+      .eq('shared_user_id', user.id)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -57,51 +71,91 @@ export async function getNemesisNames(
       throw new Error(`Error Fetching Nemeses: ${result.error.message}`)
 
   // Collect nemeses from all sources, deduplicating by ID
-  const nemesisMap = new Map<string, { id: string; monster_name: string }>()
+  const nemesisMap: { [key: string]: NemesisDetail } = {}
 
-  for (const n of nonCustomResult.data ?? [])
-    nemesisMap.set(n.id, { id: n.id, monster_name: n.monster_name })
+  for (const n of nonCustomResult.data ?? []) nemesisMap[n.id] = n
+  for (const n of userCustomResult.data ?? []) nemesisMap[n.id] = n
+  for (const row of sharedResult.data ?? [])
+    nemesisMap[row.nemesis[0].id] = row.nemesis[0]
 
-  for (const n of userCustomResult.data ?? [])
-    nemesisMap.set(n.id, { id: n.id, monster_name: n.monster_name })
+  // Build sets of IDs that are referenced as alternates or vignettes by other
+  // records. When the corresponding flag is false, these IDs are excluded.
+  if (!includeAlternates || !includeVignettes) {
+    const alternateIds = new Set<string>()
+    const vignetteIds = new Set<string>()
 
-  for (const row of sharedResult.data ?? []) {
-    const n = row.nemesis as unknown as {
-      id: string
-      monster_name: string
+    for (const n of Object.values(nemesisMap)) {
+      if (n.alternate_id) alternateIds.add(n.alternate_id)
+      if (n.vignette_id) vignetteIds.add(n.vignette_id)
     }
 
-    if (n) nemesisMap.set(n.id, { id: n.id, monster_name: n.monster_name })
+    for (const id of Object.keys(nemesisMap)) {
+      if (!includeAlternates && alternateIds.has(id)) delete nemesisMap[id]
+      if (!includeVignettes && vignetteIds.has(id)) delete nemesisMap[id]
+    }
   }
 
-  if (nemesisMap.size === 0) throw new Error('Nemeses(s) Not Found')
-
-  return [...nemesisMap.values()]
+  return nemesisMap
 }
 
 /**
- * Get Nemesis Nodes by ID
+ * Get User Custom Nemeses
  *
- * Given an array of nemesis IDs, returns each ID with its monster node.
+ * Retrieves only custom nemeses created by the current user.
  *
- * @param ids Nemesis IDs
- * @returns Nemesis ID/Node Pairs
+ * @returns Custom Nemesis Data Map
  */
-export async function getNemesisNodesById(
-  ids: string[]
-): Promise<{ id: string; node: MonsterNode }[]> {
-  if (ids.length === 0) return []
+export async function getUserCustomNemeses(): Promise<{
+  [key: string]: NemesisDetail
+}> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('nemesis')
+    .select('id, alternate_id, monster_name, multi_monster, node, vignette_id')
+    .eq('custom', true)
+    .eq('user_id', user.id)
+
+  if (error) throw new Error(`Error Fetching Custom Nemeses: ${error.message}`)
+
+  const nemesisMap: { [key: string]: NemesisDetail } = {}
+  for (const n of data ?? []) nemesisMap[n.id] = n
+
+  return nemesisMap
+}
+
+/**
+ * Get Nemesis
+ *
+ * Retrieves a single nemesis by ID.
+ *
+ * @param nemesisId Nemesis ID
+ * @returns Nemesis Detail or null
+ */
+export async function getNemesis(
+  nemesisId: string | null | undefined
+): Promise<NemesisDetail | null> {
+  if (!nemesisId) return null
 
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('nemesis')
-    .select('id, node')
-    .in('id', ids)
+    .select('id, alternate_id, monster_name, multi_monster, node, vignette_id')
+    .eq('id', nemesisId)
+    .maybeSingle()
 
-  if (error) throw new Error(`Error Fetching Nemesis Nodes: ${error.message}`)
+  if (error) throw new Error(`Error Fetching Nemesis: ${error.message}`)
 
-  return (data ?? []).map((n) => ({ id: n.id, node: n.node as MonsterNode }))
+  return data
 }
 
 /**
@@ -140,4 +194,99 @@ export async function getNemesisIds(
   if (!data) throw new Error('Nemesis(es) Not Found')
 
   return data.map((nemesis) => nemesis.id)
+}
+
+/**
+ * Get Nemesis Nodes by ID
+ *
+ * Given an array of nemesis IDs, returns each ID with its monster node.
+ *
+ * @param ids Nemesis IDs
+ * @returns Nemesis ID/Node Pairs
+ */
+export async function getNemesisNodesById(
+  ids: string[]
+): Promise<{ id: string; node: MonsterNode }[]> {
+  if (ids.length === 0) return []
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('nemesis')
+    .select('id, node')
+    .in('id', ids)
+
+  if (error) throw new Error(`Error Fetching Nemesis Nodes: ${error.message}`)
+
+  return (data ?? []).map((n) => ({ id: n.id, node: n.node as MonsterNode }))
+}
+
+/**
+ * Add Nemesis
+ *
+ * Adds a new nemesis record to the database.
+ *
+ * @param nemesis Nemesis Data
+ * @returns Inserted Nemesis
+ */
+export async function addNemesis(
+  nemesis: Omit<
+    TablesInsert<'nemesis'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
+): Promise<NemesisDetail> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Auth Error: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('nemesis')
+    .insert({ ...nemesis, user_id: user.id })
+    .select('id, alternate_id, monster_name, multi_monster, node, vignette_id')
+    .single()
+
+  if (error) throw new Error(`Error Adding Nemesis: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Nemesis
+ *
+ * Updates an existing nemesis record in the database.
+ *
+ * @param id Nemesis ID
+ * @param nemesis Nemesis Data
+ * @returns Updated Nemesis
+ */
+export async function updateNemesis(
+  id: string,
+  nemesis: Omit<TablesUpdate<'nemesis'>, 'id' | 'created_at' | 'updated_at'>
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('nemesis').update(nemesis).eq('id', id)
+
+  if (error) throw new Error(`Error Updating Nemesis: ${error.message}`)
+}
+
+/**
+ * Remove Nemesis
+ *
+ * Deletes a nemesis record from the database.
+ *
+ * @param id Nemesis ID
+ */
+export async function removeNemesis(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('nemesis').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Nemesis: ${error.message}`)
 }

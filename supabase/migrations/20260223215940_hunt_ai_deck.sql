@@ -9,10 +9,10 @@ create table hunt_ai_deck (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Data
-  basic_cards int not null default 0,
-  advanced_cards int not null default 0,
-  legendary_cards int not null default 0,
-  overtone_cards int not null default 0,
+  basic_cards int not null default 0 check (basic_cards >= 0),
+  advanced_cards int not null default 0 check (advanced_cards >= 0),
+  legendary_cards int not null default 0 check (legendary_cards >= 0),
+  overtone_cards int not null default 0 check (overtone_cards >= 0),
   hunt_id uuid not null references hunt(id) on delete cascade,
   settlement_id uuid not null references settlement(id) on delete cascade
 );

@@ -6,63 +6,34 @@ import {
 } from '@/components/settlement/nemeses/nemesis-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getNemesisNames } from '@/lib/dal/nemesis'
+import { getNemeses } from '@/lib/dal/nemesis'
 import {
-  addNemesisToSettlement,
-  getSettlementNemeses,
-  NemesisDefeatedField,
-  removeNemesisFromSettlement,
-  SettlementNemesisRow,
-  updateSettlementNemesisLevelDefeated,
-  updateSettlementNemesisUnlocked
+  addSettlementNemeses,
+  removeSettlementNemesis,
+  updateSettlementNemesis
 } from '@/lib/dal/settlement-nemesis'
+import { MonsterNode } from '@/lib/enums'
 import {
   ERROR_MESSAGE,
   NEMESIS_ADDED_MESSAGE,
+  NEMESIS_DEFEATED_MESSAGE,
   NEMESIS_REMOVED_MESSAGE,
   NEMESIS_UNLOCKED_MESSAGE
 } from '@/lib/messages'
+import { sortNemeses } from '@/lib/settlement/nemeses'
+import { NemesisDetail, SettlementDetail } from '@/lib/types'
 import { PlusIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
- * Nemesis Node Sort Order
- *
- * Defines the display order for nemesis monster nodes.
- */
-const NODE_ORDER: Record<string, number> = {
-  NN1: 0,
-  NN2: 1,
-  NN3: 2,
-  CO: 3,
-  FI: 4
-}
-
-/**
- * Sort Nemeses
- *
- * Sorts nemeses by monster node in the defined order (NN1, NN2, NN3, CO, FI),
- * then alphabetically by monster name within the same node.
- *
- * @param rows Settlement Nemesis Rows
- * @returns Sorted Settlement Nemesis Rows
- */
-function sortNemeses(rows: SettlementNemesisRow[]): SettlementNemesisRow[] {
-  return [...rows].sort((a, b) => {
-    const aOrder = NODE_ORDER[a.node] ?? Number.MAX_SAFE_INTEGER
-    const bOrder = NODE_ORDER[b.node] ?? Number.MAX_SAFE_INTEGER
-    if (aOrder !== bOrder) return aOrder - bOrder
-    return a.monster_name.localeCompare(b.monster_name)
-  })
-}
-
-/**
  * Nemeses Card Properties
  */
 interface NemesesCardProps {
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
+  /** Selected Settlement */
+  selectedSettlement: SettlementDetail | null
+  /** Set Selected Settlement */
+  setSelectedSettlement: (settlement: SettlementDetail | null) => void
 }
 
 /**
@@ -77,23 +48,24 @@ interface NemesesCardProps {
  * @returns Nemeses Card Component
  */
 export function NemesesCard({
-  selectedSettlementId
+  selectedSettlement,
+  setSelectedSettlement
 }: NemesesCardProps): ReactElement {
-  const [items, setItems] = useState<SettlementNemesisRow[]>([])
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available nemeses for the select dropdown (fetched once per settlement).
-  const [availableNemeses, setAvailableNemeses] = useState<
-    { id: string; monster_name: string }[]
-  >([])
+  const [availableNemeses, setAvailableNemeses] = useState<{
+    [key: string]: NemesisDetail
+  }>({})
 
   // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState(selectedSettlementId)
+  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
+    selectedSettlement?.id ?? null
+  )
 
-  if (selectedSettlementId !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlementId)
-    setItems([])
+  if (selectedSettlement?.id !== prevSettlementId) {
+    setPrevSettlementId(selectedSettlement?.id ?? null)
     setIsAddingNew(false)
     setHasFetched(false)
   }
@@ -103,20 +75,35 @@ export function NemesesCard({
    * changes. Both queries run in parallel to minimize load time.
    */
   useEffect(() => {
-    if (!selectedSettlementId || hasFetched) return
+    if (!selectedSettlement?.id || hasFetched) return
 
     let cancelled = false
 
-    Promise.all([getSettlementNemeses(selectedSettlementId), getNemesisNames()])
-      .then(([nemeses, names]) => {
+    Promise.all([
+      // Don't include alternates or vignettes in the dropdown
+      getNemeses(
+        [
+          MonsterNode.NN1,
+          MonsterNode.NN2,
+          MonsterNode.NN3,
+          MonsterNode.CO,
+          MonsterNode.FI
+        ],
+        false,
+        false
+      )
+    ])
+      .then(([nemeses]) => {
         if (cancelled) return
 
-        setItems(sortNemeses(nemeses))
-        setAvailableNemeses(names)
+        setAvailableNemeses(nemeses)
         setHasFetched(true)
       })
       .catch((err: unknown) => {
         if (cancelled) return
+
+        setAvailableNemeses({})
+        setHasFetched(true)
 
         console.error('Settlement Nemeses Fetch Error:', err)
         toast.error(ERROR_MESSAGE())
@@ -125,7 +112,7 @@ export function NemesesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlementId, hasFetched])
+  }, [selectedSettlement?.id, hasFetched])
 
   /**
    * Available Nemeses Not Yet Added
@@ -134,9 +121,11 @@ export function NemesesCard({
    * linked to the settlement, preventing duplicates in the add dropdown.
    */
   const selectableNemeses = useMemo(() => {
-    const linkedIds = new Set(items.map((n) => n.nemesis_id))
-    return availableNemeses.filter((n) => !linkedIds.has(n.id))
-  }, [availableNemeses, items])
+    const linkedIds = new Set(
+      (selectedSettlement?.nemeses ?? []).map((n) => n.nemesis_id)
+    )
+    return Object.values(availableNemeses).filter((n) => !linkedIds.has(n.id))
+  }, [availableNemeses, selectedSettlement?.nemeses])
 
   /**
    * Handle Add Nemesis
@@ -147,51 +136,74 @@ export function NemesesCard({
    */
   const handleAdd = useCallback(
     (nemesisId: string | undefined) => {
-      if (!nemesisId || !selectedSettlementId) {
-        setIsAddingNew(false)
-        return
-      }
+      if (!nemesisId || !selectedSettlement) return setIsAddingNew(false)
 
-      const nemesisInfo = availableNemeses.find((n) => n.id === nemesisId)
-      if (!nemesisInfo) {
-        setIsAddingNew(false)
-        return
-      }
+      const nemesisInfo = Object.values(availableNemeses).find(
+        (n) => n.id === nemesisId
+      )
+      if (!nemesisInfo) return setIsAddingNew(false)
 
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
-      const optimisticRow: SettlementNemesisRow = {
+      const optimisticRow: SettlementDetail['nemeses'][0] = {
+        available_levels: [],
+        collective_cognition_level_1: false,
+        collective_cognition_level_2: false,
+        collective_cognition_level_3: false,
         id: tempId,
-        nemesis_id: nemesisId,
-        monster_name: nemesisInfo.monster_name,
-        node: '',
-        unlocked: false,
         level_1_defeated: false,
         level_2_defeated: false,
         level_3_defeated: false,
         level_4_defeated: false,
-        available_levels: []
+        monster_name: nemesisInfo.monster_name,
+        nemesis_id: nemesisId,
+        node: '',
+        unlocked: false
       }
 
-      setItems((prev) => sortNemeses([...prev, optimisticRow]))
+      // Capture the updated nemeses list so async callbacks reference it
+      // instead of the stale pre-update closure value.
+      const updatedNemeses = [...selectedSettlement.nemeses, optimisticRow]
+
+      setSelectedSettlement({
+        ...selectedSettlement,
+        nemeses: updatedNemeses
+      })
       setIsAddingNew(false)
 
-      addNemesisToSettlement(nemesisId, selectedSettlementId)
+      addSettlementNemeses([nemesisId], selectedSettlement?.id)
         .then((row) => {
           // Replace the placeholder with the real row from the DB.
-          setItems((prev) =>
-            sortNemeses(prev.map((item) => (item.id === tempId ? row : item)))
-          )
+          setSelectedSettlement({
+            ...selectedSettlement,
+            nemeses: sortNemeses(
+              updatedNemeses.map((n) =>
+                n.id === tempId
+                  ? {
+                      ...n,
+                      available_levels: row[0].available_levels,
+                      id: row[0].id,
+                      node: nemesisInfo.node
+                    }
+                  : n
+              )
+            )
+          })
+
           toast.success(NEMESIS_ADDED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert the optimistic insert.
-          setItems((prev) => prev.filter((item) => item.id !== tempId))
+          // Revert to the original nemeses (before the optimistic add).
+          setSelectedSettlement({
+            ...selectedSettlement,
+            nemeses: selectedSettlement.nemeses
+          })
+
           console.error('Nemesis Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlementId, availableNemeses]
+    [selectedSettlement, availableNemeses, setSelectedSettlement]
   )
 
   /**
@@ -200,29 +212,38 @@ export function NemesesCard({
    * Optimistically removes a nemesis from the settlement, then persists to the
    * DB.
    *
-   * @param index Nemesis Index
+   * @param index Settlement Nemesis Index
    */
   const handleRemove = useCallback(
     (index: number) => {
-      const removed = items[index]
+      if (!selectedSettlement) return
+
+      const removed = selectedSettlement.nemeses[index]
       if (!removed) return
 
-      setItems((prev) => prev.filter((_, i) => i !== index))
+      setSelectedSettlement({
+        ...selectedSettlement,
+        nemeses: selectedSettlement.nemeses.filter((n) => n.id !== removed.id)
+      })
 
-      removeNemesisFromSettlement(removed.id)
+      removeSettlementNemesis(removed.id)
         .then(() => toast.success(NEMESIS_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
           // Revert the optimistic removal.
-          setItems((prev) => {
-            const restored = [...prev]
-            restored.splice(index, 0, removed)
-            return restored
+          setSelectedSettlement({
+            ...selectedSettlement,
+            nemeses: [
+              ...selectedSettlement.nemeses.slice(0, index),
+              removed,
+              ...selectedSettlement.nemeses.slice(index)
+            ]
           })
+
           console.error('Nemesis Remove Error:', err)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [items]
+    [selectedSettlement, setSelectedSettlement]
   )
 
   /**
@@ -236,28 +257,36 @@ export function NemesesCard({
    */
   const handleToggleUnlocked = useCallback(
     (index: number, unlocked: boolean) => {
-      const target = items[index]
+      if (!selectedSettlement) return
+
+      const target = selectedSettlement?.nemeses[index]
       if (!target) return
 
-      setItems((prev) =>
-        prev.map((item, i) => (i === index ? { ...item, unlocked } : item))
-      )
+      setSelectedSettlement({
+        ...selectedSettlement,
+        nemeses: selectedSettlement.nemeses.map((n, i) =>
+          i === index ? { ...n, unlocked } : n
+        )
+      })
 
-      updateSettlementNemesisUnlocked(target.id, unlocked)
+      updateSettlementNemesis(target.id, { unlocked })
         .then(() =>
           toast.success(NEMESIS_UNLOCKED_MESSAGE(target.monster_name, unlocked))
         )
         .catch((err: unknown) => {
-          setItems((prev) =>
-            prev.map((item, i) =>
-              i === index ? { ...item, unlocked: !unlocked } : item
+          // Revert the optimistic toggle.
+          setSelectedSettlement({
+            ...selectedSettlement,
+            nemeses: selectedSettlement.nemeses.map((n, i) =>
+              i === index ? { ...n, unlocked: !unlocked } : n
             )
-          )
+          })
+
           console.error('Nemesis Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [items]
+    [selectedSettlement, setSelectedSettlement]
   )
 
   /**
@@ -270,30 +299,43 @@ export function NemesesCard({
    * @param defeated Defeated Status
    */
   const handleToggleLevel = useCallback(
-    (index: number, field: NemesisDefeatedField, defeated: boolean) => {
-      const target = items[index]
+    (
+      index: number,
+      field:
+        | 'level_1_defeated'
+        | 'level_2_defeated'
+        | 'level_3_defeated'
+        | 'level_4_defeated',
+      defeated: boolean
+    ) => {
+      if (!selectedSettlement) return
+
+      const target = selectedSettlement.nemeses[index]
       if (!target) return
 
-      setItems((prev) =>
-        prev.map((item, i) =>
-          i === index ? { ...item, [field]: defeated } : item
+      setSelectedSettlement({
+        ...selectedSettlement,
+        nemeses: selectedSettlement.nemeses.map((n, i) =>
+          i === index ? { ...n, [field]: defeated } : n
         )
-      )
+      })
 
-      updateSettlementNemesisLevelDefeated(target.id, field, defeated).catch(
-        (err: unknown) => {
+      updateSettlementNemesis(target.id, { [field]: defeated })
+        .then(() => toast.success(NEMESIS_DEFEATED_MESSAGE()))
+        .catch((err: unknown) => {
           // Revert the optimistic toggle.
-          setItems((prev) =>
-            prev.map((item, i) =>
-              i === index ? { ...item, [field]: !defeated } : item
+          setSelectedSettlement({
+            ...selectedSettlement,
+            nemeses: selectedSettlement.nemeses.map((n, i) =>
+              i === index ? { ...n, [field]: !defeated } : n
             )
-          )
+          })
+
           console.error('Nemesis Level Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
-        }
-      )
+        })
     },
-    [items]
+    [selectedSettlement, setSelectedSettlement]
   )
 
   return (
@@ -320,34 +362,38 @@ export function NemesesCard({
       <CardContent className="p-1 pb-0">
         <div className="flex flex-col h-[240px]">
           <div className="flex-1 overflow-y-auto">
-            {items.length === 0 && !isAddingNew && hasFetched && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No nemeses yet
-              </p>
-            )}
+            {(!selectedSettlement?.nemeses ||
+              selectedSettlement.nemeses.length === 0) &&
+              !isAddingNew &&
+              hasFetched && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No nemeses yet
+                </p>
+              )}
 
-            {!hasFetched && selectedSettlementId && (
+            {!hasFetched && !selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading nemeses...
               </p>
             )}
 
-            {items.map((nemesis, index) => (
-              <NemesisItem
-                key={nemesis.id}
-                index={index}
-                monsterName={nemesis.monster_name}
-                unlocked={nemesis.unlocked}
-                level1Defeated={nemesis.level_1_defeated}
-                level2Defeated={nemesis.level_2_defeated}
-                level3Defeated={nemesis.level_3_defeated}
-                level4Defeated={nemesis.level_4_defeated}
-                availableLevels={nemesis.available_levels}
-                onRemove={handleRemove}
-                onToggleUnlocked={handleToggleUnlocked}
-                onToggleLevel={handleToggleLevel}
-              />
-            ))}
+            {hasFetched &&
+              selectedSettlement?.nemeses.map((nemesis, index) => (
+                <NemesisItem
+                  key={nemesis.id}
+                  index={index}
+                  monsterName={nemesis.monster_name}
+                  unlocked={nemesis.unlocked}
+                  level1Defeated={nemesis.level_1_defeated}
+                  level2Defeated={nemesis.level_2_defeated}
+                  level3Defeated={nemesis.level_3_defeated}
+                  level4Defeated={nemesis.level_4_defeated}
+                  availableLevels={nemesis.available_levels}
+                  onRemove={handleRemove}
+                  onToggleUnlocked={handleToggleUnlocked}
+                  onToggleLevel={handleToggleLevel}
+                />
+              ))}
 
             {isAddingNew && (
               <NewNemesisItem

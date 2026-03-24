@@ -1,5 +1,6 @@
-import { Tables } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { WandererTimelineYearDetail } from '@/lib/types'
 
 /**
  * Get Wanderer Timeline Years
@@ -8,10 +9,10 @@ import { createClient } from '@/lib/supabase/client'
  * @returns Wanderer Timeline Years
  */
 export async function getWandererTimelineYears(
-  wandererId: string
-): Promise<
-  Omit<Tables<'wanderer_timeline_year'>, 'created_at' | 'updated_at'>[]
-> {
+  wandererId: string | null | undefined
+): Promise<{ [key: string]: WandererTimelineYearDetail }> {
+  if (!wandererId) throw new Error('Required: Wanderer ID')
+
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -22,7 +23,82 @@ export async function getWandererTimelineYears(
   if (error)
     throw new Error(`Error Fetching Wanderer Timeline Years: ${error.message}`)
 
-  if (!data) throw new Error('Wanderer Timeline Year(s) Not Found')
+  const timelineYearMap: { [key: string]: WandererTimelineYearDetail } = {}
 
-  return data
+  for (const t of data ?? []) timelineYearMap[t.id] = t
+
+  return timelineYearMap
+}
+
+/**
+ * Add Wanderer Timeline Year
+ *
+ * Adds a new timeline year to a wanderer.
+ *
+ * @param wandererTimelineYear Wanderer Timeline Year Data
+ * @returns Inserted Wanderer Timeline Year ID
+ */
+export async function addWandererTimelineYear(
+  wandererTimelineYear: Omit<
+    TablesInsert<'wanderer_timeline_year'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('wanderer_timeline_year')
+    .insert(wandererTimelineYear)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(`Error Adding Wanderer Timeline Year: ${error.message}`)
+
+  return data.id
+}
+
+/**
+ * Update Wanderer Timeline Year
+ *
+ * Updates an existing wanderer timeline year record.
+ *
+ * @param id Wanderer Timeline Year ID
+ * @param wandererTimelineYear Wanderer Timeline Year Data
+ */
+export async function updateWandererTimelineYear(
+  id: string,
+  wandererTimelineYear: Omit<
+    TablesUpdate<'wanderer_timeline_year'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('wanderer_timeline_year')
+    .update(wandererTimelineYear)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Wanderer Timeline Year: ${error.message}`)
+}
+
+/**
+ * Remove Wanderer Timeline Year
+ *
+ * Deletes a wanderer timeline year record from the database.
+ *
+ * @param id Wanderer Timeline Year ID
+ */
+export async function removeWandererTimelineYear(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('wanderer_timeline_year')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Wanderer Timeline Year: ${error.message}`)
 }

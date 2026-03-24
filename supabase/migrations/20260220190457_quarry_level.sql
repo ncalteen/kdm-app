@@ -130,6 +130,7 @@ create policy "Allow all for admin" on quarry_level for all using (is_admin()) w
 -- Indexes
 --------------------------------------------------------------------------------
 create index idx_quarry_level_quarry on quarry_level(quarry_id);
+create index idx_quarry_level_quarry_level on quarry_level(quarry_id, level_number);
 --------------------------------------------------------------------------------
 -- Triggers
 --------------------------------------------------------------------------------

@@ -14,6 +14,11 @@ import {
 } from 'lucide-react'
 
 /**
+ * Local Storage Key
+ */
+export const LOCAL_STORAGE_KEY = 'kdm-archivist-local'
+
+/**
  * Basic Hunt Board Configuration
  */
 export const basicHuntBoard = {
@@ -60,3 +65,14 @@ export const settlementPhaseSteps = [
   },
   { index: 10, step: SettlementPhaseStep.END_SETTLEMENT_PHASE, icon: BanIcon }
 ]
+
+/**
+ * Vignette Unlock Map
+ *
+ * Vignette monster names that require user setting unlocks.
+ */
+export const vignetteUnlockMap: Record<string, string> = {
+  'Killenium Butcher': 'unlocked_killenium_butcher',
+  'Screaming Nukalope': 'unlocked_screaming_nukalope',
+  'White Gigalion': 'unlocked_white_gigalion'
+}

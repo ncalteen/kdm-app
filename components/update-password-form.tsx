@@ -37,7 +37,9 @@ export function UpdatePasswordForm({
    */
   const handleUpdatePassword = async (e: FormEvent) => {
     e.preventDefault()
+
     const supabase = createClient()
+
     setIsLoading(true)
     setError(null)
 
@@ -45,6 +47,7 @@ export function UpdatePasswordForm({
       const { error: updateError } = await supabase.auth.updateUser({
         password
       })
+
       if (updateError) throw updateError
 
       router.push('/')

@@ -11,8 +11,7 @@ create table fighting_art (
   custom boolean not null default false,
   user_id uuid references auth.users(id) on delete cascade,
   -- Data
-  fighting_art_name varchar not null,
-  secret_fighting_art boolean not null default false
+  fighting_art_name varchar not null
 );
 --------------------------------------------------------------------------------
 -- Junction Table: Shared Users
@@ -142,6 +141,7 @@ create policy "Allow all for admin" on fighting_art_shared_user for all using (i
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_fighting_art_custom_user on fighting_art(custom, user_id);
 create index idx_fighting_art_shared_user_fighting_art on fighting_art_shared_user(fighting_art_id);
 create index idx_fighting_art_shared_user_user on fighting_art_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

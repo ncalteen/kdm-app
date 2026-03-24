@@ -52,10 +52,6 @@ export const TimelineEventBadge = ({
           : 'cursor-pointer hover:bg-accent'
       } text-xs px-1.5 py-0.5 h-5 gap-1`}
       onClick={handleClick}>
-      {/*
-        Use a sword icon for nemesis encounters/special showdowns. Otherwise,
-        use a book icon.
-      */}
       {entry.toLowerCase().startsWith('nemesis') ||
       entry.toLowerCase().startsWith('special showdown') ? (
         <SwordsIcon className="h-2.5 w-2.5" />

@@ -81,12 +81,14 @@ export const ListItem = memo(function ListItem({
     useSortable({ id })
 
   const [value, setValue] = useState<string>(itemValue)
+  const [prevItemValue, setPrevItemValue] = useState(itemValue)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Sync local value when the canonical item value changes (e.g. reorder).
-  useEffect(() => {
+  if (prevItemValue !== itemValue) {
+    setPrevItemValue(itemValue)
     setValue(itemValue)
-  }, [itemValue])
+  }
 
   // Auto-focus when entering edit mode.
   useEffect(() => {
@@ -218,9 +220,10 @@ export const NewListItem = memo(function NewListItem({
     inputRef.current?.focus()
   }, [])
 
-  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value)
-  }, [])
+  const handleChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setValue(e.target.value),
+    []
+  )
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {

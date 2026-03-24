@@ -86,7 +86,9 @@ export enum TabType {
   /** Survivors */
   SURVIVORS = 'survivors',
   /** Timeline */
-  TIMELINE = 'timeline'
+  TIMELINE = 'timeline',
+  /** User */
+  USER = 'user'
 }
 
 /**
@@ -97,6 +99,16 @@ export enum Gender {
   FEMALE = 'F',
   /** Male */
   MALE = 'M'
+}
+
+/**
+ * Survivor Gender
+ */
+export enum DatabaseGender {
+  /** Female */
+  F = 'FEMALE',
+  /** Male */
+  M = 'MALE'
 }
 
 /**
@@ -356,6 +368,29 @@ export enum SettlementPhaseStep {
 }
 
 /**
+ * Database Settlement Phase Step Mapping
+ *
+ * Maps between the database enum values (uppercase identifiers) and the
+ * display-friendly SettlementPhaseStep enum values.
+ */
+export const DatabaseSettlementPhaseStep: Record<string, SettlementPhaseStep> =
+  {
+    SET_UP_SETTLEMENT: SettlementPhaseStep.SET_UP_SETTLEMENT,
+    SURVIVORS_RETURN: SettlementPhaseStep.SURVIVORS_RETURN,
+    GAIN_ENDEAVORS: SettlementPhaseStep.GAIN_ENDEAVORS,
+    UPDATE_TIMELINE: SettlementPhaseStep.UPDATE_TIMELINE,
+    UPDATE_DEATH_COUNT: SettlementPhaseStep.UPDATE_DEATH_COUNT,
+    CHECK_MILESTONES: SettlementPhaseStep.CHECK_MILESTONES,
+    DEVELOP: SettlementPhaseStep.DEVELOP,
+    PREPARE_DEPARTING_SURVIVORS:
+      SettlementPhaseStep.PREPARE_DEPARTING_SURVIVORS,
+    SPECIAL_SHOWDOWN: SettlementPhaseStep.SPECIAL_SHOWDOWN,
+    RECORD_AND_ARCHIVE_RESOURCES:
+      SettlementPhaseStep.RECORD_AND_ARCHIVE_RESOURCES,
+    END_SETTLEMENT_PHASE: SettlementPhaseStep.END_SETTLEMENT_PHASE
+  }
+
+/**
  * Showdown Types
  */
 export enum ShowdownType {
@@ -363,48 +398,6 @@ export enum ShowdownType {
   REGULAR = 'Regular',
   /** Special Showdown */
   SPECIAL = 'Special'
-}
-
-/**
- * Weapon Type
- */
-export enum WeaponType {
-  /** Axe */
-  AXE = 'Axe',
-  /** Bow */
-  BOW = 'Bow',
-  /** Cleaver */
-  CLEAVER = 'Cleaver',
-  /** Club */
-  CLUB = 'Club',
-  /** Dagger */
-  DAGGER = 'Dagger',
-  /** Fan */
-  FAN = 'Fan',
-  /** Fist and Tooth */
-  FIST_AND_TOOTH = 'Fist and Tooth',
-  /** Grand */
-  GRAND = 'Grand',
-  /** Katana */
-  KATANA = 'Katana',
-  /** Katar */
-  KATAR = 'Katar',
-  /** Lantern Armor */
-  LANTERN_ARMOR = 'Lantern Armor',
-  /** Scythe */
-  SCYTHE = 'Scythe',
-  /** Shield */
-  SHIELD = 'Shield',
-  /** Spear */
-  SPEAR = 'Spear',
-  /** Sword */
-  SWORD = 'Sword',
-  /** Sword - Willow */
-  SWORD_WILLOW = 'Sword - Willow',
-  /** Twilight Sword */
-  TWILIGHT_SWORD = 'Twilight Sword',
-  /** Whip */
-  WHIP = 'Whip'
 }
 
 /**
@@ -461,4 +454,17 @@ export enum Philosophy {
   WANDERER_LUCK = 'Wanderer - Luck',
   /** Wanderer - Preacher */
   WANDERER_PREACHER = 'Wanderer - Preacher'
+}
+
+/**
+ * Aenas State
+ *
+ * Used to track Aenas' state while in the settlement, which can be either
+ * Hungry or Content.
+ */
+export enum AenasState {
+  /** Content */
+  CONTENT = 'Content',
+  /** Hungry */
+  HUNGRY = 'Hungry'
 }

@@ -141,6 +141,7 @@ create policy "Allow all for admin" on location_shared_user for all using (is_ad
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_location_custom_user on location(custom, user_id);
 create index idx_location_shared_user_location on location_shared_user(location_id);
 create index idx_location_shared_user_user on location_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

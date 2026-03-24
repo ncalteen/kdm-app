@@ -143,6 +143,7 @@ create policy "Allow all for admin" on milestone_shared_user for all using (is_a
 --------------------------------------------------------------------------------
 -- Indexes
 --------------------------------------------------------------------------------
+create index idx_milestone_custom_user on milestone(custom, user_id);
 create index idx_milestone_shared_user_milestone on milestone_shared_user(milestone_id);
 create index idx_milestone_shared_user_user on milestone_shared_user(shared_user_id);
 --------------------------------------------------------------------------------

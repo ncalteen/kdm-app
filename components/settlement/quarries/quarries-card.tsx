@@ -6,47 +6,33 @@ import {
 } from '@/components/settlement/quarries/quarry-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getQuarryNames } from '@/lib/dal/quarry'
+import { getQuarries } from '@/lib/dal/quarry'
 import {
-  addQuarryToSettlement,
-  getSettlementQuarries,
-  removeQuarryFromSettlement,
-  SettlementQuarryRow,
-  updateSettlementQuarryUnlocked
+  addSettlementQuarries,
+  removeSettlementQuarry,
+  updateSettlementQuarry
 } from '@/lib/dal/settlement-quarry'
+import { MonsterNode } from '@/lib/enums'
 import {
   ERROR_MESSAGE,
   QUARRY_ADDED_MESSAGE,
   QUARRY_REMOVED_MESSAGE,
   QUARRY_UNLOCKED_MESSAGE
 } from '@/lib/messages'
+import { sortQuarries } from '@/lib/settlement/quarries'
+import { QuarryDetail, SettlementDetail } from '@/lib/types'
 import { PlusIcon, SwordIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
- * Sort Quarries
- *
- * Sorts quarries by monster node (ascending) first, then alphabetically by
- * monster name within the same node.
- *
- * @param rows Settlement Quarry Rows
- * @returns Sorted Settlement Quarry Rows
- */
-function sortQuarries(rows: SettlementQuarryRow[]): SettlementQuarryRow[] {
-  return [...rows].sort((a, b) => {
-    const nodeCmp = a.node.localeCompare(b.node)
-    if (nodeCmp !== 0) return nodeCmp
-    return a.monster_name.localeCompare(b.monster_name)
-  })
-}
-
-/**
  * Quarries Card Properties
  */
 interface QuarriesCardProps {
-  /** Selected Settlement ID */
-  selectedSettlementId: string | null
+  /** Selected Settlement */
+  selectedSettlement: SettlementDetail | null
+  /** Set Selected Settlement */
+  setSelectedSettlement: (settlement: SettlementDetail | null) => void
 }
 
 /**
@@ -60,46 +46,54 @@ interface QuarriesCardProps {
  * @returns Quarries Card Component
  */
 export function QuarriesCard({
-  selectedSettlementId
+  selectedSettlement,
+  setSelectedSettlement
 }: QuarriesCardProps): ReactElement {
-  const [items, setItems] = useState<SettlementQuarryRow[]>([])
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available quarries for the select dropdown (fetched once per settlement).
-  const [availableQuarries, setAvailableQuarries] = useState<
-    { id: string; monster_name: string }[]
-  >([])
+  const [availableQuarries, setAvailableQuarries] = useState<{
+    [key: string]: QuarryDetail
+  }>({})
 
   // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState(selectedSettlementId)
+  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
+    selectedSettlement?.id ?? null
+  )
 
-  if (selectedSettlementId !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlementId)
-    setItems([])
+  if (selectedSettlement?.id !== prevSettlementId) {
+    setPrevSettlementId(selectedSettlement?.id ?? null)
     setIsAddingNew(false)
     setHasFetched(false)
   }
 
-  /**
-   * Fetch settlement quarries and available quarry options when the settlement
-   * changes. Both queries run in parallel to minimize load time.
-   */
+  // Fetch settlement quarries and available quarry options when settlement
+  // changes.
   useEffect(() => {
-    if (!selectedSettlementId || hasFetched) return
+    if (!selectedSettlement?.id || hasFetched) return
 
     let cancelled = false
 
-    Promise.all([getSettlementQuarries(selectedSettlementId), getQuarryNames()])
-      .then(([quarries, names]) => {
+    Promise.all([
+      // Don't include alternates or vignettes in the dropdown
+      getQuarries(
+        [MonsterNode.NQ1, MonsterNode.NQ2, MonsterNode.NQ3, MonsterNode.NQ4],
+        false,
+        false
+      )
+    ])
+      .then(([quarries]) => {
         if (cancelled) return
 
-        setItems(sortQuarries(quarries))
-        setAvailableQuarries(names)
+        setAvailableQuarries(quarries)
         setHasFetched(true)
       })
       .catch((err: unknown) => {
         if (cancelled) return
+
+        setAvailableQuarries({})
+        setHasFetched(true)
 
         console.error('Settlement Quarries Fetch Error:', err)
         toast.error(ERROR_MESSAGE())
@@ -108,7 +102,7 @@ export function QuarriesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlementId, hasFetched])
+  }, [selectedSettlement?.id, hasFetched])
 
   /**
    * Available Quarries Not Yet Added
@@ -117,9 +111,11 @@ export function QuarriesCard({
    * linked to the settlement, preventing duplicates in the add dropdown.
    */
   const selectableQuarries = useMemo(() => {
-    const linkedIds = new Set(items.map((q) => q.quarry_id))
-    return availableQuarries.filter((q) => !linkedIds.has(q.id))
-  }, [availableQuarries, items])
+    const linkedIds = new Set(
+      (selectedSettlement?.quarries ?? []).map((q) => q.quarry_id)
+    )
+    return Object.values(availableQuarries).filter((q) => !linkedIds.has(q.id))
+  }, [availableQuarries, selectedSettlement?.quarries])
 
   /**
    * Handle Add Quarry
@@ -130,46 +126,71 @@ export function QuarriesCard({
    */
   const handleAdd = useCallback(
     (quarryId: string | undefined) => {
-      if (!quarryId || !selectedSettlementId) {
-        setIsAddingNew(false)
-        return
-      }
+      if (!quarryId || !selectedSettlement) return setIsAddingNew(false)
 
-      const quarryInfo = availableQuarries.find((q) => q.id === quarryId)
-      if (!quarryInfo) {
-        setIsAddingNew(false)
-        return
-      }
+      const quarryInfo = Object.values(availableQuarries).find(
+        (q) => q.id === quarryId
+      )
+      if (!quarryInfo) return setIsAddingNew(false)
 
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
-      const optimisticRow: SettlementQuarryRow = {
+      const optimisticRow: SettlementDetail['quarries'][0] = {
+        collective_cognition_level_1: false,
+        collective_cognition_level_2: [false, false],
+        collective_cognition_level_3: [false, false, false],
+        collective_cognition_prologue: false,
         id: tempId,
+        prologue: quarryInfo.prologue,
         quarry_id: quarryId,
         monster_name: quarryInfo.monster_name,
         node: '',
         unlocked: false
       }
 
-      setItems((prev) => sortQuarries([...prev, optimisticRow]))
+      // Capture the updated quarries list so async callbacks reference it
+      // instead of the stale pre-update closure value.
+      const updatedQuarries = [...selectedSettlement.quarries, optimisticRow]
+
+      setSelectedSettlement({
+        ...selectedSettlement,
+        quarries: updatedQuarries
+      })
       setIsAddingNew(false)
 
-      addQuarryToSettlement(quarryId, selectedSettlementId)
+      addSettlementQuarries([quarryId], selectedSettlement?.id)
         .then((row) => {
           // Replace the placeholder with the real row from the DB.
-          setItems((prev) =>
-            sortQuarries(prev.map((item) => (item.id === tempId ? row : item)))
-          )
+          setSelectedSettlement({
+            ...selectedSettlement,
+            quarries: sortQuarries(
+              updatedQuarries.map((q) =>
+                q.id === tempId
+                  ? {
+                      ...q,
+                      id: row[0].id,
+                      node: quarryInfo.node,
+                      prologue: quarryInfo.prologue
+                    }
+                  : q
+              )
+            )
+          })
+
           toast.success(QUARRY_ADDED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert the optimistic insert.
-          setItems((prev) => prev.filter((item) => item.id !== tempId))
+          // Revert to the original quarries (before the optimistic add).
+          setSelectedSettlement({
+            ...selectedSettlement,
+            quarries: selectedSettlement.quarries
+          })
+
           console.error('Quarry Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlementId, availableQuarries]
+    [selectedSettlement, availableQuarries, setSelectedSettlement]
   )
 
   /**
@@ -178,29 +199,38 @@ export function QuarriesCard({
    * Optimistically removes a quarry from the settlement, then persists to the
    * DB.
    *
-   * @param index Quarry Index
+   * @param index Settlement Quarry Index
    */
   const handleRemove = useCallback(
     (index: number) => {
-      const removed = items[index]
+      if (!selectedSettlement) return
+
+      const removed = selectedSettlement.quarries[index]
       if (!removed) return
 
-      setItems((prev) => prev.filter((_, i) => i !== index))
+      setSelectedSettlement({
+        ...selectedSettlement,
+        quarries: selectedSettlement.quarries.filter((n) => n.id !== removed.id)
+      })
 
-      removeQuarryFromSettlement(removed.id)
+      removeSettlementQuarry(removed.id)
         .then(() => toast.success(QUARRY_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
           // Revert the optimistic removal.
-          setItems((prev) => {
-            const restored = [...prev]
-            restored.splice(index, 0, removed)
-            return restored
+          setSelectedSettlement({
+            ...selectedSettlement,
+            quarries: [
+              ...selectedSettlement.quarries.slice(0, index),
+              removed,
+              ...selectedSettlement.quarries.slice(index)
+            ]
           })
+
           console.error('Quarry Remove Error:', err)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [items]
+    [selectedSettlement, setSelectedSettlement]
   )
 
   /**
@@ -214,30 +244,36 @@ export function QuarriesCard({
    */
   const handleToggleUnlocked = useCallback(
     (index: number, unlocked: boolean) => {
-      const target = items[index]
+      if (!selectedSettlement) return
+
+      const target = selectedSettlement?.quarries[index]
       if (!target) return
 
-      // Optimistic update.
-      setItems((prev) =>
-        prev.map((item, i) => (i === index ? { ...item, unlocked } : item))
-      )
+      setSelectedSettlement({
+        ...selectedSettlement,
+        quarries: selectedSettlement.quarries.map((n, i) =>
+          i === index ? { ...n, unlocked } : n
+        )
+      })
 
-      updateSettlementQuarryUnlocked(target.id, unlocked)
+      updateSettlementQuarry(target.id, { unlocked })
         .then(() =>
           toast.success(QUARRY_UNLOCKED_MESSAGE(target.monster_name, unlocked))
         )
         .catch((err: unknown) => {
           // Revert the optimistic toggle.
-          setItems((prev) =>
-            prev.map((item, i) =>
-              i === index ? { ...item, unlocked: !unlocked } : item
+          setSelectedSettlement({
+            ...selectedSettlement,
+            quarries: selectedSettlement.quarries.map((n, i) =>
+              i === index ? { ...n, unlocked: !unlocked } : n
             )
-          )
+          })
+
           console.error('Quarry Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [items]
+    [selectedSettlement, setSelectedSettlement]
   )
 
   return (
@@ -264,29 +300,33 @@ export function QuarriesCard({
       <CardContent className="p-1 pb-0">
         <div className="flex flex-col h-[240px]">
           <div className="flex-1 overflow-y-auto">
-            {items.length === 0 && !isAddingNew && hasFetched && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No quarries yet
-              </p>
-            )}
+            {(!selectedSettlement?.quarries ||
+              selectedSettlement.quarries.length === 0) &&
+              !isAddingNew &&
+              hasFetched && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No quarries yet
+                </p>
+              )}
 
-            {!hasFetched && selectedSettlementId && (
+            {!hasFetched && !selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading quarries...
               </p>
             )}
 
-            {items.map((quarry, index) => (
-              <QuarryItem
-                key={quarry.id}
-                index={index}
-                monsterName={quarry.monster_name}
-                node={quarry.node}
-                onRemove={handleRemove}
-                onToggleUnlocked={handleToggleUnlocked}
-                unlocked={quarry.unlocked}
-              />
-            ))}
+            {hasFetched &&
+              selectedSettlement?.quarries.map((quarry, index) => (
+                <QuarryItem
+                  key={quarry.id}
+                  index={index}
+                  monsterName={quarry.monster_name}
+                  node={quarry.node}
+                  onRemove={handleRemove}
+                  onToggleUnlocked={handleToggleUnlocked}
+                  unlocked={quarry.unlocked}
+                />
+              ))}
 
             {isAddingNew && (
               <NewQuarryItem

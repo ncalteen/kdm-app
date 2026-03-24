@@ -1,32 +1,24 @@
-'use client'
-
 import { SettlementSwitcher } from '@/components/menu/settlement-switcher'
 import { NavMain } from '@/components/nav-main'
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail
 } from '@/components/ui/sidebar'
-import { Tables } from '@/lib/database.types'
 import {
+  CampaignType,
   DatabaseCampaignType,
   DatabaseSurvivorType,
+  SurvivorType,
   TabType
 } from '@/lib/enums'
-import { ERROR_MESSAGE } from '@/lib/messages'
-import { generateSeedData } from '@/lib/seed'
+import { SettlementDetail } from '@/lib/types'
 import {
-  DatabaseIcon,
   HourglassIcon,
   LightbulbIcon,
-  LoaderCircleIcon,
   NotebookPenIcon,
   PawPrintIcon,
   School2Icon,
@@ -34,11 +26,11 @@ import {
   SettingsIcon,
   SkullIcon,
   SwordsIcon,
+  UserIcon,
   UsersIcon,
   WrenchIcon
 } from 'lucide-react'
-import { ComponentProps, ReactElement, useMemo, useTransition } from 'react'
-import { toast } from 'sonner'
+import { ComponentProps, ReactElement, useMemo } from 'react'
 
 /**
  * Primary Navigation Items
@@ -138,6 +130,11 @@ const navEmbark = [
  */
 const navSettings = [
   {
+    title: 'User',
+    tab: TabType.USER,
+    icon: UserIcon
+  },
+  {
     title: 'Settings',
     tab: TabType.SETTINGS,
     icon: SettingsIcon
@@ -148,10 +145,12 @@ const navSettings = [
  * Application Sidebar Properties
  */
 interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
+  /** Is Creating New Settlement */
+  isCreatingNewSettlement: boolean
   /** Selected Hunt ID */
   selectedHuntId: string | null
   /** Selected Settlement */
-  selectedSettlement: Tables<'settlement'> | null
+  selectedSettlement: SettlementDetail | null
   /** Selected Settlement ID */
   selectedSettlementId: string | null
   /** Selected Settlement Phase ID */
@@ -160,16 +159,18 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
   selectedShowdownId: string | null
   /** Selected Tab */
   selectedTab: TabType
+  /** Set Is Creating New Settlement */
+  setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set Selected Hunt ID */
-  setSelectedHuntId: (hunt: string | null) => void
+  setSelectedHuntId: (huntId: string | null) => void
   /** Set Selected Settlement ID */
-  setSelectedSettlementId: (settlement: string | null) => void
+  setSelectedSettlementId: (settlementId: string | null) => void
   /** Set Selected Settlement Phase ID */
-  setSelectedSettlementPhaseId: (settlementPhase: string | null) => void
+  setSelectedSettlementPhaseId: (settlementPhaseId: string | null) => void
   /** Set Selected Showdown ID */
-  setSelectedShowdownId: (showdown: string | null) => void
+  setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Survivor ID */
-  setSelectedSurvivorId: (survivor: string | null) => void
+  setSelectedSurvivorId: (survivorId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
 }
@@ -181,12 +182,14 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
  * @returns Application Sidebar Component
  */
 export function AppSidebar({
+  isCreatingNewSettlement,
   selectedHuntId,
   selectedSettlement,
   selectedSettlementId,
   selectedSettlementPhaseId,
   selectedShowdownId,
   selectedTab,
+  setIsCreatingNewSettlement,
   setSelectedHuntId,
   setSelectedSettlementId,
   setSelectedSettlementPhaseId,
@@ -195,16 +198,18 @@ export function AppSidebar({
   setSelectedTab,
   ...props
 }: AppSidebarProps): ReactElement {
-  const [isSeeding, startSeedTransition] = useTransition()
-
   const navItems = useMemo(() => {
     const items =
       selectedSettlement?.campaign_type ===
-      DatabaseCampaignType['Squires of the Citadel']
+      DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL]
         ? [...navSquires]
         : [...baseNavPrimary]
 
-    if (selectedSettlement?.survivor_type === DatabaseSurvivorType['Arc']) {
+    // Add Arc tab for ARC survivors (before the Notes tab)
+    if (
+      selectedSettlement?.survivor_type ===
+      DatabaseSurvivorType[SurvivorType.ARC]
+    ) {
       const notesIndex = items.findIndex((item) => item.tab === TabType.NOTES)
 
       if (notesIndex !== -1) {
@@ -226,10 +231,13 @@ export function AppSidebar({
       {...props}>
       <SidebarHeader>
         <SettlementSwitcher
+          isCreatingNewSettlement={isCreatingNewSettlement}
           selectedHuntId={selectedHuntId}
+          selectedSettlement={selectedSettlement}
           selectedSettlementId={selectedSettlementId}
           selectedSettlementPhaseId={selectedSettlementPhaseId}
           selectedShowdownId={selectedShowdownId}
+          setIsCreatingNewSettlement={setIsCreatingNewSettlement}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlementId={setSelectedSettlementId}
           setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
@@ -268,39 +276,6 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarRail />
-
-      {process.env.NODE_ENV === 'development' && (
-        <SidebarFooter>
-          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-            <SidebarGroupLabel>Developer</SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  disabled={isSeeding}
-                  onClick={() => {
-                    startSeedTransition(async () => {
-                      try {
-                        await generateSeedData()
-                      } catch (err) {
-                        console.error('Seed Data Error:', err)
-                        toast.error(ERROR_MESSAGE())
-                      }
-                    })
-                  }}>
-                  {isSeeding ? (
-                    <LoaderCircleIcon className="animate-spin" />
-                  ) : (
-                    <DatabaseIcon />
-                  )}
-                  <span className="text-xs">
-                    {isSeeding ? 'Generating...' : 'Generate Seed Data'}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarFooter>
-      )}
     </Sidebar>
   )
 }

@@ -16,7 +16,7 @@ create table settlement (
   current_year int not null default 0 check (current_year >= 0),
   departing_bonuses varchar [] not null default '{}',
   notes text not null default '',
-  settlement_name varchar not null default 'New Settlement',
+  settlement_name varchar not null default 'New Settlement' check (char_length(settlement_name) <= 100),
   survival_limit int not null default 1 check (survival_limit >= 0),
   survivor_type survivor_type not null default 'CORE',
   uses_scouts boolean not null default false,
