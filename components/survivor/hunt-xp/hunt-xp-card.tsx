@@ -90,7 +90,7 @@ export function HuntXPCard({
             : toast.success(HUNT_XP_UPDATED_MESSAGE())
         )
         .catch((error) => {
-          console.error(`Error Updating Hunt XP: ${error.message}`)
+          console.error('Hunt XP Update Error:', error)
           setHuntXP(oldHuntXP)
           setSurvivors(oldSurvivors)
         })
