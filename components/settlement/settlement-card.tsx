@@ -191,7 +191,7 @@ export function SettlementCard({
 
   if (!selectedSettlement)
     return (
-      <div className="flex flex-col items-center justify-center h-full">
+      <div className="flex flex-col items-center justify-center h-full pt-8">
         <p className="text-sm text-gray-500">No settlement selected</p>
       </div>
     )

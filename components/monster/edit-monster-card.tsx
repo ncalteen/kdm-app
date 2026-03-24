@@ -673,7 +673,6 @@ export function EditMonsterCard({
                     />
                   </div>
                 </button>
-                afefeafea
                 {isExpanded && levelData && (
                   <div className="p-3 pt-0 space-y-3">
                     {levelData.map((sub, subIdx) => (
