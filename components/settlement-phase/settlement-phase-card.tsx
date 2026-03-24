@@ -189,7 +189,9 @@ export function SettlementPhaseCard({
         <SettlementPhaseActionsCard
           selectedSettlement={selectedSettlement}
           selectedSettlementPhase={selectedSettlementPhase}
+          selectedSurvivor={selectedSurvivor}
           setSelectedSettlementPhase={setSelectedSettlementPhase}
+          setSelectedSurvivor={setSelectedSurvivor}
           setSelectedTab={setSelectedTab}
           setSurvivors={setSurvivors}
           survivors={survivors}

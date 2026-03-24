@@ -31,8 +31,12 @@ interface SettlementPhaseActionsCardProps {
   selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
   selectedSettlementPhase: SettlementPhaseDetail | null
+  /** Selected Survivor */
+  selectedSurvivor: SurvivorDetail | null
   /** Set Selected Settlement Phase */
   setSelectedSettlementPhase: (phase: SettlementPhaseDetail | null) => void
+  /** Set Selected Survivor */
+  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
   /** Set Survivors */
@@ -54,7 +58,9 @@ interface SettlementPhaseActionsCardProps {
 export function SettlementPhaseActionsCard({
   selectedSettlement,
   selectedSettlementPhase,
+  selectedSurvivor,
   setSelectedSettlementPhase,
+  setSelectedSurvivor,
   setSelectedTab,
   setSurvivors,
   survivors
@@ -105,11 +111,21 @@ export function SettlementPhaseActionsCard({
 
     // Optimistic update
     const previousSurvivors = [...survivors]
-    setSurvivors(
-      survivors.map((s) =>
-        returningIds.includes(s.id) && !s.dead ? { ...s, ...healUpdates } : s
-      )
+    const previousSelectedSurvivor = selectedSurvivor
+    const healedSurvivors = survivors.map((s) =>
+      returningIds.includes(s.id) && !s.dead ? { ...s, ...healUpdates } : s
     )
+
+    setSurvivors(healedSurvivors)
+
+    // Update the selected survivor if it was healed.
+    if (
+      selectedSurvivor &&
+      returningIds.includes(selectedSurvivor.id) &&
+      !selectedSurvivor.dead
+    ) {
+      setSelectedSurvivor({ ...selectedSurvivor, ...healUpdates })
+    }
 
     // Persist each survivor update
     Promise.all(aliveSurvivors.map((s) => updateSurvivor(s.id, healUpdates)))
@@ -117,10 +133,20 @@ export function SettlementPhaseActionsCard({
       .catch((err: unknown) => {
         // Rollback
         setSurvivors(previousSurvivors)
+        if (previousSelectedSurvivor)
+          setSelectedSurvivor(previousSelectedSurvivor)
+
         console.error('Heal Survivors Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [selectedSettlement, selectedSettlementPhase, survivors, setSurvivors])
+  }, [
+    selectedSettlement,
+    selectedSettlementPhase,
+    selectedSurvivor,
+    setSelectedSurvivor,
+    survivors,
+    setSurvivors
+  ])
 
   /**
    * Proceed to Special Showdown

@@ -9,7 +9,7 @@ import { COMBAT_HEAD_UPDATED_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { HardHatIcon, Shield } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -38,8 +38,7 @@ export function HeadCard({
   setSurvivors,
   survivors
 }: HeadCardProps): ReactElement {
-  const survivorIdRef = useRef<string | undefined>(undefined)
-
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [headArmor, setHeadArmor] = useState(selectedSurvivor?.head_armor ?? 0)
   const [headDeaf, setHeadDeaf] = useState(selectedSurvivor?.head_deaf ?? false)
   const [headBlind, setHeadBlind] = useState(selectedSurvivor?.head_blind ?? 0)
@@ -53,8 +52,8 @@ export function HeadCard({
     selectedSurvivor?.head_heavy_damage ?? false
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setHeadArmor(selectedSurvivor?.head_armor ?? 0)
     setHeadDeaf(selectedSurvivor?.head_deaf ?? false)
     setHeadBlind(selectedSurvivor?.head_blind ?? 0)

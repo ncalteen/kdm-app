@@ -28,7 +28,7 @@ import {
   SurvivorDetail
 } from '@/lib/types'
 import { BrainIcon, Shield } from 'lucide-react'
-import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -82,16 +82,15 @@ export function SanityCard({
   setSurvivors,
   survivors
 }: SanityCardProps): ReactElement {
-  const survivorIdRef = useRef<string | undefined>(undefined)
-
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [insanity, setInsanity] = useState(selectedSurvivor?.insanity ?? 0)
   const [brainLightDamage, setBrainLightDamage] = useState(
     selectedSurvivor?.brain_light_damage ?? false
   )
   const [torment, setTorment] = useState(selectedSurvivor?.torment ?? 0)
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setInsanity(selectedSurvivor?.insanity ?? 0)
     setBrainLightDamage(selectedSurvivor?.brain_light_damage ?? false)
     setTorment(selectedSurvivor?.torment ?? 0)

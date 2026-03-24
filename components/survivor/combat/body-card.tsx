@@ -9,7 +9,7 @@ import { COMBAT_BODY_UPDATED_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Shield, ShirtIcon } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -38,8 +38,7 @@ export function BodyCard({
   setSurvivors,
   survivors
 }: BodyCardProps): ReactElement {
-  const survivorIdRef = useRef<string | undefined>(undefined)
-
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [bodyArmor, setBodyArmor] = useState(selectedSurvivor?.body_armor ?? 0)
   const [bodyDestroyedBack, setBodyDestroyedBack] = useState(
     selectedSurvivor?.body_destroyed_back ?? false
@@ -57,8 +56,8 @@ export function BodyCard({
     selectedSurvivor?.body_heavy_damage ?? false
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setBodyArmor(selectedSurvivor?.body_armor ?? 0)
     setBodyDestroyedBack(selectedSurvivor?.body_destroyed_back ?? false)
     setBodyBrokenRib(selectedSurvivor?.body_broken_rib ?? 0)

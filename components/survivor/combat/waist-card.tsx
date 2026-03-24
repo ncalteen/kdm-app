@@ -9,7 +9,7 @@ import { COMBAT_WAIST_UPDATED_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { RibbonIcon, Shield } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -38,8 +38,7 @@ export function WaistCard({
   setSurvivors,
   survivors
 }: WaistCardProps): ReactElement {
-  const survivorIdRef = useRef<string | undefined>(undefined)
-
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [waistArmor, setWaistArmor] = useState(
     selectedSurvivor?.waist_armor ?? 0
   )
@@ -62,8 +61,8 @@ export function WaistCard({
     selectedSurvivor?.waist_heavy_damage ?? false
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setWaistArmor(selectedSurvivor?.waist_armor ?? 0)
     setWaistBrokenHip(selectedSurvivor?.waist_broken_hip ?? false)
     setWaistIntestinalProlapse(

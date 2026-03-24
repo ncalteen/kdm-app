@@ -9,7 +9,7 @@ import { COMBAT_ARMS_UPDATED_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { HandMetalIcon, Shield } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -38,8 +38,7 @@ export function ArmsCard({
   setSurvivors,
   survivors
 }: ArmsCardProps): ReactElement {
-  const survivorIdRef = useRef<string | undefined>(undefined)
-
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [armArmor, setArmArmor] = useState(selectedSurvivor?.arm_armor ?? 0)
   const [armBroken, setArmBroken] = useState(selectedSurvivor?.arm_broken ?? 0)
   const [armRupturedMuscle, setArmRupturedMuscle] = useState(
@@ -58,8 +57,8 @@ export function ArmsCard({
     selectedSurvivor?.arm_heavy_damage ?? false
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setArmArmor(selectedSurvivor?.arm_armor ?? 0)
     setArmBroken(selectedSurvivor?.arm_broken ?? 0)
     setArmRupturedMuscle(selectedSurvivor?.arm_ruptured_muscle ?? false)

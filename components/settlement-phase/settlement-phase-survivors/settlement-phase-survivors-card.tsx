@@ -142,6 +142,7 @@ export function SettlementPhaseSurvivorsCard({
       </div>
 
       <SettlementPhaseSurvivorCard
+        key={displayedSurvivor?.id}
         selectedSettlement={selectedSettlement}
         selectedSurvivor={displayedSurvivor}
         setSurvivors={setSurvivors}

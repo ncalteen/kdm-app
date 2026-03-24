@@ -9,7 +9,7 @@ import { COMBAT_LEGS_UPDATED_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { FootprintsIcon, Shield } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -38,8 +38,7 @@ export function LegsCard({
   setSurvivors,
   survivors
 }: LegsCardProps): ReactElement {
-  const survivorIdRef = useRef<string | undefined>(undefined)
-
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [legArmor, setLegArmor] = useState(selectedSurvivor?.leg_armor ?? 0)
   const [legHamstrung, setLegHamstrung] = useState(
     selectedSurvivor?.leg_hamstrung ?? false
@@ -55,8 +54,8 @@ export function LegsCard({
     selectedSurvivor?.leg_heavy_damage ?? false
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setLegArmor(selectedSurvivor?.leg_armor ?? 0)
     setLegHamstrung(selectedSurvivor?.leg_hamstrung ?? false)
     setLegBroken(selectedSurvivor?.leg_broken ?? 0)
