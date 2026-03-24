@@ -73,6 +73,8 @@ export function SettlementSurvivorsCard({
    */
   const handleDeleteSurvivor = useCallback(
     (survivorId: string) => {
+      if (!selectedSettlement?.id) return
+
       const originalSurvivors = [...survivors]
       const updatedSurvivors = survivors.filter((s) => s.id !== survivorId)
       const deletedSurvivor = survivors.filter((s) => s.id === survivorId)[0]

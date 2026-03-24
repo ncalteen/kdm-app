@@ -43,7 +43,7 @@ export function SettlementPhaseBoard({
 
     if (over) {
       const spaceId = over.id as string
-      const newPosition = parseInt(spaceId.replace('space-', ''))
+      const newPosition = parseInt(spaceId.replace('space-', ''), 10)
 
       if (newPosition >= 0 && newPosition <= 10) onPositionUpdate(newPosition)
     }

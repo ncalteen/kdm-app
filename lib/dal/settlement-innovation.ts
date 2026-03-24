@@ -54,21 +54,38 @@ export async function getSettlementInnovations(
 export async function addSettlementInnovations(
   innovationIds: string[],
   settlementId: string | null | undefined
-): Promise<void> {
+): Promise<SettlementDetail['innovations']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
-  if (innovationIds.length === 0) return
+  if (innovationIds.length === 0) return []
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement_innovation').insert(
-    innovationIds.map((innovationId) => ({
-      innovation_id: innovationId,
-      settlement_id: settlementId
-    }))
-  )
+  const { data, error } = await supabase
+    .from('settlement_innovation')
+    .insert(
+      innovationIds.map((innovationId) => ({
+        innovation_id: innovationId,
+        settlement_id: settlementId
+      }))
+    )
+    .select('id, innovation_id, innovation(innovation_name)')
 
   if (error)
     throw new Error(`Error Adding Settlement Innovations: ${error.message}`)
+
+  return (
+    data?.map((item) => {
+      const innovation = Array.isArray(item.innovation)
+        ? item.innovation[0]
+        : item.innovation
+
+      return {
+        id: item.id,
+        innovation_id: item.innovation_id,
+        innovation_name: innovation?.innovation_name ?? ''
+      }
+    }) ?? []
+  )
 }
 
 /**

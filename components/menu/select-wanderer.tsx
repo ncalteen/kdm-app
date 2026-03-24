@@ -18,7 +18,7 @@ export interface SelectWandererProps {
   onChange?: (wanderer: WandererDetail | null) => void
   /** Available Wanderers */
   wanderers: { [key: string]: WandererDetail }
-  /** Selected Wanderer Name */
+  /** Selected Wanderer ID */
   value?: string
 }
 
@@ -41,15 +41,12 @@ export function SelectWanderer({
   /**
    * Handle Value Change
    *
-   * @param selectedName Selected Wanderer Name
+   * @param selectedId Selected Wanderer ID
    */
-  const handleValueChange = (selectedName: string) => {
+  const handleValueChange = (selectedId: string) => {
     if (!onChange) return
 
-    onChange(
-      Object.values(wanderers).find((w) => w.wanderer_name === selectedName) ??
-        null
-    )
+    onChange(Object.values(wanderers).find((w) => w.id === selectedId) ?? null)
   }
 
   return (
@@ -59,7 +56,7 @@ export function SelectWanderer({
       </SelectTrigger>
       <SelectContent>
         {Object.values(wanderers).map((wanderer) => (
-          <SelectItem key={wanderer.id} value={wanderer.wanderer_name}>
+          <SelectItem key={wanderer.id} value={wanderer.id}>
             {wanderer.wanderer_name}
           </SelectItem>
         ))}

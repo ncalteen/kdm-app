@@ -127,14 +127,21 @@ export function InnovationsCard({
       setIsAddingNew(false)
 
       addSettlementInnovations([innovationId], selectedSettlement.id)
-        .then(() => {
+        .then((createdInnovations) => {
+          const hydratedItem = createdInnovations[0] ?? optimisticItem
+
+          setInnovations((prev) =>
+            prev.map((item) =>
+              item.id === optimisticItem.id ? hydratedItem : item
+            )
+          )
+
           toast.success(INNOVATION_UPDATED_MESSAGE())
 
-          // Refresh the settlement to get the real junction table ID.
           if (selectedSettlement) {
             setSelectedSettlement({
               ...selectedSettlement,
-              innovations: [...oldInnovations, optimisticItem]
+              innovations: [...oldInnovations, hydratedItem]
             })
           }
         })

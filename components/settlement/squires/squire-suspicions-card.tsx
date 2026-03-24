@@ -82,11 +82,12 @@ export function SquireSuspicionsCard({
           SQUIRE_SUSPICION_UPDATED_MESSAGE(survivor.survivor_name ?? 'Squire')
         )
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         // Revert to previous state on error
         setSurvivors(survivors)
         setSuspicion(calculateTotalSuspicion(survivors))
 
+        console.error('Update Squire Suspicion Error:', error)
         toast.error(ERROR_MESSAGE())
       })
   }

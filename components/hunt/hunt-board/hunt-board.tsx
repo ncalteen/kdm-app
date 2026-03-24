@@ -75,7 +75,7 @@ export function HuntBoard({
 
     if (over) {
       const spaceId = over.id as string
-      const newPosition = parseInt(spaceId.replace('space-', ''))
+      const newPosition = parseInt(spaceId.replace('space-', ''), 10)
 
       if (newPosition >= 0 && newPosition <= 12)
         if (active.id === 'survivors-token')
@@ -99,8 +99,16 @@ export function HuntBoard({
     const current = board?.[posKey] as string | null | undefined
 
     let newEventType: HuntEventType | undefined
-    if (!current || current === 'BASIC') newEventType = HuntEventType.MONSTER
-    else newEventType = undefined
+    if (!current) {
+      // empty -> BASIC
+      newEventType = HuntEventType.BASIC
+    } else if (current === 'BASIC') {
+      // BASIC -> MONSTER
+      newEventType = HuntEventType.MONSTER
+    } else {
+      // MONSTER -> empty
+      newEventType = undefined
+    }
 
     onHuntBoardUpdate(pos, newEventType)
   }

@@ -416,7 +416,7 @@ export function CreateSurvivorForm({
                     </Label>
                     <SelectWanderer
                       wanderers={availableWanderers}
-                      value={selectedWanderer?.wanderer_name ?? ''}
+                      value={selectedWanderer?.id ?? ''}
                       onChange={handleWandererSelect}
                     />
                   </div>
