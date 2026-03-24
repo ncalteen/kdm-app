@@ -1,5 +1,3 @@
-import { NemesisDetail } from '@/lib/types'
-
 /**
  * Nemesis Node Sort Order
  *
@@ -22,7 +20,9 @@ const NODE_ORDER: Record<string, number> = {
  * @param rows Settlement Nemesis Rows
  * @returns Sorted Settlement Nemesis Rows
  */
-export function sortNemeses(rows: NemesisDetail[]): NemesisDetail[] {
+export function sortNemeses<TRow extends { node: string; monster_name: string }>(
+  rows: TRow[]
+): TRow[] {
   return [...rows].sort((a, b) => {
     const aOrder = NODE_ORDER[a.node] ?? Number.MAX_SAFE_INTEGER
     const bOrder = NODE_ORDER[b.node] ?? Number.MAX_SAFE_INTEGER
