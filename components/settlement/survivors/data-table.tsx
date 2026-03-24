@@ -44,10 +44,17 @@ export function SurvivorDataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [prevInitialVisibility, setPrevInitialVisibility] =
+    useState<VisibilityState>(initialColumnVisibility)
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     initialColumnVisibility
   )
   const [rowSelection, setRowSelection] = useState({})
+
+  if (prevInitialVisibility !== initialColumnVisibility) {
+    setPrevInitialVisibility(initialColumnVisibility)
+    setColumnVisibility(initialColumnVisibility)
+  }
 
   const tableConfig = useMemo(
     () => ({
