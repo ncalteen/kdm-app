@@ -69,16 +69,19 @@ export async function updateSettlementPhase(
 /**
  * Add Settlement Phase
  *
- * Adds a new settlement phase record to the database.
+ * Adds a new settlement phase record and its returning survivors to the
+ * database in a single operation using the same client instance.
  *
  * @param settlementPhase Settlement Phase Data
+ * @param returningSurvivorIds Returning Survivor IDs
  * @returns Inserted Settlement Phase ID
  */
 export async function addSettlementPhase(
   settlementPhase: Omit<
     TablesInsert<'settlement_phase'>,
     'id' | 'created_at' | 'updated_at'
-  >
+  >,
+  returningSurvivorIds: string[] = []
 ): Promise<string> {
   const supabase = createClient()
 
@@ -90,7 +93,26 @@ export async function addSettlementPhase(
 
   if (error) throw new Error(`Error Adding Settlement Phase: ${error.message}`)
 
-  return data.id
+  const settlementPhaseId = data.id
+
+  if (returningSurvivorIds.length > 0) {
+    const { error: survivorError } = await supabase
+      .from('settlement_phase_returning_survivor')
+      .insert(
+        returningSurvivorIds.map((survivorId) => ({
+          settlement_id: settlementPhase.settlement_id,
+          settlement_phase_id: settlementPhaseId,
+          survivor_id: survivorId
+        }))
+      )
+
+    if (survivorError)
+      throw new Error(
+        `Error Adding Returning Survivors: ${survivorError.message}`
+      )
+  }
+
+  return settlementPhaseId
 }
 
 /**

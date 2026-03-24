@@ -10,19 +10,13 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ERROR_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
-import { ComponentPropsWithoutRef, ReactElement, useActionState } from 'react'
-import { toast } from 'sonner'
+import { ComponentPropsWithoutRef, FormEvent, useState } from 'react'
 
 /**
  * Update Password Form
- *
- * Renders a form for users to set a new password after requesting a password
- * reset. Uses `useActionState` for form submission and displays thematic
- * error messages via toast.
  *
  * @param props React component props
  * @returns Update password form component
@@ -30,32 +24,39 @@ import { toast } from 'sonner'
 export function UpdatePasswordForm({
   className,
   ...props
-}: ComponentPropsWithoutRef<'div'>): ReactElement {
+}: ComponentPropsWithoutRef<'div'>) {
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const [, submitAction, isPending] = useActionState(
-    async (_prev: string | null, formData: FormData) => {
-      const password = formData.get('password') as string
+  /**
+   * Handle update password form submission
+   *
+   * @param e React form event
+   */
+  const handleUpdatePassword = async (e: FormEvent) => {
+    e.preventDefault()
 
-      try {
-        const supabase = createClient()
-        const { error: updateError } = await supabase.auth.updateUser({
-          password
-        })
+    const supabase = createClient()
 
-        if (updateError) throw updateError
+    setIsLoading(true)
+    setError(null)
 
-        toast.success('Your password has been updated.')
-        router.push('/')
-        return null
-      } catch (error: unknown) {
-        console.error('Update Password Error:', error)
-        toast.error(ERROR_MESSAGE())
-        return ERROR_MESSAGE()
-      }
-    },
-    null
-  )
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password
+      })
+
+      if (updateError) throw updateError
+
+      router.push('/')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'An error occurred')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -67,28 +68,22 @@ export function UpdatePasswordForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            action={submitAction}
-            onSubmit={(e) => {
-              e.preventDefault()
-              const formData = new FormData(e.currentTarget)
-              submitAction(formData)
-            }}>
+          <form onSubmit={handleUpdatePassword}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="password">New password</Label>
                 <Input
                   id="password"
-                  name="password"
                   type="password"
                   placeholder="New password"
                   required
-                  disabled={isPending}
-                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending ? 'Saving...' : 'Save new password'}
+              {error && <p className="text-sm text-red-500">{error}</p>}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Saving...' : 'Save new password'}
               </Button>
             </div>
           </form>

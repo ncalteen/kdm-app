@@ -10,20 +10,17 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ERROR_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ReactElement, useActionState } from 'react'
-import { toast } from 'sonner'
+import { FormEvent, useState } from 'react'
 
 /**
  * Login Form
  *
- * Renders a login form that allows users to enter their email and password to
- * log in to their account. Uses `useActionState` for form submission handling
- * and displays thematic error messages via toast notifications.
+ * This component renders a login form that allows users to enter their email
+ * and password to log in to their account.
  *
  * @param props Login Form Properties
  * @returns Login Form Component
@@ -31,33 +28,45 @@ import { toast } from 'sonner'
 export function LoginForm({
   className,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>): ReactElement {
+}: React.ComponentPropsWithoutRef<'div'>) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
   const router = useRouter()
 
-  const [, submitAction, isPending] = useActionState(
-    async (_prev: string | null, formData: FormData) => {
-      const email = formData.get('email') as string
-      const password = formData.get('password') as string
+  /**
+   * Handle Login
+   *
+   * This function is called when the user submits the login form. It uses the
+   * Supabase client to attempt to log in with the provided email and password.
+   *
+   * @param e Form Event
+   */
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault()
 
-      try {
-        const supabase = createClient()
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        })
+    const supabase = createClient()
 
-        if (error) throw error
+    setIsLoading(true)
+    setError(null)
 
-        router.push('/')
-        return null
-      } catch (error: unknown) {
-        console.error('Login Error:', error)
-        toast.error(ERROR_MESSAGE())
-        return ERROR_MESSAGE()
-      }
-    },
-    null
-  )
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (error) throw error
+
+      router.push('/')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'An error occurred')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -69,24 +78,17 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            action={submitAction}
-            onSubmit={(e) => {
-              e.preventDefault()
-              const formData = new FormData(e.currentTarget)
-              submitAction(formData)
-            }}>
+          <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  name="email"
                   type="email"
                   placeholder="m@example.com"
                   required
-                  disabled={isPending}
-                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -100,15 +102,15 @@ export function LoginForm({
                 </div>
                 <Input
                   id="password"
-                  name="password"
                   type="password"
                   required
-                  disabled={isPending}
-                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending ? 'Logging in...' : 'Login'}
+              {error && <p className="text-sm text-red-500">{error}</p>}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Logging in...' : 'Login'}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
