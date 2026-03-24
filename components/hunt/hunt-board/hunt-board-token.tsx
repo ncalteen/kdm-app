@@ -48,7 +48,7 @@ export function HuntBoardToken({
         'absolute z-10 flex items-center justify-center',
         'w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12',
         tokenType === 'survivors' ? 'bg-blue-500' : 'bg-red-500',
-        'text-white rounded-full cursor-grab active:cursor-grabbing shadow-md hover:shadow-lg transition-shadow z-1',
+        'text-white rounded-full cursor-grab active:cursor-grabbing shadow-md hover:shadow-lg transition-shadow',
         overlap
           ? tokenType === 'survivors'
             ? // Survivors go top-left when overlapping

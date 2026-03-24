@@ -32,7 +32,7 @@ export function SettlementPhaseBoardToken(): ReactElement {
       className={cn(
         'absolute z-10 flex items-center justify-center',
         'w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-blue-500',
-        'text-white rounded-full cursor-grab active:cursor-grabbing shadow-md hover:shadow-lg transition-shadow z-1',
+        'text-white rounded-full cursor-grab active:cursor-grabbing shadow-md hover:shadow-lg transition-shadow',
         isDragging && 'opacity-50 scale-110'
       )}
       title={`Drag to move the token on the settlement phase board`}>
