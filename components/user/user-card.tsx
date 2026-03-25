@@ -163,17 +163,17 @@ export function UserCard({
     <div className="flex flex-col gap-4 pt-2">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <UpdatePasswordForm className="h-full" />
-        {/* User Settings */}
+        {/* Unlocked Vignette Monsters */}
         <Card className="p-0">
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-3 pb-0">
-            <CardTitle className="text-lg">User Settings</CardTitle>
+            <CardTitle className="text-lg">
+              Unlocked Vignette Monsters
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-sm">
-                  Unlock Killenium Butcher
-                </div>
+                <div className="font-medium text-sm">Killenium Butcher</div>
                 <div className="text-sm text-muted-foreground">
                   Allows the Killenium Butcher nemesis to appear in showdowns.
                 </div>
@@ -186,7 +186,7 @@ export function UserCard({
                 }
                 onValueChange={handleKilleniumButcherUnlockedChange}
                 name="unlock-killenium-butcher"
-                aria-label="Unlock Killenium Butcher">
+                aria-label="Killenium Butcher">
                 <SelectTrigger className="w-24" id="unlock-killenium-butcher">
                   <SelectValue />
                 </SelectTrigger>
@@ -201,9 +201,7 @@ export function UserCard({
 
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-sm">
-                  Unlock Screaming Nukalope
-                </div>
+                <div className="font-medium text-sm">Screaming Nukalope</div>
                 <div className="text-sm text-muted-foreground">
                   Allows the Screaming Nukalope quarry to be hunted.
                 </div>
@@ -216,7 +214,7 @@ export function UserCard({
                 }
                 onValueChange={handleScreamingNukalopeUnlockedChange}
                 name="unlock-screaming-nukalope"
-                aria-label="Unlock Screaming Nukalope">
+                aria-label="Screaming Nukalope">
                 <SelectTrigger className="w-24" id="unlock-screaming-nukalope">
                   <SelectValue />
                 </SelectTrigger>
@@ -231,7 +229,7 @@ export function UserCard({
 
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-sm">Unlock White Gigalion</div>
+                <div className="font-medium text-sm">White Gigalion</div>
                 <div className="text-sm text-muted-foreground">
                   Allows the White Gigalion quarry to be hunted.
                 </div>
@@ -244,7 +242,7 @@ export function UserCard({
                 }
                 onValueChange={handleWhiteGigalionUnlockedChange}
                 name="unlock-white-gigalion"
-                aria-label="Unlock White Gigalion">
+                aria-label="White Gigalion">
                 <SelectTrigger className="w-24" id="unlock-white-gigalion">
                   <SelectValue />
                 </SelectTrigger>
