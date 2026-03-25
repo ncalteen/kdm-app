@@ -1,15 +1,22 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
 import { Label } from '@/components/ui/label'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
@@ -23,6 +30,7 @@ import {
 } from '@/lib/messages'
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { Check, ChevronsUpDown } from 'lucide-react'
 import { MouseEvent, ReactElement, useCallback, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -38,6 +46,83 @@ interface KnowledgeCardProps {
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
   survivors: SurvivorDetail[]
+}
+
+/**
+ * Knowledge Select Properties
+ */
+interface KnowledgeSelectProps {
+  /** Available Knowledges */
+  knowledges: { knowledge_id: string; knowledge_name: string }[]
+  /** OnChange Handler */
+  onChange: (value: string) => void
+  /** Placeholder Text */
+  placeholder?: string
+  /** Selected Knowledge ID */
+  value?: string
+}
+
+/**
+ * Knowledge Select Component
+ *
+ * Searchable combobox for selecting a knowledge.
+ *
+ * @param props Knowledge Select Properties
+ * @returns Knowledge Select Component
+ */
+function KnowledgeSelect({
+  knowledges,
+  onChange,
+  placeholder = 'Select knowledge...',
+  value
+}: KnowledgeSelectProps): ReactElement {
+  const [open, setOpen] = useState(false)
+
+  const selectedName = knowledges.find(
+    (k) => k.knowledge_id === value
+  )?.knowledge_name
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="justify-between border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
+          {selectedName ?? placeholder}
+          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0">
+        <Command>
+          <CommandInput placeholder="Search knowledges..." />
+          <CommandList>
+            <CommandEmpty>No knowledges found.</CommandEmpty>
+            <CommandGroup>
+              {knowledges.map((k) => (
+                <CommandItem
+                  key={k.knowledge_id}
+                  value={k.knowledge_name}
+                  onSelect={() => {
+                    onChange(k.knowledge_id)
+                    setOpen(false)
+                  }}>
+                  <Check
+                    className={cn(
+                      'h-4 w-4',
+                      value === k.knowledge_id ? 'opacity-100' : 'opacity-0'
+                    )}
+                  />
+                  {k.knowledge_name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 /**
@@ -681,20 +766,12 @@ export function KnowledgeCard({
         <div className="flex items-start gap-2">
           <div className="flex-grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
-              <Select
+              <KnowledgeSelect
+                knowledges={selectedSettlement?.knowledges ?? []}
                 value={knowledge1?.id}
-                onValueChange={(value) => updateKnowledge1(value)}>
-                <SelectTrigger className="border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
-                  <SelectValue placeholder="Select knowledge..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {(selectedSettlement?.knowledges ?? []).map((k) => (
-                    <SelectItem key={k.knowledge_id} value={k.knowledge_id}>
-                      {k.knowledge_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={updateKnowledge1}
+                placeholder="Select knowledge..."
+              />
               <Label className="text-xs text-muted-foreground">
                 Knowledge Name
               </Label>
@@ -770,20 +847,12 @@ export function KnowledgeCard({
         <div className="flex items-start gap-2">
           <div className="flex-grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
-              <Select
+              <KnowledgeSelect
+                knowledges={selectedSettlement?.knowledges ?? []}
                 value={knowledge2?.id}
-                onValueChange={(value) => updateKnowledge2(value)}>
-                <SelectTrigger className="border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
-                  <SelectValue placeholder="Select knowledge..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {(selectedSettlement?.knowledges ?? []).map((k) => (
-                    <SelectItem key={k.knowledge_id} value={k.knowledge_id}>
-                      {k.knowledge_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={updateKnowledge2}
+                placeholder="Select knowledge..."
+              />
               <Label className="text-xs text-muted-foreground">
                 Knowledge Name
               </Label>

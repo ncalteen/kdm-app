@@ -3,15 +3,8 @@
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import { CheckIcon, TrashIcon, XIcon } from 'lucide-react'
-import { memo, ReactElement, useState } from 'react'
+import { TrashIcon } from 'lucide-react'
+import { memo, ReactElement } from 'react'
 
 /**
  * Nemesis Item Properties
@@ -47,18 +40,6 @@ export interface NemesisItemProps {
       | 'level_4_defeated',
     defeated: boolean
   ) => void
-}
-
-/**
- * New Nemesis Item Component Properties
- */
-export interface NewNemesisItemProps {
-  /** Available Nemeses */
-  availableNemeses: { id: string; monster_name: string }[]
-  /** On Cancel Handler */
-  onCancel: () => void
-  /** On Save Handler */
-  onSave: (nemesisId: string | undefined) => void
 }
 
 /**
@@ -166,72 +147,6 @@ export const NemesisItem = memo(function NemesisItem({
           onClick={() => onRemove(index)}
           title="Remove nemesis">
           <TrashIcon className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
-})
-
-/**
- * New Nemesis Item Component
- *
- * Renders a select dropdown for choosing a nemesis to add to the settlement.
- *
- * @param props New Nemesis Item Component Properties
- * @returns New Nemesis Item Component
- */
-export const NewNemesisItem = memo(function NewNemesisItem({
-  availableNemeses,
-  onCancel,
-  onSave
-}: NewNemesisItemProps): ReactElement {
-  const [selectedNemesisId, setSelectedNemesisId] = useState<
-    string | undefined
-  >(undefined)
-
-  return (
-    <div className="flex items-center gap-2 pl-2">
-      {/* Unlocked Checkbox (Disabled) */}
-      <Checkbox
-        checked={false}
-        disabled={true}
-        id="nemesis-new-unlocked"
-        name="nemesis-new-unlocked"
-      />
-
-      {/* Nemesis Selector */}
-      <Select
-        value={selectedNemesisId}
-        onValueChange={(value) => setSelectedNemesisId(value)}>
-        <SelectTrigger className="flex-1">
-          <SelectValue placeholder="Select nemesis" />
-        </SelectTrigger>
-        <SelectContent>
-          {availableNemeses.map((nemesis) => (
-            <SelectItem key={nemesis.id} value={nemesis.id}>
-              {nemesis.monster_name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Interaction Buttons */}
-      <div className="flex items-center gap-1 ml-auto shrink-0">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => onSave(selectedNemesisId)}
-          title="Save nemesis">
-          <CheckIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onCancel}
-          title="Cancel">
-          <XIcon className="h-4 w-4" />
         </Button>
       </div>
     </div>

@@ -1,11 +1,21 @@
 'use client'
 
-import {
-  NemesisItem,
-  NewNemesisItem
-} from '@/components/settlement/nemeses/nemesis-item'
+import { NemesisItem } from '@/components/settlement/nemeses/nemesis-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import { getNemeses } from '@/lib/dal/nemesis'
 import {
   addSettlementNemeses,
@@ -51,7 +61,7 @@ export function NemesesCard({
   selectedSettlement,
   setSelectedSettlement
 }: NemesesCardProps): ReactElement {
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available nemeses for the select dropdown (fetched once per settlement).
@@ -66,7 +76,7 @@ export function NemesesCard({
 
   if (selectedSettlement?.id !== prevSettlementId) {
     setPrevSettlementId(selectedSettlement?.id ?? null)
-    setIsAddingNew(false)
+    setAddOpen(false)
     setHasFetched(false)
   }
 
@@ -136,12 +146,14 @@ export function NemesesCard({
    */
   const handleAdd = useCallback(
     (nemesisId: string | undefined) => {
-      if (!nemesisId || !selectedSettlement) return setIsAddingNew(false)
+      if (!nemesisId || !selectedSettlement) return
 
       const nemesisInfo = Object.values(availableNemeses).find(
         (n) => n.id === nemesisId
       )
-      if (!nemesisInfo) return setIsAddingNew(false)
+      if (!nemesisInfo) return
+
+      setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
@@ -169,7 +181,6 @@ export function NemesesCard({
         ...selectedSettlement,
         nemeses: updatedNemeses
       })
-      setIsAddingNew(false)
 
       addSettlementNemeses([nemesisId], selectedSettlement?.id)
         .then((row) => {
@@ -344,17 +355,36 @@ export function NemesesCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <SkullIcon className="h-4 w-4" />
           Nemesis Monsters
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew || selectableNemeses.length === 0}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8"
+                disabled={selectableNemeses.length === 0}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search nemeses..." />
+                <CommandList>
+                  <CommandEmpty>No nemeses found.</CommandEmpty>
+                  <CommandGroup>
+                    {selectableNemeses.map((nemesis) => (
+                      <CommandItem
+                        key={nemesis.id}
+                        value={nemesis.monster_name}
+                        onSelect={() => handleAdd(nemesis.id)}>
+                        {nemesis.monster_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -364,7 +394,6 @@ export function NemesesCard({
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.nemeses ||
               selectedSettlement.nemeses.length === 0) &&
-              !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No nemeses yet
@@ -394,14 +423,6 @@ export function NemesesCard({
                   onToggleLevel={handleToggleLevel}
                 />
               ))}
-
-            {isAddingNew && (
-              <NewNemesisItem
-                availableNemeses={selectableNemeses}
-                onCancel={() => setIsAddingNew(false)}
-                onSave={handleAdd}
-              />
-            )}
           </div>
         </div>
       </CardContent>

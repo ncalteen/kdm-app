@@ -1,8 +1,21 @@
 'use client'
 
-import { GearItem, NewGearItem } from '@/components/settlement/gear/gear-item'
+import { GearItem } from '@/components/settlement/gear/gear-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import { getGear } from '@/lib/dal/gear'
 import {
   addSettlementGear,
@@ -43,7 +56,7 @@ export function GearCard({
   selectedSettlement,
   setSelectedSettlement
 }: GearCardProps): ReactElement {
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   const [availableGear, setAvailableGear] = useState<{
@@ -56,7 +69,7 @@ export function GearCard({
 
   if (selectedSettlement?.id !== prevSettlementId) {
     setPrevSettlementId(selectedSettlement?.id ?? null)
-    setIsAddingNew(false)
+    setAddOpen(false)
     setHasFetched(false)
   }
 
@@ -111,10 +124,12 @@ export function GearCard({
    */
   const handleAdd = useCallback(
     (gearId: string | undefined) => {
-      if (!gearId || !selectedSettlement) return setIsAddingNew(false)
+      if (!gearId || !selectedSettlement) return
 
       const gearInfo = availableGear[gearId]
-      if (!gearInfo) return setIsAddingNew(false)
+      if (!gearInfo) return
+
+      setAddOpen(false)
 
       const tempId = `temp-${Date.now()}`
       const optimisticRow: SettlementDetail['gear'][0] = {
@@ -130,7 +145,6 @@ export function GearCard({
         ...selectedSettlement,
         gear: updatedGear
       })
-      setIsAddingNew(false)
 
       addSettlementGear({
         gear_id: gearId,
@@ -241,17 +255,36 @@ export function GearCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <WrenchIcon className="h-4 w-4" />
           Gear Storage
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew || selectableGear.length === 0}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8"
+                disabled={selectableGear.length === 0}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search gear..." />
+                <CommandList>
+                  <CommandEmpty>No gear found.</CommandEmpty>
+                  <CommandGroup>
+                    {selectableGear.map((gear) => (
+                      <CommandItem
+                        key={gear.id}
+                        value={gear.gear_name}
+                        onSelect={() => handleAdd(gear.id)}>
+                        {gear.gear_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -260,7 +293,6 @@ export function GearCard({
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.gear ||
               selectedSettlement.gear.length === 0) &&
-              !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No gear yet
@@ -283,14 +315,6 @@ export function GearCard({
                   onRemove={handleRemove}
                 />
               ))}
-
-            {isAddingNew && (
-              <NewGearItem
-                availableGear={selectableGear}
-                onCancel={() => setIsAddingNew(false)}
-                onSave={handleAdd}
-              />
-            )}
           </div>
         </div>
       </CardContent>

@@ -1,11 +1,21 @@
 'use client'
 
-import {
-  CursedGearItem,
-  NewCursedGearItem
-} from '@/components/survivor/cursed-gear/cursed-gear-item'
+import { CursedGearItem } from '@/components/survivor/cursed-gear/cursed-gear-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import {
   addSurvivorCursedGear,
   removeSurvivorCursedGear
@@ -59,13 +69,13 @@ export function CursedGearCard({
   const [cursedGear, setCursedGear] = useState<CursedGearRow[]>(
     selectedSurvivor?.cursed_gear ?? []
   )
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const [addOpen, setAddOpen] = useState<boolean>(false)
 
   // Reset local state when the selected survivor changes.
   if (survivorIdRef.current !== selectedSurvivor?.id) {
     survivorIdRef.current = selectedSurvivor?.id
     setCursedGear(selectedSurvivor?.cursed_gear ?? [])
-    setIsAddingNew(false)
+    setAddOpen(false)
   }
 
   /**
@@ -105,12 +115,14 @@ export function CursedGearCard({
    */
   const handleAdd = useCallback(
     (gearId: string | undefined) => {
-      if (!gearId || !selectedSurvivor) return setIsAddingNew(false)
+      if (!gearId || !selectedSurvivor) return
 
       const gearDetail = selectedSettlement?.gear.find(
         (g) => g.gear_id === gearId
       )
-      if (!gearDetail) return setIsAddingNew(false)
+      if (!gearDetail) return
+
+      setAddOpen(false)
 
       const optimisticItem: CursedGearRow = {
         id: gearId,
@@ -127,7 +139,6 @@ export function CursedGearCard({
             : s
         )
       )
-      setIsAddingNew(false)
 
       addSurvivorCursedGear(selectedSurvivor.id, gearId)
         .then(() =>
@@ -212,23 +223,42 @@ export function CursedGearCard({
       <CardHeader className="p-0">
         <CardTitle className="p-0 text-sm flex flex-row items-center justify-between h-8">
           Cursed Gear
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="h-6 w-6"
-              disabled={isAddingNew || selectableGear.length === 0}>
-              <PlusIcon />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-6 w-6"
+                disabled={selectableGear.length === 0}>
+                <PlusIcon />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search gear..." />
+                <CommandList>
+                  <CommandEmpty>No gear found.</CommandEmpty>
+                  <CommandGroup>
+                    {selectableGear.map((gear) => (
+                      <CommandItem
+                        key={gear.gear_id}
+                        value={gear.gear_name}
+                        onSelect={() => handleAdd(gear.gear_id)}>
+                        {gear.gear_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
       <CardContent className="p-0">
         <div className="flex flex-col">
-          {sortedCursedGear.length === 0 && !isAddingNew && (
+          {sortedCursedGear.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">
               No cursed gear yet
             </p>
@@ -241,14 +271,6 @@ export function CursedGearCard({
               onRemove={() => handleRemove(originalIndex)}
             />
           ))}
-
-          {isAddingNew && (
-            <NewCursedGearItem
-              availableGear={selectableGear}
-              onCancel={() => setIsAddingNew(false)}
-              onSave={handleAdd}
-            />
-          )}
         </div>
       </CardContent>
     </Card>

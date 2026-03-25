@@ -1,11 +1,21 @@
 'use client'
 
-import {
-  NewRewardItem,
-  RewardItem
-} from '@/components/settlement/arc/collective-cognition-reward-item'
+import { RewardItem } from '@/components/settlement/arc/collective-cognition-reward-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import { getCollectiveCognitionRewards } from '@/lib/dal/collective-cognition-reward'
 import {
   addSettlementCollectiveCognitionRewards,
@@ -48,7 +58,7 @@ export function CollectiveCognitionRewardsCard({
   selectedSettlement,
   setSelectedSettlement
 }: CollectiveCognitionRewardsCardProps): ReactElement {
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available rewards for the select dropdown (fetched once per settlement).
@@ -63,7 +73,7 @@ export function CollectiveCognitionRewardsCard({
 
   if (selectedSettlement?.id !== prevSettlementId) {
     setPrevSettlementId(selectedSettlement?.id ?? null)
-    setIsAddingNew(false)
+    setAddOpen(false)
     setHasFetched(false)
   }
 
@@ -122,10 +132,12 @@ export function CollectiveCognitionRewardsCard({
    */
   const handleAdd = useCallback(
     (rewardId: string | undefined) => {
-      if (!rewardId || !selectedSettlement) return setIsAddingNew(false)
+      if (!rewardId || !selectedSettlement) return
 
       const rewardInfo = availableRewards[rewardId]
-      if (!rewardInfo) return setIsAddingNew(false)
+      if (!rewardInfo) return
+
+      setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
@@ -147,7 +159,6 @@ export function CollectiveCognitionRewardsCard({
         ...selectedSettlement,
         collective_cognition_rewards: updatedRewards
       })
-      setIsAddingNew(false)
 
       addSettlementCollectiveCognitionRewards([rewardId], selectedSettlement.id)
         .then((rows) => {
@@ -278,17 +289,46 @@ export function CollectiveCognitionRewardsCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <BrainIcon className="h-4 w-4" />
           Collective Cognition Rewards
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8">
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search rewards..." />
+                <CommandList>
+                  <CommandEmpty>No rewards found.</CommandEmpty>
+                  <CommandGroup>
+                    {Object.values(availableRewards)
+                      .filter(
+                        (r) =>
+                          !(
+                            selectedSettlement?.collective_cognition_rewards ??
+                            []
+                          ).some(
+                            (existing) =>
+                              existing.collective_cognition_reward_id === r.id
+                          )
+                      )
+                      .map((reward) => (
+                        <CommandItem
+                          key={reward.id}
+                          value={reward.reward_name}
+                          onSelect={() => handleAdd(reward.id)}>
+                          {reward.reward_name}
+                        </CommandItem>
+                      ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -298,7 +338,6 @@ export function CollectiveCognitionRewardsCard({
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.collective_cognition_rewards ||
               selectedSettlement.collective_cognition_rewards.length === 0) &&
-              !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No rewards yet
@@ -321,18 +360,6 @@ export function CollectiveCognitionRewardsCard({
                   onToggleUnlocked={handleToggleUnlocked}
                 />
               ))}
-
-            {isAddingNew && (
-              <NewRewardItem
-                availableRewards={Object.values(availableRewards)}
-                availableRewardsMap={availableRewards}
-                excludeIds={(
-                  selectedSettlement?.collective_cognition_rewards ?? []
-                ).map((r) => r.collective_cognition_reward_id)}
-                onCancel={() => setIsAddingNew(false)}
-                onSave={handleAdd}
-              />
-            )}
           </div>
         </div>
       </CardContent>

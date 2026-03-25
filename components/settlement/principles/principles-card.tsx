@@ -1,11 +1,21 @@
 'use client'
 
-import {
-  NewPrincipleItem,
-  PrincipleItem
-} from '@/components/settlement/principles/principle-item'
+import { PrincipleItem } from '@/components/settlement/principles/principle-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { getPrinciples } from '@/lib/dal/principle'
 import {
@@ -48,7 +58,7 @@ export function PrinciplesCard({
   selectedSettlement,
   setSelectedSettlement
 }: PrinciplesCardProps): ReactElement {
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available principles for the select dropdown (fetched once per settlement).
@@ -63,7 +73,7 @@ export function PrinciplesCard({
 
   if (selectedSettlement?.id !== prevSettlementId) {
     setPrevSettlementId(selectedSettlement?.id ?? null)
-    setIsAddingNew(false)
+    setAddOpen(false)
     setHasFetched(false)
   }
 
@@ -139,10 +149,12 @@ export function PrinciplesCard({
    */
   const handleAdd = useCallback(
     (principleId: string | undefined) => {
-      if (!principleId || !selectedSettlement) return setIsAddingNew(false)
+      if (!principleId || !selectedSettlement) return
 
       const principleInfo = availablePrinciples[principleId]
-      if (!principleInfo) return setIsAddingNew(false)
+      if (!principleInfo) return
+
+      setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
@@ -167,7 +179,6 @@ export function PrinciplesCard({
         ...selectedSettlement,
         principles: updatedPrinciples
       })
-      setIsAddingNew(false)
 
       addSettlementPrinciples([principleId], selectedSettlement.id)
         .then((row) => {
@@ -306,17 +317,36 @@ export function PrinciplesCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <StampIcon className="h-4 w-4" />
           Principles
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew || selectablePrinciples.length === 0}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8"
+                disabled={selectablePrinciples.length === 0}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search principles..." />
+                <CommandList>
+                  <CommandEmpty>No principles found.</CommandEmpty>
+                  <CommandGroup>
+                    {selectablePrinciples.map((principle) => (
+                      <CommandItem
+                        key={principle.id}
+                        value={principle.principle_name}
+                        onSelect={() => handleAdd(principle.id)}>
+                        {principle.principle_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -326,7 +356,6 @@ export function PrinciplesCard({
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.principles ||
               selectedSettlement.principles.length === 0) &&
-              !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No principles yet
@@ -351,14 +380,6 @@ export function PrinciplesCard({
                   <Separator className="my-1" />
                 </div>
               ))}
-
-            {isAddingNew && (
-              <NewPrincipleItem
-                availablePrinciples={selectablePrinciples}
-                onCancel={() => setIsAddingNew(false)}
-                onSave={handleAdd}
-              />
-            )}
           </div>
         </div>
       </CardContent>
