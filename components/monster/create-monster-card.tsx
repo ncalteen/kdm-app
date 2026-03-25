@@ -20,7 +20,12 @@ import { addQuarry } from '@/lib/dal/quarry'
 import { addQuarryHuntBoard } from '@/lib/dal/quarry-hunt-board'
 import { addQuarryLevel } from '@/lib/dal/quarry-level'
 import { MonsterNode, MonsterType } from '@/lib/enums'
-import { CUSTOM_MONSTER_CREATED_MESSAGE, ERROR_MESSAGE } from '@/lib/messages'
+import {
+  CUSTOM_MONSTER_CREATED_MESSAGE,
+  ERROR_MESSAGE,
+  MONSTER_LEVEL_MISSING_MESSAGE,
+  NAMELESS_OBJECT_ERROR_MESSAGE
+} from '@/lib/messages'
 import {
   ChevronDownIcon,
   PlusIcon,
@@ -300,11 +305,11 @@ export function CreateMonsterCard({
    */
   const handleCreate = useCallback(async () => {
     if (!name.trim())
-      return toast.error('A nameless monster cannot be recorded.')
+      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('monster'))
 
     const levelEntries = Object.entries(levels)
     if (levelEntries.length === 0)
-      return toast.error('At least one level is required.')
+      return toast.error(MONSTER_LEVEL_MISSING_MESSAGE())
 
     setIsCreating(true)
 

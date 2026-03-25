@@ -28,7 +28,11 @@ import {
   removeQuarryLevel
 } from '@/lib/dal/quarry-level'
 import { MonsterNode, MonsterType } from '@/lib/enums'
-import { CUSTOM_MONSTER_UPDATED_MESSAGE, ERROR_MESSAGE } from '@/lib/messages'
+import {
+  CUSTOM_MONSTER_UPDATED_MESSAGE,
+  ERROR_MESSAGE,
+  NAMELESS_OBJECT_ERROR_MESSAGE
+} from '@/lib/messages'
 import {
   ChevronDownIcon,
   PlusIcon,
@@ -374,7 +378,7 @@ export function EditMonsterCard({
    */
   const handleSave = useCallback(async () => {
     if (!name.trim())
-      return toast.error('A nameless monster cannot be recorded.')
+      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('monster'))
 
     setIsSaving(true)
 
