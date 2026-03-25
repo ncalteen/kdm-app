@@ -19,6 +19,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { removeHunt, updateHunt } from '@/lib/dal/hunt'
 import { updateHuntHuntBoard } from '@/lib/dal/hunt-hunt-board'
 import { addShowdown } from '@/lib/dal/showdown'
@@ -51,12 +53,13 @@ import {
 } from '@/lib/types'
 import { ChevronRightIcon, DicesIcon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Active Hunt Card Properties
  */
 interface ActiveHuntCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
@@ -94,6 +97,7 @@ interface ActiveHuntCardProps {
  * @returns Active Hunt Card Component
  */
 export function ActiveHuntCard({
+  local,
   selectedHunt,
   selectedHuntMonsterIndex,
   selectedSettlement,
@@ -107,6 +111,8 @@ export function ActiveHuntCard({
   setSurvivors,
   survivors
 }: ActiveHuntCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState<boolean>(false)
   const [isShowdownDialogOpen, setIsShowdownDialogOpen] =
     useState<boolean>(false)
@@ -120,18 +126,21 @@ export function ActiveHuntCard({
    *
    * @param eventType Event Type
    */
-  const rollHuntEvent = useCallback((eventType: HuntEventType) => {
-    const maxValue =
-      eventType === HuntEventType.BASIC || eventType === HuntEventType.MONSTER
-        ? HuntEventCount.BASIC
-        : HuntEventCount.ARC_SCOUT
-    const randomEvent = Math.floor(Math.random() * maxValue) + 1
+  const rollHuntEvent = useCallback(
+    (eventType: HuntEventType) => {
+      const maxValue =
+        eventType === HuntEventType.BASIC || eventType === HuntEventType.MONSTER
+          ? HuntEventCount.BASIC
+          : HuntEventCount.ARC_SCOUT
+      const randomEvent = Math.floor(Math.random() * maxValue) + 1
 
-    toast.success(
-      `${eventType === HuntEventType.BASIC ? 'Basic' : eventType === HuntEventType.ARC ? 'Arc' : eventType === HuntEventType.SCOUT ? 'Scout' : 'Monster'} Hunt Event: ${randomEvent}`
-    )
-    setHuntEventPopoverOpen(false)
-  }, [])
+      toast.success(
+        `${eventType === HuntEventType.BASIC ? 'Basic' : eventType === HuntEventType.ARC ? 'Arc' : eventType === HuntEventType.SCOUT ? 'Scout' : 'Monster'} Hunt Event: ${randomEvent}`
+      )
+      setHuntEventPopoverOpen(false)
+    },
+    [toast]
+  )
 
   /**
    * Handle Position Update
@@ -179,7 +188,7 @@ export function ActiveHuntCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedHunt, setSelectedHunt]
+    [selectedHunt, setSelectedHunt, toast]
   )
 
   /**
@@ -226,7 +235,7 @@ export function ActiveHuntCard({
         toast.error(ERROR_MESSAGE())
       })
     },
-    [selectedHunt, setSelectedHunt]
+    [selectedHunt, setSelectedHunt, toast]
   )
 
   /**
@@ -256,7 +265,7 @@ export function ActiveHuntCard({
         console.error('Delete Hunt Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [selectedHunt, setSelectedHunt, setSelectedHuntMonsterIndex])
+  }, [selectedHunt, setSelectedHunt, setSelectedHuntMonsterIndex, toast])
 
   /**
    * Handle Showdown (open confirmation dialog)
@@ -474,7 +483,8 @@ export function ActiveHuntCard({
     setSelectedHuntMonsterIndex,
     setSelectedShowdown,
     setSelectedShowdownMonsterIndex,
-    setSelectedTab
+    setSelectedTab,
+    toast
   ])
 
   return (
@@ -567,6 +577,7 @@ export function ActiveHuntCard({
 
       {/* Monster(s) Card */}
       <HuntMonstersCard
+        local={local}
         selectedHunt={selectedHunt}
         selectedHuntMonsterIndex={selectedHuntMonsterIndex}
         setSelectedHunt={setSelectedHunt}
@@ -575,6 +586,7 @@ export function ActiveHuntCard({
 
       {/* Hunt Party Survivors */}
       <HuntSurvivorsCard
+        local={local}
         selectedHunt={selectedHunt}
         selectedSettlement={selectedSettlement}
         selectedSurvivor={selectedSurvivor}

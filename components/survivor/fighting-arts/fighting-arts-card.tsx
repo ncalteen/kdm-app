@@ -19,6 +19,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getFightingArts } from '@/lib/dal/fighting-art'
 import { getSecretFightingArts } from '@/lib/dal/secret-fighting-art'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -52,12 +54,13 @@ import {
   useRef,
   useState
 } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Fighting Arts Card Properties
  */
 interface FightingArtsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -78,11 +81,14 @@ type SecretFightingArtItem = { id: string; secret_fighting_art_name: string }
  * @returns Fighting Arts Card Component
  */
 export function FightingArtsCard({
+  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: FightingArtsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [availableFightingArts, setAvailableFightingArts] = useState<{
@@ -200,7 +206,8 @@ export function FightingArtsCard({
       fightingArts,
       selectedSurvivor,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 
@@ -260,7 +267,8 @@ export function FightingArtsCard({
       secretFightingArts,
       selectedSurvivor,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 
@@ -319,7 +327,7 @@ export function FightingArtsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [fightingArts, selectedSurvivor, setSurvivors, survivors]
+    [fightingArts, selectedSurvivor, setSurvivors, survivors, toast]
   )
 
   /**
@@ -362,7 +370,7 @@ export function FightingArtsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [secretFightingArts, selectedSurvivor, setSurvivors, survivors]
+    [secretFightingArts, selectedSurvivor, setSurvivors, survivors, toast]
   )
 
   /**
@@ -408,7 +416,8 @@ export function FightingArtsCard({
       canUseFightingArtsKnowledges,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 

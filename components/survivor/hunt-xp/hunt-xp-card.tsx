@@ -4,6 +4,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormItem } from '@/components/ui/form'
 import { Label } from '@/components/ui/label'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { DatabaseSurvivorType, SurvivorType } from '@/lib/enums'
 import {
@@ -16,12 +18,13 @@ import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { BookOpenIcon } from 'lucide-react'
 import { MouseEvent, ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Hunt XP Card Properties
  */
 interface HuntXPCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlemenet */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -43,11 +46,14 @@ interface HuntXPCardProps {
  * @returns Hunt XP Card Component
  */
 export function HuntXPCard({
+  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: HuntXPCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [huntXP, setHuntXP] = useState<number>(selectedSurvivor?.hunt_xp ?? 0)
@@ -95,7 +101,7 @@ export function HuntXPCard({
           setSurvivors(oldSurvivors)
         })
     },
-    [huntXP, huntXPRankUp, selectedSurvivor?.id, setSurvivors, survivors]
+    [huntXP, huntXPRankUp, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -161,7 +167,7 @@ export function HuntXPCard({
           })
       }
     },
-    [huntXPRankUp, selectedSurvivor?.id, setSurvivors, survivors]
+    [huntXPRankUp, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**

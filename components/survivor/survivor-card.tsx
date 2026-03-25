@@ -22,6 +22,7 @@ import { SurvivalCard } from '@/components/survivor/survival/survival-card'
 import { WandererCard } from '@/components/survivor/wanderer/wanderer-card'
 import { WeaponProficiencyCard } from '@/components/survivor/weapon-proficiency/weapon-proficiency-card'
 import { Card, CardContent } from '@/components/ui/card'
+import { LocalStateType } from '@/contexts/local-context'
 import {
   ColorChoice,
   DatabaseSurvivorType,
@@ -41,6 +42,8 @@ import { ReactElement } from 'react'
  * Survivor Card Props
  */
 interface SurvivorCardProps extends Partial<SurvivorDetail> {
+  /** Local State */
+  local: LocalStateType
   /** Mode */
   mode: SurvivorCardMode
   /** Selected Hunt */
@@ -70,6 +73,7 @@ interface SurvivorCardProps extends Partial<SurvivorDetail> {
  * @returns Survivor Card Component
  */
 export function SurvivorCard({
+  local,
   mode,
   selectedHunt,
   selectedSettlement,
@@ -94,24 +98,28 @@ export function SurvivorCard({
           {/* First Column - Essential Stats */}
           <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px]">
             <StatusCard
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             {selectedSurvivor?.wanderer && (
               <WandererCard
+                local={local}
                 selectedSurvivor={selectedSurvivor}
                 setSurvivors={setSurvivors}
                 survivors={survivors}
               />
             )}
             <HuntXPCard
+              local={local}
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <SurvivalCard
+              local={local}
               mode={mode}
               selectedHunt={selectedHunt}
               selectedSettlement={selectedSettlement}
@@ -123,27 +131,32 @@ export function SurvivorCard({
               survivors={survivors}
             />
             <WeaponProficiencyCard
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <CourageUnderstandingCard
+              local={local}
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <DisordersCard
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <AbilitiesAndImpairmentsCard
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <OncePerLifetimeCard
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
@@ -153,6 +166,7 @@ export function SurvivorCard({
           {/* Second Column - Combat */}
           <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px]">
             <AttributeCard
+              local={local}
               mode={mode}
               selectedHunt={selectedHunt}
               selectedSettlement={selectedSettlement}
@@ -164,6 +178,7 @@ export function SurvivorCard({
               survivors={survivors}
             />
             <SanityCard
+              local={local}
               displayText={true}
               displayTormentInput={true}
               mode={mode}
@@ -177,37 +192,44 @@ export function SurvivorCard({
               survivors={survivors}
             />
             <HeadCard
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <ArmsCard
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <BodyCard
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <WaistCard
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <LegsCard
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <FightingArtsCard
+              local={local}
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <CursedGearCard
+              local={local}
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
@@ -215,6 +237,7 @@ export function SurvivorCard({
             />
             {mode === SurvivorCardMode.SURVIVOR_CARD && (
               <NextDepartureCard
+                local={local}
                 selectedSurvivor={selectedSurvivor}
                 setSurvivors={setSurvivors}
                 survivors={survivors}
@@ -227,12 +250,14 @@ export function SurvivorCard({
             DatabaseSurvivorType[SurvivorType.ARC] && (
             <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px] order-3">
               <PhilosophyCard
+                local={local}
                 selectedSettlement={selectedSettlement}
                 selectedSurvivor={selectedSurvivor}
                 setSurvivors={setSurvivors}
                 survivors={survivors}
               />
               <KnowledgeCard
+                local={local}
                 selectedSettlement={selectedSettlement}
                 selectedSurvivor={selectedSurvivor}
                 setSurvivors={setSurvivors}

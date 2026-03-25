@@ -10,6 +10,7 @@ import {
   SidebarHeader,
   SidebarRail
 } from '@/components/ui/sidebar'
+import { LocalStateType } from '@/contexts/local-context'
 import {
   CampaignType,
   DatabaseCampaignType,
@@ -149,6 +150,8 @@ const navSettings = [
 interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
   /** Is Creating New Settlement */
   isCreatingNewSettlement: boolean
+  /** Local State */
+  local: LocalStateType
   /** Selected Hunt ID */
   selectedHuntId: string | null
   /** Selected Settlement */
@@ -185,6 +188,7 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
  */
 export function AppSidebar({
   isCreatingNewSettlement,
+  local,
   selectedHuntId,
   selectedSettlement,
   selectedSettlementId,
@@ -234,6 +238,7 @@ export function AppSidebar({
       <SidebarHeader>
         <SettlementSwitcher
           isCreatingNewSettlement={isCreatingNewSettlement}
+          local={local}
           selectedHuntId={selectedHuntId}
           selectedSettlement={selectedSettlement}
           selectedSettlementId={selectedSettlementId}

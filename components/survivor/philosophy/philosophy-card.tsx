@@ -20,6 +20,8 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
   ERROR_MESSAGE,
@@ -36,12 +38,13 @@ import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { MouseEvent, ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Philosophy Card Properties
  */
 interface PhilosophyCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -133,11 +136,14 @@ function TenetKnowledgeSelect({
  * @returns Philosophy Card Component
  */
 export function PhilosophyCard({
+  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: PhilosophyCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [neurosis, setNeurosis] = useState<{
@@ -253,7 +259,8 @@ export function PhilosophyCard({
       selectedSettlement,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 
@@ -302,7 +309,7 @@ export function PhilosophyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [tenetKnowledge, selectedSurvivor?.id, setSurvivors, survivors]
+    [tenetKnowledge, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -340,7 +347,7 @@ export function PhilosophyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [philosophyRank, selectedSurvivor?.id, setSurvivors, survivors]
+    [philosophyRank, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**

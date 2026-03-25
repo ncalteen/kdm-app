@@ -3,6 +3,8 @@
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -29,7 +31,6 @@ import {
   SurvivorDetail
 } from '@/lib/types'
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /** Token name mapping from UI names to DB field names */
 const TOKEN_FIELD_MAP: Record<string, string> = {
@@ -45,19 +46,27 @@ const TOKEN_FIELD_MAP: Record<string, string> = {
  * Attribute Card Properties
  */
 interface AttributeCardProps {
+  /** Disabled */
   disabled?: boolean
+  /** Local State */
+  local: LocalStateType
+  /** Card Mode */
   mode: SurvivorCardMode
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
+  /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
+  /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt (for optimistic token updates) */
   setSelectedHunt?: (hunt: HuntDetail | null) => void
   /** Set Selected Showdown (for optimistic token updates) */
   setSelectedShowdown?: (showdown: ShowdownDetail | null) => void
+  /** Set Survivors */
   setSurvivors: (survivors: SurvivorDetail[]) => void
+  /** Survivors */
   survivors: SurvivorDetail[]
 }
 
@@ -73,6 +82,7 @@ interface AttributeCardProps {
  */
 export function AttributeCard({
   disabled = false,
+  local,
   mode,
   selectedHunt,
   selectedSettlement,
@@ -83,6 +93,8 @@ export function AttributeCard({
   setSurvivors,
   survivors
 }: AttributeCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | null>(null)
   const [movement, setMovement] = useState(selectedSurvivor?.movement ?? 1)
   const [accuracy, setAccuracy] = useState(selectedSurvivor?.accuracy ?? 0)
@@ -232,7 +244,8 @@ export function AttributeCard({
       huntSurvivorRecord,
       showdownSurvivorRecord,
       setSelectedHunt,
-      setSelectedShowdown
+      setSelectedShowdown,
+      toast
     ]
   )
 
@@ -312,7 +325,7 @@ export function AttributeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSurvivor?.id, setSurvivors, survivors]
+    [selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   return (

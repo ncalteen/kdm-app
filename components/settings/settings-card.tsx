@@ -20,10 +20,12 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
+import { LocalStateType } from '@/contexts/local-context'
 import { removeHunt } from '@/lib/dal/hunt'
 import { removeSettlement, updateSettlement } from '@/lib/dal/settlement'
 import { removeShowdown } from '@/lib/dal/showdown'
 import {
+  DISABLE_TOASTS_SETTING_UPDATED_MESSAGE,
   ERROR_MESSAGE,
   HUNT_DELETED_MESSAGE,
   SETTLEMENT_DELETED_MESSAGE,
@@ -40,6 +42,8 @@ import { toast } from 'sonner'
  * Settings Card Properties
  */
 interface SettingsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Settlement */
@@ -60,6 +64,8 @@ interface SettingsCardProps {
   setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
+  /** Update Local State */
+  updateLocal: (local: LocalStateType) => void
 }
 
 /**
@@ -73,6 +79,7 @@ interface SettingsCardProps {
  * @returns Settings Card Component
  */
 export function SettingsCard({
+  local,
   selectedHunt,
   selectedSettlement,
   selectedShowdown,
@@ -82,10 +89,37 @@ export function SettingsCard({
   setSelectedSettlementId,
   setSelectedShowdown,
   setSelectedShowdownId,
-  setSelectedSurvivorId
+  setSelectedSurvivorId,
+  updateLocal
 }: SettingsCardProps): ReactElement {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [isSeeding, startSeedTransition] = useTransition()
+  const [disableToasts, setDisableToasts] = useState<boolean>(
+    local.disableToasts ?? false
+  )
+
+  /**
+   * Handle Disable Toasts Setting
+   *
+   * @param value New Value
+   */
+  const handleDisableToastsChange = (value: string) => {
+    const newDisableToasts = value === 'true'
+
+    try {
+      updateLocal({
+        ...local,
+        disableToasts: newDisableToasts
+      })
+      setDisableToasts(newDisableToasts)
+
+      // Always show this toast so user knows the setting was changed
+      toast.success(DISABLE_TOASTS_SETTING_UPDATED_MESSAGE(newDisableToasts))
+    } catch (error) {
+      console.error('Disable Toasts Update Error:', error)
+      toast.error(ERROR_MESSAGE())
+    }
+  }
 
   /**
    * Handle Uses Scouts Setting Change
@@ -230,6 +264,36 @@ export function SettingsCard({
 
   return (
     <div className="flex flex-col gap-4 pt-2">
+      {/* Global Settings */}
+      <Card className="p-0">
+        <CardHeader className="px-4 pt-3 pb-0">
+          <CardTitle className="text-lg">Global Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-sm">Disable Notifications</div>
+              <div className="text-sm text-muted-foreground">
+                Silences success messages. Error messages will always be shown.
+              </div>
+            </div>
+            <Select
+              value={disableToasts.toString()}
+              onValueChange={handleDisableToastsChange}
+              name="disable-toasts"
+              aria-label="Disable Notifications">
+              <SelectTrigger className="w-24" id="disable-toasts">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="false">No</SelectItem>
+                <SelectItem value="true">Yes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Development Tools */}
       {isDevelopment && (
         <Card className="p-0 border-blue-500">

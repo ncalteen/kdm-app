@@ -16,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getGear } from '@/lib/dal/gear'
 import {
   addSettlementGear,
@@ -30,12 +32,13 @@ import {
 import { GearDetail, SettlementDetail } from '@/lib/types'
 import { PlusIcon, WrenchIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Gear Card Properties
  */
 interface GearCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -53,9 +56,12 @@ interface GearCardProps {
  * @returns Gear Card Component
  */
 export function GearCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: GearCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
@@ -95,7 +101,7 @@ export function GearCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   const selectableGear = useMemo(() => {
     const linkedIds = new Set(
@@ -167,7 +173,7 @@ export function GearCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableGear, setSelectedSettlement]
+    [selectedSettlement, availableGear, setSelectedSettlement, toast]
   )
 
   /**
@@ -205,7 +211,7 @@ export function GearCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -246,7 +252,7 @@ export function GearCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

@@ -16,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getNemeses } from '@/lib/dal/nemesis'
 import {
   addSettlementNemeses,
@@ -34,12 +36,13 @@ import { sortNemeses } from '@/lib/settlement/nemeses'
 import { NemesisDetail, SettlementDetail } from '@/lib/types'
 import { PlusIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Nemeses Card Properties
  */
 interface NemesesCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -58,9 +61,12 @@ interface NemesesCardProps {
  * @returns Nemeses Card Component
  */
 export function NemesesCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: NemesesCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
@@ -122,7 +128,7 @@ export function NemesesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   /**
    * Available Nemeses Not Yet Added
@@ -214,7 +220,7 @@ export function NemesesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableNemeses, setSelectedSettlement]
+    [selectedSettlement, availableNemeses, setSelectedSettlement, toast]
   )
 
   /**
@@ -254,7 +260,7 @@ export function NemesesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -297,7 +303,7 @@ export function NemesesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -346,7 +352,7 @@ export function NemesesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

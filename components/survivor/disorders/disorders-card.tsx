@@ -15,6 +15,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getDisorders } from '@/lib/dal/disorder'
 import {
   addSurvivorDisorder,
@@ -29,7 +31,6 @@ import {
 import { DisorderDetail, SurvivorDetail } from '@/lib/types'
 import { PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 const MAX_DISORDERS = 3
 
@@ -37,6 +38,8 @@ const MAX_DISORDERS = 3
  * Disorders Card Properties
  */
 interface DisordersCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -52,10 +55,13 @@ interface DisordersCardProps {
  * @returns Disorders Card Component
  */
 export function DisordersCard({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: DisordersCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [availableDisorders, setAvailableDisorders] = useState<{
@@ -129,7 +135,14 @@ export function DisordersCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [availableDisorders, disorders, selectedSurvivor, setSurvivors, survivors]
+    [
+      availableDisorders,
+      disorders,
+      selectedSurvivor,
+      setSurvivors,
+      survivors,
+      toast
+    ]
   )
 
   /**
@@ -170,7 +183,7 @@ export function DisordersCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [disorders, selectedSurvivor, setSurvivors, survivors]
+    [disorders, selectedSurvivor, setSurvivors, survivors, toast]
   )
 
   return (

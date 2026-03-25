@@ -11,6 +11,8 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSettlementNemesis } from '@/lib/dal/settlement-nemesis'
 import { updateSettlementQuarry } from '@/lib/dal/settlement-quarry'
 import {
@@ -20,12 +22,13 @@ import {
 import { SettlementDetail } from '@/lib/types'
 import { TrophyIcon } from 'lucide-react'
 import { ReactElement, useCallback } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Collective Cognition Victories Card Properties
  */
 interface CollectiveCognitionVictoriesCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -42,9 +45,12 @@ interface CollectiveCognitionVictoriesCardProps {
  * @returns Collective Cognition Victories Card Component
  */
 export function CollectiveCognitionVictoriesCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: CollectiveCognitionVictoriesCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   /**
    * Handle Quarry Collective Cognition Toggle
    *
@@ -120,7 +126,7 @@ export function CollectiveCognitionVictoriesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -172,7 +178,7 @@ export function CollectiveCognitionVictoriesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

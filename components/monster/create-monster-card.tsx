@@ -14,6 +14,8 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { addNemesis } from '@/lib/dal/nemesis'
 import { addNemesisLevel } from '@/lib/dal/nemesis-level'
 import { addQuarry } from '@/lib/dal/quarry'
@@ -34,7 +36,6 @@ import {
   XIcon
 } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
-import { toast } from 'sonner'
 
 /** Per-level sub-monster form data */
 interface LevelFormData {
@@ -162,6 +163,8 @@ function getAvailableNodes(type: MonsterType): MonsterNode[] {
  * Create Monster Card Properties
  */
 interface CreateMonsterCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Cancel Callback */
   onCancel: () => void
   /** Monster Created Callback */
@@ -178,9 +181,12 @@ interface CreateMonsterCardProps {
  * @returns Create Monster Card Component
  */
 export function CreateMonsterCard({
+  local,
   onCancel,
   onMonsterCreated
 }: CreateMonsterCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [isCreating, setIsCreating] = useState(false)
 
   // Basic info
@@ -444,7 +450,8 @@ export function CreateMonsterCard({
     isMultiMonster,
     levels,
     huntBoard,
-    onMonsterCreated
+    onMonsterCreated,
+    toast
   ])
 
   return (

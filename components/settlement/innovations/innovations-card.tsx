@@ -15,6 +15,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getInnovations } from '@/lib/dal/innovation'
 import {
   addSettlementInnovations,
@@ -35,7 +37,6 @@ import {
   useRef,
   useState
 } from 'react'
-import { toast } from 'sonner'
 
 /** Settlement innovation item with junction table and innovation details */
 type InnovationItem = {
@@ -48,6 +49,8 @@ type InnovationItem = {
  * Innovations Card Properties
  */
 interface InnovationsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -64,9 +67,12 @@ interface InnovationsCardProps {
  * @returns Innovations Card Component
  */
 export function InnovationsCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: InnovationsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const settlementIdRef = useRef<string | undefined>(undefined)
 
   const [availableInnovations, setAvailableInnovations] = useState<{
@@ -163,7 +169,8 @@ export function InnovationsCard({
       availableInnovations,
       innovations,
       selectedSettlement,
-      setSelectedSettlement
+      setSelectedSettlement,
+      toast
     ]
   )
 
@@ -202,7 +209,7 @@ export function InnovationsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [innovations, selectedSettlement, setSelectedSettlement]
+    [innovations, selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

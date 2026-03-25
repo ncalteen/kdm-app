@@ -16,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getSeedPatterns } from '@/lib/dal/seed-pattern'
 import {
   addSettlementSeedPatterns,
@@ -29,12 +31,13 @@ import {
 import { SeedPatternDetail, SettlementDetail } from '@/lib/types'
 import { BeanIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Seed Patterns Card Properties
  */
 interface SeedPatternsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -52,9 +55,12 @@ interface SeedPatternsCardProps {
  * @returns Seed Patterns Card Component
  */
 export function SeedPatternsCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: SeedPatternsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
@@ -94,7 +100,7 @@ export function SeedPatternsCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   const selectableSeedPatterns = useMemo(() => {
     const linkedIds = new Set(
@@ -160,7 +166,7 @@ export function SeedPatternsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableSeedPatterns, setSelectedSettlement]
+    [selectedSettlement, availableSeedPatterns, setSelectedSettlement, toast]
   )
 
   const handleRemove = useCallback(
@@ -192,7 +198,7 @@ export function SeedPatternsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

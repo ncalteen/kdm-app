@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getLostSettlementCount, updateSettlement } from '@/lib/dal/settlement'
 import { updateSettlementPhase } from '@/lib/dal/settlement-phase'
 import {
@@ -28,12 +30,13 @@ import {
   SurvivorDetail
 } from '@/lib/types'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Overview Card Properties
  */
 interface OverviewCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
@@ -57,12 +60,15 @@ interface OverviewCardProps {
  * @returns Overview Card Component
  */
 export function OverviewCard({
+  local,
   selectedSettlement,
   selectedSettlementPhase,
   setSelectedSettlement,
   setSelectedSettlementPhase,
   survivors
 }: OverviewCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [lostSettlementCount, setLostSettlementCount] = useState<number>(0)
 
   /** Death count derived from survivors array */
@@ -132,7 +138,7 @@ export function OverviewCard({
     return () => {
       isCancelled = true
     }
-  }, [selectedSettlement?.id])
+  }, [selectedSettlement?.id, toast])
 
   /**
    * Handle Endeavors Change
@@ -172,7 +178,7 @@ export function OverviewCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlementPhase, setSelectedSettlementPhase]
+    [selectedSettlementPhase, setSelectedSettlementPhase, toast]
   )
 
   /**
@@ -213,7 +219,7 @@ export function OverviewCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -254,7 +260,7 @@ export function OverviewCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

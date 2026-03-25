@@ -18,6 +18,8 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
   ERROR_MESSAGE,
@@ -32,12 +34,13 @@ import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { MouseEvent, ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Knowledge Card Properties
  */
 interface KnowledgeCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -132,11 +135,14 @@ function KnowledgeSelect({
  * @returns Knowledge Card Component
  */
 export function KnowledgeCard({
+  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: KnowledgeCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   // Local state for text fields to enable controlled components
@@ -236,7 +242,14 @@ export function KnowledgeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [knowledge1, knowledge2, selectedSurvivor?.id, setSurvivors, survivors]
+    [
+      knowledge1,
+      knowledge2,
+      selectedSurvivor?.id,
+      setSurvivors,
+      survivors,
+      toast
+    ]
   )
 
   /**
@@ -284,7 +297,8 @@ export function KnowledgeCard({
       canUseFightingArtsKnowledges,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 
@@ -410,7 +424,7 @@ export function KnowledgeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [knowledge1, selectedSurvivor?.id, setSurvivors, survivors]
+    [knowledge1, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -632,7 +646,7 @@ export function KnowledgeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [knowledge2, selectedSurvivor?.id, setSurvivors, survivors]
+    [knowledge2, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**

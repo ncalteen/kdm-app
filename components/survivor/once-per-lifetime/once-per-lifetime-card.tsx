@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
   ERROR_MESSAGE,
@@ -34,12 +36,13 @@ import {
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Once Per Lifetime Card Properties
  */
 interface OncePerLifetimeCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -55,10 +58,13 @@ interface OncePerLifetimeCardProps {
  * @returns Once Per Lifetime Card Component
  */
 export function OncePerLifetimeCard({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: OncePerLifetimeCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [disabledInputs, setDisabledInputs] = useState<{
@@ -146,7 +152,7 @@ export function OncePerLifetimeCard({
 
       setIsAddingNew(false)
     },
-    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, survivors]
+    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -209,7 +215,7 @@ export function OncePerLifetimeCard({
 
       setIsAddingNew(false)
     },
-    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, survivors]
+    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -268,7 +274,7 @@ export function OncePerLifetimeCard({
         })
       }
     },
-    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, survivors]
+    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -302,7 +308,7 @@ export function OncePerLifetimeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [rerollUsed, selectedSurvivor?.id, setSurvivors, survivors]
+    [rerollUsed, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   return (

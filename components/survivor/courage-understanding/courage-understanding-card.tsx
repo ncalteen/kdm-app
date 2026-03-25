@@ -5,6 +5,8 @@ import { FacesInTheSky } from '@/components/survivor/courage-understanding/faces
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
   ERROR_MESSAGE,
@@ -14,12 +16,13 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { BookOpenIcon } from 'lucide-react'
 import { ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Courage Understanding Card Properties
  */
 interface CourageUnderstandingCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -41,11 +44,14 @@ interface CourageUnderstandingCardProps {
  * @returns Courage and Understanding Card Component
  */
 export function CourageUnderstandingCard({
+  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: CourageUnderstandingCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [courage, setCourage] = useState(selectedSurvivor?.courage ?? 0)
@@ -98,7 +104,14 @@ export function CourageUnderstandingCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [courage, understanding, selectedSurvivor?.id, setSurvivors, survivors]
+    [
+      courage,
+      understanding,
+      selectedSurvivor?.id,
+      setSurvivors,
+      survivors,
+      toast
+    ]
   )
 
   // Determine the label texts based on campaign type. Currently only People of
@@ -221,6 +234,7 @@ export function CourageUnderstandingCard({
 
         {selectedSettlement?.campaign_type !== 'PEOPLE_OF_THE_STARS' ? (
           <CourageUnderstandingAbilities
+            local={local}
             selectedSurvivor={selectedSurvivor}
             setSurvivors={setSurvivors}
             survivors={survivors}
@@ -230,6 +244,7 @@ export function CourageUnderstandingCard({
             <hr className="my-2 mx-1" />
 
             <FacesInTheSky
+              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}

@@ -16,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getPatterns } from '@/lib/dal/pattern'
 import {
   addSettlementPatterns,
@@ -29,12 +31,13 @@ import {
 import { PatternDetail, SettlementDetail } from '@/lib/types'
 import { PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Patterns Card Properties
  */
 interface PatternsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -52,9 +55,12 @@ interface PatternsCardProps {
  * @returns Patterns Card Component
  */
 export function PatternsCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: PatternsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
@@ -94,7 +100,7 @@ export function PatternsCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   const selectablePatterns = useMemo(() => {
     const linkedIds = new Set(
@@ -155,7 +161,7 @@ export function PatternsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availablePatterns, setSelectedSettlement]
+    [selectedSettlement, availablePatterns, setSelectedSettlement, toast]
   )
 
   const handleRemove = useCallback(
@@ -185,7 +191,7 @@ export function PatternsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

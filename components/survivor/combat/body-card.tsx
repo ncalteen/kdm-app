@@ -4,18 +4,21 @@ import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { COMBAT_BODY_UPDATED_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Shield, ShirtIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Body Card Properties
  */
 interface BodyCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -34,10 +37,13 @@ interface BodyCardProps {
  * @returns Body Card Component
  */
 export function BodyCard({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: BodyCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [bodyArmor, setBodyArmor] = useState(selectedSurvivor?.body_armor ?? 0)
   const [bodyDestroyedBack, setBodyDestroyedBack] = useState(
@@ -101,7 +107,7 @@ export function BodyCard({
           console.error('Error Updating Body:', error)
         })
     },
-    [selectedSurvivor?.id, setSurvivors, survivors]
+    [selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   return (

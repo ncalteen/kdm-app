@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -37,12 +39,13 @@ import {
 } from '@/lib/types'
 import { LockIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Survival Card Properties
  */
 interface SurvivalCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Mode */
   mode: SurvivorCardMode
   /** Selected Hunt */
@@ -76,6 +79,7 @@ interface SurvivalCardProps {
  * @returns Survival Card Component
  */
 export function SurvivalCard({
+  local,
   mode,
   selectedHunt,
   selectedSettlement,
@@ -86,6 +90,8 @@ export function SurvivalCard({
   setSurvivors,
   survivors
 }: SurvivalCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [survival, setSurvival] = useState(selectedSurvivor?.survival ?? 0)
@@ -257,7 +263,8 @@ export function SurvivalCard({
       huntSurvivorRecord,
       showdownSurvivorRecord,
       setSelectedHunt,
-      setSelectedShowdown
+      setSelectedShowdown,
+      toast
     ]
   )
 
@@ -308,7 +315,8 @@ export function SurvivalCard({
       survival,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 
@@ -350,7 +358,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canSpendSurvival, selectedSurvivor?.id, setSurvivors, survivors]
+    [canSpendSurvival, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -384,7 +392,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canDodge, selectedSurvivor?.id, setSurvivors, survivors]
+    [canDodge, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -418,7 +426,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canEncourage, selectedSurvivor?.id, setSurvivors, survivors]
+    [canEncourage, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -452,7 +460,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canSurge, selectedSurvivor?.id, setSurvivors, survivors]
+    [canSurge, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -484,7 +492,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canDash, selectedSurvivor?.id, setSurvivors, survivors]
+    [canDash, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -518,7 +526,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canFistPump, selectedSurvivor?.id, setSurvivors, survivors]
+    [canFistPump, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -556,7 +564,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [systemicPressure, selectedSurvivor?.id, setSurvivors, survivors]
+    [systemicPressure, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -590,7 +598,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canEndure, selectedSurvivor?.id, setSurvivors, survivors]
+    [canEndure, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   return (

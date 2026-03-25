@@ -16,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getCollectiveCognitionRewards } from '@/lib/dal/collective-cognition-reward'
 import {
   addSettlementCollectiveCognitionRewards,
@@ -31,12 +33,13 @@ import {
 import { CollectiveCognitionRewardDetail, SettlementDetail } from '@/lib/types'
 import { BrainIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Collective Cognition Rewards Card Properties
  */
 interface CollectiveCognitionRewardsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -55,9 +58,12 @@ interface CollectiveCognitionRewardsCardProps {
  * @returns Collective Cognition Rewards Card Component
  */
 export function CollectiveCognitionRewardsCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: CollectiveCognitionRewardsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
@@ -103,7 +109,7 @@ export function CollectiveCognitionRewardsCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   /**
    * Sorted Rewards
@@ -184,7 +190,7 @@ export function CollectiveCognitionRewardsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableRewards, setSelectedSettlement]
+    [selectedSettlement, availableRewards, setSelectedSettlement, toast]
   )
 
   /**
@@ -235,7 +241,7 @@ export function CollectiveCognitionRewardsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -280,7 +286,7 @@ export function CollectiveCognitionRewardsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

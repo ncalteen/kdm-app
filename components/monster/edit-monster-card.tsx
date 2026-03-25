@@ -14,6 +14,8 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getNemesis, updateNemesis } from '@/lib/dal/nemesis'
 import { getNemesisLevels, removeNemesisLevel } from '@/lib/dal/nemesis-level'
 import { getQuarry, updateQuarry } from '@/lib/dal/quarry'
@@ -41,7 +43,6 @@ import {
   XIcon
 } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
 
 /** Per-level sub-monster form data */
 interface LevelFormData {
@@ -138,6 +139,8 @@ const MONSTER_ATTRIBUTES = [
  * Edit Monster Card Properties
  */
 interface EditMonsterCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Monster ID */
   monsterId: string
   /** Monster Type */
@@ -157,11 +160,14 @@ interface EditMonsterCardProps {
  * @returns Edit Monster Card Component
  */
 export function EditMonsterCard({
+  local,
   monsterId,
   monsterType,
   onCancel,
   onMonsterUpdated
 }: EditMonsterCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -319,7 +325,7 @@ export function EditMonsterCard({
       }
     }
     load()
-  }, [monsterId, monsterType])
+  }, [monsterId, monsterType, toast])
 
   const toggleLevel = useCallback((level: number) => {
     setExpandedLevels((prev) => {
@@ -548,7 +554,8 @@ export function EditMonsterCard({
     huntBoard,
     huntBoardId,
     deletedLevelIds,
-    onMonsterUpdated
+    onMonsterUpdated,
+    toast
   ])
 
   if (isLoading)

@@ -16,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getKnowledges } from '@/lib/dal/knowledge'
 import {
   addSettlementKnowledges,
@@ -29,12 +31,13 @@ import {
 import { KnowledgeDetail, SettlementDetail } from '@/lib/types'
 import { GraduationCapIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Knowledges Card Properties
  */
 interface KnowledgesCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -52,9 +55,12 @@ interface KnowledgesCardProps {
  * @returns Knowledges Card Component
  */
 export function KnowledgesCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: KnowledgesCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
@@ -100,7 +106,7 @@ export function KnowledgesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   /**
    * Sorted Knowledges
@@ -179,7 +185,7 @@ export function KnowledgesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableKnowledges, setSelectedSettlement]
+    [selectedSettlement, availableKnowledges, setSelectedSettlement, toast]
   )
 
   /**
@@ -221,7 +227,7 @@ export function KnowledgesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

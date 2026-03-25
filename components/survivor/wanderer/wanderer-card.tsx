@@ -10,6 +10,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { AenasState } from '@/lib/enums'
 import {
@@ -19,12 +21,13 @@ import {
 } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
 import { ReactElement, useCallback, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Wanderer Card Properties
  */
 interface WandererCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -44,10 +47,13 @@ interface WandererCardProps {
  * @returns Wanderer Card Component
  */
 export function WandererCard({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: WandererCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [aenasState, setAenasState] = useState<string>(
     selectedSurvivor?.aenas_state ?? AenasState.HUNGRY
   )
@@ -114,7 +120,8 @@ export function WandererCard({
       selectedSurvivor?.survivor_name,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 
@@ -146,7 +153,7 @@ export function WandererCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [disposition, selectedSurvivor?.id, setSurvivors, survivors]
+    [disposition, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   return (

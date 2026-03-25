@@ -16,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getLocations } from '@/lib/dal/location'
 import {
   addSettlementLocations,
@@ -31,12 +33,13 @@ import {
 import { LocationDetail, SettlementDetail } from '@/lib/types'
 import { HouseIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Locations Card Properties
  */
 interface LocationsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -54,9 +57,12 @@ interface LocationsCardProps {
  * @returns Locations Card Component
  */
 export function LocationsCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: LocationsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
@@ -102,7 +108,7 @@ export function LocationsCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   /**
    * Available Locations Not Yet Added
@@ -195,7 +201,7 @@ export function LocationsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableLocations, setSelectedSettlement]
+    [selectedSettlement, availableLocations, setSelectedSettlement, toast]
   )
 
   /**
@@ -237,7 +243,7 @@ export function LocationsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -278,7 +284,7 @@ export function LocationsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

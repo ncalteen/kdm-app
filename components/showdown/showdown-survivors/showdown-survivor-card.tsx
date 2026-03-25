@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { SurvivorCardMode } from '@/lib/enums'
 import { ERROR_MESSAGE, SHOWDOWN_NOTES_SAVED_MESSAGE } from '@/lib/messages'
@@ -16,12 +18,13 @@ import {
 } from '@/lib/types'
 import { CheckIcon } from 'lucide-react'
 import { ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Showdown Survivor Card Component Properties
  */
 interface ShowdownSurvivorCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Selected Settlement */
@@ -46,6 +49,7 @@ interface ShowdownSurvivorCardProps {
  * @returns Showdown Survivor Card Component
  */
 export function ShowdownSurvivorCard({
+  local,
   selectedShowdown,
   selectedSettlement,
   selectedSurvivor,
@@ -53,6 +57,8 @@ export function ShowdownSurvivorCard({
   setSurvivors,
   survivors
 }: ShowdownSurvivorCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const showdownSurvivorDetail = selectedShowdown?.showdown_survivors
     ? Object.values(selectedShowdown.showdown_survivors).find(
         (ss) => ss.survivor_id === selectedSurvivor?.id
@@ -116,7 +122,8 @@ export function ShowdownSurvivorCard({
     selectedShowdown,
     showdownSurvivorDetail,
     notesDraft,
-    setSelectedShowdown
+    setSelectedShowdown,
+    toast
   ])
 
   if (!selectedSurvivor) return <></>
@@ -125,6 +132,7 @@ export function ShowdownSurvivorCard({
     <Card className="w-full min-w-[430px] border-0 p-0">
       <CardContent className="px-2">
         <SurvivorCard
+          local={local}
           mode={SurvivorCardMode.SHOWDOWN_CARD}
           selectedHunt={null}
           selectedSettlement={selectedSettlement}

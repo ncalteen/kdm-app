@@ -16,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getQuarries } from '@/lib/dal/quarry'
 import {
   addSettlementQuarries,
@@ -33,12 +35,13 @@ import { sortQuarries } from '@/lib/settlement/quarries'
 import { QuarryDetail, SettlementDetail } from '@/lib/types'
 import { PlusIcon, SwordIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Quarries Card Properties
  */
 interface QuarriesCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -56,9 +59,12 @@ interface QuarriesCardProps {
  * @returns Quarries Card Component
  */
 export function QuarriesCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: QuarriesCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
@@ -112,7 +118,7 @@ export function QuarriesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   /**
    * Available Quarries Not Yet Added
@@ -201,7 +207,7 @@ export function QuarriesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableQuarries, setSelectedSettlement]
+    [selectedSettlement, availableQuarries, setSelectedSettlement, toast]
   )
 
   /**
@@ -241,7 +247,7 @@ export function QuarriesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -284,7 +290,7 @@ export function QuarriesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { SurvivorCardMode } from '@/lib/enums'
 import { ERROR_MESSAGE, HUNT_NOTES_SAVED_MESSAGE } from '@/lib/messages'
@@ -16,12 +18,13 @@ import {
 } from '@/lib/types'
 import { CheckIcon } from 'lucide-react'
 import { ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Hunt Survivor Card Component Properties
  */
 interface HuntSurvivorCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Settlement */
@@ -46,6 +49,7 @@ interface HuntSurvivorCardProps {
  * @returns Hunt Survivor Card Component
  */
 export function HuntSurvivorCard({
+  local,
   selectedHunt,
   selectedSettlement,
   selectedSurvivor,
@@ -53,6 +57,8 @@ export function HuntSurvivorCard({
   setSurvivors,
   survivors
 }: HuntSurvivorCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   /** Find the hunt survivor detail record for the current survivor */
   const huntSurvivorDetail = selectedHunt?.hunt_survivors
     ? Object.values(selectedHunt.hunt_survivors).find(
@@ -131,7 +137,8 @@ export function HuntSurvivorCard({
     selectedHunt,
     huntSurvivorDetail,
     notesDraft,
-    setSelectedHunt
+    setSelectedHunt,
+    toast
   ])
 
   if (!selectedSurvivor) return <></>
@@ -140,6 +147,7 @@ export function HuntSurvivorCard({
     <Card className="w-full min-w-[430px] border-0 p-0">
       <CardContent className="px-2">
         <SurvivorCard
+          local={local}
           mode={SurvivorCardMode.HUNT_CARD}
           selectedHunt={selectedHunt}
           selectedSettlement={selectedSettlement}

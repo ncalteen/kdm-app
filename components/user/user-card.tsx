@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { UpdatePasswordForm } from '@/components/update-password-form'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateUserSettings } from '@/lib/dal/user'
 import {
   CAMPAIGN_UNLOCK_KILLENIUM_BUTCHER_UPDATED_MESSAGE,
@@ -20,12 +22,13 @@ import {
 } from '@/lib/messages'
 import { UserSettingsDetail } from '@/lib/types'
 import { ReactElement, useCallback } from 'react'
-import { toast } from 'sonner'
 
 /**
  * User Card Properties
  */
 interface UserCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Set User Settings */
   setUserSettings: (settings: UserSettingsDetail | null) => void
   /** User Settings */
@@ -42,9 +45,12 @@ interface UserCardProps {
  * @returns User Card Component
  */
 export function UserCard({
+  local,
   setUserSettings,
   userSettings
 }: UserCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   /**
    * Handle Killenium Butcher Unlock Change
    *
@@ -80,7 +86,7 @@ export function UserCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [userSettings, setUserSettings]
+    [userSettings, setUserSettings, toast]
   )
 
   /**
@@ -118,7 +124,7 @@ export function UserCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [userSettings, setUserSettings]
+    [userSettings, setUserSettings, toast]
   )
 
   /**
@@ -156,7 +162,7 @@ export function UserCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [userSettings, setUserSettings]
+    [userSettings, setUserSettings, toast]
   )
 
   return (
@@ -257,7 +263,7 @@ export function UserCard({
       </div>
 
       {/* Custom Monsters */}
-      <CustomMonstersCard />
+      <CustomMonstersCard local={local} />
     </div>
   )
 }

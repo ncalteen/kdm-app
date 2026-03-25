@@ -125,7 +125,8 @@ function MainPage(): ReactElement {
     setSurvivors,
     survivors,
 
-    // updateLocal,
+    local,
+    updateLocal,
 
     userSettings,
     setUserSettings
@@ -137,6 +138,7 @@ function MainPage(): ReactElement {
         <SiteHeader />
 
         <AppSidebar
+          local={local}
           isCreatingNewSettlement={isCreatingNewSettlement}
           selectedHuntId={selectedHuntId}
           selectedSettlement={selectedSettlement}
@@ -157,6 +159,7 @@ function MainPage(): ReactElement {
             <SettlementCard
               isCreatingNewSettlement={isCreatingNewSettlement}
               isCreatingNewSurvivor={isCreatingNewSurvivor}
+              local={local}
               selectedHunt={selectedHunt}
               selectedHuntMonsterIndex={selectedHuntMonsterIndex}
               selectedSettlement={selectedSettlement}
@@ -183,6 +186,7 @@ function MainPage(): ReactElement {
               setSurvivors={setSurvivors}
               setUserSettings={setUserSettings}
               survivors={survivors}
+              updateLocal={updateLocal}
               userSettings={userSettings}
             />
           </div>

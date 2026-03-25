@@ -10,6 +10,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { ColorChoice, DatabaseGender, Gender } from '@/lib/enums'
 import {
@@ -30,12 +32,13 @@ import {
   useRef,
   useState
 } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Status Card Props
  */
 interface StatusCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -56,10 +59,13 @@ interface StatusCardProps {
  * @returns Status Card Component
  */
 export function StatusCard({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: StatusCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [survivorName, setSurvivorName] = useState(
@@ -154,7 +160,7 @@ export function StatusCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSurvivor?.id, survivorGender, survivors, setSurvivors]
+    [selectedSurvivor?.id, survivorGender, survivors, setSurvivors, toast]
   )
 
   /**
@@ -185,7 +191,7 @@ export function StatusCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSurvivor?.id, survivorDead, survivors, setSurvivors]
+    [selectedSurvivor?.id, survivorDead, survivors, setSurvivors, toast]
   )
 
   /**
@@ -216,7 +222,7 @@ export function StatusCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSurvivor?.id, survivorRetired, survivors, setSurvivors]
+    [selectedSurvivor?.id, survivorRetired, survivors, setSurvivors, toast]
   )
 
   /**
@@ -246,7 +252,7 @@ export function StatusCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSurvivor?.id, survivorColor, survivors, setSurvivors]
+    [selectedSurvivor?.id, survivorColor, survivors, setSurvivors, toast]
   )
 
   return (

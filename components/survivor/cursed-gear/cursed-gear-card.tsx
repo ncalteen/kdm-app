@@ -16,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import {
   addSurvivorCursedGear,
   removeSurvivorCursedGear
@@ -28,7 +30,6 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /** Cursed gear item shape matching SurvivorDetail['cursed_gear'][0] */
 type CursedGearRow = { id: string; gear_name: string }
@@ -37,6 +38,8 @@ type CursedGearRow = { id: string; gear_name: string }
  * Cursed Gear Card Properties
  */
 interface CursedGearCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -59,11 +62,14 @@ interface CursedGearCardProps {
  * @returns Cursed Gear Card Component
  */
 export function CursedGearCard({
+  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: CursedGearCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [cursedGear, setCursedGear] = useState<CursedGearRow[]>(
@@ -163,7 +169,14 @@ export function CursedGearCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [cursedGear, selectedSettlement, selectedSurvivor, setSurvivors, survivors]
+    [
+      cursedGear,
+      selectedSettlement,
+      selectedSurvivor,
+      setSurvivors,
+      survivors,
+      toast
+    ]
   )
 
   /**
@@ -215,7 +228,7 @@ export function CursedGearCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [cursedGear, selectedSurvivor, setSurvivors, survivors]
+    [cursedGear, selectedSurvivor, setSurvivors, survivors, toast]
   )
 
   return (

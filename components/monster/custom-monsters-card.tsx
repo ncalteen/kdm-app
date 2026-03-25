@@ -12,6 +12,8 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getUserCustomNemeses, removeNemesis } from '@/lib/dal/nemesis'
 import { getUserCustomQuarries, removeQuarry } from '@/lib/dal/quarry'
 import { MonsterType } from '@/lib/enums'
@@ -19,7 +21,6 @@ import { CUSTOM_MONSTER_DELETED_MESSAGE, ERROR_MESSAGE } from '@/lib/messages'
 import { NemesisDetail, QuarryDetail } from '@/lib/types'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
 
 /** Combined monster entry for display */
 interface MonsterEntry {
@@ -32,6 +33,14 @@ interface MonsterEntry {
 }
 
 /**
+ * Custom Monsters Card Component Properties
+ */
+interface CustomMonstersCardProps {
+  /** Local State */
+  local: LocalStateType
+}
+
+/**
  * Custom Monsters Card Component
  *
  * Lists user's custom quarry and nemesis monsters with options to create,
@@ -39,7 +48,11 @@ interface MonsterEntry {
  *
  * @returns Custom Monsters Card Component
  */
-export function CustomMonstersCard(): ReactElement {
+export function CustomMonstersCard({
+  local
+}: CustomMonstersCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [monsters, setMonsters] = useState<MonsterEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
@@ -80,7 +93,7 @@ export function CustomMonstersCard(): ReactElement {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [toast])
 
   useEffect(() => {
     loadMonsters()
@@ -118,7 +131,7 @@ export function CustomMonstersCard(): ReactElement {
           toast.error(ERROR_MESSAGE())
         })
     },
-    [monsters]
+    [monsters, toast]
   )
 
   /**
@@ -154,6 +167,7 @@ export function CustomMonstersCard(): ReactElement {
   if (isCreating)
     return (
       <CreateMonsterCard
+        local={local}
         onCancel={handleCancel}
         onMonsterCreated={handleMonsterSaved}
       />
@@ -163,6 +177,7 @@ export function CustomMonstersCard(): ReactElement {
   if (editingMonsterId && editingMonsterType)
     return (
       <EditMonsterCard
+        local={local}
         monsterId={editingMonsterId}
         monsterType={editingMonsterType}
         onCancel={handleCancel}

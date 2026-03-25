@@ -16,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getPhilosophies } from '@/lib/dal/philosophy'
 import {
   addSettlementPhilosophies,
@@ -29,12 +31,13 @@ import {
 import { PhilosophyDetail, SettlementDetail } from '@/lib/types'
 import { BrainCogIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Philosophies Card Properties
  */
 interface PhilosophiesCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -52,9 +55,12 @@ interface PhilosophiesCardProps {
  * @returns Philosophies Card Component
  */
 export function PhilosophiesCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: PhilosophiesCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
@@ -100,7 +106,7 @@ export function PhilosophiesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   /**
    * Sorted Philosophies
@@ -185,7 +191,7 @@ export function PhilosophiesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availablePhilosophies, setSelectedSettlement]
+    [selectedSettlement, availablePhilosophies, setSelectedSettlement, toast]
   )
 
   /**
@@ -227,7 +233,7 @@ export function PhilosophiesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (

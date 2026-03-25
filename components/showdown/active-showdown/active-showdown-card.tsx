@@ -14,6 +14,8 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { addSettlementPhase } from '@/lib/dal/settlement-phase'
 import { removeShowdown } from '@/lib/dal/showdown'
 import { TabType } from '@/lib/enums'
@@ -30,12 +32,13 @@ import {
 } from '@/lib/types'
 import { ChevronRightIcon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Active Showdown Card Properties
  */
 interface ActiveShowdownCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Selected Showdown Monster Index */
@@ -73,6 +76,7 @@ interface ActiveShowdownCardProps {
  * @returns Active Showdown Card Component
  */
 export function ActiveShowdownCard({
+  local,
   selectedShowdown,
   selectedShowdownMonsterIndex,
   selectedSettlement,
@@ -85,6 +89,8 @@ export function ActiveShowdownCard({
   setSurvivors,
   survivors
 }: ActiveShowdownCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState<boolean>(false)
   const [isSettlementPhaseDialogOpen, setIsSettlementPhaseDialogOpen] =
     useState<boolean>(false)
@@ -118,7 +124,12 @@ export function ActiveShowdownCard({
         console.error('Delete Showdown Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [selectedShowdown, setSelectedShowdown, setSelectedShowdownMonsterIndex])
+  }, [
+    selectedShowdown,
+    setSelectedShowdown,
+    setSelectedShowdownMonsterIndex,
+    toast
+  ])
 
   /**
    * Handle Proceed to Settlement Phase (open confirmation dialog)
@@ -204,7 +215,8 @@ export function ActiveShowdownCard({
     setSelectedShowdown,
     setSelectedShowdownMonsterIndex,
     setSelectedSettlementPhase,
-    setSelectedTab
+    setSelectedTab,
+    toast
   ])
 
   return (
@@ -236,6 +248,7 @@ export function ActiveShowdownCard({
       <div className="flex flex-col gap-2">
         <div className="flex flex-col lg:flex-row gap-2">
           <ShowdownMonstersCard
+            local={local}
             selectedShowdown={selectedShowdown}
             selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
             setSelectedShowdown={setSelectedShowdown}
@@ -243,6 +256,7 @@ export function ActiveShowdownCard({
           />
 
           <TurnCard
+            local={local}
             selectedShowdown={selectedShowdown}
             selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
             selectedSurvivor={selectedSurvivor}
@@ -252,6 +266,7 @@ export function ActiveShowdownCard({
         </div>
 
         <ShowdownSurvivorsCard
+          local={local}
           selectedShowdown={selectedShowdown}
           selectedSettlement={selectedSettlement}
           selectedSurvivor={selectedSurvivor}

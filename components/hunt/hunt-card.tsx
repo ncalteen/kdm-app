@@ -3,6 +3,7 @@
 import { ListCard } from '@/components/generic/list-card'
 import { ActiveHuntCard } from '@/components/hunt/active-hunt/active-hunt-card'
 import { CreateHuntCard } from '@/components/hunt/create-hunt/create-hunt-card'
+import { LocalStateType } from '@/contexts/local-context'
 import { updateSettlement } from '@/lib/dal/settlement'
 import { TabType } from '@/lib/enums'
 import {
@@ -19,6 +20,8 @@ import { ReactElement } from 'react'
  * Hunt Card Properties
  */
 interface HuntCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
@@ -59,6 +62,7 @@ interface HuntCardProps {
  * @returns Hunt Card Component
  */
 export function HuntCard({
+  local,
   selectedHunt,
   selectedHuntMonsterIndex,
   selectedSettlement,
@@ -76,6 +80,7 @@ export function HuntCard({
 }: HuntCardProps): ReactElement {
   return selectedHunt ? (
     <ActiveHuntCard
+      local={local}
       selectedHunt={selectedHunt}
       selectedHuntMonsterIndex={selectedHuntMonsterIndex}
       selectedSettlement={selectedSettlement}
@@ -93,6 +98,7 @@ export function HuntCard({
     <div className="mt-10 flex flex-wrap items-start justify-center gap-4">
       <div className="order-2 md:order-1">
         <CreateHuntCard
+          local={local}
           selectedSettlement={selectedSettlement}
           selectedShowdown={selectedShowdown}
           setSelectedHunt={setSelectedHunt}
@@ -102,6 +108,7 @@ export function HuntCard({
       </div>
       <div className="w-[400px] order-1 md:order-2">
         <ListCard
+          local={local}
           icon={<MapPinPlusIcon className="h-4 w-4" />}
           initialItems={selectedSettlement?.departing_bonuses || []}
           itemName="Departure Bonus"

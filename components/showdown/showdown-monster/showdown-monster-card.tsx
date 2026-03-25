@@ -10,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateShowdownMonster } from '@/lib/dal/showdown-monster'
 import {
   ERROR_MESSAGE,
@@ -26,12 +28,13 @@ import {
 import { ShowdownDetail, ShowdownMonsterDetail } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Showdown Monster Card Component Properties
  */
 interface ShowdownMonsterCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Selected Showdown Monster Index */
@@ -50,10 +53,13 @@ interface ShowdownMonsterCardProps {
  * @returns Showdown Monster Card Component
  */
 export function ShowdownMonsterCard({
+  local,
   selectedShowdown,
   selectedShowdownMonsterIndex,
   setSelectedShowdown
 }: ShowdownMonsterCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const monsterIds = useMemo(
     () => Object.keys(selectedShowdown?.showdown_monsters ?? {}),
     [selectedShowdown]
@@ -132,7 +138,7 @@ export function ShowdownMonsterCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedShowdown, currentMonsterId, monster, setSelectedShowdown]
+    [selectedShowdown, currentMonsterId, monster, setSelectedShowdown, toast]
   )
 
   const onRemoveTrait = useCallback(
@@ -174,7 +180,7 @@ export function ShowdownMonsterCard({
       )
       setIsAddingTrait(false)
     },
-    [monster?.traits, saveMonsterData]
+    [monster?.traits, saveMonsterData, toast]
   )
 
   const onRemoveMood = useCallback(
@@ -216,7 +222,7 @@ export function ShowdownMonsterCard({
       )
       setIsAddingMood(false)
     },
-    [monster?.moods, saveMonsterData]
+    [monster?.moods, saveMonsterData, toast]
   )
 
   const handleSaveNotes = useCallback(() => {
