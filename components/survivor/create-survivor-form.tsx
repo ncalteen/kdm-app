@@ -251,7 +251,7 @@ export function CreateSurvivorForm({
     }
 
     // If the wanderer has a permanent injury, set it (currently only Luck).
-    // TODO: Expand this to handle other permanent injuries as they are added.
+    // Expand this to handle other permanent injuries as they are added.
     for (const injury of wanderer.permanent_injuries)
       if (injury === 'headBlind') newSurvivor.headBlind = 1
 

@@ -264,18 +264,12 @@ export function OverviewCard({
         <div className="hidden lg:flex flex-row items-start justify-between gap-4">
           {/* Survival Limit */}
           <div className="flex flex-col items-center gap-1">
-            <Input
-              type="number"
-              min="1"
-              placeholder="1"
+            <NumericInput
+              label="Survival Limit"
               className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              defaultValue={selectedSettlement?.survival_limit ?? 1}
-              key={`survival-limit-${selectedSettlement?.id ?? ''}-${selectedSettlement?.survival_limit ?? 1}`}
-              onBlur={(e) =>
-                handleSurvivalLimitChange(parseInt(e.target.value, 10))
-              }
-              name="survival-limit-desktop"
-              id="survival-limit-desktop"
+              value={selectedSettlement?.survival_limit ?? 1}
+              min={1}
+              onChange={handleSurvivalLimitChange}
             />
             <Label className="text-center text-xs">Survival Limit</Label>
           </div>
@@ -285,7 +279,7 @@ export function OverviewCard({
             className="mx-2 data-[orientation=vertical]:h-12"
           />
 
-          {/* Population */}
+          {/* Population (Disabled) */}
           <div className="flex flex-col items-center gap-1">
             <Input
               type="number"
@@ -303,7 +297,7 @@ export function OverviewCard({
             className="mx-2 data-[orientation=vertical]:h-12"
           />
 
-          {/* Death Count */}
+          {/* Death Count (Disabled) */}
           <div className="flex flex-col items-center gap-1">
             <Input
               type="number"
@@ -321,7 +315,7 @@ export function OverviewCard({
             className="mx-2 data-[orientation=vertical]:h-12"
           />
 
-          {/* Lost Settlement Count */}
+          {/* Lost Settlement Count (Disabled) */}
           <div className="flex flex-col items-center gap-1">
             <Input
               type="number"
@@ -337,7 +331,7 @@ export function OverviewCard({
             <Label className="text-center text-xs">Lost Settlements</Label>
           </div>
 
-          {/* Collective Cognition (ARC only) */}
+          {/* Collective Cognition (Disabled) */}
           {selectedSettlement?.survivor_type ===
             DatabaseSurvivorType[SurvivorType.ARC] && (
             <>
@@ -362,7 +356,7 @@ export function OverviewCard({
             </>
           )}
 
-          {/* Lantern Research Level (People of the Lantern/Sun only) */}
+          {/* Lantern Research Level (PotL/PotSun) */}
           {(selectedSettlement?.campaign_type ===
             DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_LANTERN] ||
             selectedSettlement?.campaign_type ===
@@ -374,27 +368,19 @@ export function OverviewCard({
               />
 
               <div className="flex flex-col items-center gap-1">
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="0"
+                <NumericInput
+                  label="Lantern Research"
                   className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  defaultValue={selectedSettlement?.lantern_research ?? 0}
-                  key={`lantern-research-${selectedSettlement?.id ?? ''}-${selectedSettlement?.lantern_research ?? 0}`}
-                  onBlur={(e) =>
-                    handleLanternResearchLevelChange(
-                      parseInt(e.target.value, 10)
-                    )
-                  }
-                  name="lantern-research-desktop"
-                  id="lantern-research-desktop"
+                  value={selectedSettlement?.lantern_research ?? 0}
+                  min={0}
+                  onChange={handleLanternResearchLevelChange}
                 />
                 <Label className="text-center text-xs">Lantern Research</Label>
               </div>
             </>
           )}
 
-          {/* Endeavors (Settlement Phase Only) */}
+          {/* Endeavors (Settlement Phase) */}
           {selectedSettlementPhase?.id && (
             <>
               <Separator
@@ -403,18 +389,12 @@ export function OverviewCard({
               />
 
               <div className="flex flex-col items-center gap-1">
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="0"
+                <NumericInput
+                  label="Endeavors"
                   className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  defaultValue={selectedSettlementPhase?.endeavors ?? 0}
-                  key={`endeavors-${selectedSettlement?.id ?? ''}-${selectedSettlementPhase?.id ?? ''}-${selectedSettlementPhase?.endeavors ?? 0}`}
-                  onBlur={(e) =>
-                    handleEndeavorsChange(parseInt(e.target.value, 10))
-                  }
-                  name="endeavors-desktop"
-                  id="endeavors-desktop"
+                  value={selectedSettlement?.lantern_research ?? 0}
+                  min={0}
+                  onChange={handleEndeavorsChange}
                 />
                 <Label className="text-center text-xs">Endeavors</Label>
               </div>
@@ -436,7 +416,7 @@ export function OverviewCard({
             />
           </div>
 
-          {/* Population */}
+          {/* Population (Disabled) */}
           <div className="flex items-center justify-between">
             <Label className="text-sm">Population</Label>
             <Input
@@ -449,7 +429,7 @@ export function OverviewCard({
             />
           </div>
 
-          {/* Death Count */}
+          {/* Death Count (Disabled) */}
           <div className="flex items-center justify-between">
             <Label className="text-sm">Death Count</Label>
             <Input
@@ -462,7 +442,7 @@ export function OverviewCard({
             />
           </div>
 
-          {/* Lost Settlement Count */}
+          {/* Lost Settlement Count (Disabled) */}
           <div className="flex items-center justify-between">
             <Label className="text-sm">Lost Settlements</Label>
             <Input
@@ -475,7 +455,7 @@ export function OverviewCard({
             />
           </div>
 
-          {/* Collective Cognition (ARC only) */}
+          {/* Collective Cognition (Disabled) */}
           {selectedSettlement?.survivor_type ===
             DatabaseSurvivorType[SurvivorType.ARC] && (
             <div className="flex items-center justify-between">
@@ -491,7 +471,7 @@ export function OverviewCard({
             </div>
           )}
 
-          {/* Lantern Research Level (People of the Lantern/Sun only) */}
+          {/* Lantern Research Level (PotL/PotSun) */}
           {(selectedSettlement?.campaign_type ===
             DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_LANTERN] ||
             selectedSettlement?.campaign_type ===
@@ -508,7 +488,7 @@ export function OverviewCard({
             </div>
           )}
 
-          {/* Endeavors (Settlement Phase Only) */}
+          {/* Endeavors (Settlement Phase) */}
           {selectedSettlementPhase?.id && (
             <div className="flex items-center justify-between">
               <Label className="text-sm">Endeavors</Label>
