@@ -76,6 +76,8 @@ interface LocalContextType {
   /** Is Creating New Survivor */
   isCreatingNewSurvivor: boolean
 
+  /** Pending Special Showdown */
+  pendingSpecialShowdown: boolean
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt ID */
@@ -112,6 +114,8 @@ interface LocalContextType {
   /** Set Is Creating New Survivor */
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
 
+  /** Set Pending Special Showdown */
+  setPendingSpecialShowdown: (pending: boolean) => void
   /** Set Selected Hunt */
   setSelectedHunt: (hunt: HuntDetail | null) => void
   /** Set Selected Hunt ID */
@@ -242,6 +246,9 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   const [isCreatingNewShowdown, setIsCreatingNewShowdown] =
     useState<boolean>(false)
   const [isCreatingNewSurvivor, setIsCreatingNewSurvivor] =
+    useState<boolean>(false)
+
+  const [pendingSpecialShowdown, setPendingSpecialShowdown] =
     useState<boolean>(false)
 
   // Wait for authentication before fetching any data.
@@ -1267,6 +1274,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         isCreatingNewShowdown,
         isCreatingNewSurvivor,
 
+        pendingSpecialShowdown,
+
         selectedHunt,
         selectedHuntId,
         selectedHuntMonsterIndex,
@@ -1285,6 +1294,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setIsCreatingNewSettlement,
         setIsCreatingNewShowdown,
         setIsCreatingNewSurvivor,
+
+        setPendingSpecialShowdown,
 
         setSelectedHunt,
         setSelectedHuntId,

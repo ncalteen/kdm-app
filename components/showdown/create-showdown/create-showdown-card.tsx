@@ -46,7 +46,7 @@ import {
   SurvivorDetail
 } from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
-import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /** Vignette monster names that require user setting unlocks */
 const VIGNETTE_UNLOCK_MAP: Record<string, string> = {
@@ -101,7 +101,16 @@ export function CreateShowdownCard({
 }: CreateShowdownCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const { userSettings } = useLocal()
+  const { pendingSpecialShowdown, setPendingSpecialShowdown, userSettings } =
+    useLocal()
+
+  // Consume the pending special showdown flag after render
+  useEffect(() => {
+    if (pendingSpecialShowdown) {
+      setIsSpecialShowdown(true)
+      setPendingSpecialShowdown(false)
+    }
+  }, [pendingSpecialShowdown, setPendingSpecialShowdown])
 
   // Monster selection state
   const [monsterSource, setMonsterSource] = useState<MonsterSource | null>(null)
