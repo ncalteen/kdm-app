@@ -1,6 +1,7 @@
 'use client'
 
 import { NemesisItem } from '@/components/settlement/nemeses/nemesis-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -384,6 +385,11 @@ export function NemesesCard({
                         value={nemesis.monster_name}
                         onSelect={() => handleAdd(nemesis.id)}>
                         {nemesis.monster_name}
+                        {nemesis.custom && (
+                          <Badge variant="outline" className="ml-auto">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
                   </CommandGroup>

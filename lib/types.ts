@@ -209,7 +209,7 @@ export type MilestoneDetail = Omit<
  */
 export type NemesisDetail = Omit<
   Tables<'nemesis'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -270,7 +270,7 @@ export type PrincipleDetail = Omit<
  */
 export type QuarryDetail = Omit<
   Tables<'quarry'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**

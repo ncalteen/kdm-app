@@ -43,7 +43,7 @@ export async function getQuarries(
     supabase
       .from('quarry')
       .select(
-        'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+        'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
       )
       .eq('custom', false)
       .in('node', nodeTypes),
@@ -51,7 +51,7 @@ export async function getQuarries(
     supabase
       .from('quarry')
       .select(
-        'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+        'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
       )
       .eq('custom', true)
       .eq('user_id', user.id)
@@ -60,7 +60,7 @@ export async function getQuarries(
     supabase
       .from('quarry_shared_user')
       .select(
-        'quarry(id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id)'
+        'quarry(id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id)'
       )
       .eq('shared_user_id', user.id)
   ])
@@ -120,7 +120,7 @@ export async function getUserCustomQuarries(): Promise<{
   const { data, error } = await supabase
     .from('quarry')
     .select(
-      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
     )
     .eq('custom', true)
     .eq('user_id', user.id)
@@ -151,7 +151,7 @@ export async function getQuarry(
   const { data, error } = await supabase
     .from('quarry')
     .select(
-      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
     )
     .eq('id', quarryId)
     .maybeSingle()
@@ -253,7 +253,7 @@ export async function addQuarry(
     .from('quarry')
     .insert({ ...quarry, user_id: user.id })
     .select(
-      'id, alternate_id, monster_name, multi_monster, node, prologue, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
     )
     .single()
 
