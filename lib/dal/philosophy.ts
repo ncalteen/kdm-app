@@ -30,18 +30,18 @@ export async function getPhilosophies(): Promise<{
     // Non-custom philosophies (available to all users)
     supabase
       .from('philosophy')
-      .select('id, neurosis_id, philosophy_name')
+      .select('id, philosophy_name')
       .eq('custom', false),
     // Custom philosophies created by the user
     supabase
       .from('philosophy')
-      .select('id, neurosis_id, philosophy_name')
+      .select('id, philosophy_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom philosophies shared with the user
     supabase
       .from('philosophy_shared_user')
-      .select('philosophy(id, neurosis_id, philosophy_name)')
+      .select('philosophy(id, philosophy_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -79,7 +79,7 @@ export async function addPhilosophy(
   const { data, error } = await supabase
     .from('philosophy')
     .insert(philosophy)
-    .select('id, neurosis_id, philosophy_name')
+    .select('id, philosophy_name')
     .single()
 
   if (error) throw new Error(`Error Adding Philosophy: ${error.message}`)
@@ -109,7 +109,7 @@ export async function updatePhilosophy(
     .from('philosophy')
     .update(philosophy)
     .eq('id', id)
-    .select('id, neurosis_id, philosophy_name')
+    .select('id, philosophy_name')
     .single()
 
   if (error) throw new Error(`Error Updating Philosophy: ${error.message}`)

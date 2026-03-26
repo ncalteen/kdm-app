@@ -319,7 +319,7 @@ export type Database = {
           id: string
           monster_level: number
           monster_position: number
-          settlement_id: string | null
+          settlement_id: string
           survivor_position: number
           updated_at: string
         }
@@ -328,7 +328,7 @@ export type Database = {
           id?: string
           monster_level: number
           monster_position?: number
-          settlement_id?: string | null
+          settlement_id: string
           survivor_position?: number
           updated_at?: string
         }
@@ -337,7 +337,7 @@ export type Database = {
           id?: string
           monster_level?: number
           monster_position?: number
-          settlement_id?: string | null
+          settlement_id?: string
           survivor_position?: number
           updated_at?: string
         }
@@ -345,7 +345,7 @@ export type Database = {
           {
             foreignKeyName: "hunt_settlement_id_fkey"
             columns: ["settlement_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
@@ -417,7 +417,7 @@ export type Database = {
           pos_7: Database["public"]["Enums"]["hunt_event_type"]
           pos_8: Database["public"]["Enums"]["hunt_event_type"]
           pos_9: Database["public"]["Enums"]["hunt_event_type"]
-          settlement_id: string | null
+          settlement_id: string
           updated_at: string
         }
         Insert: {
@@ -434,7 +434,7 @@ export type Database = {
           pos_7?: Database["public"]["Enums"]["hunt_event_type"]
           pos_8?: Database["public"]["Enums"]["hunt_event_type"]
           pos_9?: Database["public"]["Enums"]["hunt_event_type"]
-          settlement_id?: string | null
+          settlement_id: string
           updated_at?: string
         }
         Update: {
@@ -451,21 +451,21 @@ export type Database = {
           pos_7?: Database["public"]["Enums"]["hunt_event_type"]
           pos_8?: Database["public"]["Enums"]["hunt_event_type"]
           pos_9?: Database["public"]["Enums"]["hunt_event_type"]
-          settlement_id?: string | null
+          settlement_id?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "hunt_hunt_board_hunt_id_fkey"
             columns: ["hunt_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "hunt"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "hunt_hunt_board_settlement_id_fkey"
             columns: ["settlement_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
@@ -1283,7 +1283,6 @@ export type Database = {
           created_at: string
           custom: boolean
           id: string
-          neurosis_id: string | null
           philosophy_name: string
           updated_at: string
           user_id: string | null
@@ -1292,7 +1291,6 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
-          neurosis_id?: string | null
           philosophy_name: string
           updated_at?: string
           user_id?: string | null
@@ -1301,20 +1299,11 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
-          neurosis_id?: string | null
           philosophy_name?: string
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "philosophy_neurosis_id_fkey"
-            columns: ["neurosis_id"]
-            isOneToOne: false
-            referencedRelation: "neurosis"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       philosophy_shared_user: {
         Row: {
@@ -2392,7 +2381,7 @@ export type Database = {
           {
             foreignKeyName: "settlement_phase_settlement_id_fkey"
             columns: ["settlement_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
@@ -2618,6 +2607,45 @@ export type Database = {
           },
         ]
       }
+      settlement_seed_pattern: {
+        Row: {
+          created_at: string
+          id: string
+          seed_pattern_id: string
+          settlement_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          seed_pattern_id: string
+          settlement_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          seed_pattern_id?: string
+          settlement_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_seed_pattern_seed_pattern_id_fkey"
+            columns: ["seed_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "seed_pattern"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_seed_pattern_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settlement_shared_user: {
         Row: {
           settlement_id: string
@@ -2682,52 +2710,13 @@ export type Database = {
           },
         ]
       }
-      settlement_wanderer: {
-        Row: {
-          created_at: string
-          id: string
-          settlement_id: string
-          updated_at: string
-          wanderer_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          settlement_id: string
-          updated_at?: string
-          wanderer_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          settlement_id?: string
-          updated_at?: string
-          wanderer_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "settlement_wanderer_settlement_id_fkey"
-            columns: ["settlement_id"]
-            isOneToOne: false
-            referencedRelation: "settlement"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "settlement_wanderer_wanderer_id_fkey"
-            columns: ["wanderer_id"]
-            isOneToOne: false
-            referencedRelation: "wanderer"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       showdown: {
         Row: {
           ambush: Database["public"]["Enums"]["ambush_type"]
           created_at: string
           id: string
           monster_level: number
-          settlement_id: string | null
+          settlement_id: string
           showdown_type: Database["public"]["Enums"]["showdown_type"]
           turn: Database["public"]["Enums"]["showdown_turn"]
           updated_at: string
@@ -2737,7 +2726,7 @@ export type Database = {
           created_at?: string
           id?: string
           monster_level: number
-          settlement_id?: string | null
+          settlement_id: string
           showdown_type?: Database["public"]["Enums"]["showdown_type"]
           turn?: Database["public"]["Enums"]["showdown_turn"]
           updated_at?: string
@@ -2747,7 +2736,7 @@ export type Database = {
           created_at?: string
           id?: string
           monster_level?: number
-          settlement_id?: string | null
+          settlement_id?: string
           showdown_type?: Database["public"]["Enums"]["showdown_type"]
           turn?: Database["public"]["Enums"]["showdown_turn"]
           updated_at?: string
@@ -2756,7 +2745,7 @@ export type Database = {
           {
             foreignKeyName: "showdown_settlement_id_fkey"
             columns: ["settlement_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
@@ -3905,6 +3894,37 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
+      is_character_owner: { Args: { record_id: string }; Returns: boolean }
+      is_collective_cognition_reward_owner: {
+        Args: { record_id: string }
+        Returns: boolean
+      }
+      is_disorder_owner: { Args: { record_id: string }; Returns: boolean }
+      is_fighting_art_owner: { Args: { record_id: string }; Returns: boolean }
+      is_gear_owner: { Args: { record_id: string }; Returns: boolean }
+      is_innovation_owner: { Args: { record_id: string }; Returns: boolean }
+      is_knowledge_owner: { Args: { record_id: string }; Returns: boolean }
+      is_location_owner: { Args: { record_id: string }; Returns: boolean }
+      is_milestone_owner: { Args: { record_id: string }; Returns: boolean }
+      is_nemesis_owner: { Args: { record_id: string }; Returns: boolean }
+      is_neurosis_owner: { Args: { record_id: string }; Returns: boolean }
+      is_pattern_owner: { Args: { record_id: string }; Returns: boolean }
+      is_philosophy_owner: { Args: { record_id: string }; Returns: boolean }
+      is_principle_owner: { Args: { record_id: string }; Returns: boolean }
+      is_quarry_owner: { Args: { record_id: string }; Returns: boolean }
+      is_resource_owner: { Args: { record_id: string }; Returns: boolean }
+      is_secret_fighting_art_owner: {
+        Args: { record_id: string }
+        Returns: boolean
+      }
+      is_seed_pattern_owner: { Args: { record_id: string }; Returns: boolean }
+      is_settlement_owner: { Args: { record_id: string }; Returns: boolean }
+      is_strain_milestone_owner: {
+        Args: { record_id: string }
+        Returns: boolean
+      }
+      is_wanderer_owner: { Args: { record_id: string }; Returns: boolean }
+      is_weapon_type_owner: { Args: { record_id: string }; Returns: boolean }
     }
     Enums: {
       aenas_state: "Content" | "Hungry"
