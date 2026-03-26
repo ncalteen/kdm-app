@@ -49,11 +49,11 @@ export function SelectNeurosis({
   /**
    * Handle Neurosis Selection
    *
-   * @param currentValue Selected Neurosis Value
+   * @param neurosisId Neurosis ID (or empty string to clear)
    */
-  const handleSelect = (currentValue: string) => {
+  const handleSelect = (neurosisId: string) => {
     setOpen(false)
-    onChange?.(currentValue)
+    onChange?.(neurosisId)
   }
 
   const neurosisOptions = (selectedSettlement?.neuroses ?? []).map((n) => ({
@@ -85,8 +85,10 @@ export function SelectNeurosis({
               {neurosisOptions.map((n) => (
                 <CommandItem
                   key={n.value ?? 'none'}
-                  value={n.value}
-                  onSelect={handleSelect}>
+                  value={n.label}
+                  onSelect={() =>
+                    handleSelect(n.value === propValue ? '' : n.value)
+                  }>
                   <Check
                     className={cn(
                       'mr-1 h-4 w-4',
