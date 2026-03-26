@@ -7,6 +7,7 @@ import { getSquiresOfTheCitadelTemplate } from '@/lib/campaigns/squires'
 import { getLocationIds } from '@/lib/dal/location'
 import { getNemesisLocationIds } from '@/lib/dal/nemesis-location'
 import { getNemesisTimelineYears } from '@/lib/dal/nemesis-timeline-year'
+import { getNeuroses } from '@/lib/dal/neurosis'
 import { getQuarryCollectiveCognitionRewardIds } from '@/lib/dal/quarry-collective-cognition-reward'
 import { getQuarryLocationIds } from '@/lib/dal/quarry-location'
 import { getQuarryTimelineYears } from '@/lib/dal/quarry-timeline-year'
@@ -322,6 +323,7 @@ export async function getSettlement(
     locations,
     milestones,
     nemeses,
+    neurosisMap,
     patterns,
     philosophies,
     principles,
@@ -337,6 +339,7 @@ export async function getSettlement(
     getSettlementLocations(settlementId),
     getSettlementMilestones(settlementId),
     getSettlementNemeses(settlementId),
+    getNeuroses(),
     getSettlementPatterns(settlementId),
     getSettlementPhilosophies(settlementId),
     getSettlementPrinciples(settlementId),
@@ -360,6 +363,7 @@ export async function getSettlement(
     locations,
     milestones,
     nemeses,
+    neuroses: Object.values(neurosisMap),
     patterns,
     philosophies,
     principles,

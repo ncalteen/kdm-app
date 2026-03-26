@@ -379,6 +379,15 @@ export type SettlementDetail = Tables<'settlement'> & {
     /** Unlocked */
     unlocked: boolean
   }[]
+  /** Neuroses */
+  neuroses: {
+    /** Neurosis ID */
+    id: string
+    /** Neurosis Name */
+    neurosis_name: string
+    /** Philosophy ID */
+    philosophy_id: string | null
+  }[]
   /** Milestones */
   milestones: {
     /** Complete */
