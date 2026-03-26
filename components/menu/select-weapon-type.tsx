@@ -60,10 +60,12 @@ export function SelectWeaponType({
   /**
    * Handle Type Select
    *
+   * Selecting the already-selected type clears the selection.
+   *
    * @param type Selected Weapon Type
    */
   const handleTypeSelect = (type: string) => {
-    onChange?.(type)
+    onChange?.(type === value ? '' : type)
     setOpen(false)
   }
 
