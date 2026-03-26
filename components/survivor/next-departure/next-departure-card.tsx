@@ -6,6 +6,8 @@ import {
 } from '@/components/survivor/next-departure/next-departure-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
   ERROR_MESSAGE,
@@ -31,12 +33,13 @@ import {
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Next Departure Card Properties
  */
 interface NextDepartureCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -52,10 +55,13 @@ interface NextDepartureCardProps {
  * @returns Next Departure Card Component
  */
 export function NextDepartureCard({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: NextDepartureCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [disabledInputs, setDisabledInputs] = useState<{
@@ -136,7 +142,7 @@ export function NextDepartureCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [nextDeparture, selectedSurvivor?.id, setSurvivors, survivors]
+    [nextDeparture, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -200,7 +206,7 @@ export function NextDepartureCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [nextDeparture, selectedSurvivor?.id, setSurvivors, survivors]
+    [nextDeparture, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -260,7 +266,7 @@ export function NextDepartureCard({
         })
       }
     },
-    [nextDeparture, selectedSurvivor?.id, setSurvivors, survivors]
+    [nextDeparture, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   return (

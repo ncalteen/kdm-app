@@ -10,6 +10,9 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { UpdatePasswordForm } from '@/components/update-password-form'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateUserSettings } from '@/lib/dal/user'
 import {
   CAMPAIGN_UNLOCK_KILLENIUM_BUTCHER_UPDATED_MESSAGE,
@@ -19,12 +22,13 @@ import {
 } from '@/lib/messages'
 import { UserSettingsDetail } from '@/lib/types'
 import { ReactElement, useCallback } from 'react'
-import { toast } from 'sonner'
 
 /**
  * User Card Properties
  */
 interface UserCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Set User Settings */
   setUserSettings: (settings: UserSettingsDetail | null) => void
   /** User Settings */
@@ -41,9 +45,12 @@ interface UserCardProps {
  * @returns User Card Component
  */
 export function UserCard({
+  local,
   setUserSettings,
   userSettings
 }: UserCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   /**
    * Handle Killenium Butcher Unlock Change
    *
@@ -79,7 +86,7 @@ export function UserCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [userSettings, setUserSettings]
+    [userSettings, setUserSettings, toast]
   )
 
   /**
@@ -117,7 +124,7 @@ export function UserCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [userSettings, setUserSettings]
+    [userSettings, setUserSettings, toast]
   )
 
   /**
@@ -155,107 +162,108 @@ export function UserCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [userSettings, setUserSettings]
+    [userSettings, setUserSettings, toast]
   )
 
   return (
     <div className="flex flex-col gap-4 pt-2">
-      {/* User Settings */}
-      <Card className="p-0">
-        <CardHeader className="px-4 pt-3 pb-0">
-          <CardTitle className="text-lg">User Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-medium text-sm">
-                Unlock Killenium Butcher
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <UpdatePasswordForm className="h-full" />
+        {/* Unlocked Vignette Monsters */}
+        <Card className="p-0">
+          <CardHeader className="flex flex-row items-center justify-between px-4 pt-3 pb-0">
+            <CardTitle className="text-lg">
+              Unlocked Vignette Monsters
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-sm">Killenium Butcher</div>
+                <div className="text-sm text-muted-foreground">
+                  Allows the Killenium Butcher nemesis to appear in showdowns.
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">
-                Allows the Killenium Butcher nemesis to appear in showdowns.
-              </div>
+              <Select
+                value={
+                  userSettings?.unlocked_killenium_butcher !== undefined
+                    ? userSettings.unlocked_killenium_butcher.toString()
+                    : 'false'
+                }
+                onValueChange={handleKilleniumButcherUnlockedChange}
+                name="unlock-killenium-butcher"
+                aria-label="Killenium Butcher">
+                <SelectTrigger className="w-24" id="unlock-killenium-butcher">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="false">No</SelectItem>
+                  <SelectItem value="true">Yes</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select
-              value={
-                userSettings?.unlocked_killenium_butcher !== undefined
-                  ? userSettings.unlocked_killenium_butcher.toString()
-                  : 'false'
-              }
-              onValueChange={handleKilleniumButcherUnlockedChange}
-              name="unlock-killenium-butcher"
-              aria-label="Unlock Killenium Butcher">
-              <SelectTrigger className="w-24" id="unlock-killenium-butcher">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="false">No</SelectItem>
-                <SelectItem value="true">Yes</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
-          <Separator className="my-2" />
+            <Separator className="my-2" />
 
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-medium text-sm">
-                Unlock Screaming Nukalope
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-sm">Screaming Nukalope</div>
+                <div className="text-sm text-muted-foreground">
+                  Allows the Screaming Nukalope quarry to be hunted.
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">
-                Allows the Screaming Nukalope quarry to be hunted.
-              </div>
+              <Select
+                value={
+                  userSettings?.unlocked_screaming_nukalope !== undefined
+                    ? userSettings.unlocked_screaming_nukalope.toString()
+                    : 'false'
+                }
+                onValueChange={handleScreamingNukalopeUnlockedChange}
+                name="unlock-screaming-nukalope"
+                aria-label="Screaming Nukalope">
+                <SelectTrigger className="w-24" id="unlock-screaming-nukalope">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="false">No</SelectItem>
+                  <SelectItem value="true">Yes</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select
-              value={
-                userSettings?.unlocked_screaming_nukalope !== undefined
-                  ? userSettings.unlocked_screaming_nukalope.toString()
-                  : 'false'
-              }
-              onValueChange={handleScreamingNukalopeUnlockedChange}
-              name="unlock-screaming-nukalope"
-              aria-label="Unlock Screaming Nukalope">
-              <SelectTrigger className="w-24" id="unlock-screaming-nukalope">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="false">No</SelectItem>
-                <SelectItem value="true">Yes</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
-          <Separator className="my-2" />
+            <Separator className="my-2" />
 
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-medium text-sm">Unlock White Gigalion</div>
-              <div className="text-sm text-muted-foreground">
-                Allows the White Gigalion quarry to be hunted.
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-sm">White Gigalion</div>
+                <div className="text-sm text-muted-foreground">
+                  Allows the White Gigalion quarry to be hunted.
+                </div>
               </div>
+              <Select
+                value={
+                  userSettings?.unlocked_white_gigalion !== undefined
+                    ? userSettings.unlocked_white_gigalion.toString()
+                    : 'false'
+                }
+                onValueChange={handleWhiteGigalionUnlockedChange}
+                name="unlock-white-gigalion"
+                aria-label="White Gigalion">
+                <SelectTrigger className="w-24" id="unlock-white-gigalion">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="false">No</SelectItem>
+                  <SelectItem value="true">Yes</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select
-              value={
-                userSettings?.unlocked_white_gigalion !== undefined
-                  ? userSettings.unlocked_white_gigalion.toString()
-                  : 'false'
-              }
-              onValueChange={handleWhiteGigalionUnlockedChange}
-              name="unlock-white-gigalion"
-              aria-label="Unlock White Gigalion">
-              <SelectTrigger className="w-24" id="unlock-white-gigalion">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="false">No</SelectItem>
-                <SelectItem value="true">Yes</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Custom Monsters */}
-      <CustomMonstersCard />
+      <CustomMonstersCard local={local} />
     </div>
   )
 }

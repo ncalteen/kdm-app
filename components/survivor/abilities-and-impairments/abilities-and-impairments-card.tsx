@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
   ABILITY_IMPAIRMENT_REMOVED_MESSAGE,
@@ -34,12 +36,13 @@ import {
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Abilities and Impairments Card Properties
  */
 interface AbilitiesAndImpairmentsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -55,10 +58,13 @@ interface AbilitiesAndImpairmentsCardProps {
  * @returns Abilities and Impairments Card Component
  */
 export function AbilitiesAndImpairmentsCard({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: AbilitiesAndImpairmentsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [abilitiesImpairments, setAbilitiesImpairments] = useState<string[]>(
@@ -143,7 +149,7 @@ export function AbilitiesAndImpairmentsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [abilitiesImpairments, selectedSurvivor?.id, setSurvivors, survivors]
+    [abilitiesImpairments, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -195,7 +201,7 @@ export function AbilitiesAndImpairmentsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [abilitiesImpairments, selectedSurvivor?.id, setSurvivors, survivors]
+    [abilitiesImpairments, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -228,7 +234,7 @@ export function AbilitiesAndImpairmentsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [skipNextHunt, selectedSurvivor?.id, setSurvivors, survivors]
+    [skipNextHunt, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**

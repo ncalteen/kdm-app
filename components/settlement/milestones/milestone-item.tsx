@@ -4,19 +4,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import { MilestoneDetail, SettlementDetail } from '@/lib/types'
-import { BookOpenIcon, CheckIcon, TrashIcon, XIcon } from 'lucide-react'
-import { memo, ReactElement, useState } from 'react'
-
-/** Settlement milestone row from SettlementDetail */
-type MilestoneRow = SettlementDetail['milestones'][0]
+import { SettlementDetail } from '@/lib/types'
+import { BookOpenIcon, TrashIcon } from 'lucide-react'
+import { memo, ReactElement } from 'react'
 
 /**
  * Milestone Item Component Properties
@@ -25,23 +15,11 @@ export interface MilestoneItemProps {
   /** Index */
   index: number
   /** Milestone Row */
-  milestone: MilestoneRow
+  milestone: SettlementDetail['milestones'][0]
   /** On Remove Handler */
   onRemove: (index: number) => void
   /** On Toggle Complete Handler */
   onToggleComplete: (index: number, checked: boolean) => void
-}
-
-/**
- * New Milestone Item Component Properties
- */
-export interface NewMilestoneItemProps {
-  /** Available Milestones */
-  availableMilestones: MilestoneDetail[]
-  /** On Cancel Handler */
-  onCancel: () => void
-  /** On Save Handler */
-  onSave: (milestoneId: string | undefined) => void
 }
 
 /**
@@ -91,72 +69,6 @@ export const MilestoneItem = memo(function MilestoneItem({
           onClick={() => onRemove(index)}
           title="Remove milestone">
           <TrashIcon className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
-})
-
-/**
- * New Milestone Item Component
- *
- * Renders a select dropdown for choosing a milestone to add to the settlement.
- *
- * @param props New Milestone Item Component Properties
- * @returns New Milestone Item Component
- */
-export const NewMilestoneItem = memo(function NewMilestoneItem({
-  availableMilestones,
-  onCancel,
-  onSave
-}: NewMilestoneItemProps): ReactElement {
-  const [selectedMilestoneId, setSelectedMilestoneId] = useState<
-    string | undefined
-  >(undefined)
-
-  return (
-    <div className="flex items-center gap-2 pl-2">
-      {/* Completion Checkbox (Disabled) */}
-      <Checkbox
-        checked={false}
-        disabled={true}
-        id="milestone-new-complete"
-        name="milestone-new-complete"
-      />
-
-      {/* Milestone Selector */}
-      <Select
-        value={selectedMilestoneId}
-        onValueChange={(value) => setSelectedMilestoneId(value)}>
-        <SelectTrigger className="flex-1">
-          <SelectValue placeholder="Select milestone" />
-        </SelectTrigger>
-        <SelectContent>
-          {availableMilestones.map((milestone) => (
-            <SelectItem key={milestone.id} value={milestone.id}>
-              {milestone.milestone_name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Interaction Buttons */}
-      <div className="flex items-center gap-1 ml-auto shrink-0">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => onSave(selectedMilestoneId)}
-          title="Save milestone">
-          <CheckIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onCancel}
-          title="Cancel">
-          <XIcon className="h-4 w-4" />
         </Button>
       </div>
     </div>

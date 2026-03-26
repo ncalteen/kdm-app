@@ -1,11 +1,23 @@
 'use client'
 
-import {
-  LocationItem,
-  NewLocationItem
-} from '@/components/settlement/locations/location-item'
+import { LocationItem } from '@/components/settlement/locations/location-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getLocations } from '@/lib/dal/location'
 import {
   addSettlementLocations,
@@ -21,12 +33,13 @@ import {
 import { LocationDetail, SettlementDetail } from '@/lib/types'
 import { HouseIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Locations Card Properties
  */
 interface LocationsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -44,10 +57,13 @@ interface LocationsCardProps {
  * @returns Locations Card Component
  */
 export function LocationsCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: LocationsCardProps): ReactElement {
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const { toast } = useToast(local)
+
+  const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available locations for the select dropdown (fetched once per settlement).
@@ -62,7 +78,7 @@ export function LocationsCard({
 
   if (selectedSettlement?.id !== prevSettlementId) {
     setPrevSettlementId(selectedSettlement?.id ?? null)
-    setIsAddingNew(false)
+    setAddOpen(false)
     setHasFetched(false)
   }
 
@@ -92,7 +108,7 @@ export function LocationsCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   /**
    * Available Locations Not Yet Added
@@ -137,10 +153,12 @@ export function LocationsCard({
    */
   const handleAdd = useCallback(
     (locationId: string | undefined) => {
-      if (!locationId || !selectedSettlement) return setIsAddingNew(false)
+      if (!locationId || !selectedSettlement) return
 
       const locationInfo = availableLocations[locationId]
-      if (!locationInfo) return setIsAddingNew(false)
+      if (!locationInfo) return
+
+      setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
@@ -159,7 +177,6 @@ export function LocationsCard({
         ...selectedSettlement,
         locations: updatedLocations
       })
-      setIsAddingNew(false)
 
       addSettlementLocations([locationId], selectedSettlement.id)
         .then((row) => {
@@ -184,7 +201,7 @@ export function LocationsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableLocations, setSelectedSettlement]
+    [selectedSettlement, availableLocations, setSelectedSettlement, toast]
   )
 
   /**
@@ -226,7 +243,7 @@ export function LocationsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -267,7 +284,7 @@ export function LocationsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (
@@ -276,17 +293,36 @@ export function LocationsCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <HouseIcon className="h-4 w-4" />
           Locations
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew || selectableLocations.length === 0}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8"
+                disabled={selectableLocations.length === 0}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search locations..." />
+                <CommandList>
+                  <CommandEmpty>No locations found.</CommandEmpty>
+                  <CommandGroup>
+                    {selectableLocations.map((location) => (
+                      <CommandItem
+                        key={location.id}
+                        value={location.location_name}
+                        onSelect={() => handleAdd(location.id)}>
+                        {location.location_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -296,7 +332,6 @@ export function LocationsCard({
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.locations ||
               selectedSettlement.locations.length === 0) &&
-              !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No locations yet
@@ -319,14 +354,6 @@ export function LocationsCard({
                   onToggleUnlocked={handleToggleUnlocked}
                 />
               ))}
-
-            {isAddingNew && (
-              <NewLocationItem
-                availableLocations={selectableLocations}
-                onCancel={() => setIsAddingNew(false)}
-                onSave={handleAdd}
-              />
-            )}
           </div>
         </div>
       </CardContent>

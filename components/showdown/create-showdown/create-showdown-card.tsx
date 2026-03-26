@@ -16,7 +16,8 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { useLocal } from '@/contexts/local-context'
+import { LocalStateType, useLocal } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getNemesis } from '@/lib/dal/nemesis'
 import { getNemesisLevels } from '@/lib/dal/nemesis-level'
 import { getQuarry } from '@/lib/dal/quarry'
@@ -46,7 +47,6 @@ import {
 } from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /** Vignette monster names that require user setting unlocks */
 const VIGNETTE_UNLOCK_MAP: Record<string, string> = {
@@ -69,6 +69,8 @@ enum MonsterVersion {
  * Create Showdown Card Properties
  */
 interface CreateShowdownCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Settlement */
@@ -91,11 +93,14 @@ interface CreateShowdownCardProps {
  * @returns Create Showdown Card Component
  */
 export function CreateShowdownCard({
+  local,
   selectedHunt,
   selectedSettlement,
   setSelectedShowdown,
   survivors
 }: CreateShowdownCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const { userSettings } = useLocal()
 
   // Monster selection state
@@ -298,7 +303,7 @@ export function CreateShowdownCard({
         toast.error(ERROR_MESSAGE())
       }
     },
-    [fetchDetail, fetchLevels]
+    [fetchDetail, fetchLevels, toast]
   )
 
   /** Handle Level Selection */
@@ -648,7 +653,8 @@ export function CreateShowdownCard({
     selectedScout,
     selectedSettlement,
     selectedSurvivors,
-    setSelectedShowdown
+    setSelectedShowdown,
+    toast
   ])
 
   return (
@@ -959,6 +965,7 @@ export function CreateShowdownCard({
         </div>
 
         <SurvivorSelectionDrawer
+          local={local}
           title="Select Showdown Party"
           description="Up to 4 survivors may embark on a showdown."
           survivors={availableSurvivors}
@@ -970,6 +977,7 @@ export function CreateShowdownCard({
 
         {selectedSettlement?.uses_scouts && (
           <ScoutSelectionDrawer
+            local={local}
             title="Select Scout"
             description="Choose a single scout. Their skills will help navigate the dangers ahead."
             survivors={availableSurvivors}

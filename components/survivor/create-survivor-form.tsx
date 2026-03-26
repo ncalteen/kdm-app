@@ -14,6 +14,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { createSurvivor } from '@/lib/dal/survivor'
 import { getWanderers } from '@/lib/dal/wanderer'
 import {
@@ -32,12 +34,13 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ReactElement, useEffect, useState } from 'react'
 import { Resolver, useForm } from 'react-hook-form'
-import { toast } from 'sonner'
 
 /**
  * Create Survivor Form Properties
  */
 interface CreateSurvivorFormProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Is Creating New Survivor */
@@ -63,12 +66,15 @@ interface CreateSurvivorFormProps {
  * @returns Create Survivor Form
  */
 export function CreateSurvivorForm({
+  local,
   selectedSettlement,
   setIsCreatingNewSurvivor,
   setSelectedSurvivorId,
   setSurvivors,
   survivors
 }: CreateSurvivorFormProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [activeTab, setActiveTab] = useState<'custom' | 'wanderer'>('custom')
   const [selectedWanderer, setSelectedWanderer] =
     useState<WandererDetail | null>(null)
@@ -113,7 +119,7 @@ export function CreateSurvivorForm({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   const form = useForm<NewSurvivorInput>({
     resolver: zodResolver(NewSurvivorInputSchema) as Resolver<NewSurvivorInput>,
@@ -251,7 +257,7 @@ export function CreateSurvivorForm({
     }
 
     // If the wanderer has a permanent injury, set it (currently only Luck).
-    // TODO: Expand this to handle other permanent injuries as they are added.
+    // Expand this to handle other permanent injuries as they are added.
     for (const injury of wanderer.permanent_injuries)
       if (injury === 'headBlind') newSurvivor.headBlind = 1
 

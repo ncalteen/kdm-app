@@ -3,6 +3,8 @@
 import { TimelineContent } from '@/components/settlement/timeline/timeline-content'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import {
   addSettlementTimelineYear,
   removeSettlementTimelineYearEntry,
@@ -33,12 +35,13 @@ import {
   useRef,
   useState
 } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Timeline Card Properties
  */
 interface TimelineCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -56,9 +59,12 @@ interface TimelineCardProps {
  * @returns Timeline Card Component
  */
 export function TimelineCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: TimelineCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [editingEvents, setEditingEvents] = useState<{
     [key: string]: boolean
   }>({})
@@ -117,7 +123,7 @@ export function TimelineCard({
         [`${yearNumber}-${newEntryIndex}`]: true
       }))
     },
-    [editingEvents, selectedSettlement?.timeline]
+    [editingEvents, selectedSettlement?.timeline, toast]
   )
 
   /**
@@ -197,7 +203,7 @@ export function TimelineCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -277,7 +283,7 @@ export function TimelineCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [inputRefs, selectedSettlement, setSelectedSettlement]
+    [inputRefs, selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -335,7 +341,7 @@ export function TimelineCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -381,7 +387,7 @@ export function TimelineCard({
         console.error('Timeline Year Add Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [selectedSettlement, setSelectedSettlement])
+  }, [selectedSettlement, setSelectedSettlement, toast])
 
   /**
    * Edit an Event in the Timeline

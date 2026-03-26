@@ -26,6 +26,8 @@ import {
   EmptyTitle
 } from '@/components/ui/empty'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { settlementPhaseSteps } from '@/lib/common'
 import { updateSettlement } from '@/lib/dal/settlement'
 import { updateSettlementPhase } from '@/lib/dal/settlement-phase'
@@ -49,12 +51,13 @@ import {
 } from '@/lib/types'
 import { CircleOffIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
 import { ReactElement, useCallback } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Settlement Phase Card Properties
  */
 interface SettlementPhaseCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
@@ -86,6 +89,7 @@ interface SettlementPhaseCardProps {
  * @returns Settlement Phase Card Component
  */
 export function SettlementPhaseCard({
+  local,
   selectedSettlement,
   selectedSettlementPhase,
   selectedSurvivor,
@@ -96,6 +100,8 @@ export function SettlementPhaseCard({
   setSurvivors,
   survivors
 }: SettlementPhaseCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   /** Current step as display-friendly enum value */
   const currentStep = selectedSettlementPhase
     ? DatabaseSettlementPhaseStep[selectedSettlementPhase.step]
@@ -146,7 +152,7 @@ export function SettlementPhaseCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlementPhase, setSelectedSettlementPhase]
+    [selectedSettlementPhase, setSelectedSettlementPhase, toast]
   )
 
   if (!selectedSettlementPhase)
@@ -187,6 +193,7 @@ export function SettlementPhaseCard({
         SettlementPhaseStep.END_SETTLEMENT_PHASE
       ].includes(currentStep as SettlementPhaseStep) && (
         <SettlementPhaseActionsCard
+          local={local}
           selectedSettlement={selectedSettlement}
           selectedSettlementPhase={selectedSettlementPhase}
           selectedSurvivor={selectedSurvivor}
@@ -213,6 +220,7 @@ export function SettlementPhaseCard({
             icon={<HousePlusIcon className="h-4 w-4" />}
             initialItems={selectedSettlement?.arrival_bonuses || []}
             itemName="Arrival Bonus"
+            local={local}
             placeholder="New arrival bonus..."
             saveList={(updateData) =>
               updateSettlement(selectedSettlement?.id, {
@@ -223,6 +231,7 @@ export function SettlementPhaseCard({
           />
 
           <PrinciplesCard
+            local={local}
             selectedSettlement={selectedSettlement}
             setSelectedSettlement={setSelectedSettlement}
           />
@@ -232,6 +241,7 @@ export function SettlementPhaseCard({
       {/* Gain Endeavors */}
       {currentStep === SettlementPhaseStep.GAIN_ENDEAVORS && (
         <PrinciplesCard
+          local={local}
           selectedSettlement={selectedSettlement}
           setSelectedSettlement={setSelectedSettlement}
         />
@@ -240,6 +250,7 @@ export function SettlementPhaseCard({
       {/* Update Timeline */}
       {currentStep === SettlementPhaseStep.UPDATE_TIMELINE && (
         <TimelineCard
+          local={local}
           selectedSettlement={selectedSettlement}
           setSelectedSettlement={setSelectedSettlement}
         />
@@ -255,6 +266,7 @@ export function SettlementPhaseCard({
       {/* Check Milestones */}
       {currentStep === SettlementPhaseStep.CHECK_MILESTONES && (
         <MilestonesCard
+          local={local}
           selectedSettlement={selectedSettlement}
           setSelectedSettlement={setSelectedSettlement}
         />
@@ -277,10 +289,12 @@ export function SettlementPhaseCard({
               <div className="flex flex-col gap-2">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                   <InnovationsCard
+                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
                   <LocationsCard
+                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
@@ -291,10 +305,12 @@ export function SettlementPhaseCard({
             <TabsContent value="craft" className="mt-2">
               <div className="flex flex-col gap-2">
                 <ResourcesCard
+                  local={local}
                   selectedSettlement={selectedSettlement}
                   setSelectedSettlement={setSelectedSettlement}
                 />
                 <GearCard
+                  local={local}
                   selectedSettlement={selectedSettlement}
                   setSelectedSettlement={setSelectedSettlement}
                 />
@@ -302,10 +318,12 @@ export function SettlementPhaseCard({
                   DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                     <PatternsCard
+                      local={local}
                       selectedSettlement={selectedSettlement}
                       setSelectedSettlement={setSelectedSettlement}
                     />
                     <SeedPatternsCard
+                      local={local}
                       selectedSettlement={selectedSettlement}
                       setSelectedSettlement={setSelectedSettlement}
                     />
@@ -318,20 +336,24 @@ export function SettlementPhaseCard({
               <div className="flex flex-col gap-2">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                   <CollectiveCognitionVictoriesCard
+                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
                   <CollectiveCognitionRewardsCard
+                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                   <PhilosophiesCard
+                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
                   <KnowledgesCard
+                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
@@ -359,6 +381,7 @@ export function SettlementPhaseCard({
       {/* Record and Archive Resources */}
       {currentStep === SettlementPhaseStep.RECORD_AND_ARCHIVE_RESOURCES && (
         <ResourcesCard
+          local={local}
           selectedSettlement={selectedSettlement}
           setSelectedSettlement={setSelectedSettlement}
         />
@@ -371,6 +394,7 @@ export function SettlementPhaseCard({
             icon={<MapPinPlusIcon className="h-4 w-4" />}
             initialItems={selectedSettlement?.departing_bonuses || []}
             itemName="Departure Bonus"
+            local={local}
             placeholder="New departure bonus..."
             saveList={(updateData) =>
               updateSettlement(selectedSettlement?.id, {
@@ -381,6 +405,7 @@ export function SettlementPhaseCard({
           />
 
           <PrinciplesCard
+            local={local}
             selectedSettlement={selectedSettlement}
             setSelectedSettlement={setSelectedSettlement}
           />
@@ -396,6 +421,7 @@ export function SettlementPhaseCard({
           SettlementPhaseStep.CHECK_MILESTONES
         ].includes(currentStep) && (
           <SettlementPhaseSurvivorsCard
+            local={local}
             selectedSettlement={selectedSettlement}
             selectedSettlementPhase={selectedSettlementPhase}
             selectedSurvivor={selectedSurvivor}

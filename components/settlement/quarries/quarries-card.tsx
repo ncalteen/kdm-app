@@ -1,11 +1,23 @@
 'use client'
 
-import {
-  NewQuarryItem,
-  QuarryItem
-} from '@/components/settlement/quarries/quarry-item'
+import { QuarryItem } from '@/components/settlement/quarries/quarry-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getQuarries } from '@/lib/dal/quarry'
 import {
   addSettlementQuarries,
@@ -23,12 +35,13 @@ import { sortQuarries } from '@/lib/settlement/quarries'
 import { QuarryDetail, SettlementDetail } from '@/lib/types'
 import { PlusIcon, SwordIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Quarries Card Properties
  */
 interface QuarriesCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -46,10 +59,13 @@ interface QuarriesCardProps {
  * @returns Quarries Card Component
  */
 export function QuarriesCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: QuarriesCardProps): ReactElement {
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const { toast } = useToast(local)
+
+  const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available quarries for the select dropdown (fetched once per settlement).
@@ -64,7 +80,7 @@ export function QuarriesCard({
 
   if (selectedSettlement?.id !== prevSettlementId) {
     setPrevSettlementId(selectedSettlement?.id ?? null)
-    setIsAddingNew(false)
+    setAddOpen(false)
     setHasFetched(false)
   }
 
@@ -102,7 +118,7 @@ export function QuarriesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   /**
    * Available Quarries Not Yet Added
@@ -126,12 +142,14 @@ export function QuarriesCard({
    */
   const handleAdd = useCallback(
     (quarryId: string | undefined) => {
-      if (!quarryId || !selectedSettlement) return setIsAddingNew(false)
+      if (!quarryId || !selectedSettlement) return
 
       const quarryInfo = Object.values(availableQuarries).find(
         (q) => q.id === quarryId
       )
-      if (!quarryInfo) return setIsAddingNew(false)
+      if (!quarryInfo) return
+
+      setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
@@ -156,7 +174,6 @@ export function QuarriesCard({
         ...selectedSettlement,
         quarries: updatedQuarries
       })
-      setIsAddingNew(false)
 
       addSettlementQuarries([quarryId], selectedSettlement?.id)
         .then((row) => {
@@ -190,7 +207,7 @@ export function QuarriesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableQuarries, setSelectedSettlement]
+    [selectedSettlement, availableQuarries, setSelectedSettlement, toast]
   )
 
   /**
@@ -230,7 +247,7 @@ export function QuarriesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -273,7 +290,7 @@ export function QuarriesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (
@@ -282,17 +299,36 @@ export function QuarriesCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <SwordIcon className="h-4 w-4" />
           Quarries
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew || selectableQuarries.length === 0}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8"
+                disabled={selectableQuarries.length === 0}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search quarries..." />
+                <CommandList>
+                  <CommandEmpty>No quarries found.</CommandEmpty>
+                  <CommandGroup>
+                    {selectableQuarries.map((quarry) => (
+                      <CommandItem
+                        key={quarry.id}
+                        value={quarry.monster_name}
+                        onSelect={() => handleAdd(quarry.id)}>
+                        {quarry.monster_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -302,7 +338,6 @@ export function QuarriesCard({
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.quarries ||
               selectedSettlement.quarries.length === 0) &&
-              !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No quarries yet
@@ -327,14 +362,6 @@ export function QuarriesCard({
                   unlocked={quarry.unlocked}
                 />
               ))}
-
-            {isAddingNew && (
-              <NewQuarryItem
-                availableQuarries={selectableQuarries}
-                onCancel={() => setIsAddingNew(false)}
-                onSave={handleAdd}
-              />
-            )}
           </div>
         </div>
       </CardContent>

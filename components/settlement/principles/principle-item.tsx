@@ -3,19 +3,9 @@
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import { PrincipleDetail, SettlementDetail } from '@/lib/types'
-import { CheckIcon, TrashIcon, XIcon } from 'lucide-react'
-import { memo, ReactElement, useState } from 'react'
-
-/** Settlement principle row from SettlementDetail */
-type PrincipleRow = SettlementDetail['principles'][0]
+import { SettlementDetail } from '@/lib/types'
+import { TrashIcon } from 'lucide-react'
+import { memo, ReactElement } from 'react'
 
 /**
  * Principle Item Component Properties
@@ -28,19 +18,7 @@ export interface PrincipleItemProps {
   /** On Remove Handler */
   onRemove: (index: number) => void
   /** Principle Row */
-  principle: PrincipleRow
-}
-
-/**
- * New Principle Item Component Properties
- */
-export interface NewPrincipleItemProps {
-  /** Available Principles */
-  availablePrinciples: PrincipleDetail[]
-  /** On Cancel Handler */
-  onCancel: () => void
-  /** On Save Handler */
-  onSave: (principleId: string | undefined) => void
+  principle: SettlementDetail['principles'][0]
 }
 
 /**
@@ -104,64 +82,6 @@ export const PrincipleItem = memo(function PrincipleItem({
           onClick={() => onRemove(index)}
           title="Remove principle">
           <TrashIcon className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
-})
-
-/**
- * New Principle Item Component
- *
- * Renders a select dropdown for choosing a principle to add to the settlement.
- *
- * @param props New Principle Item Component Properties
- * @returns New Principle Item Component
- */
-export const NewPrincipleItem = memo(function NewPrincipleItem({
-  availablePrinciples,
-  onCancel,
-  onSave
-}: NewPrincipleItemProps): ReactElement {
-  const [selectedPrincipleId, setSelectedPrincipleId] = useState<
-    string | undefined
-  >(undefined)
-
-  return (
-    <div className="flex items-center gap-2 pl-2">
-      {/* Principle Selector */}
-      <Select
-        value={selectedPrincipleId}
-        onValueChange={(value) => setSelectedPrincipleId(value)}>
-        <SelectTrigger className="flex-1">
-          <SelectValue placeholder="Select principle" />
-        </SelectTrigger>
-        <SelectContent>
-          {availablePrinciples.map((principle) => (
-            <SelectItem key={principle.id} value={principle.id}>
-              {principle.principle_name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Interaction Buttons */}
-      <div className="flex items-center gap-1 ml-auto shrink-0">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => onSave(selectedPrincipleId)}
-          title="Save principle">
-          <CheckIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onCancel}
-          title="Cancel">
-          <XIcon className="h-4 w-4" />
         </Button>
       </div>
     </div>

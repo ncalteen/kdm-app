@@ -2,6 +2,7 @@
 
 import { SurvivorCard } from '@/components/survivor/survivor-card'
 import { Card, CardContent } from '@/components/ui/card'
+import { LocalStateType } from '@/contexts/local-context'
 import { SurvivorCardMode } from '@/lib/enums'
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { ReactElement } from 'react'
@@ -10,6 +11,8 @@ import { ReactElement } from 'react'
  * Settlement Phase Survivor Card Properties
  */
 interface SettlementPhaseSurvivorCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -30,6 +33,7 @@ interface SettlementPhaseSurvivorCardProps {
  * @returns Settlement Phase Survivor Card Component
  */
 export function SettlementPhaseSurvivorCard({
+  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
@@ -41,6 +45,7 @@ export function SettlementPhaseSurvivorCard({
     <Card className="w-full min-w-[430px] border-0 p-0">
       <CardContent className="p-0">
         <SurvivorCard
+          local={local}
           mode={SurvivorCardMode.SETTLEMENT_PHASE_CARD}
           selectedHunt={null}
           selectedSettlement={selectedSettlement}

@@ -27,7 +27,32 @@ import {
   useState
 } from 'react'
 
-const newLocal = {
+/**
+ * Local State Type
+ */
+export interface LocalStateType {
+  /** Disable Toast Notifications */
+  disableToasts: boolean
+  /** Selected Hunt ID */
+  selectedHuntId: string | null
+  /** Selected Hunt Monster Index */
+  selectedHuntMonsterIndex: number
+  /** Selected Settlement ID */
+  selectedSettlementId: string | null
+  /** Selected Settlement Phase ID */
+  selectedSettlementPhaseId: string | null
+  /** Selected Showdown ID */
+  selectedShowdownId: string | null
+  /** Selected Showdown Monster Index */
+  selectedShowdownMonsterIndex: number
+  /** Selected Survivor ID */
+  selectedSurvivorId: string | null
+  /** Selected Tab */
+  selectedTab: TabType | null
+}
+
+const newLocal: LocalStateType = {
+  disableToasts: false,
   selectedHuntId: null,
   selectedHuntMonsterIndex: 0,
   selectedSettlementId: null,
@@ -121,8 +146,10 @@ interface LocalContextType {
   /** Survivors */
   survivors: SurvivorDetail[]
 
+  /** Local Context */
+  local: LocalStateType
   /** Update Local Context */
-  updateLocal: (local: LocalContextType) => void
+  updateLocal: (local: LocalStateType) => void
 
   /** User Settings */
   userSettings: UserSettingsDetail | null
@@ -152,7 +179,7 @@ const LocalContext = createContext<LocalContextType | undefined>(undefined)
 export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   // Get the local state information from local storage, or set to default if
   // not present.
-  const [local, setLocalState] = useState<LocalContextType>(() =>
+  const [local, setLocalState] = useState<LocalStateType>(() =>
     typeof window === 'undefined'
       ? newLocal
       : JSON.parse(
@@ -1227,7 +1254,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    *
    * @param local Updated Local Data
    */
-  const updateLocal = (local: LocalContextType) => {
+  const updateLocal = (local: LocalStateType) => {
     saveToLocalStorage(local)
     setLocalState(local)
   }
@@ -1276,6 +1303,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSurvivors,
         survivors,
 
+        local,
         updateLocal,
 
         userSettings,

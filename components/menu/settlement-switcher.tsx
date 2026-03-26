@@ -13,6 +13,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getSettlementForUser } from '@/lib/dal/user'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
@@ -25,7 +27,6 @@ import {
   useRef,
   useState
 } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Settlement Switcher Properties
@@ -33,6 +34,8 @@ import { toast } from 'sonner'
 interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
   /** Is Creating New Settlement */
   isCreatingNewSettlement: boolean
+  /** Local State */
+  local: LocalStateType
   /** Selected Hunt ID */
   selectedHuntId: string | null
   /** Selected Settlement */
@@ -70,6 +73,7 @@ interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
  */
 export function SettlementSwitcher({
   isCreatingNewSettlement,
+  local,
   selectedHuntId,
   selectedSettlement,
   selectedSettlementId,
@@ -82,6 +86,8 @@ export function SettlementSwitcher({
   setSelectedShowdownId,
   setSelectedSurvivorId
 }: SettlementSwitcherProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [settlementList, setSettlementList] = useState<
     {
       campaign_type: DatabaseCampaignType
@@ -124,7 +130,7 @@ export function SettlementSwitcher({
     return () => {
       isCancelled = true
     }
-  }, [selectedSettlementId])
+  }, [selectedSettlementId, toast])
 
   /**
    * Handle Settlement Selection

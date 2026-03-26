@@ -3,6 +3,7 @@
 import { HuntSurvivorCard } from '@/components/hunt/hunt-survivors/hunt-survivor-card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { LocalStateType } from '@/contexts/local-context'
 import { HuntDetail, SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useEffect, useMemo, useState } from 'react'
@@ -11,6 +12,8 @@ import { ReactElement, useEffect, useMemo, useState } from 'react'
  * Hunt Survivors Card Properties
  */
 interface HuntSurvivorsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Settlement */
@@ -37,6 +40,7 @@ interface HuntSurvivorsCardProps {
  * @returns Hunt Survivors Card Component
  */
 export function HuntSurvivorsCard({
+  local,
   selectedHunt,
   selectedSettlement,
   selectedSurvivor,
@@ -158,6 +162,7 @@ export function HuntSurvivorsCard({
       </div>
 
       <HuntSurvivorCard
+        local={local}
         selectedHunt={selectedHunt}
         selectedSettlement={selectedSettlement}
         selectedSurvivor={displayedSurvivor}

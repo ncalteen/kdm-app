@@ -14,6 +14,8 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getNemesis, updateNemesis } from '@/lib/dal/nemesis'
 import { getNemesisLevels, removeNemesisLevel } from '@/lib/dal/nemesis-level'
 import { getQuarry, updateQuarry } from '@/lib/dal/quarry'
@@ -28,7 +30,11 @@ import {
   removeQuarryLevel
 } from '@/lib/dal/quarry-level'
 import { MonsterNode, MonsterType } from '@/lib/enums'
-import { CUSTOM_MONSTER_UPDATED_MESSAGE, ERROR_MESSAGE } from '@/lib/messages'
+import {
+  CUSTOM_MONSTER_UPDATED_MESSAGE,
+  ERROR_MESSAGE,
+  NAMELESS_OBJECT_ERROR_MESSAGE
+} from '@/lib/messages'
 import {
   ChevronDownIcon,
   PlusIcon,
@@ -37,7 +43,6 @@ import {
   XIcon
 } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
 
 /** Per-level sub-monster form data */
 interface LevelFormData {
@@ -134,6 +139,8 @@ const MONSTER_ATTRIBUTES = [
  * Edit Monster Card Properties
  */
 interface EditMonsterCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Monster ID */
   monsterId: string
   /** Monster Type */
@@ -153,11 +160,14 @@ interface EditMonsterCardProps {
  * @returns Edit Monster Card Component
  */
 export function EditMonsterCard({
+  local,
   monsterId,
   monsterType,
   onCancel,
   onMonsterUpdated
 }: EditMonsterCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -315,7 +325,7 @@ export function EditMonsterCard({
       }
     }
     load()
-  }, [monsterId, monsterType])
+  }, [monsterId, monsterType, toast])
 
   const toggleLevel = useCallback((level: number) => {
     setExpandedLevels((prev) => {
@@ -374,7 +384,7 @@ export function EditMonsterCard({
    */
   const handleSave = useCallback(async () => {
     if (!name.trim())
-      return toast.error('A nameless monster cannot be recorded.')
+      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('monster'))
 
     setIsSaving(true)
 
@@ -544,7 +554,8 @@ export function EditMonsterCard({
     huntBoard,
     huntBoardId,
     deletedLevelIds,
-    onMonsterUpdated
+    onMonsterUpdated,
+    toast
   ])
 
   if (isLoading)
@@ -673,7 +684,6 @@ export function EditMonsterCard({
                     />
                   </div>
                 </button>
-                afefeafea
                 {isExpanded && levelData && (
                   <div className="p-3 pt-0 space-y-3">
                     {levelData.map((sub, subIdx) => (

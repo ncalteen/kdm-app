@@ -4,18 +4,21 @@ import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { COMBAT_LEGS_UPDATED_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { FootprintsIcon, Shield } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Legs Card Properties
  */
 interface LegsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -34,10 +37,13 @@ interface LegsCardProps {
  * @returns Legs Card Component
  */
 export function LegsCard({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: LegsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [legArmor, setLegArmor] = useState(selectedSurvivor?.leg_armor ?? 0)
   const [legHamstrung, setLegHamstrung] = useState(
@@ -99,7 +105,7 @@ export function LegsCard({
           console.error('Error Updating Legs:', error)
         })
     },
-    [selectedSurvivor?.id, setSurvivors, survivors]
+    [selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   return (

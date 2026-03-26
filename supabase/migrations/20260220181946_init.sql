@@ -109,10 +109,12 @@ create type survivor_type as enum ('CORE', 'ARC');
 --------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------
-create or replace function update_updated_at() returns trigger as $$ begin new.updated_at = now();
+create or replace function update_updated_at() returns trigger
+set search_path = '' as $$ begin new.updated_at = now();
 return new;
 end;
 $$ language plpgsql;
-create or replace function is_admin() returns boolean language sql stable security definer as $$
+create or replace function is_admin() returns boolean language sql stable security definer
+set search_path = '' as $$
 select auth.role() = 'admin';
 $$;

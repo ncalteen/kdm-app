@@ -14,13 +14,20 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { addNemesis } from '@/lib/dal/nemesis'
 import { addNemesisLevel } from '@/lib/dal/nemesis-level'
 import { addQuarry } from '@/lib/dal/quarry'
 import { addQuarryHuntBoard } from '@/lib/dal/quarry-hunt-board'
 import { addQuarryLevel } from '@/lib/dal/quarry-level'
 import { MonsterNode, MonsterType } from '@/lib/enums'
-import { CUSTOM_MONSTER_CREATED_MESSAGE, ERROR_MESSAGE } from '@/lib/messages'
+import {
+  CUSTOM_MONSTER_CREATED_MESSAGE,
+  ERROR_MESSAGE,
+  MONSTER_LEVEL_MISSING_MESSAGE,
+  NAMELESS_OBJECT_ERROR_MESSAGE
+} from '@/lib/messages'
 import {
   ChevronDownIcon,
   PlusIcon,
@@ -29,7 +36,6 @@ import {
   XIcon
 } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
-import { toast } from 'sonner'
 
 /** Per-level sub-monster form data */
 interface LevelFormData {
@@ -157,6 +163,8 @@ function getAvailableNodes(type: MonsterType): MonsterNode[] {
  * Create Monster Card Properties
  */
 interface CreateMonsterCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Cancel Callback */
   onCancel: () => void
   /** Monster Created Callback */
@@ -173,9 +181,12 @@ interface CreateMonsterCardProps {
  * @returns Create Monster Card Component
  */
 export function CreateMonsterCard({
+  local,
   onCancel,
   onMonsterCreated
 }: CreateMonsterCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [isCreating, setIsCreating] = useState(false)
 
   // Basic info
@@ -300,11 +311,11 @@ export function CreateMonsterCard({
    */
   const handleCreate = useCallback(async () => {
     if (!name.trim())
-      return toast.error('A nameless monster cannot be recorded.')
+      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('monster'))
 
     const levelEntries = Object.entries(levels)
     if (levelEntries.length === 0)
-      return toast.error('At least one level is required.')
+      return toast.error(MONSTER_LEVEL_MISSING_MESSAGE())
 
     setIsCreating(true)
 
@@ -439,7 +450,8 @@ export function CreateMonsterCard({
     isMultiMonster,
     levels,
     huntBoard,
-    onMonsterCreated
+    onMonsterCreated,
+    toast
   ])
 
   return (

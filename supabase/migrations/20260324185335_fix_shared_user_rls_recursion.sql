@@ -13,178 +13,200 @@
 --------------------------------------------------------------------------------
 -- Helper Functions (SECURITY DEFINER — bypass RLS)
 --------------------------------------------------------------------------------
-create or replace function is_character_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_character_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from character
+    from public.character
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_collective_cognition_reward_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_collective_cognition_reward_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from collective_cognition_reward
+    from public.collective_cognition_reward
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_disorder_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_disorder_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from disorder
+    from public.disorder
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_fighting_art_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_fighting_art_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from fighting_art
+    from public.fighting_art
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_gear_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_gear_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from gear
+    from public.gear
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_innovation_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_innovation_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from innovation
+    from public.innovation
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_knowledge_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_knowledge_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from knowledge
+    from public.knowledge
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_location_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_location_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from location
+    from public.location
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_milestone_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_milestone_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from milestone
+    from public.milestone
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_nemesis_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_nemesis_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from nemesis
+    from public.nemesis
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_neurosis_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_neurosis_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from neurosis
+    from public.neurosis
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_pattern_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_pattern_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from pattern
+    from public.pattern
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_philosophy_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_philosophy_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from philosophy
+    from public.philosophy
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_principle_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_principle_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from principle
+    from public.principle
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_quarry_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_quarry_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from quarry
+    from public.quarry
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_resource_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_resource_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from resource
+    from public.resource
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_secret_fighting_art_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_secret_fighting_art_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from secret_fighting_art
+    from public.secret_fighting_art
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_seed_pattern_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_seed_pattern_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from seed_pattern
+    from public.seed_pattern
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_settlement_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_settlement_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from settlement
+    from public.settlement
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_strain_milestone_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_strain_milestone_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from strain_milestone
+    from public.strain_milestone
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_wanderer_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_wanderer_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from wanderer
+    from public.wanderer
     where id = record_id
       and user_id = auth.uid()
   );
 $$;
-create or replace function is_weapon_type_owner(record_id uuid) returns boolean language sql stable security definer as $$
+create or replace function is_weapon_type_owner(record_id uuid) returns boolean language sql
+set search_path = '' stable security definer as $$
 select exists (
     select 1
-    from weapon_type
+    from public.weapon_type
     where id = record_id
       and user_id = auth.uid()
   );

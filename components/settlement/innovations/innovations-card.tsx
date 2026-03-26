@@ -1,8 +1,22 @@
 'use client'
 
-import { SelectInnovation } from '@/components/menu/select-innovation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getInnovations } from '@/lib/dal/innovation'
 import {
   addSettlementInnovations,
@@ -23,7 +37,6 @@ import {
   useRef,
   useState
 } from 'react'
-import { toast } from 'sonner'
 
 /** Settlement innovation item with junction table and innovation details */
 type InnovationItem = {
@@ -36,6 +49,8 @@ type InnovationItem = {
  * Innovations Card Properties
  */
 interface InnovationsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -52,9 +67,12 @@ interface InnovationsCardProps {
  * @returns Innovations Card Component
  */
 export function InnovationsCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: InnovationsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const settlementIdRef = useRef<string | undefined>(undefined)
 
   const [availableInnovations, setAvailableInnovations] = useState<{
@@ -63,7 +81,7 @@ export function InnovationsCard({
   const [innovations, setInnovations] = useState<InnovationItem[]>(
     selectedSettlement?.innovations ?? []
   )
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const [addOpen, setAddOpen] = useState<boolean>(false)
 
   if (settlementIdRef.current !== selectedSettlement?.id) {
     settlementIdRef.current = selectedSettlement?.id
@@ -104,16 +122,12 @@ export function InnovationsCard({
    */
   const handleAdd = useCallback(
     (innovationId: string) => {
-      if (!selectedSettlement?.id || !innovationId) {
-        setIsAddingNew(false)
-        return
-      }
+      if (!selectedSettlement?.id || !innovationId) return
 
       const detail = availableInnovations[innovationId]
-      if (!detail) {
-        setIsAddingNew(false)
-        return
-      }
+      if (!detail) return
+
+      setAddOpen(false)
 
       // Optimistic placeholder — the real junction ID comes from the DB.
       const optimisticItem: InnovationItem = {
@@ -124,7 +138,6 @@ export function InnovationsCard({
       const oldInnovations = [...innovations]
 
       setInnovations([...innovations, optimisticItem])
-      setIsAddingNew(false)
 
       addSettlementInnovations([innovationId], selectedSettlement.id)
         .then((createdInnovations) => {
@@ -156,7 +169,8 @@ export function InnovationsCard({
       availableInnovations,
       innovations,
       selectedSettlement,
-      setSelectedSettlement
+      setSelectedSettlement,
+      toast
     ]
   )
 
@@ -195,7 +209,7 @@ export function InnovationsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [innovations, selectedSettlement, setSelectedSettlement]
+    [innovations, selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (
@@ -204,17 +218,42 @@ export function InnovationsCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <LightbulbIcon className="h-4 w-4" />
           Innovations
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8">
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search innovations..." />
+                <CommandList>
+                  <CommandEmpty>No innovations found.</CommandEmpty>
+                  <CommandGroup>
+                    {Object.values(availableInnovations)
+                      .filter(
+                        (i) =>
+                          !innovations.some(
+                            (existing) => existing.innovation_id === i.id
+                          )
+                      )
+                      .map((innovation) => (
+                        <CommandItem
+                          key={innovation.id}
+                          value={innovation.innovation_name}
+                          onSelect={() => handleAdd(innovation.id)}>
+                          {innovation.innovation_name}
+                        </CommandItem>
+                      ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -225,7 +264,7 @@ export function InnovationsCard({
               <div
                 key={`${item.id}-${originalIndex}`}
                 className="flex items-center gap-2">
-                <span className="text-sm ml-1 flex-grow">
+                <span className="text-sm ml-1 flex-grow pl-2">
                   {item.innovation_name}
                 </span>
                 <Button
@@ -237,23 +276,6 @@ export function InnovationsCard({
                 </Button>
               </div>
             ))}
-
-            {isAddingNew && (
-              <div className="flex items-center justify-between gap-2">
-                <SelectInnovation
-                  innovations={availableInnovations}
-                  onChange={handleAdd}
-                  excludeIds={innovations.map((i) => i.innovation_id)}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  type="button"
-                  onClick={() => setIsAddingNew(false)}>
-                  <TrashIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       </CardContent>

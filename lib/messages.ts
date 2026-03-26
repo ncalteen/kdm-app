@@ -634,6 +634,14 @@ export const MONSTER_EVASION_TOKENS_UPDATED_MESSAGE = (
       : "The monster's evasion tokens remain unchanged."
 
 /**
+ * Monster Level Missing
+ *
+ * @returns Monster Level Missing Message
+ */
+export const MONSTER_LEVEL_MISSING_MESSAGE = () =>
+  'At least one level is required.'
+
+/**
  * Monster Luck Updated
  *
  * @param oldValue Old Value

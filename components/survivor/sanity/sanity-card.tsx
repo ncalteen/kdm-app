@@ -4,6 +4,8 @@ import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -29,7 +31,6 @@ import {
 } from '@/lib/types'
 import { BrainIcon, Shield } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Sanity Card Properties
@@ -39,6 +40,8 @@ interface SanityCardProps {
   displayText: boolean
   /** Display Torment Input */
   displayTormentInput: boolean
+  /** Local State */
+  local: LocalStateType
   /** Mode */
   mode: SurvivorCardMode
   /** Selected Hunt */
@@ -72,6 +75,7 @@ interface SanityCardProps {
 export function SanityCard({
   displayText,
   displayTormentInput,
+  local,
   mode,
   selectedHunt,
   selectedSettlement,
@@ -82,6 +86,8 @@ export function SanityCard({
   setSurvivors,
   survivors
 }: SanityCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [insanity, setInsanity] = useState(selectedSurvivor?.insanity ?? 0)
   const [brainLightDamage, setBrainLightDamage] = useState(
@@ -226,7 +232,8 @@ export function SanityCard({
       huntSurvivorRecord,
       showdownSurvivorRecord,
       setSelectedHunt,
-      setSelectedShowdown
+      setSelectedShowdown,
+      toast
     ]
   )
 
@@ -263,7 +270,7 @@ export function SanityCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [insanity, selectedSurvivor?.id, setSurvivors, survivors]
+    [insanity, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -301,7 +308,7 @@ export function SanityCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [brainLightDamage, selectedSurvivor?.id, setSurvivors, survivors]
+    [brainLightDamage, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -335,7 +342,7 @@ export function SanityCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [torment, selectedSurvivor?.id, setSurvivors, survivors]
+    [torment, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   return (

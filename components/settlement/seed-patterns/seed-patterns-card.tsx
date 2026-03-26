@@ -1,11 +1,23 @@
 'use client'
 
-import {
-  NewSeedPatternItem,
-  SeedPatternItem
-} from '@/components/settlement/seed-patterns/seed-pattern-item'
+import { SeedPatternItem } from '@/components/settlement/seed-patterns/seed-pattern-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getSeedPatterns } from '@/lib/dal/seed-pattern'
 import {
   addSettlementSeedPatterns,
@@ -19,12 +31,13 @@ import {
 import { SeedPatternDetail, SettlementDetail } from '@/lib/types'
 import { BeanIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Seed Patterns Card Properties
  */
 interface SeedPatternsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -42,10 +55,13 @@ interface SeedPatternsCardProps {
  * @returns Seed Patterns Card Component
  */
 export function SeedPatternsCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: SeedPatternsCardProps): ReactElement {
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const { toast } = useToast(local)
+
+  const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   const [availableSeedPatterns, setAvailableSeedPatterns] = useState<{
@@ -58,7 +74,7 @@ export function SeedPatternsCard({
 
   if (selectedSettlement?.id !== prevSettlementId) {
     setPrevSettlementId(selectedSettlement?.id ?? null)
-    setIsAddingNew(false)
+    setAddOpen(false)
     setHasFetched(false)
   }
 
@@ -84,7 +100,7 @@ export function SeedPatternsCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   const selectableSeedPatterns = useMemo(() => {
     const linkedIds = new Set(
@@ -107,10 +123,12 @@ export function SeedPatternsCard({
 
   const handleAdd = useCallback(
     (seedPatternId: string | undefined) => {
-      if (!seedPatternId || !selectedSettlement) return setIsAddingNew(false)
+      if (!seedPatternId || !selectedSettlement) return
 
       const seedPatternInfo = availableSeedPatterns[seedPatternId]
-      if (!seedPatternInfo) return setIsAddingNew(false)
+      if (!seedPatternInfo) return
+
+      setAddOpen(false)
 
       const tempId = `temp-${Date.now()}`
       const optimisticRow: SettlementDetail['seed_patterns'][0] = {
@@ -128,7 +146,6 @@ export function SeedPatternsCard({
         ...selectedSettlement,
         seed_patterns: updatedSeedPatterns
       })
-      setIsAddingNew(false)
 
       addSettlementSeedPatterns([seedPatternId], selectedSettlement.id)
         .then((row) => {
@@ -149,7 +166,7 @@ export function SeedPatternsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableSeedPatterns, setSelectedSettlement]
+    [selectedSettlement, availableSeedPatterns, setSelectedSettlement, toast]
   )
 
   const handleRemove = useCallback(
@@ -181,7 +198,7 @@ export function SeedPatternsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (
@@ -190,17 +207,36 @@ export function SeedPatternsCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <BeanIcon className="h-4 w-4" />
           Seed Patterns
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew || selectableSeedPatterns.length === 0}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8"
+                disabled={selectableSeedPatterns.length === 0}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search seed patterns..." />
+                <CommandList>
+                  <CommandEmpty>No seed patterns found.</CommandEmpty>
+                  <CommandGroup>
+                    {selectableSeedPatterns.map((sp) => (
+                      <CommandItem
+                        key={sp.id}
+                        value={sp.seed_pattern_name}
+                        onSelect={() => handleAdd(sp.id)}>
+                        {sp.seed_pattern_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -209,7 +245,6 @@ export function SeedPatternsCard({
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.seed_patterns ||
               selectedSettlement.seed_patterns.length === 0) &&
-              !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No seed patterns yet
@@ -231,14 +266,6 @@ export function SeedPatternsCard({
                   onRemove={handleRemove}
                 />
               ))}
-
-            {isAddingNew && (
-              <NewSeedPatternItem
-                availableSeedPatterns={selectableSeedPatterns}
-                onCancel={() => setIsAddingNew(false)}
-                onSave={handleAdd}
-              />
-            )}
           </div>
         </div>
       </CardContent>

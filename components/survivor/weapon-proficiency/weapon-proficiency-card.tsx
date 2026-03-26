@@ -3,6 +3,8 @@
 import { SelectWeaponType } from '@/components/menu/select-weapon-type'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
   ERROR_MESSAGE,
@@ -13,12 +15,13 @@ import {
 } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
 import { ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Weapon Proficiency Card Properties
  */
 interface WeaponProficiencyCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -39,10 +42,13 @@ interface WeaponProficiencyCardProps {
  * @returns Weapon Proficiency Card Component
  */
 export function WeaponProficiencyCard({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: WeaponProficiencyCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [weaponProficiency, setWeaponProficiency] = useState<number>(
@@ -107,7 +113,7 @@ export function WeaponProficiencyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [weaponProficiency, selectedSurvivor?.id, setSurvivors, survivors]
+    [weaponProficiency, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -139,7 +145,7 @@ export function WeaponProficiencyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [weaponTypeId, selectedSurvivor?.id, setSurvivors, survivors]
+    [weaponTypeId, selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   return (

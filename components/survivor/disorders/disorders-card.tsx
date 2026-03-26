@@ -1,8 +1,22 @@
 'use client'
 
-import { SelectDisorder } from '@/components/menu/select-disorder'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getDisorders } from '@/lib/dal/disorder'
 import {
   addSurvivorDisorder,
@@ -17,7 +31,6 @@ import {
 import { DisorderDetail, SurvivorDetail } from '@/lib/types'
 import { PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 const MAX_DISORDERS = 3
 
@@ -25,6 +38,8 @@ const MAX_DISORDERS = 3
  * Disorders Card Properties
  */
 interface DisordersCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -40,10 +55,13 @@ interface DisordersCardProps {
  * @returns Disorders Card Component
  */
 export function DisordersCard({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: DisordersCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [availableDisorders, setAvailableDisorders] = useState<{
@@ -52,7 +70,7 @@ export function DisordersCard({
   const [disorders, setDisorders] = useState<DisorderDetail[]>(
     selectedSurvivor?.disorders ?? []
   )
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const [addOpen, setAddOpen] = useState<boolean>(false)
 
   if (survivorIdRef.current !== selectedSurvivor?.id) {
     survivorIdRef.current = selectedSurvivor?.id
@@ -74,22 +92,17 @@ export function DisordersCard({
    */
   const handleAdd = useCallback(
     (disorderId: string) => {
-      if (!selectedSurvivor?.id || !disorderId) {
-        setIsAddingNew(false)
-        return
-      }
+      if (!selectedSurvivor?.id || !disorderId) return
 
       if (disorders.length >= MAX_DISORDERS) {
         toast.error(SURVIVOR_DISORDER_LIMIT_EXCEEDED_ERROR_MESSAGE())
-        setIsAddingNew(false)
         return
       }
 
       const detail = availableDisorders[disorderId]
-      if (!detail) {
-        setIsAddingNew(false)
-        return
-      }
+      if (!detail) return
+
+      setAddOpen(false)
 
       const optimisticItem: DisorderDetail = {
         id: disorderId,
@@ -105,7 +118,6 @@ export function DisordersCard({
             : s
         )
       )
-      setIsAddingNew(false)
 
       addSurvivorDisorder(selectedSurvivor.id, disorderId)
         .then(() => toast.success(SURVIVOR_DISORDER_UPDATED_MESSAGE(true)))
@@ -123,7 +135,14 @@ export function DisordersCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [availableDisorders, disorders, selectedSurvivor, setSurvivors, survivors]
+    [
+      availableDisorders,
+      disorders,
+      selectedSurvivor,
+      setSurvivors,
+      survivors,
+      toast
+    ]
   )
 
   /**
@@ -164,7 +183,7 @@ export function DisordersCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [disorders, selectedSurvivor, setSurvivors, survivors]
+    [disorders, selectedSurvivor, setSurvivors, survivors, toast]
   )
 
   return (
@@ -172,17 +191,41 @@ export function DisordersCard({
       <CardHeader className="p-0">
         <CardTitle className="p-0 text-sm flex flex-row items-center justify-between h-8">
           Disorders
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="h-6 w-6"
-              disabled={isAddingNew || disorders.length >= MAX_DISORDERS}>
-              <PlusIcon />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-6 w-6"
+                disabled={disorders.length >= MAX_DISORDERS}>
+                <PlusIcon />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search disorders..." />
+                <CommandList>
+                  <CommandEmpty>No disorders found.</CommandEmpty>
+                  <CommandGroup>
+                    {Object.values(availableDisorders)
+                      .filter(
+                        (d) =>
+                          !disorders.some((existing) => existing.id === d.id)
+                      )
+                      .map((disorder) => (
+                        <CommandItem
+                          key={disorder.id}
+                          value={disorder.disorder_name}
+                          onSelect={() => handleAdd(disorder.id)}>
+                          {disorder.disorder_name}
+                        </CommandItem>
+                      ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -204,23 +247,6 @@ export function DisordersCard({
               </Button>
             </div>
           ))}
-
-          {isAddingNew && (
-            <div className="flex items-center justify-between gap-2">
-              <SelectDisorder
-                disorders={availableDisorders}
-                onChange={handleAdd}
-                excludeIds={disorders.map((d) => d.id)}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                type="button"
-                onClick={() => setIsAddingNew(false)}>
-                <TrashIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

@@ -2,6 +2,8 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { removeSettlementPhase } from '@/lib/dal/settlement-phase'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
@@ -21,12 +23,13 @@ import {
 } from '@/lib/types'
 import { CircleXIcon, HeartPlusIcon, SwordsIcon } from 'lucide-react'
 import { ReactElement, useCallback } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Settlement Phase Actions Card Properties
  */
 interface SettlementPhaseActionsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
@@ -56,6 +59,7 @@ interface SettlementPhaseActionsCardProps {
  * @returns Settlement Phase Actions Card Component
  */
 export function SettlementPhaseActionsCard({
+  local,
   selectedSettlement,
   selectedSettlementPhase,
   selectedSurvivor,
@@ -65,6 +69,8 @@ export function SettlementPhaseActionsCard({
   setSurvivors,
   survivors
 }: SettlementPhaseActionsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const currentStep = selectedSettlementPhase
     ? DatabaseSettlementPhaseStep[selectedSettlementPhase.step]
     : undefined
@@ -145,7 +151,8 @@ export function SettlementPhaseActionsCard({
     selectedSurvivor,
     setSelectedSurvivor,
     survivors,
-    setSurvivors
+    setSurvivors,
+    toast
   ])
 
   /**
@@ -181,7 +188,8 @@ export function SettlementPhaseActionsCard({
     selectedSettlement,
     selectedSettlementPhase,
     setSelectedSettlementPhase,
-    setSelectedTab
+    setSelectedTab,
+    toast
   ])
 
   return (

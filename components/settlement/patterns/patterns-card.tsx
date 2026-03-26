@@ -1,11 +1,23 @@
 'use client'
 
-import {
-  NewPatternItem,
-  PatternItem
-} from '@/components/settlement/patterns/pattern-item'
+import { PatternItem } from '@/components/settlement/patterns/pattern-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getPatterns } from '@/lib/dal/pattern'
 import {
   addSettlementPatterns,
@@ -19,12 +31,13 @@ import {
 import { PatternDetail, SettlementDetail } from '@/lib/types'
 import { PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Patterns Card Properties
  */
 interface PatternsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -42,10 +55,13 @@ interface PatternsCardProps {
  * @returns Patterns Card Component
  */
 export function PatternsCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: PatternsCardProps): ReactElement {
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const { toast } = useToast(local)
+
+  const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   const [availablePatterns, setAvailablePatterns] = useState<{
@@ -58,7 +74,7 @@ export function PatternsCard({
 
   if (selectedSettlement?.id !== prevSettlementId) {
     setPrevSettlementId(selectedSettlement?.id ?? null)
-    setIsAddingNew(false)
+    setAddOpen(false)
     setHasFetched(false)
   }
 
@@ -84,7 +100,7 @@ export function PatternsCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   const selectablePatterns = useMemo(() => {
     const linkedIds = new Set(
@@ -105,10 +121,12 @@ export function PatternsCard({
 
   const handleAdd = useCallback(
     (patternId: string | undefined) => {
-      if (!patternId || !selectedSettlement) return setIsAddingNew(false)
+      if (!patternId || !selectedSettlement) return
 
       const patternInfo = availablePatterns[patternId]
-      if (!patternInfo) return setIsAddingNew(false)
+      if (!patternInfo) return
+
+      setAddOpen(false)
 
       const tempId = `temp-${Date.now()}`
       const optimisticRow: SettlementDetail['patterns'][0] = {
@@ -123,7 +141,6 @@ export function PatternsCard({
         ...selectedSettlement,
         patterns: updatedPatterns
       })
-      setIsAddingNew(false)
 
       addSettlementPatterns([patternId], selectedSettlement.id)
         .then((row) => {
@@ -144,7 +161,7 @@ export function PatternsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availablePatterns, setSelectedSettlement]
+    [selectedSettlement, availablePatterns, setSelectedSettlement, toast]
   )
 
   const handleRemove = useCallback(
@@ -174,7 +191,7 @@ export function PatternsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (
@@ -183,17 +200,36 @@ export function PatternsCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <ScissorsLineDashedIcon className="h-4 w-4" />
           Patterns
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew || selectablePatterns.length === 0}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8"
+                disabled={selectablePatterns.length === 0}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search patterns..." />
+                <CommandList>
+                  <CommandEmpty>No patterns found.</CommandEmpty>
+                  <CommandGroup>
+                    {selectablePatterns.map((pattern) => (
+                      <CommandItem
+                        key={pattern.id}
+                        value={pattern.pattern_name}
+                        onSelect={() => handleAdd(pattern.id)}>
+                        {pattern.pattern_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -202,7 +238,6 @@ export function PatternsCard({
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.patterns ||
               selectedSettlement.patterns.length === 0) &&
-              !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No patterns yet
@@ -224,14 +259,6 @@ export function PatternsCard({
                   onRemove={handleRemove}
                 />
               ))}
-
-            {isAddingNew && (
-              <NewPatternItem
-                availablePatterns={selectablePatterns}
-                onCancel={() => setIsAddingNew(false)}
-                onSave={handleAdd}
-              />
-            )}
           </div>
         </div>
       </CardContent>

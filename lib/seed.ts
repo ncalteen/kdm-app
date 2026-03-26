@@ -245,35 +245,6 @@ async function addSettlementArc(
 }
 
 /**
- * Add Settlement Wanderers
- *
- * @param supabase Supabase Client
- * @param settlementId Settlement ID
- */
-async function addSettlementWanderers(
-  supabase: SupabaseClient,
-  settlementId: string
-) {
-  console.log(`Adding Wanderers for Settlement ${settlementId}...`)
-
-  // Add all wanderers
-  const { data: wanderers, error: getWanderersError } = await supabase
-    .from('wanderer')
-    .select('id')
-
-  if (getWanderersError) throw getWanderersError
-
-  for (const wanderer of wanderers) {
-    const { error } = await supabase.from('settlement_wanderer').insert({
-      settlement_id: settlementId,
-      wanderer_id: wanderer.id
-    })
-
-    if (error) throw error
-  }
-}
-
-/**
  * Add Settlement Locations and Gear
  *
  * @param supabase Supabase Client
@@ -738,9 +709,6 @@ async function createSettlement(
         ? await addSettlementArc(supabase, settlement.id)
         : []
   }
-
-  // Add wanderers
-  await addSettlementWanderers(supabase, updatedSettlement.id)
 
   // Add locations and gear
   await addSettlementLocationsAndGear(supabase, updatedSettlement.id)

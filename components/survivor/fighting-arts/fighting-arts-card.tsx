@@ -1,11 +1,26 @@
 'use client'
 
-import { SelectFightingArt } from '@/components/menu/select-fighting-art'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator
+} from '@/components/ui/command'
 import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getFightingArts } from '@/lib/dal/fighting-art'
 import { getSecretFightingArts } from '@/lib/dal/secret-fighting-art'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -39,12 +54,13 @@ import {
   useRef,
   useState
 } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Fighting Arts Card Properties
  */
 interface FightingArtsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -65,11 +81,14 @@ type SecretFightingArtItem = { id: string; secret_fighting_art_name: string }
  * @returns Fighting Arts Card Component
  */
 export function FightingArtsCard({
+  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: FightingArtsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [availableFightingArts, setAvailableFightingArts] = useState<{
@@ -83,7 +102,7 @@ export function FightingArtsCard({
   const [secretFightingArts, setSecretFightingArts] = useState<
     SecretFightingArtItem[]
   >(selectedSurvivor?.secret_fighting_arts ?? [])
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const [addOpen, setAddOpen] = useState<boolean>(false)
 
   const canUseFightingArtsKnowledges =
     survivors.find((s) => s.id === selectedSurvivor?.id)
@@ -187,7 +206,8 @@ export function FightingArtsCard({
       fightingArts,
       selectedSurvivor,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 
@@ -247,7 +267,8 @@ export function FightingArtsCard({
       secretFightingArts,
       selectedSurvivor,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 
@@ -261,7 +282,7 @@ export function FightingArtsCard({
    */
   const handleAdd = useCallback(
     (id: string, isSecret: boolean) => {
-      setIsAddingNew(false)
+      setAddOpen(false)
       if (isSecret) handleAddSecret(id)
       else handleAddRegular(id)
     },
@@ -306,7 +327,7 @@ export function FightingArtsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [fightingArts, selectedSurvivor, setSurvivors, survivors]
+    [fightingArts, selectedSurvivor, setSurvivors, survivors, toast]
   )
 
   /**
@@ -349,7 +370,7 @@ export function FightingArtsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [secretFightingArts, selectedSurvivor, setSurvivors, survivors]
+    [secretFightingArts, selectedSurvivor, setSurvivors, survivors, toast]
   )
 
   /**
@@ -395,7 +416,8 @@ export function FightingArtsCard({
       canUseFightingArtsKnowledges,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 
@@ -411,17 +433,51 @@ export function FightingArtsCard({
       <CardHeader className="p-0">
         <CardTitle className="p-0 text-sm flex flex-row items-center justify-between h-8">
           Fighting Arts &amp; Secret Fighting Arts
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="h-6 w-6"
-              disabled={isAddingNew || (isAtRegularLimit && isAtSecretLimit)}>
-              <PlusIcon />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-6 w-6"
+                disabled={isAtRegularLimit && isAtSecretLimit}>
+                <PlusIcon />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search fighting arts..." />
+                <CommandList>
+                  <CommandEmpty>No fighting arts found.</CommandEmpty>
+                  {!isAtRegularLimit && (
+                    <CommandGroup heading="Fighting Arts">
+                      {selectableRegularArts.map((art) => (
+                        <CommandItem
+                          key={art.id}
+                          value={art.fighting_art_name}
+                          onSelect={() => handleAdd(art.id, false)}>
+                          {art.fighting_art_name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+                  <CommandSeparator />
+                  {!isAtSecretLimit && (
+                    <CommandGroup heading="Secret Fighting Arts">
+                      {selectableSecretArts.map((art) => (
+                        <CommandItem
+                          key={art.id}
+                          value={art.secret_fighting_art_name}
+                          onSelect={() => handleAdd(art.id, true)}>
+                          {art.secret_fighting_art_name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -460,25 +516,6 @@ export function FightingArtsCard({
               </Button>
             </div>
           ))}
-
-          {isAddingNew && (
-            <div className="flex items-center justify-between gap-2">
-              <SelectFightingArt
-                fightingArts={selectableRegularArts}
-                secretFightingArts={selectableSecretArts}
-                regularAtLimit={isAtRegularLimit}
-                secretAtLimit={isAtSecretLimit}
-                onChange={handleAdd}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                type="button"
-                onClick={() => setIsAddingNew(false)}>
-                <TrashIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
         </div>
 
         <div className="flex justify-end mt-2 pr-2">

@@ -48,7 +48,6 @@ import {
   addSettlementTimelineYears,
   getSettlementTimelineYears
 } from '@/lib/dal/settlement-timeline-year'
-import { addSettlementWanderers } from '@/lib/dal/settlement-wanderer'
 import { addSquiresOfTheCitadelSurvivors } from '@/lib/dal/survivor'
 import { getUserId } from '@/lib/dal/user'
 import { getWandererTimelineYears } from '@/lib/dal/wanderer-timeline-year'
@@ -181,8 +180,7 @@ export async function createSettlement(
   // Insert nemeses, quarries, and wanderers in parallel.
   await Promise.all([
     addSettlementNemeses(nemesisIds, settlementId),
-    addSettlementQuarries(quarryIds, settlementId),
-    addSettlementWanderers(options.wandererIds, settlementId)
+    addSettlementQuarries(quarryIds, settlementId)
   ])
 
   // Fetch all timeline/location/collective-cognition-reward data in parallel

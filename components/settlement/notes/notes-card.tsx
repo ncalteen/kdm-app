@@ -3,17 +3,20 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSettlement } from '@/lib/dal/settlement'
 import { ERROR_MESSAGE, SETTLEMENT_NOTES_SAVED_MESSAGE } from '@/lib/messages'
 import { SettlementDetail } from '@/lib/types'
 import { CheckIcon, StickyNoteIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Notes Card Properties
  */
 interface NotesCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -32,9 +35,12 @@ interface NotesCardProps {
  * @returns Notes Card Component
  */
 export function NotesCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: NotesCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [draft, setDraft] = useState<string>(selectedSettlement?.notes ?? '')
   const [isDirty, setIsDirty] = useState<boolean>(false)
 
@@ -83,7 +89,7 @@ export function NotesCard({
         console.error('Notes Save Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [selectedSettlement, setSelectedSettlement, draft])
+  }, [selectedSettlement, setSelectedSettlement, draft, toast])
 
   return (
     <Card className="p-0 pb-1 border-0 h-full flex flex-col">

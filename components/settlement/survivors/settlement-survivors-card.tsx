@@ -4,18 +4,21 @@ import { createColumns } from '@/components/settlement/survivors/columns'
 import { SurvivorDataTable } from '@/components/settlement/survivors/data-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { deleteSurvivor } from '@/lib/dal/survivor'
 import { DatabaseSurvivorType, SurvivorType } from '@/lib/enums'
 import { ERROR_MESSAGE, SURVIVOR_REMOVED_MESSAGE } from '@/lib/messages'
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Settlement Survivors Card Properties
  */
 interface SettlementSurvivorsCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /* Selected Survivor */
@@ -42,6 +45,7 @@ interface SettlementSurvivorsCardProps {
  * @returns Settlement Survivors Card Component
  */
 export function SettlementSurvivorsCard({
+  local,
   selectedSettlement,
   selectedSurvivor,
   setIsCreatingNewSurvivor,
@@ -49,6 +53,8 @@ export function SettlementSurvivorsCard({
   setSurvivors,
   survivors
 }: SettlementSurvivorsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   const [deleteId, setDeleteId] = useState<string | undefined>(undefined)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
 
@@ -109,7 +115,8 @@ export function SettlementSurvivorsCard({
       selectedSettlement?.id,
       selectedSurvivor?.id,
       setSelectedSurvivor,
-      setSurvivors
+      setSurvivors,
+      toast
     ]
   )
 

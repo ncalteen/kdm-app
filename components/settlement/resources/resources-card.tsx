@@ -1,11 +1,23 @@
 'use client'
 
-import {
-  NewResourceItem,
-  ResourceItem
-} from '@/components/settlement/resources/resource-item'
+import { ResourceItem } from '@/components/settlement/resources/resource-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getResources } from '@/lib/dal/resource'
 import {
   addSettlementResources,
@@ -20,12 +32,13 @@ import {
 import { ResourceDetail, SettlementDetail } from '@/lib/types'
 import { BeefIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Resources Card Properties
  */
 interface ResourcesCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -43,10 +56,13 @@ interface ResourcesCardProps {
  * @returns Resources Card Component
  */
 export function ResourcesCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: ResourcesCardProps): ReactElement {
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const { toast } = useToast(local)
+
+  const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   const [availableResources, setAvailableResources] = useState<{
@@ -59,7 +75,7 @@ export function ResourcesCard({
 
   if (selectedSettlement?.id !== prevSettlementId) {
     setPrevSettlementId(selectedSettlement?.id ?? null)
-    setIsAddingNew(false)
+    setAddOpen(false)
     setHasFetched(false)
   }
 
@@ -85,7 +101,7 @@ export function ResourcesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   const selectableResources = useMemo(() => {
     const linkedIds = new Set(
@@ -115,10 +131,12 @@ export function ResourcesCard({
    */
   const handleAdd = useCallback(
     (resourceId: string | undefined) => {
-      if (!resourceId || !selectedSettlement) return setIsAddingNew(false)
+      if (!resourceId || !selectedSettlement) return
 
       const resourceInfo = availableResources[resourceId]
-      if (!resourceInfo) return setIsAddingNew(false)
+      if (!resourceInfo) return
+
+      setAddOpen(false)
 
       const tempId = `temp-${Date.now()}`
 
@@ -140,7 +158,6 @@ export function ResourcesCard({
         ...selectedSettlement,
         resources: updatedResources
       })
-      setIsAddingNew(false)
 
       addSettlementResources([resourceId], selectedSettlement.id)
         .then((row) => {
@@ -161,7 +178,7 @@ export function ResourcesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableResources, setSelectedSettlement]
+    [selectedSettlement, availableResources, setSelectedSettlement, toast]
   )
 
   /**
@@ -201,7 +218,7 @@ export function ResourcesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   /**
@@ -242,7 +259,7 @@ export function ResourcesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (
@@ -251,17 +268,36 @@ export function ResourcesCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <BeefIcon className="h-4 w-4" />
           Resource Storage
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew || selectableResources.length === 0}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8"
+                disabled={selectableResources.length === 0}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search resources..." />
+                <CommandList>
+                  <CommandEmpty>No resources found.</CommandEmpty>
+                  <CommandGroup>
+                    {selectableResources.map((resource) => (
+                      <CommandItem
+                        key={resource.id}
+                        value={resource.resource_name}
+                        onSelect={() => handleAdd(resource.id)}>
+                        {resource.resource_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -270,7 +306,6 @@ export function ResourcesCard({
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.resources ||
               selectedSettlement.resources.length === 0) &&
-              !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No resources yet
@@ -293,14 +328,6 @@ export function ResourcesCard({
                   onRemove={handleRemove}
                 />
               ))}
-
-            {isAddingNew && (
-              <NewResourceItem
-                availableResources={selectableResources}
-                onCancel={() => setIsAddingNew(false)}
-                onSave={handleAdd}
-              />
-            )}
           </div>
         </div>
       </CardContent>

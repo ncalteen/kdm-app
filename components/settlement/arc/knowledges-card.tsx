@@ -1,11 +1,23 @@
 'use client'
 
-import {
-  KnowledgeItem,
-  NewKnowledgeItem
-} from '@/components/settlement/arc/knowledge-item'
+import { KnowledgeItem } from '@/components/settlement/arc/knowledge-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { getKnowledges } from '@/lib/dal/knowledge'
 import {
   addSettlementKnowledges,
@@ -19,12 +31,13 @@ import {
 import { KnowledgeDetail, SettlementDetail } from '@/lib/types'
 import { GraduationCapIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Knowledges Card Properties
  */
 interface KnowledgesCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -42,10 +55,13 @@ interface KnowledgesCardProps {
  * @returns Knowledges Card Component
  */
 export function KnowledgesCard({
+  local,
   selectedSettlement,
   setSelectedSettlement
 }: KnowledgesCardProps): ReactElement {
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const { toast } = useToast(local)
+
+  const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available knowledges for the select dropdown (fetched once per settlement).
@@ -60,7 +76,7 @@ export function KnowledgesCard({
 
   if (selectedSettlement?.id !== prevSettlementId) {
     setPrevSettlementId(selectedSettlement?.id ?? null)
-    setIsAddingNew(false)
+    setAddOpen(false)
     setHasFetched(false)
   }
 
@@ -90,7 +106,7 @@ export function KnowledgesCard({
     return () => {
       cancelled = true
     }
-  }, [selectedSettlement?.id, hasFetched])
+  }, [selectedSettlement?.id, hasFetched, toast])
 
   /**
    * Sorted Knowledges
@@ -121,10 +137,12 @@ export function KnowledgesCard({
    */
   const handleAdd = useCallback(
     (knowledgeId: string | undefined) => {
-      if (!knowledgeId || !selectedSettlement) return setIsAddingNew(false)
+      if (!knowledgeId || !selectedSettlement) return
 
       const knowledgeInfo = availableKnowledges[knowledgeId]
-      if (!knowledgeInfo) return setIsAddingNew(false)
+      if (!knowledgeInfo) return
+
+      setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${Date.now()}`
@@ -143,7 +161,6 @@ export function KnowledgesCard({
         ...selectedSettlement,
         knowledges: updatedKnowledges
       })
-      setIsAddingNew(false)
 
       addSettlementKnowledges([knowledgeId], selectedSettlement.id)
         .then((rows) => {
@@ -168,7 +185,7 @@ export function KnowledgesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, availableKnowledges, setSelectedSettlement]
+    [selectedSettlement, availableKnowledges, setSelectedSettlement, toast]
   )
 
   /**
@@ -210,7 +227,7 @@ export function KnowledgesCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSettlement, setSelectedSettlement]
+    [selectedSettlement, setSelectedSettlement, toast]
   )
 
   return (
@@ -219,17 +236,42 @@ export function KnowledgesCard({
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <GraduationCapIcon className="h-4 w-4" />
           Knowledges
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="border-0 h-8 w-8"
-              disabled={isAddingNew}>
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-0 h-8 w-8">
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder="Search knowledges..." />
+                <CommandList>
+                  <CommandEmpty>No knowledges found.</CommandEmpty>
+                  <CommandGroup>
+                    {Object.values(availableKnowledges)
+                      .filter(
+                        (k) =>
+                          !(selectedSettlement?.knowledges ?? []).some(
+                            (existing) => existing.knowledge_id === k.id
+                          )
+                      )
+                      .map((knowledge) => (
+                        <CommandItem
+                          key={knowledge.id}
+                          value={knowledge.knowledge_name}
+                          onSelect={() => handleAdd(knowledge.id)}>
+                          {knowledge.knowledge_name}
+                        </CommandItem>
+                      ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
@@ -239,7 +281,6 @@ export function KnowledgesCard({
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.knowledges ||
               selectedSettlement.knowledges.length === 0) &&
-              !isAddingNew &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No knowledges yet
@@ -261,17 +302,6 @@ export function KnowledgesCard({
                   onRemove={handleRemove}
                 />
               ))}
-
-            {isAddingNew && (
-              <NewKnowledgeItem
-                availableKnowledgesMap={availableKnowledges}
-                excludeIds={(selectedSettlement?.knowledges ?? []).map(
-                  (k) => k.knowledge_id
-                )}
-                onCancel={() => setIsAddingNew(false)}
-                onSave={handleAdd}
-              />
-            )}
           </div>
         </div>
       </CardContent>

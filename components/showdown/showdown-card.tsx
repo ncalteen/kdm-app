@@ -2,6 +2,7 @@
 
 import { ActiveShowdownCard } from '@/components/showdown/active-showdown/active-showdown-card'
 import { CreateShowdownCard } from '@/components/showdown/create-showdown/create-showdown-card'
+import { LocalStateType } from '@/contexts/local-context'
 import { TabType } from '@/lib/enums'
 import {
   HuntDetail,
@@ -16,6 +17,8 @@ import { ReactElement } from 'react'
  * Showdown Card Properties
  */
 interface ShowdownCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Showdown */
@@ -55,6 +58,7 @@ interface ShowdownCardProps {
  * @returns Showdown Card Component
  */
 export function ShowdownCard({
+  local,
   selectedHunt,
   selectedShowdown,
   selectedShowdownMonsterIndex,
@@ -70,6 +74,7 @@ export function ShowdownCard({
 }: ShowdownCardProps): ReactElement {
   return selectedShowdown ? (
     <ActiveShowdownCard
+      local={local}
       selectedShowdown={selectedShowdown}
       selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
       selectedSettlement={selectedSettlement}
@@ -85,6 +90,7 @@ export function ShowdownCard({
   ) : (
     <div className="mt-10 flex flex-wrap items-start justify-center gap-4">
       <CreateShowdownCard
+        local={local}
         selectedHunt={selectedHunt}
         selectedSettlement={selectedSettlement}
         setSelectedShowdown={setSelectedShowdown}

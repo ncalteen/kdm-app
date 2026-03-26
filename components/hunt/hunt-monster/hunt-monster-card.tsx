@@ -10,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateHuntMonster } from '@/lib/dal/hunt-monster'
 import {
   ERROR_MESSAGE,
@@ -26,12 +28,13 @@ import {
 import { HuntDetail, HuntMonsterDetail } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Hunt Monster Card Component Properties
  */
 interface HuntMonsterCardProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
@@ -51,10 +54,13 @@ interface HuntMonsterCardProps {
  * @returns Hunt Monster Card Component
  */
 export function HuntMonsterCard({
+  local,
   selectedHunt,
   selectedHuntMonsterIndex,
   setSelectedHunt
 }: HuntMonsterCardProps): ReactElement {
+  const { toast } = useToast(local)
+
   /** Monster IDs as an ordered array */
   const monsterIds = useMemo(
     () => Object.keys(selectedHunt?.hunt_monsters ?? {}),
@@ -155,7 +161,7 @@ export function HuntMonsterCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedHunt, currentMonsterId, monster, setSelectedHunt]
+    [selectedHunt, currentMonsterId, monster, setSelectedHunt, toast]
   )
 
   /**
@@ -213,7 +219,7 @@ export function HuntMonsterCard({
       )
       setIsAddingTrait(false)
     },
-    [monster?.traits, saveMonsterData]
+    [monster?.traits, saveMonsterData, toast]
   )
 
   /**
@@ -271,7 +277,7 @@ export function HuntMonsterCard({
       )
       setIsAddingMood(false)
     },
-    [monster?.moods, saveMonsterData]
+    [monster?.moods, saveMonsterData, toast]
   )
 
   /**

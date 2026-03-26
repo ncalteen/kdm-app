@@ -7,6 +7,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
   ERROR_MESSAGE,
@@ -14,12 +16,13 @@ import {
 } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
 import { ReactElement, useCallback, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 /**
  * Courage Understanding Abilities Properties
  */
 interface CourageUnderstandingAbilitiesProps {
+  /** Local State */
+  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -38,10 +41,13 @@ interface CourageUnderstandingAbilitiesProps {
  * @returns Courage/Understanding Abilities Component
  */
 export function CourageUnderstandingAbilities({
+  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: CourageUnderstandingAbilitiesProps): ReactElement {
+  const { toast } = useToast(local)
+
   const survivorIdRef = useRef<string | undefined>(undefined)
 
   const [courageAbility, setCourageAbility] = useState(
@@ -155,7 +161,8 @@ export function CourageUnderstandingAbilities({
       understandingAbility,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors
+      survivors,
+      toast
     ]
   )
 
