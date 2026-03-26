@@ -421,6 +421,7 @@ export function SettlementPhaseCard({
           SettlementPhaseStep.CHECK_MILESTONES
         ].includes(currentStep) && (
           <SettlementPhaseSurvivorsCard
+            local={local}
             selectedSettlement={selectedSettlement}
             selectedSettlementPhase={selectedSettlementPhase}
             selectedSurvivor={selectedSurvivor}
