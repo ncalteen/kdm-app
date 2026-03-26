@@ -8,8 +8,8 @@ import { ExternalToast, toast as sonnerToast } from 'sonner'
  * Toast Custom Hook
  *
  * Provides wrapped toast functions that respect the disableToasts setting
- * from the campaign configuration. Success/info/warning messages are suppressed
- * when toasts are disabled, but error messages are always shown.
+ * from the campaign configuration. Success/info messages are suppressed when
+ * toasts are disabled, but error messages are always shown.
  *
  * @param local Local State
  * @returns Wrapped Toast Functions
