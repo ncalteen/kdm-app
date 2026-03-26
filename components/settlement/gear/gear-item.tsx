@@ -37,7 +37,7 @@ export const GearItem = memo(function GearItem({
   onRemove
 }: GearItemProps): ReactElement {
   return (
-    <div className="flex items-center gap-2 pl-2">
+    <div className="flex items-center gap-2 pl-2 pb-1">
       {/* Gear Name */}
       <Label className="text-sm truncate ml-1">{gear.gear_name}</Label>
 
