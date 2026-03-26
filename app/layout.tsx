@@ -2,6 +2,7 @@ import '@/app/globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { LocalProvider } from '@/contexts/local-context'
+import { Analytics } from '@vercel/analytics/next'
 import { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ReactElement, ReactNode } from 'react'
@@ -35,6 +36,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <Analytics />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
