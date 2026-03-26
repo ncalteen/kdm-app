@@ -1,6 +1,7 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
+import { SelectNeurosis } from '@/components/menu/select-neurosis'
 import { SelectPhilosophy } from '@/components/menu/select-philosophy'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,6 +27,7 @@ import { updateSurvivor } from '@/lib/dal/survivor'
 import {
   ERROR_MESSAGE,
   PHILOSOPHY_RANK_MINIMUM_ERROR,
+  SURVIVOR_NEUROSIS_UPDATED_MESSAGE,
   SURVIVOR_PHILOSOPHY_RANK_UPDATED_MESSAGE,
   SURVIVOR_PHILOSOPHY_SELECTED_MESSAGE,
   SURVIVOR_TENET_KNOWLEDGE_OBSERVATION_CONDITIONS_UPDATED_MESSAGE,
@@ -208,7 +210,22 @@ export function PhilosophyCard({
           }
         : null
 
+      // Auto-set neurosis based on linked philosophy_id in the neurosis table
+      const prevNeurosis = neurosis
+      const matchedNeurosis = philosophyId
+        ? selectedSettlement?.neuroses.find(
+            (n) => n.philosophy_id === philosophyId
+          )
+        : null
+      const newNeurosis = matchedNeurosis
+        ? {
+            id: matchedNeurosis.id,
+            neurosis_name: matchedNeurosis.neurosis_name
+          }
+        : null
+
       setPhilosophy(newPhilosophy)
+      setNeurosis(newNeurosis)
       if (!philosophyId) setPhilosophyRank(0)
 
       setSurvivors(
@@ -217,6 +234,7 @@ export function PhilosophyCard({
             ? {
                 ...s,
                 philosophy: newPhilosophy,
+                neurosis: newNeurosis,
                 ...(philosophyId ? {} : { philosophy_rank: 0 })
               }
             : s
@@ -225,6 +243,7 @@ export function PhilosophyCard({
 
       updateSurvivor(selectedSurvivor?.id, {
         philosophy_id: philosophyId || null,
+        neurosis_id: newNeurosis?.id ?? null,
         ...(philosophyId ? {} : { philosophy_rank: 0 })
       })
         .then(() =>
@@ -237,13 +256,15 @@ export function PhilosophyCard({
         .catch((error) => {
           setPhilosophy(prevPhilosophy)
           setPhilosophyRank(prevPhilosophyRank)
+          setNeurosis(prevNeurosis)
           setSurvivors(
             survivors.map((s) =>
               s.id === selectedSurvivor?.id
                 ? {
                     ...s,
                     philosophy: prevPhilosophy,
-                    philosophy_rank: prevPhilosophyRank
+                    philosophy_rank: prevPhilosophyRank,
+                    neurosis: prevNeurosis
                   }
                 : s
             )
@@ -254,8 +275,68 @@ export function PhilosophyCard({
         })
     },
     [
+      neurosis,
       philosophy,
       philosophyRank,
+      selectedSettlement,
+      selectedSurvivor?.id,
+      setSurvivors,
+      survivors,
+      toast
+    ]
+  )
+
+  /**
+   * Handle Neurosis Change
+   *
+   * @param neurosisId Neurosis ID (or empty string to clear)
+   */
+  const handleNeurosisChange = useCallback(
+    (neurosisId: string) => {
+      const prevNeurosis = neurosis
+
+      const neurosisDetail = neurosisId
+        ? selectedSettlement?.neuroses.find((n) => n.id === neurosisId)
+        : null
+
+      const newNeurosis = neurosisDetail
+        ? { id: neurosisId, neurosis_name: neurosisDetail.neurosis_name }
+        : null
+
+      setNeurosis(newNeurosis)
+
+      setSurvivors(
+        survivors.map((s) =>
+          s.id === selectedSurvivor?.id ? { ...s, neurosis: newNeurosis } : s
+        )
+      )
+
+      updateSurvivor(selectedSurvivor?.id, {
+        neurosis_id: neurosisId || null
+      })
+        .then(() =>
+          toast.success(
+            SURVIVOR_NEUROSIS_UPDATED_MESSAGE(
+              neurosisDetail?.neurosis_name ?? ''
+            )
+          )
+        )
+        .catch((error) => {
+          setNeurosis(prevNeurosis)
+          setSurvivors(
+            survivors.map((s) =>
+              s.id === selectedSurvivor?.id
+                ? { ...s, neurosis: prevNeurosis }
+                : s
+            )
+          )
+
+          console.error('Neurosis Update Error:', error)
+          toast.error(ERROR_MESSAGE())
+        })
+    },
+    [
+      neurosis,
       selectedSettlement,
       selectedSurvivor?.id,
       setSurvivors,
@@ -617,9 +698,11 @@ export function PhilosophyCard({
       <CardContent className="p-0 flex flex-col">
         {/* Neurosis */}
         <div className="flex flex-col gap-1">
-          <p className="border-0 border-b px-2 text-sm py-2 text-muted-foreground">
-            {neurosis?.neurosis_name || 'No neurosis'}
-          </p>
+          <SelectNeurosis
+            selectedSettlement={selectedSettlement}
+            value={neurosis?.id ?? ''}
+            onChange={handleNeurosisChange}
+          />
           <Label className="text-xs text-muted-foreground">Neurosis</Label>
         </div>
 
