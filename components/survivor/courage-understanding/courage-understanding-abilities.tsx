@@ -185,6 +185,10 @@ export function CourageUnderstandingAbilities({
         {/* Courage Ability */}
         <div className="flex flex-col w-[45%] gap-2 pt-2">
           <Select
+            disabled={
+              (survivors.find((s) => s.id === selectedSurvivor?.id)?.courage ??
+                0) < 3
+            }
             value={courageAbility}
             onValueChange={(value) =>
               handleAbilityChange(
@@ -219,6 +223,10 @@ export function CourageUnderstandingAbilities({
         {/* Understanding Ability */}
         <div className="flex flex-col w-[45%] gap-2 pt-2">
           <Select
+            disabled={
+              (survivors.find((s) => s.id === selectedSurvivor?.id)
+                ?.understanding ?? 0) < 3
+            }
             value={understandingAbility}
             onValueChange={(value) =>
               handleAbilityChange(
