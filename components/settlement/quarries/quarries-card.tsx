@@ -1,6 +1,7 @@
 'use client'
 
 import { QuarryItem } from '@/components/settlement/quarries/quarry-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -322,6 +323,11 @@ export function QuarriesCard({
                         value={quarry.monster_name}
                         onSelect={() => handleAdd(quarry.id)}>
                         {quarry.monster_name}
+                        {quarry.custom && (
+                          <Badge variant="outline" className="ml-auto">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
                   </CommandGroup>

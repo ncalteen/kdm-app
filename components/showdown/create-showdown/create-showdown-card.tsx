@@ -16,7 +16,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { LocalStateType, useLocal } from '@/contexts/local-context'
+import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { getNemesis } from '@/lib/dal/nemesis'
 import { getNemesisLevels } from '@/lib/dal/nemesis-level'
@@ -41,12 +41,14 @@ import {
   QuarryDetail,
   QuarryLevelDetail,
   SettlementDetail,
+  SettlementPhaseDetail,
   ShowdownDetail,
   ShowdownSurvivorDetail,
-  SurvivorDetail
+  SurvivorDetail,
+  UserSettingsDetail
 } from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
-import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /** Vignette monster names that require user setting unlocks */
 const VIGNETTE_UNLOCK_MAP: Record<string, string> = {
@@ -71,14 +73,22 @@ enum MonsterVersion {
 interface CreateShowdownCardProps {
   /** Local State */
   local: LocalStateType
+  /** Pending Special Showdown */
+  pendingSpecialShowdown: boolean
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: SettlementPhaseDetail | null
+  /** Set Pending Special Showdown */
+  setPendingSpecialShowdown: (value: boolean) => void
   /** Set Selected Showdown */
   setSelectedShowdown: (showdown: ShowdownDetail | null) => void
   /** Survivors */
   survivors: SurvivorDetail[]
+  /** User Settings */
+  userSettings: UserSettingsDetail | null
 }
 
 /**
@@ -94,14 +104,24 @@ interface CreateShowdownCardProps {
  */
 export function CreateShowdownCard({
   local,
+  pendingSpecialShowdown,
   selectedHunt,
   selectedSettlement,
+  selectedSettlementPhase,
+  setPendingSpecialShowdown,
   setSelectedShowdown,
-  survivors
+  survivors,
+  userSettings
 }: CreateShowdownCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const { userSettings } = useLocal()
+  // Consume the pending special showdown flag after render
+  useEffect(() => {
+    if (pendingSpecialShowdown) {
+      setIsSpecialShowdown(true)
+      setPendingSpecialShowdown(false)
+    }
+  }, [pendingSpecialShowdown, setPendingSpecialShowdown])
 
   // Monster selection state
   const [monsterSource, setMonsterSource] = useState<MonsterSource | null>(null)
@@ -183,6 +203,23 @@ export function CreateShowdownCard({
         .sort((a, b) => a.monster_name.localeCompare(b.monster_name)),
     [selectedSettlement?.nemeses]
   )
+
+  /** Combined monster list (quarries + nemeses), sorted by name */
+  const availableMonsters = useMemo(() => {
+    const quarries = availableQuarries.map((q) => ({
+      id: q.quarry_id,
+      monster_name: q.monster_name,
+      source: 'quarry' as MonsterSource
+    }))
+    const nemeses = availableNemeses.map((n) => ({
+      id: n.nemesis_id,
+      monster_name: n.monster_name,
+      source: 'nemesis' as MonsterSource
+    }))
+    return [...quarries, ...nemeses].sort((a, b) =>
+      a.monster_name.localeCompare(b.monster_name)
+    )
+  }, [availableQuarries, availableNemeses])
 
   /** Active levels based on selected version */
   const activeLevels = useMemo(() => {
@@ -667,59 +704,31 @@ export function CreateShowdownCard({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-2 w-full">
-        {/* Monster Source: Quarry */}
+        {/* Monster Selection */}
         <div className="flex items-center justify-between">
           <Label className="text-left whitespace-nowrap min-w-[90px]">
-            Quarry
+            Monster
           </Label>
-          {availableQuarries.length > 0 ? (
+          {availableMonsters.length > 0 ? (
             <Select
-              value={
-                monsterSource === 'quarry' ? (selectedMonsterId ?? '') : ''
-              }
-              onValueChange={(id) => handleMonsterSelection(id, 'quarry')}>
+              value={selectedMonsterId ?? ''}
+              onValueChange={(id) => {
+                const monster = availableMonsters.find((m) => m.id === id)
+                if (monster) handleMonsterSelection(id, monster.source)
+              }}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a quarry..." />
+                <SelectValue placeholder="Choose a monster..." />
               </SelectTrigger>
               <SelectContent>
-                {availableQuarries.map((quarry) => (
-                  <SelectItem key={quarry.quarry_id} value={quarry.quarry_id}>
-                    {quarry.monster_name}
+                {availableMonsters.map((monster) => (
+                  <SelectItem key={monster.id} value={monster.id}>
+                    {monster.monster_name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           ) : (
-            <p className="text-sm text-muted-foreground">No quarries</p>
-          )}
-        </div>
-
-        {/* Monster Source: Nemesis */}
-        <div className="flex items-center justify-between">
-          <Label className="text-left whitespace-nowrap min-w-[90px]">
-            Nemesis
-          </Label>
-          {availableNemeses.length > 0 ? (
-            <Select
-              value={
-                monsterSource === 'nemesis' ? (selectedMonsterId ?? '') : ''
-              }
-              onValueChange={(id) => handleMonsterSelection(id, 'nemesis')}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a nemesis..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableNemeses.map((nemesis) => (
-                  <SelectItem
-                    key={nemesis.nemesis_id}
-                    value={nemesis.nemesis_id}>
-                    {nemesis.monster_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <p className="text-sm text-muted-foreground">No nemeses</p>
+            <p className="text-sm text-muted-foreground">No monsters</p>
           )}
         </div>
 
@@ -1004,6 +1013,7 @@ export function CreateShowdownCard({
             availableSurvivors.length === 0 ||
             selectedSurvivors.length === 0 ||
             (selectedSettlement?.uses_scouts === true && !selectedScout) ||
+            (!!selectedSettlementPhase && !isSpecialShowdown) ||
             isCreating
           }
           className="w-full mt-2">

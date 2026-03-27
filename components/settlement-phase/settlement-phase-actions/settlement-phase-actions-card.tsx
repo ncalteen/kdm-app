@@ -36,6 +36,8 @@ interface SettlementPhaseActionsCardProps {
   selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Pending Special Showdown */
+  setPendingSpecialShowdown: (pending: boolean) => void
   /** Set Selected Settlement Phase */
   setSelectedSettlementPhase: (phase: SettlementPhaseDetail | null) => void
   /** Set Selected Survivor */
@@ -63,6 +65,7 @@ export function SettlementPhaseActionsCard({
   selectedSettlement,
   selectedSettlementPhase,
   selectedSurvivor,
+  setPendingSpecialShowdown,
   setSelectedSettlementPhase,
   setSelectedSurvivor,
   setSelectedTab,
@@ -162,8 +165,14 @@ export function SettlementPhaseActionsCard({
    */
   const proceedToSpecialShowdown = useCallback(() => {
     if (!selectedSettlement || !selectedSettlementPhase) return
+    setPendingSpecialShowdown(true)
     setSelectedTab(TabType.SHOWDOWN)
-  }, [selectedSettlement, selectedSettlementPhase, setSelectedTab])
+  }, [
+    selectedSettlement,
+    selectedSettlementPhase,
+    setPendingSpecialShowdown,
+    setSelectedTab
+  ])
 
   /**
    * End Settlement Phase

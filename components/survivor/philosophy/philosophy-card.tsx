@@ -106,23 +106,27 @@ function TenetKnowledgeSelect({
           <CommandList>
             <CommandEmpty>No knowledges found.</CommandEmpty>
             <CommandGroup>
-              {knowledges.map((k) => (
-                <CommandItem
-                  key={k.knowledge_id}
-                  value={k.knowledge_name}
-                  onSelect={() => {
-                    onChange(k.knowledge_id)
-                    setOpen(false)
-                  }}>
-                  <Check
-                    className={cn(
-                      'h-4 w-4',
-                      value === k.knowledge_id ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
-                  {k.knowledge_name}
-                </CommandItem>
-              ))}
+              {[...knowledges]
+                .sort((a, b) =>
+                  a.knowledge_name.localeCompare(b.knowledge_name)
+                )
+                .map((k) => (
+                  <CommandItem
+                    key={k.knowledge_id}
+                    value={k.knowledge_name}
+                    onSelect={() => {
+                      onChange(k.knowledge_id === value ? '' : k.knowledge_id)
+                      setOpen(false)
+                    }}>
+                    <Check
+                      className={cn(
+                        'h-4 w-4',
+                        value === k.knowledge_id ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    {k.knowledge_name}
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>
@@ -448,9 +452,21 @@ export function PhilosophyCard({
       ? {
           ...tenetKnowledge,
           id: knowledgeId,
-          knowledge_name: knowledgeDetail.knowledge_name
+          knowledge_name: knowledgeDetail.knowledge_name,
+          observation_rank: 0,
+          rank_up: null,
+          rules: '',
+          observation_conditions: ''
         }
-      : { ...tenetKnowledge, id: '', knowledge_name: '' }
+      : {
+          ...tenetKnowledge,
+          id: '',
+          knowledge_name: '',
+          observation_rank: 0,
+          rank_up: null,
+          rules: '',
+          observation_conditions: ''
+        }
 
     setTenetKnowledge(newTenetKnowledge)
 
@@ -464,14 +480,22 @@ export function PhilosophyCard({
                     id: knowledgeId,
                     knowledge_name: knowledgeDetail.knowledge_name
                   }
-                : null
+                : null,
+              tenet_knowledge_observation_rank: 0,
+              tenet_knowledge_rank_up: null,
+              tenet_knowledge_rules: '',
+              tenet_knowledge_observation_conditions: ''
             }
           : s
       )
     )
 
     updateSurvivor(selectedSurvivor?.id, {
-      tenet_knowledge_id: knowledgeId || null
+      tenet_knowledge_id: knowledgeId || null,
+      tenet_knowledge_observation_rank: 0,
+      tenet_knowledge_rank_up: null,
+      tenet_knowledge_rules: '',
+      tenet_knowledge_observation_conditions: ''
     })
       .then(() =>
         toast.success(
@@ -722,15 +746,23 @@ export function PhilosophyCard({
             {[...Array(9)].map((_, index) => {
               const checked = tenetKnowledge.observation_rank > index
               const isRankUpMilestone = tenetKnowledge.rank_up === index
+              const hasTenetKnowledge = !!tenetKnowledge.id
 
               return (
                 <Checkbox
                   key={index}
+                  disabled={!hasTenetKnowledge}
                   checked={checked}
                   onCheckedChange={(checked) =>
                     updateTenetKnowledgeObservationRank(!!checked, index)
                   }
-                  onContextMenu={(event) => handleRightClick(index, event)}
+                  onContextMenu={(event) => {
+                    if (!hasTenetKnowledge) {
+                      event.preventDefault()
+                      return
+                    }
+                    handleRightClick(index, event)
+                  }}
                   className={cn(
                     'h-4 w-4 rounded-sm',
                     !checked && isRankUpMilestone && 'border-2 border-primary'
@@ -744,6 +776,7 @@ export function PhilosophyCard({
         {/* Tenet Knowledge Rules */}
         <div className="mt-1 flex flex-col gap-1">
           <Textarea
+            disabled={!tenetKnowledge.id}
             placeholder=" Tenet knowledge rules..."
             className="resize-none border-0 border-b rounded-none focus-visible:ring-0 focus-visible:border-b-2 px-2 h-20 overflow-y-auto text-sm"
             value={tenetKnowledge.rules}
@@ -760,6 +793,7 @@ export function PhilosophyCard({
         {/* Tenet Knowledge Observation Conditions */}
         <div className="mt-1 flex flex-col gap-1">
           <Textarea
+            disabled={!tenetKnowledge.id}
             placeholder=" Observation conditions..."
             className="resize-none border-0 border-b rounded-none focus-visible:ring-0 focus-visible:border-b-2 px-2 h-20 overflow-y-auto text-sm"
             value={tenetKnowledge.observation_conditions}

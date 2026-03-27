@@ -60,6 +60,8 @@ interface SettlementCardProps {
   isCreatingNewSurvivor: boolean
   /** Local State */
   local: LocalStateType
+  /* Pending Special Showdown */
+  pendingSpecialShowdown: boolean
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
@@ -80,6 +82,8 @@ interface SettlementCardProps {
   setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set New Survivor Being Created */
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
+  /** Set Pending Special Showdown */
+  setPendingSpecialShowdown: (pending: boolean) => void
   /** Set Selected Hunt */
   setSelectedHunt: (hunt: HuntDetail | null) => void
   /** Set Selected Hunt ID */
@@ -130,6 +134,7 @@ export function SettlementCard({
   isCreatingNewSettlement,
   isCreatingNewSurvivor,
   local,
+  pendingSpecialShowdown,
   selectedHunt,
   selectedHuntMonsterIndex,
   selectedSettlement,
@@ -140,6 +145,7 @@ export function SettlementCard({
   selectedTab,
   setIsCreatingNewSettlement,
   setIsCreatingNewSurvivor,
+  setPendingSpecialShowdown,
   setSelectedHunt,
   setSelectedHuntId,
   setSelectedHuntMonsterIndex,
@@ -546,11 +552,14 @@ export function SettlementCard({
           {selectedSettlement && selectedTab === TabType.SHOWDOWN && (
             <ShowdownCard
               local={local}
+              pendingSpecialShowdown={pendingSpecialShowdown}
               selectedHunt={selectedHunt}
               selectedShowdown={selectedShowdown}
               selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
               selectedSettlement={selectedSettlement}
+              selectedSettlementPhase={selectedSettlementPhase}
               selectedSurvivor={selectedSurvivor}
+              setPendingSpecialShowdown={setPendingSpecialShowdown}
               setSelectedSettlementPhase={setSelectedSettlementPhase}
               setSelectedShowdown={setSelectedShowdown}
               setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
@@ -558,6 +567,7 @@ export function SettlementCard({
               setSelectedTab={setSelectedTab}
               setSurvivors={setSurvivors}
               survivors={survivors}
+              userSettings={userSettings}
             />
           )}
 
@@ -568,6 +578,7 @@ export function SettlementCard({
               selectedSettlement={selectedSettlement}
               selectedSettlementPhase={selectedSettlementPhase}
               selectedSurvivor={selectedSurvivor}
+              setPendingSpecialShowdown={setPendingSpecialShowdown}
               setSelectedSettlement={setSelectedSettlement}
               setSelectedSettlementPhase={setSelectedSettlementPhase}
               setSelectedSurvivor={setSelectedSurvivor}

@@ -103,23 +103,27 @@ function KnowledgeSelect({
           <CommandList>
             <CommandEmpty>No knowledges found.</CommandEmpty>
             <CommandGroup>
-              {knowledges.map((k) => (
-                <CommandItem
-                  key={k.knowledge_id}
-                  value={k.knowledge_name}
-                  onSelect={() => {
-                    onChange(k.knowledge_id)
-                    setOpen(false)
-                  }}>
-                  <Check
-                    className={cn(
-                      'h-4 w-4',
-                      value === k.knowledge_id ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
-                  {k.knowledge_name}
-                </CommandItem>
-              ))}
+              {[...knowledges]
+                .sort((a, b) =>
+                  a.knowledge_name.localeCompare(b.knowledge_name)
+                )
+                .map((k) => (
+                  <CommandItem
+                    key={k.knowledge_id}
+                    value={k.knowledge_name}
+                    onSelect={() => {
+                      onChange(k.knowledge_id === value ? '' : k.knowledge_id)
+                      setOpen(false)
+                    }}>
+                    <Check
+                      className={cn(
+                        'h-4 w-4',
+                        value === k.knowledge_id ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    {k.knowledge_name}
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>
@@ -318,9 +322,21 @@ export function KnowledgeCard({
       ? {
           ...knowledge1,
           id: knowledgeId,
-          knowledge_name: knowledgeDetail.knowledge_name
+          knowledge_name: knowledgeDetail.knowledge_name,
+          observation_rank: 0,
+          rank_up: null,
+          rules: '',
+          observation_conditions: ''
         }
-      : { ...knowledge1, id: '', knowledge_name: '' }
+      : {
+          ...knowledge1,
+          id: '',
+          knowledge_name: '',
+          observation_rank: 0,
+          rank_up: null,
+          rules: '',
+          observation_conditions: ''
+        }
 
     setKnowledge1(newKnowledge)
 
@@ -334,14 +350,22 @@ export function KnowledgeCard({
                     id: knowledgeId,
                     knowledge_name: knowledgeDetail.knowledge_name
                   }
-                : null
+                : null,
+              knowledge_1_observation_rank: 0,
+              knowledge_1_rank_up: null,
+              knowledge_1_rules: '',
+              knowledge_1_observation_conditions: ''
             }
           : s
       )
     )
 
     updateSurvivor(selectedSurvivor?.id, {
-      knowledge_1_id: knowledgeId || null
+      knowledge_1_id: knowledgeId || null,
+      knowledge_1_observation_rank: 0,
+      knowledge_1_rank_up: null,
+      knowledge_1_rules: '',
+      knowledge_1_observation_conditions: ''
     })
       .then(() =>
         toast.success(
@@ -540,9 +564,21 @@ export function KnowledgeCard({
       ? {
           ...knowledge2,
           id: knowledgeId,
-          knowledge_name: knowledgeDetail.knowledge_name
+          knowledge_name: knowledgeDetail.knowledge_name,
+          observation_rank: 0,
+          rank_up: null,
+          rules: '',
+          observation_conditions: ''
         }
-      : { ...knowledge2, id: '', knowledge_name: '' }
+      : {
+          ...knowledge2,
+          id: '',
+          knowledge_name: '',
+          observation_rank: 0,
+          rank_up: null,
+          rules: '',
+          observation_conditions: ''
+        }
 
     setKnowledge2(newKnowledge)
 
@@ -556,14 +592,22 @@ export function KnowledgeCard({
                     id: knowledgeId,
                     knowledge_name: knowledgeDetail.knowledge_name
                   }
-                : null
+                : null,
+              knowledge_2_observation_rank: 0,
+              knowledge_2_rank_up: null,
+              knowledge_2_rules: '',
+              knowledge_2_observation_conditions: ''
             }
           : s
       )
     )
 
     updateSurvivor(selectedSurvivor?.id, {
-      knowledge_2_id: knowledgeId || null
+      knowledge_2_id: knowledgeId || null,
+      knowledge_2_observation_rank: 0,
+      knowledge_2_rank_up: null,
+      knowledge_2_rules: '',
+      knowledge_2_observation_conditions: ''
     })
       .then(() =>
         toast.success(
@@ -795,17 +839,23 @@ export function KnowledgeCard({
             {[...Array(9)].map((_, index) => {
               const checked = knowledge1.observation_rank >= index + 1
               const isRankUpMilestone = knowledge1.rank_up === index
+              const hasKnowledge = !!knowledge1.id
 
               return (
                 <Checkbox
                   key={index}
+                  disabled={!hasKnowledge}
                   checked={checked}
                   onCheckedChange={(checked) =>
                     updateKnowledge1ObservationRank(!!checked, index)
                   }
-                  onContextMenu={(event) =>
+                  onContextMenu={(event) => {
+                    if (!hasKnowledge) {
+                      event.preventDefault()
+                      return
+                    }
                     updateKnowledge1RankUp(index, event)
-                  }
+                  }}
                   className={cn(
                     'h-4 w-4 rounded-sm',
                     !checked && isRankUpMilestone && 'border-2 border-primary'
@@ -819,6 +869,7 @@ export function KnowledgeCard({
         {/* Knowledge 1 Rules */}
         <div className="mt-1 flex flex-col gap-1">
           <Textarea
+            disabled={!knowledge1.id}
             placeholder=" Enter knowledge rules..."
             className="resize-none border-0 border-b rounded-none focus-visible:ring-0 focus-visible:border-b-2 px-2 h-20 overflow-y-auto text-sm"
             value={knowledge1?.rules ?? ''}
@@ -836,6 +887,7 @@ export function KnowledgeCard({
         <div className="mt-1">
           <div className="flex flex-col gap-1">
             <Textarea
+              disabled={!knowledge1.id}
               placeholder=" Enter observation conditions..."
               className="resize-none border-0 border-b rounded-none focus-visible:ring-0 focus-visible:border-b-2 px-2 h-20 overflow-y-auto text-sm"
               value={knowledge1?.observation_conditions ?? ''}
@@ -876,17 +928,23 @@ export function KnowledgeCard({
             {[...Array(9)].map((_, index) => {
               const checked = knowledge2.observation_rank >= index + 1
               const isRankUpMilestone = knowledge2.rank_up === index
+              const hasKnowledge = !!knowledge2.id
 
               return (
                 <Checkbox
                   key={index}
+                  disabled={!hasKnowledge}
                   checked={checked}
                   onCheckedChange={(checked) =>
                     updateKnowledge2ObservationRank(!!checked, index)
                   }
-                  onContextMenu={(event) =>
+                  onContextMenu={(event) => {
+                    if (!hasKnowledge) {
+                      event.preventDefault()
+                      return
+                    }
                     updateKnowledge2RankUp(index, event)
-                  }
+                  }}
                   className={cn(
                     'h-4 w-4 rounded-sm',
                     !checked && isRankUpMilestone && 'border-2 border-primary'
@@ -900,6 +958,7 @@ export function KnowledgeCard({
         {/* Knowledge 2 Rules */}
         <div className="mt-1 flex flex-col gap-1">
           <Textarea
+            disabled={!knowledge2.id}
             placeholder=" Enter knowledge rules..."
             className="resize-none border-0 border-b rounded-none focus-visible:ring-0 focus-visible:border-b-2 px-2 h-20 overflow-y-auto text-sm"
             value={knowledge2?.rules ?? ''}
@@ -916,6 +975,7 @@ export function KnowledgeCard({
         {/* Knowledge 2 Observation Conditions */}
         <div className="mt-1 flex flex-col gap-1 pb-2">
           <Textarea
+            disabled={!knowledge2.id}
             placeholder=" Enter observation conditions..."
             className="resize-none border-0 border-b rounded-none focus-visible:ring-0 focus-visible:border-b-2 px-2 h-20 overflow-y-auto text-sm"
             value={knowledge2?.observation_conditions ?? ''}

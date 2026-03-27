@@ -124,19 +124,41 @@ export function WeaponProficiencyCard({
   const handleWeaponTypeChange = useCallback(
     (type: string) => {
       const oldWeaponTypeId = weaponTypeId
+      const oldProficiency = weaponProficiency
 
       setWeaponTypeId(type || null)
+      setWeaponProficiency(0)
+
+      setSurvivors(
+        survivors.map((s) =>
+          s.id === selectedSurvivor?.id
+            ? {
+                ...s,
+                weapon_type_id: (type ||
+                  null) as SurvivorDetail['weapon_type_id'],
+                weapon_proficiency: 0
+              }
+            : s
+        )
+      )
 
       updateSurvivor(selectedSurvivor?.id, {
-        weapon_type_id: type as unknown as SurvivorDetail['weapon_type_id']
+        weapon_type_id: (type ||
+          null) as unknown as SurvivorDetail['weapon_type_id'],
+        weapon_proficiency: 0
       })
         .then(() => toast.success(SURVIVOR_WEAPON_TYPE_UPDATED_MESSAGE()))
         .catch((error) => {
           setWeaponTypeId(oldWeaponTypeId)
+          setWeaponProficiency(oldProficiency)
           setSurvivors(
             survivors.map((s) =>
               s.id === selectedSurvivor?.id
-                ? { ...s, weapon_type_id: oldWeaponTypeId }
+                ? {
+                    ...s,
+                    weapon_type_id: oldWeaponTypeId,
+                    weapon_proficiency: oldProficiency
+                  }
                 : s
             )
           )
@@ -145,7 +167,14 @@ export function WeaponProficiencyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [weaponTypeId, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [
+      weaponProficiency,
+      weaponTypeId,
+      selectedSurvivor?.id,
+      setSurvivors,
+      survivors,
+      toast
+    ]
   )
 
   return (
@@ -166,6 +195,7 @@ export function WeaponProficiencyCard({
               {Array.from({ length: 8 }, (_, i) => (
                 <div key={i} className="w-4 h-4 flex">
                   <Checkbox
+                    disabled={!weaponTypeId}
                     checked={weaponProficiency > i}
                     onCheckedChange={(checked) =>
                       handleProficiencyChange(i, !!checked)
