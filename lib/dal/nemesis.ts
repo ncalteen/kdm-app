@@ -120,7 +120,9 @@ export async function getUserCustomNemeses(): Promise<{
 
   const { data, error } = await supabase
     .from('nemesis')
-    .select('id, alternate_id, custom, monster_name, multi_monster, node, vignette_id')
+    .select(
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+    )
     .eq('custom', true)
     .eq('user_id', user.id)
 
@@ -149,7 +151,9 @@ export async function getNemesis(
 
   const { data, error } = await supabase
     .from('nemesis')
-    .select('id, alternate_id, custom, monster_name, multi_monster, node, vignette_id')
+    .select(
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+    )
     .eq('id', nemesisId)
     .maybeSingle()
 
@@ -248,7 +252,9 @@ export async function addNemesis(
   const { data, error } = await supabase
     .from('nemesis')
     .insert({ ...nemesis, user_id: user.id })
-    .select('id, alternate_id, custom, monster_name, multi_monster, node, vignette_id')
+    .select(
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding Nemesis: ${error.message}`)

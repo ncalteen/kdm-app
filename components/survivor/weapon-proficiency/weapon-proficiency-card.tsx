@@ -134,7 +134,8 @@ export function WeaponProficiencyCard({
           s.id === selectedSurvivor?.id
             ? {
                 ...s,
-                weapon_type_id: (type || null) as SurvivorDetail['weapon_type_id'],
+                weapon_type_id: (type ||
+                  null) as SurvivorDetail['weapon_type_id'],
                 weapon_proficiency: 0
               }
             : s
@@ -142,7 +143,8 @@ export function WeaponProficiencyCard({
       )
 
       updateSurvivor(selectedSurvivor?.id, {
-        weapon_type_id: (type || null) as unknown as SurvivorDetail['weapon_type_id'],
+        weapon_type_id: (type ||
+          null) as unknown as SurvivorDetail['weapon_type_id'],
         weapon_proficiency: 0
       })
         .then(() => toast.success(SURVIVOR_WEAPON_TYPE_UPDATED_MESSAGE()))
@@ -165,7 +167,14 @@ export function WeaponProficiencyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [weaponProficiency, weaponTypeId, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [
+      weaponProficiency,
+      weaponTypeId,
+      selectedSurvivor?.id,
+      setSurvivors,
+      survivors,
+      toast
+    ]
   )
 
   return (
