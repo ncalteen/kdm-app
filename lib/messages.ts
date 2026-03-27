@@ -111,6 +111,14 @@ export const COLLECTIVE_COGNITION_REWARD_NO_TARGET_ERROR_MESSAGE = () =>
   'A reward must have a collective cognition target.'
 
 /**
+ * Collective Cognition Reward Created
+ *
+ * @returns Collective Cognition Reward Created Message
+ */
+export const COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE = () =>
+  'A new collective cognition reward is forged.'
+
+/**
  * Collective Cognition Reward Removed
  *
  * @returns Collective Cognition Reward Removed Message
@@ -313,6 +321,14 @@ export const FIGHTING_ARTS_MAX_EXCEEDED_ERROR_MESSAGE = (
  * @returns Gear Removed Message
  */
 export const GEAR_REMOVED_MESSAGE = () => 'Gear has been archived.'
+
+/**
+ * Gear Created
+ *
+ * @returns Gear Created Message
+ */
+export const GEAR_CREATED_MESSAGE = () =>
+  'New gear is crafted from the remnants of the hunt.'
 
 /**
  * Gear Updated
@@ -543,6 +559,14 @@ export const MILESTONE_COMPLETED_MESSAGE = (complete: boolean) =>
   complete
     ? 'Milestone achieved - the settlement persists through the darkness.'
     : 'Milestone status updated.'
+
+/**
+ * Milestone Created
+ *
+ * @returns Milestone Created Message
+ */
+export const MILESTONE_CREATED_MESSAGE = () =>
+  'A new milestone looms on the horizon.'
 
 /**
  * Milestone Missing Event Error
@@ -1034,6 +1058,14 @@ export const PRINCIPLE_OPTION_SELECTED_MESSAGE = (optionName: string) =>
   `The settlement has chosen ${optionName}.`
 
 /**
+ * Principle Created
+ *
+ * @returns Principle Created Message
+ */
+export const PRINCIPLE_CREATED_MESSAGE = () =>
+  'A new principle guides the settlement.'
+
+/**
  * Principle Removed
  *
  * @returns Principle Removed Message
@@ -1094,6 +1126,14 @@ export const QUARRY_UPDATED_MESSAGE = () => 'The quarry has been tracked.'
 export const RESOURCE_REMOVED_MESSAGE = () => 'The resource has been consumed.'
 
 /**
+ * Resource Created
+ *
+ * @returns Resource Created Message
+ */
+export const RESOURCE_CREATED_MESSAGE = () =>
+  'A new resource is discovered in the darkness.'
+
+/**
  * Resource Updated
  *
  * @param index Resource Index
@@ -1103,6 +1143,14 @@ export const RESOURCE_UPDATED_MESSAGE = (index?: number) =>
   index !== undefined
     ? 'The resource has been cataloged.'
     : 'A new resource has been gathered.'
+
+/**
+ * Neurosis Created
+ *
+ * @returns Neurosis Created Message
+ */
+export const NEUROSIS_CREATED_MESSAGE = () =>
+  'A new neurosis takes hold of the mind.'
 
 /**
  * Scout Conflict

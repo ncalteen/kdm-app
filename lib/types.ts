@@ -52,7 +52,7 @@ export type CharacterDetail = Omit<
  */
 export type CollectiveCognitionRewardDetail = Omit<
   Tables<'collective_cognition_reward'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -102,7 +102,7 @@ export type SeedPatternDetail = Omit<
  */
 export type GearDetail = Omit<
   Tables<'gear'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -179,7 +179,7 @@ export type InnovationDetail = Omit<
  */
 export type KnowledgeDetail = Omit<
   Tables<'knowledge'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -199,7 +199,7 @@ export type LocationDetail = Omit<
  */
 export type MilestoneDetail = Omit<
   Tables<'milestone'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -230,7 +230,7 @@ export type NemesisLevelDetail = Omit<
  */
 export type NeurosisDetail = Omit<
   Tables<'neurosis'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -260,7 +260,7 @@ export type PhilosophyDetail = Omit<
  */
 export type PrincipleDetail = Omit<
   Tables<'principle'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -301,7 +301,7 @@ export type QuarryLevelDetail = Omit<
  */
 export type ResourceDetail = Omit<
   Tables<'resource'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 > & {
   /** Quarry Monster Name (joined from quarry table) */
   quarry_monster_name: string | null
