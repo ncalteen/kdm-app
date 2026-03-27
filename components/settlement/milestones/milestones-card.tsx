@@ -1,6 +1,8 @@
 'use client'
 
+import { CreateCustomMilestoneDialog } from '@/components/settlement/milestones/create-custom-milestone-dialog'
 import { MilestoneItem } from '@/components/settlement/milestones/milestone-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -18,7 +20,7 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getMilestones } from '@/lib/dal/milestone'
+import { addMilestone, getMilestones } from '@/lib/dal/milestone'
 import {
   addSettlementMilestones,
   removeSettlementMilestone,
@@ -27,11 +29,12 @@ import {
 import {
   ERROR_MESSAGE,
   MILESTONE_COMPLETED_MESSAGE,
+  MILESTONE_CREATED_MESSAGE,
   MILESTONE_REMOVED_MESSAGE,
   MILESTONE_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { MilestoneDetail, SettlementDetail } from '@/lib/types'
-import { BadgeCheckIcon, PlusIcon } from 'lucide-react'
+import { BadgeCheckIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
@@ -65,6 +68,10 @@ export function MilestonesCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   // Available milestones for the select dropdown (fetched once per settlement).
   const [availableMilestones, setAvailableMilestones] = useState<{
@@ -273,6 +280,93 @@ export function MilestonesCard({
     [selectedSettlement, setSelectedSettlement, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availableMilestones).some(
+    (m) => m.milestone_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Milestone
+   *
+   * Creates a custom milestone via DAL, adds it to the available list, then
+   * adds it to the settlement.
+   */
+  const handleCreate = useCallback(
+    async (data: { milestone_name: string; event_name: string }) => {
+      if (creating || !selectedSettlement) return
+
+      setCreating(true)
+
+      try {
+        const newMilestone = await addMilestone({
+          custom: true,
+          milestone_name: data.milestone_name,
+          event_name: data.event_name,
+          campaign_types: []
+        })
+
+        setAvailableMilestones((prev) => ({
+          ...prev,
+          [newMilestone.id]: newMilestone
+        }))
+        setCreateDialogOpen(false)
+        setSearch('')
+        setAddOpen(false)
+        toast.success(MILESTONE_CREATED_MESSAGE())
+
+        // Add to settlement immediately.
+        const tempId = `temp-${Date.now()}`
+        const optimisticRow: SettlementDetail['milestones'][0] = {
+          complete: false,
+          event_name: newMilestone.event_name,
+          id: tempId,
+          milestone_id: newMilestone.id,
+          milestone_name: newMilestone.milestone_name
+        }
+
+        const updatedMilestones = [
+          ...selectedSettlement.milestones,
+          optimisticRow
+        ]
+
+        setSelectedSettlement({
+          ...selectedSettlement,
+          milestones: updatedMilestones
+        })
+
+        addSettlementMilestones([newMilestone.id], selectedSettlement.id)
+          .then((row) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              milestones: updatedMilestones.map((m) =>
+                m.id === tempId ? { ...m, id: row[0].id } : m
+              )
+            })
+          })
+          .catch((err: unknown) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              milestones: selectedSettlement.milestones
+            })
+            console.error('Milestone Add Error:', err)
+            toast.error(ERROR_MESSAGE())
+          })
+      } catch (error) {
+        console.error('Milestone Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
+      }
+    },
+    [creating, selectedSettlement, setSelectedSettlement, toast]
+  )
+
+  /** Open the create dialog with the current search term pre-filled. */
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
+  }, [])
+
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -291,10 +385,26 @@ export function MilestonesCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search milestones..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search milestones..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No milestones found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        onClick={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search.trim()}&quot;
+                      </button>
+                    ) : (
+                      'No milestones found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {selectableMilestones.map((milestone) => (
                       <CommandItem
@@ -302,8 +412,21 @@ export function MilestonesCard({
                         value={milestone.milestone_name}
                         onSelect={() => handleAdd(milestone.id)}>
                         {milestone.milestone_name}
+                        {milestone.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search.trim()}&quot;
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -343,6 +466,15 @@ export function MilestonesCard({
           </div>
         </div>
       </CardContent>
+
+      <CreateCustomMilestoneDialog
+        key={dialogKey}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreate={handleCreate}
+        creating={creating}
+        initialName={search.trim()}
+      />
     </Card>
   )
 }
