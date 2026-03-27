@@ -1,5 +1,6 @@
 'use client'
 
+import { CreateCustomPhilosophyDialog } from '@/components/settlement/arc/create-custom-philosophy-dialog'
 import { PhilosophyItem } from '@/components/settlement/arc/philosophy-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
+import { addNeurosis } from '@/lib/dal/neurosis'
 import { addPhilosophy, getPhilosophies } from '@/lib/dal/philosophy'
 import {
   addSettlementPhilosophies,
@@ -66,6 +68,8 @@ export function PhilosophiesCard({
   const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   // Available philosophies for the select dropdown (fetched once per settlement).
   const [availablePhilosophies, setAvailablePhilosophies] = useState<{
@@ -247,68 +251,86 @@ export function PhilosophiesCard({
   /**
    * Handle Create Custom Philosophy
    */
-  const handleCreate = useCallback(async () => {
-    const name = search.trim()
-    if (!name || creating || !selectedSettlement) return
+  const handleCreate = useCallback(
+    async (data: { philosophy_name: string; neurosis_name: string | null }) => {
+      if (creating || !selectedSettlement) return
 
-    setCreating(true)
+      setCreating(true)
 
-    try {
-      const newPhilosophy = await addPhilosophy({
-        custom: true,
-        philosophy_name: name
-      })
+      try {
+        const newPhilosophy = await addPhilosophy({
+          custom: true,
+          philosophy_name: data.philosophy_name
+        })
 
-      setAvailablePhilosophies((prev) => ({
-        ...prev,
-        [newPhilosophy.id]: newPhilosophy
-      }))
+        // If a neurosis name was provided, create it linked to this philosophy
+        if (data.neurosis_name) {
+          await addNeurosis({
+            custom: true,
+            neurosis_name: data.neurosis_name,
+            philosophy_id: newPhilosophy.id
+          })
+        }
 
-      setSearch('')
-      setAddOpen(false)
-      toast.success(PHILOSOPHY_CREATED_MESSAGE())
+        setAvailablePhilosophies((prev) => ({
+          ...prev,
+          [newPhilosophy.id]: newPhilosophy
+        }))
 
-      // Add to settlement immediately
-      const tempId = `temp-${Date.now()}`
-      const optimisticRow: SettlementDetail['philosophies'][0] = {
-        id: tempId,
-        philosophy_id: newPhilosophy.id,
-        philosophy_name: newPhilosophy.philosophy_name
+        setCreateDialogOpen(false)
+        setSearch('')
+        setAddOpen(false)
+        toast.success(PHILOSOPHY_CREATED_MESSAGE())
+
+        // Add to settlement immediately
+        const tempId = `temp-${Date.now()}`
+        const optimisticRow: SettlementDetail['philosophies'][0] = {
+          id: tempId,
+          philosophy_id: newPhilosophy.id,
+          philosophy_name: newPhilosophy.philosophy_name
+        }
+        const updatedPhilosophies = [
+          ...(selectedSettlement.philosophies ?? []),
+          optimisticRow
+        ]
+
+        setSelectedSettlement({
+          ...selectedSettlement,
+          philosophies: updatedPhilosophies
+        })
+
+        addSettlementPhilosophies([newPhilosophy.id], selectedSettlement.id)
+          .then((rows) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              philosophies: updatedPhilosophies.map((p) =>
+                p.id === tempId ? { ...p, id: rows[0].id } : p
+              )
+            })
+          })
+          .catch((err: unknown) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              philosophies: selectedSettlement.philosophies
+            })
+            console.error('Philosophy Add Error:', err)
+            toast.error(ERROR_MESSAGE())
+          })
+      } catch (error) {
+        console.error('Philosophy Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
       }
-      const updatedPhilosophies = [
-        ...(selectedSettlement.philosophies ?? []),
-        optimisticRow
-      ]
+    },
+    [creating, selectedSettlement, setSelectedSettlement, toast]
+  )
 
-      setSelectedSettlement({
-        ...selectedSettlement,
-        philosophies: updatedPhilosophies
-      })
-
-      addSettlementPhilosophies([newPhilosophy.id], selectedSettlement.id)
-        .then((rows) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            philosophies: updatedPhilosophies.map((p) =>
-              p.id === tempId ? { ...p, id: rows[0].id } : p
-            )
-          })
-        })
-        .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            philosophies: selectedSettlement.philosophies
-          })
-          console.error('Philosophy Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
-    } catch (error) {
-      console.error('Philosophy Create Error:', error)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setCreating(false)
-    }
-  }, [search, creating, selectedSettlement, setSelectedSettlement, toast])
+  /** Open the create dialog with the current search term pre-filled */
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
+  }, [])
 
   return (
     <Card className="p-0 border-1 gap-0">
@@ -339,10 +361,9 @@ export function PhilosophiesCard({
                       <button
                         type="button"
                         className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
-                        disabled={creating}
-                        onClick={handleCreate}>
+                        onClick={openCreateDialog}>
                         <Plus className="h-4 w-4" />
-                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                        Create &quot;{search.trim()}&quot;
                       </button>
                     ) : (
                       'No philosophies found.'
@@ -374,10 +395,9 @@ export function PhilosophiesCard({
                     {search.trim() && !exactMatchExists && (
                       <CommandItem
                         value={`__create__${search.trim()}`}
-                        onSelect={handleCreate}
-                        disabled={creating}>
+                        onSelect={openCreateDialog}>
                         <Plus className="h-4 w-4" />
-                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                        Create &quot;{search.trim()}&quot;
                       </CommandItem>
                     )}
                   </CommandGroup>
@@ -418,6 +438,15 @@ export function PhilosophiesCard({
           </div>
         </div>
       </CardContent>
+
+      <CreateCustomPhilosophyDialog
+        key={dialogKey}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreate={handleCreate}
+        creating={creating}
+        initialName={search.trim()}
+      />
     </Card>
   )
 }
