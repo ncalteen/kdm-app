@@ -1,6 +1,8 @@
 'use client'
 
 import { RewardItem } from '@/components/settlement/arc/collective-cognition-reward-item'
+import { CreateCustomCCRewardDialog } from '@/components/settlement/arc/create-custom-cc-reward-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -18,20 +20,24 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getCollectiveCognitionRewards } from '@/lib/dal/collective-cognition-reward'
+import {
+  addCollectiveCognitionReward,
+  getCollectiveCognitionRewards
+} from '@/lib/dal/collective-cognition-reward'
 import {
   addSettlementCollectiveCognitionRewards,
   removeSettlementCollectiveCognitionReward,
   updateSettlementCollectiveCognitionReward
 } from '@/lib/dal/settlement-collective-cognition-reward'
 import {
+  COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE,
   COLLECTIVE_COGNITION_REWARD_REMOVED_MESSAGE,
   COLLECTIVE_COGNITION_REWARD_SAVED_MESSAGE,
   COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE,
   ERROR_MESSAGE
 } from '@/lib/messages'
 import { CollectiveCognitionRewardDetail, SettlementDetail } from '@/lib/types'
-import { BrainIcon, PlusIcon } from 'lucide-react'
+import { BrainIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
@@ -66,6 +72,10 @@ export function CollectiveCognitionRewardsCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   // Available rewards for the select dropdown (fetched once per settlement).
   const [availableRewards, setAvailableRewards] = useState<{
@@ -289,6 +299,97 @@ export function CollectiveCognitionRewardsCard({
     [selectedSettlement, setSelectedSettlement, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availableRewards).some(
+    (r) => r.reward_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Reward
+   *
+   * Creates a custom collective cognition reward via DAL, adds it to the
+   * available list, then adds it to the settlement.
+   */
+  const handleCreate = useCallback(
+    async (data: { reward_name: string; collective_cognition: number }) => {
+      if (creating || !selectedSettlement) return
+
+      setCreating(true)
+
+      try {
+        const newReward = await addCollectiveCognitionReward({
+          custom: true,
+          reward_name: data.reward_name,
+          collective_cognition: data.collective_cognition
+        })
+
+        setAvailableRewards((prev) => ({
+          ...prev,
+          [newReward.id]: newReward
+        }))
+        setCreateDialogOpen(false)
+        setSearch('')
+        setAddOpen(false)
+        toast.success(COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE())
+
+        // Add to settlement immediately.
+        const tempId = `temp-${Date.now()}`
+        const optimisticRow: SettlementDetail['collective_cognition_rewards'][0] =
+          {
+            collective_cognition: String(newReward.collective_cognition),
+            collective_cognition_reward_id: newReward.id,
+            id: tempId,
+            reward_name: newReward.reward_name,
+            unlocked: false
+          }
+
+        const updatedRewards = [
+          ...(selectedSettlement.collective_cognition_rewards ?? []),
+          optimisticRow
+        ]
+
+        setSelectedSettlement({
+          ...selectedSettlement,
+          collective_cognition_rewards: updatedRewards
+        })
+
+        addSettlementCollectiveCognitionRewards(
+          [newReward.id],
+          selectedSettlement.id
+        )
+          .then((rows) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              collective_cognition_rewards: updatedRewards.map((r) =>
+                r.id === tempId ? { ...r, id: rows[0].id } : r
+              )
+            })
+          })
+          .catch((err: unknown) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              collective_cognition_rewards:
+                selectedSettlement.collective_cognition_rewards
+            })
+            console.error('Collective Cognition Reward Add Error:', err)
+            toast.error(ERROR_MESSAGE())
+          })
+      } catch (error) {
+        console.error('Collective Cognition Reward Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
+      }
+    },
+    [creating, selectedSettlement, setSelectedSettlement, toast]
+  )
+
+  /** Open the create dialog with the current search term pre-filled. */
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
+  }, [])
+
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -306,10 +407,26 @@ export function CollectiveCognitionRewardsCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search rewards..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search rewards..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No rewards found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        onClick={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search.trim()}&quot;
+                      </button>
+                    ) : (
+                      'No rewards found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {Object.values(availableRewards)
                       .filter(
@@ -328,8 +445,23 @@ export function CollectiveCognitionRewardsCard({
                           value={reward.reward_name}
                           onSelect={() => handleAdd(reward.id)}>
                           {reward.reward_name}
+                          {reward.custom && (
+                            <Badge
+                              variant="outline"
+                              className="ml-auto text-xs">
+                              Custom
+                            </Badge>
+                          )}
                         </CommandItem>
                       ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search.trim()}&quot;
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -369,6 +501,15 @@ export function CollectiveCognitionRewardsCard({
           </div>
         </div>
       </CardContent>
+
+      <CreateCustomCCRewardDialog
+        key={dialogKey}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreate={handleCreate}
+        creating={creating}
+        initialName={search.trim()}
+      />
     </Card>
   )
 }
