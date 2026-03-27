@@ -1,6 +1,8 @@
 'use client'
 
+import { CreateCustomGearDialog } from '@/components/settlement/gear/create-custom-gear-dialog'
 import { GearItem } from '@/components/settlement/gear/gear-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -18,7 +20,7 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getGear } from '@/lib/dal/gear'
+import { addGear, getGear } from '@/lib/dal/gear'
 import {
   addSettlementGear,
   removeSettlementGear,
@@ -26,11 +28,12 @@ import {
 } from '@/lib/dal/settlement-gear'
 import {
   ERROR_MESSAGE,
+  GEAR_CREATED_MESSAGE,
   GEAR_REMOVED_MESSAGE,
   GEAR_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { GearDetail, SettlementDetail } from '@/lib/types'
-import { PlusIcon, WrenchIcon } from 'lucide-react'
+import { Plus, PlusIcon, WrenchIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
@@ -64,6 +67,10 @@ export function GearCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   const [availableGear, setAvailableGear] = useState<{
     [key: string]: GearDetail
@@ -255,6 +262,87 @@ export function GearCard({
     [selectedSettlement, setSelectedSettlement, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availableGear).some(
+    (g) => g.gear_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Gear
+   *
+   * Opens the create dialog, and on submit creates the custom gear item via
+   * DAL then adds it to the settlement.
+   */
+  const handleCreate = useCallback(
+    async (data: { gear_name: string; location_id: string | null }) => {
+      if (creating || !selectedSettlement) return
+
+      setCreating(true)
+
+      try {
+        const newGear = await addGear({
+          custom: true,
+          gear_name: data.gear_name,
+          location_id: data.location_id
+        })
+
+        setAvailableGear((prev) => ({ ...prev, [newGear.id]: newGear }))
+        setCreateDialogOpen(false)
+        setSearch('')
+        setAddOpen(false)
+        toast.success(GEAR_CREATED_MESSAGE())
+
+        // Add to settlement immediately
+        const tempId = `temp-${Date.now()}`
+        const optimisticRow: SettlementDetail['gear'][0] = {
+          gear_id: newGear.id,
+          gear_name: newGear.gear_name,
+          id: tempId,
+          quantity: 1
+        }
+        const updatedGear = [...selectedSettlement.gear, optimisticRow]
+
+        setSelectedSettlement({
+          ...selectedSettlement,
+          gear: updatedGear
+        })
+
+        addSettlementGear({
+          gear_id: newGear.id,
+          quantity: 1,
+          settlement_id: selectedSettlement.id
+        })
+          .then((id) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              gear: updatedGear.map((g) => (g.id === tempId ? { ...g, id } : g))
+            })
+            toast.success(GEAR_UPDATED_MESSAGE())
+          })
+          .catch((err: unknown) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              gear: selectedSettlement.gear
+            })
+            console.error('Gear Add Error:', err)
+            toast.error(ERROR_MESSAGE())
+          })
+      } catch (error) {
+        console.error('Gear Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
+      }
+    },
+    [creating, selectedSettlement, setSelectedSettlement, toast]
+  )
+
+  /** Open the create dialog with the current search term pre-filled */
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
+  }, [])
+
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -273,10 +361,26 @@ export function GearCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search gear..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search gear..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No gear found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        onClick={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search.trim()}&quot;
+                      </button>
+                    ) : (
+                      'No gear found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {selectableGear.map((gear) => (
                       <CommandItem
@@ -284,8 +388,21 @@ export function GearCard({
                         value={gear.gear_name}
                         onSelect={() => handleAdd(gear.id)}>
                         {gear.gear_name}
+                        {gear.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search.trim()}&quot;
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -324,6 +441,15 @@ export function GearCard({
           </div>
         </div>
       </CardContent>
+
+      <CreateCustomGearDialog
+        key={dialogKey}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreate={handleCreate}
+        creating={creating}
+        initialName={search.trim()}
+      />
     </Card>
   )
 }
