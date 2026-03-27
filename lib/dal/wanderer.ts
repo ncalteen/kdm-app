@@ -32,14 +32,14 @@ export async function getWanderers(): Promise<{
     supabase
       .from('wanderer')
       .select(
-        'id, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+        'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
       )
       .eq('custom', false),
     // Custom wanderers created by the user
     supabase
       .from('wanderer')
       .select(
-        'id, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+        'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
       )
       .eq('custom', true)
       .eq('user_id', user.id),
@@ -47,7 +47,7 @@ export async function getWanderers(): Promise<{
     supabase
       .from('wanderer_shared_user')
       .select(
-        'wanderer(id, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding)'
+        'wanderer(id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding)'
       )
       .eq('shared_user_id', user.id)
   ])
@@ -122,15 +122,29 @@ export async function getWandererIds(
  * @returns Inserted Wanderer
  */
 export async function addWanderer(
-  wanderer: Omit<TablesInsert<'wanderer'>, 'id' | 'created_at' | 'updated_at'>
+  wanderer: Omit<
+    TablesInsert<'wanderer'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<WandererDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (wanderer.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('wanderer')
-    .insert(wanderer)
+    .insert({
+      ...wanderer,
+      ...(wanderer.custom ? { user_id: user!.id } : {})
+    })
     .select(
-      'id, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+      'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
     )
     .single()
 

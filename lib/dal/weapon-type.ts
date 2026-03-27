@@ -29,16 +29,16 @@ export async function getWeaponTypes(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('weapon_type')
-      .select('id, weapon_type_name')
+      .select('id, custom, weapon_type_name')
       .eq('custom', false),
     supabase
       .from('weapon_type')
-      .select('id, weapon_type_name')
+      .select('id, custom, weapon_type_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('weapon_type_shared_user')
-      .select('weapon_type(id, weapon_type_name)')
+      .select('weapon_type(id, custom, weapon_type_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -67,15 +67,26 @@ export async function getWeaponTypes(): Promise<{
 export async function addWeaponType(
   weaponType: Omit<
     TablesInsert<'weapon_type'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<WeaponTypeDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (weaponType.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('weapon_type')
-    .insert(weaponType)
-    .select('id, weapon_type_name')
+    .insert({
+      ...weaponType,
+      ...(weaponType.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, weapon_type_name')
     .single()
 
   if (error) throw new Error(`Error Adding Weapon Type: ${error.message}`)

@@ -26,15 +26,18 @@ export async function getLocations(): Promise<{
   if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase.from('location').select('id, location_name').eq('custom', false),
     supabase
       .from('location')
-      .select('id, location_name')
+      .select('id, custom, location_name')
+      .eq('custom', false),
+    supabase
+      .from('location')
+      .select('id, custom, location_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('location_shared_user')
-      .select('location(id, location_name)')
+      .select('location(id, custom, location_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -99,14 +102,28 @@ export async function getLocationIds(
  * @returns Inserted Location
  */
 export async function addLocation(
-  location: Omit<TablesInsert<'location'>, 'id' | 'created_at' | 'updated_at'>
+  location: Omit<
+    TablesInsert<'location'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<LocationDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (location.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('location')
-    .insert(location)
-    .select('id, location_name')
+    .insert({
+      ...location,
+      ...(location.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, location_name')
     .single()
 
   if (error) throw new Error(`Error Adding Location: ${error.message}`)

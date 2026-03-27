@@ -29,16 +29,16 @@ export async function getStrainMilestones(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('strain_milestone')
-      .select('id, strain_milestone_name')
+      .select('id, custom, strain_milestone_name')
       .eq('custom', false),
     supabase
       .from('strain_milestone')
-      .select('id, strain_milestone_name')
+      .select('id, custom, strain_milestone_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('strain_milestone_shared_user')
-      .select('strain_milestone(id, strain_milestone_name)')
+      .select('strain_milestone(id, custom, strain_milestone_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -69,15 +69,26 @@ export async function getStrainMilestones(): Promise<{
 export async function addStrainMilestone(
   strainMilestone: Omit<
     TablesInsert<'strain_milestone'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<StrainMilestoneDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (strainMilestone.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('strain_milestone')
-    .insert(strainMilestone)
-    .select('id, strain_milestone_name')
+    .insert({
+      ...strainMilestone,
+      ...(strainMilestone.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, strain_milestone_name')
     .single()
 
   if (error) throw new Error(`Error Adding Strain Milestone: ${error.message}`)

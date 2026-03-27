@@ -30,18 +30,18 @@ export async function getPhilosophies(): Promise<{
     // Non-custom philosophies (available to all users)
     supabase
       .from('philosophy')
-      .select('id, philosophy_name')
+      .select('id, custom, philosophy_name')
       .eq('custom', false),
     // Custom philosophies created by the user
     supabase
       .from('philosophy')
-      .select('id, philosophy_name')
+      .select('id, custom, philosophy_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom philosophies shared with the user
     supabase
       .from('philosophy_shared_user')
-      .select('philosophy(id, philosophy_name)')
+      .select('philosophy(id, custom, philosophy_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -71,15 +71,26 @@ export async function getPhilosophies(): Promise<{
 export async function addPhilosophy(
   philosophy: Omit<
     TablesInsert<'philosophy'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<PhilosophyDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (philosophy.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('philosophy')
-    .insert(philosophy)
-    .select('id, philosophy_name')
+    .insert({
+      ...philosophy,
+      ...(philosophy.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, philosophy_name')
     .single()
 
   if (error) throw new Error(`Error Adding Philosophy: ${error.message}`)
@@ -109,7 +120,7 @@ export async function updatePhilosophy(
     .from('philosophy')
     .update(philosophy)
     .eq('id', id)
-    .select('id, philosophy_name')
+    .select('id, custom, philosophy_name')
     .single()
 
   if (error) throw new Error(`Error Updating Philosophy: ${error.message}`)

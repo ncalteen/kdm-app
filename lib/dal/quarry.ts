@@ -247,11 +247,11 @@ export async function addQuarry(
   } = await supabase.auth.getUser()
 
   if (userError) throw new Error(`Auth Error: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
+  if (quarry.custom && !user) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('quarry')
-    .insert({ ...quarry, user_id: user.id })
+    .insert({ ...quarry, ...(quarry.custom ? { user_id: user!.id } : {}) })
     .select(
       'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
     )

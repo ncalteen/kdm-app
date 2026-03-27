@@ -25,19 +25,25 @@ export async function getResources(): Promise<{
   if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
   if (!user) throw new Error('Not Authenticated')
 
-  const selectFields =
-    'id, resource_name, category, quarry_id, resource_types, quarry(monster_name, node)'
-
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase.from('resource').select(selectFields).eq('custom', false),
     supabase
       .from('resource')
-      .select(selectFields)
+      .select(
+        'id, custom, resource_name, category, quarry_id, resource_types, quarry(monster_name, node)'
+      )
+      .eq('custom', false),
+    supabase
+      .from('resource')
+      .select(
+        'id, custom, resource_name, category, quarry_id, resource_types, quarry(monster_name, node)'
+      )
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('resource_shared_user')
-      .select(`resource(${selectFields})`)
+      .select(
+        `resource(${'id, custom, resource_name, category, quarry_id, resource_types, quarry(monster_name, node)'})`
+      )
       .eq('shared_user_id', user.id)
   ])
 
@@ -86,15 +92,29 @@ export async function getResources(): Promise<{
  * @returns Inserted Resource
  */
 export async function addResource(
-  resource: Omit<TablesInsert<'resource'>, 'id' | 'created_at' | 'updated_at'>
+  resource: Omit<
+    TablesInsert<'resource'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<ResourceDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (resource.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('resource')
-    .insert(resource)
+    .insert({
+      ...resource,
+      ...(resource.custom ? { user_id: user!.id } : {})
+    })
     .select(
-      'id, resource_name, category, quarry_id, resource_types, quarry(monster_name, node)'
+      'id, custom, resource_name, category, quarry_id, resource_types, quarry(monster_name, node)'
     )
     .single()
 

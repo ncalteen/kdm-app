@@ -29,16 +29,18 @@ export async function getMilestones(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('milestone')
-      .select('id, milestone_name, event_name, campaign_types')
+      .select('id, custom, milestone_name, event_name, campaign_types')
       .eq('custom', false),
     supabase
       .from('milestone')
-      .select('id, milestone_name, event_name, campaign_types')
+      .select('id, custom, milestone_name, event_name, campaign_types')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('milestone_shared_user')
-      .select('milestone(id, milestone_name, event_name, campaign_types)')
+      .select(
+        'milestone(id, custom, milestone_name, event_name, campaign_types)'
+      )
       .eq('shared_user_id', user.id)
   ])
 
@@ -107,14 +109,28 @@ export async function getMilestoneIds(
  * @returns Inserted Milestone
  */
 export async function addMilestone(
-  milestone: Omit<TablesInsert<'milestone'>, 'id' | 'created_at' | 'updated_at'>
+  milestone: Omit<
+    TablesInsert<'milestone'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<MilestoneDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (milestone.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('milestone')
-    .insert(milestone)
-    .select('id, campaign_types, event_name, milestone_name')
+    .insert({
+      ...milestone,
+      ...(milestone.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, campaign_types, event_name, milestone_name')
     .single()
 
   if (error) throw new Error(`Error Adding Milestone: ${error.message}`)

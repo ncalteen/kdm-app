@@ -42,7 +42,7 @@ export type CampaignTemplate = {
  */
 export type CharacterDetail = Omit<
   Tables<'character'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 > & {}
 
 /**
@@ -62,7 +62,7 @@ export type CollectiveCognitionRewardDetail = Omit<
  */
 export type DisorderDetail = Omit<
   Tables<'disorder'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -72,7 +72,7 @@ export type DisorderDetail = Omit<
  */
 export type FightingArtDetail = Omit<
   Tables<'fighting_art'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -82,7 +82,7 @@ export type FightingArtDetail = Omit<
  */
 export type SecretFightingArtDetail = Omit<
   Tables<'secret_fighting_art'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -92,7 +92,7 @@ export type SecretFightingArtDetail = Omit<
  */
 export type SeedPatternDetail = Omit<
   Tables<'seed_pattern'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -169,7 +169,7 @@ export type HuntSurvivorDetail = Omit<
  */
 export type InnovationDetail = Omit<
   Tables<'innovation'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -189,7 +189,7 @@ export type KnowledgeDetail = Omit<
  */
 export type LocationDetail = Omit<
   Tables<'location'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -240,7 +240,7 @@ export type NeurosisDetail = Omit<
  */
 export type PatternDetail = Omit<
   Tables<'pattern'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -250,7 +250,7 @@ export type PatternDetail = Omit<
  */
 export type PhilosophyDetail = Omit<
   Tables<'philosophy'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -614,7 +614,7 @@ export type ShowdownSurvivorDetail = Omit<
  */
 export type StrainMilestoneDetail = Omit<
   Tables<'strain_milestone'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -633,6 +633,8 @@ export type SurvivorDetail = Tables<'survivor'> & {
   }[]
   /** Disorders */
   disorders: {
+    /** Custom */
+    custom: boolean
     /** Disorder Name */
     disorder_name: string
     /** Disorder ID */
@@ -729,5 +731,5 @@ export type WandererTimelineYearDetail = Omit<
  */
 export type WeaponTypeDetail = Omit<
   Tables<'weapon_type'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >

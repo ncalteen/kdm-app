@@ -246,12 +246,15 @@ export async function addNemesis(
     error: userError
   } = await supabase.auth.getUser()
 
-  if (userError) throw new Error(`Auth Error: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (nemesis.custom && !user) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('nemesis')
-    .insert({ ...nemesis, user_id: user.id })
+    .insert({
+      ...nemesis,
+      ...(nemesis.custom ? { user_id: user!.id } : {})
+    })
     .select(
       'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
     )
