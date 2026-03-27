@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -14,11 +15,14 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { getWeaponTypes } from '@/lib/dal/weapon-type'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
+import { addWeaponType, getWeaponTypes } from '@/lib/dal/weapon-type'
+import { ERROR_MESSAGE, WEAPON_TYPE_CREATED_MESSAGE } from '@/lib/messages'
 import { WeaponTypeDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { Check, ChevronsUpDown } from 'lucide-react'
-import { ReactElement, useEffect, useState } from 'react'
+import { Check, ChevronsUpDown, Plus } from 'lucide-react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 
 /**
  * Select Weapon Type Component Properties
@@ -26,6 +30,8 @@ import { ReactElement, useEffect, useState } from 'react'
 export interface SelectWeaponTypeProps {
   /** Disabled State */
   disabled?: boolean
+  /** Local State */
+  local?: LocalStateType
   /** OnChange Handler */
   onChange?: (value: string) => void
   /** Value */
@@ -35,17 +41,29 @@ export interface SelectWeaponTypeProps {
 /**
  * Select Weapon Type Component
  *
+ * Displays a searchable dropdown for selecting a weapon type. If the search
+ * term does not match any existing weapon types, the user can create a new
+ * custom weapon type.
+ *
  * @param props Component Properties
  * @returns Select Weapon Type Component
  */
 export function SelectWeaponType({
   disabled,
+  local,
   onChange,
   value
 }: SelectWeaponTypeProps): ReactElement {
+  const { toast } = useToast(
+    local ?? ({ disableToasts: false } as LocalStateType)
+  )
+
   const [weaponTypes, setWeaponTypes] = useState<{
     [key: string]: WeaponTypeDetail
   }>({})
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
 
   useEffect(() => {
     getWeaponTypes()
@@ -55,7 +73,11 @@ export function SelectWeaponType({
       })
   }, [])
 
-  const [open, setOpen] = useState(false)
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(weaponTypes).some(
+    (type) =>
+      type.weapon_type_name.toLowerCase() === search.trim().toLowerCase()
+  )
 
   /**
    * Handle Type Select
@@ -68,6 +90,36 @@ export function SelectWeaponType({
     onChange?.(type === value ? '' : type)
     setOpen(false)
   }
+
+  /**
+   * Handle Create Custom Weapon Type
+   *
+   * Creates a new custom weapon type with the current search term.
+   */
+  const handleCreate = useCallback(async () => {
+    const name = search.trim()
+    if (!name || creating) return
+
+    setCreating(true)
+
+    try {
+      const newType = await addWeaponType({
+        custom: true,
+        weapon_type_name: name
+      })
+
+      setWeaponTypes((prev) => ({ ...prev, [newType.id]: newType }))
+      onChange?.(newType.id)
+      setSearch('')
+      setOpen(false)
+      toast.success(WEAPON_TYPE_CREATED_MESSAGE())
+    } catch (error) {
+      console.error('Weapon Type Create Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setCreating(false)
+    }
+  }, [search, creating, onChange, toast])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -86,10 +138,27 @@ export function SelectWeaponType({
       </PopoverTrigger>
 
       <PopoverContent className="p-0">
-        <Command>
-          <CommandInput placeholder="Search weapon type..." />
+        <Command shouldFilter={true}>
+          <CommandInput
+            placeholder="Search weapon type..."
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList>
-            <CommandEmpty>No weapon types found.</CommandEmpty>
+            <CommandEmpty>
+              {search.trim() ? (
+                <button
+                  type="button"
+                  className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                  disabled={creating}
+                  onClick={handleCreate}>
+                  <Plus className="h-4 w-4" />
+                  {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                </button>
+              ) : (
+                'No weapon types found.'
+              )}
+            </CommandEmpty>
             <CommandGroup>
               {Object.values(weaponTypes).map((type) => (
                 <CommandItem
@@ -103,8 +172,22 @@ export function SelectWeaponType({
                     )}
                   />
                   {type.weapon_type_name}
+                  {type.custom && (
+                    <Badge variant="outline" className="ml-auto text-xs">
+                      Custom
+                    </Badge>
+                  )}
                 </CommandItem>
               ))}
+              {search.trim() && !exactMatchExists && (
+                <CommandItem
+                  value={`__create__${search.trim()}`}
+                  onSelect={handleCreate}
+                  disabled={creating}>
+                  <Plus className="h-4 w-4" />
+                  {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                </CommandItem>
+              )}
             </CommandGroup>
           </CommandList>
         </Command>

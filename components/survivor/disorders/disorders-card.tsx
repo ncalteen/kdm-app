@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -17,19 +18,20 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getDisorders } from '@/lib/dal/disorder'
+import { addDisorder, getDisorders } from '@/lib/dal/disorder'
 import {
   addSurvivorDisorder,
   removeSurvivorDisorder
 } from '@/lib/dal/survivor-disorder'
 import {
+  DISORDER_CREATED_MESSAGE,
   ERROR_MESSAGE,
   SURVIVOR_DISORDER_LIMIT_EXCEEDED_ERROR_MESSAGE,
   SURVIVOR_DISORDER_REMOVED_MESSAGE,
   SURVIVOR_DISORDER_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { DisorderDetail, SurvivorDetail } from '@/lib/types'
-import { PlusIcon, TrashIcon } from 'lucide-react'
+import { Plus, PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
 const MAX_DISORDERS = 3
@@ -71,6 +73,8 @@ export function DisordersCard({
     selectedSurvivor?.disorders ?? []
   )
   const [addOpen, setAddOpen] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
 
   if (prevSurvivor !== selectedSurvivor) {
     setPrevSurvivor(selectedSurvivor)
@@ -103,6 +107,7 @@ export function DisordersCard({
       if (!detail) return
 
       setAddOpen(false)
+      setSearch('')
 
       const optimisticItem: DisorderDetail = {
         id: disorderId,
@@ -187,6 +192,91 @@ export function DisordersCard({
     [disorders, selectedSurvivor, setSurvivors, survivors, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availableDisorders).some(
+    (d) => d.disorder_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Disorder
+   *
+   * Creates a new custom disorder with the current search term, adds it to
+   * the available disorders, then assigns it to the survivor.
+   */
+  const handleCreate = useCallback(async () => {
+    const name = search.trim()
+    if (!name || creating || !selectedSurvivor?.id) return
+
+    if (disorders.length >= MAX_DISORDERS) {
+      toast.error(SURVIVOR_DISORDER_LIMIT_EXCEEDED_ERROR_MESSAGE())
+      return
+    }
+
+    setCreating(true)
+
+    try {
+      const newDisorder = await addDisorder({
+        custom: true,
+        disorder_name: name
+      })
+
+      setAvailableDisorders((prev) => ({
+        ...prev,
+        [newDisorder.id]: newDisorder
+      }))
+
+      setSearch('')
+      setAddOpen(false)
+      toast.success(DISORDER_CREATED_MESSAGE())
+
+      // Add to survivor immediately with the data we already have
+      const optimisticItem: DisorderDetail = {
+        id: newDisorder.id,
+        custom: newDisorder.custom,
+        disorder_name: newDisorder.disorder_name
+      }
+      const oldDisorders = [...disorders]
+
+      setDisorders([...disorders, optimisticItem])
+      setSurvivors(
+        survivors.map((s) =>
+          s.id === selectedSurvivor.id
+            ? { ...s, disorders: [...s.disorders, optimisticItem] }
+            : s
+        )
+      )
+
+      addSurvivorDisorder(selectedSurvivor.id, newDisorder.id)
+        .then(() => toast.success(SURVIVOR_DISORDER_UPDATED_MESSAGE(true)))
+        .catch((error: unknown) => {
+          setDisorders(oldDisorders)
+          setSurvivors(
+            survivors.map((s) =>
+              s.id === selectedSurvivor.id
+                ? { ...s, disorders: oldDisorders }
+                : s
+            )
+          )
+
+          console.error('Disorder Add Error:', error)
+          toast.error(ERROR_MESSAGE())
+        })
+    } catch (error) {
+      console.error('Disorder Create Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setCreating(false)
+    }
+  }, [
+    search,
+    creating,
+    selectedSurvivor,
+    disorders,
+    setSurvivors,
+    survivors,
+    toast
+  ])
+
   return (
     <Card className="p-2 border-0 gap-0">
       <CardHeader className="p-0">
@@ -204,10 +294,27 @@ export function DisordersCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search disorders..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search disorders..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No disorders found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        disabled={creating}
+                        onClick={handleCreate}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </button>
+                    ) : (
+                      'No disorders found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {Object.values(availableDisorders)
                       .filter(
@@ -220,8 +327,24 @@ export function DisordersCard({
                           value={disorder.disorder_name}
                           onSelect={() => handleAdd(disorder.id)}>
                           {disorder.disorder_name}
+                          {disorder.custom && (
+                            <Badge
+                              variant="outline"
+                              className="ml-auto text-xs">
+                              Custom
+                            </Badge>
+                          )}
                         </CommandItem>
                       ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={handleCreate}
+                        disabled={creating}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>

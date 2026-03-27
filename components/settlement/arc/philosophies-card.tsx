@@ -1,6 +1,7 @@
 'use client'
 
 import { PhilosophyItem } from '@/components/settlement/arc/philosophy-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -18,7 +19,7 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getPhilosophies } from '@/lib/dal/philosophy'
+import { addPhilosophy, getPhilosophies } from '@/lib/dal/philosophy'
 import {
   addSettlementPhilosophies,
   removeSettlementPhilosophy
@@ -29,7 +30,7 @@ import {
   PHILOSOPHY_REMOVED_MESSAGE
 } from '@/lib/messages'
 import { PhilosophyDetail, SettlementDetail } from '@/lib/types'
-import { BrainCogIcon, PlusIcon } from 'lucide-react'
+import { BrainCogIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
@@ -63,6 +64,8 @@ export function PhilosophiesCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
 
   // Available philosophies for the select dropdown (fetched once per settlement).
   const [availablePhilosophies, setAvailablePhilosophies] = useState<{
@@ -236,6 +239,77 @@ export function PhilosophiesCard({
     [selectedSettlement, setSelectedSettlement, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availablePhilosophies).some(
+    (p) => p.philosophy_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Philosophy
+   */
+  const handleCreate = useCallback(async () => {
+    const name = search.trim()
+    if (!name || creating || !selectedSettlement) return
+
+    setCreating(true)
+
+    try {
+      const newPhilosophy = await addPhilosophy({
+        custom: true,
+        philosophy_name: name
+      })
+
+      setAvailablePhilosophies((prev) => ({
+        ...prev,
+        [newPhilosophy.id]: newPhilosophy
+      }))
+
+      setSearch('')
+      setAddOpen(false)
+      toast.success(PHILOSOPHY_CREATED_MESSAGE())
+
+      // Add to settlement immediately
+      const tempId = `temp-${Date.now()}`
+      const optimisticRow: SettlementDetail['philosophies'][0] = {
+        id: tempId,
+        philosophy_id: newPhilosophy.id,
+        philosophy_name: newPhilosophy.philosophy_name
+      }
+      const updatedPhilosophies = [
+        ...(selectedSettlement.philosophies ?? []),
+        optimisticRow
+      ]
+
+      setSelectedSettlement({
+        ...selectedSettlement,
+        philosophies: updatedPhilosophies
+      })
+
+      addSettlementPhilosophies([newPhilosophy.id], selectedSettlement.id)
+        .then((rows) => {
+          setSelectedSettlement({
+            ...selectedSettlement,
+            philosophies: updatedPhilosophies.map((p) =>
+              p.id === tempId ? { ...p, id: rows[0].id } : p
+            )
+          })
+        })
+        .catch((err: unknown) => {
+          setSelectedSettlement({
+            ...selectedSettlement,
+            philosophies: selectedSettlement.philosophies
+          })
+          console.error('Philosophy Add Error:', err)
+          toast.error(ERROR_MESSAGE())
+        })
+    } catch (error) {
+      console.error('Philosophy Create Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setCreating(false)
+    }
+  }, [search, creating, selectedSettlement, setSelectedSettlement, toast])
+
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -253,10 +327,27 @@ export function PhilosophiesCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search philosophies..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search philosophies..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No philosophies found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        disabled={creating}
+                        onClick={handleCreate}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </button>
+                    ) : (
+                      'No philosophies found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {Object.values(availablePhilosophies)
                       .filter(
@@ -271,8 +362,24 @@ export function PhilosophiesCard({
                           value={philosophy.philosophy_name}
                           onSelect={() => handleAdd(philosophy.id)}>
                           {philosophy.philosophy_name}
+                          {philosophy.custom && (
+                            <Badge
+                              variant="outline"
+                              className="ml-auto text-xs">
+                              Custom
+                            </Badge>
+                          )}
                         </CommandItem>
                       ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={handleCreate}
+                        disabled={creating}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>

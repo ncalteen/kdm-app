@@ -1,6 +1,7 @@
 'use client'
 
 import { PatternItem } from '@/components/settlement/patterns/pattern-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -18,18 +19,19 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getPatterns } from '@/lib/dal/pattern'
+import { addPattern, getPatterns } from '@/lib/dal/pattern'
 import {
   addSettlementPatterns,
   removeSettlementPattern
 } from '@/lib/dal/settlement-pattern'
 import {
   ERROR_MESSAGE,
+  PATTERN_CREATED_MESSAGE,
   PATTERN_REMOVED_MESSAGE,
   PATTERN_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { PatternDetail, SettlementDetail } from '@/lib/types'
-import { PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
+import { Plus, PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
@@ -63,6 +65,8 @@ export function PatternsCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
 
   const [availablePatterns, setAvailablePatterns] = useState<{
     [key: string]: PatternDetail
@@ -194,6 +198,75 @@ export function PatternsCard({
     [selectedSettlement, setSelectedSettlement, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availablePatterns).some(
+    (p) => p.pattern_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Pattern
+   */
+  const handleCreate = useCallback(async () => {
+    const name = search.trim()
+    if (!name || creating || !selectedSettlement) return
+
+    setCreating(true)
+
+    try {
+      const newPattern = await addPattern({
+        custom: true,
+        pattern_name: name
+      })
+
+      setAvailablePatterns((prev) => ({
+        ...prev,
+        [newPattern.id]: newPattern
+      }))
+
+      setSearch('')
+      setAddOpen(false)
+      toast.success(PATTERN_CREATED_MESSAGE())
+
+      // Add to settlement immediately
+      const tempId = `temp-${Date.now()}`
+      const optimisticRow: SettlementDetail['patterns'][0] = {
+        id: tempId,
+        pattern_id: newPattern.id,
+        pattern_name: newPattern.pattern_name
+      }
+      const updatedPatterns = [...selectedSettlement.patterns, optimisticRow]
+
+      setSelectedSettlement({
+        ...selectedSettlement,
+        patterns: updatedPatterns
+      })
+
+      addSettlementPatterns([newPattern.id], selectedSettlement.id)
+        .then((row) => {
+          setSelectedSettlement({
+            ...selectedSettlement,
+            patterns: updatedPatterns.map((p) =>
+              p.id === tempId ? { ...p, id: row[0].id } : p
+            )
+          })
+          toast.success(PATTERN_UPDATED_MESSAGE())
+        })
+        .catch((err: unknown) => {
+          setSelectedSettlement({
+            ...selectedSettlement,
+            patterns: selectedSettlement.patterns
+          })
+          console.error('Pattern Add Error:', err)
+          toast.error(ERROR_MESSAGE())
+        })
+    } catch (error) {
+      console.error('Pattern Create Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setCreating(false)
+    }
+  }, [search, creating, selectedSettlement, setSelectedSettlement, toast])
+
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -212,10 +285,27 @@ export function PatternsCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search patterns..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search patterns..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No patterns found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        disabled={creating}
+                        onClick={handleCreate}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </button>
+                    ) : (
+                      'No patterns found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {selectablePatterns.map((pattern) => (
                       <CommandItem
@@ -223,8 +313,22 @@ export function PatternsCard({
                         value={pattern.pattern_name}
                         onSelect={() => handleAdd(pattern.id)}>
                         {pattern.pattern_name}
+                        {pattern.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={handleCreate}
+                        disabled={creating}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>
