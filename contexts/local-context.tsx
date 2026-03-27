@@ -1,5 +1,6 @@
 'use client'
 
+import { useRealtimeSubscriptions } from '@/hooks/use-realtime'
 import { LOCAL_STORAGE_KEY } from '@/lib/common'
 import { getHunt } from '@/lib/dal/hunt'
 import { getSettlement } from '@/lib/dal/settlement'
@@ -296,6 +297,215 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       subscription.unsubscribe()
     }
   }, [])
+
+  // Subscribe to Supabase Realtime changes on gameplay tables. When another
+  // tab or player modifies data, the affected domain is re-fetched.
+  useRealtimeSubscriptions({
+    enabled: isAuthenticated,
+    settlementId: selectedSettlementId,
+    onSettlementChange: () => {
+      if (!selectedSettlementId) return
+
+      getSettlement(selectedSettlementId)
+        .then((settlement) => {
+          setSelectedSettlementState(settlement)
+
+          if (!settlement) {
+            setSelectedSettlementIdState(null)
+            setSelectedHuntState(null)
+            setSelectedHuntIdState(null)
+            setSelectedHuntMonsterIndexState(0)
+            setSelectedSettlementPhaseState(null)
+            setSelectedSettlementPhaseIdState(null)
+            setSelectedShowdownState(null)
+            setSelectedShowdownIdState(null)
+            setSelectedShowdownMonsterIndexState(0)
+            setSelectedSurvivorState(null)
+            setSelectedSurvivorIdState(null)
+            setSurvivors([])
+
+            setLocalState((prev) => {
+              const updated = {
+                ...prev,
+                selectedSettlementId: null,
+                selectedHuntId: null,
+                selectedHuntMonsterIndex: 0,
+                selectedSettlementPhaseId: null,
+                selectedShowdownId: null,
+                selectedShowdownMonsterIndex: 0,
+                selectedSurvivorId: null
+              }
+
+              saveToLocalStorage(updated)
+
+              return updated
+            })
+          }
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Settlement Refetch Error:', err)
+        })
+    },
+    onHuntChange: () => {
+      if (!selectedSettlementId) return
+
+      getHunt(selectedSettlementId)
+        .then((hunt) => {
+          setSelectedHuntState(hunt)
+
+          if (!hunt && selectedHuntId) {
+            setSelectedHuntIdState(null)
+            setSelectedHuntMonsterIndexState(0)
+
+            setLocalState((prev) => {
+              const updated = {
+                ...prev,
+                selectedHuntId: null,
+                selectedHuntMonsterIndex: 0
+              }
+
+              saveToLocalStorage(updated)
+
+              return updated
+            })
+          } else if (hunt && !selectedHuntId) {
+            setSelectedHuntIdState(hunt.id)
+
+            setLocalState((prev) => {
+              const updated = {
+                ...prev,
+                selectedHuntId: hunt.id,
+                selectedHuntMonsterIndex: 0
+              }
+
+              saveToLocalStorage(updated)
+
+              return updated
+            })
+          }
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Hunt Refetch Error:', err)
+        })
+    },
+    onShowdownChange: () => {
+      if (!selectedSettlementId) return
+
+      getShowdown(selectedSettlementId)
+        .then((showdown) => {
+          setSelectedShowdownState(showdown)
+
+          if (!showdown && selectedShowdownId) {
+            setSelectedShowdownIdState(null)
+            setSelectedShowdownMonsterIndexState(0)
+
+            setLocalState((prev) => {
+              const updated = {
+                ...prev,
+                selectedShowdownId: null,
+                selectedShowdownMonsterIndex: 0
+              }
+
+              saveToLocalStorage(updated)
+
+              return updated
+            })
+          } else if (showdown && !selectedShowdownId) {
+            setSelectedShowdownIdState(showdown.id)
+
+            setLocalState((prev) => {
+              const updated = {
+                ...prev,
+                selectedShowdownId: showdown.id,
+                selectedShowdownMonsterIndex: 0
+              }
+
+              saveToLocalStorage(updated)
+
+              return updated
+            })
+          }
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Showdown Refetch Error:', err)
+        })
+    },
+    onSettlementPhaseChange: () => {
+      if (!selectedSettlementId) return
+
+      getSettlementPhase(selectedSettlementId)
+        .then((settlementPhase) => {
+          setSelectedSettlementPhaseState(settlementPhase)
+
+          if (!settlementPhase && selectedSettlementPhaseId) {
+            setSelectedSettlementPhaseIdState(null)
+
+            setLocalState((prev) => {
+              const updated = {
+                ...prev,
+                selectedSettlementPhaseId: null
+              }
+
+              saveToLocalStorage(updated)
+
+              return updated
+            })
+          } else if (settlementPhase && !selectedSettlementPhaseId) {
+            setSelectedSettlementPhaseIdState(settlementPhase.id)
+
+            setLocalState((prev) => {
+              const updated = {
+                ...prev,
+                selectedSettlementPhaseId: settlementPhase.id
+              }
+
+              saveToLocalStorage(updated)
+
+              return updated
+            })
+          }
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Settlement Phase Refetch Error:', err)
+        })
+    },
+    onSurvivorChange: () => {
+      if (!selectedSettlementId) return
+
+      getSurvivors(selectedSettlementId)
+        .then((updatedSurvivors) => {
+          setSurvivors(updatedSurvivors ?? [])
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Survivors Refetch Error:', err)
+        })
+
+      if (selectedSurvivorId) {
+        getSurvivor(selectedSurvivorId)
+          .then((survivor) => {
+            setSelectedSurvivorState(survivor)
+
+            if (!survivor) {
+              setSelectedSurvivorIdState(null)
+
+              setLocalState((prev) => {
+                const updated = {
+                  ...prev,
+                  selectedSurvivorId: null
+                }
+
+                saveToLocalStorage(updated)
+
+                return updated
+              })
+            }
+          })
+          .catch((err: unknown) => {
+            console.error('Realtime Survivor Refetch Error:', err)
+          })
+      }
+    }
+  })
 
   /**
    * Fetch Hunt Data
