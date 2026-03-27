@@ -29,14 +29,7 @@ import {
 } from '@/lib/messages'
 import { InnovationDetail, SettlementDetail } from '@/lib/types'
 import { LightbulbIcon, PlusIcon, TrashIcon } from 'lucide-react'
-import {
-  ReactElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react'
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /** Settlement innovation item with junction table and innovation details */
 type InnovationItem = {
@@ -73,7 +66,7 @@ export function InnovationsCard({
 }: InnovationsCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const settlementIdRef = useRef<string | undefined>(undefined)
+  const [prevSettlement, setPrevSettlement] = useState(selectedSettlement)
 
   const [availableInnovations, setAvailableInnovations] = useState<{
     [key: string]: InnovationDetail
@@ -83,8 +76,8 @@ export function InnovationsCard({
   )
   const [addOpen, setAddOpen] = useState<boolean>(false)
 
-  if (settlementIdRef.current !== selectedSettlement?.id) {
-    settlementIdRef.current = selectedSettlement?.id
+  if (prevSettlement !== selectedSettlement) {
+    setPrevSettlement(selectedSettlement)
     setInnovations(selectedSettlement?.innovations ?? [])
   }
 

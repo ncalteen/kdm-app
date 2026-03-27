@@ -15,7 +15,7 @@ import {
   SURVIVOR_COURAGE_UNDERSTANDING_ABILITY_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 
 /**
  * Courage Understanding Abilities Properties
@@ -48,7 +48,7 @@ export function CourageUnderstandingAbilities({
 }: CourageUnderstandingAbilitiesProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [courageAbility, setCourageAbility] = useState(
     selectedSurvivor?.has_stalwart
@@ -69,8 +69,8 @@ export function CourageUnderstandingAbilities({
           : ''
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setCourageAbility(
       selectedSurvivor?.has_stalwart
         ? 'stalwart'

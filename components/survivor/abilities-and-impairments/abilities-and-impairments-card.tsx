@@ -35,7 +35,7 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 
 /**
  * Abilities and Impairments Card Properties
@@ -65,7 +65,7 @@ export function AbilitiesAndImpairmentsCard({
 }: AbilitiesAndImpairmentsCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [abilitiesImpairments, setAbilitiesImpairments] = useState<string[]>(
     selectedSurvivor?.abilities_impairments ?? []
@@ -82,8 +82,8 @@ export function AbilitiesAndImpairmentsCard({
   )
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
 
     setAbilitiesImpairments(selectedSurvivor?.abilities_impairments ?? [])
     setSkipNextHunt(selectedSurvivor?.skip_next_hunt ?? false)

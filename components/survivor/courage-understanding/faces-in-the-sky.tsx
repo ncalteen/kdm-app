@@ -19,7 +19,6 @@ import {
   ReactElement,
   SetStateAction,
   useCallback,
-  useRef,
   useState
 } from 'react'
 
@@ -54,7 +53,7 @@ export function FacesInTheSky({
 }: FacesInTheSkyProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [gamblerWitch, setGamblerWitch] = useState(
     selectedSurvivor?.gambler_witch ?? false
@@ -105,9 +104,9 @@ export function FacesInTheSky({
     selectedSurvivor?.goblin_reaper ?? false
   )
 
-  // Reset local state when switching survivors
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  // Reset local state when switching survivors or receiving realtime updates
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
 
     setGamblerWitch(selectedSurvivor?.gambler_witch ?? false)
     setGamblerRust(selectedSurvivor?.gambler_rust ?? false)

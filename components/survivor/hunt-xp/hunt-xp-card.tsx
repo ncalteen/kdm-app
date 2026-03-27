@@ -17,7 +17,7 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { BookOpenIcon } from 'lucide-react'
-import { MouseEvent, ReactElement, useCallback, useRef, useState } from 'react'
+import { MouseEvent, ReactElement, useCallback, useState } from 'react'
 
 /**
  * Hunt XP Card Properties
@@ -54,15 +54,15 @@ export function HuntXPCard({
 }: HuntXPCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [huntXP, setHuntXP] = useState<number>(selectedSurvivor?.hunt_xp ?? 0)
   const [huntXPRankUp, setHuntXPRankUp] = useState<number[]>(
     selectedSurvivor?.hunt_xp_rank_up ?? []
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setHuntXP(selectedSurvivor?.hunt_xp ?? 0)
     setHuntXPRankUp(selectedSurvivor?.hunt_xp_rank_up ?? [])
   }

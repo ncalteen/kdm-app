@@ -46,14 +46,7 @@ import {
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { PlusIcon, TrashIcon } from 'lucide-react'
-import {
-  ReactElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react'
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
  * Fighting Arts Card Properties
@@ -89,7 +82,7 @@ export function FightingArtsCard({
 }: FightingArtsCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [availableFightingArts, setAvailableFightingArts] = useState<{
     [key: string]: FightingArtDetail
@@ -108,8 +101,8 @@ export function FightingArtsCard({
     survivors.find((s) => s.id === selectedSurvivor?.id)
       ?.can_use_fighting_arts_knowledges ?? true
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setFightingArts(selectedSurvivor?.fighting_arts ?? [])
     setSecretFightingArts(selectedSurvivor?.secret_fighting_arts ?? [])
   }

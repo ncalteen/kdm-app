@@ -25,13 +25,7 @@ import {
 import { SurvivorDetail } from '@/lib/types'
 import { getCardColorStyles, getColorStyle } from '@/lib/utils'
 import { SkullIcon, UserXIcon } from 'lucide-react'
-import {
-  KeyboardEvent,
-  ReactElement,
-  useCallback,
-  useRef,
-  useState
-} from 'react'
+import { KeyboardEvent, ReactElement, useCallback, useState } from 'react'
 
 /**
  * Status Card Props
@@ -66,7 +60,7 @@ export function StatusCard({
 }: StatusCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [survivorName, setSurvivorName] = useState(
     selectedSurvivor?.survivor_name ?? ''
@@ -85,8 +79,8 @@ export function StatusCard({
   )
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
 
     setSurvivorName(selectedSurvivor?.survivor_name ?? '')
     setSurvivorColor(

@@ -38,7 +38,7 @@ import {
   SurvivorDetail
 } from '@/lib/types'
 import { LockIcon } from 'lucide-react'
-import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Survival Card Properties
@@ -92,7 +92,7 @@ export function SurvivalCard({
 }: SurvivalCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [survival, setSurvival] = useState(selectedSurvivor?.survival ?? 0)
   const [canSpendSurvival, setCanSpendSurvival] = useState(
@@ -114,8 +114,8 @@ export function SurvivalCard({
     selectedSurvivor?.systemic_pressure ?? 0
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
 
     setSurvival(selectedSurvivor?.survival ?? 0)
     setCanSpendSurvival(selectedSurvivor?.can_spend_survival ?? true)

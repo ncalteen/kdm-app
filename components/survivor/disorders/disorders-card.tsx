@@ -30,7 +30,7 @@ import {
 } from '@/lib/messages'
 import { DisorderDetail, SurvivorDetail } from '@/lib/types'
 import { PlusIcon, TrashIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 
 const MAX_DISORDERS = 3
 
@@ -62,7 +62,7 @@ export function DisordersCard({
 }: DisordersCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [availableDisorders, setAvailableDisorders] = useState<{
     [key: string]: DisorderDetail
@@ -72,8 +72,8 @@ export function DisordersCard({
   )
   const [addOpen, setAddOpen] = useState<boolean>(false)
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setDisorders(selectedSurvivor?.disorders ?? [])
   }
 
@@ -106,6 +106,7 @@ export function DisordersCard({
 
       const optimisticItem: DisorderDetail = {
         id: disorderId,
+        custom: detail.custom,
         disorder_name: detail.disorder_name
       }
       const oldDisorders = [...disorders]

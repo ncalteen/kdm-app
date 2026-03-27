@@ -14,7 +14,7 @@ import {
   SURVIVOR_WEAPON_TYPE_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { SurvivorDetail } from '@/lib/types'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 
 /**
  * Weapon Proficiency Card Properties
@@ -49,7 +49,7 @@ export function WeaponProficiencyCard({
 }: WeaponProficiencyCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [weaponProficiency, setWeaponProficiency] = useState<number>(
     selectedSurvivor?.weapon_proficiency ?? 0
@@ -58,8 +58,8 @@ export function WeaponProficiencyCard({
     selectedSurvivor?.weapon_type_id ?? null
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id ?? undefined
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setWeaponProficiency(selectedSurvivor?.weapon_proficiency ?? 0)
     setWeaponTypeId(selectedSurvivor?.weapon_type_id ?? null)
   }
@@ -186,6 +186,7 @@ export function WeaponProficiencyCard({
               Weapon Proficiency
             </CardTitle>
             <SelectWeaponType
+              local={local}
               value={weaponTypeId}
               onChange={handleWeaponTypeChange}
             />
