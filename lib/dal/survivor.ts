@@ -729,27 +729,10 @@ export async function createSurvivor(
   const { data, error } = await supabase
     .from('survivor')
     .insert(survivor)
-    .select('*')
+    .select('id')
     .single()
 
   if (error) throw new Error(`Error Creating Survivor: ${error.message}`)
 
-  // Add fighting arts via junction table if provided.
-  if (options.fightingArtIds?.length) {
-    const { error: junctionError } = await supabase
-      .from('survivor_fighting_art')
-      .insert(
-        options.fightingArtIds.map((fightingArtId) => ({
-          survivor_id: data.id,
-          fighting_art_id: fightingArtId
-        }))
-      )
-
-    if (junctionError)
-      throw new Error(
-        `Error Adding Fighting Arts to Survivor: ${junctionError.message}`
-      )
-  }
-
-  return { ...data, embarked: false }
+  return (await getSurvivor(data.id)) as SurvivorDetail
 }
