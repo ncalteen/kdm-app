@@ -64,6 +64,8 @@ interface SettlementPhaseCardProps {
   selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Pending Special Showdown */
+  setPendingSpecialShowdown: (pending: boolean) => void
   /** Set Selected Settlement */
   setSelectedSettlement: (settlement: SettlementDetail | null) => void
   /** Set Selected Settlement Phase */
@@ -93,6 +95,7 @@ export function SettlementPhaseCard({
   selectedSettlement,
   selectedSettlementPhase,
   selectedSurvivor,
+  setPendingSpecialShowdown,
   setSelectedSettlement,
   setSelectedSettlementPhase,
   setSelectedSurvivor,
@@ -197,6 +200,7 @@ export function SettlementPhaseCard({
           selectedSettlement={selectedSettlement}
           selectedSettlementPhase={selectedSettlementPhase}
           selectedSurvivor={selectedSurvivor}
+          setPendingSpecialShowdown={setPendingSpecialShowdown}
           setSelectedSettlementPhase={setSelectedSettlementPhase}
           setSelectedSurvivor={setSelectedSurvivor}
           setSelectedTab={setSelectedTab}

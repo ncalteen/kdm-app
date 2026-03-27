@@ -16,7 +16,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { addSettlementPhase } from '@/lib/dal/settlement-phase'
+import {
+  addSettlementPhase,
+  updateSettlementPhase
+} from '@/lib/dal/settlement-phase'
 import { removeShowdown } from '@/lib/dal/showdown'
 import { TabType } from '@/lib/enums'
 import {
@@ -39,6 +42,8 @@ import { ReactElement, useCallback, useState } from 'react'
 interface ActiveShowdownCardProps {
   /** Local State */
   local: LocalStateType
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Selected Showdown Monster Index */
@@ -77,6 +82,7 @@ interface ActiveShowdownCardProps {
  */
 export function ActiveShowdownCard({
   local,
+  selectedSettlementPhase,
   selectedShowdown,
   selectedShowdownMonsterIndex,
   selectedSettlement,
@@ -159,6 +165,30 @@ export function ActiveShowdownCard({
     setIsProceedingToSettlementPhase(true)
 
     try {
+      const isSpecial = selectedShowdown.showdown_type === 'SPECIAL'
+
+      // Special showdowns resume the existing settlement phase at the
+      // "Update Death Count" step instead of creating a new one.
+      if (isSpecial && selectedSettlementPhase) {
+        await updateSettlementPhase(selectedSettlementPhase.id, {
+          step: 'UPDATE_DEATH_COUNT'
+        })
+
+        await removeShowdown(selectedShowdown.id)
+
+        setSelectedShowdown(null)
+        setSelectedShowdownMonsterIndex(0)
+        setSelectedSettlementPhase({
+          ...selectedSettlementPhase,
+          step: 'UPDATE_DEATH_COUNT'
+        })
+        setSelectedTab(TabType.SETTLEMENT_PHASE)
+
+        setIsSettlementPhaseDialogOpen(false)
+        toast.success(SETTLEMENT_PHASE_STARTED_MESSAGE())
+        return
+      }
+
       // Determine the returning scout (if any).
       const scoutSurvivor = Object.values(showdownSurvivors).find(
         (s) => s.scout
@@ -210,6 +240,7 @@ export function ActiveShowdownCard({
       setIsProceedingToSettlementPhase(false)
     }
   }, [
+    selectedSettlementPhase,
     selectedShowdown,
     selectedSettlement,
     setSelectedShowdown,

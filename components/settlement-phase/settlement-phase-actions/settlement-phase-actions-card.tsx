@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { LocalStateType, useLocal } from '@/contexts/local-context'
+import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { removeSettlementPhase } from '@/lib/dal/settlement-phase'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -36,6 +36,8 @@ interface SettlementPhaseActionsCardProps {
   selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Pending Special Showdown */
+  setPendingSpecialShowdown: (pending: boolean) => void
   /** Set Selected Settlement Phase */
   setSelectedSettlementPhase: (phase: SettlementPhaseDetail | null) => void
   /** Set Selected Survivor */
@@ -63,6 +65,7 @@ export function SettlementPhaseActionsCard({
   selectedSettlement,
   selectedSettlementPhase,
   selectedSurvivor,
+  setPendingSpecialShowdown,
   setSelectedSettlementPhase,
   setSelectedSurvivor,
   setSelectedTab,
@@ -70,7 +73,6 @@ export function SettlementPhaseActionsCard({
   survivors
 }: SettlementPhaseActionsCardProps): ReactElement {
   const { toast } = useToast(local)
-  const { setPendingSpecialShowdown } = useLocal()
 
   const currentStep = selectedSettlementPhase
     ? DatabaseSettlementPhaseStep[selectedSettlementPhase.step]

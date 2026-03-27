@@ -9,7 +9,8 @@ import {
   SettlementDetail,
   SettlementPhaseDetail,
   ShowdownDetail,
-  SurvivorDetail
+  SurvivorDetail,
+  UserSettingsDetail
 } from '@/lib/types'
 import { ReactElement } from 'react'
 
@@ -19,16 +20,22 @@ import { ReactElement } from 'react'
 interface ShowdownCardProps {
   /** Local State */
   local: LocalStateType
+  /** Pending Special Showdown */
+  pendingSpecialShowdown: boolean
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
+  /** Selected Settlement */
+  selectedSettlement: SettlementDetail | null
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Selected Showdown Monster Index */
   selectedShowdownMonsterIndex: number
-  /** Selected Settlement */
-  selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Pending Special Showdown */
+  setPendingSpecialShowdown: (pending: boolean) => void
   /** Set Selected Settlement Phase */
   setSelectedSettlementPhase: (
     settlementPhase: SettlementPhaseDetail | null
@@ -45,6 +52,8 @@ interface ShowdownCardProps {
   setSurvivors: (survivors: SurvivorDetail[]) => void
   /** Survivors */
   survivors: SurvivorDetail[]
+  /** User Settings */
+  userSettings: UserSettingsDetail | null
 }
 
 /**
@@ -59,22 +68,27 @@ interface ShowdownCardProps {
  */
 export function ShowdownCard({
   local,
+  pendingSpecialShowdown,
   selectedHunt,
+  selectedSettlement,
+  selectedSettlementPhase,
   selectedShowdown,
   selectedShowdownMonsterIndex,
-  selectedSettlement,
   selectedSurvivor,
+  setPendingSpecialShowdown,
   setSelectedSettlementPhase,
   setSelectedShowdown,
   setSelectedShowdownMonsterIndex,
   setSelectedSurvivor,
   setSelectedTab,
   setSurvivors,
-  survivors
+  survivors,
+  userSettings
 }: ShowdownCardProps): ReactElement {
   return selectedShowdown ? (
     <ActiveShowdownCard
       local={local}
+      selectedSettlementPhase={selectedSettlementPhase}
       selectedShowdown={selectedShowdown}
       selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
       selectedSettlement={selectedSettlement}
@@ -91,10 +105,14 @@ export function ShowdownCard({
     <div className="mt-10 flex flex-wrap items-start justify-center gap-4">
       <CreateShowdownCard
         local={local}
+        pendingSpecialShowdown={pendingSpecialShowdown}
         selectedHunt={selectedHunt}
         selectedSettlement={selectedSettlement}
+        selectedSettlementPhase={selectedSettlementPhase}
+        setPendingSpecialShowdown={setPendingSpecialShowdown}
         setSelectedShowdown={setSelectedShowdown}
         survivors={survivors}
+        userSettings={userSettings}
       />
     </div>
   )
