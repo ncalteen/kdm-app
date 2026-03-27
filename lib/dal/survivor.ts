@@ -734,5 +734,23 @@ export async function createSurvivor(
 
   if (error) throw new Error(`Error Creating Survivor: ${error.message}`)
 
+  // Add fighting arts via junction table if provided. This is usually only done
+  // for wanderers.
+  if (options.fightingArtIds?.length) {
+    const { error: junctionError } = await supabase
+      .from('survivor_fighting_art')
+      .insert(
+        options.fightingArtIds.map((fightingArtId) => ({
+          survivor_id: data.id,
+          fighting_art_id: fightingArtId
+        }))
+      )
+
+    if (junctionError)
+      throw new Error(
+        `Error Adding Fighting Arts to Survivor: ${junctionError.message}`
+      )
+  }
+
   return (await getSurvivor(data.id)) as SurvivorDetail
 }
