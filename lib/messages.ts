@@ -199,6 +199,14 @@ export const CUSTOM_MONSTER_CREATED_MESSAGE = (monsterType: MonsterType) =>
     : 'A new quarry stalks the land.'
 
 /**
+ * Character Created
+ *
+ * @returns Character Created Message
+ */
+export const CHARACTER_CREATED_MESSAGE = () =>
+  'A new character emerges from the shadows.'
+
+/**
  * Custom Monster Deleted
  *
  * @param monsterName Monster Name
@@ -269,6 +277,22 @@ export const ENDEAVORS_UPDATED_MESSAGE = (
  */
 export const ERROR_MESSAGE = () =>
   'The darkness swallows your words. Please try again.'
+
+/**
+ * Disorder Created
+ *
+ * @returns Disorder Created Message
+ */
+export const DISORDER_CREATED_MESSAGE = () =>
+  'A new affliction takes root in the darkness.'
+
+/**
+ * Fighting Art Created
+ *
+ * @returns Fighting Art Created Message
+ */
+export const FIGHTING_ART_CREATED_MESSAGE = () =>
+  'A new fighting art is mastered against the odds.'
 
 /**
  * Fighting Arts Max Exceeded Error
@@ -374,6 +398,14 @@ export const HUNT_XP_UPDATED_MESSAGE = () =>
 export const INNOVATION_REMOVED_MESSAGE = () => 'The innovation has been lost.'
 
 /**
+ * Innovation Created
+ *
+ * @returns Innovation Created Message
+ */
+export const INNOVATION_CREATED_MESSAGE = () =>
+  'A spark of ingenuity illuminates the settlement.'
+
+/**
  * Innovation Updated
  *
  * @param index Innovation Index
@@ -445,6 +477,14 @@ export const LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE = (
  * @returns Location Removed Message
  */
 export const LOCATION_REMOVED_MESSAGE = () => 'The location has been destroyed.'
+
+/**
+ * Location Created
+ *
+ * @returns Location Created Message
+ */
+export const LOCATION_CREATED_MESSAGE = () =>
+  'A new location is discovered in the darkness.'
 
 /**
  * Location Unlocked
@@ -936,6 +976,14 @@ export const NEMESIS_UPDATED_MESSAGE = () =>
 export const PATTERN_REMOVED_MESSAGE = () => 'The pattern has been lost.'
 
 /**
+ * Pattern Created
+ *
+ * @returns Pattern Created Message
+ */
+export const PATTERN_CREATED_MESSAGE = () =>
+  'A new pattern is woven from scattered knowledge.'
+
+/**
  * Pattern Updated
  *
  * @param index Pattern Index
@@ -1087,12 +1135,28 @@ export const SECRET_FIGHTING_ARTS_MAX_EXCEEDED_ERROR_MESSAGE = (
     : 'Survivors can only have 3 total Fighting Arts and Secret Fighting Arts combined.'
 
 /**
+ * Secret Fighting Art Created
+ *
+ * @returns Secret Fighting Art Created Message
+ */
+export const SECRET_FIGHTING_ART_CREATED_MESSAGE = () =>
+  'A forbidden technique is discovered.'
+
+/**
  * Seed Pattern Removed
  *
  * @returns Seed Pattern Removed Message
  */
 export const SEED_PATTERN_REMOVED_MESSAGE = () =>
   'The seed pattern has been consumed by darkness.'
+
+/**
+ * Seed Pattern Created
+ *
+ * @returns Seed Pattern Created Message
+ */
+export const SEED_PATTERN_CREATED_MESSAGE = () =>
+  'A new seed pattern takes root.'
 
 /**
  * Seed Pattern Updated
@@ -2006,6 +2070,14 @@ export const SURVIVOR_WEAPON_PROFICIENCY_UPDATED_MESSAGE = () =>
   'The survivor hones their weapon proficiency.'
 
 /**
+ * Survivor Weapon Type Created
+ *
+ * @returns Survivor Weapon Type Created Message
+ */
+export const WEAPON_TYPE_CREATED_MESSAGE = () =>
+  'A new weapon type is forged from the darkness.'
+
+/**
  * Survivor Weapon Type Updated
  *
  * @returns Survivor Weapon Type Updated Message
@@ -2090,6 +2162,14 @@ export const TIMELINE_YEAR_COMPLETED_MESSAGE = (completed: boolean) =>
  * @returns Torment Minimum Error Message
  */
 export const TORMENT_MINIMUM_ERROR_MESSAGE = () => 'Torment cannot be negative.'
+
+/**
+ * Strain Milestone Created
+ *
+ * @returns Strain Milestone Created Message
+ */
+export const STRAIN_MILESTONE_CREATED_MESSAGE = () =>
+  'A new strain milestone emerges from the struggle.'
 
 /**
  * Trait Created
