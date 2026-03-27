@@ -70,7 +70,10 @@ export async function getNeuroses(): Promise<{
  * @returns Inserted Neurosis
  */
 export async function addNeurosis(
-  neurosis: Omit<TablesInsert<'neurosis'>, 'id' | 'created_at' | 'updated_at'>
+  neurosis: Omit<
+    TablesInsert<'neurosis'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<NeurosisDetail> {
   const supabase = createClient()
 
