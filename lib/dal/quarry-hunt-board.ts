@@ -1,4 +1,5 @@
-import { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types'
+import { Tables, TablesUpdate } from '@/lib/database.types'
+import { HuntEventType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -41,12 +42,19 @@ export async function getQuarryHuntBoard(
  * @param quarryHuntBoard Quarry Hunt Board Data
  * @returns Inserted Quarry Hunt Board ID
  */
-export async function addQuarryHuntBoard(
-  quarryHuntBoard: Omit<
-    TablesInsert<'quarry_hunt_board'>,
-    'id' | 'created_at' | 'updated_at'
-  >
-): Promise<string> {
+export async function addQuarryHuntBoard(quarryHuntBoard: {
+  quarry_id: string
+  pos_1: HuntEventType
+  pos_2: HuntEventType
+  pos_3: HuntEventType
+  pos_4: HuntEventType
+  pos_5: HuntEventType
+  pos_7: HuntEventType
+  pos_8: HuntEventType
+  pos_9: HuntEventType
+  pos_10: HuntEventType
+  pos_11: HuntEventType
+}): Promise<string> {
   const supabase = createClient()
 
   const { data, error } = await supabase

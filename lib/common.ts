@@ -1,4 +1,5 @@
 import { HuntEventType, SettlementPhaseStep } from '@/lib/enums'
+import { MonsterLevelData } from '@/lib/types'
 import {
   BanIcon,
   LuggageIcon,
@@ -36,6 +37,52 @@ export const basicHuntBoard = {
   11: HuntEventType.BASIC,
   12: undefined
 }
+
+/**
+ * Base Monster Level Data
+ */
+export const baseMonsterLevelData: MonsterLevelData = {
+  subMonsterName: '',
+  basicCards: 0,
+  advancedCards: 0,
+  legendaryCards: 0,
+  overtoneCards: 0,
+  accuracy: 0,
+  accuracyTokens: 0,
+  damage: 0,
+  damageTokens: 0,
+  evasion: 0,
+  evasionTokens: 0,
+  luck: 0,
+  luckTokens: 0,
+  movement: 1,
+  movementTokens: 0,
+  speed: 0,
+  speedTokens: 0,
+  strength: 0,
+  strengthTokens: 0,
+  toughness: 0,
+  toughnessTokens: 0,
+  life: 0,
+  traits: [],
+  moods: []
+}
+
+/**
+ * Monster Attribute/Token Map
+ *
+ * Used for mapping monster attributes to their corresponding token counts.
+ */
+export const monsterAttributeTokenMap = [
+  { key: 'movement', tokenKey: 'movementTokens', label: 'Movement' },
+  { key: 'accuracy', tokenKey: 'accuracyTokens', label: 'Accuracy' },
+  { key: 'damage', tokenKey: 'damageTokens', label: 'Damage' },
+  { key: 'strength', tokenKey: 'strengthTokens', label: 'Strength' },
+  { key: 'evasion', tokenKey: 'evasionTokens', label: 'Evasion' },
+  { key: 'luck', tokenKey: 'luckTokens', label: 'Luck' },
+  { key: 'speed', tokenKey: 'speedTokens', label: 'Speed' },
+  { key: 'toughness', tokenKey: 'toughnessTokens', label: 'Toughness' }
+]
 
 /**
  * Settlement Phase Steps and Icons

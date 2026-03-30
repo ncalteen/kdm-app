@@ -1,4 +1,5 @@
 import { Tables } from '@/lib/database.types'
+import { HuntEventType } from '@/lib/enums'
 
 /**
  * Campaign Template
@@ -116,6 +117,32 @@ export type HuntAIDeckDetail = Omit<
 >
 
 /**
+ * Hunt Board
+ */
+export type HuntBoard = {
+  /** Position 1 */
+  1: HuntEventType
+  /** Position 2 */
+  2: HuntEventType
+  /** Position 3 */
+  3: HuntEventType
+  /** Position 4 */
+  4: HuntEventType
+  /** Position 5 */
+  5: HuntEventType
+  /** Position 7 */
+  7: HuntEventType
+  /** Position 8 */
+  8: HuntEventType
+  /** Position 9 */
+  9: HuntEventType
+  /** Position 10 */
+  10: HuntEventType
+  /** Position 11 */
+  11: HuntEventType
+}
+
+/**
  * Hunt Detail
  *
  * Used throughout the app to represent the currently selected hunt.
@@ -201,6 +228,63 @@ export type MilestoneDetail = Omit<
   Tables<'milestone'>,
   'created_at' | 'updated_at' | 'user_id'
 >
+
+/**
+ * Monster Level Data
+ *
+ * Used when creating or editing a custom monster.
+ */
+/** Per-level sub-monster form data */
+export type MonsterLevelData = {
+  /** Sub-Monster Name (Optional) */
+  subMonsterName: string
+  /** AI Deck: Basic Cards */
+  basicCards: number
+  /** AI Deck: Advanced Cards */
+  advancedCards: number
+  /** AI Deck: Legendary Cards */
+  legendaryCards: number
+  /** AI Deck: Overtone Cards */
+  overtoneCards: number
+  /** Accuracy */
+  accuracy: number
+  /** Accuracy Tokens */
+  accuracyTokens: number
+  /** Damage */
+  damage: number
+  /** Damage Tokens */
+  damageTokens: number
+  /** Evasion */
+  evasion: number
+  /** Evasion Tokens */
+  evasionTokens: number
+  /** Luck */
+  luck: number
+  /** Luck Tokens */
+  luckTokens: number
+  /** Movement */
+  movement: number
+  /** Movement Tokens */
+  movementTokens: number
+  /** Speed */
+  speed: number
+  /** Speed Tokens */
+  speedTokens: number
+  /** Strength */
+  strength: number
+  /** Strength Tokens */
+  strengthTokens: number
+  /** Toughness */
+  toughness: number
+  /** Toughness Tokens */
+  toughnessTokens: number
+  /** Life (nemesis only) */
+  life: number
+  /** Traits */
+  traits: string[]
+  /** Moods */
+  moods: string[]
+}
 
 /**
  * Nemesis Detail
