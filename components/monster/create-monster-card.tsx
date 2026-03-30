@@ -191,7 +191,6 @@ export function CreateMonsterCard({
   const [name, setName] = useState('')
   const [node, setNode] = useState<MonsterNode>(MonsterNode.NQ1)
   const [isPrologue, setIsPrologue] = useState(false)
-  const [isMultiMonster, setIsMultiMonster] = useState(false)
 
   // Levels: map of level number to array of sub-monster data
   const [levels, setLevels] = useState<{
@@ -352,7 +351,8 @@ export function CreateMonsterCard({
         const quarry = await addQuarry({
           custom: true,
           monster_name: name.trim(),
-          multi_monster: isMultiMonster,
+          // True if any level entry has more than one monster
+          multi_monster: levelEntries.some((entry) => entry[1].length > 1),
           node,
           prologue: isPrologue
         })
@@ -418,7 +418,8 @@ export function CreateMonsterCard({
         const nemesis = await addNemesis({
           custom: true,
           monster_name: name.trim(),
-          multi_monster: isMultiMonster,
+          // True if any level entry has more than one monster
+          multi_monster: levelEntries.some((entry) => entry[1].length > 1),
           node
         })
 
@@ -475,7 +476,6 @@ export function CreateMonsterCard({
     monsterType,
     node,
     isPrologue,
-    isMultiMonster,
     levels,
     levelHuntPositions,
     huntBoard,
@@ -544,28 +544,6 @@ export function CreateMonsterCard({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          </div>
-
-          <div className="flex gap-6">
-            {monsterType === MonsterType.QUARRY && (
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="is-prologue"
-                  checked={isPrologue}
-                  onCheckedChange={(c) => setIsPrologue(!!c)}
-                />
-                <Label htmlFor="is-prologue">Prologue Monster</Label>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="is-multi-monster"
-                checked={isMultiMonster}
-                onCheckedChange={(c) => setIsMultiMonster(!!c)}
-              />
-              <Label htmlFor="is-multi-monster">Multi-Monster Encounter</Label>
             </div>
           </div>
         </div>
