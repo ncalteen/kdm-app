@@ -153,6 +153,7 @@ enabled = true
 site_url = "http://localhost:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
+  "http://127.0.0.1:3000/**",
   "http://localhost:3000/**",
   "http://192.168.86.21:3000/**",
   "https://*-kdm-app.vercel.app/**",

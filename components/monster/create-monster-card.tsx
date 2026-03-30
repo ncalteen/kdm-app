@@ -30,6 +30,7 @@ import {
 } from '@/lib/messages'
 import {
   ChevronDownIcon,
+  ChevronRightIcon,
   PlusIcon,
   SkullIcon,
   Trash2Icon,
@@ -81,10 +82,6 @@ interface LevelFormData {
   toughness: number
   /** Toughness Tokens */
   toughnessTokens: number
-  /** Hunt Position (quarry only) */
-  huntPos: number
-  /** Survivor Hunt Position (quarry only) */
-  survivorHuntPos: number
   /** Life (nemesis only) */
   life: number
   /** Traits */
@@ -116,8 +113,6 @@ const defaultLevelData = (): LevelFormData => ({
   strengthTokens: 0,
   toughness: 0,
   toughnessTokens: 0,
-  huntPos: 12,
-  survivorHuntPos: 0,
   life: 0,
   traits: [],
   moods: []
@@ -203,6 +198,14 @@ export function CreateMonsterCard({
     [key: number]: LevelFormData[]
   }>({})
   const [expandedLevels, setExpandedLevels] = useState<Set<number>>(new Set())
+  const [expandedSubMonsters, setExpandedSubMonsters] = useState<Set<string>>(
+    new Set()
+  )
+
+  // Per-level hunt positions (quarry only)
+  const [levelHuntPositions, setLevelHuntPositions] = useState<{
+    [key: number]: { huntPos: number; survivorHuntPos: number }
+  }>({})
 
   // Hunt board (quarry only)
   const [huntBoard, setHuntBoard] = useState<HuntBoardPositions>({
@@ -243,6 +246,20 @@ export function CreateMonsterCard({
   }, [])
 
   /**
+   * Toggle Sub-Monster Expansion
+   *
+   * @param key Unique key for the sub-monster (level-index)
+   */
+  const toggleSubMonster = useCallback((key: string) => {
+    setExpandedSubMonsters((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }, [])
+
+  /**
    * Add Sub-Monster to Level
    *
    * @param level Level Number
@@ -251,6 +268,10 @@ export function CreateMonsterCard({
     setLevels((prev) => ({
       ...prev,
       [level]: [...(prev[level] ?? []), defaultLevelData()]
+    }))
+    setLevelHuntPositions((prev) => ({
+      ...prev,
+      [level]: prev[level] ?? { huntPos: 12, survivorHuntPos: 0 }
     }))
     setExpandedLevels((prev) => new Set(prev).add(level))
   }, [])
@@ -268,6 +289,12 @@ export function CreateMonsterCard({
       if (levelData.length === 0) {
         const next = { ...prev }
         delete next[level]
+        // Also clean up hunt positions for this level
+        setLevelHuntPositions((hp) => {
+          const nextHp = { ...hp }
+          delete nextHp[level]
+          return nextHp
+        })
         return next
       }
       return { ...prev, [level]: levelData }
@@ -377,8 +404,9 @@ export function CreateMonsterCard({
               strength_tokens: sub.strengthTokens,
               toughness: sub.toughness,
               toughness_tokens: sub.toughnessTokens,
-              hunt_pos: sub.huntPos,
-              survivor_hunt_pos: sub.survivorHuntPos,
+              hunt_pos: levelHuntPositions[parseInt(levelNum)]?.huntPos ?? 12,
+              survivor_hunt_pos:
+                levelHuntPositions[parseInt(levelNum)]?.survivorHuntPos ?? 0,
               traits: sub.traits,
               moods: sub.moods
             })
@@ -449,6 +477,7 @@ export function CreateMonsterCard({
     isPrologue,
     isMultiMonster,
     levels,
+    levelHuntPositions,
     huntBoard,
     onMonsterCreated,
     toast
@@ -593,333 +622,358 @@ export function CreateMonsterCard({
                   </div>
                 </button>
 
+                {/* Quarry: Hunt/Survivor Positions (per-level) */}
+                {monsterType === MonsterType.QUARRY && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-center block">
+                        Hunt Position
+                      </Label>
+                      <NumericInput
+                        label="Hunt Position"
+                        value={levelHuntPositions[levelNum]?.huntPos ?? 12}
+                        min={0}
+                        max={12}
+                        onChange={(v) =>
+                          setLevelHuntPositions((prev) => ({
+                            ...prev,
+                            [levelNum]: {
+                              ...(prev[levelNum] ?? {
+                                huntPos: 12,
+                                survivorHuntPos: 0
+                              }),
+                              huntPos: v
+                            }
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-center block">
+                        Survivor Hunt Position
+                      </Label>
+                      <NumericInput
+                        label="Survivor Hunt Position"
+                        value={
+                          levelHuntPositions[levelNum]?.survivorHuntPos ?? 0
+                        }
+                        min={0}
+                        max={12}
+                        onChange={(v) =>
+                          setLevelHuntPositions((prev) => ({
+                            ...prev,
+                            [levelNum]: {
+                              ...(prev[levelNum] ?? {
+                                huntPos: 12,
+                                survivorHuntPos: 0
+                              }),
+                              survivorHuntPos: v
+                            }
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {isExpanded && levelData && (
                   <div className="p-3 pt-2 space-y-3">
-                    {levelData.map((sub, subIdx) => (
-                      <div
-                        key={subIdx}
-                        className="border rounded-lg p-3 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs font-semibold">
-                            Sub-Monster {subIdx + 1}
-                          </Label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeSubMonster(levelNum, subIdx)}>
-                            <Trash2Icon className="h-3 w-3" />
-                          </Button>
-                        </div>
+                    {levelData.map((sub, subIdx) => {
+                      const subKey = `${levelNum}-${subIdx}`
+                      const isSubExpanded = expandedSubMonsters.has(subKey)
+                      const displayName =
+                        sub.subMonsterName || `Sub-Monster ${subIdx + 1}`
 
-                        {/* Sub-Monster Name */}
-                        <Input
-                          placeholder="Sub-monster name (optional)"
-                          value={sub.subMonsterName}
-                          onChange={(e) =>
-                            updateSubMonster(levelNum, subIdx, {
-                              subMonsterName: e.target.value
-                            })
-                          }
-                        />
-
-                        {/* AI Deck */}
-                        <div>
-                          <Label className="text-xs text-muted-foreground">
-                            AI Deck
-                          </Label>
-                          <div className="grid grid-cols-4 gap-2 mt-1">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-center block">
-                                B
-                              </Label>
-                              <NumericInput
-                                label="Basic"
-                                value={sub.basicCards}
-                                min={0}
-                                onChange={(v) =>
-                                  updateSubMonster(levelNum, subIdx, {
-                                    basicCards: v
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-center block">
-                                A
-                              </Label>
-                              <NumericInput
-                                label="Advanced"
-                                value={sub.advancedCards}
-                                min={0}
-                                onChange={(v) =>
-                                  updateSubMonster(levelNum, subIdx, {
-                                    advancedCards: v
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-center block">
-                                L
-                              </Label>
-                              <NumericInput
-                                label="Legendary"
-                                value={sub.legendaryCards}
-                                min={0}
-                                onChange={(v) =>
-                                  updateSubMonster(levelNum, subIdx, {
-                                    legendaryCards: v
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-center block">
-                                O
-                              </Label>
-                              <NumericInput
-                                label="Overtone"
-                                value={sub.overtoneCards}
-                                min={0}
-                                onChange={(v) =>
-                                  updateSubMonster(levelNum, subIdx, {
-                                    overtoneCards: v
-                                  })
-                                }
-                              />
-                            </div>
+                      return (
+                        <div
+                          key={subIdx}
+                          className="border rounded-lg overflow-hidden">
+                          {/* Compact sub-monster header */}
+                          <div className="flex items-center justify-between px-3 py-2 hover:bg-accent/50 cursor-pointer">
+                            <button
+                              type="button"
+                              className="flex items-center gap-2 flex-1 text-left"
+                              onClick={() => toggleSubMonster(subKey)}>
+                              {isSubExpanded ? (
+                                <ChevronDownIcon className="h-3 w-3 shrink-0" />
+                              ) : (
+                                <ChevronRightIcon className="h-3 w-3 shrink-0" />
+                              )}
+                              <span className="text-sm font-medium truncate">
+                                {displayName}
+                              </span>
+                            </button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0"
+                              onClick={() =>
+                                removeSubMonster(levelNum, subIdx)
+                              }>
+                              <Trash2Icon className="h-3 w-3" />
+                            </Button>
                           </div>
-                        </div>
 
-                        {/* Attributes */}
-                        <div>
-                          <Label className="text-xs text-muted-foreground">
-                            Attributes
-                          </Label>
-                          <div className="flex flex-col gap-1 mt-1">
-                            <div className="flex flex-row items-center gap-2">
-                              <div className="w-20" />
-                              <Label className="text-xs w-20 justify-center">
-                                Base
-                              </Label>
-                              <Label className="text-xs w-20 justify-center">
-                                Tokens
-                              </Label>
-                              <Label className="text-xs w-20 justify-center">
-                                Total
-                              </Label>
-                            </div>
-
-                            {MONSTER_ATTRIBUTES.map((attr) => (
-                              <div
-                                key={attr.key}
-                                className="flex flex-row items-center gap-2">
-                                <Label className="text-xs w-20">
-                                  {attr.label}
-                                </Label>
-                                <NumericInput
-                                  label={attr.label}
-                                  value={
-                                    sub[
-                                      attr.key as keyof LevelFormData
-                                    ] as number
-                                  }
-                                  onChange={(v) =>
-                                    updateSubMonster(levelNum, subIdx, {
-                                      [attr.key]: v
-                                    })
-                                  }
-                                  className="w-20"
-                                />
-                                <NumericInput
-                                  label={`${attr.label} Tokens`}
-                                  value={
-                                    sub[
-                                      attr.tokenKey as keyof LevelFormData
-                                    ] as number
-                                  }
-                                  onChange={(v) =>
-                                    updateSubMonster(levelNum, subIdx, {
-                                      [attr.tokenKey]: v
-                                    })
-                                  }
-                                  className="w-20 bg-muted!"
-                                />
-                                <NumericInput
-                                  label={`${attr.label} Total`}
-                                  value={
-                                    (sub[
-                                      attr.key as keyof LevelFormData
-                                    ] as number) +
-                                    (sub[
-                                      attr.tokenKey as keyof LevelFormData
-                                    ] as number)
-                                  }
-                                  disabled
-                                  className="w-20"
-                                />
+                          {/* Expandable sub-monster details */}
+                          {isSubExpanded && (
+                            <div className="px-3 pb-3 space-y-3">
+                              {/* Sub-Monster Name */}
+                              <div className="grid grid-cols-4 gap-2">
+                                <div className="col-span-4">
+                                  <Input
+                                    placeholder="Sub-monster name (optional)"
+                                    value={sub.subMonsterName}
+                                    onChange={(e) =>
+                                      updateSubMonster(levelNum, subIdx, {
+                                        subMonsterName: e.target.value
+                                      })
+                                    }
+                                  />
+                                </div>
                               </div>
-                            ))}
-                          </div>
+
+                              {/* AI Deck */}
+                              <div>
+                                <Label className="text-xs text-muted-foreground">
+                                  AI Deck
+                                </Label>
+                                <div className="grid grid-cols-4 gap-2 mt-1">
+                                  {[
+                                    {
+                                      label: 'B',
+                                      key: 'basicCards' as const,
+                                      full: 'Basic'
+                                    },
+                                    {
+                                      label: 'A',
+                                      key: 'advancedCards' as const,
+                                      full: 'Advanced'
+                                    },
+                                    {
+                                      label: 'L',
+                                      key: 'legendaryCards' as const,
+                                      full: 'Legendary'
+                                    },
+                                    {
+                                      label: 'O',
+                                      key: 'overtoneCards' as const,
+                                      full: 'Overtone'
+                                    }
+                                  ].map((deck) => (
+                                    <div key={deck.key} className="space-y-1">
+                                      <Label className="text-xs text-center block">
+                                        {deck.label}
+                                      </Label>
+                                      <NumericInput
+                                        label={deck.full}
+                                        value={sub[deck.key] as number}
+                                        min={0}
+                                        onChange={(v) =>
+                                          updateSubMonster(levelNum, subIdx, {
+                                            [deck.key]: v
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Attributes */}
+                              <div>
+                                <Label className="text-xs text-muted-foreground">
+                                  Attributes
+                                </Label>
+                                <div className="grid grid-cols-4 gap-x-2 gap-y-1 mt-1">
+                                  {/* Header row */}
+                                  <div />
+                                  <Label className="text-xs text-center">
+                                    Base
+                                  </Label>
+                                  <Label className="text-xs text-center">
+                                    Tokens
+                                  </Label>
+                                  <Label className="text-xs text-center">
+                                    Total
+                                  </Label>
+
+                                  {MONSTER_ATTRIBUTES.map((attr) => (
+                                    <div
+                                      key={attr.key}
+                                      className="grid grid-cols-subgrid col-span-4 items-center">
+                                      <Label className="text-xs">
+                                        {attr.label}
+                                      </Label>
+                                      <NumericInput
+                                        label={attr.label}
+                                        value={
+                                          sub[
+                                            attr.key as keyof LevelFormData
+                                          ] as number
+                                        }
+                                        onChange={(v) =>
+                                          updateSubMonster(levelNum, subIdx, {
+                                            [attr.key]: v
+                                          })
+                                        }
+                                      />
+                                      <NumericInput
+                                        label={`${attr.label} Tokens`}
+                                        value={
+                                          sub[
+                                            attr.tokenKey as keyof LevelFormData
+                                          ] as number
+                                        }
+                                        onChange={(v) =>
+                                          updateSubMonster(levelNum, subIdx, {
+                                            [attr.tokenKey]: v
+                                          })
+                                        }
+                                        className="bg-muted!"
+                                      />
+                                      <NumericInput
+                                        label={`${attr.label} Total`}
+                                        value={
+                                          (sub[
+                                            attr.key as keyof LevelFormData
+                                          ] as number) +
+                                          (sub[
+                                            attr.tokenKey as keyof LevelFormData
+                                          ] as number)
+                                        }
+                                        disabled
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Nemesis: Life */}
+                              {monsterType === MonsterType.NEMESIS && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-center block">
+                                    Life
+                                  </Label>
+                                  <NumericInput
+                                    label="Life"
+                                    value={sub.life}
+                                    min={0}
+                                    onChange={(v) =>
+                                      updateSubMonster(levelNum, subIdx, {
+                                        life: v
+                                      })
+                                    }
+                                  />
+                                </div>
+                              )}
+
+                              {/* Traits */}
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-xs text-muted-foreground">
+                                    Traits
+                                  </Label>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      updateSubMonster(levelNum, subIdx, {
+                                        traits: [...sub.traits, '']
+                                      })
+                                    }>
+                                    <PlusIcon className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                                {sub.traits.map((trait, tIdx) => (
+                                  <div
+                                    key={tIdx}
+                                    className="flex items-center gap-1">
+                                    <Input
+                                      value={trait}
+                                      placeholder="Trait"
+                                      onChange={(e) => {
+                                        const next = [...sub.traits]
+                                        next[tIdx] = e.target.value
+                                        updateSubMonster(levelNum, subIdx, {
+                                          traits: next
+                                        })
+                                      }}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        const next = sub.traits.filter(
+                                          (_, i) => i !== tIdx
+                                        )
+                                        updateSubMonster(levelNum, subIdx, {
+                                          traits: next
+                                        })
+                                      }}>
+                                      <Trash2Icon className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Moods */}
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-xs text-muted-foreground">
+                                    Moods
+                                  </Label>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      updateSubMonster(levelNum, subIdx, {
+                                        moods: [...sub.moods, '']
+                                      })
+                                    }>
+                                    <PlusIcon className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                                {sub.moods.map((mood, mIdx) => (
+                                  <div
+                                    key={mIdx}
+                                    className="flex items-center gap-1">
+                                    <Input
+                                      value={mood}
+                                      placeholder="Mood"
+                                      onChange={(e) => {
+                                        const next = [...sub.moods]
+                                        next[mIdx] = e.target.value
+                                        updateSubMonster(levelNum, subIdx, {
+                                          moods: next
+                                        })
+                                      }}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        const next = sub.moods.filter(
+                                          (_, i) => i !== mIdx
+                                        )
+                                        updateSubMonster(levelNum, subIdx, {
+                                          moods: next
+                                        })
+                                      }}>
+                                      <Trash2Icon className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
-
-                        {/* Quarry: Hunt/Survivor Positions */}
-                        {monsterType === MonsterType.QUARRY && (
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-center block">
-                                Hunt Position
-                              </Label>
-                              <NumericInput
-                                label="Hunt Position"
-                                value={sub.huntPos}
-                                min={0}
-                                max={12}
-                                onChange={(v) =>
-                                  updateSubMonster(levelNum, subIdx, {
-                                    huntPos: v
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-center block">
-                                Survivor Hunt Position
-                              </Label>
-                              <NumericInput
-                                label="Survivor Hunt Position"
-                                value={sub.survivorHuntPos}
-                                min={0}
-                                max={12}
-                                onChange={(v) =>
-                                  updateSubMonster(levelNum, subIdx, {
-                                    survivorHuntPos: v
-                                  })
-                                }
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Nemesis: Life */}
-                        {monsterType === MonsterType.NEMESIS && (
-                          <div className="space-y-1">
-                            <Label className="text-xs text-center block">
-                              Life
-                            </Label>
-                            <NumericInput
-                              label="Life"
-                              value={sub.life}
-                              min={0}
-                              onChange={(v) =>
-                                updateSubMonster(levelNum, subIdx, {
-                                  life: v
-                                })
-                              }
-                            />
-                          </div>
-                        )}
-
-                        {/* Traits */}
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-xs text-muted-foreground">
-                              Traits
-                            </Label>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                updateSubMonster(levelNum, subIdx, {
-                                  traits: [...sub.traits, '']
-                                })
-                              }>
-                              <PlusIcon className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          {sub.traits.map((trait, tIdx) => (
-                            <div key={tIdx} className="flex items-center gap-1">
-                              <Input
-                                value={trait}
-                                placeholder="Trait"
-                                onChange={(e) => {
-                                  const next = [...sub.traits]
-                                  next[tIdx] = e.target.value
-                                  updateSubMonster(levelNum, subIdx, {
-                                    traits: next
-                                  })
-                                }}
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  const next = sub.traits.filter(
-                                    (_, i) => i !== tIdx
-                                  )
-                                  updateSubMonster(levelNum, subIdx, {
-                                    traits: next
-                                  })
-                                }}>
-                                <Trash2Icon className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Moods */}
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-xs text-muted-foreground">
-                              Moods
-                            </Label>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                updateSubMonster(levelNum, subIdx, {
-                                  moods: [...sub.moods, '']
-                                })
-                              }>
-                              <PlusIcon className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          {sub.moods.map((mood, mIdx) => (
-                            <div key={mIdx} className="flex items-center gap-1">
-                              <Input
-                                value={mood}
-                                placeholder="Mood"
-                                onChange={(e) => {
-                                  const next = [...sub.moods]
-                                  next[mIdx] = e.target.value
-                                  updateSubMonster(levelNum, subIdx, {
-                                    moods: next
-                                  })
-                                }}
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  const next = sub.moods.filter(
-                                    (_, i) => i !== mIdx
-                                  )
-                                  updateSubMonster(levelNum, subIdx, {
-                                    moods: next
-                                  })
-                                }}>
-                                <Trash2Icon className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
 
                     <Button
                       type="button"
