@@ -237,17 +237,28 @@ export function QuarriesCard({
                   newLocIds,
                   selectedSettlement.id
                 )
-                // Fetch the location names for the optimistic update
+                const insertedLocations = inserted.flatMap((ins) => {
+                  const locationId = (ins as { location_id?: number }).location_id
+
+                  if (typeof locationId !== 'number') {
+                    return []
+                  }
+
+                  return [
+                    {
+                      id: ins.id,
+                      location_id: locationId,
+                      location_name: ins.location_name,
+                      unlocked: false
+                    }
+                  ]
+                })
+
                 updatedSettlement = {
                   ...updatedSettlement,
                   locations: [
                     ...updatedSettlement.locations,
-                    ...inserted.map((ins, i) => ({
-                      id: ins.id,
-                      location_id: newLocIds[i],
-                      location_name: ins.location_name,
-                      unlocked: false
-                    }))
+                    ...insertedLocations
                   ]
                 }
               }
