@@ -436,7 +436,7 @@ export type SettlementDetail = Omit<
   /** Collective Cognition Rewards */
   collective_cognition_rewards: {
     /** Collective Cognition Reward Collective Cognition */
-    collective_cognition: string
+    collective_cognition: number
     /** Collective Cognition Reward ID */
     collective_cognition_reward_id: string
     /** Settlement Collective Cognition Reward ID */

@@ -159,7 +159,7 @@ export function CollectiveCognitionRewardsCard({
       const tempId = `temp-${Date.now()}`
       const optimisticRow: SettlementDetail['collective_cognition_rewards'][0] =
         {
-          collective_cognition: String(rewardInfo.collective_cognition),
+          collective_cognition: rewardInfo.collective_cognition,
           collective_cognition_reward_id: rewardId,
           id: tempId,
           reward_name: rewardInfo.reward_name,
@@ -336,7 +336,7 @@ export function CollectiveCognitionRewardsCard({
         const tempId = `temp-${Date.now()}`
         const optimisticRow: SettlementDetail['collective_cognition_rewards'][0] =
           {
-            collective_cognition: String(newReward.collective_cognition),
+            collective_cognition: newReward.collective_cognition,
             collective_cognition_reward_id: newReward.id,
             id: tempId,
             reward_name: newReward.reward_name,
