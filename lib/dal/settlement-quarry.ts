@@ -1,6 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { SettlementDetail } from '@/lib/types'
+import { SettlementDetail, SettlementQuarryDetail } from '@/lib/types'
 
 /**
  * Get Settlement Quarries
@@ -115,7 +114,7 @@ export async function removeSettlementQuarry(
  */
 export async function updateSettlementQuarry(
   settlementQuarryId: string | null | undefined,
-  updates: Partial<Tables<'settlement_quarry'>>
+  updates: Partial<SettlementQuarryDetail>
 ): Promise<void> {
   if (!settlementQuarryId) throw new Error('Required: Settlement Quarry ID')
 

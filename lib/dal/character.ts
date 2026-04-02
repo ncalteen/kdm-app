@@ -28,17 +28,20 @@ export async function getCharacters(): Promise<{
   // Fetch all three categories of characters in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     // Non-custom characters (available to all users)
-    supabase.from('character').select('id, character_name').eq('custom', false),
+    supabase
+      .from('character')
+      .select('id, custom, character_name')
+      .eq('custom', false),
     // Custom characters created by the user
     supabase
       .from('character')
-      .select('id, character_name')
+      .select('id, custom, character_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom characters shared with the user
     supabase
       .from('character_shared_user')
-      .select('character(id, character_name)')
+      .select('character(id, custom, character_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -66,14 +69,28 @@ export async function getCharacters(): Promise<{
  * @returns Inserted Character
  */
 export async function addCharacter(
-  character: Omit<TablesInsert<'character'>, 'id' | 'created_at' | 'updated_at'>
+  character: Omit<
+    TablesInsert<'character'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<CharacterDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (character.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('character')
-    .insert(character)
-    .select('id, character_name')
+    .insert({
+      ...character,
+      ...(character.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, character_name')
     .single()
 
   if (error) throw new Error(`Error Adding Character: ${error.message}`)

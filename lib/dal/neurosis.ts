@@ -31,18 +31,18 @@ export async function getNeuroses(): Promise<{
     // Non-custom neuroses (available to all users)
     supabase
       .from('neurosis')
-      .select('id, neurosis_name, philosophy_id')
+      .select('id, custom, neurosis_name, philosophy_id')
       .eq('custom', false),
     // Custom neuroses created by the user
     supabase
       .from('neurosis')
-      .select('id, neurosis_name, philosophy_id')
+      .select('id, custom, neurosis_name, philosophy_id')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom neuroses shared with the user
     supabase
       .from('neurosis_shared_user')
-      .select('neurosis(id, neurosis_name, philosophy_id)')
+      .select('neurosis(id, custom, neurosis_name, philosophy_id)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -70,14 +70,28 @@ export async function getNeuroses(): Promise<{
  * @returns Inserted Neurosis
  */
 export async function addNeurosis(
-  neurosis: Omit<TablesInsert<'neurosis'>, 'id' | 'created_at' | 'updated_at'>
+  neurosis: Omit<
+    TablesInsert<'neurosis'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<NeurosisDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (neurosis.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('neurosis')
-    .insert(neurosis)
-    .select('id, neurosis_name, philosophy_id')
+    .insert({
+      ...neurosis,
+      ...(neurosis.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, neurosis_name, philosophy_id')
     .single()
 
   if (error) throw new Error(`Error Adding Neurosis: ${error.message}`)

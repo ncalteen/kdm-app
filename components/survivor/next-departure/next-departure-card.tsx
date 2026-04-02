@@ -32,7 +32,7 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 
 /**
  * Next Departure Card Properties
@@ -62,7 +62,7 @@ export function NextDepartureCard({
 }: NextDepartureCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [disabledInputs, setDisabledInputs] = useState<{
     [key: number]: boolean
@@ -76,8 +76,8 @@ export function NextDepartureCard({
     selectedSurvivor?.next_departure ?? []
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
 
     setDisabledInputs(
       Object.fromEntries(

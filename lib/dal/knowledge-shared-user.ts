@@ -3,73 +3,85 @@ import { createClient } from '@/lib/supabase/client'
 /**
  * Get Knowledge Shared Users
  *
- * Retrieves all users a knowledge is shared with.
+ * Retrieves all users a knowledge is shared with, including their usernames
+ * from the user_settings table.
  *
  * @param knowledgeId Knowledge ID
- * @returns Shared User IDs
+ * @returns Shared User IDs and Usernames
  */
 export async function getKnowledgeSharedUsers(
   knowledgeId: string
-): Promise<string[]> {
+): Promise<{ shared_user_id: string; username: string }[]> {
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('knowledge_shared_user')
-    .select('shared_user_id')
+    .select('shared_user_id, user_settings!shared_user_id(username)')
     .eq('knowledge_id', knowledgeId)
 
   if (error)
     throw new Error(`Error Fetching Knowledge Shared Users: ${error.message}`)
 
-  return (data ?? []).map((row) => row.shared_user_id)
+  if (!data || data.length === 0) return []
+
+  return data.map((row) => ({
+    shared_user_id: row.shared_user_id,
+    username: (row.user_settings as unknown as { username: string })?.username
+  }))
 }
 
 /**
- * Add Knowledge Shared User
+ * Add Knowledge Shared Users
  *
- * Shares a knowledge with another user.
+ * Shares a knowledge with other users.
  *
  * @param knowledgeId Knowledge ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  * @param userId Owner User ID
  */
-export async function addKnowledgeSharedUser(
+export async function addKnowledgeSharedUsers(
   knowledgeId: string,
-  sharedUserId: string,
+  sharedUserIds: string[],
   userId: string
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
-  const { error } = await supabase.from('knowledge_shared_user').insert({
-    knowledge_id: knowledgeId,
-    shared_user_id: sharedUserId,
-    user_id: userId
-  })
+  const { error } = await supabase.from('knowledge_shared_user').insert(
+    sharedUserIds.map((sharedUserId) => ({
+      knowledge_id: knowledgeId,
+      shared_user_id: sharedUserId,
+      user_id: userId
+    }))
+  )
 
   if (error)
-    throw new Error(`Error Adding Knowledge Shared User: ${error.message}`)
+    throw new Error(`Error Adding Knowledge Shared Users: ${error.message}`)
 }
 
 /**
- * Remove Knowledge Shared User
+ * Remove Knowledge Shared Users
  *
- * Revokes sharing of a knowledge with a user.
+ * Revokes sharing of a knowledge with users.
  *
  * @param knowledgeId Knowledge ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  */
-export async function removeKnowledgeSharedUser(
+export async function removeKnowledgeSharedUsers(
   knowledgeId: string,
-  sharedUserId: string
+  sharedUserIds: string[]
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase
     .from('knowledge_shared_user')
     .delete()
     .eq('knowledge_id', knowledgeId)
-    .eq('shared_user_id', sharedUserId)
+    .in('shared_user_id', sharedUserIds)
 
   if (error)
-    throw new Error(`Error Removing Knowledge Shared User: ${error.message}`)
+    throw new Error(`Error Removing Knowledge Shared Users: ${error.message}`)
 }

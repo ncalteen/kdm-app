@@ -60,7 +60,7 @@ import {
   SurvivorType
 } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
-import { SettlementDetail } from '@/lib/types'
+import { SettlementDetail, SettlementTimelineYearDetail } from '@/lib/types'
 import {
   canDash,
   canEncourage,
@@ -98,10 +98,7 @@ export async function createSettlement(
   }[options.campaignType]()
 
   // Create the settlement record first to generate the settlement ID.
-  const settlement: Omit<
-    Tables<'settlement'>,
-    'created_at' | 'id' | 'updated_at'
-  > = {
+  const settlement = {
     arrival_bonuses: [],
     campaign_type: DatabaseCampaignType[options.campaignType],
     current_year: 0,
@@ -140,15 +137,13 @@ export async function createSettlement(
     ...template.collectiveCognitionRewardIds
   ]
   const settlementLocationIds = [...template.locationIds]
-  const settlementTimeline: Omit<
-    Tables<'settlement_timeline_year'>,
-    'created_at' | 'id' | 'updated_at'
-  >[] = template.timeline.map(({ entries, year_number }) => ({
-    completed: false,
-    entries: [...entries],
-    settlement_id: settlementId,
-    year_number
-  }))
+  const settlementTimeline: SettlementTimelineYearDetail[] =
+    template.timeline.map(({ entries, year_number }) => ({
+      completed: false,
+      entries: [...entries],
+      settlement_id: settlementId,
+      year_number
+    }))
 
   // Conditional locations (Arc forum, scout outskirts).
   const conditionalLocationNames: string[] = []
@@ -377,120 +372,6 @@ export async function getSettlement(
 }
 
 /**
- * Get Collective Cognition
- *
- * Sums the collective cognition value based on settlement victories. Fetches
- * nemesis and quarry collective cognition data in parallel.
- *
- * @param settlementId Settlement ID
- * @returns Collective Cognition (or null)
- */
-export async function getCollectiveCognition(
-  settlementId: string | null | undefined
-): Promise<number | null> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
-
-  const supabase = createClient()
-
-  // Fetch nemesis and quarry collective cognition data in parallel.
-  const [nemesisResult, quarryResult] = await Promise.all([
-    supabase
-      .from('settlement_nemesis')
-      .select(
-        'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3'
-      )
-      .eq('settlement_id', settlementId),
-    supabase
-      .from('settlement_quarry')
-      .select(
-        'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue'
-      )
-      .eq('settlement_id', settlementId)
-  ])
-
-  if (nemesisResult.error)
-    throw new Error(
-      `Error Fetching Settlement Nemeses: ${nemesisResult.error.message}`
-    )
-  if (quarryResult.error)
-    throw new Error(
-      `Error Fetching Settlement Quarries: ${quarryResult.error.message}`
-    )
-
-  let total = 0
-
-  for (const nemesis of nemesisResult.data ?? []) {
-    if (nemesis.collective_cognition_level_1) total += 3
-    if (nemesis.collective_cognition_level_2) total += 3
-    if (nemesis.collective_cognition_level_3) total += 3
-  }
-
-  for (const quarry of quarryResult.data ?? []) {
-    if (quarry.collective_cognition_prologue) total += 1
-    if (quarry.collective_cognition_level_1) total += 1
-    for (const level2 of quarry.collective_cognition_level_2 as boolean[])
-      if (level2) total += 2
-    for (const level3 of quarry.collective_cognition_level_3 as boolean[])
-      if (level3) total += 3
-  }
-
-  return total
-}
-
-/**
- * Get Death Count
- *
- * Only includes survivors who are dead. Uses `select('id')` instead of
- * `select('*')` to minimize data transferred with `head: true`.
- *
- * @param settlementId Settlement ID
- * @returns Death Count (or null)
- */
-export async function getDeathCount(
-  settlementId: string | null | undefined
-): Promise<number | null> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
-
-  const supabase = createClient()
-
-  const { count, error } = await supabase
-    .from('survivor')
-    .select('id', { count: 'exact', head: true })
-    .eq('settlement_id', settlementId)
-    .eq('dead', true)
-
-  if (error) throw new Error(`Error Fetching Death Count: ${error.message}`)
-
-  return count
-}
-
-/**
- * Get Hunt ID
- *
- * Retrieves the selected settlement's hunt ID.
- *
- * @param settlementId Settlement ID
- * @returns Hunt ID (or null)
- */
-export async function getHuntId(
-  settlementId: string | null | undefined
-): Promise<string | null> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('hunt')
-    .select('id')
-    .eq('settlement_id', settlementId)
-    .maybeSingle()
-
-  if (error) throw new Error(`Error Fetching Hunt ID: ${error.message}`)
-
-  return data?.id ?? null
-}
-
-/**
  * Get Lost Settlement Count
  *
  * Determined by evaluating the settlement's milestones. If there is a milestone
@@ -518,85 +399,6 @@ export async function getLostSettlementCount(
     throw new Error(`Error Fetching Lost Settlement Count: ${error.message}`)
 
   return count
-}
-
-/**
- * Get Population
- *
- * Only includes survivors who are not dead.
- *
- * @param settlementId Settlement ID
- * @returns Population (or null)
- */
-export async function getPopulation(
-  settlementId: string | null | undefined
-): Promise<number | null> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
-
-  const supabase = createClient()
-
-  const { count, error } = await supabase
-    .from('survivor')
-    .select('id', { count: 'exact', head: true })
-    .eq('settlement_id', settlementId)
-    .not('dead', 'eq', true)
-
-  if (error) throw new Error(`Error Fetching Population: ${error.message}`)
-
-  return count
-}
-
-/**
- * Get Settlement Phase ID
- *
- * Retrieves the selected settlement's settlement phase ID.
- *
- * @param settlementId Settlement ID
- * @returns Settlement Phase ID (or null)
- */
-export async function getSettlementPhaseId(
-  settlementId: string | null | undefined
-): Promise<string | null> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('settlement_phase')
-    .select('id')
-    .eq('settlement_id', settlementId)
-    .maybeSingle()
-
-  if (error)
-    throw new Error(`Error Fetching Settlement Phase ID: ${error.message}`)
-
-  return data?.id ?? null
-}
-
-/**
- * Get Showdown ID
- *
- * Retrieves the selected settlement's showdown ID.
- *
- * @param settlementId Settlement ID
- * @returns Showdown ID (or null)
- */
-export async function getShowdownId(
-  settlementId: string | null | undefined
-): Promise<string | null> {
-  if (!settlementId) throw new Error('Required: Settlement ID')
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('showdown')
-    .select('id')
-    .eq('settlement_id', settlementId)
-    .maybeSingle()
-
-  if (error) throw new Error(`Error Fetching Showdown ID: ${error.message}`)
-
-  return data?.id ?? null
 }
 
 /**

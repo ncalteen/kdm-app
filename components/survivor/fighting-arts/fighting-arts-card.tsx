@@ -21,8 +21,11 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getFightingArts } from '@/lib/dal/fighting-art'
-import { getSecretFightingArts } from '@/lib/dal/secret-fighting-art'
+import { addFightingArt, getFightingArts } from '@/lib/dal/fighting-art'
+import {
+  addSecretFightingArt,
+  getSecretFightingArts
+} from '@/lib/dal/secret-fighting-art'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
   addSurvivorFightingArt,
@@ -34,6 +37,8 @@ import {
 } from '@/lib/dal/survivor-secret-fighting-art'
 import {
   ERROR_MESSAGE,
+  FIGHTING_ART_CREATED_MESSAGE,
+  SECRET_FIGHTING_ART_CREATED_MESSAGE,
   SURVIVOR_CAN_USE_FIGHTING_ARTS_UPDATED_MESSAGE,
   SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE,
   SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE
@@ -45,15 +50,8 @@ import {
   SurvivorDetail
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { PlusIcon, TrashIcon } from 'lucide-react'
-import {
-  ReactElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react'
+import { Plus, PlusIcon, TrashIcon } from 'lucide-react'
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
  * Fighting Arts Card Properties
@@ -89,7 +87,7 @@ export function FightingArtsCard({
 }: FightingArtsCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [availableFightingArts, setAvailableFightingArts] = useState<{
     [key: string]: FightingArtDetail
@@ -103,13 +101,16 @@ export function FightingArtsCard({
     SecretFightingArtItem[]
   >(selectedSurvivor?.secret_fighting_arts ?? [])
   const [addOpen, setAddOpen] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [creatingRegular, setCreatingRegular] = useState(false)
+  const [creatingSecret, setCreatingSecret] = useState(false)
 
   const canUseFightingArtsKnowledges =
     survivors.find((s) => s.id === selectedSurvivor?.id)
       ?.can_use_fighting_arts_knowledges ?? true
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setFightingArts(selectedSurvivor?.fighting_arts ?? [])
     setSecretFightingArts(selectedSurvivor?.secret_fighting_arts ?? [])
   }
@@ -421,6 +422,170 @@ export function FightingArtsCard({
     ]
   )
 
+  /** Check if an exact match for the search term already exists in regular arts. */
+  const exactRegularMatch = Object.values(availableFightingArts).some(
+    (a) => a.fighting_art_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /** Check if an exact match for the search term already exists in secret arts. */
+  const exactSecretMatch = Object.values(availableSecretFightingArts).some(
+    (a) =>
+      a.secret_fighting_art_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Fighting Art
+   *
+   * Creates a new custom fighting art with the current search term, adds it
+   * to the available arts, then assigns it to the survivor.
+   */
+  const handleCreateRegular = useCallback(async () => {
+    const name = search.trim()
+    if (!name || creatingRegular || !selectedSurvivor?.id) return
+
+    setCreatingRegular(true)
+
+    try {
+      const newArt = await addFightingArt({
+        custom: true,
+        fighting_art_name: name
+      })
+
+      setAvailableFightingArts((prev) => ({ ...prev, [newArt.id]: newArt }))
+      setSearch('')
+      setAddOpen(false)
+      toast.success(FIGHTING_ART_CREATED_MESSAGE())
+
+      // Add to survivor immediately
+      const optimisticItem: FightingArtItem = {
+        id: newArt.id,
+        fighting_art_name: newArt.fighting_art_name
+      }
+      const oldArts = [...fightingArts]
+
+      setFightingArts([...fightingArts, optimisticItem])
+      setSurvivors(
+        survivors.map((s) =>
+          s.id === selectedSurvivor.id
+            ? { ...s, fighting_arts: [...s.fighting_arts, optimisticItem] }
+            : s
+        )
+      )
+
+      addSurvivorFightingArt(selectedSurvivor.id, newArt.id)
+        .then(() =>
+          toast.success(SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true))
+        )
+        .catch((error: unknown) => {
+          setFightingArts(oldArts)
+          setSurvivors(
+            survivors.map((s) =>
+              s.id === selectedSurvivor.id
+                ? { ...s, fighting_arts: oldArts }
+                : s
+            )
+          )
+
+          console.error('Fighting Art Add Error:', error)
+          toast.error(ERROR_MESSAGE())
+        })
+    } catch (error) {
+      console.error('Fighting Art Create Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setCreatingRegular(false)
+    }
+  }, [
+    search,
+    creatingRegular,
+    selectedSurvivor,
+    fightingArts,
+    setSurvivors,
+    survivors,
+    toast
+  ])
+
+  /**
+   * Handle Create Custom Secret Fighting Art
+   *
+   * Creates a new custom secret fighting art with the current search term,
+   * adds it to the available arts, then assigns it to the survivor.
+   */
+  const handleCreateSecret = useCallback(async () => {
+    const name = search.trim()
+    if (!name || creatingSecret || !selectedSurvivor?.id) return
+
+    setCreatingSecret(true)
+
+    try {
+      const newArt = await addSecretFightingArt({
+        custom: true,
+        secret_fighting_art_name: name
+      })
+
+      setAvailableSecretFightingArts((prev) => ({
+        ...prev,
+        [newArt.id]: newArt
+      }))
+      setSearch('')
+      setAddOpen(false)
+      toast.success(SECRET_FIGHTING_ART_CREATED_MESSAGE())
+
+      // Add to survivor immediately
+      const optimisticItem: SecretFightingArtItem = {
+        id: newArt.id,
+        secret_fighting_art_name: newArt.secret_fighting_art_name
+      }
+      const oldArts = [...secretFightingArts]
+
+      setSecretFightingArts([...secretFightingArts, optimisticItem])
+      setSurvivors(
+        survivors.map((s) =>
+          s.id === selectedSurvivor.id
+            ? {
+                ...s,
+                secret_fighting_arts: [
+                  ...s.secret_fighting_arts,
+                  optimisticItem
+                ]
+              }
+            : s
+        )
+      )
+
+      addSurvivorSecretFightingArt(selectedSurvivor.id, newArt.id)
+        .then(() =>
+          toast.success(SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true))
+        )
+        .catch((error: unknown) => {
+          setSecretFightingArts(oldArts)
+          setSurvivors(
+            survivors.map((s) =>
+              s.id === selectedSurvivor.id
+                ? { ...s, secret_fighting_arts: oldArts }
+                : s
+            )
+          )
+
+          console.error('Secret Fighting Art Add Error:', error)
+          toast.error(ERROR_MESSAGE())
+        })
+    } catch (error) {
+      console.error('Secret Fighting Art Create Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setCreatingSecret(false)
+    }
+  }, [
+    search,
+    creatingSecret,
+    selectedSurvivor,
+    secretFightingArts,
+    setSurvivors,
+    survivors,
+    toast
+  ])
+
   if (selectedSettlement?.campaign_type === 'SQUIRES_OF_THE_CITADEL')
     return <></>
 
@@ -445,10 +610,45 @@ export function FightingArtsCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search fighting arts..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search fighting arts..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No fighting arts found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <div className="flex flex-col gap-1">
+                        {!isAtRegularLimit && (
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                            disabled={creatingRegular}
+                            onClick={handleCreateRegular}>
+                            <Plus className="h-4 w-4" />
+                            {creatingRegular
+                              ? 'Creating...'
+                              : `Create Fighting Art "${search.trim()}"`}
+                          </button>
+                        )}
+                        {!isAtSecretLimit && (
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                            disabled={creatingSecret}
+                            onClick={handleCreateSecret}>
+                            <Plus className="h-4 w-4" />
+                            {creatingSecret
+                              ? 'Creating...'
+                              : `Create Secret Fighting Art "${search.trim()}"`}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      'No fighting arts found.'
+                    )}
+                  </CommandEmpty>
                   {!isAtRegularLimit && (
                     <CommandGroup heading="Fighting Arts">
                       {selectableRegularArts.map((art) => (
@@ -457,8 +657,26 @@ export function FightingArtsCard({
                           value={art.fighting_art_name}
                           onSelect={() => handleAdd(art.id, false)}>
                           {art.fighting_art_name}
+                          {art.custom && (
+                            <Badge
+                              variant="outline"
+                              className="ml-auto text-xs">
+                              Custom
+                            </Badge>
+                          )}
                         </CommandItem>
                       ))}
+                      {search.trim() && !exactRegularMatch && (
+                        <CommandItem
+                          value={`__create_regular__${search.trim()}`}
+                          onSelect={handleCreateRegular}
+                          disabled={creatingRegular}>
+                          <Plus className="h-4 w-4" />
+                          {creatingRegular
+                            ? 'Creating...'
+                            : `Create "${search.trim()}"`}
+                        </CommandItem>
+                      )}
                     </CommandGroup>
                   )}
                   <CommandSeparator />
@@ -470,8 +688,26 @@ export function FightingArtsCard({
                           value={art.secret_fighting_art_name}
                           onSelect={() => handleAdd(art.id, true)}>
                           {art.secret_fighting_art_name}
+                          {art.custom && (
+                            <Badge
+                              variant="outline"
+                              className="ml-auto text-xs">
+                              Custom
+                            </Badge>
+                          )}
                         </CommandItem>
                       ))}
+                      {search.trim() && !exactSecretMatch && (
+                        <CommandItem
+                          value={`__create_secret__${search.trim()}`}
+                          onSelect={handleCreateSecret}
+                          disabled={creatingSecret}>
+                          <Plus className="h-4 w-4" />
+                          {creatingSecret
+                            ? 'Creating...'
+                            : `Create "${search.trim()}"`}
+                        </CommandItem>
+                      )}
                     </CommandGroup>
                   )}
                 </CommandList>

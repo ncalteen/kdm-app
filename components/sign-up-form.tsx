@@ -30,6 +30,7 @@ export function SignUpForm({
   ...props
 }: ComponentPropsWithoutRef<'div'>) {
   const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [repeatPassword, setRepeatPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -53,13 +54,39 @@ export function SignUpForm({
     setIsLoading(true)
     setError(null)
 
+    // Verify that the password and repeat password fields match.
     if (password !== repeatPassword) {
       setError('Passwords do not match')
       setIsLoading(false)
       return
     }
 
+    // Verify the username matches the allowed pattern (alphanumeric and
+    // underscores, 3-20 characters).
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      setError(
+        'Username must be 3-20 characters and can only contain letters, numbers, and underscores'
+      )
+      setIsLoading(false)
+      return
+    }
+
     try {
+      // Verify the username is not already taken via RPC (works for
+      // unauthenticated users, unlike a direct table query blocked by RLS).
+      const { data: isAvailable, error: usernameError } = await supabase.rpc(
+        'check_username_available',
+        { desired_username: username }
+      )
+
+      if (usernameError) throw usernameError
+
+      if (!isAvailable) {
+        setError('Username is already in use')
+        setIsLoading(false)
+        return
+      }
+
       // Sign up the user with Supabase Auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -70,6 +97,19 @@ export function SignUpForm({
       })
       if (signUpError) throw signUpError
       if (!data.user) throw new Error('User creation failed')
+
+      // Initialize user settings via RPC. The user is not yet authenticated
+      // (email confirmation pending), so a direct insert would be blocked by
+      // RLS. The SECURITY DEFINER function handles this safely.
+      const { error: settingsError } = await supabase.rpc(
+        'initialize_user_settings',
+        { p_user_id: data.user.id, p_username: username }
+      )
+
+      if (settingsError)
+        router.push(
+          `/auth/error?error=${encodeURIComponent(settingsError.message)}`
+        )
 
       router.push('/auth/sign-up-success')
     } catch (error: unknown) {
@@ -94,10 +134,21 @@ export function SignUpForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="user@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="user"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">

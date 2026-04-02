@@ -28,16 +28,16 @@ export async function getKnowledges(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('knowledge')
-      .select('id, knowledge_name, philosophy_id')
+      .select('id, custom, knowledge_name, philosophy_id')
       .eq('custom', false),
     supabase
       .from('knowledge')
-      .select('id, knowledge_name, philosophy_id')
+      .select('id, custom, knowledge_name, philosophy_id')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('knowledge_shared_user')
-      .select('knowledge(id, knowledge_name, philosophy_id)')
+      .select('knowledge(id, custom, knowledge_name, philosophy_id)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -64,14 +64,28 @@ export async function getKnowledges(): Promise<{
  * @returns Inserted Knowledge
  */
 export async function addKnowledge(
-  knowledge: Omit<TablesInsert<'knowledge'>, 'id' | 'created_at' | 'updated_at'>
+  knowledge: Omit<
+    TablesInsert<'knowledge'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<KnowledgeDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (knowledge.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('knowledge')
-    .insert(knowledge)
-    .select('id, knowledge_name, philosophy_id')
+    .insert({
+      ...knowledge,
+      ...(knowledge.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, knowledge_name, philosophy_id')
     .single()
 
   if (error) throw new Error(`Error Adding Knowledge: ${error.message}`)

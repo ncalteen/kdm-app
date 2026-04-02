@@ -28,16 +28,16 @@ export async function getGear(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('gear')
-      .select('id, gear_name, location_id')
+      .select('id, custom, gear_name, location_id')
       .eq('custom', false),
     supabase
       .from('gear')
-      .select('id, gear_name, location_id')
+      .select('id, custom, gear_name, location_id')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('gear_shared_user')
-      .select('gear(id, gear_name, location_id)')
+      .select('gear(id, custom, gear_name, location_id)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -64,14 +64,28 @@ export async function getGear(): Promise<{
  * @returns Inserted Gear
  */
 export async function addGear(
-  gear: Omit<TablesInsert<'gear'>, 'id' | 'created_at' | 'updated_at'>
+  gear: Omit<
+    TablesInsert<'gear'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<GearDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (gear.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('gear')
-    .insert(gear)
-    .select('id, gear_name, location_id')
+    .insert({
+      ...gear,
+      ...(gear.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, gear_name, location_id')
     .single()
 
   if (error) throw new Error(`Error Adding Gear: ${error.message}`)
@@ -112,4 +126,38 @@ export async function removeGear(id: string): Promise<void> {
   const { error } = await supabase.from('gear').delete().eq('id', id)
 
   if (error) throw new Error(`Error Removing Gear: ${error.message}`)
+}
+
+/**
+ * Get Custom Gear
+ *
+ * Gets only the custom gear that the user has created.
+ *
+ * @returns Custom Gear
+ */
+export async function getCustomGear(): Promise<{
+  [key: string]: GearDetail
+}> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('gear')
+    .select('id, custom, gear_name, location_id')
+    .eq('custom', true)
+    .eq('user_id', user.id)
+
+  if (error) throw new Error(`Error Fetching Custom Gear: ${error.message}`)
+
+  const gearMap: { [key: string]: GearDetail } = {}
+  for (const g of data ?? []) gearMap[g.id] = g
+
+  return gearMap
 }

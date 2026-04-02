@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -17,26 +18,20 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getInnovations } from '@/lib/dal/innovation'
+import { addInnovation, getInnovations } from '@/lib/dal/innovation'
 import {
   addSettlementInnovations,
   removeSettlementInnovation
 } from '@/lib/dal/settlement-innovation'
 import {
   ERROR_MESSAGE,
+  INNOVATION_CREATED_MESSAGE,
   INNOVATION_REMOVED_MESSAGE,
   INNOVATION_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { InnovationDetail, SettlementDetail } from '@/lib/types'
-import { LightbulbIcon, PlusIcon, TrashIcon } from 'lucide-react'
-import {
-  ReactElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react'
+import { LightbulbIcon, Plus, PlusIcon, TrashIcon } from 'lucide-react'
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /** Settlement innovation item with junction table and innovation details */
 type InnovationItem = {
@@ -73,7 +68,7 @@ export function InnovationsCard({
 }: InnovationsCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const settlementIdRef = useRef<string | undefined>(undefined)
+  const [prevSettlement, setPrevSettlement] = useState(selectedSettlement)
 
   const [availableInnovations, setAvailableInnovations] = useState<{
     [key: string]: InnovationDetail
@@ -82,9 +77,11 @@ export function InnovationsCard({
     selectedSettlement?.innovations ?? []
   )
   const [addOpen, setAddOpen] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
 
-  if (settlementIdRef.current !== selectedSettlement?.id) {
-    settlementIdRef.current = selectedSettlement?.id
+  if (prevSettlement !== selectedSettlement) {
+    setPrevSettlement(selectedSettlement)
     setInnovations(selectedSettlement?.innovations ?? [])
   }
 
@@ -212,6 +209,83 @@ export function InnovationsCard({
     [innovations, selectedSettlement, setSelectedSettlement, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availableInnovations).some(
+    (i) => i.innovation_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Innovation
+   */
+  const handleCreate = useCallback(async () => {
+    const name = search.trim()
+    if (!name || creating || !selectedSettlement) return
+
+    setCreating(true)
+
+    try {
+      const newInnovation = await addInnovation({
+        custom: true,
+        innovation_name: name
+      })
+
+      setAvailableInnovations((prev) => ({
+        ...prev,
+        [newInnovation.id]: newInnovation
+      }))
+
+      setSearch('')
+      setAddOpen(false)
+      toast.success(INNOVATION_CREATED_MESSAGE())
+
+      // Add to settlement immediately
+      const optimisticItem: InnovationItem = {
+        id: `temp-${Date.now()}`,
+        innovation_id: newInnovation.id,
+        innovation_name: newInnovation.innovation_name
+      }
+      const oldInnovations = [...innovations]
+
+      setInnovations([...innovations, optimisticItem])
+
+      addSettlementInnovations([newInnovation.id], selectedSettlement.id)
+        .then((createdInnovations) => {
+          const hydratedItem = createdInnovations[0] ?? optimisticItem
+
+          setInnovations((prev) =>
+            prev.map((item) =>
+              item.id === optimisticItem.id ? hydratedItem : item
+            )
+          )
+
+          toast.success(INNOVATION_UPDATED_MESSAGE())
+
+          setSelectedSettlement({
+            ...selectedSettlement,
+            innovations: [...oldInnovations, hydratedItem]
+          })
+        })
+        .catch((error: unknown) => {
+          setInnovations(oldInnovations)
+
+          console.error('Innovation Add Error:', error)
+          toast.error(ERROR_MESSAGE())
+        })
+    } catch (error) {
+      console.error('Innovation Create Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setCreating(false)
+    }
+  }, [
+    search,
+    creating,
+    innovations,
+    selectedSettlement,
+    setSelectedSettlement,
+    toast
+  ])
+
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -229,10 +303,27 @@ export function InnovationsCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search innovations..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search innovations..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No innovations found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        disabled={creating}
+                        onClick={handleCreate}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </button>
+                    ) : (
+                      'No innovations found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {Object.values(availableInnovations)
                       .filter(
@@ -247,8 +338,24 @@ export function InnovationsCard({
                           value={innovation.innovation_name}
                           onSelect={() => handleAdd(innovation.id)}>
                           {innovation.innovation_name}
+                          {innovation.custom && (
+                            <Badge
+                              variant="outline"
+                              className="ml-auto text-xs">
+                              Custom
+                            </Badge>
+                          )}
                         </CommandItem>
                       ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={handleCreate}
+                        disabled={creating}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>

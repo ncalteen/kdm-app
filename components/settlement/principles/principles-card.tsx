@@ -1,6 +1,8 @@
 'use client'
 
+import { CreateCustomPrincipleDialog } from '@/components/settlement/principles/create-custom-principle-dialog'
 import { PrincipleItem } from '@/components/settlement/principles/principle-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -19,7 +21,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getPrinciples } from '@/lib/dal/principle'
+import { addPrinciple, getPrinciples } from '@/lib/dal/principle'
 import {
   addSettlementPrinciples,
   removeSettlementPrinciple,
@@ -27,12 +29,13 @@ import {
 } from '@/lib/dal/settlement-principle'
 import {
   ERROR_MESSAGE,
+  PRINCIPLE_CREATED_MESSAGE,
   PRINCIPLE_OPTION_SELECTED_MESSAGE,
   PRINCIPLE_REMOVED_MESSAGE,
   PRINCIPLE_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { PrincipleDetail, SettlementDetail } from '@/lib/types'
-import { PlusIcon, StampIcon } from 'lucide-react'
+import { Plus, PlusIcon, StampIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
@@ -66,6 +69,10 @@ export function PrinciplesCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   // Available principles for the select dropdown (fetched once per settlement).
   const [availablePrinciples, setAvailablePrinciples] = useState<{
@@ -317,6 +324,97 @@ export function PrinciplesCard({
     [selectedSettlement, setSelectedSettlement, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availablePrinciples).some(
+    (p) => p.principle_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Principle
+   */
+  const handleCreate = useCallback(
+    async (data: {
+      principle_name: string
+      option_1_name: string
+      option_2_name: string
+    }) => {
+      if (creating || !selectedSettlement) return
+
+      setCreating(true)
+
+      try {
+        const newPrinciple = await addPrinciple({
+          custom: true,
+          principle_name: data.principle_name,
+          option_1_name: data.option_1_name,
+          option_2_name: data.option_2_name,
+          campaign_types: []
+        })
+
+        setAvailablePrinciples((prev) => ({
+          ...prev,
+          [newPrinciple.id]: newPrinciple
+        }))
+        setCreateDialogOpen(false)
+        setSearch('')
+        setAddOpen(false)
+        toast.success(PRINCIPLE_CREATED_MESSAGE())
+
+        // Add to settlement immediately
+        const tempId = `temp-${Date.now()}`
+        const optimisticRow: SettlementDetail['principles'][0] = {
+          id: tempId,
+          option_1_name: newPrinciple.option_1_name,
+          option_1_selected: false,
+          option_2_name: newPrinciple.option_2_name,
+          option_2_selected: false,
+          principle_id: newPrinciple.id,
+          principle_name: newPrinciple.principle_name
+        }
+        const updatedPrinciples = [
+          ...(selectedSettlement.principles ?? []),
+          optimisticRow
+        ]
+
+        setSelectedSettlement({
+          ...selectedSettlement,
+          principles: updatedPrinciples
+        })
+
+        addSettlementPrinciples([newPrinciple.id], selectedSettlement.id)
+          .then((rows) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              principles: updatedPrinciples.map((p) =>
+                p.id === tempId ? { ...p, id: rows[0].id } : p
+              )
+            })
+            toast.success(PRINCIPLE_UPDATED_MESSAGE(true))
+          })
+          .catch((err: unknown) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              principles: selectedSettlement.principles
+            })
+            console.error('Principle Add Error:', err)
+            toast.error(ERROR_MESSAGE())
+          })
+      } catch (error) {
+        console.error('Principle Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
+      }
+    },
+    [creating, selectedSettlement, setSelectedSettlement, toast]
+  )
+
+  /** Open the create dialog with the current search term pre-filled */
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
+  }, [])
+
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -335,10 +433,26 @@ export function PrinciplesCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search principles..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search principles..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No principles found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        onClick={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search.trim()}&quot;
+                      </button>
+                    ) : (
+                      'No principles found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {selectablePrinciples.map((principle) => (
                       <CommandItem
@@ -346,8 +460,21 @@ export function PrinciplesCard({
                         value={principle.principle_name}
                         onSelect={() => handleAdd(principle.id)}>
                         {principle.principle_name}
+                        {principle.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search.trim()}&quot;
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -389,6 +516,15 @@ export function PrinciplesCard({
           </div>
         </div>
       </CardContent>
+
+      <CreateCustomPrincipleDialog
+        key={dialogKey}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreate={handleCreate}
+        creating={creating}
+        initialName={search.trim()}
+      />
     </Card>
   )
 }

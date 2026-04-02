@@ -111,6 +111,14 @@ export const COLLECTIVE_COGNITION_REWARD_NO_TARGET_ERROR_MESSAGE = () =>
   'A reward must have a collective cognition target.'
 
 /**
+ * Collective Cognition Reward Created
+ *
+ * @returns Collective Cognition Reward Created Message
+ */
+export const COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE = () =>
+  'A new collective cognition reward is forged.'
+
+/**
  * Collective Cognition Reward Removed
  *
  * @returns Collective Cognition Reward Removed Message
@@ -199,6 +207,32 @@ export const CUSTOM_MONSTER_CREATED_MESSAGE = (monsterType: MonsterType) =>
     : 'A new quarry stalks the land.'
 
 /**
+ * Character Created
+ *
+ * @returns Character Created Message
+ */
+export const CHARACTER_CREATED_MESSAGE = () =>
+  'A new character emerges from the shadows.'
+
+/**
+ * Character Deleted
+ *
+ * @param characterName Character Name
+ * @returns Character Deleted Message
+ */
+export const CHARACTER_DELETED_MESSAGE = (characterName?: string) =>
+  `${characterName ?? 'Character'} fades back into the darkness.`
+
+/**
+ * Character Updated
+ *
+ * @param characterName Character Name
+ * @returns Character Updated Message
+ */
+export const CHARACTER_UPDATED_MESSAGE = (characterName?: string) =>
+  `${characterName ?? 'Character'} has been reshaped by the lantern's light.`
+
+/**
  * Custom Monster Deleted
  *
  * @param monsterName Monster Name
@@ -271,6 +305,54 @@ export const ERROR_MESSAGE = () =>
   'The darkness swallows your words. Please try again.'
 
 /**
+ * Disorder Created
+ *
+ * @returns Disorder Created Message
+ */
+export const DISORDER_CREATED_MESSAGE = () =>
+  'A new affliction takes root in the darkness.'
+
+/**
+ * Disorder Removed
+ *
+ * @returns Disorder Removed Message
+ */
+export const DISORDER_REMOVED_MESSAGE = () =>
+  'The affliction fades from the settlement.'
+
+/**
+ * Disorder Updated
+ *
+ * @returns Disorder Updated Message
+ */
+export const DISORDER_UPDATED_MESSAGE = () =>
+  'The affliction has been rewritten.'
+
+/**
+ * Fighting Art Created
+ *
+ * @returns Fighting Art Created Message
+ */
+export const FIGHTING_ART_CREATED_MESSAGE = () =>
+  'A new fighting art is mastered against the odds.'
+
+/**
+ * Fighting Art Removed
+ *
+ * @returns Fighting Art Removed Message
+ */
+export const FIGHTING_ART_REMOVED_MESSAGE = () =>
+  'The fighting art is lost to the darkness.'
+
+/**
+ * Fighting Art Updated
+ *
+ * @returns Fighting Art Updated Message
+ */
+export const FIGHTING_ART_UPDATED_MESSAGE = () =>
+  'The fighting art has been refined.'
+
+/**
  * Fighting Arts Max Exceeded Error
  *
  * @param survivorType Survivor Type
@@ -289,6 +371,14 @@ export const FIGHTING_ARTS_MAX_EXCEEDED_ERROR_MESSAGE = (
  * @returns Gear Removed Message
  */
 export const GEAR_REMOVED_MESSAGE = () => 'Gear has been archived.'
+
+/**
+ * Gear Created
+ *
+ * @returns Gear Created Message
+ */
+export const GEAR_CREATED_MESSAGE = () =>
+  'New gear is crafted from the remnants of the hunt.'
 
 /**
  * Gear Updated
@@ -374,6 +464,14 @@ export const HUNT_XP_UPDATED_MESSAGE = () =>
 export const INNOVATION_REMOVED_MESSAGE = () => 'The innovation has been lost.'
 
 /**
+ * Innovation Created
+ *
+ * @returns Innovation Created Message
+ */
+export const INNOVATION_CREATED_MESSAGE = () =>
+  'A spark of ingenuity illuminates the settlement.'
+
+/**
  * Innovation Updated
  *
  * @param index Innovation Index
@@ -447,6 +545,14 @@ export const LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE = (
 export const LOCATION_REMOVED_MESSAGE = () => 'The location has been destroyed.'
 
 /**
+ * Location Created
+ *
+ * @returns Location Created Message
+ */
+export const LOCATION_CREATED_MESSAGE = () =>
+  'A new location is discovered in the darkness.'
+
+/**
  * Location Unlocked
  *
  * @param unlocked Location Unlocked State
@@ -503,6 +609,14 @@ export const MILESTONE_COMPLETED_MESSAGE = (complete: boolean) =>
   complete
     ? 'Milestone achieved - the settlement persists through the darkness.'
     : 'Milestone status updated.'
+
+/**
+ * Milestone Created
+ *
+ * @returns Milestone Created Message
+ */
+export const MILESTONE_CREATED_MESSAGE = () =>
+  'A new milestone looms on the horizon.'
 
 /**
  * Milestone Missing Event Error
@@ -936,6 +1050,14 @@ export const NEMESIS_UPDATED_MESSAGE = () =>
 export const PATTERN_REMOVED_MESSAGE = () => 'The pattern has been lost.'
 
 /**
+ * Pattern Created
+ *
+ * @returns Pattern Created Message
+ */
+export const PATTERN_CREATED_MESSAGE = () =>
+  'A new pattern is woven from scattered knowledge.'
+
+/**
  * Pattern Updated
  *
  * @param index Pattern Index
@@ -984,6 +1106,14 @@ export const PHILOSOPHY_UPDATED_MESSAGE = () => 'Philosophy etched into memory.'
  */
 export const PRINCIPLE_OPTION_SELECTED_MESSAGE = (optionName: string) =>
   `The settlement has chosen ${optionName}.`
+
+/**
+ * Principle Created
+ *
+ * @returns Principle Created Message
+ */
+export const PRINCIPLE_CREATED_MESSAGE = () =>
+  'A new principle guides the settlement.'
 
 /**
  * Principle Removed
@@ -1046,6 +1176,14 @@ export const QUARRY_UPDATED_MESSAGE = () => 'The quarry has been tracked.'
 export const RESOURCE_REMOVED_MESSAGE = () => 'The resource has been consumed.'
 
 /**
+ * Resource Created
+ *
+ * @returns Resource Created Message
+ */
+export const RESOURCE_CREATED_MESSAGE = () =>
+  'A new resource is discovered in the darkness.'
+
+/**
  * Resource Updated
  *
  * @param index Resource Index
@@ -1055,6 +1193,28 @@ export const RESOURCE_UPDATED_MESSAGE = (index?: number) =>
   index !== undefined
     ? 'The resource has been cataloged.'
     : 'A new resource has been gathered.'
+
+/**
+ * Neurosis Created
+ *
+ * @returns Neurosis Created Message
+ */
+export const NEUROSIS_CREATED_MESSAGE = () =>
+  'A new neurosis takes hold of the mind.'
+
+/**
+ * Neurosis Removed
+ *
+ * @returns Neurosis Removed Message
+ */
+export const NEUROSIS_REMOVED_MESSAGE = () => 'The neurosis loosens its grip.'
+
+/**
+ * Neurosis Updated
+ *
+ * @returns Neurosis Updated Message
+ */
+export const NEUROSIS_UPDATED_MESSAGE = () => 'The neurosis has shifted.'
 
 /**
  * Scout Conflict
@@ -1087,12 +1247,44 @@ export const SECRET_FIGHTING_ARTS_MAX_EXCEEDED_ERROR_MESSAGE = (
     : 'Survivors can only have 3 total Fighting Arts and Secret Fighting Arts combined.'
 
 /**
+ * Secret Fighting Art Created
+ *
+ * @returns Secret Fighting Art Created Message
+ */
+export const SECRET_FIGHTING_ART_CREATED_MESSAGE = () =>
+  'A forbidden technique is discovered.'
+
+/**
+ * Secret Fighting Art Removed
+ *
+ * @returns Secret Fighting Art Removed Message
+ */
+export const SECRET_FIGHTING_ART_REMOVED_MESSAGE = () =>
+  'The forbidden technique is forgotten.'
+
+/**
+ * Secret Fighting Art Updated
+ *
+ * @returns Secret Fighting Art Updated Message
+ */
+export const SECRET_FIGHTING_ART_UPDATED_MESSAGE = () =>
+  'The forbidden technique has been altered.'
+
+/**
  * Seed Pattern Removed
  *
  * @returns Seed Pattern Removed Message
  */
 export const SEED_PATTERN_REMOVED_MESSAGE = () =>
   'The seed pattern has been consumed by darkness.'
+
+/**
+ * Seed Pattern Created
+ *
+ * @returns Seed Pattern Created Message
+ */
+export const SEED_PATTERN_CREATED_MESSAGE = () =>
+  'A new seed pattern takes root.'
 
 /**
  * Seed Pattern Updated
@@ -2006,12 +2198,60 @@ export const SURVIVOR_WEAPON_PROFICIENCY_UPDATED_MESSAGE = () =>
   'The survivor hones their weapon proficiency.'
 
 /**
+ * Survivor Weapon Type Created
+ *
+ * @returns Survivor Weapon Type Created Message
+ */
+export const WEAPON_TYPE_CREATED_MESSAGE = () =>
+  'A new weapon type is forged from the darkness.'
+
+/**
+ * Weapon Type Removed
+ *
+ * @returns Weapon Type Removed Message
+ */
+export const WEAPON_TYPE_REMOVED_MESSAGE = () =>
+  'The weapon type is lost to the darkness.'
+
+/**
+ * Weapon Type Updated
+ *
+ * @returns Weapon Type Updated Message
+ */
+export const WEAPON_TYPE_UPDATED_MESSAGE = () =>
+  'The weapon type has been reforged.'
+
+/**
  * Survivor Weapon Type Updated
  *
  * @returns Survivor Weapon Type Updated Message
  */
 export const SURVIVOR_WEAPON_TYPE_UPDATED_MESSAGE = () =>
   'The survivor turns their focus to a new weapon.'
+
+/**
+ * Wanderer Created
+ *
+ * @returns Wanderer Created Message
+ */
+export const WANDERER_CREATED_MESSAGE = () =>
+  'A new wanderer emerges from the endless darkness.'
+
+/**
+ * Wanderer Removed
+ *
+ * @returns Wanderer Removed Message
+ */
+export const WANDERER_REMOVED_MESSAGE = () =>
+  'The wanderer vanishes into the shadows.'
+
+/**
+ * Wanderer Updated
+ *
+ * @returns Wanderer Updated Message
+ */
+export const WANDERER_UPDATED_MESSAGE = () =>
+  "The wanderer's tale has been inscribed."
 
 /**
  * Survivors Healed
@@ -2090,6 +2330,30 @@ export const TIMELINE_YEAR_COMPLETED_MESSAGE = (completed: boolean) =>
  * @returns Torment Minimum Error Message
  */
 export const TORMENT_MINIMUM_ERROR_MESSAGE = () => 'Torment cannot be negative.'
+
+/**
+ * Strain Milestone Created
+ *
+ * @returns Strain Milestone Created Message
+ */
+export const STRAIN_MILESTONE_CREATED_MESSAGE = () =>
+  'A new strain milestone emerges from the struggle.'
+
+/**
+ * Strain Milestone Removed
+ *
+ * @returns Strain Milestone Removed Message
+ */
+export const STRAIN_MILESTONE_REMOVED_MESSAGE = () =>
+  'The strain milestone crumbles into dust.'
+
+/**
+ * Strain Milestone Updated
+ *
+ * @returns Strain Milestone Updated Message
+ */
+export const STRAIN_MILESTONE_UPDATED_MESSAGE = () =>
+  'The strain milestone shifts under pressure.'
 
 /**
  * Trait Created

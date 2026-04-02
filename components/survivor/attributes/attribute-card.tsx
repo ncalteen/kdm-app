@@ -30,7 +30,7 @@ import {
   ShowdownDetail,
   SurvivorDetail
 } from '@/lib/types'
-import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /** Token name mapping from UI names to DB field names */
 const TOKEN_FIELD_MAP: Record<string, string> = {
@@ -95,7 +95,7 @@ export function AttributeCard({
 }: AttributeCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | null>(null)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [movement, setMovement] = useState(selectedSurvivor?.movement ?? 1)
   const [accuracy, setAccuracy] = useState(selectedSurvivor?.accuracy ?? 0)
   const [strength, setStrength] = useState(selectedSurvivor?.strength ?? 0)
@@ -105,8 +105,8 @@ export function AttributeCard({
   const [lumi, setLumi] = useState(selectedSurvivor?.lumi ?? 0)
 
   // Sync local state when the selected survivor changes
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id ?? null
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setMovement(selectedSurvivor?.movement ?? 1)
     setAccuracy(selectedSurvivor?.accuracy ?? 0)
     setStrength(selectedSurvivor?.strength ?? 0)

@@ -31,19 +31,19 @@ export async function getCollectiveCognitionRewards(): Promise<{
     // Non-custom rewards (available to all users)
     supabase
       .from('collective_cognition_reward')
-      .select('id, reward_name, collective_cognition')
+      .select('id, custom, reward_name, collective_cognition')
       .eq('custom', false),
     // Custom rewards created by the user
     supabase
       .from('collective_cognition_reward')
-      .select('id, reward_name, collective_cognition')
+      .select('id, custom, reward_name, collective_cognition')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom rewards shared with the user
     supabase
       .from('collective_cognition_reward_shared_user')
       .select(
-        'collective_cognition_reward(id, reward_name, collective_cognition)'
+        'collective_cognition_reward(id, custom, reward_name, collective_cognition)'
       )
       .eq('shared_user_id', user.id)
   ])
@@ -119,15 +119,26 @@ export async function getCollectiveCognitionRewardIds(
 export async function addCollectiveCognitionReward(
   reward: Omit<
     TablesInsert<'collective_cognition_reward'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<CollectiveCognitionRewardDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (reward.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('collective_cognition_reward')
-    .insert(reward)
-    .select('id, collective_cognition, reward_name')
+    .insert({
+      ...reward,
+      ...(reward.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, collective_cognition, reward_name')
     .single()
 
   if (error)

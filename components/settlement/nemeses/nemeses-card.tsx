@@ -20,12 +20,19 @@ import {
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { getNemeses } from '@/lib/dal/nemesis'
+import { getNemesisLocationIds } from '@/lib/dal/nemesis-location'
+import { getNemesisTimelineYears } from '@/lib/dal/nemesis-timeline-year'
+import { addSettlementLocations } from '@/lib/dal/settlement-location'
 import {
   addSettlementNemeses,
   removeSettlementNemesis,
   updateSettlementNemesis
 } from '@/lib/dal/settlement-nemesis'
-import { MonsterNode } from '@/lib/enums'
+import {
+  addSettlementTimelineYear,
+  saveSettlementTimelineYearEntry
+} from '@/lib/dal/settlement-timeline-year'
+import { CampaignType, MonsterNode } from '@/lib/enums'
 import {
   ERROR_MESSAGE,
   NEMESIS_ADDED_MESSAGE,
@@ -190,23 +197,120 @@ export function NemesesCard({
       })
 
       addSettlementNemeses([nemesisId], selectedSettlement?.id)
-        .then((row) => {
+        .then(async (row) => {
           // Replace the placeholder with the real row from the DB.
+          const finalNemeses = sortNemeses(
+            updatedNemeses.map((n) =>
+              n.id === tempId
+                ? {
+                    ...n,
+                    available_levels: row[0].available_levels,
+                    id: row[0].id,
+                    node: nemesisInfo.node
+                  }
+                : n
+            )
+          )
+
           setSelectedSettlement({
             ...selectedSettlement,
-            nemeses: sortNemeses(
-              updatedNemeses.map((n) =>
-                n.id === tempId
-                  ? {
-                      ...n,
-                      available_levels: row[0].available_levels,
-                      id: row[0].id,
-                      node: nemesisInfo.node
-                    }
-                  : n
-              )
-            )
+            nemeses: finalNemeses
           })
+
+          // Add related locations and timeline events
+          try {
+            const campaignType =
+              CampaignType[
+                selectedSettlement.campaign_type as keyof typeof CampaignType
+              ]
+
+            const [locationIds, timelineYears] = await Promise.all([
+              getNemesisLocationIds(nemesisId),
+              getNemesisTimelineYears(nemesisId, campaignType)
+            ])
+
+            let updatedSettlement = {
+              ...selectedSettlement,
+              nemeses: finalNemeses
+            }
+
+            // Add locations not already present
+            if (locationIds.length > 0) {
+              const existingLocIds = new Set(
+                selectedSettlement.locations.map((l) => l.location_id)
+              )
+              const newLocIds = locationIds.filter(
+                (id) => !existingLocIds.has(id)
+              )
+              if (newLocIds.length > 0) {
+                const inserted = await addSettlementLocations(
+                  newLocIds,
+                  selectedSettlement.id
+                )
+                updatedSettlement = {
+                  ...updatedSettlement,
+                  locations: [
+                    ...updatedSettlement.locations,
+                    ...inserted.map((ins, i) => ({
+                      id: ins.id,
+                      location_id: newLocIds[i],
+                      location_name: ins.location_name,
+                      unlocked: false
+                    }))
+                  ]
+                }
+              }
+            }
+
+            // Add timeline entries to existing years or create new ones
+            if (timelineYears.length > 0) {
+              const updatedTimeline = { ...updatedSettlement.timeline }
+
+              for (const ty of timelineYears) {
+                const existingYear = updatedTimeline[ty.year_number]
+                if (existingYear) {
+                  const existingEntries = new Set(existingYear.entries)
+                  const newEntries = ty.entries.filter(
+                    (e) => !existingEntries.has(e)
+                  )
+                  for (const entry of newEntries) {
+                    const updated = await saveSettlementTimelineYearEntry(
+                      existingYear.id,
+                      entry,
+                      existingYear.entries.length
+                    )
+                    existingYear.entries = updated
+                  }
+                } else {
+                  const yearId = await addSettlementTimelineYear(
+                    selectedSettlement.id,
+                    ty.year_number
+                  )
+                  for (let i = 0; i < ty.entries.length; i++) {
+                    const updated = await saveSettlementTimelineYearEntry(
+                      yearId,
+                      ty.entries[i],
+                      i
+                    )
+                    updatedTimeline[ty.year_number] = {
+                      id: yearId,
+                      completed: false,
+                      entries: updated
+                    }
+                  }
+                }
+              }
+
+              updatedSettlement = {
+                ...updatedSettlement,
+                timeline: updatedTimeline
+              }
+            }
+
+            setSelectedSettlement(updatedSettlement)
+          } catch (relatedErr) {
+            console.error('Nemesis Related Data Add Error:', relatedErr)
+          }
 
           toast.success(NEMESIS_ADDED_MESSAGE())
         })

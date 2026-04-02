@@ -1,5 +1,32 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { CollectiveCognitionRewardDetail } from '@/lib/types'
+
+/**
+ * Get Quarry CC Reward Junction IDs
+ *
+ * Fetches the quarry_collective_cognition_reward junction table row IDs.
+ *
+ * @param quarryId Quarry ID
+ * @returns Junction Row IDs
+ */
+export async function getQuarryCollectiveCognitionRewardJunctionIds(
+  quarryId: string
+): Promise<string[]> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry_collective_cognition_reward')
+    .select('id')
+    .eq('quarry_id', quarryId)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Quarry CC Reward Junction IDs: ${error.message}`
+    )
+
+  return (data ?? []).map((item) => item.id)
+}
 
 /**
  * Get Quarry Collective Cognition Reward IDs
@@ -30,6 +57,50 @@ export async function getQuarryCollectiveCognitionRewardIds(
   if (!data) throw new Error('Quarry Collective Cognition Reward(s) Not Found')
 
   return data.map((reward) => reward.collective_cognition_reward_id)
+}
+
+/**
+ * Get Quarry Collective Cognition Rewards
+ *
+ * Fetches collective cognition rewards associated with a specific quarry
+ * from the quarry_collective_cognition_reward table, including reward details.
+ *
+ * @param quarryId Quarry ID
+ * @returns Quarry Collective Cognition Rewards with details
+ */
+export async function getQuarryCollectiveCognitionRewards(
+  quarryId: string | null | undefined
+): Promise<CollectiveCognitionRewardDetail[]> {
+  if (!quarryId) throw new Error('Required: Quarry ID')
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry_collective_cognition_reward')
+    .select(
+      'collective_cognition_reward:collective_cognition_reward_id (collective_cognition, custom, id, reward_name)'
+    )
+    .eq('quarry_id', quarryId)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Quarry Collective Cognition Rewards: ${error.message}`
+    )
+
+  if (!data) throw new Error('Quarry Collective Cognition Reward(s) Not Found')
+
+  return (
+    data as unknown as {
+      collective_cognition_reward: {
+        collective_cognition: number
+        custom: boolean
+        id: string
+        reward_name: string
+      }
+    }[]
+  ).map((item) => ({
+    ...item.collective_cognition_reward
+  }))
 }
 
 /**

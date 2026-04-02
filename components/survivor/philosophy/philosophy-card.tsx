@@ -39,7 +39,7 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { MouseEvent, ReactElement, useCallback, useRef, useState } from 'react'
+import { MouseEvent, ReactElement, useCallback, useState } from 'react'
 
 /**
  * Philosophy Card Properties
@@ -150,7 +150,7 @@ export function PhilosophyCard({
 }: PhilosophyCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [neurosis, setNeurosis] = useState<{
     id: string
@@ -173,9 +173,9 @@ export function PhilosophyCard({
     selectedSurvivor?.philosophy_rank ?? 0
   )
 
-  // Reset local state when survivor changes (different ID)
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  // Reset local state when survivor changes
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
 
     setNeurosis(selectedSurvivor?.neurosis ?? null)
     setTenetKnowledge({

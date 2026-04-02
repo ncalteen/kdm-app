@@ -1,6 +1,7 @@
 'use client'
 
 import { LocationItem } from '@/components/settlement/locations/location-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -18,7 +19,7 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getLocations } from '@/lib/dal/location'
+import { addLocation, getLocations } from '@/lib/dal/location'
 import {
   addSettlementLocations,
   removeSettlementLocation,
@@ -26,12 +27,13 @@ import {
 } from '@/lib/dal/settlement-location'
 import {
   ERROR_MESSAGE,
+  LOCATION_CREATED_MESSAGE,
   LOCATION_REMOVED_MESSAGE,
   LOCATION_UNLOCKED_MESSAGE,
   LOCATION_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { LocationDetail, SettlementDetail } from '@/lib/types'
-import { HouseIcon, PlusIcon } from 'lucide-react'
+import { HouseIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
@@ -65,6 +67,8 @@ export function LocationsCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
 
   // Available locations for the select dropdown (fetched once per settlement).
   const [availableLocations, setAvailableLocations] = useState<{
@@ -287,6 +291,79 @@ export function LocationsCard({
     [selectedSettlement, setSelectedSettlement, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availableLocations).some(
+    (l) => l.location_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Location
+   *
+   * Creates a new custom location with the current search term, adds it to
+   * available locations, then links it to the settlement.
+   */
+  const handleCreate = useCallback(async () => {
+    const name = search.trim()
+    if (!name || creating || !selectedSettlement) return
+
+    setCreating(true)
+
+    try {
+      const newLocation = await addLocation({
+        custom: true,
+        location_name: name
+      })
+
+      setAvailableLocations((prev) => ({
+        ...prev,
+        [newLocation.id]: newLocation
+      }))
+
+      setSearch('')
+      setAddOpen(false)
+      toast.success(LOCATION_CREATED_MESSAGE())
+
+      // Add to settlement immediately
+      const tempId = `temp-${Date.now()}`
+      const optimisticRow: SettlementDetail['locations'][0] = {
+        id: tempId,
+        location_id: newLocation.id,
+        location_name: newLocation.location_name,
+        unlocked: false
+      }
+      const updatedLocations = [...selectedSettlement.locations, optimisticRow]
+
+      setSelectedSettlement({
+        ...selectedSettlement,
+        locations: updatedLocations
+      })
+
+      addSettlementLocations([newLocation.id], selectedSettlement.id)
+        .then((row) => {
+          setSelectedSettlement({
+            ...selectedSettlement,
+            locations: updatedLocations.map((l) =>
+              l.id === tempId ? { ...l, id: row[0].id } : l
+            )
+          })
+          toast.success(LOCATION_UPDATED_MESSAGE())
+        })
+        .catch((err: unknown) => {
+          setSelectedSettlement({
+            ...selectedSettlement,
+            locations: selectedSettlement.locations
+          })
+          console.error('Location Add Error:', err)
+          toast.error(ERROR_MESSAGE())
+        })
+    } catch (error) {
+      console.error('Location Create Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setCreating(false)
+    }
+  }, [search, creating, selectedSettlement, setSelectedSettlement, toast])
+
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -305,10 +382,27 @@ export function LocationsCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search locations..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search locations..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No locations found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        disabled={creating}
+                        onClick={handleCreate}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </button>
+                    ) : (
+                      'No locations found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {selectableLocations.map((location) => (
                       <CommandItem
@@ -316,8 +410,22 @@ export function LocationsCard({
                         value={location.location_name}
                         onSelect={() => handleAdd(location.id)}>
                         {location.location_name}
+                        {location.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={handleCreate}
+                        disabled={creating}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>

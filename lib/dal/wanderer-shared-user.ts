@@ -3,73 +3,85 @@ import { createClient } from '@/lib/supabase/client'
 /**
  * Get Wanderer Shared Users
  *
- * Retrieves all users a wanderer is shared with.
+ * Retrieves all users a wanderer is shared with, including their usernames
+ * from the user_settings table.
  *
  * @param wandererId Wanderer ID
- * @returns Shared User IDs
+ * @returns Shared User IDs and Usernames
  */
 export async function getWandererSharedUsers(
   wandererId: string
-): Promise<string[]> {
+): Promise<{ shared_user_id: string; username: string }[]> {
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('wanderer_shared_user')
-    .select('shared_user_id')
+    .select('shared_user_id, user_settings!shared_user_id(username)')
     .eq('wanderer_id', wandererId)
 
   if (error)
     throw new Error(`Error Fetching Wanderer Shared Users: ${error.message}`)
 
-  return (data ?? []).map((row) => row.shared_user_id)
+  if (!data || data.length === 0) return []
+
+  return data.map((row) => ({
+    shared_user_id: row.shared_user_id,
+    username: (row.user_settings as unknown as { username: string })?.username
+  }))
 }
 
 /**
- * Add Wanderer Shared User
+ * Add Wanderer Shared Users
  *
- * Shares a wanderer with another user.
+ * Shares a wanderer with other users.
  *
  * @param wandererId Wanderer ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  * @param userId Owner User ID
  */
-export async function addWandererSharedUser(
+export async function addWandererSharedUsers(
   wandererId: string,
-  sharedUserId: string,
+  sharedUserIds: string[],
   userId: string
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
-  const { error } = await supabase.from('wanderer_shared_user').insert({
-    wanderer_id: wandererId,
-    shared_user_id: sharedUserId,
-    user_id: userId
-  })
+  const { error } = await supabase.from('wanderer_shared_user').insert(
+    sharedUserIds.map((sharedUserId) => ({
+      wanderer_id: wandererId,
+      shared_user_id: sharedUserId,
+      user_id: userId
+    }))
+  )
 
   if (error)
-    throw new Error(`Error Adding Wanderer Shared User: ${error.message}`)
+    throw new Error(`Error Adding Wanderer Shared Users: ${error.message}`)
 }
 
 /**
- * Remove Wanderer Shared User
+ * Remove Wanderer Shared Users
  *
- * Revokes sharing of a wanderer with a user.
+ * Revokes sharing of a wanderer with users.
  *
  * @param wandererId Wanderer ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  */
-export async function removeWandererSharedUser(
+export async function removeWandererSharedUsers(
   wandererId: string,
-  sharedUserId: string
+  sharedUserIds: string[]
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase
     .from('wanderer_shared_user')
     .delete()
     .eq('wanderer_id', wandererId)
-    .eq('shared_user_id', sharedUserId)
+    .in('shared_user_id', sharedUserIds)
 
   if (error)
-    throw new Error(`Error Removing Wanderer Shared User: ${error.message}`)
+    throw new Error(`Error Removing Wanderer Shared Users: ${error.message}`)
 }

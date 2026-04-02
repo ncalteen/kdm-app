@@ -28,16 +28,16 @@ export async function getInnovations(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('innovation')
-      .select('id, innovation_name')
+      .select('id, custom, innovation_name')
       .eq('custom', false),
     supabase
       .from('innovation')
-      .select('id, innovation_name')
+      .select('id, custom, innovation_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('innovation_shared_user')
-      .select('innovation(id, innovation_name)')
+      .select('innovation(id, custom, innovation_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -105,15 +105,26 @@ export async function getInnovationIds(
 export async function addInnovation(
   innovation: Omit<
     TablesInsert<'innovation'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<InnovationDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (innovation.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('innovation')
-    .insert(innovation)
-    .select('id, innovation_name')
+    .insert({
+      ...innovation,
+      ...(innovation.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, innovation_name')
     .single()
 
   if (error) throw new Error(`Error Adding Innovation: ${error.message}`)

@@ -41,7 +41,7 @@ export async function getSettlementCollectiveCognitionRewards(
       ).reward_name,
       collective_cognition: (
         item.collective_cognition_reward as unknown as {
-          collective_cognition: string
+          collective_cognition: number
         }
       ).collective_cognition
     })) ?? []
@@ -57,7 +57,9 @@ export async function getSettlementCollectiveCognitionRewards(
 export async function addSettlementCollectiveCognitionRewards(
   rewardIds: string[],
   settlementId: string | null | undefined
-): Promise<{ id: string }[]> {
+): Promise<
+  { id: string; collective_cognition: number; reward_name: string }[]
+> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   if (rewardIds.length === 0) return []
@@ -73,14 +75,28 @@ export async function addSettlementCollectiveCognitionRewards(
         unlocked: false
       }))
     )
-    .select('id')
+    .select(
+      'id, collective_cognition_reward(collective_cognition, reward_name)'
+    )
 
   if (error)
     throw new Error(
       `Error Adding Collective Cognition Rewards to Settlement: ${error.message}`
     )
 
-  return data
+  return (
+    data as unknown as {
+      id: string
+      collective_cognition_reward: {
+        collective_cognition: number
+        reward_name: string
+      }
+    }[]
+  ).map((item) => ({
+    id: item.id,
+    collective_cognition: item.collective_cognition_reward.collective_cognition,
+    reward_name: item.collective_cognition_reward.reward_name
+  }))
 }
 
 /**

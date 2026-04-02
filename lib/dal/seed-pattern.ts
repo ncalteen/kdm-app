@@ -32,18 +32,18 @@ export async function getSeedPatterns(): Promise<{
     // Non-custom seed patterns (available to all users)
     supabase
       .from('seed_pattern')
-      .select('id, seed_pattern_name')
+      .select('id, custom, seed_pattern_name')
       .eq('custom', false),
     // Custom seed patterns created by the user
     supabase
       .from('seed_pattern')
-      .select('id, seed_pattern_name')
+      .select('id, custom, seed_pattern_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom seed patterns shared with the user
     supabase
       .from('seed_pattern_shared_user')
-      .select('seed_pattern(id, seed_pattern_name)')
+      .select('seed_pattern(id, custom, seed_pattern_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -74,15 +74,26 @@ export async function getSeedPatterns(): Promise<{
 export async function addSeedPattern(
   seedPattern: Omit<
     TablesInsert<'seed_pattern'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<SeedPatternDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (seedPattern.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('seed_pattern')
-    .insert(seedPattern)
-    .select('id, seed_pattern_name')
+    .insert({
+      ...seedPattern,
+      ...(seedPattern.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, seed_pattern_name')
     .single()
 
   if (error) throw new Error(`Error Adding Seed Pattern: ${error.message}`)

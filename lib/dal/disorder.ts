@@ -24,15 +24,18 @@ export async function getDisorders(): Promise<{
 
   // Fetch all three categories of disorders in parallel.
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase.from('disorder').select('id, disorder_name').eq('custom', false),
     supabase
       .from('disorder')
-      .select('id, disorder_name')
+      .select('id, custom, disorder_name')
+      .eq('custom', false),
+    supabase
+      .from('disorder')
+      .select('id, custom, disorder_name')
       .eq('custom', true)
       .eq('user_id', userId),
     supabase
       .from('disorder_shared_user')
-      .select('disorder(id, disorder_name)')
+      .select('disorder(id, custom, disorder_name)')
       .eq('shared_user_id', userId)
   ])
 
@@ -75,14 +78,28 @@ export async function getDisorders(): Promise<{
  * @returns Inserted Disorder
  */
 export async function addDisorder(
-  disorder: Omit<TablesInsert<'disorder'>, 'id' | 'created_at' | 'updated_at'>
+  disorder: Omit<
+    TablesInsert<'disorder'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<DisorderDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (disorder.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('disorder')
-    .insert(disorder)
-    .select('id, disorder_name')
+    .insert({
+      ...disorder,
+      ...(disorder.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, disorder_name')
     .single()
 
   if (error) throw new Error(`Error Adding Disorder: ${error.message}`)

@@ -1,4 +1,5 @@
 import { Tables } from '@/lib/database.types'
+import { HuntEventType } from '@/lib/enums'
 
 /**
  * Campaign Template
@@ -42,7 +43,7 @@ export type CampaignTemplate = {
  */
 export type CharacterDetail = Omit<
   Tables<'character'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 > & {}
 
 /**
@@ -52,7 +53,7 @@ export type CharacterDetail = Omit<
  */
 export type CollectiveCognitionRewardDetail = Omit<
   Tables<'collective_cognition_reward'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -62,7 +63,7 @@ export type CollectiveCognitionRewardDetail = Omit<
  */
 export type DisorderDetail = Omit<
   Tables<'disorder'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -72,7 +73,7 @@ export type DisorderDetail = Omit<
  */
 export type FightingArtDetail = Omit<
   Tables<'fighting_art'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -82,7 +83,7 @@ export type FightingArtDetail = Omit<
  */
 export type SecretFightingArtDetail = Omit<
   Tables<'secret_fighting_art'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -92,7 +93,7 @@ export type SecretFightingArtDetail = Omit<
  */
 export type SeedPatternDetail = Omit<
   Tables<'seed_pattern'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -102,7 +103,7 @@ export type SeedPatternDetail = Omit<
  */
 export type GearDetail = Omit<
   Tables<'gear'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -114,6 +115,32 @@ export type HuntAIDeckDetail = Omit<
   Tables<'hunt_ai_deck'>,
   'created_at' | 'updated_at' | 'settlement_id' | 'hunt_id'
 >
+
+/**
+ * Hunt Board
+ */
+export type HuntBoard = {
+  /** Position 1 */
+  1: HuntEventType
+  /** Position 2 */
+  2: HuntEventType
+  /** Position 3 */
+  3: HuntEventType
+  /** Position 4 */
+  4: HuntEventType
+  /** Position 5 */
+  5: HuntEventType
+  /** Position 7 */
+  7: HuntEventType
+  /** Position 8 */
+  8: HuntEventType
+  /** Position 9 */
+  9: HuntEventType
+  /** Position 10 */
+  10: HuntEventType
+  /** Position 11 */
+  11: HuntEventType
+}
 
 /**
  * Hunt Detail
@@ -169,7 +196,7 @@ export type HuntSurvivorDetail = Omit<
  */
 export type InnovationDetail = Omit<
   Tables<'innovation'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -179,7 +206,7 @@ export type InnovationDetail = Omit<
  */
 export type KnowledgeDetail = Omit<
   Tables<'knowledge'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -189,7 +216,7 @@ export type KnowledgeDetail = Omit<
  */
 export type LocationDetail = Omit<
   Tables<'location'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -199,8 +226,65 @@ export type LocationDetail = Omit<
  */
 export type MilestoneDetail = Omit<
   Tables<'milestone'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
+
+/**
+ * Monster Level Data
+ *
+ * Used when creating or editing a custom monster.
+ */
+/** Per-level sub-monster form data */
+export type MonsterLevelData = {
+  /** Sub-Monster Name (Optional) */
+  sub_monster_name: string | null
+  /** AI Deck: Basic Cards */
+  basic_cards: number
+  /** AI Deck: Advanced Cards */
+  advanced_cards: number
+  /** AI Deck: Legendary Cards */
+  legendary_cards: number
+  /** AI Deck: Overtone Cards */
+  overtone_cards: number
+  /** Accuracy */
+  accuracy: number
+  /** Accuracy Tokens */
+  accuracy_tokens: number
+  /** Damage */
+  damage: number
+  /** Damage Tokens */
+  damage_tokens: number
+  /** Evasion */
+  evasion: number
+  /** Evasion Tokens */
+  evasion_tokens: number
+  /** Luck */
+  luck: number
+  /** Luck Tokens */
+  luck_tokens: number
+  /** Movement */
+  movement: number
+  /** Movement Tokens */
+  movement_tokens: number
+  /** Speed */
+  speed: number
+  /** Speed Tokens */
+  speed_tokens: number
+  /** Strength */
+  strength: number
+  /** Strength Tokens */
+  strength_tokens: number
+  /** Toughness */
+  toughness: number
+  /** Toughness Tokens */
+  toughness_tokens: number
+  /** Life (nemesis only) */
+  life: number
+  /** Traits */
+  traits: string[]
+  /** Moods */
+  moods: string[]
+}
 
 /**
  * Nemesis Detail
@@ -224,13 +308,23 @@ export type NemesisLevelDetail = Omit<
 >
 
 /**
+ * Nemesis Timeline Detail
+ *
+ * Used throughout the app to represent a nemesis timeline entry.
+ */
+export type NemesisTimelineDetail = Omit<
+  Tables<'nemesis_timeline_year'>,
+  'created_at' | 'updated_at' | 'campaign_types' | 'nemesis_id'
+>
+
+/**
  * Neurosis Detail
  *
  * Used throughout the app to represent a neurosis.
  */
 export type NeurosisDetail = Omit<
   Tables<'neurosis'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -240,7 +334,7 @@ export type NeurosisDetail = Omit<
  */
 export type PatternDetail = Omit<
   Tables<'pattern'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -250,7 +344,7 @@ export type PatternDetail = Omit<
  */
 export type PhilosophyDetail = Omit<
   Tables<'philosophy'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -260,7 +354,7 @@ export type PhilosophyDetail = Omit<
  */
 export type PrincipleDetail = Omit<
   Tables<'principle'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -295,13 +389,23 @@ export type QuarryLevelDetail = Omit<
 >
 
 /**
+ * Quarry Timeline Detail
+ *
+ * Used throughout the app to represent a quarry timeline entry.
+ */
+export type QuarryTimelineDetail = Omit<
+  Tables<'quarry_timeline_year'>,
+  'created_at' | 'updated_at' | 'campaign_types' | 'quarry_id'
+>
+
+/**
  * Resource Detail
  *
  * Used throughout the app to represent a resource.
  */
 export type ResourceDetail = Omit<
   Tables<'resource'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 > & {
   /** Quarry Monster Name (joined from quarry table) */
   quarry_monster_name: string | null
@@ -315,7 +419,10 @@ export type ResourceDetail = Omit<
  * Used throughout the app to represent the currently selected settlement.
  * Includes additional information not present in the settlement table.
  */
-export type SettlementDetail = Tables<'settlement'> & {
+export type SettlementDetail = Omit<
+  Tables<'settlement'>,
+  'created_at' | 'updated_at'
+> & {
   /** Can Encourage */
   can_encourage: boolean
   /** Can Surge */
@@ -329,7 +436,7 @@ export type SettlementDetail = Tables<'settlement'> & {
   /** Collective Cognition Rewards */
   collective_cognition_rewards: {
     /** Collective Cognition Reward Collective Cognition */
-    collective_cognition: string
+    collective_cognition: number
     /** Collective Cognition Reward ID */
     collective_cognition_reward_id: string
     /** Settlement Collective Cognition Reward ID */
@@ -560,6 +667,26 @@ export type SettlementNemesisDetail = Omit<
 >
 
 /**
+ * Settlement Quarry Detail
+ *
+ * Used throughout the app to represent a settlement quarry.
+ */
+export type SettlementQuarryDetail = Omit<
+  Tables<'settlement_quarry'>,
+  'created_at' | 'updated_at' | 'settlement_id'
+>
+
+/**
+ * Settlement Timeline Year Detail
+ *
+ * Used throughout the app to represent a settlement timeline year.
+ */
+export type SettlementTimelineYearDetail = Omit<
+  Tables<'settlement_timeline_year'>,
+  'created_at' | 'id' | 'updated_at'
+>
+
+/**
  * Showdown AI Deck Detail
  *
  * Used throughout the app to represent a monster's AI deck in a showdown.
@@ -614,7 +741,7 @@ export type ShowdownSurvivorDetail = Omit<
  */
 export type StrainMilestoneDetail = Omit<
   Tables<'strain_milestone'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >
 
 /**
@@ -633,6 +760,8 @@ export type SurvivorDetail = Tables<'survivor'> & {
   }[]
   /** Disorders */
   disorders: {
+    /** Custom */
+    custom: boolean
     /** Disorder Name */
     disorder_name: string
     /** Disorder ID */
@@ -692,6 +821,46 @@ export type SurvivorDetail = Tables<'survivor'> & {
 }
 
 /**
+ * Survivor Cursed Gear Detail
+ *
+ * Used throughout the app to represent a survivor's cursed gear items.
+ */
+export type SurvivorCursedGearDetail = Omit<
+  Tables<'survivor_cursed_gear'>,
+  'created_at' | 'updated_at' | 'survivor_id'
+>
+
+/**
+ * Survivor Disorder Detail
+ *
+ * Used throughout the app to represent a survivor's disorders.
+ */
+export type SurvivorDisorderDetail = Omit<
+  Tables<'survivor_disorder'>,
+  'created_at' | 'updated_at' | 'survivor_id'
+>
+
+/**
+ * Survivor Fighting Art Detail
+ *
+ * Used throughout the app to represent a survivor's fighting arts.
+ */
+export type SurvivorFightingArtDetail = Omit<
+  Tables<'survivor_fighting_art'>,
+  'created_at' | 'updated_at' | 'survivor_id'
+>
+
+/**
+ * Survivor Secret Fighting Art Detail
+ *
+ * Used throughout the app to represent a survivor's secret fighting arts.
+ */
+export type SurvivorSecretFightingArtDetail = Omit<
+  Tables<'survivor_secret_fighting_art'>,
+  'created_at' | 'updated_at' | 'survivor_id'
+>
+
+/**
  * User Settings Detail
  *
  * Used throughout the app to represent the user's settings.
@@ -729,5 +898,5 @@ export type WandererTimelineYearDetail = Omit<
  */
 export type WeaponTypeDetail = Omit<
   Tables<'weapon_type'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id'
 >

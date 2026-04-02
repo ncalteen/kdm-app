@@ -1,6 +1,7 @@
 'use client'
 
 import { SeedPatternItem } from '@/components/settlement/seed-patterns/seed-pattern-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -18,18 +19,19 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getSeedPatterns } from '@/lib/dal/seed-pattern'
+import { addSeedPattern, getSeedPatterns } from '@/lib/dal/seed-pattern'
 import {
   addSettlementSeedPatterns,
   removeSettlementSeedPattern
 } from '@/lib/dal/settlement-seed-pattern'
 import {
   ERROR_MESSAGE,
+  SEED_PATTERN_CREATED_MESSAGE,
   SEED_PATTERN_REMOVED_MESSAGE,
   SEED_PATTERN_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { SeedPatternDetail, SettlementDetail } from '@/lib/types'
-import { BeanIcon, PlusIcon } from 'lucide-react'
+import { BeanIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
@@ -63,6 +65,8 @@ export function SeedPatternsCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
 
   const [availableSeedPatterns, setAvailableSeedPatterns] = useState<{
     [key: string]: SeedPatternDetail
@@ -201,6 +205,78 @@ export function SeedPatternsCard({
     [selectedSettlement, setSelectedSettlement, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availableSeedPatterns).some(
+    (sp) => sp.seed_pattern_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Seed Pattern
+   */
+  const handleCreate = useCallback(async () => {
+    const name = search.trim()
+    if (!name || creating || !selectedSettlement) return
+
+    setCreating(true)
+
+    try {
+      const newSeedPattern = await addSeedPattern({
+        custom: true,
+        seed_pattern_name: name
+      })
+
+      setAvailableSeedPatterns((prev) => ({
+        ...prev,
+        [newSeedPattern.id]: newSeedPattern
+      }))
+
+      setSearch('')
+      setAddOpen(false)
+      toast.success(SEED_PATTERN_CREATED_MESSAGE())
+
+      // Add to settlement immediately
+      const tempId = `temp-${Date.now()}`
+      const optimisticRow: SettlementDetail['seed_patterns'][0] = {
+        id: tempId,
+        seed_pattern_id: newSeedPattern.id,
+        seed_pattern_name: newSeedPattern.seed_pattern_name
+      }
+      const updatedSeedPatterns = [
+        ...selectedSettlement.seed_patterns,
+        optimisticRow
+      ]
+
+      setSelectedSettlement({
+        ...selectedSettlement,
+        seed_patterns: updatedSeedPatterns
+      })
+
+      addSettlementSeedPatterns([newSeedPattern.id], selectedSettlement.id)
+        .then((row) => {
+          setSelectedSettlement({
+            ...selectedSettlement,
+            seed_patterns: updatedSeedPatterns.map((sp) =>
+              sp.id === tempId ? { ...sp, id: row[0].id } : sp
+            )
+          })
+          toast.success(SEED_PATTERN_UPDATED_MESSAGE())
+        })
+        .catch((err: unknown) => {
+          setSelectedSettlement({
+            ...selectedSettlement,
+            seed_patterns: selectedSettlement.seed_patterns
+          })
+          console.error('Seed Pattern Add Error:', err)
+          toast.error(ERROR_MESSAGE())
+        })
+    } catch (error) {
+      console.error('Seed Pattern Create Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setCreating(false)
+    }
+  }, [search, creating, selectedSettlement, setSelectedSettlement, toast])
+
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -219,10 +295,27 @@ export function SeedPatternsCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search seed patterns..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search seed patterns..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No seed patterns found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        disabled={creating}
+                        onClick={handleCreate}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </button>
+                    ) : (
+                      'No seed patterns found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {selectableSeedPatterns.map((sp) => (
                       <CommandItem
@@ -230,8 +323,22 @@ export function SeedPatternsCard({
                         value={sp.seed_pattern_name}
                         onSelect={() => handleAdd(sp.id)}>
                         {sp.seed_pattern_name}
+                        {sp.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={handleCreate}
+                        disabled={creating}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>

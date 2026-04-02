@@ -30,20 +30,20 @@ export async function getPrinciples(): Promise<{
     supabase
       .from('principle')
       .select(
-        'id, principle_name, option_1_name, option_2_name, campaign_types'
+        'id, custom, principle_name, option_1_name, option_2_name, campaign_types'
       )
       .eq('custom', false),
     supabase
       .from('principle')
       .select(
-        'id, principle_name, option_1_name, option_2_name, campaign_types'
+        'id, custom, principle_name, option_1_name, option_2_name, campaign_types'
       )
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('principle_shared_user')
       .select(
-        'principle(id, principle_name, option_1_name, option_2_name, campaign_types)'
+        'principle(id, custom, principle_name, option_1_name, option_2_name, campaign_types)'
       )
       .eq('shared_user_id', user.id)
   ])
@@ -113,14 +113,30 @@ export async function getPrincipleIds(
  * @returns Inserted Principle
  */
 export async function addPrinciple(
-  principle: Omit<TablesInsert<'principle'>, 'id' | 'created_at' | 'updated_at'>
+  principle: Omit<
+    TablesInsert<'principle'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<PrincipleDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (principle.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('principle')
-    .insert(principle)
-    .select('id, principle_name, option_1_name, option_2_name, campaign_types')
+    .insert({
+      ...principle,
+      ...(principle.custom ? { user_id: user!.id } : {})
+    })
+    .select(
+      'id, custom, principle_name, option_1_name, option_2_name, campaign_types'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding Principle: ${error.message}`)

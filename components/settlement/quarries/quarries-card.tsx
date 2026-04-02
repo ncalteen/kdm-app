@@ -20,12 +20,21 @@ import {
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { getQuarries } from '@/lib/dal/quarry'
+import { getQuarryCollectiveCognitionRewardIds } from '@/lib/dal/quarry-collective-cognition-reward'
+import { getQuarryLocationIds } from '@/lib/dal/quarry-location'
+import { getQuarryTimelineYears } from '@/lib/dal/quarry-timeline-year'
+import { addSettlementCollectiveCognitionRewards } from '@/lib/dal/settlement-collective-cognition-reward'
+import { addSettlementLocations } from '@/lib/dal/settlement-location'
 import {
   addSettlementQuarries,
   removeSettlementQuarry,
   updateSettlementQuarry
 } from '@/lib/dal/settlement-quarry'
-import { MonsterNode } from '@/lib/enums'
+import {
+  addSettlementTimelineYear,
+  saveSettlementTimelineYearEntry
+} from '@/lib/dal/settlement-timeline-year'
+import { CampaignType, MonsterNode } from '@/lib/enums'
 import {
   ERROR_MESSAGE,
   QUARRY_ADDED_MESSAGE,
@@ -177,23 +186,154 @@ export function QuarriesCard({
       })
 
       addSettlementQuarries([quarryId], selectedSettlement?.id)
-        .then((row) => {
+        .then(async (row) => {
           // Replace the placeholder with the real row from the DB.
+          const finalQuarries = sortQuarries(
+            updatedQuarries.map((q) =>
+              q.id === tempId
+                ? {
+                    ...q,
+                    id: row[0].id,
+                    node: quarryInfo.node,
+                    prologue: quarryInfo.prologue
+                  }
+                : q
+            )
+          )
+
           setSelectedSettlement({
             ...selectedSettlement,
-            quarries: sortQuarries(
-              updatedQuarries.map((q) =>
-                q.id === tempId
-                  ? {
-                      ...q,
-                      id: row[0].id,
-                      node: quarryInfo.node,
-                      prologue: quarryInfo.prologue
-                    }
-                  : q
-              )
-            )
+            quarries: finalQuarries
           })
+
+          // Add related locations, timeline events, and CC rewards
+          try {
+            const campaignType =
+              CampaignType[
+                selectedSettlement.campaign_type as keyof typeof CampaignType
+              ]
+
+            const [locationIds, timelineYears, ccrIds] = await Promise.all([
+              getQuarryLocationIds(quarryId),
+              getQuarryTimelineYears(quarryId, campaignType),
+              getQuarryCollectiveCognitionRewardIds(quarryId)
+            ])
+
+            let updatedSettlement = {
+              ...selectedSettlement,
+              quarries: finalQuarries
+            }
+
+            // Add locations not already present
+            if (locationIds.length > 0) {
+              const existingLocIds = new Set(
+                selectedSettlement.locations.map((l) => l.location_id)
+              )
+              const newLocIds = locationIds.filter(
+                (id) => !existingLocIds.has(id)
+              )
+              if (newLocIds.length > 0) {
+                const inserted = await addSettlementLocations(
+                  newLocIds,
+                  selectedSettlement.id
+                )
+                const insertedLocations = inserted.map((ins) => ({
+                  id: ins.id,
+                  location_id: ins.location_id,
+                  location_name: ins.location_name,
+                  unlocked: false
+                }))
+
+                updatedSettlement = {
+                  ...updatedSettlement,
+                  locations: [
+                    ...updatedSettlement.locations,
+                    ...insertedLocations
+                  ]
+                }
+              }
+            }
+
+            // Add timeline entries to existing years or create new ones
+            if (timelineYears.length > 0) {
+              const updatedTimeline = { ...updatedSettlement.timeline }
+
+              for (const ty of timelineYears) {
+                const existingYear = updatedTimeline[ty.year_number]
+                if (existingYear) {
+                  // Add entries that don't already exist in this year
+                  const existingEntries = new Set(existingYear.entries)
+                  const newEntries = ty.entries.filter(
+                    (e) => !existingEntries.has(e)
+                  )
+                  for (const entry of newEntries) {
+                    const updated = await saveSettlementTimelineYearEntry(
+                      existingYear.id,
+                      entry,
+                      existingYear.entries.length
+                    )
+                    existingYear.entries = updated
+                  }
+                } else {
+                  // Create a new timeline year
+                  const yearId = await addSettlementTimelineYear(
+                    selectedSettlement.id,
+                    ty.year_number
+                  )
+                  for (let i = 0; i < ty.entries.length; i++) {
+                    const updated = await saveSettlementTimelineYearEntry(
+                      yearId,
+                      ty.entries[i],
+                      i
+                    )
+                    updatedTimeline[ty.year_number] = {
+                      id: yearId,
+                      completed: false,
+                      entries: updated
+                    }
+                  }
+                }
+              }
+
+              updatedSettlement = {
+                ...updatedSettlement,
+                timeline: updatedTimeline
+              }
+            }
+
+            // Add CC rewards not already present
+            if (ccrIds.length > 0) {
+              const existingCcrIds = new Set(
+                selectedSettlement.collective_cognition_rewards.map(
+                  (c) => c.collective_cognition_reward_id
+                )
+              )
+              const newCcrIds = ccrIds.filter((id) => !existingCcrIds.has(id))
+              if (newCcrIds.length > 0) {
+                const inserted = await addSettlementCollectiveCognitionRewards(
+                  newCcrIds,
+                  selectedSettlement.id
+                )
+                updatedSettlement = {
+                  ...updatedSettlement,
+                  collective_cognition_rewards: [
+                    ...updatedSettlement.collective_cognition_rewards,
+                    ...inserted.map((ins, i) => ({
+                      id: ins.id,
+                      collective_cognition_reward_id: newCcrIds[i],
+                      reward_name: inserted[i].reward_name,
+                      collective_cognition: inserted[i].collective_cognition,
+                      unlocked: false
+                    }))
+                  ]
+                }
+              }
+            }
+
+            setSelectedSettlement(updatedSettlement)
+          } catch (relatedErr) {
+            console.error('Quarry Related Data Add Error:', relatedErr)
+          }
 
           toast.success(QUARRY_ADDED_MESSAGE())
         })

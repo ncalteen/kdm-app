@@ -29,7 +29,7 @@ import {
 } from '@/lib/messages'
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /** Cursed gear item shape matching SurvivorDetail['cursed_gear'][0] */
 type CursedGearRow = { id: string; gear_name: string }
@@ -70,7 +70,7 @@ export function CursedGearCard({
 }: CursedGearCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [cursedGear, setCursedGear] = useState<CursedGearRow[]>(
     selectedSurvivor?.cursed_gear ?? []
@@ -78,8 +78,8 @@ export function CursedGearCard({
   const [addOpen, setAddOpen] = useState<boolean>(false)
 
   // Reset local state when the selected survivor changes.
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setCursedGear(selectedSurvivor?.cursed_gear ?? [])
     setAddOpen(false)
   }

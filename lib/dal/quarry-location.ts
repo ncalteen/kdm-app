@@ -1,5 +1,32 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { LocationDetail } from '@/lib/types'
+
+/**
+ * Get Quarry Location Junction IDs
+ *
+ * Fetches the quarry_location junction table row IDs for a specific quarry.
+ *
+ * @param quarryId Quarry ID
+ * @returns Junction Row IDs
+ */
+export async function getQuarryLocationJunctionIds(
+  quarryId: string
+): Promise<string[]> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry_location')
+    .select('id')
+    .eq('quarry_id', quarryId)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Quarry Location Junction IDs: ${error.message}`
+    )
+
+  return (data ?? []).map((item) => item.id)
+}
 
 /**
  * Get Quarry Location IDs
@@ -28,6 +55,41 @@ export async function getQuarryLocationIds(
   if (!data) throw new Error('Quarry Location ID(s) Not Found')
 
   return data.map((item) => item.location_id)
+}
+
+/**
+ * Get Quarry Location Data
+ *
+ * Fetches location data associated with a specific quarry by joining the
+ * quarry_location and location tables.
+ *
+ * @param quarryId Quarry ID
+ * @returns Quarry Location Data
+ */
+export async function getQuarryLocations(
+  quarryId: string | null | undefined
+): Promise<LocationDetail[]> {
+  if (!quarryId) throw new Error('Required: Quarry ID')
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry_location')
+    .select('location(custom, id, location_name)')
+    .eq('quarry_id', quarryId)
+
+  if (error)
+    throw new Error(`Error Fetching Quarry Location Data: ${error.message}`)
+
+  if (!data) throw new Error('Quarry Location Data Not Found')
+
+  return (
+    data as unknown as {
+      location: { custom: boolean; id: string; location_name: string }
+    }[]
+  ).map((item) => ({
+    ...item.location
+  }))
 }
 
 /**
@@ -83,16 +145,18 @@ export async function updateQuarryLocation(
 }
 
 /**
- * Remove Quarry Location
+ * Remove Quarry Locations
  *
- * Deletes a quarry location record from the database.
- *
- * @param id Quarry Location ID
+ * @param ids Quarry Location IDs
  */
-export async function removeQuarryLocation(id: string): Promise<void> {
+export async function removeQuarryLocations(ids: string[]): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase.from('quarry_location').delete().eq('id', id)
+  const { error } = await supabase
+    .from('quarry_location')
+    .delete()
+    .in('id', ids)
 
-  if (error) throw new Error(`Error Removing Quarry Location: ${error.message}`)
+  if (error)
+    throw new Error(`Error Removing Quarry Locations: ${error.message}`)
 }

@@ -35,7 +35,7 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 
 /**
  * Once Per Lifetime Card Properties
@@ -65,7 +65,7 @@ export function OncePerLifetimeCard({
 }: OncePerLifetimeCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [disabledInputs, setDisabledInputs] = useState<{
     [key: number]: boolean
@@ -82,8 +82,8 @@ export function OncePerLifetimeCard({
     selectedSurvivor?.reroll_used ?? false
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
 
     setDisabledInputs(
       Object.fromEntries(

@@ -27,15 +27,18 @@ export async function getPatterns(): Promise<{
   if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase.from('pattern').select('id, pattern_name').eq('custom', false),
     supabase
       .from('pattern')
-      .select('id, pattern_name')
+      .select('id, custom, pattern_name')
+      .eq('custom', false),
+    supabase
+      .from('pattern')
+      .select('id, custom, pattern_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('pattern_shared_user')
-      .select('pattern(id, pattern_name)')
+      .select('pattern(id, custom, pattern_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -62,14 +65,28 @@ export async function getPatterns(): Promise<{
  * @returns Inserted Pattern
  */
 export async function addPattern(
-  pattern: Omit<TablesInsert<'pattern'>, 'id' | 'created_at' | 'updated_at'>
+  pattern: Omit<
+    TablesInsert<'pattern'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<PatternDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (pattern.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('pattern')
-    .insert(pattern)
-    .select('id, pattern_name')
+    .insert({
+      ...pattern,
+      ...(pattern.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, pattern_name')
     .single()
 
   if (error) throw new Error(`Error Adding Pattern: ${error.message}`)

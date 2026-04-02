@@ -1,6 +1,8 @@
 'use client'
 
+import { CreateCustomKnowledgeDialog } from '@/components/settlement/arc/create-custom-knowledge-dialog'
 import { KnowledgeItem } from '@/components/settlement/arc/knowledge-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -18,7 +20,7 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { getKnowledges } from '@/lib/dal/knowledge'
+import { addKnowledge, getKnowledges } from '@/lib/dal/knowledge'
 import {
   addSettlementKnowledges,
   removeSettlementKnowledge
@@ -29,7 +31,7 @@ import {
   KNOWLEDGE_REMOVED_MESSAGE
 } from '@/lib/messages'
 import { KnowledgeDetail, SettlementDetail } from '@/lib/types'
-import { GraduationCapIcon, PlusIcon } from 'lucide-react'
+import { GraduationCapIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
@@ -63,6 +65,10 @@ export function KnowledgesCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   // Available knowledges for the select dropdown (fetched once per settlement).
   const [availableKnowledges, setAvailableKnowledges] = useState<{
@@ -230,6 +236,90 @@ export function KnowledgesCard({
     [selectedSettlement, setSelectedSettlement, toast]
   )
 
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availableKnowledges).some(
+    (k) => k.knowledge_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Handle Create Custom Knowledge
+   *
+   * Creates a custom knowledge via DAL, adds it to the available list, then
+   * adds it to the settlement.
+   */
+  const handleCreate = useCallback(
+    async (data: { knowledge_name: string; philosophy_id: string | null }) => {
+      if (creating || !selectedSettlement) return
+
+      setCreating(true)
+
+      try {
+        const newKnowledge = await addKnowledge({
+          custom: true,
+          knowledge_name: data.knowledge_name,
+          philosophy_id: data.philosophy_id
+        })
+
+        setAvailableKnowledges((prev) => ({
+          ...prev,
+          [newKnowledge.id]: newKnowledge
+        }))
+        setCreateDialogOpen(false)
+        setSearch('')
+        setAddOpen(false)
+        toast.success(KNOWLEDGE_CREATED_MESSAGE())
+
+        // Add to settlement immediately.
+        const tempId = `temp-${Date.now()}`
+        const optimisticRow: SettlementDetail['knowledges'][0] = {
+          id: tempId,
+          knowledge_id: newKnowledge.id,
+          knowledge_name: newKnowledge.knowledge_name
+        }
+
+        const updatedKnowledges = [
+          ...(selectedSettlement.knowledges ?? []),
+          optimisticRow
+        ]
+
+        setSelectedSettlement({
+          ...selectedSettlement,
+          knowledges: updatedKnowledges
+        })
+
+        addSettlementKnowledges([newKnowledge.id], selectedSettlement.id)
+          .then((rows) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              knowledges: updatedKnowledges.map((k) =>
+                k.id === tempId ? { ...k, id: rows[0].id } : k
+              )
+            })
+          })
+          .catch((err: unknown) => {
+            setSelectedSettlement({
+              ...selectedSettlement,
+              knowledges: selectedSettlement.knowledges
+            })
+            console.error('Knowledge Add Error:', err)
+            toast.error(ERROR_MESSAGE())
+          })
+      } catch (error) {
+        console.error('Knowledge Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
+      }
+    },
+    [creating, selectedSettlement, setSelectedSettlement, toast]
+  )
+
+  /** Open the create dialog with the current search term pre-filled. */
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
+  }, [])
+
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -247,10 +337,26 @@ export function KnowledgesCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-              <Command>
-                <CommandInput placeholder="Search knowledges..." />
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search knowledges..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
                 <CommandList>
-                  <CommandEmpty>No knowledges found.</CommandEmpty>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        onClick={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search.trim()}&quot;
+                      </button>
+                    ) : (
+                      'No knowledges found.'
+                    )}
+                  </CommandEmpty>
                   <CommandGroup>
                     {Object.values(availableKnowledges)
                       .filter(
@@ -265,8 +371,23 @@ export function KnowledgesCard({
                           value={knowledge.knowledge_name}
                           onSelect={() => handleAdd(knowledge.id)}>
                           {knowledge.knowledge_name}
+                          {knowledge.custom && (
+                            <Badge
+                              variant="outline"
+                              className="ml-auto text-xs">
+                              Custom
+                            </Badge>
+                          )}
                         </CommandItem>
                       ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search.trim()}&quot;
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -305,6 +426,15 @@ export function KnowledgesCard({
           </div>
         </div>
       </CardContent>
+
+      <CreateCustomKnowledgeDialog
+        key={dialogKey}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreate={handleCreate}
+        creating={creating}
+        initialName={search.trim()}
+      />
     </Card>
   )
 }

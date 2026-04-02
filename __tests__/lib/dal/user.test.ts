@@ -47,7 +47,7 @@ describe('getUserSettings', () => {
 
     expect(mockSupabase.from).toHaveBeenCalledWith('user_settings')
     expect(mockSelect).toHaveBeenCalledWith(
-      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id'
+      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username'
     )
     expect(mockEq).toHaveBeenCalledWith('user_id', mockUser.id)
     expect(mockMaybeSingle).toHaveBeenCalledOnce()

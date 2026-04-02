@@ -244,13 +244,13 @@ export enum SurvivorCardMode {
  */
 export enum HuntEventType {
   /** Arc Hunt Event */
-  ARC = 'arc',
+  ARC = 'ARC',
   /** Basic Hunt Event */
-  BASIC = 'basic',
+  BASIC = 'BASIC',
   /** Monster Hunt Event */
-  MONSTER = 'monster',
+  MONSTER = 'MONSTER',
   /** Scout Hunt Event */
-  SCOUT = 'scout'
+  SCOUT = 'SCOUT'
 }
 
 /**

@@ -15,7 +15,7 @@ import {
 } from '@/lib/messages'
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { BookOpenIcon } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 
 /**
  * Courage Understanding Card Properties
@@ -52,15 +52,15 @@ export function CourageUnderstandingCard({
 }: CourageUnderstandingCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [courage, setCourage] = useState(selectedSurvivor?.courage ?? 0)
   const [understanding, setUnderstanding] = useState(
     selectedSurvivor?.understanding ?? 0
   )
 
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
     setCourage(selectedSurvivor?.courage ?? 0)
     setUnderstanding(selectedSurvivor?.understanding ?? 0)
   }

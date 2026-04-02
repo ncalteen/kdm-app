@@ -1,6 +1,6 @@
-import { Tables, TablesUpdate } from '@/lib/database.types'
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { SettlementDetail } from '@/lib/types'
+import { SettlementDetail, SettlementTimelineYearDetail } from '@/lib/types'
 
 /**
  * Get Settlement Timeline Years
@@ -54,10 +54,7 @@ export async function getSettlementTimelineYears(
  * @param timelineYears Timeline Year Data
  */
 export async function addSettlementTimelineYears(
-  timelineYears: Omit<
-    Tables<'settlement_timeline_year'>,
-    'created_at' | 'id' | 'updated_at'
-  >[]
+  timelineYears: SettlementTimelineYearDetail[]
 ): Promise<void> {
   if (timelineYears.length === 0) return
 

@@ -32,18 +32,18 @@ export async function getSecretFightingArts(): Promise<{
     // Non-custom secret fighting arts (available to all users)
     supabase
       .from('secret_fighting_art')
-      .select('id, secret_fighting_art_name')
+      .select('id, custom, secret_fighting_art_name')
       .eq('custom', false),
     // Custom secret fighting arts created by the user
     supabase
       .from('secret_fighting_art')
-      .select('id, secret_fighting_art_name')
+      .select('id, custom, secret_fighting_art_name')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom secret fighting arts shared with the user
     supabase
       .from('secret_fighting_art_shared_user')
-      .select('secret_fighting_art(id, secret_fighting_art_name)')
+      .select('secret_fighting_art(id, custom, secret_fighting_art_name)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -76,15 +76,26 @@ export async function getSecretFightingArts(): Promise<{
 export async function addSecretFightingArt(
   secretFightingArt: Omit<
     TablesInsert<'secret_fighting_art'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<SecretFightingArtDetail> {
   const supabase = createClient()
 
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (secretFightingArt.custom && !user) throw new Error('Not Authenticated')
+
   const { data, error } = await supabase
     .from('secret_fighting_art')
-    .insert(secretFightingArt)
-    .select('id, secret_fighting_art_name')
+    .insert({
+      ...secretFightingArt,
+      ...(secretFightingArt.custom ? { user_id: user!.id } : {})
+    })
+    .select('id, custom, secret_fighting_art_name')
     .single()
 
   if (error)

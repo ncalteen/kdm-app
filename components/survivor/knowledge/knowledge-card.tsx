@@ -33,7 +33,7 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { MouseEvent, ReactElement, useCallback, useRef, useState } from 'react'
+import { MouseEvent, ReactElement, useCallback, useState } from 'react'
 
 /**
  * Knowledge Card Properties
@@ -147,7 +147,7 @@ export function KnowledgeCard({
 }: KnowledgeCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  const survivorIdRef = useRef<string | undefined>(undefined)
+  const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   // Local state for text fields to enable controlled components
   const [knowledge1, setKnowledge1] = useState({
@@ -173,9 +173,9 @@ export function KnowledgeCard({
     survivors.find((s) => s.id === selectedSurvivor?.id)
       ?.can_use_fighting_arts_knowledges ?? true
 
-  // Reset local state when survivor changes (different ID)
-  if (survivorIdRef.current !== selectedSurvivor?.id) {
-    survivorIdRef.current = selectedSurvivor?.id
+  // Reset local state when survivor changes
+  if (prevSurvivor !== selectedSurvivor) {
+    setPrevSurvivor(selectedSurvivor)
 
     setKnowledge1({
       id: selectedSurvivor?.knowledge_1?.id ?? '',
