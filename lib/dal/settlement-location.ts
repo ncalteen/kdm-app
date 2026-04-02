@@ -48,7 +48,7 @@ export async function getSettlementLocations(
 export async function addSettlementLocations(
   locationIds: string[],
   settlementId: string | null | undefined
-): Promise<{ id: string; location_name: string }[]> {
+): Promise<{ id: string; location_id: string; location_name: string }[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
   if (locationIds.length === 0) return []
 
@@ -63,15 +63,19 @@ export async function addSettlementLocations(
         unlocked: false
       }))
     )
-    .select('id, location(location_name)')
+    .select('id, location(id, location_name)')
 
   if (error)
     throw new Error(`Error Adding Settlement Locations: ${error.message}`)
 
   return (
-    data as unknown as { id: string; location: { location_name: string } }[]
+    data as unknown as {
+      id: string
+      location: { id: string; location_name: string }
+    }[]
   ).map((item) => ({
     id: item.id,
+    location_id: item.location.id,
     location_name: item.location.location_name
   }))
 }

@@ -27,7 +27,10 @@ export async function getCharacterSharedUsers(
   const { data: settings, error: settingsError } = await supabase
     .from('user_settings')
     .select('user_id, username')
-    .in('user_id', data)
+    .in(
+      'user_id',
+      data.map((row) => row.shared_user_id)
+    )
 
   if (settingsError)
     throw new Error(

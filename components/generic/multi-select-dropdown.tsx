@@ -42,7 +42,7 @@ interface MultiSelectDropdownProps {
  * A reusable multi-select dropdown component using Radix UI's Popover and
  * Command components. Allows users to select multiple items from a list, with a
  * search input and an empty state message. The trigger button displays the
- * provided label and indicates the number of selected items.
+ * provided label.
  *
  * @param props Multi-Select Dropdown Component Properties
  * @returns Multi-Select Dropdown Component

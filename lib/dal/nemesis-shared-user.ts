@@ -59,6 +59,8 @@ export async function addNemesisSharedUsers(
 ): Promise<void> {
   const supabase = createClient()
 
+  if (sharedUserIds.length === 0) return
+
   const { error } = await supabase.from('nemesis_shared_user').insert(
     sharedUserIds.map((sharedUserId) => ({
       nemesis_id: nemesisId,

@@ -71,22 +71,22 @@ export function SignUpForm({
       return
     }
 
-    // Verify the username is not already taken via RPC (works for
-    // unauthenticated users, unlike a direct table query blocked by RLS).
-    const { data: isAvailable, error: usernameError } = await supabase.rpc(
-      'check_username_available',
-      { desired_username: username }
-    )
-
-    if (usernameError) throw usernameError
-
-    if (!isAvailable) {
-      setError('Username is already in use')
-      setIsLoading(false)
-      return
-    }
-
     try {
+      // Verify the username is not already taken via RPC (works for
+      // unauthenticated users, unlike a direct table query blocked by RLS).
+      const { data: isAvailable, error: usernameError } = await supabase.rpc(
+        'check_username_available',
+        { desired_username: username }
+      )
+
+      if (usernameError) throw usernameError
+
+      if (!isAvailable) {
+        setError('Username is already in use')
+        setIsLoading(false)
+        return
+      }
+
       // Sign up the user with Supabase Auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,

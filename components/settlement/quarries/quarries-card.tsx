@@ -237,22 +237,12 @@ export function QuarriesCard({
                   newLocIds,
                   selectedSettlement.id
                 )
-                const insertedLocations = inserted.flatMap((ins) => {
-                  const locationId = (ins as { location_id?: number }).location_id
-
-                  if (typeof locationId !== 'number') {
-                    return []
-                  }
-
-                  return [
-                    {
-                      id: ins.id,
-                      location_id: locationId,
-                      location_name: ins.location_name,
-                      unlocked: false
-                    }
-                  ]
-                })
+                const insertedLocations = inserted.map((ins) => ({
+                  id: ins.id,
+                  location_id: ins.location_id,
+                  location_name: ins.location_name,
+                  unlocked: false
+                }))
 
                 updatedSettlement = {
                   ...updatedSettlement,
