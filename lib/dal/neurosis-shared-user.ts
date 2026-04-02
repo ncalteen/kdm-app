@@ -3,14 +3,15 @@ import { createClient } from '@/lib/supabase/client'
 /**
  * Get Neurosis Shared Users
  *
- * Retrieves all users a neurosis is shared with.
+ * Retrieves all users a neurosis is shared with, including their usernames
+ * from the user_settings table.
  *
  * @param neurosisId Neurosis ID
- * @returns Shared User IDs
+ * @returns Shared User IDs and Usernames
  */
 export async function getNeurosisSharedUsers(
   neurosisId: string
-): Promise<string[]> {
+): Promise<{ shared_user_id: string; username: string }[]> {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -21,46 +22,66 @@ export async function getNeurosisSharedUsers(
   if (error)
     throw new Error(`Error Fetching Neurosis Shared Users: ${error.message}`)
 
-  return (data ?? []).map((row) => row.shared_user_id)
+  if (!data || data.length === 0) return []
+
+  const { data: settings, error: settingsError } = await supabase
+    .from('user_settings')
+    .select('user_id, username')
+    .in(
+      'user_id',
+      data.map((row) => row.shared_user_id)
+    )
+
+  if (settingsError)
+    throw new Error(
+      `Error Fetching Shared User Settings: ${settingsError.message}`
+    )
+
+  return settings.map((row) => ({
+    shared_user_id: row.user_id,
+    username: row.username
+  }))
 }
 
 /**
- * Add Neurosis Shared User
+ * Add Neurosis Shared Users
  *
- * Shares a neurosis with another user.
+ * Shares a neurosis with other users.
  *
  * @param neurosisId Neurosis ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  * @param userId Owner User ID
  */
-export async function addNeurosisSharedUser(
+export async function addNeurosisSharedUsers(
   neurosisId: string,
-  sharedUserId: string,
+  sharedUserIds: string[],
   userId: string
 ): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase.from('neurosis_shared_user').insert({
-    neurosis_id: neurosisId,
-    shared_user_id: sharedUserId,
-    user_id: userId
-  })
+  const { error } = await supabase.from('neurosis_shared_user').insert(
+    sharedUserIds.map((sharedUserId) => ({
+      neurosis_id: neurosisId,
+      shared_user_id: sharedUserId,
+      user_id: userId
+    }))
+  )
 
   if (error)
-    throw new Error(`Error Adding Neurosis Shared User: ${error.message}`)
+    throw new Error(`Error Adding Neurosis Shared Users: ${error.message}`)
 }
 
 /**
- * Remove Neurosis Shared User
+ * Remove Neurosis Shared Users
  *
- * Revokes sharing of a neurosis with a user.
+ * Revokes sharing of a neurosis with users.
  *
  * @param neurosisId Neurosis ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  */
-export async function removeNeurosisSharedUser(
+export async function removeNeurosisSharedUsers(
   neurosisId: string,
-  sharedUserId: string
+  sharedUserIds: string[]
 ): Promise<void> {
   const supabase = createClient()
 
@@ -68,8 +89,8 @@ export async function removeNeurosisSharedUser(
     .from('neurosis_shared_user')
     .delete()
     .eq('neurosis_id', neurosisId)
-    .eq('shared_user_id', sharedUserId)
+    .in('shared_user_id', sharedUserIds)
 
   if (error)
-    throw new Error(`Error Removing Neurosis Shared User: ${error.message}`)
+    throw new Error(`Error Removing Neurosis Shared Users: ${error.message}`)
 }

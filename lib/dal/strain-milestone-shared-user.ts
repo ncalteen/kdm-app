@@ -3,14 +3,15 @@ import { createClient } from '@/lib/supabase/client'
 /**
  * Get Strain Milestone Shared Users
  *
- * Retrieves all users a strain milestone is shared with.
+ * Retrieves all users a strain milestone is shared with, including their
+ * usernames from the user_settings table.
  *
  * @param strainMilestoneId Strain Milestone ID
- * @returns Shared User IDs
+ * @returns Shared User IDs and Usernames
  */
 export async function getStrainMilestoneSharedUsers(
   strainMilestoneId: string
-): Promise<string[]> {
+): Promise<{ shared_user_id: string; username: string }[]> {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -23,48 +24,68 @@ export async function getStrainMilestoneSharedUsers(
       `Error Fetching Strain Milestone Shared Users: ${error.message}`
     )
 
-  return (data ?? []).map((row) => row.shared_user_id)
+  if (!data || data.length === 0) return []
+
+  const { data: settings, error: settingsError } = await supabase
+    .from('user_settings')
+    .select('user_id, username')
+    .in(
+      'user_id',
+      data.map((row) => row.shared_user_id)
+    )
+
+  if (settingsError)
+    throw new Error(
+      `Error Fetching Shared User Settings: ${settingsError.message}`
+    )
+
+  return settings.map((row) => ({
+    shared_user_id: row.user_id,
+    username: row.username
+  }))
 }
 
 /**
- * Add Strain Milestone Shared User
+ * Add Strain Milestone Shared Users
  *
- * Shares a strain milestone with another user.
+ * Shares a strain milestone with other users.
  *
  * @param strainMilestoneId Strain Milestone ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  * @param userId Owner User ID
  */
-export async function addStrainMilestoneSharedUser(
+export async function addStrainMilestoneSharedUsers(
   strainMilestoneId: string,
-  sharedUserId: string,
+  sharedUserIds: string[],
   userId: string
 ): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase.from('strain_milestone_shared_user').insert({
-    strain_milestone_id: strainMilestoneId,
-    shared_user_id: sharedUserId,
-    user_id: userId
-  })
+  const { error } = await supabase.from('strain_milestone_shared_user').insert(
+    sharedUserIds.map((sharedUserId) => ({
+      strain_milestone_id: strainMilestoneId,
+      shared_user_id: sharedUserId,
+      user_id: userId
+    }))
+  )
 
   if (error)
     throw new Error(
-      `Error Adding Strain Milestone Shared User: ${error.message}`
+      `Error Adding Strain Milestone Shared Users: ${error.message}`
     )
 }
 
 /**
- * Remove Strain Milestone Shared User
+ * Remove Strain Milestone Shared Users
  *
- * Revokes sharing of a strain milestone with a user.
+ * Revokes sharing of a strain milestone with users.
  *
  * @param strainMilestoneId Strain Milestone ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  */
-export async function removeStrainMilestoneSharedUser(
+export async function removeStrainMilestoneSharedUsers(
   strainMilestoneId: string,
-  sharedUserId: string
+  sharedUserIds: string[]
 ): Promise<void> {
   const supabase = createClient()
 
@@ -72,10 +93,10 @@ export async function removeStrainMilestoneSharedUser(
     .from('strain_milestone_shared_user')
     .delete()
     .eq('strain_milestone_id', strainMilestoneId)
-    .eq('shared_user_id', sharedUserId)
+    .in('shared_user_id', sharedUserIds)
 
   if (error)
     throw new Error(
-      `Error Removing Strain Milestone Shared User: ${error.message}`
+      `Error Removing Strain Milestone Shared Users: ${error.message}`
     )
 }

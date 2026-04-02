@@ -3,14 +3,15 @@ import { createClient } from '@/lib/supabase/client'
 /**
  * Get Innovation Shared Users
  *
- * Retrieves all users a innovation is shared with.
+ * Retrieves all users an innovation is shared with, including their usernames
+ * from the user_settings table.
  *
  * @param innovationId Innovation ID
- * @returns Shared User IDs
+ * @returns Shared User IDs and Usernames
  */
 export async function getInnovationSharedUsers(
   innovationId: string
-): Promise<string[]> {
+): Promise<{ shared_user_id: string; username: string }[]> {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -21,46 +22,66 @@ export async function getInnovationSharedUsers(
   if (error)
     throw new Error(`Error Fetching Innovation Shared Users: ${error.message}`)
 
-  return (data ?? []).map((row) => row.shared_user_id)
+  if (!data || data.length === 0) return []
+
+  const { data: settings, error: settingsError } = await supabase
+    .from('user_settings')
+    .select('user_id, username')
+    .in(
+      'user_id',
+      data.map((row) => row.shared_user_id)
+    )
+
+  if (settingsError)
+    throw new Error(
+      `Error Fetching Shared User Settings: ${settingsError.message}`
+    )
+
+  return settings.map((row) => ({
+    shared_user_id: row.user_id,
+    username: row.username
+  }))
 }
 
 /**
- * Add Innovation Shared User
+ * Add Innovation Shared Users
  *
- * Shares a innovation with another user.
+ * Shares an innovation with other users.
  *
  * @param innovationId Innovation ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  * @param userId Owner User ID
  */
-export async function addInnovationSharedUser(
+export async function addInnovationSharedUsers(
   innovationId: string,
-  sharedUserId: string,
+  sharedUserIds: string[],
   userId: string
 ): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase.from('innovation_shared_user').insert({
-    innovation_id: innovationId,
-    shared_user_id: sharedUserId,
-    user_id: userId
-  })
+  const { error } = await supabase.from('innovation_shared_user').insert(
+    sharedUserIds.map((sharedUserId) => ({
+      innovation_id: innovationId,
+      shared_user_id: sharedUserId,
+      user_id: userId
+    }))
+  )
 
   if (error)
-    throw new Error(`Error Adding Innovation Shared User: ${error.message}`)
+    throw new Error(`Error Adding Innovation Shared Users: ${error.message}`)
 }
 
 /**
- * Remove Innovation Shared User
+ * Remove Innovation Shared Users
  *
- * Revokes sharing of a innovation with a user.
+ * Revokes sharing of an innovation with users.
  *
  * @param innovationId Innovation ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  */
-export async function removeInnovationSharedUser(
+export async function removeInnovationSharedUsers(
   innovationId: string,
-  sharedUserId: string
+  sharedUserIds: string[]
 ): Promise<void> {
   const supabase = createClient()
 
@@ -68,8 +89,8 @@ export async function removeInnovationSharedUser(
     .from('innovation_shared_user')
     .delete()
     .eq('innovation_id', innovationId)
-    .eq('shared_user_id', sharedUserId)
+    .in('shared_user_id', sharedUserIds)
 
   if (error)
-    throw new Error(`Error Removing Innovation Shared User: ${error.message}`)
+    throw new Error(`Error Removing Innovation Shared Users: ${error.message}`)
 }

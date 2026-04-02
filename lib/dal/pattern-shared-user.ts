@@ -3,14 +3,15 @@ import { createClient } from '@/lib/supabase/client'
 /**
  * Get Pattern Shared Users
  *
- * Retrieves all users a pattern is shared with.
+ * Retrieves all users a pattern is shared with, including their usernames
+ * from the user_settings table.
  *
  * @param patternId Pattern ID
- * @returns Shared User IDs
+ * @returns Shared User IDs and Usernames
  */
 export async function getPatternSharedUsers(
   patternId: string
-): Promise<string[]> {
+): Promise<{ shared_user_id: string; username: string }[]> {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -21,46 +22,66 @@ export async function getPatternSharedUsers(
   if (error)
     throw new Error(`Error Fetching Pattern Shared Users: ${error.message}`)
 
-  return (data ?? []).map((row) => row.shared_user_id)
+  if (!data || data.length === 0) return []
+
+  const { data: settings, error: settingsError } = await supabase
+    .from('user_settings')
+    .select('user_id, username')
+    .in(
+      'user_id',
+      data.map((row) => row.shared_user_id)
+    )
+
+  if (settingsError)
+    throw new Error(
+      `Error Fetching Shared User Settings: ${settingsError.message}`
+    )
+
+  return settings.map((row) => ({
+    shared_user_id: row.user_id,
+    username: row.username
+  }))
 }
 
 /**
- * Add Pattern Shared User
+ * Add Pattern Shared Users
  *
- * Shares a pattern with another user.
+ * Shares a pattern with other users.
  *
  * @param patternId Pattern ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  * @param userId Owner User ID
  */
-export async function addPatternSharedUser(
+export async function addPatternSharedUsers(
   patternId: string,
-  sharedUserId: string,
+  sharedUserIds: string[],
   userId: string
 ): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase.from('pattern_shared_user').insert({
-    pattern_id: patternId,
-    shared_user_id: sharedUserId,
-    user_id: userId
-  })
+  const { error } = await supabase.from('pattern_shared_user').insert(
+    sharedUserIds.map((sharedUserId) => ({
+      pattern_id: patternId,
+      shared_user_id: sharedUserId,
+      user_id: userId
+    }))
+  )
 
   if (error)
-    throw new Error(`Error Adding Pattern Shared User: ${error.message}`)
+    throw new Error(`Error Adding Pattern Shared Users: ${error.message}`)
 }
 
 /**
- * Remove Pattern Shared User
+ * Remove Pattern Shared Users
  *
- * Revokes sharing of a pattern with a user.
+ * Revokes sharing of a pattern with users.
  *
  * @param patternId Pattern ID
- * @param sharedUserId Shared User ID
+ * @param sharedUserIds Shared User IDs
  */
-export async function removePatternSharedUser(
+export async function removePatternSharedUsers(
   patternId: string,
-  sharedUserId: string
+  sharedUserIds: string[]
 ): Promise<void> {
   const supabase = createClient()
 
@@ -68,8 +89,8 @@ export async function removePatternSharedUser(
     .from('pattern_shared_user')
     .delete()
     .eq('pattern_id', patternId)
-    .eq('shared_user_id', sharedUserId)
+    .in('shared_user_id', sharedUserIds)
 
   if (error)
-    throw new Error(`Error Removing Pattern Shared User: ${error.message}`)
+    throw new Error(`Error Removing Pattern Shared Users: ${error.message}`)
 }
