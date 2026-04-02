@@ -24,13 +24,13 @@ export async function getNemesisTimelineYears(
   const { data, error } = campaignType
     ? await supabase
         .from('nemesis_timeline_year')
-        .select('entries, year_number')
+        .select('id, entries, year_number')
         .eq('nemesis_id', nemesisId)
         .contains('campaign_types', [DatabaseCampaignType[campaignType]])
         .order('year_number', { ascending: true })
     : await supabase
         .from('nemesis_timeline_year')
-        .select('entries, year_number')
+        .select('id, entries, year_number')
         .eq('nemesis_id', nemesisId)
         .order('year_number', { ascending: true })
 

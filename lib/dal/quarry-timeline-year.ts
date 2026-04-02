@@ -24,13 +24,13 @@ export async function getQuarryTimelineYears(
   const { data, error } = campaignType
     ? await supabase
         .from('quarry_timeline_year')
-        .select('entries, year_number')
+        .select('id, entries, year_number')
         .eq('quarry_id', quarryId)
         .contains('campaign_types', [DatabaseCampaignType[campaignType]])
         .order('year_number', { ascending: true })
     : await supabase
         .from('quarry_timeline_year')
-        .select('entries, year_number')
+        .select('id, entries, year_number')
         .eq('quarry_id', quarryId)
         .order('year_number', { ascending: true })
 

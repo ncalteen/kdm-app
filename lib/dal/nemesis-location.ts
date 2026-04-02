@@ -3,6 +3,32 @@ import { createClient } from '@/lib/supabase/client'
 import { LocationDetail } from '@/lib/types'
 
 /**
+ * Get Nemesis Location Junction IDs
+ *
+ * Fetches the nemesis_location junction table row IDs for a specific nemesis.
+ *
+ * @param nemesisId Nemesis ID
+ * @returns Junction Row IDs
+ */
+export async function getNemesisLocationJunctionIds(
+  nemesisId: string
+): Promise<string[]> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('nemesis_location')
+    .select('id')
+    .eq('nemesis_id', nemesisId)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Nemesis Location Junction IDs: ${error.message}`
+    )
+
+  return (data ?? []).map((item) => item.id)
+}
+
+/**
  * Get Nemesis Location IDs
  *
  * Fetches location IDs associated with a specific nemesis from the

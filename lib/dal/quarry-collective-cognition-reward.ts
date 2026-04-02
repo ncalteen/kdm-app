@@ -3,6 +3,32 @@ import { createClient } from '@/lib/supabase/client'
 import { CollectiveCognitionRewardDetail } from '@/lib/types'
 
 /**
+ * Get Quarry CC Reward Junction IDs
+ *
+ * Fetches the quarry_collective_cognition_reward junction table row IDs.
+ *
+ * @param quarryId Quarry ID
+ * @returns Junction Row IDs
+ */
+export async function getQuarryCollectiveCognitionRewardJunctionIds(
+  quarryId: string
+): Promise<string[]> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry_collective_cognition_reward')
+    .select('id')
+    .eq('quarry_id', quarryId)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Quarry CC Reward Junction IDs: ${error.message}`
+    )
+
+  return (data ?? []).map((item) => item.id)
+}
+
+/**
  * Get Quarry Collective Cognition Reward IDs
  *
  * Fetches collective cognition reward IDs associated with a specific quarry

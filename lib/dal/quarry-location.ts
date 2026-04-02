@@ -3,6 +3,32 @@ import { createClient } from '@/lib/supabase/client'
 import { LocationDetail } from '@/lib/types'
 
 /**
+ * Get Quarry Location Junction IDs
+ *
+ * Fetches the quarry_location junction table row IDs for a specific quarry.
+ *
+ * @param quarryId Quarry ID
+ * @returns Junction Row IDs
+ */
+export async function getQuarryLocationJunctionIds(
+  quarryId: string
+): Promise<string[]> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('quarry_location')
+    .select('id')
+    .eq('quarry_id', quarryId)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Quarry Location Junction IDs: ${error.message}`
+    )
+
+  return (data ?? []).map((item) => item.id)
+}
+
+/**
  * Get Quarry Location IDs
  *
  * Fetches location IDs associated with a specific quarry from the
