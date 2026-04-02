@@ -1,5 +1,6 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { LocationDetail } from '@/lib/types'
 
 /**
  * Get Nemesis Location IDs
@@ -28,6 +29,41 @@ export async function getNemesisLocationIds(
   if (!data) throw new Error('Nemesis Location ID(s) Not Found')
 
   return data.map((item) => item.location_id)
+}
+
+/**
+ * Get Nemesis Location Data
+ *
+ * Fetches location data associated with a specific nemesis by joining the
+ * nemesis_location and location tables.
+ *
+ * @param nemesisId Nemesis ID
+ * @returns Nemesis Location Data
+ */
+export async function getNemesisLocations(
+  nemesisId: string | null | undefined
+): Promise<LocationDetail[]> {
+  if (!nemesisId) throw new Error('Required: Nemesis ID')
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('nemesis_location')
+    .select('location(custom, id, location_name)')
+    .eq('nemesis_id', nemesisId)
+
+  if (error)
+    throw new Error(`Error Fetching Nemesis Location Data: ${error.message}`)
+
+  if (!data) throw new Error('Nemesis Location Data Not Found')
+
+  return (
+    data as unknown as {
+      location: { custom: boolean; id: string; location_name: string }
+    }[]
+  ).map((item) => ({
+    ...item.location
+  }))
 }
 
 /**

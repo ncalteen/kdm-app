@@ -65,6 +65,7 @@ export async function getResources(): Promise<{
     return {
       id: r.id as string,
       category: r.category as ResourceDetail['category'],
+      custom: r.custom as boolean,
       quarry_id: r.quarry_id as string | null,
       quarry_monster_name: quarry?.monster_name ?? null,
       quarry_node: quarry?.node ?? null,
@@ -130,6 +131,7 @@ export async function addResource(
   return {
     id: data.id,
     category: data.category,
+    custom: data.custom,
     quarry_id: data.quarry_id,
     quarry_monster_name: quarry?.monster_name ?? null,
     quarry_node: quarry?.node ?? null,

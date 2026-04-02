@@ -1,5 +1,6 @@
-import { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { NemesisLevelDetail } from '@/lib/types'
 
 /**
  * Get Nemesis Levels
@@ -11,9 +12,7 @@ import { createClient } from '@/lib/supabase/client'
  */
 export async function getNemesisLevels(
   nemesisId: string | null | undefined
-): Promise<
-  Omit<Tables<'nemesis_level'>, 'created_at' | 'updated_at' | 'nemesis_id'>[]
-> {
+): Promise<NemesisLevelDetail[]> {
   if (!nemesisId) throw new Error('Required: Nemesis ID')
 
   const supabase = createClient()
