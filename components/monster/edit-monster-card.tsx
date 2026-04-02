@@ -4,8 +4,21 @@ import { NumericInput } from '@/components/menu/numeric-input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -16,24 +29,34 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import {
-  baseMonsterLevelData,
-  basicHuntBoard,
-  monsterAttributeTokenMap
-} from '@/lib/common'
-import { addCollectiveCognitionReward } from '@/lib/dal/collective-cognition-reward'
-import { addLocation } from '@/lib/dal/location'
+import { baseMonsterLevelData, monsterAttributeTokenMap } from '@/lib/common'
+import { getCollectiveCognitionRewards } from '@/lib/dal/collective-cognition-reward'
+import { getLocations } from '@/lib/dal/location'
 import { getNemesis, updateNemesis } from '@/lib/dal/nemesis'
-import { getNemesisLevels, removeNemesisLevel } from '@/lib/dal/nemesis-level'
-import { addNemesisLocation } from '@/lib/dal/nemesis-location'
+import {
+  addNemesisLevel,
+  getNemesisLevels,
+  removeNemesisLevel,
+  updateNemesisLevel
+} from '@/lib/dal/nemesis-level'
+import {
+  addNemesisLocation,
+  getNemesisLocationJunctionIds,
+  getNemesisLocations,
+  removeNemesisLocation
+} from '@/lib/dal/nemesis-location'
 import {
   addNemesisTimelineYear,
-  getNemesisTimelineYears
+  getNemesisTimelineYears,
+  removeNemesisTimelineYear,
+  updateNemesisTimelineYear
 } from '@/lib/dal/nemesis-timeline-year'
 import { getQuarry, updateQuarry } from '@/lib/dal/quarry'
 import {
   addQuarryCollectiveCognitionReward,
-  getQuarryCollectiveCognitionRewards
+  getQuarryCollectiveCognitionRewardJunctionIds,
+  getQuarryCollectiveCognitionRewards,
+  removeQuarryCollectiveCognitionReward
 } from '@/lib/dal/quarry-collective-cognition-reward'
 import {
   addQuarryHuntBoard,
@@ -43,15 +66,20 @@ import {
 import {
   addQuarryLevel,
   getQuarryLevels,
-  removeQuarryLevel
+  removeQuarryLevel,
+  updateQuarryLevel
 } from '@/lib/dal/quarry-level'
 import {
   addQuarryLocation,
-  getQuarryLocations
+  getQuarryLocationJunctionIds,
+  getQuarryLocations,
+  removeQuarryLocations
 } from '@/lib/dal/quarry-location'
 import {
   addQuarryTimelineYear,
-  getQuarryTimelineYears
+  getQuarryTimelineYears,
+  removeQuarryTimelineYear,
+  updateQuarryTimelineYear
 } from '@/lib/dal/quarry-timeline-year'
 import { HuntEventType, MonsterNode, MonsterType } from '@/lib/enums'
 import {
@@ -59,8 +87,15 @@ import {
   ERROR_MESSAGE,
   NAMELESS_OBJECT_ERROR_MESSAGE
 } from '@/lib/messages'
-import { createClient } from '@/lib/supabase/client'
-import { HuntBoard, MonsterLevelData } from '@/lib/types'
+import {
+  CollectiveCognitionRewardDetail,
+  LocationDetail,
+  NemesisLevelDetail,
+  QuarryDetail,
+  QuarryHuntBoardDetail,
+  QuarryLevelDetail,
+  QuarryTimelineDetail
+} from '@/lib/types'
 import { getAvailableNodes } from '@/lib/utils'
 import {
   ChevronDownIcon,
@@ -70,30 +105,7 @@ import {
   Trash2Icon,
   XIcon
 } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/** Timeline Event Form Data */
-interface TimelineEventData {
-  /** Year Number */
-  yearNumber: number
-  /** Timeline Entries */
-  entries: string[]
-}
-
-/** Collective Cognition Reward Form Data (Quarry Only) */
-interface CollectiveCognitionRewardData {
-  /** Collective Cognition Value */
-  collectiveCognition: number
-  /** Reward Name */
-  rewardName: string
-}
-
-/**
- * Monster Level Data (Editing)
- */
-type MonsterLevelDataEditing = MonsterLevelData & {
-  dbId: string | null
-}
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
  * Edit Monster Card Properties
@@ -128,208 +140,173 @@ export function EditMonsterCard({
 }: EditMonsterCardProps): ReactElement {
   const { toast } = useToast(local)
 
+  // UI State
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-
-  const [name, setName] = useState('')
-  const [node, setNode] = useState<MonsterNode>(MonsterNode.NQ1)
-  const [isPrologue, setIsPrologue] = useState(false)
-
-  const [levels, setLevels] = useState<{
-    [key: number]: MonsterLevelDataEditing[]
-  }>({})
   const [expandedLevels, setExpandedLevels] = useState<Set<number>>(new Set())
   const [expandedSubMonsters, setExpandedSubMonsters] = useState<Set<string>>(
     new Set()
   )
-
-  const [levelHuntPositions, setLevelHuntPositions] = useState<{
-    [key: number]: { huntPos: number; survivorHuntPos: number }
-  }>({})
-
-  const [huntBoardId, setHuntBoardId] = useState<string | null>(null)
-  const [huntBoard, setHuntBoard] = useState<HuntBoard>(basicHuntBoard)
-
-  // IDs of levels to delete on save
   const [deletedLevelIds, setDeletedLevelIds] = useState<string[]>([])
 
-  // Locations, Timeline Events, CC Rewards
-  const [locations, setLocations] = useState<string[]>([])
-  const [existingLocationIds, setExistingLocationIds] = useState<string[]>([])
-  const [timelineEvents, setTimelineEvents] = useState<TimelineEventData[]>([])
-  const [ccRewards, setCCRewards] = useState<CollectiveCognitionRewardData[]>(
+  // Monster Data
+  const [name, setName] = useState<string | null>(null)
+  const [node, setNode] = useState<MonsterNode>(MonsterNode.NQ1)
+  const [prologue, setPrologue] = useState<boolean>(false)
+
+  // Level Data
+  const [levels, setLevels] = useState<{
+    [key: number]: (NemesisLevelDetail | QuarryLevelDetail)[]
+  }>({})
+  const [levelHuntPositions, setLevelHuntPositions] = useState<{
+    [key: number]: { hunt_pos: number; survivor_hunt_pos: number }
+  }>({})
+
+  // Hunt Board Data (Quarry Only)
+  const [huntBoard, setHuntBoard] = useState<QuarryHuntBoardDetail>({
+    id: '',
+    pos_1: HuntEventType.BASIC,
+    pos_2: HuntEventType.BASIC,
+    pos_3: HuntEventType.BASIC,
+    pos_4: HuntEventType.BASIC,
+    pos_5: HuntEventType.BASIC,
+    pos_7: HuntEventType.BASIC,
+    pos_8: HuntEventType.BASIC,
+    pos_9: HuntEventType.BASIC,
+    pos_10: HuntEventType.BASIC,
+    pos_11: HuntEventType.BASIC,
+    quarry_id: ''
+  })
+
+  // Location Data
+  const [locations, setLocations] = useState<LocationDetail[]>([])
+  const [locationAddOpen, setLocationAddOpen] = useState(false)
+  const [availableLocations, setAvailableLocations] = useState<{
+    [key: string]: LocationDetail
+  }>({})
+
+  // Timeline Event Data
+  const [timelineEvents, setTimelineEvents] = useState<QuarryTimelineDetail[]>(
     []
   )
-  const [existingCCRewardIds, setExistingCCRewardIds] = useState<string[]>([])
 
-  /** Load monster data from DB */
+  // Collective Cognition Rewards (Quarry Only)
+  const [collectiveCognitionRewards, setCollectiveCognitionRewards] = useState<
+    CollectiveCognitionRewardDetail[]
+  >([])
+  const [ccRewardAddOpen, setCCRewardAddOpen] = useState(false)
+  const [availableCCRewards, setAvailableCCRewards] = useState<{
+    [key: string]: CollectiveCognitionRewardDetail
+  }>({})
+
+  /** Locations not yet selected */
+  const selectableLocations = useMemo(() => {
+    const selectedIds = new Set(locations.map((l) => l.id))
+    return Object.values(availableLocations).filter(
+      (l) => !selectedIds.has(l.id)
+    )
+  }, [availableLocations, locations])
+
+  /** CC rewards not yet selected */
+  const selectableCCRewards = useMemo(() => {
+    const selectedIds = new Set(collectiveCognitionRewards.map((c) => c.id))
+    return Object.values(availableCCRewards).filter(
+      (c) => !selectedIds.has(c.id)
+    )
+  }, [availableCCRewards, collectiveCognitionRewards])
+
+  /**
+   * Load monster data from DB
+   */
   useEffect(() => {
     const load = async () => {
       setIsLoading(true)
+
       try {
+        // Fetch available locations and CC rewards for the dropdown
+        setAvailableLocations(await getLocations())
+        setAvailableCCRewards(await getCollectiveCognitionRewards())
+
+        const functionMap = (monsterType: MonsterType) => ({
+          getMonsterData:
+            monsterType === MonsterType.QUARRY ? getQuarry : getNemesis,
+          getMonsterLevels:
+            monsterType === MonsterType.QUARRY
+              ? getQuarryLevels
+              : getNemesisLevels,
+          getMonsterLocations:
+            monsterType === MonsterType.QUARRY
+              ? getQuarryLocations
+              : getNemesisLocations,
+          getMonsterTimelineEvents:
+            monsterType === MonsterType.QUARRY
+              ? getQuarryTimelineYears
+              : getNemesisTimelineYears
+        })
+
+        const [
+          monsterData,
+          monsterLevels,
+          monsterLocations,
+          monsterTimelineEvents
+        ] = await Promise.all([
+          functionMap(monsterType).getMonsterData(monsterId),
+          functionMap(monsterType).getMonsterLevels(monsterId),
+          functionMap(monsterType).getMonsterLocations(monsterId),
+          functionMap(monsterType).getMonsterTimelineEvents(monsterId)
+        ])
+
+        // Set base monster data
+        if (monsterData) {
+          setName(monsterData.monster_name)
+          setNode(monsterData.node as MonsterNode)
+
+          if (monsterType === MonsterType.QUARRY)
+            setPrologue((monsterData as QuarryDetail).prologue)
+        }
+
+        // Set level data (grouped by level number)
+        const grouped: {
+          [key: number]: (NemesisLevelDetail | QuarryLevelDetail)[]
+        } = {}
+
+        for (const monsterLevel of monsterLevels) {
+          if (!grouped[monsterLevel.level_number])
+            grouped[monsterLevel.level_number] = []
+
+          grouped[monsterLevel.level_number].push(monsterLevel)
+        }
+        setLevels(grouped)
+        setExpandedLevels(new Set(Object.keys(grouped).map(Number)))
+
+        // Set location data
+        setLocations(monsterLocations)
+
+        // Set timeline data
+        setTimelineEvents(monsterTimelineEvents)
+
         if (monsterType === MonsterType.QUARRY) {
-          const [detail, qLevels, board] = await Promise.all([
-            getQuarry(monsterId),
-            getQuarryLevels(monsterId),
-            getQuarryHuntBoard(monsterId)
-          ])
+          // Set hunt board data
+          setHuntBoard(await getQuarryHuntBoard(monsterId))
 
-          if (detail) {
-            setName(detail.monster_name)
-            setNode(detail.node as MonsterNode)
-            setIsPrologue(detail.prologue)
-          }
-
-          // Group levels by level_number
-          const grouped: { [key: number]: MonsterLevelDataEditing[] } = {}
-          for (const l of qLevels) {
-            const n = l.level_number
-            if (!grouped[n]) grouped[n] = []
-            grouped[n].push({
-              dbId: l.id,
-              subMonsterName: l.sub_monster_name ?? '',
-              basicCards: l.basic_cards,
-              advancedCards: l.advanced_cards,
-              legendaryCards: l.legendary_cards,
-              overtoneCards: l.overtone_cards,
-              accuracy: l.accuracy,
-              accuracyTokens: l.accuracy_tokens,
-              damage: l.damage,
-              damageTokens: l.damage_tokens,
-              evasion: l.evasion,
-              evasionTokens: l.evasion_tokens,
-              luck: l.luck,
-              luckTokens: l.luck_tokens,
-              movement: l.movement,
-              movementTokens: l.movement_tokens,
-              speed: l.speed,
-              speedTokens: l.speed_tokens,
-              strength: l.strength,
-              strengthTokens: l.strength_tokens,
-              toughness: l.toughness,
-              toughnessTokens: l.toughness_tokens,
-              life: 0,
-              traits: l.traits,
-              moods: l.moods
-            })
-          }
-          setLevels(grouped)
-          setExpandedLevels(new Set(Object.keys(grouped).map(Number)))
-
-          // Extract per-level hunt positions from the first sub-monster
+          // Extract per-level hunt positions from the first sub-monster.
           const huntPositions: {
-            [key: number]: { huntPos: number; survivorHuntPos: number }
+            [key: number]: { hunt_pos: number; survivor_hunt_pos: number }
           } = {}
-          for (const l of qLevels) {
-            if (!huntPositions[l.level_number]) {
-              huntPositions[l.level_number] = {
-                huntPos: l.hunt_pos,
-                survivorHuntPos: l.survivor_hunt_pos
+          for (const monsterLevel of monsterLevels) {
+            if (!huntPositions[monsterLevel.level_number]) {
+              huntPositions[monsterLevel.level_number] = {
+                hunt_pos: (monsterLevel as QuarryLevelDetail).hunt_pos,
+                survivor_hunt_pos: (monsterLevel as QuarryLevelDetail)
+                  .survivor_hunt_pos
               }
             }
           }
           setLevelHuntPositions(huntPositions)
 
-          if (board) {
-            setHuntBoardId(board.id)
-            setHuntBoard({
-              1: board.pos_1 as HuntEventType,
-              2: board.pos_2 as HuntEventType,
-              3: board.pos_3 as HuntEventType,
-              4: board.pos_4 as HuntEventType,
-              5: board.pos_5 as HuntEventType,
-              7: board.pos_7 as HuntEventType,
-              8: board.pos_8 as HuntEventType,
-              9: board.pos_9 as HuntEventType,
-              10: board.pos_10 as HuntEventType,
-              11: board.pos_11 as HuntEventType
-            })
-          }
-
-          // Load locations, timeline events, and CC rewards
-          const locations = await getQuarryLocations(monsterId)
-          setExistingLocationIds(locations.map((l) => l.id))
-          setLocations(locations.map((l) => l.name))
-
-          const timelineData = await getQuarryTimelineYears(monsterId)
-          setTimelineEvents(
-            timelineData.map((t) => ({
-              yearNumber: t.year_number,
-              entries: t.entries
-            }))
-          )
-
-          const collectiveCognitionRewards =
+          // Load collective cognition rewards
+          setCollectiveCognitionRewards(
             await getQuarryCollectiveCognitionRewards(monsterId)
-          setExistingCCRewardIds(
-            collectiveCognitionRewards.map(
-              (r) => r.collective_cognition_reward_id
-            )
-          )
-          setCCRewards(
-            collectiveCognitionRewards.map((r) => ({
-              collectiveCognition:
-                r.collective_cognition_reward.collective_cognition,
-              rewardName: r.collective_cognition_reward.reward_name
-            }))
-          )
-        } else {
-          const [detail, nLevels] = await Promise.all([
-            getNemesis(monsterId),
-            getNemesisLevels(monsterId)
-          ])
-
-          if (detail) {
-            setName(detail.monster_name)
-            setNode(detail.node as MonsterNode)
-          }
-
-          const grouped: { [key: number]: MonsterLevelDataEditing[] } = {}
-          for (const l of nLevels) {
-            const n = l.level_number
-            if (!grouped[n]) grouped[n] = []
-            grouped[n].push({
-              dbId: l.id,
-              subMonsterName: l.sub_monster_name ?? '',
-              basicCards: l.basic_cards,
-              advancedCards: l.advanced_cards,
-              legendaryCards: l.legendary_cards,
-              overtoneCards: l.overtone_cards,
-              accuracy: l.accuracy,
-              accuracyTokens: l.accuracy_tokens,
-              damage: l.damage,
-              damageTokens: l.damage_tokens,
-              evasion: l.evasion,
-              evasionTokens: l.evasion_tokens,
-              luck: l.luck,
-              luckTokens: l.luck_tokens,
-              movement: l.movement,
-              movementTokens: l.movement_tokens,
-              speed: l.speed,
-              speedTokens: l.speed_tokens,
-              strength: l.strength,
-              strengthTokens: l.strength_tokens,
-              toughness: l.toughness,
-              toughnessTokens: l.toughness_tokens,
-              life: l.life ?? 0,
-              traits: l.traits,
-              moods: l.moods
-            })
-          }
-          setLevels(grouped)
-          setExpandedLevels(new Set(Object.keys(grouped).map(Number)))
-
-          // Load locations and timeline events for nemesis
-          const locations = await getQuarryLocations(monsterId)
-          setExistingLocationIds(locations.map((l) => l.id))
-          setLocations(locations.map((l) => l.name))
-
-          const timelineData = await getNemesisTimelineYears(monsterId)
-          setTimelineEvents(
-            timelineData.map((t) => ({
-              yearNumber: t.year_number,
-              entries: t.entries
-            }))
           )
         }
       } catch (err: unknown) {
@@ -342,71 +319,150 @@ export function EditMonsterCard({
     load()
   }, [monsterId, monsterType, toast])
 
-  const toggleSubMonster = useCallback((key: string) => {
-    setExpandedSubMonsters((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }, [])
+  /**
+   * Toggle Sub-Monster Expansion
+   *
+   * Uses a unique key of `${level}-${index}` to track expansion state of each
+   * sub-monster across levels.
+   *
+   * @param key Unique Key
+   */
+  const toggleSubMonster = useCallback(
+    (key: string) =>
+      setExpandedSubMonsters((prev) => {
+        const next = new Set(prev)
+        if (next.has(key)) next.delete(key)
+        else next.add(key)
+        return next
+      }),
+    []
+  )
 
-  const toggleLevel = useCallback((level: number) => {
-    setExpandedLevels((prev) => {
-      const next = new Set(prev)
-      if (next.has(level)) next.delete(level)
-      else next.add(level)
-      return next
-    })
-  }, [])
+  /**
+   * Toggle Level Expansion
+   *
+   * Expanding a level shows all sub-monsters for that level. Expansion state is
+   * tracked by level number in a Set.
+   *
+   * @param level Level Number
+   */
+  const toggleLevel = useCallback(
+    (level: number) =>
+      setExpandedLevels((prev) => {
+        const next = new Set(prev)
+        if (next.has(level)) next.delete(level)
+        else next.add(level)
+        return next
+      }),
+    []
+  )
 
+  /**
+   * Add Sub-Monster
+   *
+   * Adds a new sub-monster to the specified level with default values. Also
+   * expands the level to show the new sub-monster. New sub-monsters have a null
+   * database ID to indicate they don't exist in the DB yet.
+   *
+   * @param level Level Number
+   */
   const addSubMonster = useCallback((level: number) => {
     setLevels((prev) => ({
       ...prev,
-      [level]: [...(prev[level] ?? []), { ...baseMonsterLevelData, dbId: null }]
+      [level]: [
+        ...(prev[level] ?? []),
+        {
+          ...baseMonsterLevelData,
+          id: `temp-${Date.now()}`,
+          ai_deck_remaining: 0,
+          level_number: level,
+          survivor_statuses: []
+        } as unknown as QuarryLevelDetail
+      ]
     }))
+
     setExpandedLevels((prev) => new Set(prev).add(level))
   }, [])
 
-  const removeSubMonster = useCallback((level: number, index: number) => {
-    setLevels((prev) => {
-      const levelData = [...(prev[level] ?? [])]
-      const removed = levelData[index]
-      if (removed?.dbId) setDeletedLevelIds((ids) => [...ids, removed.dbId!])
-      levelData.splice(index, 1)
-      if (levelData.length === 0) {
-        const next = { ...prev }
-        delete next[level]
-        return next
-      }
-      return { ...prev, [level]: levelData }
-    })
-  }, [])
+  /**
+   * Remove Sub-Monster
+   *
+   * Removes the specified sub-monster from the specified level. If the
+   * sub-monster has a database ID, it is added to the deletedLevelIds state to
+   * be removed from the DB on save. If removing the sub-monster results in no
+   * sub-monsters left for the level, the level is removed from the levels state
+   * entirely.
+   *
+   * @param level Level Number
+   */
+  const removeSubMonster = useCallback(
+    (level: number, index: number) =>
+      setLevels((prev) => {
+        const levelData = [...(prev[level] ?? [])]
+        const removed = levelData[index]
 
+        if (removed.id) setDeletedLevelIds((ids) => [...ids, removed.id])
+
+        levelData.splice(index, 1)
+
+        if (levelData.length === 0) {
+          const next = { ...prev }
+          delete next[level]
+          return next
+        }
+
+        return { ...prev, [level]: levelData }
+      }),
+    []
+  )
+
+  /**
+   * Update Sub-Monster
+   *
+   * Updates the specified sub-monster with the provided changes. Changes are
+   * merged with existing sub-monster data, allowing for partial updates. The
+   * levels state is updated immutably to trigger re-renders.
+   *
+   * @param level Level Number
+   * @param index Sub-Monster Index
+   * @param updates Partial Sub-Monster Data to Update
+   */
   const updateSubMonster = useCallback(
     (
       level: number,
       index: number,
-      updates: Partial<MonsterLevelDataEditing>
-    ) => {
+      updates: Partial<NemesisLevelDetail | QuarryLevelDetail>
+    ) =>
       setLevels((prev) => {
         const levelData = [...(prev[level] ?? [])]
         levelData[index] = { ...levelData[index], ...updates }
         return { ...prev, [level]: levelData }
-      })
-    },
+      }),
     []
   )
 
-  const cycleHuntBoardPos = useCallback((pos: keyof HuntBoard) => {
-    setHuntBoard((prev) => ({
-      ...prev,
-      [pos]:
-        prev[pos] === HuntEventType.BASIC
-          ? HuntEventType.MONSTER
-          : HuntEventType.BASIC
-    }))
-  }, [])
+  /**
+   * Cycle Hunt Board Position
+   *
+   * Cycles the specified hunt board position through the available event types
+   * (Basic -> Monster -> Basic). This allows users to easily configure the hunt
+   * board layout for the quarry. The huntBoard state is updated immutably to
+   * trigger re-renders.
+   *
+   * @param pos Hunt Board Position (1-5, 7-11)
+   */
+  const cycleHuntBoardPos = useCallback(
+    (pos: `pos_${1 | 2 | 3 | 4 | 5 | 7 | 8 | 9 | 10 | 11}`) => {
+      setHuntBoard((prev) => ({
+        ...prev,
+        [pos]:
+          prev[pos] === HuntEventType.BASIC
+            ? HuntEventType.MONSTER
+            : HuntEventType.BASIC
+      }))
+    },
+    []
+  )
 
   /**
    * Handle Save
@@ -414,156 +470,165 @@ export function EditMonsterCard({
    * Updates the monster record and reconciles levels (add new, delete removed).
    */
   const handleSave = useCallback(async () => {
-    if (!name.trim())
+    if (!name?.trim())
       return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('monster'))
 
     setIsSaving(true)
 
+    const isQuarry = monsterType === MonsterType.QUARRY
+
+    const fns = {
+      addLevel: isQuarry ? addQuarryLevel : addNemesisLevel,
+      removeLevel: isQuarry ? removeQuarryLevel : removeNemesisLevel,
+      updateMonster: isQuarry ? updateQuarry : updateNemesis,
+      updateLevel: isQuarry ? updateQuarryLevel : updateNemesisLevel,
+      addLocation: isQuarry
+        ? (locId: string) =>
+            addQuarryLocation({ quarry_id: monsterId, location_id: locId })
+        : (locId: string) =>
+            addNemesisLocation({ nemesis_id: monsterId, location_id: locId }),
+      getLocationJunctionIds: isQuarry
+        ? () => getQuarryLocationJunctionIds(monsterId)
+        : () => getNemesisLocationJunctionIds(monsterId),
+      removeLocationJunction: isQuarry
+        ? (ids: string[]) => removeQuarryLocations(ids)
+        : async (ids: string[]) => {
+            for (const id of ids) await removeNemesisLocation(id)
+          },
+      addTimelineYear: isQuarry
+        ? (data: { year_number: number; entries: string[] }) =>
+            addQuarryTimelineYear({
+              quarry_id: monsterId,
+              ...data,
+              campaign_types: []
+            })
+        : (data: { year_number: number; entries: string[] }) =>
+            addNemesisTimelineYear({
+              nemesis_id: monsterId,
+              ...data,
+              campaign_types: []
+            }),
+      updateTimelineYear: isQuarry
+        ? updateQuarryTimelineYear
+        : updateNemesisTimelineYear,
+      removeTimelineYear: isQuarry
+        ? removeQuarryTimelineYear
+        : removeNemesisTimelineYear
+    }
+
     try {
-      if (monsterType === MonsterType.QUARRY) {
-        // Update quarry record
-        await updateQuarry(monsterId, {
-          monster_name: name.trim(),
-          multi_monster: Object.values(levels).some((l) => l.length > 1),
-          node,
-          prologue: isPrologue
-        })
+      // Update the monster record
+      await fns.updateMonster(monsterId, {
+        monster_name: name.trim(),
+        multi_monster: Object.values(levels).some((l) => l.length > 1),
+        node,
+        ...(isQuarry ? { prologue } : {})
+      })
 
-        // Update or create hunt board
-        if (huntBoardId) {
-          await updateQuarryHuntBoard(huntBoardId, {
-            pos_1: huntBoard[1],
-            pos_2: huntBoard[2],
-            pos_3: huntBoard[3],
-            pos_4: huntBoard[4],
-            pos_5: huntBoard[5],
-            pos_7: huntBoard[7],
-            pos_8: huntBoard[8],
-            pos_9: huntBoard[9],
-            pos_10: huntBoard[10],
-            pos_11: huntBoard[11]
-          })
+      // Delete removed levels
+      for (const id of deletedLevelIds) await fns.removeLevel(id)
+
+      // Add/update levels
+      for (const [levelNum, subMonsters] of Object.entries(levels)) {
+        for (const sub of subMonsters) {
+          const levelParsed = parseInt(levelNum)
+          const levelData = {
+            ...sub,
+            level_number: sub.level_number || levelParsed,
+            ai_deck_remaining:
+              sub.basic_cards +
+              sub.advanced_cards +
+              sub.legendary_cards +
+              sub.overtone_cards,
+            ...(isQuarry
+              ? {
+                  hunt_pos: levelHuntPositions[levelParsed]?.hunt_pos ?? 12,
+                  survivor_hunt_pos:
+                    levelHuntPositions[levelParsed]?.survivor_hunt_pos ?? 0
+                }
+              : {})
+          }
+
+          if (sub.id && !sub.id.startsWith('temp-')) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { id, ...updateData } = levelData
+            await fns.updateLevel(sub.id, updateData)
+          } else {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { id, ...insertData } = levelData
+            const idKey = isQuarry ? 'quarry_id' : 'nemesis_id'
+            await (
+              fns.addLevel as (
+                data: Record<string, unknown>
+              ) => Promise<unknown>
+            )({ ...insertData, [idKey]: monsterId })
+          }
+        }
+      }
+
+      // Reconcile locations: delete all existing junction records, re-add
+      const existingLocJunctionIds = await fns.getLocationJunctionIds()
+      if (existingLocJunctionIds.length > 0)
+        await fns.removeLocationJunction(existingLocJunctionIds)
+
+      for (const location of locations) await fns.addLocation(location.id)
+
+      // Reconcile timeline events: update existing, add new, delete removed
+      const deletedTimelineIds = new Set<string>()
+      for (const te of timelineEvents) {
+        if (te.id) {
+          const validEntries = te.entries.filter((e) => e.trim())
+
+          if (validEntries.length === 0) {
+            await fns.removeTimelineYear(te.id)
+            deletedTimelineIds.add(te.id)
+          } else {
+            await fns.updateTimelineYear(te.id, {
+              year_number: te.year_number,
+              entries: validEntries
+            })
+          }
         } else {
-          await addQuarryHuntBoard({
-            quarry_id: monsterId,
-            pos_1: huntBoard[1],
-            pos_2: huntBoard[2],
-            pos_3: huntBoard[3],
-            pos_4: huntBoard[4],
-            pos_5: huntBoard[5],
-            pos_7: huntBoard[7],
-            pos_8: huntBoard[8],
-            pos_9: huntBoard[9],
-            pos_10: huntBoard[10],
-            pos_11: huntBoard[11]
+          const validEntries = te.entries.filter((e) => e.trim())
+          if (validEntries.length === 0) continue
+          await fns.addTimelineYear({
+            year_number: te.year_number,
+            entries: validEntries
+          })
+        }
+      }
+
+      if (isQuarry) {
+        // Update or create hunt board
+        if (huntBoard.id) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, quarry_id, ...boardData } = huntBoard
+          await updateQuarryHuntBoard(huntBoard.id, boardData)
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...boardData } = huntBoard
+          await (
+            addQuarryHuntBoard as (
+              data: Record<string, unknown>
+            ) => Promise<unknown>
+          )({
+            ...boardData,
+            quarry_id: monsterId
           })
         }
 
-        // Delete removed levels
-        for (const id of deletedLevelIds) await removeQuarryLevel(id)
+        // Reconcile CC rewards: delete all junction records, re-add
+        const existingCCRJunctionIds =
+          await getQuarryCollectiveCognitionRewardJunctionIds(monsterId)
 
-        // Add/update levels
-        for (const [levelNum, subMonsters] of Object.entries(levels)) {
-          for (const sub of subMonsters) {
-            const levelData = {
-              level_number: parseInt(levelNum),
-              sub_monster_name: sub.subMonsterName || null,
-              basic_cards: sub.basicCards,
-              advanced_cards: sub.advancedCards,
-              legendary_cards: sub.legendaryCards,
-              overtone_cards: sub.overtoneCards,
-              ai_deck_remaining:
-                sub.basicCards +
-                sub.advancedCards +
-                sub.legendaryCards +
-                sub.overtoneCards,
-              accuracy: sub.accuracy,
-              accuracy_tokens: sub.accuracyTokens,
-              damage: sub.damage,
-              damage_tokens: sub.damageTokens,
-              evasion: sub.evasion,
-              evasion_tokens: sub.evasionTokens,
-              luck: sub.luck,
-              luck_tokens: sub.luckTokens,
-              movement: sub.movement,
-              movement_tokens: sub.movementTokens,
-              speed: sub.speed,
-              speed_tokens: sub.speedTokens,
-              strength: sub.strength,
-              strength_tokens: sub.strengthTokens,
-              toughness: sub.toughness,
-              toughness_tokens: sub.toughnessTokens,
-              hunt_pos: levelHuntPositions[parseInt(levelNum)]?.huntPos ?? 12,
-              survivor_hunt_pos:
-                levelHuntPositions[parseInt(levelNum)]?.survivorHuntPos ?? 0,
-              traits: sub.traits,
-              moods: sub.moods
-            }
+        for (const jId of existingCCRJunctionIds)
+          await removeQuarryCollectiveCognitionReward(jId)
 
-            if (sub.dbId) {
-              const { updateQuarryLevel } =
-                await import('@/lib/dal/quarry-level')
-              await updateQuarryLevel(sub.dbId, levelData)
-            } else {
-              await addQuarryLevel({ quarry_id: monsterId, ...levelData })
-            }
-          }
-        }
-      } else {
-        // Nemesis
-        await updateNemesis(monsterId, {
-          monster_name: name.trim(),
-          multi_monster: Object.values(levels).some((l) => l.length > 1),
-          node
-        })
-
-        for (const id of deletedLevelIds) await removeNemesisLevel(id)
-
-        for (const [levelNum, subMonsters] of Object.entries(levels)) {
-          for (const sub of subMonsters) {
-            const levelData = {
-              level_number: parseInt(levelNum),
-              sub_monster_name: sub.subMonsterName || null,
-              basic_cards: sub.basicCards,
-              advanced_cards: sub.advancedCards,
-              legendary_cards: sub.legendaryCards,
-              overtone_cards: sub.overtoneCards,
-              ai_deck_remaining:
-                sub.basicCards +
-                sub.advancedCards +
-                sub.legendaryCards +
-                sub.overtoneCards,
-              accuracy: sub.accuracy,
-              accuracy_tokens: sub.accuracyTokens,
-              damage: sub.damage,
-              damage_tokens: sub.damageTokens,
-              evasion: sub.evasion,
-              evasion_tokens: sub.evasionTokens,
-              luck: sub.luck,
-              luck_tokens: sub.luckTokens,
-              movement: sub.movement,
-              movement_tokens: sub.movementTokens,
-              speed: sub.speed,
-              speed_tokens: sub.speedTokens,
-              strength: sub.strength,
-              strength_tokens: sub.strengthTokens,
-              toughness: sub.toughness,
-              toughness_tokens: sub.toughnessTokens,
-              life: sub.life || null,
-              traits: sub.traits,
-              moods: sub.moods
-            }
-
-            if (sub.dbId) {
-              const { updateNemesisLevel } =
-                await import('@/lib/dal/nemesis-level')
-              await updateNemesisLevel(sub.dbId, levelData)
-            } else {
-              const { addNemesisLevel: addLevel } =
-                await import('@/lib/dal/nemesis-level')
-              await addLevel({ nemesis_id: monsterId, ...levelData })
-            }
-          }
+        for (const ccr of collectiveCognitionRewards) {
+          await addQuarryCollectiveCognitionReward({
+            quarry_id: monsterId,
+            collective_cognition_reward_id: ccr.id
+          })
         }
       }
 
@@ -580,18 +645,15 @@ export function EditMonsterCard({
     monsterType,
     monsterId,
     node,
-    isPrologue,
+    prologue,
     levels,
     levelHuntPositions,
     locations,
-    existingLocationIds,
     timelineEvents,
-    ccRewards,
-    existingCCRewardIds,
     huntBoard,
-    huntBoardId,
     deletedLevelIds,
     onMonsterUpdated,
+    collectiveCognitionRewards,
     toast
   ])
 
@@ -625,15 +687,15 @@ export function EditMonsterCard({
               <Input
                 id="edit-monster-name"
                 className="flex-1"
-                value={name}
+                value={name ?? ''}
                 onChange={(e) => setName(e.target.value)}
               />
               {monsterType === MonsterType.QUARRY && (
                 <div className="flex items-center gap-2 shrink-0">
                   <Checkbox
                     id="edit-prologue"
-                    checked={isPrologue}
-                    onCheckedChange={(c) => setIsPrologue(!!c)}
+                    checked={prologue}
+                    onCheckedChange={(c) => setPrologue(!!c)}
                   />
                   <Label htmlFor="edit-prologue" className="whitespace-nowrap">
                     Prologue
@@ -682,39 +744,45 @@ export function EditMonsterCard({
                 <div className="w-16 h-16 border-2 rounded-lg border-green-500 bg-green-500/10 flex items-center justify-center text-xs">
                   Start
                 </div>
-                {([1, 2, 3, 4, 5] as const).map((pos) => (
-                  <button
-                    key={pos}
-                    type="button"
-                    className={`w-16 h-16 border-2 rounded-lg flex items-center justify-center text-xs cursor-pointer ${
-                      huntBoard[pos] === HuntEventType.MONSTER
-                        ? 'border-purple-500 bg-purple-500/10'
-                        : 'border-blue-500 bg-blue-500/10'
-                    }`}
-                    onClick={() => cycleHuntBoardPos(pos)}>
-                    {huntBoard[pos] === HuntEventType.MONSTER
-                      ? 'Monster'
-                      : 'Basic'}
-                  </button>
-                ))}
+                {([1, 2, 3, 4, 5] as const).map((pos) => {
+                  const key = `pos_${pos}` as const
+                  return (
+                    <button
+                      key={pos}
+                      type="button"
+                      className={`w-16 h-16 border-2 rounded-lg flex items-center justify-center text-xs cursor-pointer ${
+                        huntBoard[key] === HuntEventType.MONSTER
+                          ? 'border-purple-500 bg-purple-500/10'
+                          : 'border-blue-500 bg-blue-500/10'
+                      }`}
+                      onClick={() => cycleHuntBoardPos(key)}>
+                      {huntBoard[key] === HuntEventType.MONSTER
+                        ? 'Monster'
+                        : 'Basic'}
+                    </button>
+                  )
+                })}
                 <div className="w-16 h-16 border-2 rounded-lg border-amber-500 bg-amber-500/10 flex items-center justify-center text-xs">
                   OD
                 </div>
-                {([7, 8, 9, 10, 11] as const).map((pos) => (
-                  <button
-                    key={pos}
-                    type="button"
-                    className={`w-16 h-16 border-2 rounded-lg flex items-center justify-center text-xs cursor-pointer ${
-                      huntBoard[pos] === HuntEventType.MONSTER
-                        ? 'border-purple-500 bg-purple-500/10'
-                        : 'border-blue-500 bg-blue-500/10'
-                    }`}
-                    onClick={() => cycleHuntBoardPos(pos)}>
-                    {huntBoard[pos] === HuntEventType.MONSTER
-                      ? 'Monster'
-                      : 'Basic'}
-                  </button>
-                ))}
+                {([7, 8, 9, 10, 11] as const).map((pos) => {
+                  const key = `pos_${pos}` as const
+                  return (
+                    <button
+                      key={pos}
+                      type="button"
+                      className={`w-16 h-16 border-2 rounded-lg flex items-center justify-center text-xs cursor-pointer ${
+                        huntBoard[key] === HuntEventType.MONSTER
+                          ? 'border-purple-500 bg-purple-500/10'
+                          : 'border-blue-500 bg-blue-500/10'
+                      }`}
+                      onClick={() => cycleHuntBoardPos(key)}>
+                      {huntBoard[key] === HuntEventType.MONSTER
+                        ? 'Monster'
+                        : 'Basic'}
+                    </button>
+                  )
+                })}
                 <div className="w-16 h-16 border-2 rounded-lg border-red-500 bg-red-500/10 flex items-center justify-center text-xs">
                   Starvation
                 </div>
@@ -729,31 +797,48 @@ export function EditMonsterCard({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-semibold">Locations</Label>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocations((prev) => [...prev, ''])}>
-              <PlusIcon className="h-3 w-3" />
-            </Button>
+            <Popover open={locationAddOpen} onOpenChange={setLocationAddOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={selectableLocations.length === 0}>
+                  <PlusIcon className="h-3 w-3" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0" align="end">
+                <Command>
+                  <CommandInput placeholder="Search locations..." />
+                  <CommandList>
+                    <CommandEmpty>No locations found.</CommandEmpty>
+                    <CommandGroup>
+                      {selectableLocations.map((loc) => (
+                        <CommandItem
+                          key={loc.id}
+                          value={loc.location_name}
+                          onSelect={() => {
+                            setLocations((prev) => [...prev, loc])
+                            setLocationAddOpen(false)
+                          }}>
+                          {loc.location_name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
-          {locations.map((loc, idx) => (
-            <div key={idx} className="flex items-center gap-1">
-              <Input
-                value={loc}
-                placeholder="Location name"
-                onChange={(e) => {
-                  const next = [...locations]
-                  next[idx] = e.target.value
-                  setLocations(next)
-                }}
-              />
+          {locations.map((loc) => (
+            <div key={loc.id} className="flex items-center gap-1">
+              <Input value={loc.location_name} disabled />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() =>
-                  setLocations(locations.filter((_, i) => i !== idx))
+                  setLocations(locations.filter((l) => l.id !== loc.id))
                 }>
                 <Trash2Icon className="h-3 w-3" />
               </Button>
@@ -774,7 +859,7 @@ export function EditMonsterCard({
               onClick={() =>
                 setTimelineEvents((prev) => [
                   ...prev,
-                  { yearNumber: 0, entries: [''] }
+                  { id: `temp-${Date.now()}`, year_number: 0, entries: [''] }
                 ])
               }>
               <PlusIcon className="h-3 w-3" />
@@ -789,11 +874,11 @@ export function EditMonsterCard({
                     <Label className="text-xs pr-2">Year</Label>
                     <NumericInput
                       label="Year"
-                      value={te.yearNumber}
+                      value={te.year_number}
                       min={0}
                       onChange={(v) => {
                         const next = [...timelineEvents]
-                        next[teIdx] = { ...next[teIdx], yearNumber: v }
+                        next[teIdx] = { ...next[teIdx], year_number: v }
                         setTimelineEvents(next)
                       }}
                     />
@@ -876,50 +961,60 @@ export function EditMonsterCard({
                 <Label className="text-sm font-semibold">
                   Collective Cognition Rewards
                 </Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setCCRewards((prev) => [
-                      ...prev,
-                      { rewardName: '', collectiveCognition: 0 }
-                    ])
-                  }>
-                  <PlusIcon className="h-3 w-3" />
-                </Button>
+                <Popover
+                  open={ccRewardAddOpen}
+                  onOpenChange={setCCRewardAddOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={selectableCCRewards.length === 0}>
+                      <PlusIcon className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0" align="end">
+                    <Command>
+                      <CommandInput placeholder="Search rewards..." />
+                      <CommandList>
+                        <CommandEmpty>No rewards found.</CommandEmpty>
+                        <CommandGroup>
+                          {selectableCCRewards.map((ccr) => (
+                            <CommandItem
+                              key={ccr.id}
+                              value={ccr.reward_name}
+                              onSelect={() => {
+                                setCollectiveCognitionRewards((prev) => [
+                                  ...prev,
+                                  ccr
+                                ])
+                                setCCRewardAddOpen(false)
+                              }}>
+                              {ccr.reward_name} (CC: {ccr.collective_cognition})
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
-              {ccRewards.map((ccr, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Label className="text-xs whitespace-nowrap">CC</Label>
-                    <NumericInput
-                      label="CC"
-                      value={ccr.collectiveCognition}
-                      min={0}
-                      onChange={(v) => {
-                        const next = [...ccRewards]
-                        next[idx] = { ...next[idx], collectiveCognition: v }
-                        setCCRewards(next)
-                      }}
-                    />
-                  </div>
+              {collectiveCognitionRewards.map((ccr) => (
+                <div key={ccr.id} className="flex items-center gap-1">
                   <Input
-                    className="flex-1"
-                    value={ccr.rewardName}
-                    placeholder="Reward name"
-                    onChange={(e) => {
-                      const next = [...ccRewards]
-                      next[idx] = { ...next[idx], rewardName: e.target.value }
-                      setCCRewards(next)
-                    }}
+                    value={`${ccr.reward_name} (CC: ${ccr.collective_cognition})`}
+                    disabled
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() =>
-                      setCCRewards(ccRewards.filter((_, i) => i !== idx))
+                      setCollectiveCognitionRewards(
+                        collectiveCognitionRewards.filter(
+                          (c) => c.id !== ccr.id
+                        )
+                      )
                     }>
                     <Trash2Icon className="h-3 w-3" />
                   </Button>
@@ -971,7 +1066,7 @@ export function EditMonsterCard({
                       <NumericInput
                         label="Survivor Hunt Position"
                         value={
-                          levelHuntPositions[levelNum]?.survivorHuntPos ?? 0
+                          levelHuntPositions[levelNum]?.survivor_hunt_pos ?? 0
                         }
                         min={0}
                         max={12}
@@ -996,7 +1091,7 @@ export function EditMonsterCard({
                       </Label>
                       <NumericInput
                         label="Monster Hunt Position"
-                        value={levelHuntPositions[levelNum]?.huntPos ?? 12}
+                        value={levelHuntPositions[levelNum]?.hunt_pos ?? 12}
                         min={0}
                         max={12}
                         onChange={(v) =>
@@ -1024,7 +1119,7 @@ export function EditMonsterCard({
                           const subKey = `${levelNum}-${subIdx}`
                           const isSubExpanded = expandedSubMonsters.has(subKey)
                           const displayName =
-                            sub.subMonsterName || `Sub-Monster ${subIdx + 1}`
+                            sub.sub_monster_name || `Sub-Monster ${subIdx + 1}`
 
                           return (
                             <div
@@ -1066,10 +1161,10 @@ export function EditMonsterCard({
                                     <Input
                                       className="flex-1"
                                       placeholder="Sub-monster name (optional)"
-                                      value={sub.subMonsterName}
+                                      value={sub.sub_monster_name ?? ''}
                                       onChange={(e) =>
                                         updateSubMonster(levelNum, subIdx, {
-                                          subMonsterName: e.target.value
+                                          sub_monster_name: e.target.value
                                         })
                                       }
                                     />
@@ -1081,7 +1176,10 @@ export function EditMonsterCard({
                                         </Label>
                                         <NumericInput
                                           label="Life"
-                                          value={sub.life}
+                                          value={
+                                            (sub as NemesisLevelDetail).life ??
+                                            0
+                                          }
                                           min={0}
                                           onChange={(v) =>
                                             updateSubMonster(levelNum, subIdx, {
@@ -1104,22 +1202,22 @@ export function EditMonsterCard({
                                       {[
                                         {
                                           label: 'B',
-                                          key: 'basicCards' as const,
+                                          key: 'basic_cards' as const,
                                           full: 'Basic'
                                         },
                                         {
                                           label: 'A',
-                                          key: 'advancedCards' as const,
+                                          key: 'advanced_cards' as const,
                                           full: 'Advanced'
                                         },
                                         {
                                           label: 'L',
-                                          key: 'legendaryCards' as const,
+                                          key: 'legendary_cards' as const,
                                           full: 'Legendary'
                                         },
                                         {
                                           label: 'O',
-                                          key: 'overtoneCards' as const,
+                                          key: 'overtone_cards' as const,
                                           full: 'Overtone'
                                         }
                                       ].map((deck) => (
@@ -1131,7 +1229,11 @@ export function EditMonsterCard({
                                           </Label>
                                           <NumericInput
                                             label={deck.full}
-                                            value={sub[deck.key] as number}
+                                            value={
+                                              (sub as Record<string, unknown>)[
+                                                deck.key
+                                              ] as number
+                                            }
                                             min={0}
                                             onChange={(v) =>
                                               updateSubMonster(
@@ -1168,62 +1270,69 @@ export function EditMonsterCard({
                                         Total
                                       </Label>
 
-                                      {monsterAttributeTokenMap.map((attr) => (
-                                        <div
-                                          key={attr.key}
-                                          className="grid grid-cols-subgrid col-span-4 items-center">
-                                          <Label className="text-xs text-muted-foreground">
-                                            {attr.label}
-                                          </Label>
-                                          <NumericInput
-                                            label={attr.label}
-                                            value={
-                                              sub[
-                                                attr.key as keyof MonsterLevelDataEditing
-                                              ] as number
-                                            }
-                                            onChange={(v) =>
-                                              updateSubMonster(
-                                                levelNum,
-                                                subIdx,
-                                                {
-                                                  [attr.key]: v
-                                                }
-                                              )
-                                            }
-                                          />
-                                          <NumericInput
-                                            label={`${attr.label} Tokens`}
-                                            value={
-                                              sub[
-                                                attr.tokenKey as keyof MonsterLevelDataEditing
-                                              ] as number
-                                            }
-                                            onChange={(v) =>
-                                              updateSubMonster(
-                                                levelNum,
-                                                subIdx,
-                                                {
-                                                  [attr.tokenKey]: v
-                                                }
-                                              )
-                                            }
-                                            className="bg-muted!"
-                                          />
-                                          <NumericInput
-                                            label={`${attr.label} Total`}
-                                            value={
-                                              (sub[
-                                                attr.key as keyof MonsterLevelDataEditing
-                                              ] as number) +
-                                              (sub[
-                                                attr.tokenKey as keyof MonsterLevelDataEditing
-                                              ] as number)
-                                            }
-                                            disabled
-                                          />
-                                        </div>
-                                      ))}
+                                      {monsterAttributeTokenMap.map((attr) => {
+                                        const subRecord = sub as Record<
+                                          string,
+                                          unknown
+                                        >
+
+                                        return (
+                                          <div
+                                            key={attr.key}
+                                            className="grid grid-cols-subgrid col-span-4 items-center">
+                                            <Label className="text-xs text-muted-foreground">
+                                              {attr.label}
+                                            </Label>
+                                            <NumericInput
+                                              label={attr.label}
+                                              value={
+                                                (subRecord[
+                                                  attr.key
+                                                ] as number) ?? 0
+                                              }
+                                              onChange={(v) =>
+                                                updateSubMonster(
+                                                  levelNum,
+                                                  subIdx,
+                                                  {
+                                                    [attr.key]: v
+                                                  }
+                                                )
+                                              }
+                                            />
+                                            <NumericInput
+                                              label={`${attr.label} Tokens`}
+                                              value={
+                                                (subRecord[
+                                                  attr.tokenKey
+                                                ] as number) ?? 0
+                                              }
+                                              onChange={(v) =>
+                                                updateSubMonster(
+                                                  levelNum,
+                                                  subIdx,
+                                                  {
+                                                    [attr.tokenKey]: v
+                                                  }
+                                                )
+                                              }
+                                              className="bg-muted!"
+                                            />
+                                            <NumericInput
+                                              label={`${attr.label} Total`}
+                                              value={
+                                                ((subRecord[
+                                                  attr.key
+                                                ] as number) ?? 0) +
+                                                ((subRecord[
+                                                  attr.tokenKey
+                                                ] as number) ?? 0)
+                                              }
+                                              disabled
+                                            />
+                                          </div>
+                                        )
+                                      })}
                                     </div>
                                   </div>
 
@@ -1360,7 +1469,7 @@ export function EditMonsterCard({
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!name.trim() || isSaving}>
+          <Button onClick={handleSave} disabled={!name?.trim() || isSaving}>
             {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
