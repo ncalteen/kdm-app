@@ -1,5 +1,6 @@
-import { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { QuarryLevelDetail } from '@/lib/types'
 
 /**
  * Get Quarry Levels
@@ -11,9 +12,7 @@ import { createClient } from '@/lib/supabase/client'
  */
 export async function getQuarryLevels(
   quarryId: string | null | undefined
-): Promise<
-  Omit<Tables<'quarry_level'>, 'created_at' | 'updated_at' | 'quarry_id'>[]
-> {
+): Promise<QuarryLevelDetail[]> {
   if (!quarryId) throw new Error('Required: Quarry ID')
 
   const supabase = createClient()

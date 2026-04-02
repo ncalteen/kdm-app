@@ -21,9 +21,20 @@ import {
   basicHuntBoard,
   monsterAttributeTokenMap
 } from '@/lib/common'
+import { addCollectiveCognitionReward } from '@/lib/dal/collective-cognition-reward'
+import { addLocation } from '@/lib/dal/location'
 import { getNemesis, updateNemesis } from '@/lib/dal/nemesis'
 import { getNemesisLevels, removeNemesisLevel } from '@/lib/dal/nemesis-level'
+import { addNemesisLocation } from '@/lib/dal/nemesis-location'
+import {
+  addNemesisTimelineYear,
+  getNemesisTimelineYears
+} from '@/lib/dal/nemesis-timeline-year'
 import { getQuarry, updateQuarry } from '@/lib/dal/quarry'
+import {
+  addQuarryCollectiveCognitionReward,
+  getQuarryCollectiveCognitionRewards
+} from '@/lib/dal/quarry-collective-cognition-reward'
 import {
   addQuarryHuntBoard,
   getQuarryHuntBoard,
@@ -34,12 +45,21 @@ import {
   getQuarryLevels,
   removeQuarryLevel
 } from '@/lib/dal/quarry-level'
+import {
+  addQuarryLocation,
+  getQuarryLocations
+} from '@/lib/dal/quarry-location'
+import {
+  addQuarryTimelineYear,
+  getQuarryTimelineYears
+} from '@/lib/dal/quarry-timeline-year'
 import { HuntEventType, MonsterNode, MonsterType } from '@/lib/enums'
 import {
   CUSTOM_MONSTER_UPDATED_MESSAGE,
   ERROR_MESSAGE,
   NAMELESS_OBJECT_ERROR_MESSAGE
 } from '@/lib/messages'
+import { createClient } from '@/lib/supabase/client'
 import { HuntBoard, MonsterLevelData } from '@/lib/types'
 import { getAvailableNodes } from '@/lib/utils'
 import {
@@ -51,6 +71,22 @@ import {
   XIcon
 } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+
+/** Timeline Event Form Data */
+interface TimelineEventData {
+  /** Year Number */
+  yearNumber: number
+  /** Timeline Entries */
+  entries: string[]
+}
+
+/** Collective Cognition Reward Form Data (Quarry Only) */
+interface CollectiveCognitionRewardData {
+  /** Collective Cognition Value */
+  collectiveCognition: number
+  /** Reward Name */
+  rewardName: string
+}
 
 /**
  * Monster Level Data (Editing)
@@ -116,6 +152,15 @@ export function EditMonsterCard({
 
   // IDs of levels to delete on save
   const [deletedLevelIds, setDeletedLevelIds] = useState<string[]>([])
+
+  // Locations, Timeline Events, CC Rewards
+  const [locations, setLocations] = useState<string[]>([])
+  const [existingLocationIds, setExistingLocationIds] = useState<string[]>([])
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEventData[]>([])
+  const [ccRewards, setCCRewards] = useState<CollectiveCognitionRewardData[]>(
+    []
+  )
+  const [existingCCRewardIds, setExistingCCRewardIds] = useState<string[]>([])
 
   /** Load monster data from DB */
   useEffect(() => {
@@ -200,6 +245,34 @@ export function EditMonsterCard({
               11: board.pos_11 as HuntEventType
             })
           }
+
+          // Load locations, timeline events, and CC rewards
+          const locations = await getQuarryLocations(monsterId)
+          setExistingLocationIds(locations.map((l) => l.id))
+          setLocations(locations.map((l) => l.name))
+
+          const timelineData = await getQuarryTimelineYears(monsterId)
+          setTimelineEvents(
+            timelineData.map((t) => ({
+              yearNumber: t.year_number,
+              entries: t.entries
+            }))
+          )
+
+          const collectiveCognitionRewards =
+            await getQuarryCollectiveCognitionRewards(monsterId)
+          setExistingCCRewardIds(
+            collectiveCognitionRewards.map(
+              (r) => r.collective_cognition_reward_id
+            )
+          )
+          setCCRewards(
+            collectiveCognitionRewards.map((r) => ({
+              collectiveCognition:
+                r.collective_cognition_reward.collective_cognition,
+              rewardName: r.collective_cognition_reward.reward_name
+            }))
+          )
         } else {
           const [detail, nLevels] = await Promise.all([
             getNemesis(monsterId),
@@ -245,6 +318,19 @@ export function EditMonsterCard({
           }
           setLevels(grouped)
           setExpandedLevels(new Set(Object.keys(grouped).map(Number)))
+
+          // Load locations and timeline events for nemesis
+          const locations = await getQuarryLocations(monsterId)
+          setExistingLocationIds(locations.map((l) => l.id))
+          setLocations(locations.map((l) => l.name))
+
+          const timelineData = await getNemesisTimelineYears(monsterId)
+          setTimelineEvents(
+            timelineData.map((t) => ({
+              yearNumber: t.year_number,
+              entries: t.entries
+            }))
+          )
         }
       } catch (err: unknown) {
         console.error('Load Monster Error:', err)
@@ -497,6 +583,11 @@ export function EditMonsterCard({
     isPrologue,
     levels,
     levelHuntPositions,
+    locations,
+    existingLocationIds,
+    timelineEvents,
+    ccRewards,
+    existingCCRewardIds,
     huntBoard,
     huntBoardId,
     deletedLevelIds,
@@ -628,6 +719,212 @@ export function EditMonsterCard({
                   Starvation
                 </div>
               </div>
+            </div>
+          </>
+        )}
+
+        <Separator />
+
+        {/* Locations */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold">Locations</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocations((prev) => [...prev, ''])}>
+              <PlusIcon className="h-3 w-3" />
+            </Button>
+          </div>
+          {locations.map((loc, idx) => (
+            <div key={idx} className="flex items-center gap-1">
+              <Input
+                value={loc}
+                placeholder="Location name"
+                onChange={(e) => {
+                  const next = [...locations]
+                  next[idx] = e.target.value
+                  setLocations(next)
+                }}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  setLocations(locations.filter((_, i) => i !== idx))
+                }>
+                <Trash2Icon className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        <Separator />
+
+        {/* Timeline Events */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold">Timeline Events</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                setTimelineEvents((prev) => [
+                  ...prev,
+                  { yearNumber: 0, entries: [''] }
+                ])
+              }>
+              <PlusIcon className="h-3 w-3" />
+            </Button>
+          </div>
+          {timelineEvents.map((te, teIdx) => (
+            <div key={teIdx} className="border rounded-lg p-3">
+              <div className="flex gap-3">
+                {/* Year number and delete button */}
+                <div className="flex flex-col items-start gap-1 shrink-0">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs pr-2">Year</Label>
+                    <NumericInput
+                      label="Year"
+                      value={te.yearNumber}
+                      min={0}
+                      onChange={(v) => {
+                        const next = [...timelineEvents]
+                        next[teIdx] = { ...next[teIdx], yearNumber: v }
+                        setTimelineEvents(next)
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        setTimelineEvents(
+                          timelineEvents.filter((_, i) => i !== teIdx)
+                        )
+                      }>
+                      <Trash2Icon className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Entries column */}
+                <div className="flex-1 space-y-1">
+                  {te.entries.map((entry, eIdx) => (
+                    <div key={eIdx} className="flex items-center gap-1">
+                      <Input
+                        value={entry}
+                        placeholder="Timeline entry"
+                        onChange={(e) => {
+                          const next = [...timelineEvents]
+                          const entries = [...next[teIdx].entries]
+                          entries[eIdx] = e.target.value
+                          next[teIdx] = { ...next[teIdx], entries }
+                          setTimelineEvents(next)
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const next = [...timelineEvents]
+                          next[teIdx] = {
+                            ...next[teIdx],
+                            entries: next[teIdx].entries.filter(
+                              (_, i) => i !== eIdx
+                            )
+                          }
+                          setTimelineEvents(next)
+                        }}>
+                        <Trash2Icon className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      const next = [...timelineEvents]
+                      next[teIdx] = {
+                        ...next[teIdx],
+                        entries: [...next[teIdx].entries, '']
+                      }
+                      setTimelineEvents(next)
+                    }}>
+                    <PlusIcon className="h-3 w-3 mr-1" />
+                    Add Entry
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CC Rewards (Quarry Only) */}
+        {monsterType === MonsterType.QUARRY && (
+          <>
+            <Separator />
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">
+                  Collective Cognition Rewards
+                </Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setCCRewards((prev) => [
+                      ...prev,
+                      { rewardName: '', collectiveCognition: 0 }
+                    ])
+                  }>
+                  <PlusIcon className="h-3 w-3" />
+                </Button>
+              </div>
+              {ccRewards.map((ccr, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Label className="text-xs whitespace-nowrap">CC</Label>
+                    <NumericInput
+                      label="CC"
+                      value={ccr.collectiveCognition}
+                      min={0}
+                      onChange={(v) => {
+                        const next = [...ccRewards]
+                        next[idx] = { ...next[idx], collectiveCognition: v }
+                        setCCRewards(next)
+                      }}
+                    />
+                  </div>
+                  <Input
+                    className="flex-1"
+                    value={ccr.rewardName}
+                    placeholder="Reward name"
+                    onChange={(e) => {
+                      const next = [...ccRewards]
+                      next[idx] = { ...next[idx], rewardName: e.target.value }
+                      setCCRewards(next)
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setCCRewards(ccRewards.filter((_, i) => i !== idx))
+                    }>
+                    <Trash2Icon className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
             </div>
           </>
         )}

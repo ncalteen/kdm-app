@@ -1,6 +1,7 @@
-import { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { NemesisTimelineDetail } from '@/lib/types'
 
 /**
  * Get Nemesis Timeline Years
@@ -9,26 +10,29 @@ import { createClient } from '@/lib/supabase/client'
  * the nemesis_timeline_year table.
  *
  * @param nemesisId Nemesis ID
+ * @param campaignType Campaign Type
  * @returns Nemesis Timeline Years
  */
 export async function getNemesisTimelineYears(
   nemesisId: string | null | undefined,
-  campaignType: CampaignType
-): Promise<
-  Omit<
-    Tables<'nemesis_timeline_year'>,
-    'created_at' | 'id' | 'updated_at' | 'campaign_types' | 'nemesis_id'
-  >[]
-> {
+  campaignType?: CampaignType
+): Promise<NemesisTimelineDetail[]> {
   if (!nemesisId) throw new Error('Required: Nemesis ID')
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('nemesis_timeline_year')
-    .select('entries, year_number')
-    .eq('nemesis_id', nemesisId)
-    .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+  const { data, error } = campaignType
+    ? await supabase
+        .from('nemesis_timeline_year')
+        .select('entries, year_number')
+        .eq('nemesis_id', nemesisId)
+        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .order('year_number', { ascending: true })
+    : await supabase
+        .from('nemesis_timeline_year')
+        .select('entries, year_number')
+        .eq('nemesis_id', nemesisId)
+        .order('year_number', { ascending: true })
 
   if (error)
     throw new Error(`Error Fetching Nemesis Timeline Years: ${error.message}`)

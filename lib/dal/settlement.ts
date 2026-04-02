@@ -60,7 +60,7 @@ import {
   SurvivorType
 } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
-import { SettlementDetail } from '@/lib/types'
+import { SettlementDetail, SettlementTimelineYearDetail } from '@/lib/types'
 import {
   canDash,
   canEncourage,
@@ -98,10 +98,7 @@ export async function createSettlement(
   }[options.campaignType]()
 
   // Create the settlement record first to generate the settlement ID.
-  const settlement: Omit<
-    Tables<'settlement'>,
-    'created_at' | 'id' | 'updated_at'
-  > = {
+  const settlement = {
     arrival_bonuses: [],
     campaign_type: DatabaseCampaignType[options.campaignType],
     current_year: 0,
@@ -140,15 +137,13 @@ export async function createSettlement(
     ...template.collectiveCognitionRewardIds
   ]
   const settlementLocationIds = [...template.locationIds]
-  const settlementTimeline: Omit<
-    Tables<'settlement_timeline_year'>,
-    'created_at' | 'id' | 'updated_at'
-  >[] = template.timeline.map(({ entries, year_number }) => ({
-    completed: false,
-    entries: [...entries],
-    settlement_id: settlementId,
-    year_number
-  }))
+  const settlementTimeline: SettlementTimelineYearDetail[] =
+    template.timeline.map(({ entries, year_number }) => ({
+      completed: false,
+      entries: [...entries],
+      settlement_id: settlementId,
+      year_number
+    }))
 
   // Conditional locations (Arc forum, scout outskirts).
   const conditionalLocationNames: string[] = []

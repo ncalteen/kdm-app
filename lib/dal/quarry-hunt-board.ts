@@ -1,6 +1,7 @@
-import { Tables, TablesUpdate } from '@/lib/database.types'
+import { TablesUpdate } from '@/lib/database.types'
 import { HuntEventType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { QuarryHuntBoardDetail } from '@/lib/types'
 
 /**
  * Get Quarry Hunt Board
@@ -12,10 +13,7 @@ import { createClient } from '@/lib/supabase/client'
  */
 export async function getQuarryHuntBoard(
   quarryId: string | null | undefined
-): Promise<Omit<
-  Tables<'quarry_hunt_board'>,
-  'created_at' | 'updated_at'
-> | null> {
+): Promise<QuarryHuntBoardDetail> {
   if (!quarryId) throw new Error('Required: Quarry ID')
 
   const supabase = createClient()
@@ -26,7 +24,7 @@ export async function getQuarryHuntBoard(
       'id, quarry_id, pos_1, pos_2, pos_3, pos_4, pos_5, pos_7, pos_8, pos_9, pos_10, pos_11'
     )
     .eq('quarry_id', quarryId)
-    .maybeSingle()
+    .single()
 
   if (error)
     throw new Error(`Error Fetching Quarry Hunt Board: ${error.message}`)

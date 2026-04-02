@@ -237,47 +237,47 @@ export type MilestoneDetail = Omit<
 /** Per-level sub-monster form data */
 export type MonsterLevelData = {
   /** Sub-Monster Name (Optional) */
-  subMonsterName: string
+  sub_monster_name: string | null
   /** AI Deck: Basic Cards */
-  basicCards: number
+  basic_cards: number
   /** AI Deck: Advanced Cards */
-  advancedCards: number
+  advanced_cards: number
   /** AI Deck: Legendary Cards */
-  legendaryCards: number
+  legendary_cards: number
   /** AI Deck: Overtone Cards */
-  overtoneCards: number
+  overtone_cards: number
   /** Accuracy */
   accuracy: number
   /** Accuracy Tokens */
-  accuracyTokens: number
+  accuracy_tokens: number
   /** Damage */
   damage: number
   /** Damage Tokens */
-  damageTokens: number
+  damage_tokens: number
   /** Evasion */
   evasion: number
   /** Evasion Tokens */
-  evasionTokens: number
+  evasion_tokens: number
   /** Luck */
   luck: number
   /** Luck Tokens */
-  luckTokens: number
+  luck_tokens: number
   /** Movement */
   movement: number
   /** Movement Tokens */
-  movementTokens: number
+  movement_tokens: number
   /** Speed */
   speed: number
   /** Speed Tokens */
-  speedTokens: number
+  speed_tokens: number
   /** Strength */
   strength: number
   /** Strength Tokens */
-  strengthTokens: number
+  strength_tokens: number
   /** Toughness */
   toughness: number
   /** Toughness Tokens */
-  toughnessTokens: number
+  toughness_tokens: number
   /** Life (nemesis only) */
   life: number
   /** Traits */
@@ -305,6 +305,16 @@ export type NemesisDetail = Omit<
 export type NemesisLevelDetail = Omit<
   Tables<'nemesis_level'>,
   'created_at' | 'updated_at' | 'nemesis_id'
+>
+
+/**
+ * Nemesis Timeline Detail
+ *
+ * Used throughout the app to represent a nemesis timeline entry.
+ */
+export type NemesisTimelineDetail = Omit<
+  Tables<'nemesis_timeline_year'>,
+  'created_at' | 'id' | 'updated_at' | 'campaign_types' | 'nemesis_id'
 >
 
 /**
@@ -379,6 +389,16 @@ export type QuarryLevelDetail = Omit<
 >
 
 /**
+ * Quarry Timeline Detail
+ *
+ * Used throughout the app to represent a quarry timeline entry.
+ */
+export type QuarryTimelineDetail = Omit<
+  Tables<'quarry_timeline_year'>,
+  'created_at' | 'id' | 'updated_at' | 'campaign_types' | 'quarry_id'
+>
+
+/**
  * Resource Detail
  *
  * Used throughout the app to represent a resource.
@@ -399,7 +419,10 @@ export type ResourceDetail = Omit<
  * Used throughout the app to represent the currently selected settlement.
  * Includes additional information not present in the settlement table.
  */
-export type SettlementDetail = Tables<'settlement'> & {
+export type SettlementDetail = Omit<
+  Tables<'settlement'>,
+  'created_at' | 'updated_at'
+> & {
   /** Can Encourage */
   can_encourage: boolean
   /** Can Surge */
@@ -644,6 +667,26 @@ export type SettlementNemesisDetail = Omit<
 >
 
 /**
+ * Settlement Quarry Detail
+ *
+ * Used throughout the app to represent a settlement quarry.
+ */
+export type SettlementQuarryDetail = Omit<
+  Tables<'settlement_quarry'>,
+  'created_at' | 'updated_at' | 'settlement_id'
+>
+
+/**
+ * Settlement Timeline Year Detail
+ *
+ * Used throughout the app to represent a settlement timeline year.
+ */
+export type SettlementTimelineYearDetail = Omit<
+  Tables<'settlement_timeline_year'>,
+  'created_at' | 'id' | 'updated_at'
+>
+
+/**
  * Showdown AI Deck Detail
  *
  * Used throughout the app to represent a monster's AI deck in a showdown.
@@ -776,6 +819,46 @@ export type SurvivorDetail = Tables<'survivor'> & {
     knowledge_name: string
   } | null
 }
+
+/**
+ * Survivor Cursed Gear Detail
+ *
+ * Used throughout the app to represent a survivor's cursed gear items.
+ */
+export type SurvivorCursedGearDetail = Omit<
+  Tables<'survivor_cursed_gear'>,
+  'created_at' | 'updated_at' | 'survivor_id'
+>
+
+/**
+ * Survivor Disorder Detail
+ *
+ * Used throughout the app to represent a survivor's disorders.
+ */
+export type SurvivorDisorderDetail = Omit<
+  Tables<'survivor_disorder'>,
+  'created_at' | 'updated_at' | 'survivor_id'
+>
+
+/**
+ * Survivor Fighting Art Detail
+ *
+ * Used throughout the app to represent a survivor's fighting arts.
+ */
+export type SurvivorFightingArtDetail = Omit<
+  Tables<'survivor_fighting_art'>,
+  'created_at' | 'updated_at' | 'survivor_id'
+>
+
+/**
+ * Survivor Secret Fighting Art Detail
+ *
+ * Used throughout the app to represent a survivor's secret fighting arts.
+ */
+export type SurvivorSecretFightingArtDetail = Omit<
+  Tables<'survivor_secret_fighting_art'>,
+  'created_at' | 'updated_at' | 'survivor_id'
+>
 
 /**
  * User Settings Detail

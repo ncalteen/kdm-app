@@ -1,6 +1,7 @@
-import { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
+import { QuarryTimelineDetail } from '@/lib/types'
 
 /**
  * Get Quarry Timeline Years
@@ -9,26 +10,29 @@ import { createClient } from '@/lib/supabase/client'
  * the quarry_timeline_year table.
  *
  * @param quarryId Quarry ID
+ * @param campaignType Campaign Type
  * @returns Quarry Timeline Years
  */
 export async function getQuarryTimelineYears(
   quarryId: string | null | undefined,
-  campaignType: CampaignType
-): Promise<
-  Omit<
-    Tables<'quarry_timeline_year'>,
-    'created_at' | 'id' | 'updated_at' | 'campaign_types' | 'quarry_id'
-  >[]
-> {
+  campaignType?: CampaignType
+): Promise<QuarryTimelineDetail[]> {
   if (!quarryId) throw new Error('Required: Quarry ID')
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('quarry_timeline_year')
-    .select('entries, year_number')
-    .eq('quarry_id', quarryId)
-    .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+  const { data, error } = campaignType
+    ? await supabase
+        .from('quarry_timeline_year')
+        .select('entries, year_number')
+        .eq('quarry_id', quarryId)
+        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .order('year_number', { ascending: true })
+    : await supabase
+        .from('quarry_timeline_year')
+        .select('entries, year_number')
+        .eq('quarry_id', quarryId)
+        .order('year_number', { ascending: true })
 
   if (error)
     throw new Error(`Error Fetching Quarry Timeline Years: ${error.message}`)

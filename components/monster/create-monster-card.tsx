@@ -21,11 +21,18 @@ import {
   basicHuntBoard,
   monsterAttributeTokenMap
 } from '@/lib/common'
+import { addCollectiveCognitionReward } from '@/lib/dal/collective-cognition-reward'
+import { addLocation } from '@/lib/dal/location'
 import { addNemesis } from '@/lib/dal/nemesis'
 import { addNemesisLevel } from '@/lib/dal/nemesis-level'
+import { addNemesisLocation } from '@/lib/dal/nemesis-location'
+import { addNemesisTimelineYear } from '@/lib/dal/nemesis-timeline-year'
 import { addQuarry } from '@/lib/dal/quarry'
+import { addQuarryCollectiveCognitionReward } from '@/lib/dal/quarry-collective-cognition-reward'
 import { addQuarryHuntBoard } from '@/lib/dal/quarry-hunt-board'
 import { addQuarryLevel } from '@/lib/dal/quarry-level'
+import { addQuarryLocation } from '@/lib/dal/quarry-location'
+import { addQuarryTimelineYear } from '@/lib/dal/quarry-timeline-year'
 import { HuntEventType, MonsterNode, MonsterType } from '@/lib/enums'
 import {
   CUSTOM_MONSTER_CREATED_MESSAGE,
@@ -44,6 +51,22 @@ import {
   XIcon
 } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
+
+/** Timeline Event Form Data */
+interface TimelineEventData {
+  /** Year Number */
+  yearNumber: number
+  /** Timeline Entries */
+  entries: string[]
+}
+
+/** Collective Cognition Reward Form Data (Quarry Only) */
+interface CollectiveCognitionRewardData {
+  /** Collective Cognition Value */
+  collectiveCognition: number
+  /** Reward Name */
+  rewardName: string
+}
 
 /**
  * Create Monster Card Properties
@@ -97,6 +120,13 @@ export function CreateMonsterCard({
 
   // Hunt Board
   const [huntBoard, setHuntBoard] = useState<HuntBoard>(basicHuntBoard)
+
+  // Locations, Timeline Events, CC Rewards
+  const [locations, setLocations] = useState<string[]>([])
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEventData[]>([])
+  const [ccRewards, setCCRewards] = useState<CollectiveCognitionRewardData[]>(
+    []
+  )
 
   /**
    * Handle Monster Type Change
@@ -328,6 +358,48 @@ export function CreateMonsterCard({
             })
           }
         }
+
+        // 4. Create locations
+        for (const locName of locations) {
+          if (!locName.trim()) continue
+          const loc = await addLocation({
+            custom: true,
+            location_name: locName.trim()
+          })
+
+          await addQuarryLocation({
+            quarry_id: quarry.id,
+            location_id: loc.id
+          })
+        }
+
+        // 5. Create timeline events
+        for (const te of timelineEvents) {
+          const validEntries = te.entries.filter((e) => e.trim())
+          if (validEntries.length === 0) continue
+
+          await addQuarryTimelineYear({
+            quarry_id: quarry.id,
+            year_number: te.yearNumber,
+            entries: validEntries,
+            campaign_types: []
+          })
+        }
+
+        // 6. Create CC rewards
+        for (const ccr of ccRewards) {
+          if (!ccr.rewardName.trim()) continue
+          const reward = await addCollectiveCognitionReward({
+            custom: true,
+            reward_name: ccr.rewardName.trim(),
+            collective_cognition: ccr.collectiveCognition
+          })
+
+          await addQuarryCollectiveCognitionReward({
+            quarry_id: quarry.id,
+            collective_cognition_reward_id: reward.id
+          })
+        }
       } else {
         // Nemesis
         // 1. Create nemesis record
@@ -379,6 +451,33 @@ export function CreateMonsterCard({
             })
           }
         }
+
+        // 3. Create locations
+        for (const locName of locations) {
+          if (!locName.trim()) continue
+          const loc = await addLocation({
+            custom: true,
+            location_name: locName.trim()
+          })
+
+          await addNemesisLocation({
+            nemesis_id: nemesis.id,
+            location_id: loc.id
+          })
+        }
+
+        // 4. Create timeline events
+        for (const te of timelineEvents) {
+          const validEntries = te.entries.filter((e) => e.trim())
+          if (validEntries.length === 0) continue
+
+          await addNemesisTimelineYear({
+            nemesis_id: nemesis.id,
+            year_number: te.yearNumber,
+            entries: validEntries,
+            campaign_types: []
+          })
+        }
       }
 
       toast.success(CUSTOM_MONSTER_CREATED_MESSAGE(monsterType))
@@ -396,6 +495,9 @@ export function CreateMonsterCard({
     isPrologue,
     levels,
     levelHuntPositions,
+    locations,
+    timelineEvents,
+    ccRewards,
     huntBoard,
     onMonsterCreated,
     toast
@@ -532,6 +634,212 @@ export function CreateMonsterCard({
                   Starvation
                 </div>
               </div>
+            </div>
+          </>
+        )}
+
+        <Separator />
+
+        {/* Locations */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold">Locations</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocations((prev) => [...prev, ''])}>
+              <PlusIcon className="h-3 w-3" />
+            </Button>
+          </div>
+          {locations.map((loc, idx) => (
+            <div key={idx} className="flex items-center gap-1">
+              <Input
+                value={loc}
+                placeholder="Location name"
+                onChange={(e) => {
+                  const next = [...locations]
+                  next[idx] = e.target.value
+                  setLocations(next)
+                }}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  setLocations(locations.filter((_, i) => i !== idx))
+                }>
+                <Trash2Icon className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        <Separator />
+
+        {/* Timeline Events */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold">Timeline Events</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                setTimelineEvents((prev) => [
+                  ...prev,
+                  { yearNumber: 0, entries: [''] }
+                ])
+              }>
+              <PlusIcon className="h-3 w-3" />
+            </Button>
+          </div>
+          {timelineEvents.map((te, teIdx) => (
+            <div key={teIdx} className="border rounded-lg p-3">
+              <div className="flex gap-3">
+                {/* Year number and delete button */}
+                <div className="flex flex-col items-start gap-1 shrink-0">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs pr-2">Year</Label>
+                    <NumericInput
+                      label="Year"
+                      value={te.yearNumber}
+                      min={0}
+                      onChange={(v) => {
+                        const next = [...timelineEvents]
+                        next[teIdx] = { ...next[teIdx], yearNumber: v }
+                        setTimelineEvents(next)
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        setTimelineEvents(
+                          timelineEvents.filter((_, i) => i !== teIdx)
+                        )
+                      }>
+                      <Trash2Icon className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Entries column */}
+                <div className="flex-1 space-y-1">
+                  {te.entries.map((entry, eIdx) => (
+                    <div key={eIdx} className="flex items-center gap-1">
+                      <Input
+                        value={entry}
+                        placeholder="Timeline entry"
+                        onChange={(e) => {
+                          const next = [...timelineEvents]
+                          const entries = [...next[teIdx].entries]
+                          entries[eIdx] = e.target.value
+                          next[teIdx] = { ...next[teIdx], entries }
+                          setTimelineEvents(next)
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const next = [...timelineEvents]
+                          next[teIdx] = {
+                            ...next[teIdx],
+                            entries: next[teIdx].entries.filter(
+                              (_, i) => i !== eIdx
+                            )
+                          }
+                          setTimelineEvents(next)
+                        }}>
+                        <Trash2Icon className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      const next = [...timelineEvents]
+                      next[teIdx] = {
+                        ...next[teIdx],
+                        entries: [...next[teIdx].entries, '']
+                      }
+                      setTimelineEvents(next)
+                    }}>
+                    <PlusIcon className="h-3 w-3 mr-1" />
+                    Add Entry
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CC Rewards (Quarry Only) */}
+        {monsterType === MonsterType.QUARRY && (
+          <>
+            <Separator />
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">
+                  Collective Cognition Rewards
+                </Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setCCRewards((prev) => [
+                      ...prev,
+                      { rewardName: '', collectiveCognition: 0 }
+                    ])
+                  }>
+                  <PlusIcon className="h-3 w-3" />
+                </Button>
+              </div>
+              {ccRewards.map((ccr, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Label className="text-xs whitespace-nowrap">CC</Label>
+                    <NumericInput
+                      label="CC"
+                      value={ccr.collectiveCognition}
+                      min={0}
+                      onChange={(v) => {
+                        const next = [...ccRewards]
+                        next[idx] = { ...next[idx], collectiveCognition: v }
+                        setCCRewards(next)
+                      }}
+                    />
+                  </div>
+                  <Input
+                    className="flex-1"
+                    value={ccr.rewardName}
+                    placeholder="Reward name"
+                    onChange={(e) => {
+                      const next = [...ccRewards]
+                      next[idx] = { ...next[idx], rewardName: e.target.value }
+                      setCCRewards(next)
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setCCRewards(ccRewards.filter((_, i) => i !== idx))
+                    }>
+                    <Trash2Icon className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
             </div>
           </>
         )}

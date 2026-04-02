@@ -1,5 +1,6 @@
-import { Tables, TablesUpdate } from '@/lib/database.types'
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { SurvivorDisorderDetail } from '@/lib/types'
 
 /**
  * Get Survivor Disorders
@@ -11,12 +12,7 @@ import { createClient } from '@/lib/supabase/client'
  */
 export async function getSurvivorDisorders(
   survivorId: string | null | undefined
-): Promise<
-  Omit<
-    Tables<'survivor_disorder'>,
-    'created_at' | 'updated_at' | 'survivor_id'
-  >[]
-> {
+): Promise<SurvivorDisorderDetail[]> {
   if (!survivorId) throw new Error('Required: Survivor ID')
 
   const supabase = createClient()

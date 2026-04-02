@@ -1,6 +1,5 @@
-import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { SettlementDetail } from '@/lib/types'
+import { SettlementDetail, SettlementNemesisDetail } from '@/lib/types'
 
 /**
  * Get Settlement Nemeses
@@ -178,7 +177,7 @@ export async function removeSettlementNemesis(
  */
 export async function updateSettlementNemesis(
   settlementNemesisId: string | null | undefined,
-  updates: Partial<Tables<'settlement_nemesis'>>
+  updates: Partial<SettlementNemesisDetail>
 ): Promise<void> {
   if (!settlementNemesisId) throw new Error('Required: Settlement Nemesis ID')
 
