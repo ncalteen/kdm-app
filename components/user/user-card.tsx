@@ -1,5 +1,21 @@
 'use client'
 
+import { CustomCharactersCard } from '@/components/custom/custom-characters-card'
+import { CustomCollectiveCognitionRewardsCard } from '@/components/custom/custom-collective-cognition-rewards-card'
+import { CustomDisordersCard } from '@/components/custom/custom-disorders-card'
+import { CustomFightingArtsCard } from '@/components/custom/custom-fighting-arts-card'
+import { CustomGearCard } from '@/components/custom/custom-gear-card'
+import { CustomInnovationsCard } from '@/components/custom/custom-innovations-card'
+import { CustomKnowledgeCard } from '@/components/custom/custom-knowledge-card'
+import { CustomLocationsCard } from '@/components/custom/custom-locations-card'
+import { CustomMilestonesCard } from '@/components/custom/custom-milestones-card'
+import { CustomNeurosesCard } from '@/components/custom/custom-neuroses-card'
+import { CustomPatternsCard } from '@/components/custom/custom-patterns-card'
+import { CustomPhilosophiesCard } from '@/components/custom/custom-philosophies-card'
+import { CustomPrinciplesCard } from '@/components/custom/custom-principles-card'
+import { CustomResourcesCard } from '@/components/custom/custom-resources-card'
+import { CustomSecretFightingArtsCard } from '@/components/custom/custom-secret-fighting-arts-card'
+import { CustomSeedPatternsCard } from '@/components/custom/custom-seed-patterns-card'
 import { CustomMonstersCard } from '@/components/monster/custom-monsters-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -10,6 +26,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UpdatePasswordForm } from '@/components/update-password-form'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
@@ -262,8 +279,68 @@ export function UserCard({
         </Card>
       </div>
 
-      {/* Custom Monsters */}
-      <CustomMonstersCard local={local} />
+      {/* Custom Content */}
+      <h4 className="text-lg font-semibold">Custom Content</h4>
+
+      <Tabs defaultValue="society" className="w-full">
+        <TabsList>
+          <TabsTrigger value="society">Society</TabsTrigger>
+          <TabsTrigger value="crafting">Crafting</TabsTrigger>
+          <TabsTrigger value="arc">Arc</TabsTrigger>
+          <TabsTrigger value="survivors">Survivors</TabsTrigger>
+          <TabsTrigger value="monsters">Monsters</TabsTrigger>
+          <TabsTrigger value="wanderers">Wanderers</TabsTrigger>
+          <TabsTrigger value="other">Other</TabsTrigger>
+        </TabsList>
+        <TabsContent value="society">
+          <div className="grid grid-cols-1 gap-4">
+            <CustomMilestonesCard local={local} />
+            <CustomPrinciplesCard local={local} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomInnovationsCard local={local} />
+              <CustomLocationsCard local={local} />
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="crafting">
+          <div className="grid grid-cols-1 gap-4">
+            <CustomGearCard local={local} />
+            <CustomResourcesCard local={local} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomPatternsCard local={local} />
+              <CustomSeedPatternsCard local={local} />
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="arc">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CustomCollectiveCognitionRewardsCard local={local} />
+            <CustomPhilosophiesCard local={local} />
+            <CustomKnowledgeCard local={local} />
+            <CustomNeurosesCard local={local} />
+          </div>
+        </TabsContent>
+        <TabsContent value="survivors">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomFightingArtsCard local={local} />
+              <CustomSecretFightingArtsCard local={local} />
+            </div>
+            <CustomDisordersCard local={local} />
+          </div>
+        </TabsContent>
+        <TabsContent value="monsters">
+          <CustomMonstersCard local={local} />
+        </TabsContent>
+        <TabsContent value="wanderers">{/* Wanderer */}</TabsContent>
+        <TabsContent value="other">
+          <div className="grid grid-cols-1 gap-4">
+            <CustomCharactersCard local={local} />
+            {/* Strain Milestone */}
+            {/* Weapon Type */}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
