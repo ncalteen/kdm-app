@@ -46,6 +46,8 @@ export async function addStrainMilestoneSharedUsers(
   sharedUserIds: string[],
   userId: string
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase.from('strain_milestone_shared_user').insert(
@@ -74,6 +76,8 @@ export async function removeStrainMilestoneSharedUsers(
   strainMilestoneId: string,
   sharedUserIds: string[]
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase

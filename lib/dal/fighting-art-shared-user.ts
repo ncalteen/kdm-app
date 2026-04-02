@@ -46,6 +46,8 @@ export async function addFightingArtSharedUsers(
   sharedUserIds: string[],
   userId: string
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase.from('fighting_art_shared_user').insert(
@@ -72,6 +74,8 @@ export async function removeFightingArtSharedUsers(
   fightingArtId: string,
   sharedUserIds: string[]
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase

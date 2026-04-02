@@ -44,6 +44,8 @@ export async function addQuarrySharedUsers(
   sharedUserIds: string[],
   userId: string
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase.from('quarry_shared_user').insert(
@@ -70,6 +72,8 @@ export async function removeQuarrySharedUsers(
   quarryId: string,
   sharedUserIds: string[]
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase

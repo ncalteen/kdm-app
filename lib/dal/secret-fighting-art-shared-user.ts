@@ -46,6 +46,8 @@ export async function addSecretFightingArtSharedUsers(
   sharedUserIds: string[],
   userId: string
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase
@@ -76,6 +78,8 @@ export async function removeSecretFightingArtSharedUsers(
   secretFightingArtId: string,
   sharedUserIds: string[]
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase

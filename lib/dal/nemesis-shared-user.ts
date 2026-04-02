@@ -44,6 +44,8 @@ export async function addNemesisSharedUsers(
   sharedUserIds: string[],
   userId: string
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   if (sharedUserIds.length === 0) return
@@ -72,6 +74,8 @@ export async function removeNemesisSharedUsers(
   nemesisId: string,
   sharedUserIds: string[]
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase

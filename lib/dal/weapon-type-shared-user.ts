@@ -44,6 +44,8 @@ export async function addWeaponTypeSharedUsers(
   sharedUserIds: string[],
   userId: string
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase.from('weapon_type_shared_user').insert(
@@ -70,6 +72,8 @@ export async function removeWeaponTypeSharedUsers(
   weaponTypeId: string,
   sharedUserIds: string[]
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase

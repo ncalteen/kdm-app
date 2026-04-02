@@ -44,6 +44,8 @@ export async function addGearSharedUsers(
   sharedUserIds: string[],
   userId: string
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase.from('gear_shared_user').insert(
@@ -69,6 +71,8 @@ export async function removeGearSharedUsers(
   gearId: string,
   sharedUserIds: string[]
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase

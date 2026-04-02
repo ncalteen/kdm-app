@@ -46,6 +46,8 @@ export async function addSeedPatternSharedUsers(
   sharedUserIds: string[],
   userId: string
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase.from('seed_pattern_shared_user').insert(
@@ -72,6 +74,8 @@ export async function removeSeedPatternSharedUsers(
   seedPatternId: string,
   sharedUserIds: string[]
 ): Promise<void> {
+  if (sharedUserIds.length === 0) return
+
   const supabase = createClient()
 
   const { error } = await supabase
