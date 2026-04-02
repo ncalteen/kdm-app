@@ -7,7 +7,7 @@ import { getSettlement } from '@/lib/dal/settlement'
 import { getSettlementPhase } from '@/lib/dal/settlement-phase'
 import { getShowdown } from '@/lib/dal/showdown'
 import { getSurvivor, getSurvivors } from '@/lib/dal/survivor'
-import { addUserSettings, getUserId, getUserSettings } from '@/lib/dal/user'
+import { getUserSettings } from '@/lib/dal/user'
 import { TabType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -928,31 +928,6 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         console.debug('User Settings:', userSettingsData)
 
         setUserSettingsState(userSettingsData)
-
-        // If the user settings are not found, create them in the database and
-        // set to default values.
-        if (!userSettingsData) {
-          // Get the user ID
-          getUserId().then((userId) => {
-            addUserSettings({
-              unlocked_killenium_butcher: false,
-              unlocked_screaming_nukalope: false,
-              unlocked_white_gigalion: false,
-              user_id: userId
-            })
-              .then((newSettings) => {
-                if (isCancelled) return
-
-                console.debug('Created User Settings:', newSettings)
-                setUserSettingsState(newSettings)
-              })
-              .catch((error: unknown) => {
-                if (isCancelled) return
-
-                console.error('Error Creating User Settings:', error)
-              })
-          })
-        }
       })
       .catch((err: unknown) => {
         if (isCancelled) return
