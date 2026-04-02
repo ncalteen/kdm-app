@@ -215,6 +215,24 @@ export const CHARACTER_CREATED_MESSAGE = () =>
   'A new character emerges from the shadows.'
 
 /**
+ * Character Deleted
+ *
+ * @param characterName Character Name
+ * @returns Character Deleted Message
+ */
+export const CHARACTER_DELETED_MESSAGE = (characterName?: string) =>
+  `${characterName ?? 'Character'} fades back into the darkness.`
+
+/**
+ * Character Updated
+ *
+ * @param characterName Character Name
+ * @returns Character Updated Message
+ */
+export const CHARACTER_UPDATED_MESSAGE = (characterName?: string) =>
+  `${characterName ?? 'Character'} has been reshaped by the lantern's light.`
+
+/**
  * Custom Monster Deleted
  *
  * @param monsterName Monster Name
@@ -295,12 +313,44 @@ export const DISORDER_CREATED_MESSAGE = () =>
   'A new affliction takes root in the darkness.'
 
 /**
+ * Disorder Removed
+ *
+ * @returns Disorder Removed Message
+ */
+export const DISORDER_REMOVED_MESSAGE = () =>
+  'The affliction fades from the settlement.'
+
+/**
+ * Disorder Updated
+ *
+ * @returns Disorder Updated Message
+ */
+export const DISORDER_UPDATED_MESSAGE = () =>
+  'The affliction has been rewritten.'
+
+/**
  * Fighting Art Created
  *
  * @returns Fighting Art Created Message
  */
 export const FIGHTING_ART_CREATED_MESSAGE = () =>
   'A new fighting art is mastered against the odds.'
+
+/**
+ * Fighting Art Removed
+ *
+ * @returns Fighting Art Removed Message
+ */
+export const FIGHTING_ART_REMOVED_MESSAGE = () =>
+  'The fighting art is lost to the darkness.'
+
+/**
+ * Fighting Art Updated
+ *
+ * @returns Fighting Art Updated Message
+ */
+export const FIGHTING_ART_UPDATED_MESSAGE = () =>
+  'The fighting art has been refined.'
 
 /**
  * Fighting Arts Max Exceeded Error
@@ -1153,6 +1203,20 @@ export const NEUROSIS_CREATED_MESSAGE = () =>
   'A new neurosis takes hold of the mind.'
 
 /**
+ * Neurosis Removed
+ *
+ * @returns Neurosis Removed Message
+ */
+export const NEUROSIS_REMOVED_MESSAGE = () => 'The neurosis loosens its grip.'
+
+/**
+ * Neurosis Updated
+ *
+ * @returns Neurosis Updated Message
+ */
+export const NEUROSIS_UPDATED_MESSAGE = () => 'The neurosis has shifted.'
+
+/**
  * Scout Conflict
  *
  * @returns Scout Conflict Message
@@ -1189,6 +1253,22 @@ export const SECRET_FIGHTING_ARTS_MAX_EXCEEDED_ERROR_MESSAGE = (
  */
 export const SECRET_FIGHTING_ART_CREATED_MESSAGE = () =>
   'A forbidden technique is discovered.'
+
+/**
+ * Secret Fighting Art Removed
+ *
+ * @returns Secret Fighting Art Removed Message
+ */
+export const SECRET_FIGHTING_ART_REMOVED_MESSAGE = () =>
+  'The forbidden technique is forgotten.'
+
+/**
+ * Secret Fighting Art Updated
+ *
+ * @returns Secret Fighting Art Updated Message
+ */
+export const SECRET_FIGHTING_ART_UPDATED_MESSAGE = () =>
+  'The forbidden technique has been altered.'
 
 /**
  * Seed Pattern Removed
@@ -2126,12 +2206,52 @@ export const WEAPON_TYPE_CREATED_MESSAGE = () =>
   'A new weapon type is forged from the darkness.'
 
 /**
+ * Weapon Type Removed
+ *
+ * @returns Weapon Type Removed Message
+ */
+export const WEAPON_TYPE_REMOVED_MESSAGE = () =>
+  'The weapon type is lost to the darkness.'
+
+/**
+ * Weapon Type Updated
+ *
+ * @returns Weapon Type Updated Message
+ */
+export const WEAPON_TYPE_UPDATED_MESSAGE = () =>
+  'The weapon type has been reforged.'
+
+/**
  * Survivor Weapon Type Updated
  *
  * @returns Survivor Weapon Type Updated Message
  */
 export const SURVIVOR_WEAPON_TYPE_UPDATED_MESSAGE = () =>
   'The survivor turns their focus to a new weapon.'
+
+/**
+ * Wanderer Created
+ *
+ * @returns Wanderer Created Message
+ */
+export const WANDERER_CREATED_MESSAGE = () =>
+  'A new wanderer emerges from the endless darkness.'
+
+/**
+ * Wanderer Removed
+ *
+ * @returns Wanderer Removed Message
+ */
+export const WANDERER_REMOVED_MESSAGE = () =>
+  'The wanderer vanishes into the shadows.'
+
+/**
+ * Wanderer Updated
+ *
+ * @returns Wanderer Updated Message
+ */
+export const WANDERER_UPDATED_MESSAGE = () =>
+  "The wanderer's tale has been inscribed."
 
 /**
  * Survivors Healed
@@ -2218,6 +2338,22 @@ export const TORMENT_MINIMUM_ERROR_MESSAGE = () => 'Torment cannot be negative.'
  */
 export const STRAIN_MILESTONE_CREATED_MESSAGE = () =>
   'A new strain milestone emerges from the struggle.'
+
+/**
+ * Strain Milestone Removed
+ *
+ * @returns Strain Milestone Removed Message
+ */
+export const STRAIN_MILESTONE_REMOVED_MESSAGE = () =>
+  'The strain milestone crumbles into dust.'
+
+/**
+ * Strain Milestone Updated
+ *
+ * @returns Strain Milestone Updated Message
+ */
+export const STRAIN_MILESTONE_UPDATED_MESSAGE = () =>
+  'The strain milestone shifts under pressure.'
 
 /**
  * Trait Created
