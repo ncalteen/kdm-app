@@ -4,8 +4,21 @@ import { NumericInput } from '@/components/menu/numeric-input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -21,8 +34,8 @@ import {
   basicHuntBoard,
   monsterAttributeTokenMap
 } from '@/lib/common'
-import { addCollectiveCognitionReward } from '@/lib/dal/collective-cognition-reward'
-import { addLocation } from '@/lib/dal/location'
+import { getCollectiveCognitionRewards } from '@/lib/dal/collective-cognition-reward'
+import { getLocations } from '@/lib/dal/location'
 import { addNemesis } from '@/lib/dal/nemesis'
 import { addNemesisLevel } from '@/lib/dal/nemesis-level'
 import { addNemesisLocation } from '@/lib/dal/nemesis-location'
@@ -40,7 +53,12 @@ import {
   MONSTER_LEVEL_MISSING_MESSAGE,
   NAMELESS_OBJECT_ERROR_MESSAGE
 } from '@/lib/messages'
-import { HuntBoard, MonsterLevelData } from '@/lib/types'
+import {
+  CollectiveCognitionRewardDetail,
+  HuntBoard,
+  LocationDetail,
+  MonsterLevelData
+} from '@/lib/types'
 import { getAvailableNodes } from '@/lib/utils'
 import {
   ChevronDownIcon,
@@ -50,7 +68,7 @@ import {
   Trash2Icon,
   XIcon
 } from 'lucide-react'
-import { ReactElement, useCallback, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /** Timeline Event Form Data */
 interface TimelineEventData {
@@ -58,14 +76,6 @@ interface TimelineEventData {
   yearNumber: number
   /** Timeline Entries */
   entries: string[]
-}
-
-/** Collective Cognition Reward Form Data (Quarry Only) */
-interface CollectiveCognitionRewardData {
-  /** Collective Cognition Value */
-  collectiveCognition: number
-  /** Reward Name */
-  rewardName: string
 }
 
 /**
@@ -122,11 +132,48 @@ export function CreateMonsterCard({
   const [huntBoard, setHuntBoard] = useState<HuntBoard>(basicHuntBoard)
 
   // Locations, Timeline Events, CC Rewards
-  const [locations, setLocations] = useState<string[]>([])
+  const [locations, setLocations] = useState<LocationDetail[]>([])
+  const [locationAddOpen, setLocationAddOpen] = useState(false)
+  const [availableLocations, setAvailableLocations] = useState<{
+    [key: string]: LocationDetail
+  }>({})
   const [timelineEvents, setTimelineEvents] = useState<TimelineEventData[]>([])
-  const [ccRewards, setCCRewards] = useState<CollectiveCognitionRewardData[]>(
+  const [ccRewards, setCCRewards] = useState<CollectiveCognitionRewardDetail[]>(
     []
   )
+  const [ccRewardAddOpen, setCCRewardAddOpen] = useState(false)
+  const [availableCCRewards, setAvailableCCRewards] = useState<{
+    [key: string]: CollectiveCognitionRewardDetail
+  }>({})
+
+  // Fetch available locations and CC rewards on mount
+  useEffect(() => {
+    Promise.all([getLocations(), getCollectiveCognitionRewards()])
+      .then(([locs, ccrs]) => {
+        setAvailableLocations(locs)
+        setAvailableCCRewards(ccrs)
+      })
+      .catch((err: unknown) => {
+        console.error('Fetch Options Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+  }, [toast])
+
+  /** Locations not yet selected */
+  const selectableLocations = useMemo(() => {
+    const selectedIds = new Set(locations.map((l) => l.id))
+    return Object.values(availableLocations).filter(
+      (l) => !selectedIds.has(l.id)
+    )
+  }, [availableLocations, locations])
+
+  /** CC rewards not yet selected */
+  const selectableCCRewards = useMemo(() => {
+    const selectedIds = new Set(ccRewards.map((c) => c.id))
+    return Object.values(availableCCRewards).filter(
+      (c) => !selectedIds.has(c.id)
+    )
+  }, [availableCCRewards, ccRewards])
 
   /**
    * Handle Monster Type Change
@@ -290,20 +337,22 @@ export function CreateMonsterCard({
     setIsCreating(true)
 
     try {
-      if (monsterType === MonsterType.QUARRY) {
-        // 1. Create the quarry record and get the ID
-        const quarry = await addQuarry({
-          custom: true,
-          monster_name: name.trim(),
-          // True if any level entry has more than one monster
-          multi_monster: levelEntries.some((entry) => entry[1].length > 1),
-          node,
-          prologue: isPrologue
-        })
+      const isQuarry = monsterType === MonsterType.QUARRY
 
-        // 2. Create the hunt board
+      // 1. Create the monster record
+      const addMonster = isQuarry ? addQuarry : addNemesis
+      const monster = await addMonster({
+        custom: true,
+        monster_name: name.trim(),
+        multi_monster: levelEntries.some((entry) => entry[1].length > 1),
+        node,
+        ...(isQuarry ? { prologue: isPrologue } : {})
+      })
+
+      // 2. Create hunt board (quarry only)
+      if (isQuarry) {
         await addQuarryHuntBoard({
-          quarry_id: quarry.id,
+          quarry_id: monster.id,
           pos_1: huntBoard[1],
           pos_2: huntBoard[2],
           pos_3: huntBoard[3],
@@ -315,167 +364,78 @@ export function CreateMonsterCard({
           pos_10: huntBoard[10],
           pos_11: huntBoard[11]
         })
+      }
 
-        // 3. Create each monster level data record linked to the quarry ID
-        for (const [levelStr, subMonsters] of levelEntries) {
-          const levelNum = parseInt(levelStr, 10)
+      // 3. Create levels
+      const addLevel = isQuarry ? addQuarryLevel : addNemesisLevel
+      const idKey = isQuarry ? 'quarry_id' : 'nemesis_id'
 
-          for (const sub of subMonsters) {
-            await addQuarryLevel({
-              quarry_id: quarry.id,
-              level_number: levelNum,
-              sub_monster_name: sub.subMonsterName || null,
-              basic_cards: sub.basicCards,
-              advanced_cards: sub.advancedCards,
-              legendary_cards: sub.legendaryCards,
-              overtone_cards: sub.overtoneCards,
-              ai_deck_remaining:
-                sub.basicCards +
-                sub.advancedCards +
-                sub.legendaryCards +
-                sub.overtoneCards,
-              accuracy: sub.accuracy,
-              accuracy_tokens: sub.accuracyTokens,
-              damage: sub.damage,
-              damage_tokens: sub.damageTokens,
-              evasion: sub.evasion,
-              evasion_tokens: sub.evasionTokens,
-              luck: sub.luck,
-              luck_tokens: sub.luckTokens,
-              movement: sub.movement,
-              movement_tokens: sub.movementTokens,
-              speed: sub.speed,
-              speed_tokens: sub.speedTokens,
-              strength: sub.strength,
-              strength_tokens: sub.strengthTokens,
-              toughness: sub.toughness,
-              toughness_tokens: sub.toughnessTokens,
-              hunt_pos: levelHuntPositions[levelNum]?.huntPos ?? 12,
-              survivor_hunt_pos:
-                levelHuntPositions[levelNum]?.survivorHuntPos ?? 0,
-              traits: sub.traits,
-              moods: sub.moods
+      for (const [levelStr, subMonsters] of levelEntries) {
+        const levelNum = parseInt(levelStr, 10)
+
+        for (const sub of subMonsters) {
+          await (
+            addLevel as (data: Record<string, unknown>) => Promise<unknown>
+          )({
+            [idKey]: monster.id,
+            ...sub,
+            sub_monster_name: sub.sub_monster_name || null,
+            level_number: levelNum,
+            ai_deck_remaining:
+              sub.basic_cards +
+              sub.advanced_cards +
+              sub.legendary_cards +
+              sub.overtone_cards,
+            ...(isQuarry
+              ? {
+                  hunt_pos: levelHuntPositions[levelNum]?.huntPos ?? 12,
+                  survivor_hunt_pos:
+                    levelHuntPositions[levelNum]?.survivorHuntPos ?? 0
+                }
+              : { life: sub.life || null })
+          })
+        }
+      }
+
+      // 4. Link locations
+      const addLocation = isQuarry
+        ? (locId: string) =>
+            addQuarryLocation({ quarry_id: monster.id, location_id: locId })
+        : (locId: string) =>
+            addNemesisLocation({ nemesis_id: monster.id, location_id: locId })
+
+      for (const loc of locations) await addLocation(loc.id)
+
+      // 5. Create timeline events
+      const addTimeline = isQuarry
+        ? (data: { year_number: number; entries: string[] }) =>
+            addQuarryTimelineYear({
+              quarry_id: monster.id,
+              ...data,
+              campaign_types: []
             })
-          }
-        }
+        : (data: { year_number: number; entries: string[] }) =>
+            addNemesisTimelineYear({
+              nemesis_id: monster.id,
+              ...data,
+              campaign_types: []
+            })
 
-        // 4. Create locations
-        for (const locName of locations) {
-          if (!locName.trim()) continue
-          const loc = await addLocation({
-            custom: true,
-            location_name: locName.trim()
-          })
-
-          await addQuarryLocation({
-            quarry_id: quarry.id,
-            location_id: loc.id
-          })
-        }
-
-        // 5. Create timeline events
-        for (const te of timelineEvents) {
-          const validEntries = te.entries.filter((e) => e.trim())
-          if (validEntries.length === 0) continue
-
-          await addQuarryTimelineYear({
-            quarry_id: quarry.id,
-            year_number: te.yearNumber,
-            entries: validEntries,
-            campaign_types: []
-          })
-        }
-
-        // 6. Create CC rewards
-        for (const ccr of ccRewards) {
-          if (!ccr.rewardName.trim()) continue
-          const reward = await addCollectiveCognitionReward({
-            custom: true,
-            reward_name: ccr.rewardName.trim(),
-            collective_cognition: ccr.collectiveCognition
-          })
-
-          await addQuarryCollectiveCognitionReward({
-            quarry_id: quarry.id,
-            collective_cognition_reward_id: reward.id
-          })
-        }
-      } else {
-        // Nemesis
-        // 1. Create nemesis record
-        const nemesis = await addNemesis({
-          custom: true,
-          monster_name: name.trim(),
-          // True if any level entry has more than one monster
-          multi_monster: levelEntries.some((entry) => entry[1].length > 1),
-          node
+      for (const te of timelineEvents) {
+        const validEntries = te.entries.filter((e) => e.trim())
+        if (validEntries.length === 0) continue
+        await addTimeline({
+          year_number: te.yearNumber,
+          entries: validEntries
         })
+      }
 
-        // 2. Create levels
-        for (const [levelStr, subMonsters] of levelEntries) {
-          const levelNum = parseInt(levelStr, 10)
-
-          for (const sub of subMonsters) {
-            await addNemesisLevel({
-              nemesis_id: nemesis.id,
-              level_number: levelNum,
-              sub_monster_name: sub.subMonsterName || null,
-              basic_cards: sub.basicCards,
-              advanced_cards: sub.advancedCards,
-              legendary_cards: sub.legendaryCards,
-              overtone_cards: sub.overtoneCards,
-              ai_deck_remaining:
-                sub.basicCards +
-                sub.advancedCards +
-                sub.legendaryCards +
-                sub.overtoneCards,
-              accuracy: sub.accuracy,
-              accuracy_tokens: sub.accuracyTokens,
-              damage: sub.damage,
-              damage_tokens: sub.damageTokens,
-              evasion: sub.evasion,
-              evasion_tokens: sub.evasionTokens,
-              luck: sub.luck,
-              luck_tokens: sub.luckTokens,
-              movement: sub.movement,
-              movement_tokens: sub.movementTokens,
-              speed: sub.speed,
-              speed_tokens: sub.speedTokens,
-              strength: sub.strength,
-              strength_tokens: sub.strengthTokens,
-              toughness: sub.toughness,
-              toughness_tokens: sub.toughnessTokens,
-              life: sub.life || null,
-              traits: sub.traits,
-              moods: sub.moods
-            })
-          }
-        }
-
-        // 3. Create locations
-        for (const locName of locations) {
-          if (!locName.trim()) continue
-          const loc = await addLocation({
-            custom: true,
-            location_name: locName.trim()
-          })
-
-          await addNemesisLocation({
-            nemesis_id: nemesis.id,
-            location_id: loc.id
-          })
-        }
-
-        // 4. Create timeline events
-        for (const te of timelineEvents) {
-          const validEntries = te.entries.filter((e) => e.trim())
-          if (validEntries.length === 0) continue
-
-          await addNemesisTimelineYear({
-            nemesis_id: nemesis.id,
-            year_number: te.yearNumber,
-            entries: validEntries,
-            campaign_types: []
+      // 6. Link CC rewards (quarry only)
+      if (isQuarry) {
+        for (const ccr of ccRewards) {
+          await addQuarryCollectiveCognitionReward({
+            quarry_id: monster.id,
+            collective_cognition_reward_id: ccr.id
           })
         }
       }
@@ -644,31 +604,48 @@ export function CreateMonsterCard({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-semibold">Locations</Label>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocations((prev) => [...prev, ''])}>
-              <PlusIcon className="h-3 w-3" />
-            </Button>
+            <Popover open={locationAddOpen} onOpenChange={setLocationAddOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={selectableLocations.length === 0}>
+                  <PlusIcon className="h-3 w-3" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0" align="end">
+                <Command>
+                  <CommandInput placeholder="Search locations..." />
+                  <CommandList>
+                    <CommandEmpty>No locations found.</CommandEmpty>
+                    <CommandGroup>
+                      {selectableLocations.map((loc) => (
+                        <CommandItem
+                          key={loc.id}
+                          value={loc.location_name}
+                          onSelect={() => {
+                            setLocations((prev) => [...prev, loc])
+                            setLocationAddOpen(false)
+                          }}>
+                          {loc.location_name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
-          {locations.map((loc, idx) => (
-            <div key={idx} className="flex items-center gap-1">
-              <Input
-                value={loc}
-                placeholder="Location name"
-                onChange={(e) => {
-                  const next = [...locations]
-                  next[idx] = e.target.value
-                  setLocations(next)
-                }}
-              />
+          {locations.map((loc) => (
+            <div key={loc.id} className="flex items-center gap-1">
+              <Input value={loc.location_name} disabled />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() =>
-                  setLocations(locations.filter((_, i) => i !== idx))
+                  setLocations(locations.filter((l) => l.id !== loc.id))
                 }>
                 <Trash2Icon className="h-3 w-3" />
               </Button>
@@ -791,50 +768,53 @@ export function CreateMonsterCard({
                 <Label className="text-sm font-semibold">
                   Collective Cognition Rewards
                 </Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setCCRewards((prev) => [
-                      ...prev,
-                      { rewardName: '', collectiveCognition: 0 }
-                    ])
-                  }>
-                  <PlusIcon className="h-3 w-3" />
-                </Button>
+                <Popover
+                  open={ccRewardAddOpen}
+                  onOpenChange={setCCRewardAddOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={selectableCCRewards.length === 0}>
+                      <PlusIcon className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0" align="end">
+                    <Command>
+                      <CommandInput placeholder="Search rewards..." />
+                      <CommandList>
+                        <CommandEmpty>No rewards found.</CommandEmpty>
+                        <CommandGroup>
+                          {selectableCCRewards.map((ccr) => (
+                            <CommandItem
+                              key={ccr.id}
+                              value={ccr.reward_name}
+                              onSelect={() => {
+                                setCCRewards((prev) => [...prev, ccr])
+                                setCCRewardAddOpen(false)
+                              }}>
+                              {ccr.reward_name} (CC: {ccr.collective_cognition})
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
-              {ccRewards.map((ccr, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Label className="text-xs whitespace-nowrap">CC</Label>
-                    <NumericInput
-                      label="CC"
-                      value={ccr.collectiveCognition}
-                      min={0}
-                      onChange={(v) => {
-                        const next = [...ccRewards]
-                        next[idx] = { ...next[idx], collectiveCognition: v }
-                        setCCRewards(next)
-                      }}
-                    />
-                  </div>
+              {ccRewards.map((ccr) => (
+                <div key={ccr.id} className="flex items-center gap-1">
                   <Input
-                    className="flex-1"
-                    value={ccr.rewardName}
-                    placeholder="Reward name"
-                    onChange={(e) => {
-                      const next = [...ccRewards]
-                      next[idx] = { ...next[idx], rewardName: e.target.value }
-                      setCCRewards(next)
-                    }}
+                    value={`${ccr.reward_name} (CC: ${ccr.collective_cognition})`}
+                    disabled
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() =>
-                      setCCRewards(ccRewards.filter((_, i) => i !== idx))
+                      setCCRewards(ccRewards.filter((c) => c.id !== ccr.id))
                     }>
                     <Trash2Icon className="h-3 w-3" />
                   </Button>
@@ -939,7 +919,7 @@ export function CreateMonsterCard({
                           const subKey = `${levelNum}-${subIdx}`
                           const isSubExpanded = expandedSubMonsters.has(subKey)
                           const displayName =
-                            sub.subMonsterName || `Sub-Monster ${subIdx + 1}`
+                            sub.sub_monster_name || `Sub-Monster ${subIdx + 1}`
 
                           return (
                             <div
@@ -981,10 +961,10 @@ export function CreateMonsterCard({
                                     <Input
                                       className="flex-1"
                                       placeholder="Sub-monster name (optional)"
-                                      value={sub.subMonsterName}
+                                      value={sub.sub_monster_name ?? ''}
                                       onChange={(e) =>
                                         updateSubMonster(levelNum, subIdx, {
-                                          subMonsterName: e.target.value
+                                          sub_monster_name: e.target.value
                                         })
                                       }
                                     />
@@ -1019,22 +999,22 @@ export function CreateMonsterCard({
                                       {[
                                         {
                                           label: 'B',
-                                          key: 'basicCards' as const,
+                                          key: 'basic_cards' as const,
                                           full: 'Basic'
                                         },
                                         {
                                           label: 'A',
-                                          key: 'advancedCards' as const,
+                                          key: 'advanced_cards' as const,
                                           full: 'Advanced'
                                         },
                                         {
                                           label: 'L',
-                                          key: 'legendaryCards' as const,
+                                          key: 'legendary_cards' as const,
                                           full: 'Legendary'
                                         },
                                         {
                                           label: 'O',
-                                          key: 'overtoneCards' as const,
+                                          key: 'overtone_cards' as const,
                                           full: 'Overtone'
                                         }
                                       ].map((deck) => (

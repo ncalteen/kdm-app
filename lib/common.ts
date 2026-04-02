@@ -42,27 +42,27 @@ export const basicHuntBoard = {
  * Base Monster Level Data
  */
 export const baseMonsterLevelData: MonsterLevelData = {
-  subMonsterName: '',
-  basicCards: 0,
-  advancedCards: 0,
-  legendaryCards: 0,
-  overtoneCards: 0,
+  sub_monster_name: '',
+  basic_cards: 0,
+  advanced_cards: 0,
+  legendary_cards: 0,
+  overtone_cards: 0,
   accuracy: 0,
-  accuracyTokens: 0,
+  accuracy_tokens: 0,
   damage: 0,
-  damageTokens: 0,
+  damage_tokens: 0,
   evasion: 0,
-  evasionTokens: 0,
+  evasion_tokens: 0,
   luck: 0,
-  luckTokens: 0,
+  luck_tokens: 0,
   movement: 1,
-  movementTokens: 0,
+  movement_tokens: 0,
   speed: 0,
-  speedTokens: 0,
+  speed_tokens: 0,
   strength: 0,
-  strengthTokens: 0,
+  strength_tokens: 0,
   toughness: 0,
-  toughnessTokens: 0,
+  toughness_tokens: 0,
   life: 0,
   traits: [],
   moods: []
@@ -74,14 +74,14 @@ export const baseMonsterLevelData: MonsterLevelData = {
  * Used for mapping monster attributes to their corresponding token counts.
  */
 export const monsterAttributeTokenMap = [
-  { key: 'movement', tokenKey: 'movementTokens', label: 'Movement' },
-  { key: 'accuracy', tokenKey: 'accuracyTokens', label: 'Accuracy' },
-  { key: 'damage', tokenKey: 'damageTokens', label: 'Damage' },
-  { key: 'strength', tokenKey: 'strengthTokens', label: 'Strength' },
-  { key: 'evasion', tokenKey: 'evasionTokens', label: 'Evasion' },
-  { key: 'luck', tokenKey: 'luckTokens', label: 'Luck' },
-  { key: 'speed', tokenKey: 'speedTokens', label: 'Speed' },
-  { key: 'toughness', tokenKey: 'toughnessTokens', label: 'Toughness' }
+  { key: 'movement', tokenKey: 'movement_tokens', label: 'Movement' },
+  { key: 'accuracy', tokenKey: 'accuracy_tokens', label: 'Accuracy' },
+  { key: 'damage', tokenKey: 'damage_tokens', label: 'Damage' },
+  { key: 'strength', tokenKey: 'strength_tokens', label: 'Strength' },
+  { key: 'evasion', tokenKey: 'evasion_tokens', label: 'Evasion' },
+  { key: 'luck', tokenKey: 'luck_tokens', label: 'Luck' },
+  { key: 'speed', tokenKey: 'speed_tokens', label: 'Speed' },
+  { key: 'toughness', tokenKey: 'toughness_tokens', label: 'Toughness' }
 ]
 
 /**
