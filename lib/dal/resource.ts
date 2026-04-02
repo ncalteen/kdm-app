@@ -77,9 +77,7 @@ export async function getResources(): Promise<{
   for (const r of nonCustomResult.data ?? []) resourceMap[r.id] = toDetail(r)
   for (const r of userCustomResult.data ?? []) resourceMap[r.id] = toDetail(r)
   for (const row of sharedResult.data ?? [])
-    resourceMap[(row.resource as unknown as { id: string }[])[0].id] = toDetail(
-      (row.resource as unknown as Record<string, unknown>[])[0]
-    )
+    resourceMap[row.resource[0].id] = toDetail(row.resource[0])
 
   return resourceMap
 }
@@ -121,11 +119,10 @@ export async function addResource(
 
   if (error) throw new Error(`Error Adding Resource: ${error.message}`)
 
-  const raw = data.quarry as unknown
-  const quarry = raw
-    ? Array.isArray(raw)
-      ? (raw as { monster_name: string; node: string }[])[0]
-      : (raw as { monster_name: string; node: string })
+  const quarry = data.quarry
+    ? Array.isArray(data.quarry)
+      ? (data.quarry as { monster_name: string; node: string }[])[0]
+      : (data.quarry as { monster_name: string; node: string })
     : null
 
   return {

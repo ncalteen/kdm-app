@@ -143,8 +143,7 @@ export function WeaponProficiencyCard({
       )
 
       updateSurvivor(selectedSurvivor?.id, {
-        weapon_type_id: (type ||
-          null) as unknown as SurvivorDetail['weapon_type_id'],
+        weapon_type_id: type || null,
         weapon_proficiency: 0
       })
         .then(() => toast.success(SURVIVOR_WEAPON_TYPE_UPDATED_MESSAGE()))

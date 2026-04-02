@@ -377,7 +377,7 @@ export function EditMonsterCard({
           ai_deck_remaining: 0,
           level_number: level,
           survivor_statuses: []
-        } as unknown as QuarryLevelDetail
+        }
       ]
     }))
 
