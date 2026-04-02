@@ -127,3 +127,37 @@ export async function removeGear(id: string): Promise<void> {
 
   if (error) throw new Error(`Error Removing Gear: ${error.message}`)
 }
+
+/**
+ * Get Custom Gear
+ *
+ * Gets only the custom gear that the user has created.
+ *
+ * @returns Custom Gear
+ */
+export async function getCustomGear(): Promise<{
+  [key: string]: GearDetail
+}> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('gear')
+    .select('id, custom, gear_name, location_id')
+    .eq('custom', true)
+    .eq('user_id', user.id)
+
+  if (error) throw new Error(`Error Fetching Custom Gear: ${error.message}`)
+
+  const gearMap: { [key: string]: GearDetail } = {}
+  for (const g of data ?? []) gearMap[g.id] = g
+
+  return gearMap
+}

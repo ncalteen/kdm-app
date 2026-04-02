@@ -16,6 +16,9 @@ import { CustomPrinciplesCard } from '@/components/custom/custom-principles-card
 import { CustomResourcesCard } from '@/components/custom/custom-resources-card'
 import { CustomSecretFightingArtsCard } from '@/components/custom/custom-secret-fighting-arts-card'
 import { CustomSeedPatternsCard } from '@/components/custom/custom-seed-patterns-card'
+import { CustomStrainMilestonesCard } from '@/components/custom/custom-strain-milestones-card'
+import { CustomWanderersCard } from '@/components/custom/custom-wanderers-card'
+import { CustomWeaponTypesCard } from '@/components/custom/custom-weapon-types-card'
 import { CustomMonstersCard } from '@/components/monster/custom-monsters-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -332,12 +335,16 @@ export function UserCard({
         <TabsContent value="monsters">
           <CustomMonstersCard local={local} />
         </TabsContent>
-        <TabsContent value="wanderers">{/* Wanderer */}</TabsContent>
+        <TabsContent value="wanderers">
+          <CustomWanderersCard local={local} />
+        </TabsContent>
         <TabsContent value="other">
           <div className="grid grid-cols-1 gap-4">
             <CustomCharactersCard local={local} />
-            {/* Strain Milestone */}
-            {/* Weapon Type */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomStrainMilestonesCard local={local} />
+              <CustomWeaponTypesCard local={local} />
+            </div>
           </div>
         </TabsContent>
       </Tabs>

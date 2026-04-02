@@ -190,3 +190,40 @@ export async function removeWanderer(id: string): Promise<void> {
 
   if (error) throw new Error(`Error Removing Wanderer: ${error.message}`)
 }
+
+/**
+ * Get Custom Wanderers
+ *
+ * Gets only the custom wanderers that the user has created.
+ *
+ * @returns Custom Wanderers
+ */
+export async function getCustomWanderers(): Promise<{
+  [key: string]: WandererDetail
+}> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
+  if (!user) throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('wanderer')
+    .select(
+      'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+    )
+    .eq('custom', true)
+    .eq('user_id', user.id)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Wanderers: ${error.message}`)
+
+  const wandererMap: { [key: string]: WandererDetail } = {}
+  for (const w of data ?? []) wandererMap[w.id] = w
+
+  return wandererMap
+}
