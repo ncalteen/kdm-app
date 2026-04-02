@@ -85,6 +85,13 @@ export type Database = {
             referencedRelation: "character"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_character_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       collective_cognition_reward: {
@@ -141,6 +148,13 @@ export type Database = {
             referencedRelation: "collective_cognition_reward"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_ccr_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       disorder: {
@@ -194,6 +208,13 @@ export type Database = {
             referencedRelation: "disorder"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_disorder_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       fighting_art: {
@@ -246,6 +267,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "fighting_art"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_fighting_art_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -304,6 +332,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_gear_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "gear_shared_user_gear_id_fkey"
             columns: ["gear_id"]
@@ -710,6 +745,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_innovation_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "innovation_shared_user_innovation_id_fkey"
             columns: ["innovation_id"]
             isOneToOne: false
@@ -774,6 +816,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_knowledge_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "knowledge_shared_user_knowledge_id_fkey"
             columns: ["knowledge_id"]
             isOneToOne: false
@@ -826,6 +875,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_location_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "location_shared_user_location_id_fkey"
             columns: ["location_id"]
@@ -885,6 +941,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_milestone_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "milestone_shared_user_milestone_id_fkey"
             columns: ["milestone_id"]
@@ -1115,6 +1178,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_nemesis_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "nemesis_shared_user_nemesis_id_fkey"
             columns: ["nemesis_id"]
             isOneToOne: false
@@ -1217,6 +1287,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_neurosis_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "neurosis_shared_user_neurosis_id_fkey"
             columns: ["neurosis_id"]
             isOneToOne: false
@@ -1270,6 +1347,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_pattern_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "pattern_shared_user_pattern_id_fkey"
             columns: ["pattern_id"]
             isOneToOne: false
@@ -1322,6 +1406,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_philosophy_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "philosophy_shared_user_philosophy_id_fkey"
             columns: ["philosophy_id"]
@@ -1384,6 +1475,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_principle_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "principle_shared_user_principle_id_fkey"
             columns: ["principle_id"]
@@ -1718,6 +1816,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_quarry_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "quarry_shared_user_quarry_id_fkey"
             columns: ["quarry_id"]
             isOneToOne: false
@@ -1826,6 +1931,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_resource_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "resource_shared_user_resource_id_fkey"
             columns: ["resource_id"]
             isOneToOne: false
@@ -1879,6 +1991,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_secret_fighting_art_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "secret_fighting_art_shared_user_secret_fighting_art_id_fkey"
             columns: ["secret_fighting_art_id"]
             isOneToOne: false
@@ -1931,6 +2050,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_seed_pattern_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "seed_pattern_shared_user_seed_pattern_id_fkey"
             columns: ["seed_pattern_id"]
@@ -2664,6 +2790,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_settlement_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "settlement_shared_user_settlement_id_fkey"
             columns: ["settlement_id"]
             isOneToOne: false
@@ -3064,6 +3197,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_strain_milestone_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "strain_milestone_shared_user_strain_milestone_id_fkey"
             columns: ["strain_milestone_id"]
@@ -3795,6 +3935,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_wanderer_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "wanderer_shared_user_wanderer_id_fkey"
             columns: ["wanderer_id"]
             isOneToOne: false
@@ -3883,6 +4030,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_weapon_type_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "weapon_type_shared_user_weapon_type_id_fkey"
             columns: ["weapon_type_id"]
             isOneToOne: false
@@ -3896,6 +4050,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_username_available: {
+        Args: { desired_username: string }
+        Returns: boolean
+      }
+      initialize_user_settings: {
+        Args: { p_user_id: string; p_username: string }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
       is_character_owner: { Args: { record_id: string }; Returns: boolean }
       is_collective_cognition_reward_owner: {
