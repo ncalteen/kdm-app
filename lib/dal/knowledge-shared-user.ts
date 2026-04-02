@@ -16,7 +16,7 @@ export async function getKnowledgeSharedUsers(
 
   const { data, error } = await supabase
     .from('knowledge_shared_user')
-    .select('shared_user_id')
+    .select('shared_user_id, user_settings!shared_user_id(username)')
     .eq('knowledge_id', knowledgeId)
 
   if (error)
@@ -24,22 +24,10 @@ export async function getKnowledgeSharedUsers(
 
   if (!data || data.length === 0) return []
 
-  const { data: settings, error: settingsError } = await supabase
-    .from('user_settings')
-    .select('user_id, username')
-    .in(
-      'user_id',
-      data.map((row) => row.shared_user_id)
-    )
-
-  if (settingsError)
-    throw new Error(
-      `Error Fetching Shared User Settings: ${settingsError.message}`
-    )
-
-  return settings.map((row) => ({
-    shared_user_id: row.user_id,
-    username: row.username
+  return data.map((row) => ({
+    shared_user_id: row.shared_user_id,
+    username:
+      (row.user_settings as unknown as { username: string })?.username ?? ''
   }))
 }
 
