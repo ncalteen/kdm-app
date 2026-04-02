@@ -314,7 +314,7 @@ export type NemesisLevelDetail = Omit<
  */
 export type NemesisTimelineDetail = Omit<
   Tables<'nemesis_timeline_year'>,
-  'created_at' | 'id' | 'updated_at' | 'campaign_types' | 'nemesis_id'
+  'created_at' | 'updated_at' | 'campaign_types' | 'nemesis_id'
 >
 
 /**
@@ -395,7 +395,7 @@ export type QuarryLevelDetail = Omit<
  */
 export type QuarryTimelineDetail = Omit<
   Tables<'quarry_timeline_year'>,
-  'created_at' | 'id' | 'updated_at' | 'campaign_types' | 'quarry_id'
+  'created_at' | 'updated_at' | 'campaign_types' | 'quarry_id'
 >
 
 /**
