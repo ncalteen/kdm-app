@@ -26,8 +26,7 @@ export async function getNemesisSharedUsers(
 
   return data.map((row) => ({
     shared_user_id: row.shared_user_id,
-    username:
-      (row.user_settings as unknown as { username: string })?.username ?? ''
+    username: (row.user_settings as unknown as { username: string })?.username
   }))
 }
 
