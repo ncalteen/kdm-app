@@ -378,6 +378,16 @@ export type QuarryHuntBoardDetail = Omit<
 >
 
 /**
+ * Quarry Hunt Board Position Detail
+ *
+ * Used throughout the app to represent a quarry's level-based hunt positions.
+ */
+export type QuarryHuntBoardPositionDetail = Omit<
+  Tables<'quarry_hunt_board_position'>,
+  'created_at' | 'updated_at'
+>
+
+/**
  * Quarry Level Detail
  *
  * Used throughout the app to represent a quarry's level configuration
@@ -386,7 +396,12 @@ export type QuarryHuntBoardDetail = Omit<
 export type QuarryLevelDetail = Omit<
   Tables<'quarry_level'>,
   'created_at' | 'updated_at' | 'quarry_id'
->
+> & {
+  /** Monster Hunt Position (joined from quarry_hunt_board_position) */
+  hunt_pos: number
+  /** Survivor Hunt Position (joined from quarry_hunt_board_position) */
+  survivor_hunt_pos: number
+}
 
 /**
  * Quarry Timeline Detail

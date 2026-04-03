@@ -43,6 +43,7 @@ import { addNemesisTimelineYear } from '@/lib/dal/nemesis-timeline-year'
 import { addQuarry } from '@/lib/dal/quarry'
 import { addQuarryCollectiveCognitionReward } from '@/lib/dal/quarry-collective-cognition-reward'
 import { addQuarryHuntBoard } from '@/lib/dal/quarry-hunt-board'
+import { upsertQuarryHuntBoardPosition } from '@/lib/dal/quarry-hunt-board-position'
 import { addQuarryLevel } from '@/lib/dal/quarry-level'
 import { addQuarryLocation } from '@/lib/dal/quarry-location'
 import { addQuarryTimelineYear } from '@/lib/dal/quarry-timeline-year'
@@ -386,13 +387,17 @@ export function CreateMonsterCard({
               sub.advanced_cards +
               sub.legendary_cards +
               sub.overtone_cards,
-            ...(isQuarry
-              ? {
-                  hunt_pos: levelHuntPositions[levelNum]?.huntPos ?? 12,
-                  survivor_hunt_pos:
-                    levelHuntPositions[levelNum]?.survivorHuntPos ?? 0
-                }
-              : { life: sub.life || null })
+            ...(isQuarry ? {} : { life: sub.life || null })
+          })
+        }
+
+        if (isQuarry) {
+          await upsertQuarryHuntBoardPosition({
+            quarry_id: monster.id,
+            level_number: levelNum,
+            monster_hunt_pos: levelHuntPositions[levelNum]?.huntPos ?? 12,
+            survivor_hunt_pos:
+              levelHuntPositions[levelNum]?.survivorHuntPos ?? 0
           })
         }
       }

@@ -64,6 +64,11 @@ import {
   updateQuarryHuntBoard
 } from '@/lib/dal/quarry-hunt-board'
 import {
+  getQuarryHuntBoardPositions,
+  removeQuarryHuntBoardPosition,
+  upsertQuarryHuntBoardPosition
+} from '@/lib/dal/quarry-hunt-board-position'
+import {
   addQuarryLevel,
   getQuarryLevels,
   removeQuarryLevel,
@@ -159,7 +164,10 @@ export function EditMonsterCard({
     [key: number]: (NemesisLevelDetail | QuarryLevelDetail)[]
   }>({})
   const [levelHuntPositions, setLevelHuntPositions] = useState<{
-    [key: number]: { hunt_pos: number; survivor_hunt_pos: number }
+    [key: number]: { huntPos: number; survivorHuntPos: number }
+  }>({})
+  const [levelPositionIds, setLevelPositionIds] = useState<{
+    [key: number]: string
   }>({})
 
   // Hunt Board Data (Quarry Only)
@@ -289,20 +297,34 @@ export function EditMonsterCard({
           // Set hunt board data
           setHuntBoard(await getQuarryHuntBoard(monsterId))
 
-          // Extract per-level hunt positions from the first sub-monster.
+          // Extract per-level hunt positions from dedicated quarry positions.
+          const quarryLevelPositions = await getQuarryHuntBoardPositions(
+            monsterId
+          )
+
           const huntPositions: {
-            [key: number]: { hunt_pos: number; survivor_hunt_pos: number }
+            [key: number]: { huntPos: number; survivorHuntPos: number }
           } = {}
-          for (const monsterLevel of monsterLevels) {
-            if (!huntPositions[monsterLevel.level_number]) {
-              huntPositions[monsterLevel.level_number] = {
-                hunt_pos: (monsterLevel as QuarryLevelDetail).hunt_pos,
-                survivor_hunt_pos: (monsterLevel as QuarryLevelDetail)
-                  .survivor_hunt_pos
-              }
+          const positionIds: { [key: number]: string } = {}
+
+          for (const levelPosition of quarryLevelPositions) {
+            huntPositions[levelPosition.level_number] = {
+              huntPos: levelPosition.monster_hunt_pos,
+              survivorHuntPos: levelPosition.survivor_hunt_pos
             }
+            positionIds[levelPosition.level_number] = levelPosition.id
           }
+
+          for (const monsterLevel of monsterLevels) {
+            if (!huntPositions[monsterLevel.level_number])
+              huntPositions[monsterLevel.level_number] = {
+                huntPos: 12,
+                survivorHuntPos: 0
+              }
+          }
+
           setLevelHuntPositions(huntPositions)
+          setLevelPositionIds(positionIds)
 
           // Load collective cognition rewards
           setCollectiveCognitionRewards(
@@ -539,14 +561,7 @@ export function EditMonsterCard({
               sub.basic_cards +
               sub.advanced_cards +
               sub.legendary_cards +
-              sub.overtone_cards,
-            ...(isQuarry
-              ? {
-                  hunt_pos: levelHuntPositions[levelParsed]?.hunt_pos ?? 12,
-                  survivor_hunt_pos:
-                    levelHuntPositions[levelParsed]?.survivor_hunt_pos ?? 0
-                }
-              : {})
+              sub.overtone_cards
           }
 
           if (sub.id && !sub.id.startsWith('temp-')) {
@@ -563,6 +578,27 @@ export function EditMonsterCard({
               ) => Promise<unknown>
             )({ ...insertData, [idKey]: monsterId })
           }
+        }
+      }
+
+      if (isQuarry) {
+        const currentLevelNumbers = Object.entries(levels)
+          .filter(([, subMonsters]) => subMonsters.length > 0)
+          .map(([levelNum]) => parseInt(levelNum, 10))
+
+        for (const levelNum of currentLevelNumbers) {
+          await upsertQuarryHuntBoardPosition({
+            quarry_id: monsterId,
+            level_number: levelNum,
+            monster_hunt_pos: levelHuntPositions[levelNum]?.huntPos ?? 12,
+            survivor_hunt_pos:
+              levelHuntPositions[levelNum]?.survivorHuntPos ?? 0
+          })
+        }
+
+        for (const [levelNum, positionId] of Object.entries(levelPositionIds)) {
+          if (!currentLevelNumbers.includes(parseInt(levelNum, 10)))
+            await removeQuarryHuntBoardPosition(positionId)
         }
       }
 
@@ -648,6 +684,7 @@ export function EditMonsterCard({
     prologue,
     levels,
     levelHuntPositions,
+    levelPositionIds,
     locations,
     timelineEvents,
     huntBoard,
@@ -1066,7 +1103,7 @@ export function EditMonsterCard({
                       <NumericInput
                         label="Survivor Hunt Position"
                         value={
-                          levelHuntPositions[levelNum]?.survivor_hunt_pos ?? 0
+                          levelHuntPositions[levelNum]?.survivorHuntPos ?? 0
                         }
                         min={0}
                         max={12}
@@ -1091,7 +1128,7 @@ export function EditMonsterCard({
                       </Label>
                       <NumericInput
                         label="Monster Hunt Position"
-                        value={levelHuntPositions[levelNum]?.hunt_pos ?? 12}
+                        value={levelHuntPositions[levelNum]?.huntPos ?? 12}
                         min={0}
                         max={12}
                         onChange={(v) =>

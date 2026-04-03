@@ -17,16 +17,41 @@ export async function getQuarryLevels(
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
+  const { data: levels, error: levelsError } = await supabase
     .from('quarry_level')
     .select(
-      'id, accuracy, accuracy_tokens, advanced_cards, ai_deck_remaining, basic_cards, damage, damage_tokens, evasion, evasion_tokens, hunt_pos, legendary_cards, level_number, luck, luck_tokens, moods, movement, movement_tokens, overtone_cards, speed, speed_tokens, strength, strength_tokens, sub_monster_name, survivor_hunt_pos, survivor_statuses, toughness, toughness_tokens, traits'
+      'id, accuracy, accuracy_tokens, advanced_cards, ai_deck_remaining, basic_cards, damage, damage_tokens, evasion, evasion_tokens, legendary_cards, level_number, luck, luck_tokens, moods, movement, movement_tokens, overtone_cards, speed, speed_tokens, strength, strength_tokens, sub_monster_name, survivor_statuses, toughness, toughness_tokens, traits'
     )
     .eq('quarry_id', quarryId)
 
-  if (error) throw new Error(`Error Fetching Quarry Levels: ${error.message}`)
+  if (levelsError)
+    throw new Error(`Error Fetching Quarry Levels: ${levelsError.message}`)
 
-  return data ?? []
+  const { data: positions, error: positionsError } = await supabase
+    .from('quarry_hunt_board_position')
+    .select('level_number, monster_hunt_pos, survivor_hunt_pos')
+    .eq('quarry_id', quarryId)
+
+  if (positionsError)
+    throw new Error(
+      `Error Fetching Quarry Hunt Positions: ${positionsError.message}`
+    )
+
+  const positionsByLevel = new Map(
+    (positions ?? []).map((position) => [position.level_number, position])
+  )
+
+  const mergedLevels = (levels ?? []).map((level) => {
+    const position = positionsByLevel.get(level.level_number)
+
+    return {
+      ...level,
+      hunt_pos: position?.monster_hunt_pos ?? 12,
+      survivor_hunt_pos: position?.survivor_hunt_pos ?? 0
+    }
+  })
+
+  return mergedLevels
 }
 
 /**

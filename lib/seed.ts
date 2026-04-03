@@ -1747,7 +1747,6 @@ async function createCustomQuarries(
       damage_tokens: 0,
       evasion: -1,
       evasion_tokens: 0,
-      hunt_pos: 10,
       level_number: 1,
       luck: 0,
       luck_tokens: 0,
@@ -1760,7 +1759,6 @@ async function createCustomQuarries(
       speed_tokens: 0,
       strength: 2,
       strength_tokens: 0,
-      survivor_hunt_pos: 0,
       survivor_statuses: [],
       toughness: 10,
       toughness_tokens: 0,
@@ -1785,7 +1783,6 @@ async function createCustomQuarries(
       damage_tokens: 0,
       evasion: 0,
       evasion_tokens: 0,
-      hunt_pos: 12,
       level_number: 2,
       luck: 0,
       luck_tokens: 0,
@@ -1798,7 +1795,6 @@ async function createCustomQuarries(
       speed_tokens: 0,
       strength: 3,
       strength_tokens: 0,
-      survivor_hunt_pos: 0,
       survivor_statuses: ['Bleeding'],
       toughness: 12,
       toughness_tokens: 0,
@@ -1808,6 +1804,26 @@ async function createCustomQuarries(
     .single()
 
   if (createIronWyrmLevel2Error) throw createIronWyrmLevel2Error
+
+  const { error: createIronWyrmLevelPositionsError } = await supabase
+    .from('quarry_hunt_board_position')
+    .insert([
+      {
+        quarry_id: ironWyrm.id,
+        level_number: 1,
+        monster_hunt_pos: 10,
+        survivor_hunt_pos: 0
+      },
+      {
+        quarry_id: ironWyrm.id,
+        level_number: 2,
+        monster_hunt_pos: 12,
+        survivor_hunt_pos: 0
+      }
+    ])
+
+  if (createIronWyrmLevelPositionsError)
+    throw createIronWyrmLevelPositionsError
 
   const {
     data: ironWyrmCollectiveCognitionReward,
@@ -1966,7 +1982,6 @@ async function createCustomQuarries(
       damage_tokens: 0,
       evasion: 1,
       evasion_tokens: 0,
-      hunt_pos: 11,
       level_number: 1,
       luck: 0,
       luck_tokens: 0,
@@ -1979,7 +1994,6 @@ async function createCustomQuarries(
       speed_tokens: 0,
       strength: 2,
       strength_tokens: 0,
-      survivor_hunt_pos: 0,
       survivor_statuses: [],
       toughness: 10,
       toughness_tokens: 0,
@@ -2005,7 +2019,6 @@ async function createCustomQuarries(
         damage_tokens: 0,
         evasion: 1,
         evasion_tokens: 0,
-        hunt_pos: 11,
         level_number: 2,
         luck: 0,
         luck_tokens: 0,
@@ -2018,7 +2031,6 @@ async function createCustomQuarries(
         speed_tokens: 0,
         strength: 2,
         strength_tokens: 0,
-        survivor_hunt_pos: 0,
         survivor_statuses: [],
         toughness: 10,
         toughness_tokens: 0,
@@ -2036,7 +2048,6 @@ async function createCustomQuarries(
         damage_tokens: 0,
         evasion: 1,
         evasion_tokens: 0,
-        hunt_pos: 11,
         level_number: 2,
         luck: 0,
         luck_tokens: 0,
@@ -2049,7 +2060,6 @@ async function createCustomQuarries(
         speed_tokens: 0,
         strength: 2,
         strength_tokens: 0,
-        survivor_hunt_pos: 0,
         survivor_statuses: [],
         toughness: 10,
         toughness_tokens: 0,
@@ -2075,7 +2085,6 @@ async function createCustomQuarries(
         damage_tokens: 0,
         evasion: 1,
         evasion_tokens: 0,
-        hunt_pos: 11,
         level_number: 3,
         luck: 0,
         luck_tokens: 0,
@@ -2088,7 +2097,6 @@ async function createCustomQuarries(
         speed_tokens: 0,
         strength: 2,
         strength_tokens: 0,
-        survivor_hunt_pos: 0,
         survivor_statuses: [],
         toughness: 10,
         toughness_tokens: 0,
@@ -2106,7 +2114,6 @@ async function createCustomQuarries(
         damage_tokens: 0,
         evasion: 1,
         evasion_tokens: 0,
-        hunt_pos: 11,
         level_number: 3,
         luck: 0,
         luck_tokens: 0,
@@ -2119,7 +2126,6 @@ async function createCustomQuarries(
         speed_tokens: 0,
         strength: 2,
         strength_tokens: 0,
-        survivor_hunt_pos: 0,
         survivor_statuses: [],
         toughness: 10,
         toughness_tokens: 0,
@@ -2137,7 +2143,6 @@ async function createCustomQuarries(
         damage_tokens: 0,
         evasion: 1,
         evasion_tokens: 0,
-        hunt_pos: 11,
         level_number: 3,
         luck: 0,
         luck_tokens: 0,
@@ -2150,7 +2155,6 @@ async function createCustomQuarries(
         speed_tokens: 0,
         strength: 2,
         strength_tokens: 0,
-        survivor_hunt_pos: 0,
         survivor_statuses: [],
         toughness: 10,
         toughness_tokens: 0,
@@ -2160,6 +2164,32 @@ async function createCustomQuarries(
     .select('id')
 
   if (createDarkHorsesLevel3Error) throw createDarkHorsesLevel3Error
+
+  const { error: createDarkHorsesLevelPositionsError } = await supabase
+    .from('quarry_hunt_board_position')
+    .insert([
+      {
+        quarry_id: darkHorses.id,
+        level_number: 1,
+        monster_hunt_pos: 11,
+        survivor_hunt_pos: 0
+      },
+      {
+        quarry_id: darkHorses.id,
+        level_number: 2,
+        monster_hunt_pos: 11,
+        survivor_hunt_pos: 0
+      },
+      {
+        quarry_id: darkHorses.id,
+        level_number: 3,
+        monster_hunt_pos: 11,
+        survivor_hunt_pos: 0
+      }
+    ])
+
+  if (createDarkHorsesLevelPositionsError)
+    throw createDarkHorsesLevelPositionsError
 
   const {
     data: darkHorsesCollectiveCognitionReward,
