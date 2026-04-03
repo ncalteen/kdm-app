@@ -298,9 +298,8 @@ export function EditMonsterCard({
           setHuntBoard(await getQuarryHuntBoard(monsterId))
 
           // Extract per-level hunt positions from dedicated quarry positions.
-          const quarryLevelPositions = await getQuarryHuntBoardPositions(
-            monsterId
-          )
+          const quarryLevelPositions =
+            await getQuarryHuntBoardPositions(monsterId)
 
           const huntPositions: {
             [key: number]: { huntPos: number; survivorHuntPos: number }

@@ -1822,8 +1822,7 @@ async function createCustomQuarries(
       }
     ])
 
-  if (createIronWyrmLevelPositionsError)
-    throw createIronWyrmLevelPositionsError
+  if (createIronWyrmLevelPositionsError) throw createIronWyrmLevelPositionsError
 
   const {
     data: ironWyrmCollectiveCognitionReward,
