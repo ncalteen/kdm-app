@@ -150,7 +150,7 @@ enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
 # TODO: Change this to the production side once live
-site_url = "http://localhost:3000"
+site_url = "https://archivist.monster"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
   "http://127.0.0.1:3000/**",
