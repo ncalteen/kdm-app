@@ -238,13 +238,13 @@ sender_name = "No Reply - KD:M Archivist"
 # Confirmation email template
 [auth.email.template.confirmation]
 subject = "[KD:M - Archivist] Welcome, Survivor!"
-content_path = "./supabase/templates/confirmation.html"
+content_path = "./templates/confirmation.html"
 
 # Password reset email template
 [auth.email.notification.password_changed]
 enabled = true
 subject = "[KD:M - Archivist] Password Changed"
-content_path = "./supabase/templates/password_changed_notification.html"
+content_path = "./templates/password_changed_notification.html"
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.
