@@ -40,8 +40,105 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      23,
+      9,
+      7,
+      2,
+      5,
+      0,
+      2,
+      2,
+      0,
+      0,
+      0,
+      11,
+      3,
+      0,
+      1,
+      '{"Indigestion"}',
+      10,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Bullfrogdog'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      17,
+      0,
+      '{"Bullish Charge", "Double Sphincter", "Foul Stench", "Gaseous Bloat", "Mature", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -52,11 +149,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -65,48 +161,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    23,
-    9,
-    7,
-    2,
-    5,
-    0,
-    2,
-    2,
-    0,
-    0,
-    0,
-    11,
-    3,
-    0,
-    1,
-    '{"Indigestion"}',
-    10,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Bullfrogdog'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    17,
-    0,
-    '{"Bullish Charge", "Double Sphincter", "Foul Stench", "Gaseous Bloat", "Mature", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 ------------------------------------------------------------------------------
 -- Screaming Nukalope
 ------------------------------------------------------------------------------
@@ -149,8 +222,141 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      16,
+      9,
+      7,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      9,
+      2,
+      0,
+      0,
+      '{}',
+      9,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Screaming Nukalope'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      11,
+      0,
+      '{"Atomic Vigor - Inert", "Critical Mass - Inert", "Prehensile Tail - Inert"}'
+    ),
+    (
+      22,
+      12,
+      8,
+      2,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      2,
+      11,
+      3,
+      0,
+      0,
+      '{}',
+      9,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Screaming Nukalope'
+          and not custom
+      ),
+      null,
+      3,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      12,
+      0,
+      '{"Atomic Vigor - Inert", "Critical Mass - Inert", "Exponential Yield", "Legendary Horns", "Prehensile Tail - Inert", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -161,11 +367,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -174,84 +379,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    16,
-    9,
-    7,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    0,
-    9,
-    2,
-    0,
-    0,
-    '{}',
-    9,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Screaming Nukalope'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    11,
-    0,
-    '{"Atomic Vigor - Inert", "Critical Mass - Inert", "Prehensile Tail - Inert"}'
-  ),
-  (
-    22,
-    12,
-    8,
-    2,
-    0,
-    0,
-    1,
-    1,
-    0,
-    0,
-    2,
-    11,
-    3,
-    0,
-    0,
-    '{}',
-    9,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Screaming Nukalope'
-        and not custom
-    ),
-    null,
-    3,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    12,
-    0,
-    '{"Atomic Vigor - Inert", "Critical Mass - Inert", "Exponential Yield", "Legendary Horns", "Prehensile Tail - Inert", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -309,8 +455,141 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      15,
+      10,
+      5,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      8,
+      2,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'White Gigalion'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      10,
+      0,
+      '{"Giga Claws", "Smart Cat", "Vicious"}'
+    ),
+    (
+      20,
+      11,
+      8,
+      1,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      8,
+      3,
+      0,
+      1,
+      '{}',
+      10,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'White Gigalion'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      16,
+      0,
+      '{"Giga Claws", "Golden Eyes", "Merciless", "Smart Cat", "Vicious", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -321,11 +600,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -334,84 +612,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    15,
-    10,
-    5,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    8,
-    2,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'White Gigalion'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    10,
-    0,
-    '{"Giga Claws", "Smart Cat", "Vicious"}'
-  ),
-  (
-    20,
-    11,
-    8,
-    1,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    0,
-    8,
-    3,
-    0,
-    1,
-    '{}',
-    10,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'White Gigalion'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    16,
-    0,
-    '{"Giga Claws", "Golden Eyes", "Merciless", "Smart Cat", "Vicious", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -469,8 +688,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      10,
+      7,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      1,
+      0,
+      0,
+      '{}',
+      6,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Crimson Crocodile'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      7,
+      0,
+      '{"Adrenal Adept", "Enchanted Flesh", "Immortal Presence"}'
+    ),
+    (
+      15,
+      9,
+      5,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      8,
+      2,
+      0,
+      0,
+      '{}',
+      7,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Crimson Crocodile'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      9,
+      0,
+      '{"Adrenal Adept", "Blood Soaked", "Enchanted Flesh", "Immortal Presence"}'
+    ),
+    (
+      20,
+      12,
+      6,
+      2,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      11,
+      3,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Crimson Crocodile'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      15,
+      0,
+      '{"Adrenal Adept", "Blood Secret", "Blood Soaked", "Enchanted Flesh", "Immortal Presence", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -481,11 +869,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -494,120 +881,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    10,
-    7,
-    3,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    4,
-    1,
-    0,
-    0,
-    '{}',
-    6,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Crimson Crocodile'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    7,
-    0,
-    '{"Adrenal Adept", "Enchanted Flesh", "Immortal Presence"}'
-  ),
-  (
-    15,
-    9,
-    5,
-    1,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    8,
-    2,
-    0,
-    0,
-    '{}',
-    7,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Crimson Crocodile'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    9,
-    0,
-    '{"Adrenal Adept", "Blood Soaked", "Enchanted Flesh", "Immortal Presence"}'
-  ),
-  (
-    20,
-    12,
-    6,
-    2,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    0,
-    11,
-    3,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Crimson Crocodile'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    15,
-    0,
-    '{"Adrenal Adept", "Blood Secret", "Blood Soaked", "Enchanted Flesh", "Immortal Presence", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -695,8 +987,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      12,
+      8,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      '{}',
+      10,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Dragon King'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      13,
+      0,
+      '{"Irradiate", "Unseen Agony"}'
+    ),
+    (
+      16,
+      8,
+      7,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      '{}',
+      10,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Dragon King'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      15,
+      0,
+      '{"Irradiate", "Unseen Agony"}'
+    ),
+    (
+      19,
+      9,
+      8,
+      2,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      1,
+      '{}',
+      10,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Dragon King'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      17,
+      0,
+      '{"Irradiate", "Smolder", "Unseen Agony", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -707,11 +1168,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -720,120 +1180,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    12,
-    8,
-    4,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    '{}',
-    10,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Dragon King'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    13,
-    0,
-    '{"Irradiate", "Unseen Agony"}'
-  ),
-  (
-    16,
-    8,
-    7,
-    1,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    '{}',
-    10,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Dragon King'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    15,
-    0,
-    '{"Irradiate", "Unseen Agony"}'
-  ),
-  (
-    19,
-    9,
-    8,
-    2,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    0,
-    0,
-    3,
-    0,
-    1,
-    '{}',
-    10,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Dragon King'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    17,
-    0,
-    '{"Irradiate", "Smolder", "Unseen Agony", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -902,8 +1267,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      10,
+      7,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      '{}',
+      7,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Dung Beetle Knight'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      12,
+      0,
+      '{"Baller", "Power Forward", "Prepared Tunnels", "Separation Anxiety"}'
+    ),
+    (
+      14,
+      7,
+      6,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      '{}',
+      7,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Dung Beetle Knight'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      14,
+      0,
+      '{"Baller", "Heavy Load", "Power Forward", "Prepared Tunnels", "Separation Anxiety"}'
+    ),
+    (
+      19,
+      8,
+      9,
+      2,
+      0,
+      0,
+      1,
+      2,
+      0,
+      0,
+      1,
+      0,
+      3,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Dung Beetle Knight'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      18,
+      0,
+      '{"Burrow", "Baller", "Heavy Load", "Power Forward", "Prepared Tunnels", "Separation Anxiety", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -914,11 +1448,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -927,120 +1460,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    10,
-    7,
-    3,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    '{}',
-    7,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Dung Beetle Knight'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    12,
-    0,
-    '{"Baller", "Power Forward", "Prepared Tunnels", "Separation Anxiety"}'
-  ),
-  (
-    14,
-    7,
-    6,
-    1,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    '{}',
-    7,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Dung Beetle Knight'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    14,
-    0,
-    '{"Baller", "Heavy Load", "Power Forward", "Prepared Tunnels", "Separation Anxiety"}'
-  ),
-  (
-    19,
-    8,
-    9,
-    2,
-    0,
-    0,
-    1,
-    2,
-    0,
-    0,
-    1,
-    0,
-    3,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Dung Beetle Knight'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    18,
-    0,
-    '{"Burrow", "Baller", "Heavy Load", "Power Forward", "Prepared Tunnels", "Separation Anxiety", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
@@ -1095,8 +1533,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      11,
+      7,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      '{}',
+      7,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Flower Knight'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      2,
+      '{}',
+      6,
+      0,
+      '{"Bloom", "Set Roots"}'
+    ),
+    (
+      13,
+      8,
+      4,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Flower Knight'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      1,
+      '{}',
+      8,
+      0,
+      '{"Bloom", "Razor Bulbs", "Set Roots"}'
+    ),
+    (
+      16,
+      9,
+      5,
+      2,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      '{}',
+      9,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Flower Knight'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      11,
+      0,
+      '{"Bloom", "Heart of the Woods", "Perfect Aim", "Razor Bulbs", "Set Roots", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -1107,11 +1714,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -1120,120 +1726,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    11,
-    7,
-    4,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    '{}',
-    7,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Flower Knight'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    2,
-    '{}',
-    6,
-    0,
-    '{"Bloom", "Set Roots"}'
-  ),
-  (
-    13,
-    8,
-    4,
-    1,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Flower Knight'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    1,
-    '{}',
-    8,
-    0,
-    '{"Bloom", "Razor Bulbs", "Set Roots"}'
-  ),
-  (
-    16,
-    9,
-    5,
-    2,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    0,
-    0,
-    3,
-    0,
-    0,
-    '{}',
-    9,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Flower Knight'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    11,
-    0,
-    '{"Bloom", "Heart of the Woods", "Perfect Aim", "Razor Bulbs", "Set Roots", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
@@ -1301,8 +1812,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      10,
+      8,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      '{}',
+      7,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Frogdog'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      '{"Double Sphincter", "Foul Stench", "Gaseous Bloat", "Leap"}'
+    ),
+    (
+      14,
+      8,
+      6,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      '{}',
+      9,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Frogdog'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      11,
+      0,
+      '{"Double Sphincter", "Foul Stench", "Gaseous Bloat", "Leap", "Mature"}'
+    ),
+    (
+      19,
+      9,
+      8,
+      2,
+      0,
+      0,
+      2,
+      2,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      '{"Indigestion"}',
+      10,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Frogdog'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      17,
+      0,
+      '{"Double Sphincter", "Foul Stench", "Gaseous Bloat", "Leap", "Mature", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -1313,11 +1993,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -1326,120 +2005,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    10,
-    8,
-    2,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    '{}',
-    7,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Frogdog'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    '{"Double Sphincter", "Foul Stench", "Gaseous Bloat", "Leap"}'
-  ),
-  (
-    14,
-    8,
-    6,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    '{}',
-    9,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Frogdog'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    11,
-    0,
-    '{"Double Sphincter", "Foul Stench", "Gaseous Bloat", "Leap", "Mature"}'
-  ),
-  (
-    19,
-    9,
-    8,
-    2,
-    0,
-    0,
-    2,
-    2,
-    0,
-    0,
-    0,
-    0,
-    3,
-    0,
-    0,
-    '{"Indigestion"}',
-    10,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Frogdog'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    17,
-    0,
-    '{"Double Sphincter", "Foul Stench", "Gaseous Bloat", "Leap", "Mature", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -1508,8 +2092,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      10,
+      8,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      '{}',
+      6,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Gorm'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      '{}'
+    ),
+    (
+      14,
+      9,
+      5,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      '{}',
+      9,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Gorm'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      11,
+      0,
+      '{"Gorm''s Den", "Musth"}'
+    ),
+    (
+      20,
+      10,
+      8,
+      2,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      1,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Gorm'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      15,
+      0,
+      '{"Ancient Tusks", "Gormyard", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -1520,11 +2273,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -1533,120 +2285,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    10,
-    8,
-    2,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    '{}',
-    6,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Gorm'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    '{}'
-  ),
-  (
-    14,
-    9,
-    5,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    '{}',
-    9,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Gorm'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    11,
-    0,
-    '{"Gorm''s Den", "Musth"}'
-  ),
-  (
-    20,
-    10,
-    8,
-    2,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    0,
-    0,
-    3,
-    0,
-    1,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Gorm'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    15,
-    0,
-    '{"Ancient Tusks", "Gormyard", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -1729,8 +2386,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      19,
+      8,
+      8,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      7,
+      1,
+      0,
+      0,
+      '{}',
+      7,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'King'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      19,
+      0,
+      '{"Audio Synthesis", "Current", "Ghost Geometry", "King''s New Clothes"}'
+    ),
+    (
+      22,
+      8,
+      8,
+      6,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      9,
+      2,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'King'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      22,
+      0,
+      '{"Audio Synthesis", "Current", "Ghost Geometry", "Half Power", "King''s New Clothes"}'
+    ),
+    (
+      27,
+      8,
+      12,
+      7,
+      0,
+      0,
+      2,
+      2,
+      0,
+      0,
+      0,
+      11,
+      3,
+      0,
+      0,
+      '{}',
+      9,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'King'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      25,
+      0,
+      '{"Audio Synthesis", "Current", "Full Power", "Ghost Geometry", "King''s New Clothes", "King''s Presence", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -1741,11 +2567,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -1754,120 +2579,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    19,
-    8,
-    8,
-    3,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    7,
-    1,
-    0,
-    0,
-    '{}',
-    7,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'King'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    19,
-    0,
-    '{"Audio Synthesis", "Current", "Ghost Geometry", "King''s New Clothes"}'
-  ),
-  (
-    22,
-    8,
-    8,
-    6,
-    0,
-    0,
-    1,
-    1,
-    0,
-    0,
-    0,
-    9,
-    2,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'King'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    22,
-    0,
-    '{"Audio Synthesis", "Current", "Ghost Geometry", "Half Power", "King''s New Clothes"}'
-  ),
-  (
-    27,
-    8,
-    12,
-    7,
-    0,
-    0,
-    2,
-    2,
-    0,
-    0,
-    0,
-    11,
-    3,
-    0,
-    0,
-    '{}',
-    9,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'King'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    25,
-    0,
-    '{"Audio Synthesis", "Current", "Full Power", "Ghost Geometry", "King''s New Clothes", "King''s Presence", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -1953,8 +2683,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      15,
+      7,
+      7,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Lion God'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      14,
+      0,
+      '{"Heft", "Hollow Earth", "Whiplash"}'
+    ),
+    (
+      20,
+      11,
+      8,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      1,
+      '{}',
+      9,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Lion God'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      16,
+      0,
+      '{"Divine Prowess", "Heft", "Hollow Earth", "Whiplash"}'
+    ),
+    (
+      25,
+      14,
+      9,
+      2,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      1,
+      0,
+      3,
+      0,
+      2,
+      '{}',
+      10,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Lion God'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      21,
+      0,
+      '{"Divine Prowess", "Heft", "Hollow Earth", "Immaculate Intuition", "Whiplash", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -1965,11 +2864,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -1978,120 +2876,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    15,
-    7,
-    7,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Lion God'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    14,
-    0,
-    '{"Heft", "Hollow Earth", "Whiplash"}'
-  ),
-  (
-    20,
-    11,
-    8,
-    1,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    0,
-    2,
-    0,
-    1,
-    '{}',
-    9,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Lion God'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    16,
-    0,
-    '{"Divine Prowess", "Heft", "Hollow Earth", "Whiplash"}'
-  ),
-  (
-    25,
-    14,
-    9,
-    2,
-    0,
-    0,
-    0,
-    3,
-    0,
-    0,
-    1,
-    0,
-    3,
-    0,
-    2,
-    '{}',
-    10,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Lion God'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    21,
-    0,
-    '{"Divine Prowess", "Heft", "Hollow Earth", "Immaculate Intuition", "Whiplash", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
@@ -2146,8 +2949,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      12,
+      8,
+      3,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      5,
+      1,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Phoenix'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{"Dreaded Decade"}',
+      10,
+      0,
+      '{"Materialize", "Spiral Age", "Zeal"}'
+    ),
+    (
+      17,
+      10,
+      6,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      8,
+      2,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Phoenix'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{"Dreaded Decade"}',
+      12,
+      0,
+      '{"Materialize", "Spiral Age", "Top of the Food Chain", "Zeal"}'
+    ),
+    (
+      22,
+      13,
+      7,
+      2,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0,
+      11,
+      3,
+      0,
+      2,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Phoenix'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{"Dreaded Decade"}',
+      17,
+      0,
+      '{"Materialize", "Spiral Age", "Top of the Food Chain", "Zeal", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -2158,11 +3130,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -2171,120 +3142,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    12,
-    8,
-    3,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    5,
-    1,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Phoenix'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{"Dreaded Decade"}',
-    10,
-    0,
-    '{"Materialize", "Spiral Age", "Zeal"}'
-  ),
-  (
-    17,
-    10,
-    6,
-    1,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    8,
-    2,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Phoenix'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{"Dreaded Decade"}',
-    12,
-    0,
-    '{"Materialize", "Spiral Age", "Top of the Food Chain", "Zeal"}'
-  ),
-  (
-    22,
-    13,
-    7,
-    2,
-    0,
-    0,
-    0,
-    3,
-    0,
-    0,
-    0,
-    11,
-    3,
-    0,
-    2,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Phoenix'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{"Dreaded Decade"}',
-    17,
-    0,
-    '{"Materialize", "Spiral Age", "Top of the Food Chain", "Zeal", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -2383,8 +3259,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      10,
+      7,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      1,
+      0,
+      0,
+      '{}',
+      6,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Screaming Antelope'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      '{"Trample"}'
+    ),
+    (
+      15,
+      10,
+      5,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      8,
+      2,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Screaming Antelope'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      10,
+      0,
+      '{"Diabolical", "Trample"}'
+    ),
+    (
+      22,
+      12,
+      8,
+      2,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      1,
+      10,
+      3,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Screaming Antelope'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      12,
+      0,
+      '{"Diabolical", "Hypermetabolism", "Legendary Horns", "Trample", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -2395,11 +3440,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -2408,120 +3452,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    10,
-    7,
-    3,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    4,
-    1,
-    0,
-    0,
-    '{}',
-    6,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Screaming Antelope'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    '{"Trample"}'
-  ),
-  (
-    15,
-    10,
-    5,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    8,
-    2,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Screaming Antelope'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    10,
-    0,
-    '{"Diabolical", "Trample"}'
-  ),
-  (
-    22,
-    12,
-    8,
-    2,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    1,
-    10,
-    3,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Screaming Antelope'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    12,
-    0,
-    '{"Diabolical", "Hypermetabolism", "Legendary Horns", "Trample", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -2607,8 +3556,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      12,
+      8,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      1,
+      0,
+      0,
+      '{}',
+      6,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Smog Singers'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{"Bloody Hands"}',
+      7,
+      0,
+      '{"Performing Artists", "Song Cards", "Vibration Damage"}'
+    ),
+    (
+      17,
+      8,
+      4,
+      1,
+      4,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      8,
+      2,
+      0,
+      0,
+      '{}',
+      7,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Smog Singers'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{"Bloody Hands"}',
+      9,
+      0,
+      '{"Overtone Singing", "Performing Artists", "Song Cards", "Vibration Damage"}'
+    ),
+    (
+      25,
+      9,
+      6,
+      2,
+      8,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      10,
+      3,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Smog Singers'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{"Bloody Hands"}',
+      12,
+      0,
+      '{"Overtone Singing", "Performing Artists", "Singing Whale", "Song Cards", "Vibration Damage", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -2619,11 +3737,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -2632,120 +3749,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    12,
-    8,
-    4,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    4,
-    1,
-    0,
-    0,
-    '{}',
-    6,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Smog Singers'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{"Bloody Hands"}',
-    7,
-    0,
-    '{"Performing Artists", "Song Cards", "Vibration Damage"}'
-  ),
-  (
-    17,
-    8,
-    4,
-    1,
-    4,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    8,
-    2,
-    0,
-    0,
-    '{}',
-    7,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Smog Singers'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{"Bloody Hands"}',
-    9,
-    0,
-    '{"Overtone Singing", "Performing Artists", "Song Cards", "Vibration Damage"}'
-  ),
-  (
-    25,
-    9,
-    6,
-    2,
-    8,
-    0,
-    0,
-    2,
-    0,
-    0,
-    0,
-    10,
-    3,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Smog Singers'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{"Bloody Hands"}',
-    12,
-    0,
-    '{"Overtone Singing", "Performing Artists", "Singing Whale", "Song Cards", "Vibration Damage", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -2831,8 +3853,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      9,
+      5,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      '{"Frantic Spinning"}',
+      11,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Spidicules'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      '{"Spawn", "Spiderling Action", "Twitching Leg Pile"}'
+    ),
+    (
+      13,
+      8,
+      5,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      '{"Feeding Time"}',
+      14,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Spidicules'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      10,
+      0,
+      '{"Hivemind", "Spiderling Action", "Spawn", "Twitching Leg Pile"}'
+    ),
+    (
+      21,
+      12,
+      7,
+      2,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      '{"Necrotoxins"}',
+      16,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Spidicules'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      12,
+      0,
+      '{"10,000 Teeth", "Hivemind", "Spawn", "Spiderling Action", "Twitching Leg Pile", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -2843,11 +4034,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -2856,120 +4046,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    9,
-    5,
-    4,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    '{"Frantic Spinning"}',
-    11,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Spidicules'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    '{"Spawn", "Spiderling Action", "Twitching Leg Pile"}'
-  ),
-  (
-    13,
-    8,
-    5,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    '{"Feeding Time"}',
-    14,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Spidicules'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    10,
-    0,
-    '{"Hivemind", "Spiderling Action", "Spawn", "Twitching Leg Pile"}'
-  ),
-  (
-    21,
-    12,
-    7,
-    2,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    0,
-    0,
-    3,
-    0,
-    0,
-    '{"Necrotoxins"}',
-    16,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Spidicules'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    12,
-    0,
-    '{"10,000 Teeth", "Hivemind", "Spawn", "Spiderling Action", "Twitching Leg Pile", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_timeline_year (campaign_types, entries, quarry_id, year_number)
 values (
     '{}',
@@ -3024,8 +4119,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      10,
+      7,
+      2,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      '{}',
+      16,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Sunstalker'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      10,
+      0,
+      '{"Light & Shadow", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial"}'
+    ),
+    (
+      15,
+      9,
+      5,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      '{}',
+      16,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Sunstalker'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      12,
+      0,
+      '{"Light & Shadow", "Living Shadows", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial"}'
+    ),
+    (
+      20,
+      12,
+      6,
+      2,
+      0,
+      0,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      1,
+      '{}',
+      16,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'Sunstalker'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      16,
+      0,
+      '{"Light & Shadow", "Living Shadows", "Monochrome", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -3036,11 +4300,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -3049,120 +4312,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    10,
-    7,
-    2,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    '{}',
-    16,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Sunstalker'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    10,
-    0,
-    '{"Light & Shadow", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial"}'
-  ),
-  (
-    15,
-    9,
-    5,
-    1,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    0,
-    2,
-    0,
-    0,
-    '{}',
-    16,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Sunstalker'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    12,
-    0,
-    '{"Light & Shadow", "Living Shadows", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial"}'
-  ),
-  (
-    20,
-    12,
-    6,
-    2,
-    0,
-    0,
-    1,
-    2,
-    0,
-    0,
-    0,
-    0,
-    3,
-    0,
-    1,
-    '{}',
-    16,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'Sunstalker'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    16,
-    0,
-    '{"Light & Shadow", "Living Shadows", "Monochrome", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (
@@ -3244,8 +4412,177 @@ values (
         and not custom
     )
   );
-insert into quarry_level (
-    ai_deck_remaining,
+with quarry_level_source (
+  ai_deck_remaining,
+  basic_cards,
+  advanced_cards,
+  legendary_cards,
+  overtone_cards,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  evasion,
+  evasion_tokens,
+  hunt_pos,
+  level_number,
+  luck,
+  luck_tokens,
+  moods,
+  movement,
+  movement_tokens,
+  quarry_id,
+  sub_monster_name,
+  speed,
+  speed_tokens,
+  strength,
+  strength_tokens,
+  survivor_hunt_pos,
+  survivor_statuses,
+  toughness,
+  toughness_tokens,
+  traits
+) as (
+  values (
+      10,
+      7,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      1,
+      0,
+      0,
+      '{}',
+      6,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'White Lion'
+          and not custom
+      ),
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      8,
+      0,
+      '{}'
+    ),
+    (
+      15,
+      10,
+      5,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      8,
+      2,
+      0,
+      0,
+      '{}',
+      7,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'White Lion'
+          and not custom
+      ),
+      null,
+      1,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      10,
+      0,
+      '{"Cunning"}'
+    ),
+    (
+      21,
+      10,
+      9,
+      2,
+      0,
+      0,
+      2,
+      2,
+      0,
+      0,
+      0,
+      10,
+      3,
+      0,
+      1,
+      '{}',
+      8,
+      0,
+      (
+        select id
+        from quarry
+        where monster_name = 'White Lion'
+          and not custom
+      ),
+      null,
+      2,
+      0,
+      0,
+      0,
+      0,
+      '{}',
+      14,
+      0,
+      '{"Cunning", "Merciless", "Indomitable"}'
+    )
+),
+inserted_quarry_levels as (
+  insert into quarry_level (
+      ai_deck_remaining,
+      basic_cards,
+      advanced_cards,
+      legendary_cards,
+      overtone_cards,
+      accuracy,
+      accuracy_tokens,
+      damage,
+      damage_tokens,
+      evasion,
+      evasion_tokens,
+      level_number,
+      luck,
+      luck_tokens,
+      moods,
+      movement,
+      movement_tokens,
+      quarry_id,
+      sub_monster_name,
+      speed,
+      speed_tokens,
+      strength,
+      strength_tokens,
+      survivor_statuses,
+      toughness,
+      toughness_tokens,
+      traits
+    )
+  select ai_deck_remaining,
     basic_cards,
     advanced_cards,
     legendary_cards,
@@ -3256,11 +4593,10 @@ insert into quarry_level (
     damage_tokens,
     evasion,
     evasion_tokens,
-    hunt_pos,
     level_number,
     luck,
     luck_tokens,
-    moods,
+    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -3269,120 +4605,25 @@ insert into quarry_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_hunt_pos,
-    survivor_statuses,
+    survivor_statuses::varchar [],
     toughness,
     toughness_tokens,
-    traits
+    traits::varchar []
+  from quarry_level_source
+)
+insert into quarry_hunt_board_position (
+    quarry_id,
+    level_number,
+    monster_hunt_pos,
+    survivor_hunt_pos
   )
-values (
-    10,
-    7,
-    3,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    4,
-    1,
-    0,
-    0,
-    '{}',
-    6,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'White Lion'
-        and not custom
-    ),
-    null,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    8,
-    0,
-    '{}'
-  ),
-  (
-    15,
-    10,
-    5,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    8,
-    2,
-    0,
-    0,
-    '{}',
-    7,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'White Lion'
-        and not custom
-    ),
-    null,
-    1,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    10,
-    0,
-    '{"Cunning"}'
-  ),
-  (
-    21,
-    10,
-    9,
-    2,
-    0,
-    0,
-    2,
-    2,
-    0,
-    0,
-    0,
-    10,
-    3,
-    0,
-    1,
-    '{}',
-    8,
-    0,
-    (
-      select id
-      from quarry
-      where monster_name = 'White Lion'
-        and not custom
-    ),
-    null,
-    2,
-    0,
-    0,
-    0,
-    0,
-    '{}',
-    14,
-    0,
-    '{"Cunning", "Merciless", "Indomitable"}'
-  );
+select distinct on (quarry_id, level_number) quarry_id,
+  level_number,
+  hunt_pos,
+  survivor_hunt_pos
+from quarry_level_source
+order by quarry_id,
+  level_number;
 insert into quarry_location (location_id, quarry_id)
 values (
     (

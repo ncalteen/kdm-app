@@ -1646,6 +1646,44 @@ export type Database = {
           },
         ]
       }
+      quarry_hunt_board_position: {
+        Row: {
+          created_at: string
+          id: string
+          level_number: number
+          monster_hunt_pos: number
+          quarry_id: string
+          survivor_hunt_pos: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level_number: number
+          monster_hunt_pos?: number
+          quarry_id: string
+          survivor_hunt_pos?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level_number?: number
+          monster_hunt_pos?: number
+          quarry_id?: string
+          survivor_hunt_pos?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quarry_hunt_board_position_quarry_id_fkey"
+            columns: ["quarry_id"]
+            isOneToOne: false
+            referencedRelation: "quarry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quarry_level: {
         Row: {
           accuracy: number
@@ -1658,7 +1696,6 @@ export type Database = {
           damage_tokens: number
           evasion: number
           evasion_tokens: number
-          hunt_pos: number
           id: string
           legendary_cards: number
           level_number: number
@@ -1674,7 +1711,6 @@ export type Database = {
           strength: number
           strength_tokens: number
           sub_monster_name: string | null
-          survivor_hunt_pos: number
           survivor_statuses: string[]
           toughness: number
           toughness_tokens: number
@@ -1692,7 +1728,6 @@ export type Database = {
           damage_tokens?: number
           evasion?: number
           evasion_tokens?: number
-          hunt_pos?: number
           id?: string
           legendary_cards?: number
           level_number: number
@@ -1708,7 +1743,6 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           sub_monster_name?: string | null
-          survivor_hunt_pos?: number
           survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
@@ -1726,7 +1760,6 @@ export type Database = {
           damage_tokens?: number
           evasion?: number
           evasion_tokens?: number
-          hunt_pos?: number
           id?: string
           legendary_cards?: number
           level_number?: number
@@ -1742,7 +1775,6 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           sub_monster_name?: string | null
-          survivor_hunt_pos?: number
           survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number

@@ -2,7 +2,7 @@
   "name": "kdm",
   "description": "Kingdom Death: Monster (KDM) - Archivist",
   "author": "Nick Alteen <ncalteen@gmail.com>",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "type": "module",
   "homepage": "https://github.com/ncalteen/kdm-app#readme",
   "repository": "ncalteen/kdm-app",
@@ -110,7 +110,6 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^6",
     "vite": "^8.0.3",
-    "vite-tsconfig-paths": "^6.0.4",
     "vitest": "^4.0.15"
   }
 }
