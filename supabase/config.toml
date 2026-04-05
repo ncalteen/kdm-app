@@ -225,8 +225,8 @@ otp_expiry = 3600
 enabled = true
 host = "smtp.gmail.com"
 port = 465
-user = "env(GMAIL_APP_USER)"
-pass = "env(GMAIL_APP_PASSWORD)"
+user = "env(SMTP_USER)"
+pass = "env(SMTP_PASS)"
 admin_email = "noreply@archivist.monster"
 sender_name = "No Reply - KD:M Archivist"
 
