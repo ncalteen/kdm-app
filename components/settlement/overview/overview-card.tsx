@@ -29,6 +29,7 @@ import {
   SettlementPhaseDetail,
   SurvivorDetail
 } from '@/lib/types'
+import { calculateSettlementCollectiveCognition } from '@/lib/utils'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /**
@@ -95,26 +96,10 @@ export function OverviewCard({
    * Computed locally from the settlement's quarry and nemesis collective
    * cognition fields so it updates reactively whenever victories are toggled.
    */
-  const collectiveCognition = useMemo(() => {
-    if (!selectedSettlement) return 0
-
-    let total = 0
-
-    for (const nemesis of selectedSettlement.nemeses ?? []) {
-      if (nemesis.collective_cognition_level_1) total += 3
-      if (nemesis.collective_cognition_level_2) total += 3
-      if (nemesis.collective_cognition_level_3) total += 3
-    }
-
-    for (const quarry of selectedSettlement.quarries ?? []) {
-      if (quarry.collective_cognition_prologue) total += 1
-      if (quarry.collective_cognition_level_1) total += 1
-      for (const v of quarry.collective_cognition_level_2) if (v) total += 2
-      for (const v of quarry.collective_cognition_level_3) if (v) total += 3
-    }
-
-    return total
-  }, [selectedSettlement])
+  const collectiveCognition = useMemo(
+    () => calculateSettlementCollectiveCognition(selectedSettlement),
+    [selectedSettlement]
+  )
 
   /**
    * Handle Component Loading

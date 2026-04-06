@@ -445,3 +445,32 @@ export const getAvailableNodes = (type: MonsterType): MonsterNode[] => {
 export function saveToLocalStorage(local: unknown) {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(local))
 }
+
+/**
+ * Calculate Settlement Collective Cognition
+ *
+ * @param selectedSettlement Selected Settlement
+ * @returns Collective Cognition Total
+ */
+export function calculateSettlementCollectiveCognition(
+  selectedSettlement: SettlementDetail | null
+): number {
+  if (!selectedSettlement) return 0
+
+  let total = 0
+
+  for (const nemesis of selectedSettlement.nemeses ?? []) {
+    if (nemesis.collective_cognition_level_1) total += 3
+    if (nemesis.collective_cognition_level_2) total += 3
+    if (nemesis.collective_cognition_level_3) total += 3
+  }
+
+  for (const quarry of selectedSettlement.quarries ?? []) {
+    if (quarry.collective_cognition_prologue) total += 1
+    if (quarry.collective_cognition_level_1) total += 1
+    for (const v of quarry.collective_cognition_level_2) if (v) total += 2
+    for (const v of quarry.collective_cognition_level_3) if (v) total += 3
+  }
+
+  return total
+}
