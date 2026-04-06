@@ -16,6 +16,8 @@ export interface RewardItemProps {
   index: number
   /** Reward Row */
   reward: SettlementDetail['collective_cognition_rewards'][0]
+  /** Highlight reward as eligible to unlock */
+  shouldHighlight?: boolean
   /** On Remove Handler */
   onRemove: (index: number) => void
   /** On Toggle Unlocked Handler */
@@ -35,11 +37,17 @@ export interface RewardItemProps {
 export const RewardItem = memo(function RewardItem({
   index,
   reward,
+  shouldHighlight = false,
   onRemove,
   onToggleUnlocked
 }: RewardItemProps): ReactElement {
   return (
-    <div className="flex items-center gap-2 pl-2">
+    <div
+      className={`flex items-center gap-2 pl-2 mt-1 rounded-sm border ${
+        shouldHighlight
+          ? 'border-amber-300/70 bg-amber-50/70 dark:border-amber-700/70 dark:bg-amber-950/30'
+          : 'border-transparent'
+      }`}>
       {/* Unlocked Checkbox */}
       <Checkbox
         id={`reward-unlocked-${index}`}

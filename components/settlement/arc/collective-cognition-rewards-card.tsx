@@ -37,6 +37,7 @@ import {
   ERROR_MESSAGE
 } from '@/lib/messages'
 import { CollectiveCognitionRewardDetail, SettlementDetail } from '@/lib/types'
+import { calculateSettlementCollectiveCognition } from '@/lib/utils'
 import { BrainIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -138,6 +139,17 @@ export function CollectiveCognitionRewardsCard({
           Number(b.reward.collective_cognition)
       )
   }, [selectedSettlement?.collective_cognition_rewards])
+
+  /**
+   * Settlement Collective Cognition Total
+   *
+   * Derived from quarry and nemesis victory states so reward eligibility
+   * updates reactively as victories are toggled.
+   */
+  const collectiveCognitionTotal = useMemo(
+    () => calculateSettlementCollectiveCognition(selectedSettlement),
+    [selectedSettlement]
+  )
 
   /**
    * Handle Add Reward
@@ -493,6 +505,11 @@ export function CollectiveCognitionRewardsCard({
                 <RewardItem
                   key={reward.id}
                   index={originalIndex}
+                  shouldHighlight={
+                    !reward.unlocked &&
+                    collectiveCognitionTotal >=
+                      Number(reward.collective_cognition)
+                  }
                   reward={reward}
                   onRemove={handleRemove}
                   onToggleUnlocked={handleToggleUnlocked}
