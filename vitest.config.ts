@@ -17,11 +17,16 @@ export default defineConfig({
       provider: 'v8',
       reportsDirectory: 'coverage',
       reporter: ['json-summary', 'json', 'html', 'lcov', 'text'],
-      include: ['schemas/**/*.{js,jsx,ts,tsx}', 'src/**/*.{js,jsx,ts,tsx}'],
+      include: [
+        'lib/**/*.{js,jsx,ts,tsx}',
+        'schemas/**/*.{js,jsx,ts,tsx}',
+        'src/**/*.{js,jsx,ts,tsx}'
+      ],
       exclude: [
         '.next',
         'dist',
         'node_modules',
+        'lib/**/*.d.ts',
         'src/**/*.d.ts',
         'src/**/layout.tsx',
         'src/**/globals.css'
