@@ -35,12 +35,16 @@ describe('getSettlementNemeses', () => {
   }
 
   it('throws when settlementId is null', async () => {
-    await expect(getSettlementNemeses(null)).rejects.toThrow('Required: Settlement ID')
+    await expect(getSettlementNemeses(null)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when settlementId is undefined', async () => {
-    await expect(getSettlementNemeses(undefined)).rejects.toThrow('Required: Settlement ID')
+    await expect(getSettlementNemeses(undefined)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
   })
 
   it('returns empty array when no nemeses exist', async () => {
@@ -100,7 +104,9 @@ describe('getSettlementNemeses', () => {
   it('throws when nemesis query fails', async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
@@ -118,7 +124,10 @@ describe('getSettlementNemeses', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          in: vi.fn().mockResolvedValue({ data: null, error: { message: 'Level error' } })
+          in: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: 'Level error' }
+          })
         })
       })
 
@@ -197,7 +206,10 @@ describe('addSettlementNemeses', () => {
   it('throws when insert fails', async () => {
     mockSupabase.from.mockReturnValue({
       insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+        select: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'Insert failed' }
+        })
       })
     })
 
@@ -215,7 +227,10 @@ describe('addSettlementNemeses', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          in: vi.fn().mockResolvedValue({ data: null, error: { message: 'Level error' } })
+          in: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: 'Level error' }
+          })
         })
       })
 
@@ -245,7 +260,9 @@ describe('removeSettlementNemesis', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
@@ -278,7 +295,9 @@ describe('updateSettlementNemesis', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 

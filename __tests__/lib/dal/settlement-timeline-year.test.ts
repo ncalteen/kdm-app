@@ -1,3 +1,4 @@
+import { SettlementTimelineYearDetail } from '@/lib/types'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
@@ -25,12 +26,16 @@ beforeEach(() => {
 
 describe('getSettlementTimelineYears', () => {
   it('throws when settlementId is null', async () => {
-    await expect(getSettlementTimelineYears(null)).rejects.toThrow('Required: Settlement ID')
+    await expect(getSettlementTimelineYears(null)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when settlementId is undefined', async () => {
-    await expect(getSettlementTimelineYears(undefined)).rejects.toThrow('Required: Settlement ID')
+    await expect(getSettlementTimelineYears(undefined)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
   })
 
   it('returns timeline years keyed by year_number', async () => {
@@ -46,7 +51,9 @@ describe('getSettlementTimelineYears', () => {
     const result = await getSettlementTimelineYears('settlement-1')
 
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_timeline_year')
-    expect(mockSelect).toHaveBeenCalledWith('completed, entries, id, year_number')
+    expect(mockSelect).toHaveBeenCalledWith(
+      'completed, entries, id, year_number'
+    )
     expect(mockEq).toHaveBeenCalledWith('settlement_id', 'settlement-1')
     expect(result).toEqual({
       1: { completed: false, entries: ['a'], id: 'sty1' },
@@ -66,7 +73,9 @@ describe('getSettlementTimelineYears', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockOrder = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockOrder = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -92,30 +101,40 @@ describe('addSettlementTimelineYears', () => {
       { settlement_id: 's1', year_number: 2, completed: false, entries: [] }
     ]
 
-    await expect(addSettlementTimelineYears(years as any)).resolves.toBeUndefined()
+    await expect(addSettlementTimelineYears(years)).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_timeline_year')
     expect(mockInsert).toHaveBeenCalledWith(years)
   })
 
   it('throws when insert fails', async () => {
-    const mockInsert = vi.fn().mockResolvedValue({ error: { message: 'Insert failed' } })
+    const mockInsert = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Insert failed' } })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addSettlementTimelineYears([{ settlement_id: 's1', year_number: 1 } as any])
-    ).rejects.toThrow('Error Adding Timeline Years to Settlement: Insert failed')
+      addSettlementTimelineYears([
+        { settlement_id: 's1', year_number: 1 } as SettlementTimelineYearDetail
+      ])
+    ).rejects.toThrow(
+      'Error Adding Timeline Years to Settlement: Insert failed'
+    )
   })
 })
 
 describe('addSettlementTimelineYear', () => {
   it('throws when settlementId is null', async () => {
-    await expect(addSettlementTimelineYear(null, 1)).rejects.toThrow('Required: Settlement ID')
+    await expect(addSettlementTimelineYear(null, 1)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('inserts a single timeline year and returns the new id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'sty-new' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'sty-new' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -133,7 +152,9 @@ describe('addSettlementTimelineYear', () => {
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -146,7 +167,9 @@ describe('addSettlementTimelineYear', () => {
 
 describe('removeSettlementTimelineYearEntry', () => {
   const buildMocks = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fetchResult: { data: any; error: any },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updateResult: { error: any }
   ) => {
     const mockFirstSingle = vi.fn().mockResolvedValue(fetchResult)
@@ -171,7 +194,9 @@ describe('removeSettlementTimelineYearEntry', () => {
   })
 
   it('throws when first query errors', async () => {
-    const mockFirstSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Fetch error' } })
+    const mockFirstSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Fetch error' } })
     const mockFirstEq = vi.fn().mockReturnValue({ single: mockFirstSingle })
     const mockFirstSelect = vi.fn().mockReturnValue({ eq: mockFirstEq })
     mockSupabase.from.mockReturnValueOnce({ select: mockFirstSelect })
@@ -182,7 +207,9 @@ describe('removeSettlementTimelineYearEntry', () => {
   })
 
   it('throws when data is null (not found)', async () => {
-    const mockFirstSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+    const mockFirstSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: null })
     const mockFirstEq = vi.fn().mockReturnValue({ single: mockFirstSingle })
     const mockFirstSelect = vi.fn().mockReturnValue({ eq: mockFirstEq })
     mockSupabase.from.mockReturnValueOnce({ select: mockFirstSelect })
@@ -193,18 +220,22 @@ describe('removeSettlementTimelineYearEntry', () => {
   })
 
   it('throws when entryIndex is out of bounds (negative)', async () => {
-    const mockFirstSingle = vi.fn().mockResolvedValue({ data: { entries: ['a', 'b'] }, error: null })
+    const mockFirstSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { entries: ['a', 'b'] }, error: null })
     const mockFirstEq = vi.fn().mockReturnValue({ single: mockFirstSingle })
     const mockFirstSelect = vi.fn().mockReturnValue({ eq: mockFirstEq })
     mockSupabase.from.mockReturnValueOnce({ select: mockFirstSelect })
 
-    await expect(removeSettlementTimelineYearEntry('sty-1', -1)).rejects.toThrow(
-      'Entry Index Out of Bounds for Removal'
-    )
+    await expect(
+      removeSettlementTimelineYearEntry('sty-1', -1)
+    ).rejects.toThrow('Entry Index Out of Bounds for Removal')
   })
 
   it('throws when entryIndex is out of bounds (too large)', async () => {
-    const mockFirstSingle = vi.fn().mockResolvedValue({ data: { entries: ['a', 'b'] }, error: null })
+    const mockFirstSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { entries: ['a', 'b'] }, error: null })
     const mockFirstEq = vi.fn().mockReturnValue({ single: mockFirstSingle })
     const mockFirstSelect = vi.fn().mockReturnValue({ eq: mockFirstEq })
     mockSupabase.from.mockReturnValueOnce({ select: mockFirstSelect })
@@ -215,7 +246,10 @@ describe('removeSettlementTimelineYearEntry', () => {
   })
 
   it('removes entry at index and returns updated entries', async () => {
-    buildMocks({ data: { entries: ['a', 'b', 'c'] }, error: null }, { error: null })
+    buildMocks(
+      { data: { entries: ['a', 'b', 'c'] }, error: null },
+      { error: null }
+    )
 
     const result = await removeSettlementTimelineYearEntry('sty-1', 1)
 
@@ -223,7 +257,10 @@ describe('removeSettlementTimelineYearEntry', () => {
   })
 
   it('removes first entry correctly', async () => {
-    buildMocks({ data: { entries: ['a', 'b', 'c'] }, error: null }, { error: null })
+    buildMocks(
+      { data: { entries: ['a', 'b', 'c'] }, error: null },
+      { error: null }
+    )
 
     const result = await removeSettlementTimelineYearEntry('sty-1', 0)
 
@@ -231,7 +268,10 @@ describe('removeSettlementTimelineYearEntry', () => {
   })
 
   it('removes last entry correctly', async () => {
-    buildMocks({ data: { entries: ['a', 'b', 'c'] }, error: null }, { error: null })
+    buildMocks(
+      { data: { entries: ['a', 'b', 'c'] }, error: null },
+      { error: null }
+    )
 
     const result = await removeSettlementTimelineYearEntry('sty-1', 2)
 
@@ -252,7 +292,9 @@ describe('removeSettlementTimelineYearEntry', () => {
 
 describe('saveSettlementTimelineYearEntry', () => {
   const buildMocks = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fetchResult: { data: any; error: any },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updateResult: { error: any }
   ) => {
     const mockFirstSingle = vi.fn().mockResolvedValue(fetchResult)
@@ -270,43 +312,51 @@ describe('saveSettlementTimelineYearEntry', () => {
   }
 
   it('throws when settlementTimelineYearId is null', async () => {
-    await expect(saveSettlementTimelineYearEntry(null, 'val', 0)).rejects.toThrow(
-      'Required: Settlement Timeline Year ID'
-    )
+    await expect(
+      saveSettlementTimelineYearEntry(null, 'val', 0)
+    ).rejects.toThrow('Required: Settlement Timeline Year ID')
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when first query errors', async () => {
-    const mockFirstSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Fetch error' } })
+    const mockFirstSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Fetch error' } })
     const mockFirstEq = vi.fn().mockReturnValue({ single: mockFirstSingle })
     const mockFirstSelect = vi.fn().mockReturnValue({ eq: mockFirstEq })
     mockSupabase.from.mockReturnValueOnce({ select: mockFirstSelect })
 
-    await expect(saveSettlementTimelineYearEntry('sty-1', 'val', 0)).rejects.toThrow(
+    await expect(
+      saveSettlementTimelineYearEntry('sty-1', 'val', 0)
+    ).rejects.toThrow(
       'Error Fetching Settlement Timeline Year for Entry Addition: Fetch error'
     )
   })
 
   it('throws when data is null (not found)', async () => {
-    const mockFirstSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+    const mockFirstSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: null })
     const mockFirstEq = vi.fn().mockReturnValue({ single: mockFirstSingle })
     const mockFirstSelect = vi.fn().mockReturnValue({ eq: mockFirstEq })
     mockSupabase.from.mockReturnValueOnce({ select: mockFirstSelect })
 
-    await expect(saveSettlementTimelineYearEntry('sty-1', 'val', 0)).rejects.toThrow(
-      'Settlement Timeline Year Not Found for Entry Addition'
-    )
+    await expect(
+      saveSettlementTimelineYearEntry('sty-1', 'val', 0)
+    ).rejects.toThrow('Settlement Timeline Year Not Found for Entry Addition')
   })
 
   it('throws when entryIndex is negative', async () => {
-    const mockFirstSingle = vi.fn().mockResolvedValue({ data: { entries: ['a', 'b'] }, error: null })
+    const mockFirstSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { entries: ['a', 'b'] }, error: null })
     const mockFirstEq = vi.fn().mockReturnValue({ single: mockFirstSingle })
     const mockFirstSelect = vi.fn().mockReturnValue({ eq: mockFirstEq })
     mockSupabase.from.mockReturnValueOnce({ select: mockFirstSelect })
 
-    await expect(saveSettlementTimelineYearEntry('sty-1', 'val', -1)).rejects.toThrow(
-      'Entry Index Cannot Be Negative for Entry Addition'
-    )
+    await expect(
+      saveSettlementTimelineYearEntry('sty-1', 'val', -1)
+    ).rejects.toThrow('Entry Index Cannot Be Negative for Entry Addition')
   })
 
   it('appends to end when entryIndex equals entries length', async () => {
@@ -318,7 +368,9 @@ describe('saveSettlementTimelineYearEntry', () => {
     const result = await saveSettlementTimelineYearEntry('sty-1', 'new', 2)
 
     expect(result).toEqual(['a', 'b', 'new'])
-    expect(mockSecondUpdate).toHaveBeenCalledWith({ entries: ['a', 'b', 'new'] })
+    expect(mockSecondUpdate).toHaveBeenCalledWith({
+      entries: ['a', 'b', 'new']
+    })
   })
 
   it('appends to end when entryIndex exceeds entries length', async () => {
@@ -338,7 +390,9 @@ describe('saveSettlementTimelineYearEntry', () => {
     const result = await saveSettlementTimelineYearEntry('sty-1', 'updated', 1)
 
     expect(result).toEqual(['a', 'updated', 'c'])
-    expect(mockSecondUpdate).toHaveBeenCalledWith({ entries: ['a', 'updated', 'c'] })
+    expect(mockSecondUpdate).toHaveBeenCalledWith({
+      entries: ['a', 'updated', 'c']
+    })
   })
 
   it('throws when update errors', async () => {
@@ -347,7 +401,9 @@ describe('saveSettlementTimelineYearEntry', () => {
       { error: { message: 'Update failed' } }
     )
 
-    await expect(saveSettlementTimelineYearEntry('sty-1', 'new', 0)).rejects.toThrow(
+    await expect(
+      saveSettlementTimelineYearEntry('sty-1', 'new', 0)
+    ).rejects.toThrow(
       'Error Updating Settlement Timeline Year for Entry Addition: Update failed'
     )
   })
@@ -355,9 +411,9 @@ describe('saveSettlementTimelineYearEntry', () => {
 
 describe('toggleSettlementYearCompletionStatus', () => {
   it('throws when settlementTimelineYearId is null', async () => {
-    await expect(toggleSettlementYearCompletionStatus(null, 0, true)).rejects.toThrow(
-      'Required: Settlement Timeline Year ID'
-    )
+    await expect(
+      toggleSettlementYearCompletionStatus(null, 0, true)
+    ).rejects.toThrow('Required: Settlement Timeline Year ID')
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
@@ -388,11 +444,15 @@ describe('toggleSettlementYearCompletionStatus', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(toggleSettlementYearCompletionStatus('sty-1', 1, true)).rejects.toThrow(
+    await expect(
+      toggleSettlementYearCompletionStatus('sty-1', 1, true)
+    ).rejects.toThrow(
       'Error Toggling Settlement Timeline Year Completion Status: Update failed'
     )
   })
@@ -414,13 +474,15 @@ describe('updateSettlementTimelineYear', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateSettlementTimelineYear('sty-1', { completed: false })).rejects.toThrow(
-      'Error Updating Settlement Timeline Year: Update failed'
-    )
+    await expect(
+      updateSettlementTimelineYear('sty-1', { completed: false })
+    ).rejects.toThrow('Error Updating Settlement Timeline Year: Update failed')
   })
 })
 
@@ -437,7 +499,9 @@ describe('removeSettlementTimelineYear', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

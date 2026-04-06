@@ -9,8 +9,12 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getQuarryLevels, addQuarryLevel, updateQuarryLevel, removeQuarryLevel } =
-  await import('@/lib/dal/quarry-level')
+const {
+  getQuarryLevels,
+  addQuarryLevel,
+  updateQuarryLevel,
+  removeQuarryLevel
+} = await import('@/lib/dal/quarry-level')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -53,12 +57,18 @@ describe('getQuarryLevels', () => {
   })
 
   it('throws when quarryId is undefined', async () => {
-    await expect(getQuarryLevels(undefined)).rejects.toThrow('Required: Quarry ID')
+    await expect(getQuarryLevels(undefined)).rejects.toThrow(
+      'Required: Quarry ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('returns merged quarry levels with hunt board positions', async () => {
-    const position = { level_number: 1, monster_hunt_pos: 10, survivor_hunt_pos: 3 }
+    const position = {
+      level_number: 1,
+      monster_hunt_pos: 10,
+      survivor_hunt_pos: 3
+    }
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -121,11 +131,15 @@ describe('getQuarryLevels', () => {
     // Code throws before reaching the positions query, so only one mock is needed
     mockSupabase.from.mockReturnValueOnce({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
-    await expect(getQuarryLevels('q1')).rejects.toThrow('Error Fetching Quarry Levels: DB error')
+    await expect(getQuarryLevels('q1')).rejects.toThrow(
+      'Error Fetching Quarry Levels: DB error'
+    )
   })
 
   it('throws when positions query fails', async () => {
@@ -137,7 +151,9 @@ describe('getQuarryLevels', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'Pos error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'Pos error' } })
         })
       })
 
@@ -149,7 +165,9 @@ describe('getQuarryLevels', () => {
 
 describe('addQuarryLevel', () => {
   it('inserts a quarry level and returns its id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'ql1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'ql1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -158,18 +176,23 @@ describe('addQuarryLevel', () => {
 
     expect(result).toBe('ql1')
     expect(mockSupabase.from).toHaveBeenCalledWith('quarry_level')
-    expect(mockInsert).toHaveBeenCalledWith({ quarry_id: 'q1', level_number: 1 })
+    expect(mockInsert).toHaveBeenCalledWith({
+      quarry_id: 'q1',
+      level_number: 1
+    })
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addQuarryLevel({ quarry_id: 'q1', level_number: 1 })).rejects.toThrow(
-      'Error Adding Quarry Level: Insert failed'
-    )
+    await expect(
+      addQuarryLevel({ quarry_id: 'q1', level_number: 1 })
+    ).rejects.toThrow('Error Adding Quarry Level: Insert failed')
   })
 })
 
@@ -179,14 +202,18 @@ describe('updateQuarryLevel', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateQuarryLevel('ql1', { toughness: 8 })).resolves.toBeUndefined()
+    await expect(
+      updateQuarryLevel('ql1', { toughness: 8 })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('quarry_level')
     expect(mockEq).toHaveBeenCalledWith('id', 'ql1')
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
@@ -209,10 +236,14 @@ describe('removeQuarryLevel', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeQuarryLevel('ql1')).rejects.toThrow('Error Removing Quarry Level: Delete failed')
+    await expect(removeQuarryLevel('ql1')).rejects.toThrow(
+      'Error Removing Quarry Level: Delete failed'
+    )
   })
 })

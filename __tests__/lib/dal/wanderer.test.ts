@@ -22,9 +22,6 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-const mockWandererFields =
-  'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
-
 const baseWanderer = {
   id: 'w1',
   custom: false,
@@ -56,22 +53,39 @@ const baseWanderer = {
 describe('getWanderers', () => {
   const mockUser = { id: 'user-1' }
   const nonCustomWanderer = { ...baseWanderer, id: 'w1', custom: false }
-  const userCustomWanderer = { ...baseWanderer, id: 'w2', custom: true, wanderer_name: 'My Wanderer' }
-  const sharedWanderer = { ...baseWanderer, id: 'w3', custom: true, wanderer_name: 'Shared Wanderer' }
+  const userCustomWanderer = {
+    ...baseWanderer,
+    id: 'w2',
+    custom: true,
+    wanderer_name: 'My Wanderer'
+  }
+  const sharedWanderer = {
+    ...baseWanderer,
+    id: 'w3',
+    custom: true,
+    wanderer_name: 'Shared Wanderer'
+  }
 
   it('returns wanderers from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustomWanderer], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [nonCustomWanderer], error: null })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomWanderer], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomWanderer], error: null })
           })
         })
       })
@@ -94,7 +108,10 @@ describe('getWanderers', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getWanderers()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -106,16 +123,23 @@ describe('getWanderers', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getWanderers()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getWanderers()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when any source query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -131,11 +155,16 @@ describe('getWanderers', () => {
         })
       })
 
-    await expect(getWanderers()).rejects.toThrow('Error Fetching Wanderers: DB error')
+    await expect(getWanderers()).rejects.toThrow(
+      'Error Fetching Wanderers: DB error'
+    )
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -165,9 +194,14 @@ describe('getWandererIds', () => {
   const mockUser = { id: 'user-1' }
 
   it('fetches wanderer IDs without userId', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockEq = vi.fn().mockResolvedValue({ data: [{ id: 'w1' }, { id: 'w2' }], error: null })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'w1' }, { id: 'w2' }], error: null })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -178,9 +212,14 @@ describe('getWandererIds', () => {
   })
 
   it('fetches wanderer IDs with userId', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockEq2 = vi.fn().mockResolvedValue({ data: [{ id: 'w3' }], error: null })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'w3' }], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq1 })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
@@ -192,9 +231,14 @@ describe('getWandererIds', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
-    await expect(getWandererIds(['The Survivor'], false)).rejects.toThrow('Not Authenticated')
+    await expect(getWandererIds(['The Survivor'], false)).rejects.toThrow(
+      'Not Authenticated'
+    )
   })
 
   it('throws when auth returns an error', async () => {
@@ -209,9 +253,14 @@ describe('getWandererIds', () => {
   })
 
   it('throws when query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -222,14 +271,19 @@ describe('getWandererIds', () => {
   })
 
   it('throws when data is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const mockEq = vi.fn().mockResolvedValue({ data: null, error: null })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getWandererIds(['The Survivor'], false)).rejects.toThrow('Wanderer(s) Not Found')
+    await expect(getWandererIds(['The Survivor'], false)).rejects.toThrow(
+      'Wanderer(s) Not Found'
+    )
   })
 })
 
@@ -237,29 +291,55 @@ describe('addWanderer', () => {
   const mockUser = { id: 'user-1' }
 
   it('inserts a non-custom wanderer without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: baseWanderer, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: baseWanderer, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addWanderer({ wanderer_name: 'The Survivor', custom: false })
+    const result = await addWanderer({
+      wanderer_name: 'The Survivor',
+      custom: false
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
 
     expect(result).toEqual(baseWanderer)
-    expect(mockInsert).toHaveBeenCalledWith({ wanderer_name: 'The Survivor', custom: false })
+    expect(mockInsert).toHaveBeenCalledWith({
+      wanderer_name: 'The Survivor',
+      custom: false
+    })
   })
 
   it('inserts a custom wanderer with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const customWanderer = { ...baseWanderer, id: 'w2', custom: true, wanderer_name: 'My Wanderer' }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customWanderer, error: null })
+    const customWanderer = {
+      ...baseWanderer,
+      id: 'w2',
+      custom: true,
+      wanderer_name: 'My Wanderer'
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customWanderer, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addWanderer({ wanderer_name: 'My Wanderer', custom: true })
+    const result = await addWanderer({
+      wanderer_name: 'My Wanderer',
+      custom: true
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
 
     expect(result).toEqual(customWanderer)
     expect(mockInsert).toHaveBeenCalledWith({
@@ -270,11 +350,15 @@ describe('addWanderer', () => {
   })
 
   it('throws when custom wanderer requires auth but user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
-    await expect(addWanderer({ wanderer_name: 'My Wanderer', custom: true })).rejects.toThrow(
-      'Not Authenticated'
-    )
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      addWanderer({ wanderer_name: 'My Wanderer', custom: true } as any)
+    ).rejects.toThrow('Not Authenticated')
   })
 
   it('throws when auth returns an error', async () => {
@@ -283,22 +367,29 @@ describe('addWanderer', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(addWanderer({ wanderer_name: 'The Survivor', custom: false })).rejects.toThrow(
-      'Error Fetching User: Auth error'
-    )
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      addWanderer({ wanderer_name: 'The Survivor', custom: false } as any)
+    ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addWanderer({ wanderer_name: 'The Survivor', custom: false })).rejects.toThrow(
-      'Error Adding Wanderer: Insert failed'
-    )
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      addWanderer({ wanderer_name: 'The Survivor', custom: false } as any)
+    ).rejects.toThrow('Error Adding Wanderer: Insert failed')
   })
 })
 
@@ -308,20 +399,24 @@ describe('updateWanderer', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateWanderer('w1', { wanderer_name: 'Renamed Survivor' })).resolves.toBeUndefined()
+    await expect(
+      updateWanderer('w1', { wanderer_name: 'Renamed Survivor' })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('wanderer')
     expect(mockEq).toHaveBeenCalledWith('id', 'w1')
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateWanderer('w1', { wanderer_name: 'Survivor' })).rejects.toThrow(
-      'Error Updating Wanderer: Update failed'
-    )
+    await expect(
+      updateWanderer('w1', { wanderer_name: 'Survivor' })
+    ).rejects.toThrow('Error Updating Wanderer: Update failed')
   })
 })
 
@@ -338,22 +433,36 @@ describe('removeWanderer', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeWanderer('w1')).rejects.toThrow('Error Removing Wanderer: Delete failed')
+    await expect(removeWanderer('w1')).rejects.toThrow(
+      'Error Removing Wanderer: Delete failed'
+    )
   })
 })
 
 describe('getCustomWanderers', () => {
   const mockUser = { id: 'user-1' }
-  const customWanderer = { ...baseWanderer, id: 'w2', custom: true, wanderer_name: 'My Wanderer' }
+  const customWanderer = {
+    ...baseWanderer,
+    id: 'w2',
+    custom: true,
+    wanderer_name: 'My Wanderer'
+  }
 
   it('returns only custom wanderers for the user', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockEq2 = vi.fn().mockResolvedValue({ data: [customWanderer], error: null })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: [customWanderer], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -364,7 +473,10 @@ describe('getCustomWanderers', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getCustomWanderers()).rejects.toThrow('Not Authenticated')
   })
@@ -375,22 +487,34 @@ describe('getCustomWanderers', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getCustomWanderers()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getCustomWanderers()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockEq2 = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getCustomWanderers()).rejects.toThrow('Error Fetching Custom Wanderers: DB error')
+    await expect(getCustomWanderers()).rejects.toThrow(
+      'Error Fetching Custom Wanderers: DB error'
+    )
   })
 
   it('returns empty map when no custom wanderers exist', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const mockEq2 = vi.fn().mockResolvedValue({ data: [], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })

@@ -94,7 +94,9 @@ describe('getShowdownMonsters', () => {
   it('throws when query fails', async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
@@ -106,25 +108,37 @@ describe('getShowdownMonsters', () => {
 
 describe('addShowdownMonster', () => {
   it('inserts a showdown monster and returns the id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'monster-1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'monster-1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addShowdownMonster({ showdown_id: 'showdown-1', monster_name: 'White Lion' })
+    const result = await addShowdownMonster({
+      showdown_id: 'showdown-1',
+      monster_name: 'White Lion'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
 
     expect(result).toBe('monster-1')
     expect(mockSupabase.from).toHaveBeenCalledWith('showdown_monster')
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addShowdownMonster({ showdown_id: 'showdown-1', monster_name: 'White Lion' })
+      addShowdownMonster({
+        showdown_id: 'showdown-1',
+        monster_name: 'White Lion'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
     ).rejects.toThrow('Error Adding Showdown Monster: Insert failed')
   })
 })
@@ -135,7 +149,9 @@ describe('updateShowdownMonster', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateShowdownMonster('monster-1', { wounds: 3 })).resolves.toBeUndefined()
+    await expect(
+      updateShowdownMonster('monster-1', { wounds: 3 })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('showdown_monster')
     expect(mockUpdate).toHaveBeenCalledWith({ wounds: 3 })
@@ -143,13 +159,15 @@ describe('updateShowdownMonster', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateShowdownMonster('monster-1', { wounds: 3 })).rejects.toThrow(
-      'Error Updating Showdown Monster: Update failed'
-    )
+    await expect(
+      updateShowdownMonster('monster-1', { wounds: 3 })
+    ).rejects.toThrow('Error Updating Showdown Monster: Update failed')
   })
 })
 
@@ -166,7 +184,9 @@ describe('removeShowdownMonster', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

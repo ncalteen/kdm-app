@@ -28,9 +28,9 @@ describe('getSettlementCollectiveCognitionRewards', () => {
   })
 
   it('throws when settlementId is undefined', async () => {
-    await expect(getSettlementCollectiveCognitionRewards(undefined)).rejects.toThrow(
-      'Required: Settlement ID'
-    )
+    await expect(
+      getSettlementCollectiveCognitionRewards(undefined)
+    ).rejects.toThrow('Required: Settlement ID')
   })
 
   it('returns mapped rewards', async () => {
@@ -38,7 +38,10 @@ describe('getSettlementCollectiveCognitionRewards', () => {
       id: 'scr-1',
       collective_cognition_reward_id: 'cr-1',
       unlocked: false,
-      collective_cognition_reward: { reward_name: 'Reward A', collective_cognition: 3 }
+      collective_cognition_reward: {
+        reward_name: 'Reward A',
+        collective_cognition: 3
+      }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -57,7 +60,9 @@ describe('getSettlementCollectiveCognitionRewards', () => {
         collective_cognition: 3
       }
     ])
-    expect(mockSupabase.from).toHaveBeenCalledWith('settlement_collective_cognition_reward')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'settlement_collective_cognition_reward'
+    )
   })
 
   it('returns empty array when no rewards exist', async () => {
@@ -75,11 +80,15 @@ describe('getSettlementCollectiveCognitionRewards', () => {
   it('throws when query fails', async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
-    await expect(getSettlementCollectiveCognitionRewards('settlement-1')).rejects.toThrow(
+    await expect(
+      getSettlementCollectiveCognitionRewards('settlement-1')
+    ).rejects.toThrow(
       'Error Fetching Settlement Collective Cognition Rewards: DB error'
     )
   })
@@ -94,7 +103,10 @@ describe('addSettlementCollectiveCognitionRewards', () => {
   })
 
   it('returns empty array when rewardIds is empty', async () => {
-    const result = await addSettlementCollectiveCognitionRewards([], 'settlement-1')
+    const result = await addSettlementCollectiveCognitionRewards(
+      [],
+      'settlement-1'
+    )
 
     expect(result).toEqual([])
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -103,13 +115,21 @@ describe('addSettlementCollectiveCognitionRewards', () => {
   it('inserts and returns mapped rewards', async () => {
     const rawItem = {
       id: 'scr-1',
-      collective_cognition_reward: { collective_cognition: 3, reward_name: 'Reward A' }
+      collective_cognition_reward: {
+        collective_cognition: 3,
+        reward_name: 'Reward A'
+      }
     }
-    const mockSelect = vi.fn().mockResolvedValue({ data: [rawItem], error: null })
+    const mockSelect = vi
+      .fn()
+      .mockResolvedValue({ data: [rawItem], error: null })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addSettlementCollectiveCognitionRewards(['cr-1'], 'settlement-1')
+    const result = await addSettlementCollectiveCognitionRewards(
+      ['cr-1'],
+      'settlement-1'
+    )
 
     expect(result).toEqual([
       { id: 'scr-1', collective_cognition: 3, reward_name: 'Reward A' }
@@ -124,13 +144,17 @@ describe('addSettlementCollectiveCognitionRewards', () => {
   })
 
   it('throws when insert fails', async () => {
-    const mockSelect = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSelect = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
       addSettlementCollectiveCognitionRewards(['cr-1'], 'settlement-1')
-    ).rejects.toThrow('Error Adding Collective Cognition Rewards to Settlement: Insert failed')
+    ).rejects.toThrow(
+      'Error Adding Collective Cognition Rewards to Settlement: Insert failed'
+    )
   })
 })
 
@@ -144,19 +168,25 @@ describe('updateSettlementCollectiveCognitionReward', () => {
       updateSettlementCollectiveCognitionReward('scr-1', { unlocked: true })
     ).resolves.toBeUndefined()
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('settlement_collective_cognition_reward')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'settlement_collective_cognition_reward'
+    )
     expect(mockUpdate).toHaveBeenCalledWith({ unlocked: true })
     expect(mockEq).toHaveBeenCalledWith('id', 'scr-1')
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
     await expect(
       updateSettlementCollectiveCognitionReward('scr-1', { unlocked: true })
-    ).rejects.toThrow('Error Updating Settlement Collective Cognition Reward: Update failed')
+    ).rejects.toThrow(
+      'Error Updating Settlement Collective Cognition Reward: Update failed'
+    )
   })
 })
 
@@ -170,12 +200,16 @@ describe('removeSettlementCollectiveCognitionReward', () => {
       removeSettlementCollectiveCognitionReward('scr-1')
     ).resolves.toBeUndefined()
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('settlement_collective_cognition_reward')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'settlement_collective_cognition_reward'
+    )
     expect(mockEq).toHaveBeenCalledWith('id', 'scr-1')
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

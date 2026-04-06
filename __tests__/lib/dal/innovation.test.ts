@@ -25,23 +25,42 @@ beforeEach(() => {
 
 describe('getInnovations', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomInnovation = { id: 'i1', custom: false, innovation_name: 'Cooking' }
-  const userCustomInnovation = { id: 'i2', custom: true, innovation_name: 'My Innovation' }
-  const sharedInnovation = { id: 'i3', custom: true, innovation_name: 'Shared Innovation' }
+  const nonCustomInnovation = {
+    id: 'i1',
+    custom: false,
+    innovation_name: 'Cooking'
+  }
+  const userCustomInnovation = {
+    id: 'i2',
+    custom: true,
+    innovation_name: 'My Innovation'
+  }
+  const sharedInnovation = {
+    id: 'i3',
+    custom: true,
+    innovation_name: 'Shared Innovation'
+  }
 
   it('returns innovations from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustomInnovation], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [nonCustomInnovation], error: null })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomInnovation], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomInnovation], error: null })
           })
         })
       })
@@ -64,7 +83,10 @@ describe('getInnovations', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getInnovations()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -76,16 +98,23 @@ describe('getInnovations', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getInnovations()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getInnovations()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when non-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -101,11 +130,16 @@ describe('getInnovations', () => {
         })
       })
 
-    await expect(getInnovations()).rejects.toThrow('Error Fetching Innovations: DB error')
+    await expect(getInnovations()).rejects.toThrow(
+      'Error Fetching Innovations: DB error'
+    )
   })
 
   it('throws when user-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -116,7 +150,9 @@ describe('getInnovations', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -126,11 +162,16 @@ describe('getInnovations', () => {
         })
       })
 
-    await expect(getInnovations()).rejects.toThrow('Error Fetching Innovations: DB error')
+    await expect(getInnovations()).rejects.toThrow(
+      'Error Fetching Innovations: DB error'
+    )
   })
 
   it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -147,15 +188,22 @@ describe('getInnovations', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
-    await expect(getInnovations()).rejects.toThrow('Error Fetching Innovations: DB error')
+    await expect(getInnovations()).rejects.toThrow(
+      'Error Fetching Innovations: DB error'
+    )
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -183,7 +231,9 @@ describe('getInnovations', () => {
 
 describe('getInnovationIds', () => {
   it('returns innovation IDs without userId', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: [{ id: 'i1' }, { id: 'i2' }], error: null })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'i1' }, { id: 'i2' }], error: null })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -195,7 +245,9 @@ describe('getInnovationIds', () => {
   })
 
   it('returns innovation IDs with userId (adds user_id filter)', async () => {
-    const mockEq2 = vi.fn().mockResolvedValue({ data: [{ id: 'i3' }], error: null })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'i3' }], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq1 })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
@@ -208,7 +260,9 @@ describe('getInnovationIds', () => {
   })
 
   it('throws when DB query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -224,7 +278,9 @@ describe('getInnovationIds', () => {
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getInnovationIds(['Cooking'], false)).rejects.toThrow('Innovation(s) Not Found')
+    await expect(getInnovationIds(['Cooking'], false)).rejects.toThrow(
+      'Innovation(s) Not Found'
+    )
   })
 })
 
@@ -233,29 +289,52 @@ describe('addInnovation', () => {
   const mockInnovation = { id: 'i1', custom: false, innovation_name: 'Cooking' }
 
   it('inserts a non-custom innovation without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockInnovation, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockInnovation, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addInnovation({ innovation_name: 'Cooking', custom: false })
+    const result = await addInnovation({
+      innovation_name: 'Cooking',
+      custom: false
+    })
 
     expect(result).toEqual(mockInnovation)
-    expect(mockInsert).toHaveBeenCalledWith({ innovation_name: 'Cooking', custom: false })
+    expect(mockInsert).toHaveBeenCalledWith({
+      innovation_name: 'Cooking',
+      custom: false
+    })
   })
 
   it('inserts a custom innovation with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const customInnovation = { id: 'i2', custom: true, innovation_name: 'My Innovation' }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customInnovation, error: null })
+    const customInnovation = {
+      id: 'i2',
+      custom: true,
+      innovation_name: 'My Innovation'
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customInnovation, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addInnovation({ innovation_name: 'My Innovation', custom: true })
+    const result = await addInnovation({
+      innovation_name: 'My Innovation',
+      custom: true
+    })
 
     expect(result).toEqual(customInnovation)
     expect(mockInsert).toHaveBeenCalledWith({
@@ -266,11 +345,14 @@ describe('addInnovation', () => {
   })
 
   it('throws when custom and user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
-    await expect(addInnovation({ innovation_name: 'My Innovation', custom: true })).rejects.toThrow(
-      'Not Authenticated'
-    )
+    await expect(
+      addInnovation({ innovation_name: 'My Innovation', custom: true })
+    ).rejects.toThrow('Not Authenticated')
   })
 
   it('throws when auth errors', async () => {
@@ -279,22 +361,27 @@ describe('addInnovation', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(addInnovation({ innovation_name: 'Cooking', custom: false })).rejects.toThrow(
-      'Error Fetching User: Auth error'
-    )
+    await expect(
+      addInnovation({ innovation_name: 'Cooking', custom: false })
+    ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addInnovation({ innovation_name: 'Cooking', custom: false })).rejects.toThrow(
-      'Error Adding Innovation: Insert failed'
-    )
+    await expect(
+      addInnovation({ innovation_name: 'Cooking', custom: false })
+    ).rejects.toThrow('Error Adding Innovation: Insert failed')
   })
 })
 
@@ -313,13 +400,15 @@ describe('updateInnovation', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateInnovation('i1', { innovation_name: 'Cooking' })).rejects.toThrow(
-      'Error Updating Innovation: Update failed'
-    )
+    await expect(
+      updateInnovation('i1', { innovation_name: 'Cooking' })
+    ).rejects.toThrow('Error Updating Innovation: Update failed')
   })
 })
 
@@ -336,7 +425,9 @@ describe('removeInnovation', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

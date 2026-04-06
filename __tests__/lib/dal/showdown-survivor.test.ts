@@ -83,7 +83,9 @@ describe('getShowdownSurvivors', () => {
   it('throws when query fails', async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
@@ -95,25 +97,37 @@ describe('getShowdownSurvivors', () => {
 
 describe('addShowdownSurvivor', () => {
   it('inserts a showdown survivor and returns the id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'ss-1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'ss-1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addShowdownSurvivor({ showdown_id: 'showdown-1', survivor_id: 'surv-1' })
+    const result = await addShowdownSurvivor({
+      showdown_id: 'showdown-1',
+      survivor_id: 'surv-1'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
 
     expect(result).toBe('ss-1')
     expect(mockSupabase.from).toHaveBeenCalledWith('showdown_survivor')
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addShowdownSurvivor({ showdown_id: 'showdown-1', survivor_id: 'surv-1' })
+      addShowdownSurvivor({
+        showdown_id: 'showdown-1',
+        survivor_id: 'surv-1'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
     ).rejects.toThrow('Error Adding Showdown Survivor: Insert failed')
   })
 })
@@ -134,13 +148,15 @@ describe('updateShowdownSurvivor', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateShowdownSurvivor('ss-1', { knocked_down: true })).rejects.toThrow(
-      'Error Updating Showdown Survivor: Update failed'
-    )
+    await expect(
+      updateShowdownSurvivor('ss-1', { knocked_down: true })
+    ).rejects.toThrow('Error Updating Showdown Survivor: Update failed')
   })
 })
 
@@ -157,7 +173,9 @@ describe('removeShowdownSurvivor', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

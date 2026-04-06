@@ -20,23 +20,42 @@ beforeEach(() => {
 
 describe('getPatterns', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomPattern = { id: 'p1', custom: false, pattern_name: 'Screaming Coat' }
-  const userCustomPattern = { id: 'p2', custom: true, pattern_name: 'My Pattern' }
-  const sharedPattern = { id: 'p3', custom: true, pattern_name: 'Shared Pattern' }
+  const nonCustomPattern = {
+    id: 'p1',
+    custom: false,
+    pattern_name: 'Screaming Coat'
+  }
+  const userCustomPattern = {
+    id: 'p2',
+    custom: true,
+    pattern_name: 'My Pattern'
+  }
+  const sharedPattern = {
+    id: 'p3',
+    custom: true,
+    pattern_name: 'Shared Pattern'
+  }
 
   it('returns patterns from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustomPattern], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [nonCustomPattern], error: null })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomPattern], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomPattern], error: null })
           })
         })
       })
@@ -59,7 +78,10 @@ describe('getPatterns', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getPatterns()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -71,16 +93,23 @@ describe('getPatterns', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getPatterns()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getPatterns()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when non-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -96,11 +125,16 @@ describe('getPatterns', () => {
         })
       })
 
-    await expect(getPatterns()).rejects.toThrow('Error Fetching Patterns: DB error')
+    await expect(getPatterns()).rejects.toThrow(
+      'Error Fetching Patterns: DB error'
+    )
   })
 
   it('throws when user-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -111,7 +145,9 @@ describe('getPatterns', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -121,11 +157,16 @@ describe('getPatterns', () => {
         })
       })
 
-    await expect(getPatterns()).rejects.toThrow('Error Fetching Patterns: DB error')
+    await expect(getPatterns()).rejects.toThrow(
+      'Error Fetching Patterns: DB error'
+    )
   })
 
   it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -142,15 +183,22 @@ describe('getPatterns', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
-    await expect(getPatterns()).rejects.toThrow('Error Fetching Patterns: DB error')
+    await expect(getPatterns()).rejects.toThrow(
+      'Error Fetching Patterns: DB error'
+    )
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -178,32 +226,55 @@ describe('getPatterns', () => {
 
 describe('addPattern', () => {
   const mockUser = { id: 'user-1' }
-  const mockPattern = { id: 'p1', custom: false, pattern_name: 'Screaming Coat' }
+  const mockPattern = {
+    id: 'p1',
+    custom: false,
+    pattern_name: 'Screaming Coat'
+  }
 
   it('inserts a non-custom pattern without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockPattern, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockPattern, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addPattern({ pattern_name: 'Screaming Coat', custom: false })
+    const result = await addPattern({
+      pattern_name: 'Screaming Coat',
+      custom: false
+    })
 
     expect(result).toEqual(mockPattern)
-    expect(mockInsert).toHaveBeenCalledWith({ pattern_name: 'Screaming Coat', custom: false })
+    expect(mockInsert).toHaveBeenCalledWith({
+      pattern_name: 'Screaming Coat',
+      custom: false
+    })
   })
 
   it('inserts a custom pattern with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const customPattern = { id: 'p2', custom: true, pattern_name: 'My Pattern' }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customPattern, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customPattern, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addPattern({ pattern_name: 'My Pattern', custom: true })
+    const result = await addPattern({
+      pattern_name: 'My Pattern',
+      custom: true
+    })
 
     expect(result).toEqual(customPattern)
     expect(mockInsert).toHaveBeenCalledWith({
@@ -214,11 +285,14 @@ describe('addPattern', () => {
   })
 
   it('throws when custom and user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
-    await expect(addPattern({ pattern_name: 'My Pattern', custom: true })).rejects.toThrow(
-      'Not Authenticated'
-    )
+    await expect(
+      addPattern({ pattern_name: 'My Pattern', custom: true })
+    ).rejects.toThrow('Not Authenticated')
   })
 
   it('throws when auth errors', async () => {
@@ -227,22 +301,27 @@ describe('addPattern', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(addPattern({ pattern_name: 'Screaming Coat', custom: false })).rejects.toThrow(
-      'Error Fetching User: Auth error'
-    )
+    await expect(
+      addPattern({ pattern_name: 'Screaming Coat', custom: false })
+    ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addPattern({ pattern_name: 'Screaming Coat', custom: false })).rejects.toThrow(
-      'Error Adding Pattern: Insert failed'
-    )
+    await expect(
+      addPattern({ pattern_name: 'Screaming Coat', custom: false })
+    ).rejects.toThrow('Error Adding Pattern: Insert failed')
   })
 })
 
@@ -261,13 +340,15 @@ describe('updatePattern', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updatePattern('p1', { pattern_name: 'Screaming Coat' })).rejects.toThrow(
-      'Error Updating Pattern: Update failed'
-    )
+    await expect(
+      updatePattern('p1', { pattern_name: 'Screaming Coat' })
+    ).rejects.toThrow('Error Updating Pattern: Update failed')
   })
 })
 
@@ -284,10 +365,14 @@ describe('removePattern', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removePattern('p1')).rejects.toThrow('Error Removing Pattern: Delete failed')
+    await expect(removePattern('p1')).rejects.toThrow(
+      'Error Removing Pattern: Delete failed'
+    )
   })
 })

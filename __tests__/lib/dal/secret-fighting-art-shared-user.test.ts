@@ -8,9 +8,11 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getSecretFightingArtSharedUsers, addSecretFightingArtSharedUsers, removeSecretFightingArtSharedUsers } = await import(
-  '@/lib/dal/secret-fighting-art-shared-user'
-)
+const {
+  getSecretFightingArtSharedUsers,
+  addSecretFightingArtSharedUsers,
+  removeSecretFightingArtSharedUsers
+} = await import('@/lib/dal/secret-fighting-art-shared-user')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -18,22 +20,29 @@ beforeEach(() => {
 
 describe('getSecretFightingArtSharedUsers', () => {
   it('returns mapped shared users on success', async () => {
-    const mockEq = vi
-      .fn()
-      .mockResolvedValue({
-        data: [{ shared_user_id: 'u-1', user_settings: { username: 'testuser' } }],
-        error: null
-      })
+    const mockEq = vi.fn().mockResolvedValue({
+      data: [
+        { shared_user_id: 'u-1', user_settings: { username: 'testuser' } }
+      ],
+      error: null
+    })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    const result = await getSecretFightingArtSharedUsers('secret_fighting_art-1')
+    const result = await getSecretFightingArtSharedUsers(
+      'secret_fighting_art-1'
+    )
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('secret_fighting_art_shared_user')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'secret_fighting_art_shared_user'
+    )
     expect(mockSelect).toHaveBeenCalledWith(
       'shared_user_id, user_settings!shared_user_id(username)'
     )
-    expect(mockEq).toHaveBeenCalledWith('secret_fighting_art_id', 'secret_fighting_art-1')
+    expect(mockEq).toHaveBeenCalledWith(
+      'secret_fighting_art_id',
+      'secret_fighting_art-1'
+    )
     expect(result).toEqual([{ shared_user_id: 'u-1', username: 'testuser' }])
   })
 
@@ -42,7 +51,9 @@ describe('getSecretFightingArtSharedUsers', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    const result = await getSecretFightingArtSharedUsers('secret_fighting_art-1')
+    const result = await getSecretFightingArtSharedUsers(
+      'secret_fighting_art-1'
+    )
 
     expect(result).toEqual([])
   })
@@ -52,7 +63,9 @@ describe('getSecretFightingArtSharedUsers', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    const result = await getSecretFightingArtSharedUsers('secret_fighting_art-1')
+    const result = await getSecretFightingArtSharedUsers(
+      'secret_fighting_art-1'
+    )
 
     expect(result).toEqual([])
   })
@@ -64,7 +77,9 @@ describe('getSecretFightingArtSharedUsers', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getSecretFightingArtSharedUsers('secret_fighting_art-1')).rejects.toThrow(
+    await expect(
+      getSecretFightingArtSharedUsers('secret_fighting_art-1')
+    ).rejects.toThrow(
       'Error Fetching Secret Fighting Art Shared Users: DB error'
     )
   })
@@ -81,12 +96,26 @@ describe('addSecretFightingArtSharedUsers', () => {
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await addSecretFightingArtSharedUsers('secret_fighting_art-1', ['u-1', 'u-2'], 'user-1')
+    await addSecretFightingArtSharedUsers(
+      'secret_fighting_art-1',
+      ['u-1', 'u-2'],
+      'user-1'
+    )
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('secret_fighting_art_shared_user')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'secret_fighting_art_shared_user'
+    )
     expect(mockInsert).toHaveBeenCalledWith([
-      { secret_fighting_art_id: 'secret_fighting_art-1', shared_user_id: 'u-1', user_id: 'user-1' },
-      { secret_fighting_art_id: 'secret_fighting_art-1', shared_user_id: 'u-2', user_id: 'user-1' }
+      {
+        secret_fighting_art_id: 'secret_fighting_art-1',
+        shared_user_id: 'u-1',
+        user_id: 'user-1'
+      },
+      {
+        secret_fighting_art_id: 'secret_fighting_art-1',
+        shared_user_id: 'u-2',
+        user_id: 'user-1'
+      }
     ])
   })
 
@@ -97,8 +126,14 @@ describe('addSecretFightingArtSharedUsers', () => {
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addSecretFightingArtSharedUsers('secret_fighting_art-1', ['u-1'], 'user-1')
-    ).rejects.toThrow('Error Adding Secret Fighting Art Shared Users: Insert failed')
+      addSecretFightingArtSharedUsers(
+        'secret_fighting_art-1',
+        ['u-1'],
+        'user-1'
+      )
+    ).rejects.toThrow(
+      'Error Adding Secret Fighting Art Shared Users: Insert failed'
+    )
   })
 })
 
@@ -115,10 +150,18 @@ describe('removeSecretFightingArtSharedUsers', () => {
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await removeSecretFightingArtSharedUsers('secret_fighting_art-1', ['u-1', 'u-2'])
+    await removeSecretFightingArtSharedUsers('secret_fighting_art-1', [
+      'u-1',
+      'u-2'
+    ])
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('secret_fighting_art_shared_user')
-    expect(mockEq).toHaveBeenCalledWith('secret_fighting_art_id', 'secret_fighting_art-1')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'secret_fighting_art_shared_user'
+    )
+    expect(mockEq).toHaveBeenCalledWith(
+      'secret_fighting_art_id',
+      'secret_fighting_art-1'
+    )
     expect(mockIn).toHaveBeenCalledWith('shared_user_id', ['u-1', 'u-2'])
   })
 
@@ -132,6 +175,8 @@ describe('removeSecretFightingArtSharedUsers', () => {
 
     await expect(
       removeSecretFightingArtSharedUsers('secret_fighting_art-1', ['u-1'])
-    ).rejects.toThrow('Error Removing Secret Fighting Art Shared Users: Delete failed')
+    ).rejects.toThrow(
+      'Error Removing Secret Fighting Art Shared Users: Delete failed'
+    )
   })
 })

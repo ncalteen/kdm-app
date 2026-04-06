@@ -26,9 +26,21 @@ beforeEach(() => {
 describe('getDisorders', () => {
   const mockUserId = 'user-1'
 
-  const nonCustomDisorder = { id: 'd1', custom: false, disorder_name: 'Anxiety' }
-  const userCustomDisorder = { id: 'd2', custom: true, disorder_name: 'My Disorder' }
-  const sharedDisorder = { id: 'd3', custom: true, disorder_name: 'Shared Disorder' }
+  const nonCustomDisorder = {
+    id: 'd1',
+    custom: false,
+    disorder_name: 'Anxiety'
+  }
+  const userCustomDisorder = {
+    id: 'd2',
+    custom: true,
+    disorder_name: 'My Disorder'
+  }
+  const sharedDisorder = {
+    id: 'd3',
+    custom: true,
+    disorder_name: 'Shared Disorder'
+  }
 
   it('returns disorders from all three sources', async () => {
     vi.mocked(getUserId).mockResolvedValue(mockUserId)
@@ -36,13 +48,17 @@ describe('getDisorders', () => {
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustomDisorder], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [nonCustomDisorder], error: null })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomDisorder], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomDisorder], error: null })
           })
         })
       })
@@ -107,7 +123,9 @@ describe('getDisorders', () => {
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -123,7 +141,9 @@ describe('getDisorders', () => {
         })
       })
 
-    await expect(getDisorders()).rejects.toThrow('Error Fetching Built-in Disorders: DB error')
+    await expect(getDisorders()).rejects.toThrow(
+      'Error Fetching Built-in Disorders: DB error'
+    )
   })
 
   it('throws when user-custom query fails', async () => {
@@ -138,7 +158,9 @@ describe('getDisorders', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -148,7 +170,9 @@ describe('getDisorders', () => {
         })
       })
 
-    await expect(getDisorders()).rejects.toThrow('Error Fetching Custom Disorders: DB error')
+    await expect(getDisorders()).rejects.toThrow(
+      'Error Fetching Custom Disorders: DB error'
+    )
   })
 
   it('throws when shared query fails', async () => {
@@ -169,11 +193,15 @@ describe('getDisorders', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
-    await expect(getDisorders()).rejects.toThrow('Error Fetching Shared Disorders: DB error')
+    await expect(getDisorders()).rejects.toThrow(
+      'Error Fetching Shared Disorders: DB error'
+    )
   })
 
   it('returns empty map when all sources are empty', async () => {
@@ -213,15 +241,23 @@ describe('addDisorder', () => {
       error: null
     })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockDisorder, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockDisorder, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addDisorder({ disorder_name: 'Anxiety', custom: false })
+    const result = await addDisorder({
+      disorder_name: 'Anxiety',
+      custom: false
+    })
 
     expect(result).toEqual(mockDisorder)
-    expect(mockInsert).toHaveBeenCalledWith({ disorder_name: 'Anxiety', custom: false })
+    expect(mockInsert).toHaveBeenCalledWith({
+      disorder_name: 'Anxiety',
+      custom: false
+    })
   })
 
   it('inserts a custom disorder with user_id', async () => {
@@ -230,13 +266,22 @@ describe('addDisorder', () => {
       error: null
     })
 
-    const customDisorder = { id: 'd2', custom: true, disorder_name: 'My Disorder' }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customDisorder, error: null })
+    const customDisorder = {
+      id: 'd2',
+      custom: true,
+      disorder_name: 'My Disorder'
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customDisorder, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addDisorder({ disorder_name: 'My Disorder', custom: true })
+    const result = await addDisorder({
+      disorder_name: 'My Disorder',
+      custom: true
+    })
 
     expect(result).toEqual(customDisorder)
     expect(mockInsert).toHaveBeenCalledWith({
@@ -252,9 +297,9 @@ describe('addDisorder', () => {
       error: null
     })
 
-    await expect(addDisorder({ disorder_name: 'My Disorder', custom: true })).rejects.toThrow(
-      'Not Authenticated'
-    )
+    await expect(
+      addDisorder({ disorder_name: 'My Disorder', custom: true })
+    ).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
@@ -264,9 +309,9 @@ describe('addDisorder', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(addDisorder({ disorder_name: 'Anxiety', custom: false })).rejects.toThrow(
-      'Error Fetching User: Auth error'
-    )
+    await expect(
+      addDisorder({ disorder_name: 'Anxiety', custom: false })
+    ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
@@ -275,14 +320,16 @@ describe('addDisorder', () => {
       error: null
     })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addDisorder({ disorder_name: 'Anxiety', custom: false })).rejects.toThrow(
-      'Error Adding Disorder: Insert failed'
-    )
+    await expect(
+      addDisorder({ disorder_name: 'Anxiety', custom: false })
+    ).rejects.toThrow('Error Adding Disorder: Insert failed')
   })
 })
 
@@ -297,18 +344,22 @@ describe('updateDisorder', () => {
     ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('disorder')
-    expect(mockUpdate).toHaveBeenCalledWith({ disorder_name: 'Updated Anxiety' })
+    expect(mockUpdate).toHaveBeenCalledWith({
+      disorder_name: 'Updated Anxiety'
+    })
     expect(mockEq).toHaveBeenCalledWith('id', 'd1')
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateDisorder('d1', { disorder_name: 'Anxiety' })).rejects.toThrow(
-      'Error Updating Disorder: Update failed'
-    )
+    await expect(
+      updateDisorder('d1', { disorder_name: 'Anxiety' })
+    ).rejects.toThrow('Error Updating Disorder: Update failed')
   })
 })
 
@@ -325,10 +376,14 @@ describe('removeDisorder', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeDisorder('d1')).rejects.toThrow('Error Removing Disorder: Delete failed')
+    await expect(removeDisorder('d1')).rejects.toThrow(
+      'Error Removing Disorder: Delete failed'
+    )
   })
 })

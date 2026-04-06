@@ -24,12 +24,27 @@ beforeEach(() => {
 
 describe('getSecretFightingArts', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomSFA = { id: 'sfa1', custom: false, secret_fighting_art_name: 'Fist and Tooth' }
-  const userCustomSFA = { id: 'sfa2', custom: true, secret_fighting_art_name: 'My Secret Art' }
-  const sharedSFA = { id: 'sfa3', custom: true, secret_fighting_art_name: 'Shared Secret Art' }
+  const nonCustomSFA = {
+    id: 'sfa1',
+    custom: false,
+    secret_fighting_art_name: 'Fist and Tooth'
+  }
+  const userCustomSFA = {
+    id: 'sfa2',
+    custom: true,
+    secret_fighting_art_name: 'My Secret Art'
+  }
+  const sharedSFA = {
+    id: 'sfa3',
+    custom: true,
+    secret_fighting_art_name: 'Shared Secret Art'
+  }
 
   it('returns secret fighting arts from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -40,7 +55,9 @@ describe('getSecretFightingArts', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomSFA], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomSFA], error: null })
           })
         })
       })
@@ -63,7 +80,10 @@ describe('getSecretFightingArts', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getSecretFightingArts()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -75,16 +95,23 @@ describe('getSecretFightingArts', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getSecretFightingArts()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getSecretFightingArts()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when non-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -106,7 +133,10 @@ describe('getSecretFightingArts', () => {
   })
 
   it('throws when user-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -117,7 +147,9 @@ describe('getSecretFightingArts', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -133,7 +165,10 @@ describe('getSecretFightingArts', () => {
   })
 
   it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -150,7 +185,9 @@ describe('getSecretFightingArts', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
@@ -160,7 +197,10 @@ describe('getSecretFightingArts', () => {
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -188,10 +228,17 @@ describe('getSecretFightingArts', () => {
 
 describe('addSecretFightingArt', () => {
   const mockUser = { id: 'user-1' }
-  const mockSFA = { id: 'sfa1', custom: false, secret_fighting_art_name: 'Fist and Tooth' }
+  const mockSFA = {
+    id: 'sfa1',
+    custom: false,
+    secret_fighting_art_name: 'Fist and Tooth'
+  }
 
   it('inserts a non-custom secret fighting art without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const mockSingle = vi.fn().mockResolvedValue({ data: mockSFA, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
@@ -211,10 +258,19 @@ describe('addSecretFightingArt', () => {
   })
 
   it('inserts a custom secret fighting art with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const customSFA = { id: 'sfa2', custom: true, secret_fighting_art_name: 'My Secret Art' }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customSFA, error: null })
+    const customSFA = {
+      id: 'sfa2',
+      custom: true,
+      secret_fighting_art_name: 'My Secret Art'
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customSFA, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -233,10 +289,16 @@ describe('addSecretFightingArt', () => {
   })
 
   it('throws when custom and user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(
-      addSecretFightingArt({ secret_fighting_art_name: 'My Secret Art', custom: true })
+      addSecretFightingArt({
+        secret_fighting_art_name: 'My Secret Art',
+        custom: true
+      })
     ).rejects.toThrow('Not Authenticated')
   })
 
@@ -247,20 +309,31 @@ describe('addSecretFightingArt', () => {
     })
 
     await expect(
-      addSecretFightingArt({ secret_fighting_art_name: 'Fist and Tooth', custom: false })
+      addSecretFightingArt({
+        secret_fighting_art_name: 'Fist and Tooth',
+        custom: false
+      })
     ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addSecretFightingArt({ secret_fighting_art_name: 'Fist and Tooth', custom: false })
+      addSecretFightingArt({
+        secret_fighting_art_name: 'Fist and Tooth',
+        custom: false
+      })
     ).rejects.toThrow('Error Adding Secret Fighting Art: Insert failed')
   })
 })
@@ -272,7 +345,9 @@ describe('updateSecretFightingArt', () => {
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
     await expect(
-      updateSecretFightingArt('sfa1', { secret_fighting_art_name: 'Updated Fist and Tooth' })
+      updateSecretFightingArt('sfa1', {
+        secret_fighting_art_name: 'Updated Fist and Tooth'
+      })
     ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('secret_fighting_art')
@@ -280,12 +355,16 @@ describe('updateSecretFightingArt', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
     await expect(
-      updateSecretFightingArt('sfa1', { secret_fighting_art_name: 'Fist and Tooth' })
+      updateSecretFightingArt('sfa1', {
+        secret_fighting_art_name: 'Fist and Tooth'
+      })
     ).rejects.toThrow('Error Updating Secret Fighting Art: Update failed')
   })
 })
@@ -303,7 +382,9 @@ describe('removeSecretFightingArt', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

@@ -20,12 +20,30 @@ beforeEach(() => {
 
 describe('getGear', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomGear = { id: 'g1', custom: false, gear_name: 'Lantern Helm', location_id: 'l1' }
-  const userCustomGear = { id: 'g2', custom: true, gear_name: 'My Gear', location_id: null }
-  const sharedGear = { id: 'g3', custom: true, gear_name: 'Shared Gear', location_id: null }
+  const nonCustomGear = {
+    id: 'g1',
+    custom: false,
+    gear_name: 'Lantern Helm',
+    location_id: 'l1'
+  }
+  const userCustomGear = {
+    id: 'g2',
+    custom: true,
+    gear_name: 'My Gear',
+    location_id: null
+  }
+  const sharedGear = {
+    id: 'g3',
+    custom: true,
+    gear_name: 'Shared Gear',
+    location_id: null
+  }
 
   it('returns gear from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -36,7 +54,9 @@ describe('getGear', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomGear], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomGear], error: null })
           })
         })
       })
@@ -59,7 +79,10 @@ describe('getGear', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getGear()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -75,12 +98,17 @@ describe('getGear', () => {
   })
 
   it('throws when non-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -100,7 +128,10 @@ describe('getGear', () => {
   })
 
   it('throws when user-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -111,7 +142,9 @@ describe('getGear', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -125,7 +158,10 @@ describe('getGear', () => {
   })
 
   it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -142,7 +178,9 @@ describe('getGear', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
@@ -150,7 +188,10 @@ describe('getGear', () => {
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -178,17 +219,31 @@ describe('getGear', () => {
 
 describe('addGear', () => {
   const mockUser = { id: 'user-1' }
-  const mockGear = { id: 'g1', custom: false, gear_name: 'Lantern Helm', location_id: 'l1' }
+  const mockGear = {
+    id: 'g1',
+    custom: false,
+    gear_name: 'Lantern Helm',
+    location_id: 'l1'
+  }
 
   it('inserts a non-custom gear without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockGear, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockGear, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addGear({ gear_name: 'Lantern Helm', custom: false, location_id: 'l1' })
+    const result = await addGear({
+      gear_name: 'Lantern Helm',
+      custom: false,
+      location_id: 'l1'
+    })
 
     expect(result).toEqual(mockGear)
     expect(mockInsert).toHaveBeenCalledWith({
@@ -199,10 +254,20 @@ describe('addGear', () => {
   })
 
   it('inserts a custom gear with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const customGear = { id: 'g2', custom: true, gear_name: 'My Gear', location_id: null }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customGear, error: null })
+    const customGear = {
+      id: 'g2',
+      custom: true,
+      gear_name: 'My Gear',
+      location_id: null
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customGear, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -218,11 +283,14 @@ describe('addGear', () => {
   })
 
   it('throws when custom and user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
-    await expect(addGear({ gear_name: 'My Gear', custom: true })).rejects.toThrow(
-      'Not Authenticated'
-    )
+    await expect(
+      addGear({ gear_name: 'My Gear', custom: true })
+    ).rejects.toThrow('Not Authenticated')
   })
 
   it('throws when auth errors', async () => {
@@ -231,22 +299,27 @@ describe('addGear', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(addGear({ gear_name: 'Lantern Helm', custom: false })).rejects.toThrow(
-      'Error Fetching User: Auth error'
-    )
+    await expect(
+      addGear({ gear_name: 'Lantern Helm', custom: false })
+    ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addGear({ gear_name: 'Lantern Helm', custom: false })).rejects.toThrow(
-      'Error Adding Gear: Insert failed'
-    )
+    await expect(
+      addGear({ gear_name: 'Lantern Helm', custom: false })
+    ).rejects.toThrow('Error Adding Gear: Insert failed')
   })
 })
 
@@ -256,20 +329,24 @@ describe('updateGear', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateGear('g1', { gear_name: 'Updated Lantern Helm' })).resolves.toBeUndefined()
+    await expect(
+      updateGear('g1', { gear_name: 'Updated Lantern Helm' })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('gear')
     expect(mockEq).toHaveBeenCalledWith('id', 'g1')
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateGear('g1', { gear_name: 'Lantern Helm' })).rejects.toThrow(
-      'Error Updating Gear: Update failed'
-    )
+    await expect(
+      updateGear('g1', { gear_name: 'Lantern Helm' })
+    ).rejects.toThrow('Error Updating Gear: Update failed')
   })
 })
 
@@ -286,11 +363,15 @@ describe('removeGear', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeGear('g1')).rejects.toThrow('Error Removing Gear: Delete failed')
+    await expect(removeGear('g1')).rejects.toThrow(
+      'Error Removing Gear: Delete failed'
+    )
   })
 })
 
@@ -298,10 +379,20 @@ describe('getCustomGear', () => {
   const mockUser = { id: 'user-1' }
 
   it('returns only custom gear for the authenticated user', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const customGear = { id: 'g2', custom: true, gear_name: 'My Gear', location_id: null }
-    const mockEq2 = vi.fn().mockResolvedValue({ data: [customGear], error: null })
+    const customGear = {
+      id: 'g2',
+      custom: true,
+      gear_name: 'My Gear',
+      location_id: null
+    }
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: [customGear], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -314,7 +405,10 @@ describe('getCustomGear', () => {
   })
 
   it('returns empty map when user has no custom gear', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const mockEq2 = vi.fn().mockResolvedValue({ data: [], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
@@ -326,7 +420,10 @@ describe('getCustomGear', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getCustomGear()).rejects.toThrow('Not Authenticated')
   })
@@ -337,17 +434,26 @@ describe('getCustomGear', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getCustomGear()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getCustomGear()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when DB query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockEq2 = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getCustomGear()).rejects.toThrow('Error Fetching Custom Gear: DB error')
+    await expect(getCustomGear()).rejects.toThrow(
+      'Error Fetching Custom Gear: DB error'
+    )
   })
 })

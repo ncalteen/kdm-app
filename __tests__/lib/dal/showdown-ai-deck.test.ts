@@ -21,12 +21,16 @@ beforeEach(() => {
 
 describe('getShowdownAIDecks', () => {
   it('throws when showdownId is null', async () => {
-    await expect(getShowdownAIDecks(null)).rejects.toThrow('Required: Showdown ID')
+    await expect(getShowdownAIDecks(null)).rejects.toThrow(
+      'Required: Showdown ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when showdownId is undefined', async () => {
-    await expect(getShowdownAIDecks(undefined)).rejects.toThrow('Required: Showdown ID')
+    await expect(getShowdownAIDecks(undefined)).rejects.toThrow(
+      'Required: Showdown ID'
+    )
   })
 
   it('returns a map of showdown AI decks', async () => {
@@ -64,7 +68,9 @@ describe('getShowdownAIDecks', () => {
   it('throws when query fails', async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
@@ -76,26 +82,41 @@ describe('getShowdownAIDecks', () => {
 
 describe('addShowdownAIDeck', () => {
   it('inserts a showdown AI deck and returns it', async () => {
-    const mockDeck = { id: 'deck-1', basic_cards: 5, advanced_cards: 2, legendary_cards: 0, overtone_cards: 1 }
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockDeck, error: null })
+    const mockDeck = {
+      id: 'deck-1',
+      basic_cards: 5,
+      advanced_cards: 2,
+      legendary_cards: 0,
+      overtone_cards: 1
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockDeck, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addShowdownAIDeck({ showdown_id: 'showdown-1', basic_cards: 5 })
+    const result = await addShowdownAIDeck({
+      showdown_id: 'showdown-1',
+      basic_cards: 5
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
 
     expect(result).toEqual(mockDeck)
     expect(mockSupabase.from).toHaveBeenCalledWith('showdown_ai_deck')
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addShowdownAIDeck({ showdown_id: 'showdown-1', basic_cards: 5 })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      addShowdownAIDeck({ showdown_id: 'showdown-1', basic_cards: 5 } as any)
     ).rejects.toThrow('Error Adding Showdown AI Deck: Insert failed')
   })
 })
@@ -106,7 +127,9 @@ describe('updateShowdownAIDeck', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateShowdownAIDeck('deck-1', { basic_cards: 10 })).resolves.toBeUndefined()
+    await expect(
+      updateShowdownAIDeck('deck-1', { basic_cards: 10 })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('showdown_ai_deck')
     expect(mockUpdate).toHaveBeenCalledWith({ basic_cards: 10 })
@@ -114,13 +137,15 @@ describe('updateShowdownAIDeck', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateShowdownAIDeck('deck-1', { basic_cards: 10 })).rejects.toThrow(
-      'Error Updating Showdown AI Deck: Update failed'
-    )
+    await expect(
+      updateShowdownAIDeck('deck-1', { basic_cards: 10 })
+    ).rejects.toThrow('Error Updating Showdown AI Deck: Update failed')
   })
 })
 
@@ -137,7 +162,9 @@ describe('removeShowdownAIDeck', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

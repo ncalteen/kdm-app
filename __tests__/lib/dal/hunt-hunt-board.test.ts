@@ -8,8 +8,12 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getHuntHuntBoard, addHuntHuntBoard, updateHuntHuntBoard, removeHuntHuntBoard } =
-  await import('@/lib/dal/hunt-hunt-board')
+const {
+  getHuntHuntBoard,
+  addHuntHuntBoard,
+  updateHuntHuntBoard,
+  removeHuntHuntBoard
+} = await import('@/lib/dal/hunt-hunt-board')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -47,7 +51,9 @@ describe('getHuntHuntBoard', () => {
   })
 
   it('returns hunt board data', async () => {
-    const mockMaybeSingle = vi.fn().mockResolvedValue({ data: mockBoard, error: null })
+    const mockMaybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockBoard, error: null })
     const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -59,7 +65,9 @@ describe('getHuntHuntBoard', () => {
   })
 
   it('returns null when no board is found', async () => {
-    const mockMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+    const mockMaybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: null })
     const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -70,7 +78,9 @@ describe('getHuntHuntBoard', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockMaybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -83,20 +93,31 @@ describe('getHuntHuntBoard', () => {
 
 describe('addHuntHuntBoard', () => {
   it('inserts a hunt board and returns it', async () => {
-    const mockBoard = { id: 'board-1', hunt_id: 'hunt-1', settlement_id: 'settlement-1' }
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockBoard, error: null })
+    const mockBoard = {
+      id: 'board-1',
+      hunt_id: 'hunt-1',
+      settlement_id: 'settlement-1'
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockBoard, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addHuntHuntBoard({ hunt_id: 'hunt-1', settlement_id: 'settlement-1' })
+    const result = await addHuntHuntBoard({
+      hunt_id: 'hunt-1',
+      settlement_id: 'settlement-1'
+    })
 
     expect(result).toEqual(mockBoard)
     expect(mockSupabase.from).toHaveBeenCalledWith('hunt_hunt_board')
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -113,21 +134,25 @@ describe('updateHuntHuntBoard', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateHuntHuntBoard('board-1', { pos_1: 'survivor-1' })).resolves.toBeUndefined()
+    await expect(
+      updateHuntHuntBoard('board-1', { pos_1: 'BASIC' })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('hunt_hunt_board')
-    expect(mockUpdate).toHaveBeenCalledWith({ pos_1: 'survivor-1' })
+    expect(mockUpdate).toHaveBeenCalledWith({ pos_1: 'BASIC' })
     expect(mockEq).toHaveBeenCalledWith('id', 'board-1')
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateHuntHuntBoard('board-1', { pos_1: 'survivor-1' })).rejects.toThrow(
-      'Error Updating Hunt Board: Update failed'
-    )
+    await expect(
+      updateHuntHuntBoard('board-1', { pos_1: 'BASIC' })
+    ).rejects.toThrow('Error Updating Hunt Board: Update failed')
   })
 })
 
@@ -144,7 +169,9 @@ describe('removeHuntHuntBoard', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

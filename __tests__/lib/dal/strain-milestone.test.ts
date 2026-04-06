@@ -24,23 +24,44 @@ beforeEach(() => {
 
 describe('getStrainMilestones', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomStrainMilestone = { id: 'sm1', custom: false, strain_milestone_name: 'Crossroads' }
-  const userCustomStrainMilestone = { id: 'sm2', custom: true, strain_milestone_name: 'My Strain Milestone' }
-  const sharedStrainMilestone = { id: 'sm3', custom: true, strain_milestone_name: 'Shared Strain Milestone' }
+  const nonCustomStrainMilestone = {
+    id: 'sm1',
+    custom: false,
+    strain_milestone_name: 'Crossroads'
+  }
+  const userCustomStrainMilestone = {
+    id: 'sm2',
+    custom: true,
+    strain_milestone_name: 'My Strain Milestone'
+  }
+  const sharedStrainMilestone = {
+    id: 'sm3',
+    custom: true,
+    strain_milestone_name: 'Shared Strain Milestone'
+  }
 
   it('returns strain milestones from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustomStrainMilestone], error: null })
+          eq: vi.fn().mockResolvedValue({
+            data: [nonCustomStrainMilestone],
+            error: null
+          })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomStrainMilestone], error: null })
+            eq: vi.fn().mockResolvedValue({
+              data: [userCustomStrainMilestone],
+              error: null
+            })
           })
         })
       })
@@ -63,7 +84,10 @@ describe('getStrainMilestones', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getStrainMilestones()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -75,16 +99,23 @@ describe('getStrainMilestones', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getStrainMilestones()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getStrainMilestones()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when non-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -100,11 +131,16 @@ describe('getStrainMilestones', () => {
         })
       })
 
-    await expect(getStrainMilestones()).rejects.toThrow('Error Fetching Strain Milestones: DB error')
+    await expect(getStrainMilestones()).rejects.toThrow(
+      'Error Fetching Strain Milestones: DB error'
+    )
   })
 
   it('throws when user-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -115,7 +151,9 @@ describe('getStrainMilestones', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -125,11 +163,16 @@ describe('getStrainMilestones', () => {
         })
       })
 
-    await expect(getStrainMilestones()).rejects.toThrow('Error Fetching Strain Milestones: DB error')
+    await expect(getStrainMilestones()).rejects.toThrow(
+      'Error Fetching Strain Milestones: DB error'
+    )
   })
 
   it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -146,15 +189,22 @@ describe('getStrainMilestones', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
-    await expect(getStrainMilestones()).rejects.toThrow('Error Fetching Strain Milestones: DB error')
+    await expect(getStrainMilestones()).rejects.toThrow(
+      'Error Fetching Strain Milestones: DB error'
+    )
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -182,17 +232,29 @@ describe('getStrainMilestones', () => {
 
 describe('addStrainMilestone', () => {
   const mockUser = { id: 'user-1' }
-  const mockStrainMilestone = { id: 'sm1', custom: false, strain_milestone_name: 'Crossroads' }
+  const mockStrainMilestone = {
+    id: 'sm1',
+    custom: false,
+    strain_milestone_name: 'Crossroads'
+  }
 
   it('inserts a non-custom strain milestone without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockStrainMilestone, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockStrainMilestone, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addStrainMilestone({ strain_milestone_name: 'Crossroads', custom: false })
+    const result = await addStrainMilestone({
+      strain_milestone_name: 'Crossroads',
+      custom: false
+    })
 
     expect(result).toEqual(mockStrainMilestone)
     expect(mockInsert).toHaveBeenCalledWith({
@@ -202,10 +264,19 @@ describe('addStrainMilestone', () => {
   })
 
   it('inserts a custom strain milestone with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const customStrainMilestone = { id: 'sm2', custom: true, strain_milestone_name: 'My Strain Milestone' }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customStrainMilestone, error: null })
+    const customStrainMilestone = {
+      id: 'sm2',
+      custom: true,
+      strain_milestone_name: 'My Strain Milestone'
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customStrainMilestone, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -224,10 +295,16 @@ describe('addStrainMilestone', () => {
   })
 
   it('throws when custom and user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(
-      addStrainMilestone({ strain_milestone_name: 'My Strain Milestone', custom: true })
+      addStrainMilestone({
+        strain_milestone_name: 'My Strain Milestone',
+        custom: true
+      })
     ).rejects.toThrow('Not Authenticated')
   })
 
@@ -243,9 +320,14 @@ describe('addStrainMilestone', () => {
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -263,7 +345,9 @@ describe('updateStrainMilestone', () => {
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
     await expect(
-      updateStrainMilestone('sm1', { strain_milestone_name: 'Updated Crossroads' })
+      updateStrainMilestone('sm1', {
+        strain_milestone_name: 'Updated Crossroads'
+      })
     ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('strain_milestone')
@@ -271,7 +355,9 @@ describe('updateStrainMilestone', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
@@ -294,7 +380,9 @@ describe('removeStrainMilestone', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

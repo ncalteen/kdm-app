@@ -34,7 +34,9 @@ describe('getQuarryCollectiveCognitionRewardJunctionIds', () => {
     const result = await getQuarryCollectiveCognitionRewardJunctionIds('q1')
 
     expect(result).toEqual(['jid1', 'jid2'])
-    expect(mockSupabase.from).toHaveBeenCalledWith('quarry_collective_cognition_reward')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'quarry_collective_cognition_reward'
+    )
     expect(mockEq).toHaveBeenCalledWith('quarry_id', 'q1')
   })
 
@@ -49,24 +51,30 @@ describe('getQuarryCollectiveCognitionRewardJunctionIds', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getQuarryCollectiveCognitionRewardJunctionIds('q1')).rejects.toThrow(
-      'Error Fetching Quarry CC Reward Junction IDs: DB error'
-    )
+    await expect(
+      getQuarryCollectiveCognitionRewardJunctionIds('q1')
+    ).rejects.toThrow('Error Fetching Quarry CC Reward Junction IDs: DB error')
   })
 })
 
 describe('getQuarryCollectiveCognitionRewardIds', () => {
   it('throws when quarryId is null', async () => {
-    await expect(getQuarryCollectiveCognitionRewardIds(null)).rejects.toThrow('Required: Quarry ID')
+    await expect(getQuarryCollectiveCognitionRewardIds(null)).rejects.toThrow(
+      'Required: Quarry ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when quarryId is undefined', async () => {
-    await expect(getQuarryCollectiveCognitionRewardIds(undefined)).rejects.toThrow('Required: Quarry ID')
+    await expect(
+      getQuarryCollectiveCognitionRewardIds(undefined)
+    ).rejects.toThrow('Required: Quarry ID')
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
@@ -87,7 +95,9 @@ describe('getQuarryCollectiveCognitionRewardIds', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -109,12 +119,16 @@ describe('getQuarryCollectiveCognitionRewardIds', () => {
 
 describe('getQuarryCollectiveCognitionRewards', () => {
   it('throws when quarryId is null', async () => {
-    await expect(getQuarryCollectiveCognitionRewards(null)).rejects.toThrow('Required: Quarry ID')
+    await expect(getQuarryCollectiveCognitionRewards(null)).rejects.toThrow(
+      'Required: Quarry ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when quarryId is undefined', async () => {
-    await expect(getQuarryCollectiveCognitionRewards(undefined)).rejects.toThrow('Required: Quarry ID')
+    await expect(
+      getQuarryCollectiveCognitionRewards(undefined)
+    ).rejects.toThrow('Required: Quarry ID')
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
@@ -134,12 +148,19 @@ describe('getQuarryCollectiveCognitionRewards', () => {
     const result = await getQuarryCollectiveCognitionRewards('q1')
 
     expect(result).toEqual([
-      { collective_cognition: 3, custom: false, id: 'r1', reward_name: 'Ammonia' }
+      {
+        collective_cognition: 3,
+        custom: false,
+        id: 'r1',
+        reward_name: 'Ammonia'
+      }
     ])
   })
 
   it('throws when query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -161,7 +182,9 @@ describe('getQuarryCollectiveCognitionRewards', () => {
 
 describe('addQuarryCollectiveCognitionReward', () => {
   it('inserts a quarry CC reward junction and returns its id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'qccr1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'qccr1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -172,7 +195,9 @@ describe('addQuarryCollectiveCognitionReward', () => {
     })
 
     expect(result).toBe('qccr1')
-    expect(mockSupabase.from).toHaveBeenCalledWith('quarry_collective_cognition_reward')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'quarry_collective_cognition_reward'
+    )
     expect(mockInsert).toHaveBeenCalledWith({
       quarry_id: 'q1',
       collective_cognition_reward_id: 'r1'
@@ -180,7 +205,9 @@ describe('addQuarryCollectiveCognitionReward', () => {
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -190,7 +217,9 @@ describe('addQuarryCollectiveCognitionReward', () => {
         quarry_id: 'q1',
         collective_cognition_reward_id: 'r1'
       })
-    ).rejects.toThrow('Error Adding Quarry Collective Cognition Reward: Insert failed')
+    ).rejects.toThrow(
+      'Error Adding Quarry Collective Cognition Reward: Insert failed'
+    )
   })
 })
 
@@ -201,21 +230,31 @@ describe('updateQuarryCollectiveCognitionReward', () => {
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
     await expect(
-      updateQuarryCollectiveCognitionReward('qccr1', { collective_cognition_reward_id: 'r2' })
+      updateQuarryCollectiveCognitionReward('qccr1', {
+        collective_cognition_reward_id: 'r2'
+      })
     ).resolves.toBeUndefined()
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('quarry_collective_cognition_reward')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'quarry_collective_cognition_reward'
+    )
     expect(mockEq).toHaveBeenCalledWith('id', 'qccr1')
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
     await expect(
-      updateQuarryCollectiveCognitionReward('qccr1', { collective_cognition_reward_id: 'r2' })
-    ).rejects.toThrow('Error Updating Quarry Collective Cognition Reward: Update failed')
+      updateQuarryCollectiveCognitionReward('qccr1', {
+        collective_cognition_reward_id: 'r2'
+      })
+    ).rejects.toThrow(
+      'Error Updating Quarry Collective Cognition Reward: Update failed'
+    )
   })
 })
 
@@ -225,18 +264,26 @@ describe('removeQuarryCollectiveCognitionReward', () => {
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeQuarryCollectiveCognitionReward('qccr1')).resolves.toBeUndefined()
+    await expect(
+      removeQuarryCollectiveCognitionReward('qccr1')
+    ).resolves.toBeUndefined()
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('quarry_collective_cognition_reward')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'quarry_collective_cognition_reward'
+    )
     expect(mockEq).toHaveBeenCalledWith('id', 'qccr1')
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeQuarryCollectiveCognitionReward('qccr1')).rejects.toThrow(
+    await expect(
+      removeQuarryCollectiveCognitionReward('qccr1')
+    ).rejects.toThrow(
       'Error Removing Quarry Collective Cognition Reward: Delete failed'
     )
   })

@@ -52,18 +52,25 @@ describe('getPrinciples', () => {
   }
 
   it('returns principles from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustomPrinciple], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [nonCustomPrinciple], error: null })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomPrinciple], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomPrinciple], error: null })
           })
         })
       })
@@ -86,7 +93,10 @@ describe('getPrinciples', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getPrinciples()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -98,16 +108,23 @@ describe('getPrinciples', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getPrinciples()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getPrinciples()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when non-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -123,11 +140,16 @@ describe('getPrinciples', () => {
         })
       })
 
-    await expect(getPrinciples()).rejects.toThrow('Error Fetching Principles: DB error')
+    await expect(getPrinciples()).rejects.toThrow(
+      'Error Fetching Principles: DB error'
+    )
   })
 
   it('throws when user-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -138,7 +160,9 @@ describe('getPrinciples', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -148,11 +172,16 @@ describe('getPrinciples', () => {
         })
       })
 
-    await expect(getPrinciples()).rejects.toThrow('Error Fetching Principles: DB error')
+    await expect(getPrinciples()).rejects.toThrow(
+      'Error Fetching Principles: DB error'
+    )
   })
 
   it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -169,15 +198,22 @@ describe('getPrinciples', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
-    await expect(getPrinciples()).rejects.toThrow('Error Fetching Principles: DB error')
+    await expect(getPrinciples()).rejects.toThrow(
+      'Error Fetching Principles: DB error'
+    )
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -205,7 +241,9 @@ describe('getPrinciples', () => {
 
 describe('getPrincipleIds', () => {
   it('returns principle IDs without userId', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: [{ id: 'pr1' }, { id: 'pr2' }], error: null })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'pr1' }, { id: 'pr2' }], error: null })
     const mockContains = vi.fn().mockReturnValue({ eq: mockEq })
     const mockIn = vi.fn().mockReturnValue({ contains: mockContains })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
@@ -222,21 +260,30 @@ describe('getPrincipleIds', () => {
   })
 
   it('returns principle IDs with userId', async () => {
-    const mockEq2 = vi.fn().mockResolvedValue({ data: [{ id: 'pr3' }], error: null })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'pr3' }], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockContains = vi.fn().mockReturnValue({ eq: mockEq1 })
     const mockIn = vi.fn().mockReturnValue({ contains: mockContains })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    const result = await getPrincipleIds(['My Principle'], CampaignType.CUSTOM, true, 'user-1')
+    const result = await getPrincipleIds(
+      ['My Principle'],
+      CampaignType.CUSTOM,
+      true,
+      'user-1'
+    )
 
     expect(result).toEqual(['pr3'])
     expect(mockEq2).toHaveBeenCalledWith('user_id', 'user-1')
   })
 
   it('throws when DB query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockContains = vi.fn().mockReturnValue({ eq: mockEq })
     const mockIn = vi.fn().mockReturnValue({ contains: mockContains })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
@@ -272,9 +319,14 @@ describe('addPrinciple', () => {
   }
 
   it('inserts a non-custom principle without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockPrinciple, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockPrinciple, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -291,10 +343,15 @@ describe('addPrinciple', () => {
   })
 
   it('inserts a custom principle with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const customPrinciple = { ...mockPrinciple, id: 'pr2', custom: true }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customPrinciple, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customPrinciple, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -313,7 +370,10 @@ describe('addPrinciple', () => {
   })
 
   it('throws when custom and user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(
       addPrinciple({
@@ -344,15 +404,26 @@ describe('addPrinciple', () => {
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addPrinciple({ principle_name: 'New Life', custom: false, option_1_name: 'A', option_2_name: 'B', campaign_types: [] })
+      addPrinciple({
+        principle_name: 'New Life',
+        custom: false,
+        option_1_name: 'A',
+        option_2_name: 'B',
+        campaign_types: []
+      })
     ).rejects.toThrow('Error Adding Principle: Insert failed')
   })
 })
@@ -372,13 +443,15 @@ describe('updatePrinciple', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updatePrinciple('pr1', { principle_name: 'New Life' })).rejects.toThrow(
-      'Error Updating Principle: Update failed'
-    )
+    await expect(
+      updatePrinciple('pr1', { principle_name: 'New Life' })
+    ).rejects.toThrow('Error Updating Principle: Update failed')
   })
 })
 
@@ -395,10 +468,14 @@ describe('removePrinciple', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removePrinciple('pr1')).rejects.toThrow('Error Removing Principle: Delete failed')
+    await expect(removePrinciple('pr1')).rejects.toThrow(
+      'Error Removing Principle: Delete failed'
+    )
   })
 })

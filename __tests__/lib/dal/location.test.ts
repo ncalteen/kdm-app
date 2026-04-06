@@ -25,23 +25,42 @@ beforeEach(() => {
 
 describe('getLocations', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomLocation = { id: 'l1', custom: false, location_name: 'Lantern Hoard' }
-  const userCustomLocation = { id: 'l2', custom: true, location_name: 'My Location' }
-  const sharedLocation = { id: 'l3', custom: true, location_name: 'Shared Location' }
+  const nonCustomLocation = {
+    id: 'l1',
+    custom: false,
+    location_name: 'Lantern Hoard'
+  }
+  const userCustomLocation = {
+    id: 'l2',
+    custom: true,
+    location_name: 'My Location'
+  }
+  const sharedLocation = {
+    id: 'l3',
+    custom: true,
+    location_name: 'Shared Location'
+  }
 
   it('returns locations from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustomLocation], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [nonCustomLocation], error: null })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomLocation], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomLocation], error: null })
           })
         })
       })
@@ -64,7 +83,10 @@ describe('getLocations', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getLocations()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -76,16 +98,23 @@ describe('getLocations', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getLocations()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getLocations()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when non-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -101,11 +130,16 @@ describe('getLocations', () => {
         })
       })
 
-    await expect(getLocations()).rejects.toThrow('Error Fetching Locations: DB error')
+    await expect(getLocations()).rejects.toThrow(
+      'Error Fetching Locations: DB error'
+    )
   })
 
   it('throws when user-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -116,7 +150,9 @@ describe('getLocations', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -126,11 +162,16 @@ describe('getLocations', () => {
         })
       })
 
-    await expect(getLocations()).rejects.toThrow('Error Fetching Locations: DB error')
+    await expect(getLocations()).rejects.toThrow(
+      'Error Fetching Locations: DB error'
+    )
   })
 
   it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -147,15 +188,22 @@ describe('getLocations', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
-    await expect(getLocations()).rejects.toThrow('Error Fetching Locations: DB error')
+    await expect(getLocations()).rejects.toThrow(
+      'Error Fetching Locations: DB error'
+    )
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -183,7 +231,9 @@ describe('getLocations', () => {
 
 describe('getLocationIds', () => {
   it('returns location IDs without userId', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: [{ id: 'l1' }, { id: 'l2' }], error: null })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'l1' }, { id: 'l2' }], error: null })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -195,7 +245,9 @@ describe('getLocationIds', () => {
   })
 
   it('returns location IDs with userId (adds user_id filter)', async () => {
-    const mockEq2 = vi.fn().mockResolvedValue({ data: [{ id: 'l3' }], error: null })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'l3' }], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq1 })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
@@ -208,7 +260,9 @@ describe('getLocationIds', () => {
   })
 
   it('throws when DB query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -224,38 +278,67 @@ describe('getLocationIds', () => {
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getLocationIds(['Lantern Hoard'], false)).rejects.toThrow('Location(s) Not Found')
+    await expect(getLocationIds(['Lantern Hoard'], false)).rejects.toThrow(
+      'Location(s) Not Found'
+    )
   })
 })
 
 describe('addLocation', () => {
   const mockUser = { id: 'user-1' }
-  const mockLocation = { id: 'l1', custom: false, location_name: 'Lantern Hoard' }
+  const mockLocation = {
+    id: 'l1',
+    custom: false,
+    location_name: 'Lantern Hoard'
+  }
 
   it('inserts a non-custom location without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockLocation, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockLocation, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addLocation({ location_name: 'Lantern Hoard', custom: false })
+    const result = await addLocation({
+      location_name: 'Lantern Hoard',
+      custom: false
+    })
 
     expect(result).toEqual(mockLocation)
-    expect(mockInsert).toHaveBeenCalledWith({ location_name: 'Lantern Hoard', custom: false })
+    expect(mockInsert).toHaveBeenCalledWith({
+      location_name: 'Lantern Hoard',
+      custom: false
+    })
   })
 
   it('inserts a custom location with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const customLocation = { id: 'l2', custom: true, location_name: 'My Location' }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customLocation, error: null })
+    const customLocation = {
+      id: 'l2',
+      custom: true,
+      location_name: 'My Location'
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customLocation, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addLocation({ location_name: 'My Location', custom: true })
+    const result = await addLocation({
+      location_name: 'My Location',
+      custom: true
+    })
 
     expect(result).toEqual(customLocation)
     expect(mockInsert).toHaveBeenCalledWith({
@@ -266,11 +349,14 @@ describe('addLocation', () => {
   })
 
   it('throws when custom and user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
-    await expect(addLocation({ location_name: 'My Location', custom: true })).rejects.toThrow(
-      'Not Authenticated'
-    )
+    await expect(
+      addLocation({ location_name: 'My Location', custom: true })
+    ).rejects.toThrow('Not Authenticated')
   })
 
   it('throws when auth errors', async () => {
@@ -279,22 +365,27 @@ describe('addLocation', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(addLocation({ location_name: 'Lantern Hoard', custom: false })).rejects.toThrow(
-      'Error Fetching User: Auth error'
-    )
+    await expect(
+      addLocation({ location_name: 'Lantern Hoard', custom: false })
+    ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addLocation({ location_name: 'Lantern Hoard', custom: false })).rejects.toThrow(
-      'Error Adding Location: Insert failed'
-    )
+    await expect(
+      addLocation({ location_name: 'Lantern Hoard', custom: false })
+    ).rejects.toThrow('Error Adding Location: Insert failed')
   })
 })
 
@@ -313,13 +404,15 @@ describe('updateLocation', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateLocation('l1', { location_name: 'Lantern Hoard' })).rejects.toThrow(
-      'Error Updating Location: Update failed'
-    )
+    await expect(
+      updateLocation('l1', { location_name: 'Lantern Hoard' })
+    ).rejects.toThrow('Error Updating Location: Update failed')
   })
 })
 
@@ -336,10 +429,14 @@ describe('removeLocation', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeLocation('l1')).rejects.toThrow('Error Removing Location: Delete failed')
+    await expect(removeLocation('l1')).rejects.toThrow(
+      'Error Removing Location: Delete failed'
+    )
   })
 })

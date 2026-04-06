@@ -8,9 +8,11 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getWeaponTypeSharedUsers, addWeaponTypeSharedUsers, removeWeaponTypeSharedUsers } = await import(
-  '@/lib/dal/weapon-type-shared-user'
-)
+const {
+  getWeaponTypeSharedUsers,
+  addWeaponTypeSharedUsers,
+  removeWeaponTypeSharedUsers
+} = await import('@/lib/dal/weapon-type-shared-user')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -18,12 +20,12 @@ beforeEach(() => {
 
 describe('getWeaponTypeSharedUsers', () => {
   it('returns mapped shared users on success', async () => {
-    const mockEq = vi
-      .fn()
-      .mockResolvedValue({
-        data: [{ shared_user_id: 'u-1', user_settings: { username: 'testuser' } }],
-        error: null
-      })
+    const mockEq = vi.fn().mockResolvedValue({
+      data: [
+        { shared_user_id: 'u-1', user_settings: { username: 'testuser' } }
+      ],
+      error: null
+    })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -85,8 +87,16 @@ describe('addWeaponTypeSharedUsers', () => {
 
     expect(mockSupabase.from).toHaveBeenCalledWith('weapon_type_shared_user')
     expect(mockInsert).toHaveBeenCalledWith([
-      { weapon_type_id: 'weapon_type-1', shared_user_id: 'u-1', user_id: 'user-1' },
-      { weapon_type_id: 'weapon_type-1', shared_user_id: 'u-2', user_id: 'user-1' }
+      {
+        weapon_type_id: 'weapon_type-1',
+        shared_user_id: 'u-1',
+        user_id: 'user-1'
+      },
+      {
+        weapon_type_id: 'weapon_type-1',
+        shared_user_id: 'u-2',
+        user_id: 'user-1'
+      }
     ])
   })
 

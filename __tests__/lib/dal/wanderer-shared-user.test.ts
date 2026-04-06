@@ -8,9 +8,11 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getWandererSharedUsers, addWandererSharedUsers, removeWandererSharedUsers } = await import(
-  '@/lib/dal/wanderer-shared-user'
-)
+const {
+  getWandererSharedUsers,
+  addWandererSharedUsers,
+  removeWandererSharedUsers
+} = await import('@/lib/dal/wanderer-shared-user')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -18,12 +20,12 @@ beforeEach(() => {
 
 describe('getWandererSharedUsers', () => {
   it('returns mapped shared users on success', async () => {
-    const mockEq = vi
-      .fn()
-      .mockResolvedValue({
-        data: [{ shared_user_id: 'u-1', user_settings: { username: 'testuser' } }],
-        error: null
-      })
+    const mockEq = vi.fn().mockResolvedValue({
+      data: [
+        { shared_user_id: 'u-1', user_settings: { username: 'testuser' } }
+      ],
+      error: null
+    })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 

@@ -21,12 +21,16 @@ beforeEach(() => {
 
 describe('getSettlementGear', () => {
   it('throws when settlementId is null', async () => {
-    await expect(getSettlementGear(null)).rejects.toThrow('Required: Settlement ID')
+    await expect(getSettlementGear(null)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when settlementId is undefined', async () => {
-    await expect(getSettlementGear(undefined)).rejects.toThrow('Required: Settlement ID')
+    await expect(getSettlementGear(undefined)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
   })
 
   it('returns mapped gear', async () => {
@@ -65,7 +69,9 @@ describe('getSettlementGear', () => {
   it('throws when query fails', async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
@@ -77,25 +83,37 @@ describe('getSettlementGear', () => {
 
 describe('addSettlementGear', () => {
   it('inserts gear and returns the id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'sg-1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'sg-1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addSettlementGear({ gear_id: 'gear-1', settlement_id: 'settlement-1', quantity: 1 })
+    const result = await addSettlementGear({
+      gear_id: 'gear-1',
+      settlement_id: 'settlement-1',
+      quantity: 1
+    })
 
     expect(result).toBe('sg-1')
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_gear')
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addSettlementGear({ gear_id: 'gear-1', settlement_id: 'settlement-1', quantity: 1 })
+      addSettlementGear({
+        gear_id: 'gear-1',
+        settlement_id: 'settlement-1',
+        quantity: 1
+      })
     ).rejects.toThrow('Error Adding Settlement Gear: Insert failed')
   })
 })
@@ -106,7 +124,9 @@ describe('updateSettlementGear', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateSettlementGear('sg-1', { quantity: 3 })).resolves.toBeUndefined()
+    await expect(
+      updateSettlementGear('sg-1', { quantity: 3 })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_gear')
     expect(mockUpdate).toHaveBeenCalledWith({ quantity: 3 })
@@ -114,7 +134,9 @@ describe('updateSettlementGear', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
@@ -137,7 +159,9 @@ describe('removeSettlementGear', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

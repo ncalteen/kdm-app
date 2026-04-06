@@ -8,9 +8,11 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getCollectiveCognitionRewardSharedUsers, addCollectiveCognitionRewardSharedUsers, removeCollectiveCognitionRewardSharedUsers } = await import(
-  '@/lib/dal/collective-cognition-reward-shared-user'
-)
+const {
+  getCollectiveCognitionRewardSharedUsers,
+  addCollectiveCognitionRewardSharedUsers,
+  removeCollectiveCognitionRewardSharedUsers
+} = await import('@/lib/dal/collective-cognition-reward-shared-user')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -18,22 +20,29 @@ beforeEach(() => {
 
 describe('getCollectiveCognitionRewardSharedUsers', () => {
   it('returns mapped shared users on success', async () => {
-    const mockEq = vi
-      .fn()
-      .mockResolvedValue({
-        data: [{ shared_user_id: 'u-1', user_settings: { username: 'testuser' } }],
-        error: null
-      })
+    const mockEq = vi.fn().mockResolvedValue({
+      data: [
+        { shared_user_id: 'u-1', user_settings: { username: 'testuser' } }
+      ],
+      error: null
+    })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    const result = await getCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1')
+    const result = await getCollectiveCognitionRewardSharedUsers(
+      'collective_cognition_reward-1'
+    )
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('collective_cognition_reward_shared_user')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'collective_cognition_reward_shared_user'
+    )
     expect(mockSelect).toHaveBeenCalledWith(
       'shared_user_id, user_settings!shared_user_id(username)'
     )
-    expect(mockEq).toHaveBeenCalledWith('collective_cognition_reward_id', 'collective_cognition_reward-1')
+    expect(mockEq).toHaveBeenCalledWith(
+      'collective_cognition_reward_id',
+      'collective_cognition_reward-1'
+    )
     expect(result).toEqual([{ shared_user_id: 'u-1', username: 'testuser' }])
   })
 
@@ -42,7 +51,9 @@ describe('getCollectiveCognitionRewardSharedUsers', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    const result = await getCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1')
+    const result = await getCollectiveCognitionRewardSharedUsers(
+      'collective_cognition_reward-1'
+    )
 
     expect(result).toEqual([])
   })
@@ -52,7 +63,9 @@ describe('getCollectiveCognitionRewardSharedUsers', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    const result = await getCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1')
+    const result = await getCollectiveCognitionRewardSharedUsers(
+      'collective_cognition_reward-1'
+    )
 
     expect(result).toEqual([])
   })
@@ -64,7 +77,9 @@ describe('getCollectiveCognitionRewardSharedUsers', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1')).rejects.toThrow(
+    await expect(
+      getCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1')
+    ).rejects.toThrow(
       'Error Fetching Collective Cognition Reward Shared Users: DB error'
     )
   })
@@ -72,7 +87,11 @@ describe('getCollectiveCognitionRewardSharedUsers', () => {
 
 describe('addCollectiveCognitionRewardSharedUsers', () => {
   it('returns early without calling from() when sharedUserIds is empty', async () => {
-    await addCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1', [], 'user-1')
+    await addCollectiveCognitionRewardSharedUsers(
+      'collective_cognition_reward-1',
+      [],
+      'user-1'
+    )
 
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
@@ -81,12 +100,26 @@ describe('addCollectiveCognitionRewardSharedUsers', () => {
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await addCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1', ['u-1', 'u-2'], 'user-1')
+    await addCollectiveCognitionRewardSharedUsers(
+      'collective_cognition_reward-1',
+      ['u-1', 'u-2'],
+      'user-1'
+    )
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('collective_cognition_reward_shared_user')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'collective_cognition_reward_shared_user'
+    )
     expect(mockInsert).toHaveBeenCalledWith([
-      { collective_cognition_reward_id: 'collective_cognition_reward-1', shared_user_id: 'u-1', user_id: 'user-1' },
-      { collective_cognition_reward_id: 'collective_cognition_reward-1', shared_user_id: 'u-2', user_id: 'user-1' }
+      {
+        collective_cognition_reward_id: 'collective_cognition_reward-1',
+        shared_user_id: 'u-1',
+        user_id: 'user-1'
+      },
+      {
+        collective_cognition_reward_id: 'collective_cognition_reward-1',
+        shared_user_id: 'u-2',
+        user_id: 'user-1'
+      }
     ])
   })
 
@@ -97,14 +130,23 @@ describe('addCollectiveCognitionRewardSharedUsers', () => {
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1', ['u-1'], 'user-1')
-    ).rejects.toThrow('Error Adding Collective Cognition Reward Shared Users: Insert failed')
+      addCollectiveCognitionRewardSharedUsers(
+        'collective_cognition_reward-1',
+        ['u-1'],
+        'user-1'
+      )
+    ).rejects.toThrow(
+      'Error Adding Collective Cognition Reward Shared Users: Insert failed'
+    )
   })
 })
 
 describe('removeCollectiveCognitionRewardSharedUsers', () => {
   it('returns early without calling from() when sharedUserIds is empty', async () => {
-    await removeCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1', [])
+    await removeCollectiveCognitionRewardSharedUsers(
+      'collective_cognition_reward-1',
+      []
+    )
 
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
@@ -115,10 +157,18 @@ describe('removeCollectiveCognitionRewardSharedUsers', () => {
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await removeCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1', ['u-1', 'u-2'])
+    await removeCollectiveCognitionRewardSharedUsers(
+      'collective_cognition_reward-1',
+      ['u-1', 'u-2']
+    )
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('collective_cognition_reward_shared_user')
-    expect(mockEq).toHaveBeenCalledWith('collective_cognition_reward_id', 'collective_cognition_reward-1')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'collective_cognition_reward_shared_user'
+    )
+    expect(mockEq).toHaveBeenCalledWith(
+      'collective_cognition_reward_id',
+      'collective_cognition_reward-1'
+    )
     expect(mockIn).toHaveBeenCalledWith('shared_user_id', ['u-1', 'u-2'])
   })
 
@@ -131,7 +181,12 @@ describe('removeCollectiveCognitionRewardSharedUsers', () => {
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
     await expect(
-      removeCollectiveCognitionRewardSharedUsers('collective_cognition_reward-1', ['u-1'])
-    ).rejects.toThrow('Error Removing Collective Cognition Reward Shared Users: Delete failed')
+      removeCollectiveCognitionRewardSharedUsers(
+        'collective_cognition_reward-1',
+        ['u-1']
+      )
+    ).rejects.toThrow(
+      'Error Removing Collective Cognition Reward Shared Users: Delete failed'
+    )
   })
 })

@@ -30,17 +30,23 @@ const mockPosition = {
 
 describe('getQuarryHuntBoardPositions', () => {
   it('throws when quarryId is null', async () => {
-    await expect(getQuarryHuntBoardPositions(null)).rejects.toThrow('Required: Quarry ID')
+    await expect(getQuarryHuntBoardPositions(null)).rejects.toThrow(
+      'Required: Quarry ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when quarryId is undefined', async () => {
-    await expect(getQuarryHuntBoardPositions(undefined)).rejects.toThrow('Required: Quarry ID')
+    await expect(getQuarryHuntBoardPositions(undefined)).rejects.toThrow(
+      'Required: Quarry ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('returns hunt board positions for a valid quarry', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: [mockPosition], error: null })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: [mockPosition], error: null })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -62,7 +68,9 @@ describe('getQuarryHuntBoardPositions', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -88,13 +96,20 @@ describe('upsertQuarryHuntBoardPosition', () => {
 
     expect(mockSupabase.from).toHaveBeenCalledWith('quarry_hunt_board_position')
     expect(mockUpsert).toHaveBeenCalledWith(
-      { quarry_id: 'q1', level_number: 1, monster_hunt_pos: 12, survivor_hunt_pos: 0 },
+      {
+        quarry_id: 'q1',
+        level_number: 1,
+        monster_hunt_pos: 12,
+        survivor_hunt_pos: 0
+      },
       { onConflict: 'quarry_id,level_number' }
     )
   })
 
   it('throws when upsert fails', async () => {
-    const mockUpsert = vi.fn().mockResolvedValue({ error: { message: 'Upsert failed' } })
+    const mockUpsert = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Upsert failed' } })
     mockSupabase.from.mockReturnValue({ upsert: mockUpsert })
 
     await expect(
@@ -104,7 +119,9 @@ describe('upsertQuarryHuntBoardPosition', () => {
         monster_hunt_pos: 12,
         survivor_hunt_pos: 0
       })
-    ).rejects.toThrow('Error Upserting Quarry Hunt Board Position: Upsert failed')
+    ).rejects.toThrow(
+      'Error Upserting Quarry Hunt Board Position: Upsert failed'
+    )
   })
 })
 
@@ -123,11 +140,15 @@ describe('updateQuarryHuntBoardPosition', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateQuarryHuntBoardPosition('pos1', { monster_hunt_pos: 11 })).rejects.toThrow(
+    await expect(
+      updateQuarryHuntBoardPosition('pos1', { monster_hunt_pos: 11 })
+    ).rejects.toThrow(
       'Error Updating Quarry Hunt Board Position: Update failed'
     )
   })
@@ -146,7 +167,9 @@ describe('removeQuarryHuntBoardPosition', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

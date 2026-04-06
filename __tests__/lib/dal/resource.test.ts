@@ -32,22 +32,37 @@ const makeResourceRow = (overrides = {}) => ({
 describe('getResources', () => {
   const mockUser = { id: 'user-1' }
   const nonCustomResource = makeResourceRow()
-  const userCustomResource = makeResourceRow({ id: 'r2', custom: true, resource_name: 'My Resource' })
-  const sharedResource = makeResourceRow({ id: 'r3', custom: true, resource_name: 'Shared Resource' })
+  const userCustomResource = makeResourceRow({
+    id: 'r2',
+    custom: true,
+    resource_name: 'My Resource'
+  })
+  const sharedResource = makeResourceRow({
+    id: 'r3',
+    custom: true,
+    resource_name: 'Shared Resource'
+  })
 
   it('returns resources from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustomResource], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [nonCustomResource], error: null })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomResource], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomResource], error: null })
           })
         })
       })
@@ -62,13 +77,25 @@ describe('getResources', () => {
 
     const result = await getResources()
 
-    expect(result['r1']).toMatchObject({ id: 'r1', resource_name: 'Broken Lantern' })
-    expect(result['r2']).toMatchObject({ id: 'r2', resource_name: 'My Resource' })
-    expect(result['r3']).toMatchObject({ id: 'r3', resource_name: 'Shared Resource' })
+    expect(result['r1']).toMatchObject({
+      id: 'r1',
+      resource_name: 'Broken Lantern'
+    })
+    expect(result['r2']).toMatchObject({
+      id: 'r2',
+      resource_name: 'My Resource'
+    })
+    expect(result['r3']).toMatchObject({
+      id: 'r3',
+      resource_name: 'Shared Resource'
+    })
   })
 
   it('correctly maps quarry object shape', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const resourceWithQuarry = makeResourceRow({
       quarry_id: 'q1',
@@ -78,7 +105,9 @@ describe('getResources', () => {
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [resourceWithQuarry], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [resourceWithQuarry], error: null })
         })
       })
       .mockReturnValueOnce({
@@ -101,7 +130,10 @@ describe('getResources', () => {
   })
 
   it('correctly maps quarry array shape', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const resourceWithArrayQuarry = makeResourceRow({
       quarry_id: 'q1',
@@ -111,7 +143,9 @@ describe('getResources', () => {
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [resourceWithArrayQuarry], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [resourceWithArrayQuarry], error: null })
         })
       })
       .mockReturnValueOnce({
@@ -134,7 +168,10 @@ describe('getResources', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getResources()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -146,16 +183,23 @@ describe('getResources', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getResources()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getResources()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when non-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -171,11 +215,16 @@ describe('getResources', () => {
         })
       })
 
-    await expect(getResources()).rejects.toThrow('Error Fetching Resources: DB error')
+    await expect(getResources()).rejects.toThrow(
+      'Error Fetching Resources: DB error'
+    )
   })
 
   it('throws when user-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -186,7 +235,9 @@ describe('getResources', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -196,11 +247,16 @@ describe('getResources', () => {
         })
       })
 
-    await expect(getResources()).rejects.toThrow('Error Fetching Resources: DB error')
+    await expect(getResources()).rejects.toThrow(
+      'Error Fetching Resources: DB error'
+    )
   })
 
   it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -217,15 +273,22 @@ describe('getResources', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
-    await expect(getResources()).rejects.toThrow('Error Fetching Resources: DB error')
+    await expect(getResources()).rejects.toThrow(
+      'Error Fetching Resources: DB error'
+    )
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -255,7 +318,10 @@ describe('addResource', () => {
   const mockUser = { id: 'user-1' }
 
   it('inserts a non-custom resource without quarry', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const rawData = makeResourceRow()
     const mockSingle = vi.fn().mockResolvedValue({ data: rawData, error: null })
@@ -266,8 +332,8 @@ describe('addResource', () => {
     const result = await addResource({
       resource_name: 'Broken Lantern',
       custom: false,
-      category: 'basic',
-      resource_types: ['organ']
+      category: 'BASIC',
+      resource_types: ['ORGAN']
     })
 
     expect(result).toMatchObject({ id: 'r1', resource_name: 'Broken Lantern' })
@@ -276,7 +342,10 @@ describe('addResource', () => {
   })
 
   it('inserts a non-custom resource with quarry object', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const rawData = makeResourceRow({
       quarry_id: 'q1',
@@ -290,8 +359,8 @@ describe('addResource', () => {
     const result = await addResource({
       resource_name: 'Broken Lantern',
       custom: false,
-      category: 'basic',
-      resource_types: ['organ'],
+      category: 'BASIC',
+      resource_types: ['ORGAN'],
       quarry_id: 'q1'
     })
 
@@ -300,7 +369,10 @@ describe('addResource', () => {
   })
 
   it('inserts a custom resource with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const rawData = makeResourceRow({ id: 'r2', custom: true })
     const mockSingle = vi.fn().mockResolvedValue({ data: rawData, error: null })
@@ -308,7 +380,12 @@ describe('addResource', () => {
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await addResource({ resource_name: 'My Resource', custom: true, category: 'basic', resource_types: [] })
+    await addResource({
+      resource_name: 'My Resource',
+      custom: true,
+      category: 'BASIC',
+      resource_types: []
+    })
 
     expect(mockInsert).toHaveBeenCalledWith(
       expect.objectContaining({ user_id: mockUser.id })
@@ -316,10 +393,18 @@ describe('addResource', () => {
   })
 
   it('throws when custom and user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(
-      addResource({ resource_name: 'My Resource', custom: true, category: 'basic', resource_types: [] })
+      addResource({
+        resource_name: 'My Resource',
+        custom: true,
+        category: 'BASIC',
+        resource_types: []
+      })
     ).rejects.toThrow('Not Authenticated')
   })
 
@@ -330,20 +415,35 @@ describe('addResource', () => {
     })
 
     await expect(
-      addResource({ resource_name: 'Broken Lantern', custom: false, category: 'basic', resource_types: [] })
+      addResource({
+        resource_name: 'Broken Lantern',
+        custom: false,
+        category: 'BASIC',
+        resource_types: []
+      })
     ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addResource({ resource_name: 'Broken Lantern', custom: false, category: 'basic', resource_types: [] })
+      addResource({
+        resource_name: 'Broken Lantern',
+        custom: false,
+        category: 'BASIC',
+        resource_types: []
+      })
     ).rejects.toThrow('Error Adding Resource: Insert failed')
   })
 })
@@ -363,13 +463,15 @@ describe('updateResource', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateResource('r1', { resource_name: 'Lantern' })).rejects.toThrow(
-      'Error Updating Resource: Update failed'
-    )
+    await expect(
+      updateResource('r1', { resource_name: 'Lantern' })
+    ).rejects.toThrow('Error Updating Resource: Update failed')
   })
 })
 
@@ -386,10 +488,14 @@ describe('removeResource', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeResource('r1')).rejects.toThrow('Error Removing Resource: Delete failed')
+    await expect(removeResource('r1')).rejects.toThrow(
+      'Error Removing Resource: Delete failed'
+    )
   })
 })

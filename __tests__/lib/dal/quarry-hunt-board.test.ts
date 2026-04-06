@@ -10,8 +10,12 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getQuarryHuntBoard, addQuarryHuntBoard, updateQuarryHuntBoard, removeQuarryHuntBoard } =
-  await import('@/lib/dal/quarry-hunt-board')
+const {
+  getQuarryHuntBoard,
+  addQuarryHuntBoard,
+  updateQuarryHuntBoard,
+  removeQuarryHuntBoard
+} = await import('@/lib/dal/quarry-hunt-board')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -34,17 +38,23 @@ const mockHuntBoard = {
 
 describe('getQuarryHuntBoard', () => {
   it('throws when quarryId is null', async () => {
-    await expect(getQuarryHuntBoard(null)).rejects.toThrow('Required: Quarry ID')
+    await expect(getQuarryHuntBoard(null)).rejects.toThrow(
+      'Required: Quarry ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when quarryId is undefined', async () => {
-    await expect(getQuarryHuntBoard(undefined)).rejects.toThrow('Required: Quarry ID')
+    await expect(getQuarryHuntBoard(undefined)).rejects.toThrow(
+      'Required: Quarry ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('returns hunt board for a valid quarry', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockHuntBoard, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockHuntBoard, error: null })
     const mockEq = vi.fn().mockReturnValue({ single: mockSingle })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -57,18 +67,24 @@ describe('getQuarryHuntBoard', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockEq = vi.fn().mockReturnValue({ single: mockSingle })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getQuarryHuntBoard('q1')).rejects.toThrow('Error Fetching Quarry Hunt Board: DB error')
+    await expect(getQuarryHuntBoard('q1')).rejects.toThrow(
+      'Error Fetching Quarry Hunt Board: DB error'
+    )
   })
 })
 
 describe('addQuarryHuntBoard', () => {
   it('inserts a quarry hunt board and returns its id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'hb1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'hb1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -95,7 +111,9 @@ describe('addQuarryHuntBoard', () => {
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -133,13 +151,15 @@ describe('updateQuarryHuntBoard', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateQuarryHuntBoard('hb1', { pos_4: HuntEventType.SCOUT })).rejects.toThrow(
-      'Error Updating Quarry Hunt Board: Update failed'
-    )
+    await expect(
+      updateQuarryHuntBoard('hb1', { pos_4: HuntEventType.SCOUT })
+    ).rejects.toThrow('Error Updating Quarry Hunt Board: Update failed')
   })
 })
 
@@ -156,7 +176,9 @@ describe('removeQuarryHuntBoard', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

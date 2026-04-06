@@ -61,7 +61,9 @@ describe('getSettlementPhase', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({ data: mockPhaseData, error: null })
+            maybeSingle: vi
+              .fn()
+              .mockResolvedValue({ data: mockPhaseData, error: null })
           })
         })
       })
@@ -81,7 +83,9 @@ describe('getSettlementPhase', () => {
       returning_survivor_ids: ['surv-1']
     })
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_phase')
-    expect(mockSupabase.from).toHaveBeenCalledWith('settlement_phase_returning_survivor')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'settlement_phase_returning_survivor'
+    )
   })
 
   it('returns empty returning_survivor_ids when none exist', async () => {
@@ -89,7 +93,9 @@ describe('getSettlementPhase', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({ data: mockPhaseData, error: null })
+            maybeSingle: vi
+              .fn()
+              .mockResolvedValue({ data: mockPhaseData, error: null })
           })
         })
       })
@@ -108,7 +114,9 @@ describe('getSettlementPhase', () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          maybeSingle: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
     })
@@ -123,13 +131,18 @@ describe('getSettlementPhase', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({ data: mockPhaseData, error: null })
+            maybeSingle: vi
+              .fn()
+              .mockResolvedValue({ data: mockPhaseData, error: null })
           })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'Returning error' } })
+          eq: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: 'Returning error' }
+          })
         })
       })
 
@@ -141,9 +154,9 @@ describe('getSettlementPhase', () => {
 
 describe('updateSettlementPhase', () => {
   it('throws when settlementPhaseId is null', async () => {
-    await expect(updateSettlementPhase(null, { step: 2 })).rejects.toThrow(
-      'Required: Settlement Phase ID'
-    )
+    await expect(
+      updateSettlementPhase(null, { step: 'SURVIVORS_RETURN' })
+    ).rejects.toThrow('Required: Settlement Phase ID')
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
@@ -152,27 +165,33 @@ describe('updateSettlementPhase', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateSettlementPhase('phase-1', { step: 2 })).resolves.toBeUndefined()
+    await expect(
+      updateSettlementPhase('phase-1', { step: 'SURVIVORS_RETURN' })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_phase')
-    expect(mockUpdate).toHaveBeenCalledWith({ step: 2 })
+    expect(mockUpdate).toHaveBeenCalledWith({ step: 'SURVIVORS_RETURN' })
     expect(mockEq).toHaveBeenCalledWith('id', 'phase-1')
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateSettlementPhase('phase-1', { step: 2 })).rejects.toThrow(
-      'Error Updating Settlement Phase: Update failed'
-    )
+    await expect(
+      updateSettlementPhase('phase-1', { step: 'SURVIVORS_RETURN' })
+    ).rejects.toThrow('Error Updating Settlement Phase: Update failed')
   })
 })
 
 describe('addSettlementPhase', () => {
   it('inserts a phase with no returning survivors and returns id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'phase-1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'phase-1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -184,7 +203,9 @@ describe('addSettlementPhase', () => {
   })
 
   it('inserts phase and returning survivors, returns id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'phase-1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'phase-1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert1 = vi.fn().mockReturnValue({ select: mockSelect })
 
@@ -194,10 +215,9 @@ describe('addSettlementPhase', () => {
       .mockReturnValueOnce({ insert: mockInsert1 })
       .mockReturnValueOnce({ insert: mockInsert2 })
 
-    const result = await addSettlementPhase(
-      { settlement_id: 'settlement-1' },
-      ['surv-1']
-    )
+    const result = await addSettlementPhase({ settlement_id: 'settlement-1' }, [
+      'surv-1'
+    ])
 
     expect(result).toBe('phase-1')
     expect(mockInsert2).toHaveBeenCalledWith([
@@ -210,11 +230,15 @@ describe('addSettlementPhase', () => {
   })
 
   it('cleans up phase when returning survivor insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'phase-1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'phase-1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert1 = vi.fn().mockReturnValue({ select: mockSelect })
 
-    const mockInsert2 = vi.fn().mockResolvedValue({ error: { message: 'Survivor insert failed' } })
+    const mockInsert2 = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Survivor insert failed' } })
 
     const mockEq = vi.fn().mockResolvedValue({ error: null })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
@@ -226,14 +250,18 @@ describe('addSettlementPhase', () => {
 
     await expect(
       addSettlementPhase({ settlement_id: 'settlement-1' }, ['surv-1'])
-    ).rejects.toThrow('Error Adding Returning Survivors: Survivor insert failed')
+    ).rejects.toThrow(
+      'Error Adding Returning Survivors: Survivor insert failed'
+    )
 
     expect(mockDelete).toHaveBeenCalled()
     expect(mockEq).toHaveBeenCalledWith('id', 'phase-1')
   })
 
   it('throws when phase insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -257,7 +285,9 @@ describe('removeSettlementPhase', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

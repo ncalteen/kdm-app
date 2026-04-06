@@ -21,12 +21,16 @@ beforeEach(() => {
 
 describe('getSettlementInnovations', () => {
   it('throws when settlementId is null', async () => {
-    await expect(getSettlementInnovations(null)).rejects.toThrow('Required: Settlement ID')
+    await expect(getSettlementInnovations(null)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when settlementId is undefined', async () => {
-    await expect(getSettlementInnovations(undefined)).rejects.toThrow('Required: Settlement ID')
+    await expect(getSettlementInnovations(undefined)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
   })
 
   it('returns mapped innovations (innovation as object)', async () => {
@@ -83,7 +87,9 @@ describe('getSettlementInnovations', () => {
   it('throws when query fails', async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
@@ -114,7 +120,9 @@ describe('addSettlementInnovations', () => {
       innovation_id: 'i-1',
       innovation: { innovation_name: 'Cooking' }
     }
-    const mockSelect = vi.fn().mockResolvedValue({ data: [rawItem], error: null })
+    const mockSelect = vi
+      .fn()
+      .mockResolvedValue({ data: [rawItem], error: null })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
@@ -129,13 +137,15 @@ describe('addSettlementInnovations', () => {
   })
 
   it('throws when insert fails', async () => {
-    const mockSelect = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSelect = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addSettlementInnovations(['i-1'], 'settlement-1')).rejects.toThrow(
-      'Error Adding Settlement Innovations: Insert failed'
-    )
+    await expect(
+      addSettlementInnovations(['i-1'], 'settlement-1')
+    ).rejects.toThrow('Error Adding Settlement Innovations: Insert failed')
   })
 })
 
@@ -155,7 +165,9 @@ describe('updateSettlementInnovation', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
@@ -178,7 +190,9 @@ describe('removeSettlementInnovation', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

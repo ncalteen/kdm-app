@@ -8,9 +8,8 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getGearSharedUsers, addGearSharedUsers, removeGearSharedUsers } = await import(
-  '@/lib/dal/gear-shared-user'
-)
+const { getGearSharedUsers, addGearSharedUsers, removeGearSharedUsers } =
+  await import('@/lib/dal/gear-shared-user')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -18,12 +17,12 @@ beforeEach(() => {
 
 describe('getGearSharedUsers', () => {
   it('returns mapped shared users on success', async () => {
-    const mockEq = vi
-      .fn()
-      .mockResolvedValue({
-        data: [{ shared_user_id: 'u-1', user_settings: { username: 'testuser' } }],
-        error: null
-      })
+    const mockEq = vi.fn().mockResolvedValue({
+      data: [
+        { shared_user_id: 'u-1', user_settings: { username: 'testuser' } }
+      ],
+      error: null
+    })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -130,8 +129,8 @@ describe('removeGearSharedUsers', () => {
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(
-      removeGearSharedUsers('gear-1', ['u-1'])
-    ).rejects.toThrow('Error Removing Gear Shared Users: Delete failed')
+    await expect(removeGearSharedUsers('gear-1', ['u-1'])).rejects.toThrow(
+      'Error Removing Gear Shared Users: Delete failed'
+    )
   })
 })

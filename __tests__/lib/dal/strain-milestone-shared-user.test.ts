@@ -8,9 +8,11 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getStrainMilestoneSharedUsers, addStrainMilestoneSharedUsers, removeStrainMilestoneSharedUsers } = await import(
-  '@/lib/dal/strain-milestone-shared-user'
-)
+const {
+  getStrainMilestoneSharedUsers,
+  addStrainMilestoneSharedUsers,
+  removeStrainMilestoneSharedUsers
+} = await import('@/lib/dal/strain-milestone-shared-user')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -18,22 +20,27 @@ beforeEach(() => {
 
 describe('getStrainMilestoneSharedUsers', () => {
   it('returns mapped shared users on success', async () => {
-    const mockEq = vi
-      .fn()
-      .mockResolvedValue({
-        data: [{ shared_user_id: 'u-1', user_settings: { username: 'testuser' } }],
-        error: null
-      })
+    const mockEq = vi.fn().mockResolvedValue({
+      data: [
+        { shared_user_id: 'u-1', user_settings: { username: 'testuser' } }
+      ],
+      error: null
+    })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
     const result = await getStrainMilestoneSharedUsers('strain_milestone-1')
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('strain_milestone_shared_user')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'strain_milestone_shared_user'
+    )
     expect(mockSelect).toHaveBeenCalledWith(
       'shared_user_id, user_settings!shared_user_id(username)'
     )
-    expect(mockEq).toHaveBeenCalledWith('strain_milestone_id', 'strain_milestone-1')
+    expect(mockEq).toHaveBeenCalledWith(
+      'strain_milestone_id',
+      'strain_milestone-1'
+    )
     expect(result).toEqual([{ shared_user_id: 'u-1', username: 'testuser' }])
   })
 
@@ -64,9 +71,9 @@ describe('getStrainMilestoneSharedUsers', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getStrainMilestoneSharedUsers('strain_milestone-1')).rejects.toThrow(
-      'Error Fetching Strain Milestone Shared Users: DB error'
-    )
+    await expect(
+      getStrainMilestoneSharedUsers('strain_milestone-1')
+    ).rejects.toThrow('Error Fetching Strain Milestone Shared Users: DB error')
   })
 })
 
@@ -81,12 +88,26 @@ describe('addStrainMilestoneSharedUsers', () => {
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await addStrainMilestoneSharedUsers('strain_milestone-1', ['u-1', 'u-2'], 'user-1')
+    await addStrainMilestoneSharedUsers(
+      'strain_milestone-1',
+      ['u-1', 'u-2'],
+      'user-1'
+    )
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('strain_milestone_shared_user')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'strain_milestone_shared_user'
+    )
     expect(mockInsert).toHaveBeenCalledWith([
-      { strain_milestone_id: 'strain_milestone-1', shared_user_id: 'u-1', user_id: 'user-1' },
-      { strain_milestone_id: 'strain_milestone-1', shared_user_id: 'u-2', user_id: 'user-1' }
+      {
+        strain_milestone_id: 'strain_milestone-1',
+        shared_user_id: 'u-1',
+        user_id: 'user-1'
+      },
+      {
+        strain_milestone_id: 'strain_milestone-1',
+        shared_user_id: 'u-2',
+        user_id: 'user-1'
+      }
     ])
   })
 
@@ -98,7 +119,9 @@ describe('addStrainMilestoneSharedUsers', () => {
 
     await expect(
       addStrainMilestoneSharedUsers('strain_milestone-1', ['u-1'], 'user-1')
-    ).rejects.toThrow('Error Adding Strain Milestone Shared Users: Insert failed')
+    ).rejects.toThrow(
+      'Error Adding Strain Milestone Shared Users: Insert failed'
+    )
   })
 })
 
@@ -117,8 +140,13 @@ describe('removeStrainMilestoneSharedUsers', () => {
 
     await removeStrainMilestoneSharedUsers('strain_milestone-1', ['u-1', 'u-2'])
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('strain_milestone_shared_user')
-    expect(mockEq).toHaveBeenCalledWith('strain_milestone_id', 'strain_milestone-1')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'strain_milestone_shared_user'
+    )
+    expect(mockEq).toHaveBeenCalledWith(
+      'strain_milestone_id',
+      'strain_milestone-1'
+    )
     expect(mockIn).toHaveBeenCalledWith('shared_user_id', ['u-1', 'u-2'])
   })
 
@@ -132,6 +160,8 @@ describe('removeStrainMilestoneSharedUsers', () => {
 
     await expect(
       removeStrainMilestoneSharedUsers('strain_milestone-1', ['u-1'])
-    ).rejects.toThrow('Error Removing Strain Milestone Shared Users: Delete failed')
+    ).rejects.toThrow(
+      'Error Removing Strain Milestone Shared Users: Delete failed'
+    )
   })
 })

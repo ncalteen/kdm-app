@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CampaignType } from '@/lib/enums'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
   auth: {
@@ -49,18 +49,25 @@ describe('getMilestones', () => {
   }
 
   it('returns milestones from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustomMilestone], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [nonCustomMilestone], error: null })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomMilestone], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomMilestone], error: null })
           })
         })
       })
@@ -83,7 +90,10 @@ describe('getMilestones', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getMilestones()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -95,16 +105,23 @@ describe('getMilestones', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getMilestones()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getMilestones()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when non-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -120,11 +137,16 @@ describe('getMilestones', () => {
         })
       })
 
-    await expect(getMilestones()).rejects.toThrow('Error Fetching Milestones: DB error')
+    await expect(getMilestones()).rejects.toThrow(
+      'Error Fetching Milestones: DB error'
+    )
   })
 
   it('throws when user-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -135,7 +157,9 @@ describe('getMilestones', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -145,11 +169,16 @@ describe('getMilestones', () => {
         })
       })
 
-    await expect(getMilestones()).rejects.toThrow('Error Fetching Milestones: DB error')
+    await expect(getMilestones()).rejects.toThrow(
+      'Error Fetching Milestones: DB error'
+    )
   })
 
   it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -166,15 +195,22 @@ describe('getMilestones', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
-    await expect(getMilestones()).rejects.toThrow('Error Fetching Milestones: DB error')
+    await expect(getMilestones()).rejects.toThrow(
+      'Error Fetching Milestones: DB error'
+    )
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -202,7 +238,9 @@ describe('getMilestones', () => {
 
 describe('getMilestoneIds', () => {
   it('returns milestone IDs without userId', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: [{ id: 'm1' }, { id: 'm2' }], error: null })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'm1' }, { id: 'm2' }], error: null })
     const mockContains = vi.fn().mockReturnValue({ eq: mockEq })
     const mockIn = vi.fn().mockReturnValue({ contains: mockContains })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
@@ -219,7 +257,9 @@ describe('getMilestoneIds', () => {
   })
 
   it('returns milestone IDs with userId', async () => {
-    const mockEq2 = vi.fn().mockResolvedValue({ data: [{ id: 'm3' }], error: null })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'm3' }], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockContains = vi.fn().mockReturnValue({ eq: mockEq1 })
     const mockIn = vi.fn().mockReturnValue({ contains: mockContains })
@@ -238,14 +278,20 @@ describe('getMilestoneIds', () => {
   })
 
   it('throws when DB query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockContains = vi.fn().mockReturnValue({ eq: mockEq })
     const mockIn = vi.fn().mockReturnValue({ contains: mockContains })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
     await expect(
-      getMilestoneIds(['First Story'], CampaignType.PEOPLE_OF_THE_LANTERN, false)
+      getMilestoneIds(
+        ['First Story'],
+        CampaignType.PEOPLE_OF_THE_LANTERN,
+        false
+      )
     ).rejects.toThrow('Error Fetching Milestone ID(s): DB error')
   })
 
@@ -257,7 +303,11 @@ describe('getMilestoneIds', () => {
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
     await expect(
-      getMilestoneIds(['First Story'], CampaignType.PEOPLE_OF_THE_LANTERN, false)
+      getMilestoneIds(
+        ['First Story'],
+        CampaignType.PEOPLE_OF_THE_LANTERN,
+        false
+      )
     ).rejects.toThrow('Milestone(s) Not Found')
   })
 })
@@ -273,9 +323,14 @@ describe('addMilestone', () => {
   }
 
   it('inserts a non-custom milestone without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockMilestone, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockMilestone, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -291,7 +346,10 @@ describe('addMilestone', () => {
   })
 
   it('inserts a custom milestone with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const customMilestone = {
       id: 'm2',
@@ -300,7 +358,9 @@ describe('addMilestone', () => {
       event_name: 'Custom Event',
       campaign_types: ['CUSTOM']
     }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customMilestone, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customMilestone, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -319,10 +379,18 @@ describe('addMilestone', () => {
   })
 
   it('throws when custom and user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(
-      addMilestone({ milestone_name: 'My Milestone', custom: true, campaign_types: ['CUSTOM'] })
+      addMilestone({
+        milestone_name: 'My Milestone',
+        custom: true,
+        campaign_types: ['CUSTOM']
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
     ).rejects.toThrow('Not Authenticated')
   })
 
@@ -333,20 +401,35 @@ describe('addMilestone', () => {
     })
 
     await expect(
-      addMilestone({ milestone_name: 'First Story', custom: false, campaign_types: [] })
+      addMilestone({
+        milestone_name: 'First Story',
+        custom: false,
+        campaign_types: []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
     ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addMilestone({ milestone_name: 'First Story', custom: false, campaign_types: [] })
+      addMilestone({
+        milestone_name: 'First Story',
+        custom: false,
+        campaign_types: []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
     ).rejects.toThrow('Error Adding Milestone: Insert failed')
   })
 })
@@ -366,13 +449,15 @@ describe('updateMilestone', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateMilestone('m1', { milestone_name: 'First Story' })).rejects.toThrow(
-      'Error Updating Milestone: Update failed'
-    )
+    await expect(
+      updateMilestone('m1', { milestone_name: 'First Story' })
+    ).rejects.toThrow('Error Updating Milestone: Update failed')
   })
 })
 
@@ -389,10 +474,14 @@ describe('removeMilestone', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeMilestone('m1')).rejects.toThrow('Error Removing Milestone: Delete failed')
+    await expect(removeMilestone('m1')).rejects.toThrow(
+      'Error Removing Milestone: Delete failed'
+    )
   })
 })

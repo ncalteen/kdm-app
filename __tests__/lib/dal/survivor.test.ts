@@ -160,9 +160,7 @@ describe('getSurvivor', () => {
     const mockSurvivorEq = vi
       .fn()
       .mockReturnValue({ maybeSingle: mockMaybeSingle })
-    const mockSurvivorSelect = vi
-      .fn()
-      .mockReturnValue({ eq: mockSurvivorEq })
+    const mockSurvivorSelect = vi.fn().mockReturnValue({ eq: mockSurvivorEq })
 
     // Junction table calls (all return empty)
     const emptyResult = { data: [], error: null }
@@ -201,16 +199,12 @@ describe('getSurvivor', () => {
     const mockSurvivorEq = vi
       .fn()
       .mockReturnValue({ maybeSingle: mockMaybeSingle })
-    const mockSurvivorSelect = vi
-      .fn()
-      .mockReturnValue({ eq: mockSurvivorEq })
+    const mockSurvivorSelect = vi.fn().mockReturnValue({ eq: mockSurvivorEq })
 
     const errorResult = { data: null, error: { message: 'junction error' } }
     const mockLimit = vi.fn().mockResolvedValue(errorResult)
     const mockJunctionEq = vi.fn().mockReturnValue({ limit: mockLimit })
-    const mockJunctionSelect = vi
-      .fn()
-      .mockReturnValue({ eq: mockJunctionEq })
+    const mockJunctionSelect = vi.fn().mockReturnValue({ eq: mockJunctionEq })
 
     mockSupabase.from
       .mockReturnValueOnce({ select: mockSurvivorSelect })
@@ -258,9 +252,7 @@ describe('getSurvivors', () => {
       .fn()
       .mockResolvedValue({ data: [survivor], error: null })
     const mockSurvivorEq = vi.fn().mockReturnValue({ order: mockOrder })
-    const mockSurvivorSelect = vi
-      .fn()
-      .mockReturnValue({ eq: mockSurvivorEq })
+    const mockSurvivorSelect = vi.fn().mockReturnValue({ eq: mockSurvivorEq })
 
     // Junction tables
     const emptyResult = { data: [], error: null }
@@ -506,7 +498,8 @@ describe('createSurvivor', () => {
 
   it('throws when no settlement ID', async () => {
     await expect(
-      createSurvivor({ ...mockInput, settlementId: '' })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      createSurvivor({ ...mockInput, settlementId: '' } as any)
     ).rejects.toThrow('Required: Settlement ID')
   })
 
@@ -518,7 +511,8 @@ describe('createSurvivor', () => {
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(createSurvivor(mockInput)).rejects.toThrow(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await expect(createSurvivor(mockInput as any)).rejects.toThrow(
       'Error Creating Survivor: insert fail'
     )
   })

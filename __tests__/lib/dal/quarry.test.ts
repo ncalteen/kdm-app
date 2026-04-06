@@ -40,8 +40,16 @@ const makeQuarry = (overrides = {}) => ({
 describe('getQuarries', () => {
   const mockUser = { id: 'user-1' }
   const nonCustomQuarry = makeQuarry({ id: 'q1', custom: false })
-  const userCustomQuarry = makeQuarry({ id: 'q2', custom: true, monster_name: 'My Quarry' })
-  const sharedQuarry = makeQuarry({ id: 'q3', custom: true, monster_name: 'Shared Quarry' })
+  const userCustomQuarry = makeQuarry({
+    id: 'q2',
+    custom: true,
+    monster_name: 'My Quarry'
+  })
+  const sharedQuarry = makeQuarry({
+    id: 'q3',
+    custom: true,
+    monster_name: 'Shared Quarry'
+  })
 
   const setupThreeSources = (
     nonCustomData: object[],
@@ -60,7 +68,9 @@ describe('getQuarries', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              in: vi.fn().mockResolvedValue({ data: userCustomData, error: null })
+              in: vi
+                .fn()
+                .mockResolvedValue({ data: userCustomData, error: null })
             })
           })
         })
@@ -73,7 +83,10 @@ describe('getQuarries', () => {
   }
 
   it('returns quarries from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
     setupThreeSources(
       [nonCustomQuarry],
       [userCustomQuarry],
@@ -90,7 +103,10 @@ describe('getQuarries', () => {
   })
 
   it('excludes alternates when includeAlternates is false', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const quarryA = makeQuarry({ id: 'q1', alternate_id: 'q2' })
     const quarryB = makeQuarry({ id: 'q2', alternate_id: null })
@@ -104,7 +120,10 @@ describe('getQuarries', () => {
   })
 
   it('excludes vignettes when includeVignettes is false', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const quarryA = makeQuarry({ id: 'q1', vignette_id: 'q2' })
     const quarryB = makeQuarry({ id: 'q2', vignette_id: null })
@@ -118,9 +137,16 @@ describe('getQuarries', () => {
   })
 
   it('includes all quarries when both flags are true', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const quarryA = makeQuarry({ id: 'q1', alternate_id: 'q2', vignette_id: 'q3' })
+    const quarryA = makeQuarry({
+      id: 'q1',
+      alternate_id: 'q2',
+      vignette_id: 'q3'
+    })
     const quarryB = makeQuarry({ id: 'q2' })
     const quarryC = makeQuarry({ id: 'q3' })
 
@@ -132,7 +158,10 @@ describe('getQuarries', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getQuarries()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -144,17 +173,24 @@ describe('getQuarries', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getQuarries()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getQuarries()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when a source query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            in: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            in: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -173,11 +209,16 @@ describe('getQuarries', () => {
         })
       })
 
-    await expect(getQuarries()).rejects.toThrow('Error Fetching Quarries: DB error')
+    await expect(getQuarries()).rejects.toThrow(
+      'Error Fetching Quarries: DB error'
+    )
   })
 
   it('returns empty map when all sources are empty', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
     setupThreeSources([], [], [])
 
     const result = await getQuarries()
@@ -187,12 +228,21 @@ describe('getQuarries', () => {
 
 describe('getUserCustomQuarries', () => {
   const mockUser = { id: 'user-1' }
-  const customQuarry = makeQuarry({ id: 'q2', custom: true, monster_name: 'My Quarry' })
+  const customQuarry = makeQuarry({
+    id: 'q2',
+    custom: true,
+    monster_name: 'My Quarry'
+  })
 
   it('returns only custom quarries for the user', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockEq2 = vi.fn().mockResolvedValue({ data: [customQuarry], error: null })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: [customQuarry], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -204,7 +254,10 @@ describe('getUserCustomQuarries', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getUserCustomQuarries()).rejects.toThrow('Not Authenticated')
   })
@@ -215,18 +268,27 @@ describe('getUserCustomQuarries', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getUserCustomQuarries()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getUserCustomQuarries()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockEq2 = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getUserCustomQuarries()).rejects.toThrow('Error Fetching Custom Quarries: DB error')
+    await expect(getUserCustomQuarries()).rejects.toThrow(
+      'Error Fetching Custom Quarries: DB error'
+    )
   })
 })
 
@@ -247,7 +309,9 @@ describe('getQuarry', () => {
 
   it('returns quarry data for valid id', async () => {
     const quarry = makeQuarry()
-    const mockMaybeSingle = vi.fn().mockResolvedValue({ data: quarry, error: null })
+    const mockMaybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: quarry, error: null })
     const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -259,7 +323,9 @@ describe('getQuarry', () => {
   })
 
   it('returns null when quarry is not found', async () => {
-    const mockMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+    const mockMaybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: null })
     const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -270,29 +336,40 @@ describe('getQuarry', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockMaybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getQuarry('q1')).rejects.toThrow('Error Fetching Quarry: DB error')
+    await expect(getQuarry('q1')).rejects.toThrow(
+      'Error Fetching Quarry: DB error'
+    )
   })
 })
 
 describe('getQuarryIds', () => {
   it('fetches quarry IDs without userId', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: [{ id: 'q1' }, { id: 'q2' }], error: null })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'q1' }, { id: 'q2' }], error: null })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    const result = await getQuarryIds(['White Lion', 'Screaming Antelope'], false)
+    const result = await getQuarryIds(
+      ['White Lion', 'Screaming Antelope'],
+      false
+    )
 
     expect(result).toEqual(['q1', 'q2'])
   })
 
   it('fetches quarry IDs with userId', async () => {
-    const mockEq2 = vi.fn().mockResolvedValue({ data: [{ id: 'q3' }], error: null })
+    const mockEq2 = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'q3' }], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq1 })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
@@ -304,7 +381,9 @@ describe('getQuarryIds', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockIn = vi.fn().mockReturnValue({ eq: mockEq })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -320,7 +399,9 @@ describe('getQuarryIds', () => {
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getQuarryIds(['White Lion'], false)).rejects.toThrow('Quarry(ies) Not Found')
+    await expect(getQuarryIds(['White Lion'], false)).rejects.toThrow(
+      'Quarry(ies) Not Found'
+    )
   })
 })
 
@@ -352,11 +433,15 @@ describe('getQuarryNodesById', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockIn = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockIn = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getQuarryNodesById(['q1'])).rejects.toThrow('Error Fetching Quarry Nodes: DB error')
+    await expect(getQuarryNodesById(['q1'])).rejects.toThrow(
+      'Error Fetching Quarry Nodes: DB error'
+    )
   })
 })
 
@@ -364,7 +449,10 @@ describe('addQuarry', () => {
   const mockUser = { id: 'user-1' }
 
   it('inserts a non-custom quarry without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     const quarry = makeQuarry()
     const mockSingle = vi.fn().mockResolvedValue({ data: quarry, error: null })
@@ -387,10 +475,19 @@ describe('addQuarry', () => {
   })
 
   it('inserts a custom quarry with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const customQuarry = makeQuarry({ id: 'q2', custom: true, monster_name: 'My Quarry' })
-    const mockSingle = vi.fn().mockResolvedValue({ data: customQuarry, error: null })
+    const customQuarry = makeQuarry({
+      id: 'q2',
+      custom: true,
+      monster_name: 'My Quarry'
+    })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customQuarry, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -411,10 +508,17 @@ describe('addQuarry', () => {
   })
 
   it('throws when custom quarry requires auth but user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(
-      addQuarry({ monster_name: 'My Quarry', custom: true, node: MonsterNode.NQ1 })
+      addQuarry({
+        monster_name: 'My Quarry',
+        custom: true,
+        node: MonsterNode.NQ1
+      })
     ).rejects.toThrow('Not Authenticated')
   })
 
@@ -425,20 +529,33 @@ describe('addQuarry', () => {
     })
 
     await expect(
-      addQuarry({ monster_name: 'White Lion', custom: false, node: MonsterNode.NQ1 })
+      addQuarry({
+        monster_name: 'White Lion',
+        custom: false,
+        node: MonsterNode.NQ1
+      })
     ).rejects.toThrow('Auth Error: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addQuarry({ monster_name: 'White Lion', custom: false, node: MonsterNode.NQ1 })
+      addQuarry({
+        monster_name: 'White Lion',
+        custom: false,
+        node: MonsterNode.NQ1
+      })
     ).rejects.toThrow('Error Adding Quarry: Insert failed')
   })
 })
@@ -449,20 +566,24 @@ describe('updateQuarry', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateQuarry('q1', { monster_name: 'Phoenix' })).resolves.toBeUndefined()
+    await expect(
+      updateQuarry('q1', { monster_name: 'Phoenix' })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('quarry')
     expect(mockEq).toHaveBeenCalledWith('id', 'q1')
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateQuarry('q1', { monster_name: 'Phoenix' })).rejects.toThrow(
-      'Error Updating Quarry: Update failed'
-    )
+    await expect(
+      updateQuarry('q1', { monster_name: 'Phoenix' })
+    ).rejects.toThrow('Error Updating Quarry: Update failed')
   })
 })
 
@@ -479,10 +600,14 @@ describe('removeQuarry', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeQuarry('q1')).rejects.toThrow('Error Removing Quarry: Delete failed')
+    await expect(removeQuarry('q1')).rejects.toThrow(
+      'Error Removing Quarry: Delete failed'
+    )
   })
 })

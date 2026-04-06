@@ -21,12 +21,16 @@ beforeEach(() => {
 
 describe('getWandererTimelineYears', () => {
   it('throws when wandererId is null', async () => {
-    await expect(getWandererTimelineYears(null)).rejects.toThrow('Required: Wanderer ID')
+    await expect(getWandererTimelineYears(null)).rejects.toThrow(
+      'Required: Wanderer ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when wandererId is undefined', async () => {
-    await expect(getWandererTimelineYears(undefined)).rejects.toThrow('Required: Wanderer ID')
+    await expect(getWandererTimelineYears(undefined)).rejects.toThrow(
+      'Required: Wanderer ID'
+    )
   })
 
   it('returns timeline years keyed by id', async () => {
@@ -41,7 +45,9 @@ describe('getWandererTimelineYears', () => {
     const result = await getWandererTimelineYears('w1')
 
     expect(mockSupabase.from).toHaveBeenCalledWith('wanderer_timeline_year')
-    expect(mockSelect).toHaveBeenCalledWith('id, wanderer_id, entries, year_number')
+    expect(mockSelect).toHaveBeenCalledWith(
+      'id, wanderer_id, entries, year_number'
+    )
     expect(mockEq).toHaveBeenCalledWith('wanderer_id', 'w1')
     expect(result).toEqual({
       wty1: mockData[0],
@@ -60,7 +66,9 @@ describe('getWandererTimelineYears', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -72,26 +80,42 @@ describe('getWandererTimelineYears', () => {
 
 describe('addWandererTimelineYear', () => {
   it('inserts and returns the new row id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'wty-new' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'wty-new' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addWandererTimelineYear({ wanderer_id: 'w1', year_number: 1, entries: [] })
+    const result = await addWandererTimelineYear({
+      wanderer_id: 'w1',
+      year_number: 1,
+      entries: []
+    })
 
     expect(mockSupabase.from).toHaveBeenCalledWith('wanderer_timeline_year')
-    expect(mockInsert).toHaveBeenCalledWith({ wanderer_id: 'w1', year_number: 1, entries: [] })
+    expect(mockInsert).toHaveBeenCalledWith({
+      wanderer_id: 'w1',
+      year_number: 1,
+      entries: []
+    })
     expect(result).toBe('wty-new')
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addWandererTimelineYear({ wanderer_id: 'w1', year_number: 1, entries: [] })
+      addWandererTimelineYear({
+        wanderer_id: 'w1',
+        year_number: 1,
+        entries: []
+      })
     ).rejects.toThrow('Error Adding Wanderer Timeline Year: Insert failed')
   })
 })
@@ -112,13 +136,15 @@ describe('updateWandererTimelineYear', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateWandererTimelineYear('wty-1', { entries: [] })).rejects.toThrow(
-      'Error Updating Wanderer Timeline Year: Update failed'
-    )
+    await expect(
+      updateWandererTimelineYear('wty-1', { entries: [] })
+    ).rejects.toThrow('Error Updating Wanderer Timeline Year: Update failed')
   })
 })
 
@@ -135,7 +161,9 @@ describe('removeWandererTimelineYear', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

@@ -177,9 +177,7 @@ describe('getSettlementForUser', () => {
       .mockResolvedValue({ data: null, error: { message: 'owned error' } })
     const mockOwnedSelect = vi.fn().mockReturnValue({ eq: mockOwnedEq })
 
-    const mockSharedEq = vi
-      .fn()
-      .mockResolvedValue({ data: [], error: null })
+    const mockSharedEq = vi.fn().mockResolvedValue({ data: [], error: null })
     const mockSharedSelect = vi.fn().mockReturnValue({ eq: mockSharedEq })
 
     mockSupabase.from
@@ -202,12 +200,17 @@ describe('addUserSettings', () => {
       unlocked_screaming_nukalope: false,
       unlocked_white_gigalion: false
     }
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockData, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockData, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addUserSettings({ user_id: 'user-1', username: 'tester' })
+    const result = await addUserSettings({
+      user_id: 'user-1',
+      username: 'tester'
+    })
     expect(result).toEqual(mockData)
   })
 

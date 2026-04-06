@@ -8,8 +8,12 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getHuntSurvivors, addHuntSurvivor, updateHuntSurvivor, removeHuntSurvivor } =
-  await import('@/lib/dal/hunt-survivor')
+const {
+  getHuntSurvivors,
+  addHuntSurvivor,
+  updateHuntSurvivor,
+  removeHuntSurvivor
+} = await import('@/lib/dal/hunt-survivor')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -78,7 +82,9 @@ describe('getHuntSurvivors', () => {
   it('throws when query fails', async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
@@ -90,25 +96,34 @@ describe('getHuntSurvivors', () => {
 
 describe('addHuntSurvivor', () => {
   it('inserts a hunt survivor and returns the id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'hs-1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'hs-1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addHuntSurvivor({ hunt_id: 'hunt-1', survivor_id: 'surv-1' })
+    const result = await addHuntSurvivor({
+      hunt_id: 'hunt-1',
+      survivor_id: 'surv-1'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
 
     expect(result).toBe('hs-1')
     expect(mockSupabase.from).toHaveBeenCalledWith('hunt_survivor')
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addHuntSurvivor({ hunt_id: 'hunt-1', survivor_id: 'surv-1' })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      addHuntSurvivor({ hunt_id: 'hunt-1', survivor_id: 'surv-1' } as any)
     ).rejects.toThrow('Error Adding Hunt Survivor: Insert failed')
   })
 })
@@ -119,7 +134,9 @@ describe('updateHuntSurvivor', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateHuntSurvivor('hs-1', { scout: true })).resolves.toBeUndefined()
+    await expect(
+      updateHuntSurvivor('hs-1', { scout: true })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('hunt_survivor')
     expect(mockUpdate).toHaveBeenCalledWith({ scout: true })
@@ -127,7 +144,9 @@ describe('updateHuntSurvivor', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
@@ -150,7 +169,9 @@ describe('removeHuntSurvivor', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

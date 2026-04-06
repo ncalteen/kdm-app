@@ -60,7 +60,9 @@ describe('getHuntAIDecks', () => {
   it('throws when the query fails', async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
@@ -80,26 +82,35 @@ describe('addHuntAIDeck', () => {
   }
 
   it('inserts a hunt AI deck and returns it', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockDeck, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockDeck, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addHuntAIDeck({ hunt_id: 'hunt-1', basic_cards: 5 })
+    const result = await addHuntAIDeck({
+      hunt_id: 'hunt-1',
+      basic_cards: 5
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
 
     expect(result).toEqual(mockDeck)
     expect(mockSupabase.from).toHaveBeenCalledWith('hunt_ai_deck')
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addHuntAIDeck({ hunt_id: 'hunt-1', basic_cards: 5 })).rejects.toThrow(
-      'Error Adding Hunt AI Deck: Insert failed'
-    )
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      addHuntAIDeck({ hunt_id: 'hunt-1', basic_cards: 5 } as any)
+    ).rejects.toThrow('Error Adding Hunt AI Deck: Insert failed')
   })
 })
 
@@ -109,7 +120,9 @@ describe('updateHuntAIDeck', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateHuntAIDeck('deck-1', { basic_cards: 10 })).resolves.toBeUndefined()
+    await expect(
+      updateHuntAIDeck('deck-1', { basic_cards: 10 })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('hunt_ai_deck')
     expect(mockUpdate).toHaveBeenCalledWith({ basic_cards: 10 })
@@ -117,13 +130,15 @@ describe('updateHuntAIDeck', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateHuntAIDeck('deck-1', { basic_cards: 10 })).rejects.toThrow(
-      'Error Updating Hunt AI Deck: Update failed'
-    )
+    await expect(
+      updateHuntAIDeck('deck-1', { basic_cards: 10 })
+    ).rejects.toThrow('Error Updating Hunt AI Deck: Update failed')
   })
 })
 
@@ -140,7 +155,9 @@ describe('removeHuntAIDeck', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

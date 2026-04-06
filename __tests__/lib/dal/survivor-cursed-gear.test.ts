@@ -21,12 +21,16 @@ beforeEach(() => {
 
 describe('getSurvivorCursedGear', () => {
   it('throws when survivorId is null', async () => {
-    await expect(getSurvivorCursedGear(null)).rejects.toThrow('Required: Survivor ID')
+    await expect(getSurvivorCursedGear(null)).rejects.toThrow(
+      'Required: Survivor ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when survivorId is undefined', async () => {
-    await expect(getSurvivorCursedGear(undefined)).rejects.toThrow('Required: Survivor ID')
+    await expect(getSurvivorCursedGear(undefined)).rejects.toThrow(
+      'Required: Survivor ID'
+    )
   })
 
   it('returns cursed gear for a survivor', async () => {
@@ -57,7 +61,9 @@ describe('getSurvivorCursedGear', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -69,7 +75,9 @@ describe('getSurvivorCursedGear', () => {
 
 describe('addSurvivorCursedGear', () => {
   it('inserts and returns the junction row id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'cg-new' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'cg-new' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -77,12 +85,17 @@ describe('addSurvivorCursedGear', () => {
     const result = await addSurvivorCursedGear('survivor-1', 'gear-1')
 
     expect(mockSupabase.from).toHaveBeenCalledWith('survivor_cursed_gear')
-    expect(mockInsert).toHaveBeenCalledWith({ survivor_id: 'survivor-1', gear_id: 'gear-1' })
+    expect(mockInsert).toHaveBeenCalledWith({
+      survivor_id: 'survivor-1',
+      gear_id: 'gear-1'
+    })
     expect(result).toBe('cg-new')
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
@@ -100,7 +113,9 @@ describe('removeSurvivorCursedGear', () => {
     const mockDelete = vi.fn().mockReturnValue({ eq: mockFirstEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeSurvivorCursedGear('survivor-1', 'gear-1')).resolves.toBeUndefined()
+    await expect(
+      removeSurvivorCursedGear('survivor-1', 'gear-1')
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('survivor_cursed_gear')
     expect(mockFirstEq).toHaveBeenCalledWith('survivor_id', 'survivor-1')
@@ -108,14 +123,16 @@ describe('removeSurvivorCursedGear', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockSecondEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockSecondEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockFirstEq = vi.fn().mockReturnValue({ eq: mockSecondEq })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockFirstEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeSurvivorCursedGear('survivor-1', 'gear-1')).rejects.toThrow(
-      'Error Removing Survivor Cursed Gear: Delete failed'
-    )
+    await expect(
+      removeSurvivorCursedGear('survivor-1', 'gear-1')
+    ).rejects.toThrow('Error Removing Survivor Cursed Gear: Delete failed')
   })
 })
 
@@ -135,12 +152,14 @@ describe('updateSurvivorCursedGear', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateSurvivorCursedGear('cg-1', { gear_id: 'gear-2' })).rejects.toThrow(
-      'Error Updating Survivor Cursed Gear: Update failed'
-    )
+    await expect(
+      updateSurvivorCursedGear('cg-1', { gear_id: 'gear-2' })
+    ).rejects.toThrow('Error Updating Survivor Cursed Gear: Update failed')
   })
 })

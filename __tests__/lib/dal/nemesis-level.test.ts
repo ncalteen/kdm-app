@@ -9,8 +9,12 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getNemesisLevels, addNemesisLevel, updateNemesisLevel, removeNemesisLevel } =
-  await import('@/lib/dal/nemesis-level')
+const {
+  getNemesisLevels,
+  addNemesisLevel,
+  updateNemesisLevel,
+  removeNemesisLevel
+} = await import('@/lib/dal/nemesis-level')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -54,7 +58,9 @@ describe('getNemesisLevels', () => {
   })
 
   it('throws when nemesisId is undefined', async () => {
-    await expect(getNemesisLevels(undefined)).rejects.toThrow('Required: Nemesis ID')
+    await expect(getNemesisLevels(undefined)).rejects.toThrow(
+      'Required: Nemesis ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
@@ -81,37 +87,53 @@ describe('getNemesisLevels', () => {
   })
 
   it('throws when query fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
-    await expect(getNemesisLevels('n1')).rejects.toThrow('Error Fetching Nemesis Levels: DB error')
+    await expect(getNemesisLevels('n1')).rejects.toThrow(
+      'Error Fetching Nemesis Levels: DB error'
+    )
   })
 })
 
 describe('addNemesisLevel', () => {
   it('inserts a nemesis level and returns its id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'nl1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'nl1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addNemesisLevel({ nemesis_id: 'n1', level_number: 1, life: 10 })
+    const result = await addNemesisLevel({
+      nemesis_id: 'n1',
+      level_number: 1,
+      life: 10
+    })
 
     expect(result).toBe('nl1')
     expect(mockSupabase.from).toHaveBeenCalledWith('nemesis_level')
-    expect(mockInsert).toHaveBeenCalledWith({ nemesis_id: 'n1', level_number: 1, life: 10 })
+    expect(mockInsert).toHaveBeenCalledWith({
+      nemesis_id: 'n1',
+      level_number: 1,
+      life: 10
+    })
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addNemesisLevel({ nemesis_id: 'n1', level_number: 1, life: 10 })).rejects.toThrow(
-      'Error Adding Nemesis Level: Insert failed'
-    )
+    await expect(
+      addNemesisLevel({ nemesis_id: 'n1', level_number: 1, life: 10 })
+    ).rejects.toThrow('Error Adding Nemesis Level: Insert failed')
   })
 })
 
@@ -121,7 +143,9 @@ describe('updateNemesisLevel', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateNemesisLevel('nl1', { life: 15 })).resolves.toBeUndefined()
+    await expect(
+      updateNemesisLevel('nl1', { life: 15 })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('nemesis_level')
     expect(mockUpdate).toHaveBeenCalledWith({ life: 15 })
@@ -129,7 +153,9 @@ describe('updateNemesisLevel', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
@@ -152,7 +178,9 @@ describe('removeNemesisLevel', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 

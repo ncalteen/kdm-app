@@ -20,7 +20,8 @@ vi.mock('@/lib/dal/hunt-survivor', () => ({
   getHuntSurvivors: vi.fn()
 }))
 
-const { getHunt, addHunt, updateHunt, removeHunt } = await import('@/lib/dal/hunt')
+const { getHunt, addHunt, updateHunt, removeHunt } =
+  await import('@/lib/dal/hunt')
 const { getHuntHuntBoard } = await import('@/lib/dal/hunt-hunt-board')
 const { getHuntMonsters } = await import('@/lib/dal/hunt-monster')
 const { getHuntSurvivors } = await import('@/lib/dal/hunt-survivor')
@@ -71,7 +72,9 @@ describe('getHunt', () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          maybeSingle: vi.fn().mockResolvedValue({ data: mockHuntData, error: null })
+          maybeSingle: vi
+            .fn()
+            .mockResolvedValue({ data: mockHuntData, error: null })
         })
       })
     })
@@ -101,37 +104,47 @@ describe('getHunt', () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          maybeSingle: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
     })
 
-    await expect(getHunt('settlement-1')).rejects.toThrow('Error Fetching Hunt: DB error')
+    await expect(getHunt('settlement-1')).rejects.toThrow(
+      'Error Fetching Hunt: DB error'
+    )
   })
 })
 
 describe('addHunt', () => {
   it('inserts a hunt and returns the id', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'hunt-1' }, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'hunt-1' }, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addHunt({ settlement_id: 'settlement-1' })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await addHunt({ settlement_id: 'settlement-1' } as any)
 
     expect(result).toBe('hunt-1')
     expect(mockSupabase.from).toHaveBeenCalledWith('hunt')
   })
 
   it('throws when insert fails', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addHunt({ settlement_id: 'settlement-1' })).rejects.toThrow(
-      'Error Adding Hunt: Insert failed'
-    )
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      addHunt({ settlement_id: 'settlement-1' } as any)
+    ).rejects.toThrow('Error Adding Hunt: Insert failed')
   })
 })
 
@@ -141,7 +154,9 @@ describe('updateHunt', () => {
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateHunt('hunt-1', { monster_level: 2 })).resolves.toBeUndefined()
+    await expect(
+      updateHunt('hunt-1', { monster_level: 2 })
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('hunt')
     expect(mockUpdate).toHaveBeenCalledWith({ monster_level: 2 })
@@ -149,7 +164,9 @@ describe('updateHunt', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
@@ -172,10 +189,14 @@ describe('removeHunt', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeHunt('hunt-1')).rejects.toThrow('Error Removing Hunt: Delete failed')
+    await expect(removeHunt('hunt-1')).rejects.toThrow(
+      'Error Removing Hunt: Delete failed'
+    )
   })
 })

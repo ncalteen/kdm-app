@@ -20,23 +20,45 @@ beforeEach(() => {
 
 describe('getNeuroses', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomNeurosis = { id: 'n1', custom: false, neurosis_name: 'Agoraphobia', philosophy_id: 'p1' }
-  const userCustomNeurosis = { id: 'n2', custom: true, neurosis_name: 'My Neurosis', philosophy_id: 'p2' }
-  const sharedNeurosis = { id: 'n3', custom: true, neurosis_name: 'Shared Neurosis', philosophy_id: 'p3' }
+  const nonCustomNeurosis = {
+    id: 'n1',
+    custom: false,
+    neurosis_name: 'Agoraphobia',
+    philosophy_id: 'p1'
+  }
+  const userCustomNeurosis = {
+    id: 'n2',
+    custom: true,
+    neurosis_name: 'My Neurosis',
+    philosophy_id: 'p2'
+  }
+  const sharedNeurosis = {
+    id: 'n3',
+    custom: true,
+    neurosis_name: 'Shared Neurosis',
+    philosophy_id: 'p3'
+  }
 
   it('returns neuroses from all three sources', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustomNeurosis], error: null })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: [nonCustomNeurosis], error: null })
         })
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustomNeurosis], error: null })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: [userCustomNeurosis], error: null })
           })
         })
       })
@@ -59,7 +81,10 @@ describe('getNeuroses', () => {
   })
 
   it('throws when user is not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(getNeuroses()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
@@ -71,16 +96,23 @@ describe('getNeuroses', () => {
       error: { message: 'Auth error' }
     })
 
-    await expect(getNeuroses()).rejects.toThrow('Error Fetching User: Auth error')
+    await expect(getNeuroses()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
   })
 
   it('throws when non-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
       .mockReturnValueOnce({
@@ -96,11 +128,16 @@ describe('getNeuroses', () => {
         })
       })
 
-    await expect(getNeuroses()).rejects.toThrow('Error Fetching Neuroses: DB error')
+    await expect(getNeuroses()).rejects.toThrow(
+      'Error Fetching Neuroses: DB error'
+    )
   })
 
   it('throws when user-custom query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -111,7 +148,9 @@ describe('getNeuroses', () => {
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+            eq: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
           })
         })
       })
@@ -121,11 +160,16 @@ describe('getNeuroses', () => {
         })
       })
 
-    await expect(getNeuroses()).rejects.toThrow('Error Fetching Neuroses: DB error')
+    await expect(getNeuroses()).rejects.toThrow(
+      'Error Fetching Neuroses: DB error'
+    )
   })
 
   it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -142,15 +186,22 @@ describe('getNeuroses', () => {
       })
       .mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          eq: vi
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
         })
       })
 
-    await expect(getNeuroses()).rejects.toThrow('Error Fetching Neuroses: DB error')
+    await expect(getNeuroses()).rejects.toThrow(
+      'Error Fetching Neuroses: DB error'
+    )
   })
 
   it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
     mockSupabase.from
       .mockReturnValueOnce({
@@ -178,17 +229,31 @@ describe('getNeuroses', () => {
 
 describe('addNeurosis', () => {
   const mockUser = { id: 'user-1' }
-  const mockNeurosis = { id: 'n1', custom: false, neurosis_name: 'Agoraphobia', philosophy_id: 'p1' }
+  const mockNeurosis = {
+    id: 'n1',
+    custom: false,
+    neurosis_name: 'Agoraphobia',
+    philosophy_id: 'p1'
+  }
 
   it('inserts a non-custom neurosis without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: mockNeurosis, error: null })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockNeurosis, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addNeurosis({ neurosis_name: 'Agoraphobia', custom: false, philosophy_id: 'p1' })
+    const result = await addNeurosis({
+      neurosis_name: 'Agoraphobia',
+      custom: false,
+      philosophy_id: 'p1'
+    })
 
     expect(result).toEqual(mockNeurosis)
     expect(mockInsert).toHaveBeenCalledWith({
@@ -199,15 +264,29 @@ describe('addNeurosis', () => {
   })
 
   it('inserts a custom neurosis with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const customNeurosis = { id: 'n2', custom: true, neurosis_name: 'My Neurosis', philosophy_id: 'p1' }
-    const mockSingle = vi.fn().mockResolvedValue({ data: customNeurosis, error: null })
+    const customNeurosis = {
+      id: 'n2',
+      custom: true,
+      neurosis_name: 'My Neurosis',
+      philosophy_id: 'p1'
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: customNeurosis, error: null })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    const result = await addNeurosis({ neurosis_name: 'My Neurosis', custom: true, philosophy_id: 'p1' })
+    const result = await addNeurosis({
+      neurosis_name: 'My Neurosis',
+      custom: true,
+      philosophy_id: 'p1'
+    })
 
     expect(result).toEqual(customNeurosis)
     expect(mockInsert).toHaveBeenCalledWith({
@@ -219,10 +298,17 @@ describe('addNeurosis', () => {
   })
 
   it('throws when custom neurosis requires auth but user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null
+    })
 
     await expect(
-      addNeurosis({ neurosis_name: 'My Neurosis', custom: true, philosophy_id: 'p1' })
+      addNeurosis({
+        neurosis_name: 'My Neurosis',
+        custom: true,
+        philosophy_id: 'p1'
+      })
     ).rejects.toThrow('Not Authenticated')
   })
 
@@ -233,20 +319,33 @@ describe('addNeurosis', () => {
     })
 
     await expect(
-      addNeurosis({ neurosis_name: 'Agoraphobia', custom: false, philosophy_id: 'p1' })
+      addNeurosis({
+        neurosis_name: 'Agoraphobia',
+        custom: false,
+        philosophy_id: 'p1'
+      })
     ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
 
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      addNeurosis({ neurosis_name: 'Agoraphobia', custom: false, philosophy_id: 'p1' })
+      addNeurosis({
+        neurosis_name: 'Agoraphobia',
+        custom: false,
+        philosophy_id: 'p1'
+      })
     ).rejects.toThrow('Error Adding Neurosis: Insert failed')
   })
 })
@@ -266,13 +365,15 @@ describe('updateNeurosis', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    await expect(updateNeurosis('n1', { neurosis_name: 'Agoraphobia' })).rejects.toThrow(
-      'Error Updating Neurosis: Update failed'
-    )
+    await expect(
+      updateNeurosis('n1', { neurosis_name: 'Agoraphobia' })
+    ).rejects.toThrow('Error Updating Neurosis: Update failed')
   })
 })
 
@@ -289,10 +390,14 @@ describe('removeNeurosis', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeNeurosis('n1')).rejects.toThrow('Error Removing Neurosis: Delete failed')
+    await expect(removeNeurosis('n1')).rejects.toThrow(
+      'Error Removing Neurosis: Delete failed'
+    )
   })
 })

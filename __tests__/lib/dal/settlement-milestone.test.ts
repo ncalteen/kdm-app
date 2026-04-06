@@ -21,12 +21,16 @@ beforeEach(() => {
 
 describe('getSettlementMilestones', () => {
   it('throws when settlementId is null', async () => {
-    await expect(getSettlementMilestones(null)).rejects.toThrow('Required: Settlement ID')
+    await expect(getSettlementMilestones(null)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
   it('throws when settlementId is undefined', async () => {
-    await expect(getSettlementMilestones(undefined)).rejects.toThrow('Required: Settlement ID')
+    await expect(getSettlementMilestones(undefined)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
   })
 
   it('returns mapped milestones', async () => {
@@ -34,7 +38,10 @@ describe('getSettlementMilestones', () => {
       complete: false,
       id: 'sm-1',
       milestone_id: 'mil-1',
-      milestone: { event_name: 'First Story', milestone_name: 'First Survivor Death' }
+      milestone: {
+        event_name: 'First Story',
+        milestone_name: 'First Survivor Death'
+      }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -71,7 +78,9 @@ describe('getSettlementMilestones', () => {
   it('throws when query fails', async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { message: 'DB error' } })
       })
     })
 
@@ -97,7 +106,9 @@ describe('addSettlementMilestones', () => {
   })
 
   it('inserts and returns ids', async () => {
-    const mockSelect = vi.fn().mockResolvedValue({ data: [{ id: 'sm-1' }], error: null })
+    const mockSelect = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: 'sm-1' }], error: null })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
@@ -110,13 +121,15 @@ describe('addSettlementMilestones', () => {
   })
 
   it('throws when insert fails', async () => {
-    const mockSelect = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+    const mockSelect = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ insert: mockInsert })
 
-    await expect(addSettlementMilestones(['mil-1'], 'settlement-1')).rejects.toThrow(
-      'Error Adding Settlement Milestones: Insert failed'
-    )
+    await expect(
+      addSettlementMilestones(['mil-1'], 'settlement-1')
+    ).rejects.toThrow('Error Adding Settlement Milestones: Insert failed')
   })
 })
 
@@ -136,7 +149,9 @@ describe('updateSettlementMilestone', () => {
   })
 
   it('throws when update fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
@@ -159,7 +174,9 @@ describe('removeSettlementMilestone', () => {
   })
 
   it('throws when delete fails', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockEq = vi
+      .fn()
+      .mockResolvedValue({ error: { message: 'Delete failed' } })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
