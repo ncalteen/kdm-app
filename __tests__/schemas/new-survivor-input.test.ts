@@ -79,7 +79,10 @@ describe('NewSurvivorInputSchema', () => {
         abilitiesAndImpairments: ['Mighty Strike', 'Club Foot']
       })
 
-      expect(result.abilitiesAndImpairments).toEqual(['Mighty Strike', 'Club Foot'])
+      expect(result.abilitiesAndImpairments).toEqual([
+        'Mighty Strike',
+        'Club Foot'
+      ])
     })
 
     it('rejects an array containing empty strings', () => {
