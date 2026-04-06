@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { CampaignType } from '@/lib/enums'
+import { CampaignType, MonsterNode } from '@/lib/enums'
 
 // Mock all campaign template functions
 vi.mock('@/lib/campaigns/custom', () => ({
@@ -31,15 +31,13 @@ vi.mock('@/lib/dal/quarry', () => ({
 }))
 
 const { getCustomCampaignTemplate } = await import('@/lib/campaigns/custom')
-const { getPeopleOfTheDreamKeeperTemplate } = await import(
-  '@/lib/campaigns/potdk'
-)
+const { getPeopleOfTheDreamKeeperTemplate } =
+  await import('@/lib/campaigns/potdk')
 const { getPeopleOfTheLanternTemplate } = await import('@/lib/campaigns/potl')
 const { getPeopleOfTheStarsTemplate } = await import('@/lib/campaigns/potstars')
 const { getPeopleOfTheSunTemplate } = await import('@/lib/campaigns/potsun')
-const { getSquiresOfTheCitadelTemplate } = await import(
-  '@/lib/campaigns/squires'
-)
+const { getSquiresOfTheCitadelTemplate } =
+  await import('@/lib/campaigns/squires')
 const { getNemesisNodesById } = await import('@/lib/dal/nemesis')
 const { getQuarryNodesById } = await import('@/lib/dal/quarry')
 const { fetchTemplate } = await import('@/lib/campaigns/index')
@@ -101,9 +99,7 @@ describe('fetchTemplate', () => {
   })
 
   it('fetches PEOPLE_OF_THE_DREAM_KEEPER campaign template', async () => {
-    const result = await fetchTemplate(
-      CampaignType.PEOPLE_OF_THE_DREAM_KEEPER
-    )
+    const result = await fetchTemplate(CampaignType.PEOPLE_OF_THE_DREAM_KEEPER)
 
     expect(getPeopleOfTheDreamKeeperTemplate).toHaveBeenCalled()
     expect(result.template).toEqual(mockTemplate)
@@ -119,9 +115,9 @@ describe('fetchTemplate', () => {
   })
 
   it('throws error for unsupported campaign type', async () => {
-    await expect(
-      fetchTemplate('Unknown' as CampaignType)
-    ).rejects.toThrow('Unsupported Campaign Type: Unknown')
+    await expect(fetchTemplate('Unknown' as CampaignType)).rejects.toThrow(
+      'Unsupported Campaign Type: Unknown'
+    )
   })
 
   it('PEOPLE_OF_THE_DREAM_KEEPER uses scouts', async () => {
@@ -138,8 +134,8 @@ describe('fetchTemplate', () => {
 
   it('groups quarry nodes by node key', async () => {
     vi.mocked(getQuarryNodesById).mockResolvedValue([
-      { id: 'quarry-1', node: 'NQ1' },
-      { id: 'quarry-2', node: 'NQ2' }
+      { id: 'quarry-1', node: MonsterNode.NQ1 },
+      { id: 'quarry-2', node: MonsterNode.NQ2 }
     ])
 
     const result = await fetchTemplate(CampaignType.PEOPLE_OF_THE_LANTERN)
@@ -150,8 +146,8 @@ describe('fetchTemplate', () => {
 
   it('groups nemesis nodes by node key', async () => {
     vi.mocked(getNemesisNodesById).mockResolvedValue([
-      { id: 'nem-1', node: 'NN1' },
-      { id: 'nem-2', node: 'CO' }
+      { id: 'nem-1', node: MonsterNode.NN1 },
+      { id: 'nem-2', node: MonsterNode.CO }
     ])
 
     const result = await fetchTemplate(CampaignType.PEOPLE_OF_THE_LANTERN)
@@ -178,7 +174,7 @@ describe('fetchTemplate', () => {
 
   it('ignores nodes with unknown keys', async () => {
     vi.mocked(getQuarryNodesById).mockResolvedValue([
-      { id: 'quarry-99', node: 'UNKNOWN_NODE' }
+      { id: 'quarry-99', node: 'UNKNOWN_NODE' as unknown as MonsterNode }
     ])
 
     const result = await fetchTemplate(CampaignType.PEOPLE_OF_THE_LANTERN)

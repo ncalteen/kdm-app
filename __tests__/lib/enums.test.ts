@@ -235,7 +235,9 @@ describe('SettlementPhaseStep', () => {
     expect(SettlementPhaseStep.RECORD_AND_ARCHIVE_RESOURCES).toBe(
       'Record and Archive Resources'
     )
-    expect(SettlementPhaseStep.END_SETTLEMENT_PHASE).toBe('End Settlement Phase')
+    expect(SettlementPhaseStep.END_SETTLEMENT_PHASE).toBe(
+      'End Settlement Phase'
+    )
   })
 })
 

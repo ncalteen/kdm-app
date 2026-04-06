@@ -23,18 +23,15 @@ vi.mock('@/lib/dal/quarry', () => ({
   getQuarryIds: vi.fn()
 }))
 
-const { getCollectiveCognitionRewardIds } = await import(
-  '@/lib/dal/collective-cognition-reward'
-)
+const { getCollectiveCognitionRewardIds } =
+  await import('@/lib/dal/collective-cognition-reward')
 const { getInnovationIds } = await import('@/lib/dal/innovation')
 const { getLocationIds } = await import('@/lib/dal/location')
 const { getMilestoneIds } = await import('@/lib/dal/milestone')
 const { getNemesisIds } = await import('@/lib/dal/nemesis')
 const { getPrincipleIds } = await import('@/lib/dal/principle')
 const { getQuarryIds } = await import('@/lib/dal/quarry')
-const { getPeopleOfTheLanternTemplate } = await import(
-  '@/lib/campaigns/potl'
-)
+const { getPeopleOfTheLanternTemplate } = await import('@/lib/campaigns/potl')
 
 describe('getPeopleOfTheLanternTemplate', () => {
   beforeEach(() => {
@@ -72,7 +69,11 @@ describe('getPeopleOfTheLanternTemplate', () => {
       'prin-3',
       'prin-4'
     ])
-    vi.mocked(getQuarryIds).mockResolvedValue(['quarry-1', 'quarry-2', 'quarry-3'])
+    vi.mocked(getQuarryIds).mockResolvedValue([
+      'quarry-1',
+      'quarry-2',
+      'quarry-3'
+    ])
   })
 
   it('returns a template with IDs from all DAL functions', async () => {
@@ -81,17 +82,36 @@ describe('getPeopleOfTheLanternTemplate', () => {
     expect(template.collectiveCognitionRewardIds).toEqual(['ccr-1'])
     expect(template.innovationIds).toEqual(['innovation-1'])
     expect(template.locationIds).toEqual([
-      'loc-1', 'loc-2', 'loc-3', 'loc-4', 'loc-5',
-      'loc-6', 'loc-7', 'loc-8', 'loc-9', 'loc-10'
+      'loc-1',
+      'loc-2',
+      'loc-3',
+      'loc-4',
+      'loc-5',
+      'loc-6',
+      'loc-7',
+      'loc-8',
+      'loc-9',
+      'loc-10'
     ])
     expect(template.milestoneIds).toEqual([
-      'ms-1', 'ms-2', 'ms-3', 'ms-4', 'ms-5'
+      'ms-1',
+      'ms-2',
+      'ms-3',
+      'ms-4',
+      'ms-5'
     ])
     expect(template.nemesisIds).toEqual([
-      'nem-1', 'nem-2', 'nem-3', 'nem-4', 'nem-5'
+      'nem-1',
+      'nem-2',
+      'nem-3',
+      'nem-4',
+      'nem-5'
     ])
     expect(template.principleIds).toEqual([
-      'prin-1', 'prin-2', 'prin-3', 'prin-4'
+      'prin-1',
+      'prin-2',
+      'prin-3',
+      'prin-4'
     ])
     expect(template.quarryIds).toEqual(['quarry-1', 'quarry-2', 'quarry-3'])
     expect(template.wandererIds).toEqual([])

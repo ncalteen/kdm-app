@@ -116,22 +116,34 @@ describe('settlementPhaseSteps', () => {
 
   it('steps have correct indices and steps', () => {
     expect(settlementPhaseSteps[0].index).toBe(0)
-    expect(settlementPhaseSteps[0].step).toBe(SettlementPhaseStep.SET_UP_SETTLEMENT)
+    expect(settlementPhaseSteps[0].step).toBe(
+      SettlementPhaseStep.SET_UP_SETTLEMENT
+    )
 
     expect(settlementPhaseSteps[1].index).toBe(1)
-    expect(settlementPhaseSteps[1].step).toBe(SettlementPhaseStep.SURVIVORS_RETURN)
+    expect(settlementPhaseSteps[1].step).toBe(
+      SettlementPhaseStep.SURVIVORS_RETURN
+    )
 
     expect(settlementPhaseSteps[2].index).toBe(2)
-    expect(settlementPhaseSteps[2].step).toBe(SettlementPhaseStep.GAIN_ENDEAVORS)
+    expect(settlementPhaseSteps[2].step).toBe(
+      SettlementPhaseStep.GAIN_ENDEAVORS
+    )
 
     expect(settlementPhaseSteps[3].index).toBe(3)
-    expect(settlementPhaseSteps[3].step).toBe(SettlementPhaseStep.UPDATE_TIMELINE)
+    expect(settlementPhaseSteps[3].step).toBe(
+      SettlementPhaseStep.UPDATE_TIMELINE
+    )
 
     expect(settlementPhaseSteps[4].index).toBe(4)
-    expect(settlementPhaseSteps[4].step).toBe(SettlementPhaseStep.UPDATE_DEATH_COUNT)
+    expect(settlementPhaseSteps[4].step).toBe(
+      SettlementPhaseStep.UPDATE_DEATH_COUNT
+    )
 
     expect(settlementPhaseSteps[5].index).toBe(5)
-    expect(settlementPhaseSteps[5].step).toBe(SettlementPhaseStep.CHECK_MILESTONES)
+    expect(settlementPhaseSteps[5].step).toBe(
+      SettlementPhaseStep.CHECK_MILESTONES
+    )
 
     expect(settlementPhaseSteps[6].index).toBe(6)
     expect(settlementPhaseSteps[6].step).toBe(SettlementPhaseStep.DEVELOP)
@@ -142,7 +154,9 @@ describe('settlementPhaseSteps', () => {
     )
 
     expect(settlementPhaseSteps[8].index).toBe(8)
-    expect(settlementPhaseSteps[8].step).toBe(SettlementPhaseStep.SPECIAL_SHOWDOWN)
+    expect(settlementPhaseSteps[8].step).toBe(
+      SettlementPhaseStep.SPECIAL_SHOWDOWN
+    )
 
     expect(settlementPhaseSteps[9].index).toBe(9)
     expect(settlementPhaseSteps[9].step).toBe(

@@ -10,7 +10,9 @@ import {
 describe('coreCollectiveCognitionRewards', () => {
   it('contains the expected reward names', () => {
     expect(coreCollectiveCognitionRewards).toContain('Pleasing Plating')
-    expect(coreCollectiveCognitionRewards).toContain('Comprehensive Construction')
+    expect(coreCollectiveCognitionRewards).toContain(
+      'Comprehensive Construction'
+    )
     expect(coreCollectiveCognitionRewards).toContain('Communal Larder')
     expect(coreCollectiveCognitionRewards).toContain('Sated Enlightenment')
     expect(coreCollectiveCognitionRewards).toContain('Metabolic Improvements')

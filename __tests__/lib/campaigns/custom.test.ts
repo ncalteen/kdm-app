@@ -10,7 +10,11 @@ const { getCustomCampaignTemplate } = await import('@/lib/campaigns/custom')
 
 describe('getCustomCampaignTemplate', () => {
   beforeEach(() => {
-    vi.mocked(getMilestoneIds).mockResolvedValue(['milestone-1', 'milestone-2', 'milestone-3'])
+    vi.mocked(getMilestoneIds).mockResolvedValue([
+      'milestone-1',
+      'milestone-2',
+      'milestone-3'
+    ])
   })
 
   it('returns a template with empty arrays for most fields', async () => {

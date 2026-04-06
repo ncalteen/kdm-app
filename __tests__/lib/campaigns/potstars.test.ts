@@ -23,38 +23,54 @@ vi.mock('@/lib/dal/quarry', () => ({
   getQuarryIds: vi.fn()
 }))
 
-const { getCollectiveCognitionRewardIds } = await import(
-  '@/lib/dal/collective-cognition-reward'
-)
+const { getCollectiveCognitionRewardIds } =
+  await import('@/lib/dal/collective-cognition-reward')
 const { getInnovationIds } = await import('@/lib/dal/innovation')
 const { getLocationIds } = await import('@/lib/dal/location')
 const { getMilestoneIds } = await import('@/lib/dal/milestone')
 const { getNemesisIds } = await import('@/lib/dal/nemesis')
 const { getPrincipleIds } = await import('@/lib/dal/principle')
 const { getQuarryIds } = await import('@/lib/dal/quarry')
-const { getPeopleOfTheStarsTemplate } = await import(
-  '@/lib/campaigns/potstars'
-)
+const { getPeopleOfTheStarsTemplate } = await import('@/lib/campaigns/potstars')
 
 describe('getPeopleOfTheStarsTemplate', () => {
   beforeEach(() => {
     vi.mocked(getCollectiveCognitionRewardIds).mockResolvedValue(['ccr-1'])
     vi.mocked(getInnovationIds).mockResolvedValue(['innovation-1'])
     vi.mocked(getLocationIds).mockResolvedValue([
-      'loc-1', 'loc-2', 'loc-3', 'loc-4', 'loc-5',
-      'loc-6', 'loc-7', 'loc-8', 'loc-9'
+      'loc-1',
+      'loc-2',
+      'loc-3',
+      'loc-4',
+      'loc-5',
+      'loc-6',
+      'loc-7',
+      'loc-8',
+      'loc-9'
     ])
     vi.mocked(getMilestoneIds).mockResolvedValue([
-      'ms-1', 'ms-2', 'ms-3', 'ms-4'
+      'ms-1',
+      'ms-2',
+      'ms-3',
+      'ms-4'
     ])
     vi.mocked(getNemesisIds).mockResolvedValue([
-      'nem-1', 'nem-2', 'nem-3', 'nem-4', 'nem-5'
+      'nem-1',
+      'nem-2',
+      'nem-3',
+      'nem-4',
+      'nem-5'
     ])
     vi.mocked(getPrincipleIds).mockResolvedValue([
-      'prin-1', 'prin-2', 'prin-3', 'prin-4'
+      'prin-1',
+      'prin-2',
+      'prin-3',
+      'prin-4'
     ])
     vi.mocked(getQuarryIds).mockResolvedValue([
-      'quarry-1', 'quarry-2', 'quarry-3'
+      'quarry-1',
+      'quarry-2',
+      'quarry-3'
     ])
   })
 
@@ -89,10 +105,7 @@ describe('getPeopleOfTheStarsTemplate', () => {
       false
     )
     expect(getMilestoneIds).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        'Population reaches 0',
-        'First child is born'
-      ]),
+      expect.arrayContaining(['Population reaches 0', 'First child is born']),
       'People of the Stars',
       false
     )

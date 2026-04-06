@@ -1,5 +1,3 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-
 import { LOCAL_STORAGE_KEY } from '@/lib/common'
 import { ColorChoice, MonsterNode, MonsterType } from '@/lib/enums'
 import {
@@ -16,6 +14,7 @@ import {
   saveToLocalStorage,
   survivorsBornWithUnderstanding
 } from '@/lib/utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Helper to build a minimal innovation list
 function makeInnovations(names: string[]) {
@@ -174,7 +173,9 @@ describe('getCardColorStyles', () => {
     const redStyles = getCardColorStyles(ColorChoice.RED)
     const blueStyles = getCardColorStyles(ColorChoice.BLUE)
 
+    // @ts-expect-error - we know these properties exist
     expect(redStyles['--card-border-color']).not.toBe(
+      // @ts-expect-error - we know these properties exist
       blueStyles['--card-border-color']
     )
   })
@@ -183,7 +184,9 @@ describe('getCardColorStyles', () => {
     const unknownStyles = getCardColorStyles('unknown' as ColorChoice)
     const slateStyles = getCardColorStyles(ColorChoice.SLATE)
 
+    // @ts-expect-error - we know these properties exist
     expect(unknownStyles['--card-border-color']).toBe(
+      // @ts-expect-error - we know these properties exist
       slateStyles['--card-border-color']
     )
   })
@@ -288,9 +291,6 @@ describe('saveToLocalStorage', () => {
   it('saves null to localStorage', () => {
     saveToLocalStorage(null)
 
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      LOCAL_STORAGE_KEY,
-      'null'
-    )
+    expect(localStorage.setItem).toHaveBeenCalledWith(LOCAL_STORAGE_KEY, 'null')
   })
 })

@@ -294,15 +294,15 @@ describe('AMBUSH_MESSAGE', () => {
   })
 
   it('returns default message for unknown ambush type', () => {
-    expect(AMBUSH_MESSAGE('unknown' as AmbushType)).toBe(
-      'The showdown begins.'
-    )
+    expect(AMBUSH_MESSAGE('unknown' as AmbushType)).toBe('The showdown begins.')
   })
 })
 
 describe('ARRIVAL_BONUS_REMOVED_MESSAGE', () => {
   it('returns correct message', () => {
-    expect(ARRIVAL_BONUS_REMOVED_MESSAGE()).toBe('A blessing fades into the void.')
+    expect(ARRIVAL_BONUS_REMOVED_MESSAGE()).toBe(
+      'A blessing fades into the void.'
+    )
   })
 })
 
@@ -617,7 +617,9 @@ describe('DISORDER_REMOVED_MESSAGE', () => {
 
 describe('DISORDER_UPDATED_MESSAGE', () => {
   it('returns correct message', () => {
-    expect(DISORDER_UPDATED_MESSAGE()).toBe('The affliction has been rewritten.')
+    expect(DISORDER_UPDATED_MESSAGE()).toBe(
+      'The affliction has been rewritten.'
+    )
   })
 })
 
@@ -779,7 +781,9 @@ describe('INNOVATION_UPDATED_MESSAGE', () => {
 
 describe('INSANITY_MINIMUM_ERROR_MESSAGE', () => {
   it('returns correct message', () => {
-    expect(INSANITY_MINIMUM_ERROR_MESSAGE()).toBe('Insanity cannot be negative.')
+    expect(INSANITY_MINIMUM_ERROR_MESSAGE()).toBe(
+      'Insanity cannot be negative.'
+    )
   })
 })
 
@@ -907,9 +911,7 @@ describe('MILESTONE_COMPLETED_MESSAGE', () => {
   })
 
   it('returns updated message when not complete', () => {
-    expect(MILESTONE_COMPLETED_MESSAGE(false)).toBe(
-      'Milestone status updated.'
-    )
+    expect(MILESTONE_COMPLETED_MESSAGE(false)).toBe('Milestone status updated.')
   })
 })
 
@@ -1579,9 +1581,9 @@ describe('SCOUT_REQUIRED_MESSAGE', () => {
 
 describe('SECRET_FIGHTING_ARTS_MAX_EXCEEDED_ERROR_MESSAGE', () => {
   it('returns ARC message for ARC survivor type', () => {
-    expect(SECRET_FIGHTING_ARTS_MAX_EXCEEDED_ERROR_MESSAGE(SurvivorType.ARC)).toBe(
-      'Arc survivors can only have 1 Secret Fighting Art.'
-    )
+    expect(
+      SECRET_FIGHTING_ARTS_MAX_EXCEEDED_ERROR_MESSAGE(SurvivorType.ARC)
+    ).toBe('Arc survivors can only have 1 Secret Fighting Art.')
   })
 
   it('returns CORE message for CORE survivor type', () => {
@@ -1627,7 +1629,9 @@ describe('SEED_PATTERN_REMOVED_MESSAGE', () => {
 
 describe('SEED_PATTERN_CREATED_MESSAGE', () => {
   it('returns correct message', () => {
-    expect(SEED_PATTERN_CREATED_MESSAGE()).toBe('A new seed pattern takes root.')
+    expect(SEED_PATTERN_CREATED_MESSAGE()).toBe(
+      'A new seed pattern takes root.'
+    )
   })
 })
 

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock supabase client
-const mockDeleteEq = vi.fn().mockReturnThis()
 const mockDelete = vi.fn().mockReturnValue({
   eq: vi.fn().mockReturnValue({
     eq: vi.fn().mockResolvedValue({ data: null, error: null })
@@ -9,18 +8,6 @@ const mockDelete = vi.fn().mockReturnValue({
 })
 const mockSettlementDelete = vi.fn().mockReturnValue({
   eq: vi.fn().mockResolvedValue({ data: null, error: null })
-})
-const mockInsertSelect = vi.fn().mockReturnValue({
-  select: vi.fn().mockReturnValue({
-    single: vi.fn().mockResolvedValue({
-      data: {
-        id: 'settlement-1',
-        survivor_type: 'CORE',
-        philosophies: []
-      },
-      error: null
-    })
-  })
 })
 
 const mockFrom = vi.fn((table: string) => {
@@ -45,7 +32,9 @@ const mockFrom = vi.fn((table: string) => {
     delete: mockDelete,
     insert: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({ data: { id: 'new-id' }, error: null })
+        single: vi
+          .fn()
+          .mockResolvedValue({ data: { id: 'new-id' }, error: null })
       })
     }),
     select: vi.fn().mockReturnValue({
@@ -67,9 +56,10 @@ vi.mock('@/lib/supabase/client', () => ({
 }))
 
 // Mock toast
-const mockToast = vi.fn()
-mockToast.error = vi.fn()
-mockToast.success = vi.fn()
+const mockToast = {
+  error: vi.fn(),
+  success: vi.fn()
+}
 
 vi.mock('sonner', () => ({
   toast: mockToast

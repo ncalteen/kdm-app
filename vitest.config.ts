@@ -17,17 +17,19 @@ export default defineConfig({
       provider: 'v8',
       reportsDirectory: 'coverage',
       reporter: ['json-summary', 'json', 'html', 'lcov', 'text'],
-      include: ['lib/**/*.{ts,tsx}'],
+      include: [
+        'lib/**/*.{ts,tsx}',
+        'schemas/**/*.{ts,tsx}',
+        'src/**/*.{ts,tsx}'
+      ],
       exclude: [
         '.next',
         'dist',
         'node_modules',
-        'lib/dal/**',
-        'lib/settlement/**',
-        'lib/supabase/**',
         'lib/**/*.d.ts',
-        'lib/database.types.ts',
-        'lib/types.ts'
+        'src/**/*.d.ts',
+        'src/**/layout.tsx',
+        'src/**/globals.css'
       ]
     },
     reporters: ['default', 'junit'],
