@@ -17,15 +17,8 @@ export default defineConfig({
       provider: 'v8',
       reportsDirectory: 'coverage',
       reporter: ['json-summary', 'json', 'html', 'lcov', 'text'],
-      include: ['src/**/*.{js,jsx,ts,tsx}'],
-      exclude: [
-        '.next',
-        'dist',
-        'node_modules',
-        'src/**/*.d.ts',
-        'src/**/layout.tsx',
-        'src/**/globals.css'
-      ]
+      include: ['lib/**/*.{js,jsx,ts,tsx}'],
+      exclude: ['.next', 'dist', 'node_modules', 'lib/**/*.d.ts']
     },
     reporters: ['default', 'junit'],
     outputFile: {

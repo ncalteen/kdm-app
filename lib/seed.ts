@@ -2257,5 +2257,7 @@ async function createSettlementPhase(
   settlementId: string,
   usesScouts: boolean
 ): Promise<void> {
-  console.log(`Creating Settlement Phase for Settlement ${settlementId}...`)
+  console.log(
+    `Creating Settlement Phase for Settlement ${settlementId} (Scouts: ${usesScouts})...`
+  )
 }
