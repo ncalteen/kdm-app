@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
-import { showStoryEventIcon, usesNormalNumbering } from '@/lib/settlement/timeline'
+import {
+  showStoryEventIcon,
+  usesNormalNumbering
+} from '@/lib/settlement/timeline'
 
 // ---------------------------------------------------------------------------
 // usesNormalNumbering
@@ -26,7 +29,9 @@ describe('usesNormalNumbering', () => {
 
   it('returns true for People of the Stars', () => {
     expect(
-      usesNormalNumbering(DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_STARS])
+      usesNormalNumbering(
+        DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_STARS]
+      )
     ).toBe(true)
   })
 
@@ -37,9 +42,9 @@ describe('usesNormalNumbering', () => {
   })
 
   it('returns true for Custom', () => {
-    expect(
-      usesNormalNumbering(DatabaseCampaignType[CampaignType.CUSTOM])
-    ).toBe(true)
+    expect(usesNormalNumbering(DatabaseCampaignType[CampaignType.CUSTOM])).toBe(
+      true
+    )
   })
 
   it('returns false for People of the Lantern', () => {
@@ -89,16 +94,14 @@ describe('showStoryEventIcon', () => {
   })
 
   it('returns true for Custom', () => {
-    expect(
-      showStoryEventIcon(DatabaseCampaignType[CampaignType.CUSTOM])
-    ).toBe(true)
+    expect(showStoryEventIcon(DatabaseCampaignType[CampaignType.CUSTOM])).toBe(
+      true
+    )
   })
 
   it('returns false for People of the Stars', () => {
     expect(
-      showStoryEventIcon(
-        DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_STARS]
-      )
+      showStoryEventIcon(DatabaseCampaignType[CampaignType.PEOPLE_OF_THE_STARS])
     ).toBe(false)
   })
 
