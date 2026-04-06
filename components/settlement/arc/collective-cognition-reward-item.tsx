@@ -48,6 +48,12 @@ export const RewardItem = memo(function RewardItem({
         onCheckedChange={(checked) => onToggleUnlocked(index, !!checked)}
       />
 
+      {/* Collective Cognition Badge */}
+      <Badge variant="secondary" className="h-8 w-16">
+        <BrainIcon className="h-4 w-4" />
+        <span className="text-xs">{reward.collective_cognition}</span>
+      </Badge>
+
       {/* Reward Name */}
       <Label
         className="text-sm truncate ml-1"
@@ -57,10 +63,6 @@ export const RewardItem = memo(function RewardItem({
 
       {/* Collective Cognition Badge and Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">
-        <Badge variant="secondary" className="h-8 w-16">
-          <BrainIcon className="h-4 w-4" />
-          <span className="text-xs">{reward.collective_cognition}</span>
-        </Badge>
         <Button
           variant="ghost"
           size="icon"
