@@ -23,19 +23,7 @@ simple UI for keeping track of settlment and survivor information in Kingdom
 Death: Monster. It is designed to be lightweight and easy to use, allowing
 players to enjoy the game and save some trees.
 
-Try it out here:
-[`https://ncalteen.github.io-app`](https://ncalteen.github.io/kdm-app)
-
-## Storage
-
-This site makes use of your browser's local storage to save your data. This
-means that you can close the tab or even your browser and come back later to
-find your data still there. However, this also means that if you clear your
-browser's local storage, your data will be lost. If you want to back up your
-data, use the `Preserve Records` button.
-
-This will download a JSON file containing all of your settlements. You can then
-upload this file later to restore your settlements at any time!
+Try it out here: [`https://archivist.monster`](https://archivist.monster)
 
 ## Support
 
