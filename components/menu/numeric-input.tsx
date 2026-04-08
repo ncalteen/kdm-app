@@ -100,6 +100,7 @@ export function NumericInput({
   ) : (
     <Drawer
       preventScrollRestoration
+      noBodyStyles
       open={open}
       onOpenChange={(isOpen) => {
         if (isOpen) setDraftValue(value)
