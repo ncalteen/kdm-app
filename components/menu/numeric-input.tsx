@@ -11,7 +11,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { Minus, Plus } from 'lucide-react'
-import { ReactElement, RefObject, useState } from 'react'
+import { ReactElement, RefObject, useRef, useState } from 'react'
 
 /**
  * Numeric Input Properties
@@ -60,6 +60,7 @@ export function NumericInput({
 }: NumericInputProps): ReactElement {
   const [draftValue, setDraftValue] = useState(value)
   const [open, setOpen] = useState(false)
+  const scrollPosRef = useRef(0)
 
   /**
    * Handle Increment
@@ -99,11 +100,20 @@ export function NumericInput({
     />
   ) : (
     <Drawer
-      noBodyStyles
       open={open}
       onOpenChange={(isOpen) => {
-        if (isOpen) setDraftValue(value)
+        if (isOpen) {
+          scrollPosRef.current = window.scrollY
+          setDraftValue(value)
+        }
         setOpen(isOpen)
+
+        if (!isOpen) {
+          // Restore scroll position after vaul finishes tearing down body styles
+          requestAnimationFrame(() => {
+            window.scrollTo(0, scrollPosRef.current)
+          })
+        }
       }}>
       <DrawerTrigger asChild>
         <div
