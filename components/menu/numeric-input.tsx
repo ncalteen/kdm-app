@@ -99,7 +99,6 @@ export function NumericInput({
     />
   ) : (
     <Drawer
-      preventScrollRestoration
       noBodyStyles
       open={open}
       onOpenChange={(isOpen) => {
@@ -122,7 +121,7 @@ export function NumericInput({
           />
         </div>
       </DrawerTrigger>
-      <DrawerContent onCloseAutoFocus={(e) => e.preventDefault()}>
+      <DrawerContent>
         <DrawerHeader className="text-center">
           <DrawerTitle>{label}</DrawerTitle>
           <DrawerDescription>
