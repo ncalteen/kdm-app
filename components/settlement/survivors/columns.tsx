@@ -75,11 +75,12 @@ export const createColumns = ({
         )
       },
       cell: ({ row }) => (
-        <div className="flex gap-2 justify-start items-center">
+        <div className="flex gap-2 justify-start items-center min-w-0">
           <Button
             variant="outline"
             size="sm"
             title="View survivor"
+            className="shrink-0"
             onClick={() => setSelectedSurvivor(row.original)}>
             <UserRoundSearchIcon className="h-4 w-4" />
           </Button>
@@ -127,9 +128,9 @@ export const createColumns = ({
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <div className="text-left text-sm pl-2 flex gap-2 items-center">
+          <div className="text-left text-sm pl-2 flex gap-2 items-center min-w-0">
             <Avatar
-              className={`h-6 w-6 ${getColorStyle(row.original.color as ColorChoice, 'bg')}`}>
+              className={`h-6 w-6 shrink-0 ${getColorStyle(row.original.color as ColorChoice, 'bg')}`}>
               <AvatarFallback className="bg-transparent">
                 {(row.original.dead && <SkullIcon className="h-3 w-3" />) ||
                   (row.original.retired && !row.original.dead && (
@@ -137,7 +138,7 @@ export const createColumns = ({
                   ))}
               </AvatarFallback>
             </Avatar>
-            {row.original.survivor_name}
+            <span className="truncate">{row.original.survivor_name}</span>
           </div>
           {row.original.wanderer && (
             <Badge variant="outline" className="text-xs">
@@ -167,12 +168,12 @@ export const createColumns = ({
         )
       },
       cell: ({ row }) => (
-        <div className="text-sm hidden md:block">
+        <div className="text-sm hidden md:flex md:justify-center">
           <Badge variant="outline">{Gender[row.original.gender]}</Badge>
         </div>
       ),
       meta: {
-        className: 'hidden md:table-cell'
+        className: 'hidden md:table-cell md:w-[100px] text-center'
       }
     },
     {
@@ -190,10 +191,13 @@ export const createColumns = ({
         )
       },
       cell: ({ row }) => (
-        <div className="text-sm">
+        <div className="text-sm flex justify-center">
           <Badge variant="outline">{row.original.hunt_xp}</Badge>
         </div>
-      )
+      ),
+      meta: {
+        className: 'w-[80px] md:w-[100px] text-center'
+      }
     },
     {
       accessorKey: 'philosophy',
@@ -215,7 +219,7 @@ export const createColumns = ({
         </div>
       ),
       meta: {
-        className: 'hidden md:table-cell'
+        className: 'hidden md:table-cell md:w-[140px]'
       }
     },
     {
@@ -234,10 +238,15 @@ export const createColumns = ({
       },
       cell: ({ row }) =>
         row.getValue('retired') && (
-          <Badge variant="secondary" className="text-sm h-8 w-8">
-            <ShieldOffIcon />
-          </Badge>
-        )
+          <div className="flex justify-center">
+            <Badge variant="secondary" className="text-sm h-8 w-8">
+              <ShieldOffIcon />
+            </Badge>
+          </div>
+        ),
+      meta: {
+        className: 'w-[60px] md:w-[100px] text-center'
+      }
     },
     {
       accessorKey: 'dead',
@@ -255,10 +264,15 @@ export const createColumns = ({
       },
       cell: ({ row }) =>
         row.getValue('dead') && (
-          <Badge variant="destructive" className="text-sm h-8 w-8">
-            <SkullIcon />
-          </Badge>
-        )
+          <div className="flex justify-center">
+            <Badge variant="destructive" className="text-sm h-8 w-8">
+              <SkullIcon />
+            </Badge>
+          </div>
+        ),
+      meta: {
+        className: 'w-[60px] md:w-[100px] text-center'
+      }
     }
   ]
 }
