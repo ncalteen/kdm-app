@@ -12,6 +12,7 @@ import {
   CommandList
 } from '@/components/ui/command'
 import { Label } from '@/components/ui/label'
+import { LongPressCheckbox } from '@/components/ui/long-press-checkbox'
 import {
   Popover,
   PopoverContent,
@@ -33,7 +34,7 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { MouseEvent, ReactElement, useCallback, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Knowledge Card Properties
@@ -159,6 +160,7 @@ export function KnowledgeCard({
     observation_rank: selectedSurvivor?.knowledge_1_observation_rank ?? 0,
     rank_up: selectedSurvivor?.knowledge_1_rank_up ?? null
   })
+  const knowledge1RankUpRef = useRef(knowledge1.rank_up)
   const [knowledge2, setKnowledge2] = useState({
     id: selectedSurvivor?.knowledge_2?.id ?? '',
     knowledge_name: selectedSurvivor?.knowledge_2?.knowledge_name ?? '',
@@ -168,6 +170,7 @@ export function KnowledgeCard({
     observation_rank: selectedSurvivor?.knowledge_2_observation_rank ?? 0,
     rank_up: selectedSurvivor?.knowledge_2_rank_up ?? null
   })
+  const knowledge2RankUpRef = useRef(knowledge2.rank_up)
 
   const canUseFightingArtsKnowledges =
     survivors.find((s) => s.id === selectedSurvivor?.id)
@@ -196,6 +199,15 @@ export function KnowledgeCard({
       rank_up: selectedSurvivor?.knowledge_2_rank_up ?? null
     })
   }
+
+  // Sync refs after state updates (refs cannot be written during render)
+  useEffect(() => {
+    knowledge1RankUpRef.current = knowledge1.rank_up
+  }, [knowledge1.rank_up])
+
+  useEffect(() => {
+    knowledge2RankUpRef.current = knowledge2.rank_up
+  }, [knowledge2.rank_up])
 
   /**
    * Handle Observation Rank Change
@@ -406,19 +418,17 @@ export function KnowledgeCard({
    * Update Knowledge 1 Rank Up Milestone
    *
    * @param index Checkbox Index (0-based)
-   * @param event Mouse Event
    */
   const updateKnowledge1RankUp = useCallback(
-    (index: number, event: MouseEvent) => {
-      event.preventDefault()
+    (index: number) => {
+      const newRankUp = knowledge1RankUpRef.current === index ? null : index
+      const oldRankUp = knowledge1RankUpRef.current
 
-      const newRankUp = knowledge1.rank_up === index ? null : index
-      const oldRankUp = knowledge1.rank_up
-
-      setKnowledge1({
-        ...knowledge1,
+      knowledge1RankUpRef.current = newRankUp
+      setKnowledge1((prev) => ({
+        ...prev,
         rank_up: newRankUp
-      })
+      }))
 
       setSurvivors(
         survivors.map((s) =>
@@ -435,7 +445,8 @@ export function KnowledgeCard({
           )
         )
         .catch((error) => {
-          setKnowledge1({ ...knowledge1, rank_up: oldRankUp })
+          knowledge1RankUpRef.current = oldRankUp
+          setKnowledge1((prev) => ({ ...prev, rank_up: oldRankUp }))
           setSurvivors(
             survivors.map((s) =>
               s.id === selectedSurvivor?.id
@@ -448,7 +459,7 @@ export function KnowledgeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [knowledge1, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -648,19 +659,17 @@ export function KnowledgeCard({
    * Update Knowledge 2 Rank Up Milestone
    *
    * @param index Checkbox Index (0-based)
-   * @param event Mouse Event
    */
   const updateKnowledge2RankUp = useCallback(
-    (index: number, event: MouseEvent) => {
-      event.preventDefault()
+    (index: number) => {
+      const newRankUp = knowledge2RankUpRef.current === index ? null : index
+      const oldRankUp = knowledge2RankUpRef.current
 
-      const newRankUp = knowledge2.rank_up === index ? null : index
-      const oldRankUp = knowledge2.rank_up
-
-      setKnowledge2({
-        ...knowledge2,
+      knowledge2RankUpRef.current = newRankUp
+      setKnowledge2((prev) => ({
+        ...prev,
         rank_up: newRankUp
-      })
+      }))
 
       setSurvivors(
         survivors.map((s) =>
@@ -677,7 +686,8 @@ export function KnowledgeCard({
           )
         )
         .catch((error) => {
-          setKnowledge2({ ...knowledge2, rank_up: oldRankUp })
+          knowledge2RankUpRef.current = oldRankUp
+          setKnowledge2((prev) => ({ ...prev, rank_up: oldRankUp }))
           setSurvivors(
             survivors.map((s) =>
               s.id === selectedSurvivor?.id
@@ -690,7 +700,7 @@ export function KnowledgeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [knowledge2, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -835,34 +845,38 @@ export function KnowledgeCard({
               </Label>
             </div>
           </div>
-          <div className="flex gap-1 pt-2">
-            {[...Array(9)].map((_, index) => {
-              const checked = knowledge1.observation_rank >= index + 1
-              const isRankUpMilestone = knowledge1.rank_up === index
-              const hasKnowledge = !!knowledge1.id
+          <div className="flex flex-col gap-1">
+            <div className="flex gap-1 pt-2">
+              {[...Array(9)].map((_, index) => {
+                const checked = knowledge1.observation_rank >= index + 1
+                const isRankUpMilestone = knowledge1.rank_up === index
+                const hasKnowledge = !!knowledge1.id
 
-              return (
-                <Checkbox
-                  key={index}
-                  disabled={!hasKnowledge}
-                  checked={checked}
-                  onCheckedChange={(checked) =>
-                    updateKnowledge1ObservationRank(!!checked, index)
-                  }
-                  onContextMenu={(event) => {
-                    if (!hasKnowledge) {
-                      event.preventDefault()
-                      return
+                return (
+                  <LongPressCheckbox
+                    key={index}
+                    disabled={!hasKnowledge}
+                    checked={checked}
+                    onCheckedChange={(checked) =>
+                      updateKnowledge1ObservationRank(!!checked, index)
                     }
-                    updateKnowledge1RankUp(index, event)
-                  }}
-                  className={cn(
-                    'h-4 w-4 rounded-sm',
-                    !checked && isRankUpMilestone && 'border-2 border-primary'
-                  )}
-                />
-              )
-            })}
+                    onLongPress={
+                      hasKnowledge
+                        ? () => updateKnowledge1RankUp(index)
+                        : undefined
+                    }
+                    className={cn(
+                      'h-4 w-4 rounded-sm',
+                      !checked && isRankUpMilestone && 'border-2 border-primary'
+                    )}
+                  />
+                )
+              })}
+            </div>
+
+            <p className="text-xs text-muted-foreground text-right lg:hidden">
+              Long press to mark rank-up
+            </p>
           </div>
         </div>
 
@@ -924,34 +938,38 @@ export function KnowledgeCard({
               </Label>
             </div>
           </div>
-          <div className="flex gap-1 pt-2">
-            {[...Array(9)].map((_, index) => {
-              const checked = knowledge2.observation_rank >= index + 1
-              const isRankUpMilestone = knowledge2.rank_up === index
-              const hasKnowledge = !!knowledge2.id
+          <div className="flex flex-col gap-1">
+            <div className="flex gap-1 pt-2">
+              {[...Array(9)].map((_, index) => {
+                const checked = knowledge2.observation_rank >= index + 1
+                const isRankUpMilestone = knowledge2.rank_up === index
+                const hasKnowledge = !!knowledge2.id
 
-              return (
-                <Checkbox
-                  key={index}
-                  disabled={!hasKnowledge}
-                  checked={checked}
-                  onCheckedChange={(checked) =>
-                    updateKnowledge2ObservationRank(!!checked, index)
-                  }
-                  onContextMenu={(event) => {
-                    if (!hasKnowledge) {
-                      event.preventDefault()
-                      return
+                return (
+                  <LongPressCheckbox
+                    key={index}
+                    disabled={!hasKnowledge}
+                    checked={checked}
+                    onCheckedChange={(checked) =>
+                      updateKnowledge2ObservationRank(!!checked, index)
                     }
-                    updateKnowledge2RankUp(index, event)
-                  }}
-                  className={cn(
-                    'h-4 w-4 rounded-sm',
-                    !checked && isRankUpMilestone && 'border-2 border-primary'
-                  )}
-                />
-              )
-            })}
+                    onLongPress={
+                      hasKnowledge
+                        ? () => updateKnowledge2RankUp(index)
+                        : undefined
+                    }
+                    className={cn(
+                      'h-4 w-4 rounded-sm',
+                      !checked && isRankUpMilestone && 'border-2 border-primary'
+                    )}
+                  />
+                )
+              })}
+            </div>
+
+            <p className="text-xs text-muted-foreground text-right lg:hidden">
+              Long press to mark rank-up
+            </p>
           </div>
         </div>
 

@@ -5,7 +5,6 @@ import { SelectNeurosis } from '@/components/menu/select-neurosis'
 import { SelectPhilosophy } from '@/components/menu/select-philosophy'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Command,
   CommandEmpty,
@@ -15,6 +14,7 @@ import {
   CommandList
 } from '@/components/ui/command'
 import { Label } from '@/components/ui/label'
+import { LongPressCheckbox } from '@/components/ui/long-press-checkbox'
 import {
   Popover,
   PopoverContent,
@@ -39,7 +39,7 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { MouseEvent, ReactElement, useCallback, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Philosophy Card Properties
@@ -165,6 +165,9 @@ export function PhilosophyCard({
     observation_rank: selectedSurvivor?.tenet_knowledge_observation_rank ?? 0,
     rank_up: selectedSurvivor?.tenet_knowledge_rank_up ?? null
   })
+  const tenetRankUpRef = useRef(
+    selectedSurvivor?.tenet_knowledge_rank_up ?? null
+  )
   const [philosophy, setPhilosophy] = useState<{
     id: string
     philosophy_name: string
@@ -190,6 +193,11 @@ export function PhilosophyCard({
     setPhilosophy(selectedSurvivor?.philosophy ?? null)
     setPhilosophyRank(selectedSurvivor?.philosophy_rank ?? 0)
   }
+
+  // Sync ref after state updates (refs cannot be written during render)
+  useEffect(() => {
+    tenetRankUpRef.current = tenetKnowledge.rank_up
+  }, [tenetKnowledge.rank_up])
 
   /**
    * Handle Philosophy Change
@@ -350,19 +358,17 @@ export function PhilosophyCard({
   )
 
   /**
-   * Handle Tenet Knowledge Rank Up Right Click
+   * Handle Tenet Knowledge Rank Up (Right-Click or Long Press)
    *
    * @param index Checkbox Index (0-Based)
-   * @param event Mouse Event
    */
-  const handleRightClick = useCallback(
-    (index: number, event: MouseEvent) => {
-      event.preventDefault()
+  const handleRankUpToggle = useCallback(
+    (index: number) => {
+      const prevRankUp = tenetRankUpRef.current
+      const newRankUp = tenetRankUpRef.current === index ? null : index
 
-      const prevRankUp = tenetKnowledge.rank_up
-      const newRankUp = tenetKnowledge.rank_up === index ? null : index
-
-      setTenetKnowledge({ ...tenetKnowledge, rank_up: newRankUp })
+      tenetRankUpRef.current = newRankUp
+      setTenetKnowledge((prev) => ({ ...prev, rank_up: newRankUp }))
 
       setSurvivors(
         survivors.map((s) =>
@@ -381,7 +387,8 @@ export function PhilosophyCard({
           )
         )
         .catch((error) => {
-          setTenetKnowledge({ ...tenetKnowledge, rank_up: prevRankUp })
+          tenetRankUpRef.current = prevRankUp
+          setTenetKnowledge((prev) => ({ ...prev, rank_up: prevRankUp }))
           setSurvivors(
             survivors.map((s) =>
               s.id === selectedSurvivor?.id
@@ -394,7 +401,7 @@ export function PhilosophyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [tenetKnowledge, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -742,34 +749,37 @@ export function PhilosophyCard({
               Tenet Knowledge
             </Label>
           </div>
-          <div className="flex gap-1 pt-2">
-            {[...Array(9)].map((_, index) => {
-              const checked = tenetKnowledge.observation_rank > index
-              const isRankUpMilestone = tenetKnowledge.rank_up === index
-              const hasTenetKnowledge = !!tenetKnowledge.id
+          <div className="flex flex-col gap-1">
+            <div className="flex gap-1 pt-2">
+              {[...Array(9)].map((_, index) => {
+                const checked = tenetKnowledge.observation_rank > index
+                const isRankUpMilestone = tenetKnowledge.rank_up === index
+                const hasTenetKnowledge = !!tenetKnowledge.id
 
-              return (
-                <Checkbox
-                  key={index}
-                  disabled={!hasTenetKnowledge}
-                  checked={checked}
-                  onCheckedChange={(checked) =>
-                    updateTenetKnowledgeObservationRank(!!checked, index)
-                  }
-                  onContextMenu={(event) => {
-                    if (!hasTenetKnowledge) {
-                      event.preventDefault()
-                      return
+                return (
+                  <LongPressCheckbox
+                    key={index}
+                    disabled={!hasTenetKnowledge}
+                    checked={checked}
+                    onCheckedChange={(checked) =>
+                      updateTenetKnowledgeObservationRank(!!checked, index)
                     }
-                    handleRightClick(index, event)
-                  }}
-                  className={cn(
-                    'h-4 w-4 rounded-sm',
-                    !checked && isRankUpMilestone && 'border-2 border-primary'
-                  )}
-                />
-              )
-            })}
+                    onLongPress={
+                      hasTenetKnowledge
+                        ? () => handleRankUpToggle(index)
+                        : undefined
+                    }
+                    className={cn(
+                      'h-4 w-4 rounded-sm',
+                      !checked && isRankUpMilestone && 'border-2 border-primary'
+                    )}
+                  />
+                )
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground text-right lg:hidden">
+              Long press to mark rank-up
+            </p>
           </div>
         </div>
 

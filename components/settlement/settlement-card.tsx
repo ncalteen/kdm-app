@@ -19,6 +19,7 @@ import { OverviewCard } from '@/components/settlement/overview/overview-card'
 import { PatternsCard } from '@/components/settlement/patterns/patterns-card'
 import { PrinciplesCard } from '@/components/settlement/principles/principles-card'
 import { QuarriesCard } from '@/components/settlement/quarries/quarries-card'
+import { ResourceOverviewCard } from '@/components/settlement/resources/resource-overview-card'
 import { ResourcesCard } from '@/components/settlement/resources/resources-card'
 import { SeedPatternsCard } from '@/components/settlement/seed-patterns/seed-patterns-card'
 import { SquireProgressionCards } from '@/components/settlement/squires/squire-progression-cards'
@@ -444,6 +445,9 @@ export function SettlementCard({
           {/* Crafting Tab */}
           {selectedSettlement && selectedTab === TabType.CRAFTING && (
             <div className="flex flex-col gap-2 pl-2">
+              {/* Resource Overview */}
+              <ResourceOverviewCard selectedSettlement={selectedSettlement} />
+
               {/* Resources */}
               <ResourcesCard
                 local={local}
