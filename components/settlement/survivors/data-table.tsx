@@ -115,8 +115,8 @@ export function SurvivorDataTable<TData, TValue>({
         </Button>
       </div>
 
-      <div className="overflow-y-auto h-[300px] w-full rounded-md border">
-        <table className="w-full">
+      <div className="overflow-auto h-[300px] w-full rounded-md border">
+        <table className="min-w-full">
           <thead className="sticky top-0 bg-accent">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="border-b">

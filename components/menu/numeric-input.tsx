@@ -99,6 +99,7 @@ export function NumericInput({
     />
   ) : (
     <Drawer
+      noBodyStyles
       open={open}
       onOpenChange={(isOpen) => {
         if (isOpen) setDraftValue(value)
