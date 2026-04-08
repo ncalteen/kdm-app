@@ -120,7 +120,7 @@ export function NumericInput({
           />
         </div>
       </DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent onCloseAutoFocus={(e) => e.preventDefault()}>
         <DrawerHeader className="text-center">
           <DrawerTitle>{label}</DrawerTitle>
           <DrawerDescription>
