@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormItem } from '@/components/ui/form'
 import { Label } from '@/components/ui/label'
+import { LongPressCheckbox } from '@/components/ui/long-press-checkbox'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -17,7 +18,7 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { BookOpenIcon } from 'lucide-react'
-import { MouseEvent, ReactElement, useCallback, useState } from 'react'
+import { ReactElement, useCallback, useRef, useState } from 'react'
 
 /**
  * Hunt XP Card Properties
@@ -60,6 +61,7 @@ export function HuntXPCard({
   const [huntXPRankUp, setHuntXPRankUp] = useState<number[]>(
     selectedSurvivor?.hunt_xp_rank_up ?? []
   )
+  const huntXPRankUpRef = useRef(huntXPRankUp)
 
   if (prevSurvivor !== selectedSurvivor) {
     setPrevSurvivor(selectedSurvivor)
@@ -105,21 +107,19 @@ export function HuntXPCard({
   )
 
   /**
-   * Handles right-clicking on Hunt XP checkboxes to toggle rank up milestones
+   * Handles toggling rank up milestones (via right-click or long press)
    *
    * @param index Checkbox Index (0-based)
-   * @param event Mouse Event
    */
   const updateHuntXPRankUp = useCallback(
-    (index: number, event: MouseEvent) => {
-      event.preventDefault()
-
-      const currentRankUps = [...huntXPRankUp]
+    (index: number) => {
+      const currentRankUps = [...huntXPRankUpRef.current]
       const rankUpIndex = currentRankUps.indexOf(index)
       const oldSurvivors = [...survivors]
 
       if (rankUpIndex >= 0) {
         currentRankUps.splice(rankUpIndex, 1)
+        huntXPRankUpRef.current = currentRankUps
         setHuntXPRankUp(currentRankUps)
         setSurvivors(
           survivors.map((s) =>
@@ -139,12 +139,14 @@ export function HuntXPCard({
             console.error(
               `Error Removing Hunt XP Rank Up Milestone: ${error.message}`
             )
+            huntXPRankUpRef.current = [...currentRankUps, index]
             setHuntXPRankUp([...currentRankUps, index])
             setSurvivors(oldSurvivors)
           })
       } else {
         currentRankUps.push(index)
         currentRankUps.sort((a, b) => a - b)
+        huntXPRankUpRef.current = currentRankUps
         setHuntXPRankUp(currentRankUps)
         setSurvivors(
           survivors.map((s) =>
@@ -162,12 +164,14 @@ export function HuntXPCard({
             console.error(
               `Error Adding Hunt XP Rank Up Milestone: ${error.message}`
             )
-            setHuntXPRankUp(currentRankUps.filter((i) => i !== index))
+            const reverted = currentRankUps.filter((i) => i !== index)
+            huntXPRankUpRef.current = reverted
+            setHuntXPRankUp(reverted)
             setSurvivors(oldSurvivors)
           })
       }
     },
-    [huntXPRankUp, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, survivors, toast]
   )
 
   /**
@@ -192,16 +196,14 @@ export function HuntXPCard({
 
                     return (
                       <div key={i} className="flex">
-                        <Checkbox
+                        <LongPressCheckbox
                           id={`hunt-xp-${i}`}
                           checked={checked}
                           disabled={isDisabled(i)}
                           onCheckedChange={(checked) =>
                             updateHuntXP(i, !!checked)
                           }
-                          onContextMenu={(event) =>
-                            updateHuntXPRankUp(i, event)
-                          }
+                          onLongPress={() => updateHuntXPRankUp(i)}
                           className={cn(
                             'h-4 w-4 rounded-sm',
                             !checked &&
@@ -218,6 +220,10 @@ export function HuntXPCard({
             </FormItem>
           </div>
         </div>
+
+        <p className="text-xs text-muted-foreground text-right lg:hidden mt-1">
+          Long press to mark rank-up
+        </p>
 
         <hr className="hidden lg:flex my-2" />
 
