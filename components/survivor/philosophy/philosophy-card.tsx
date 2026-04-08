@@ -39,7 +39,7 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Philosophy Card Properties
@@ -193,6 +193,11 @@ export function PhilosophyCard({
     setPhilosophy(selectedSurvivor?.philosophy ?? null)
     setPhilosophyRank(selectedSurvivor?.philosophy_rank ?? 0)
   }
+
+  // Sync ref after state updates (refs cannot be written during render)
+  useEffect(() => {
+    tenetRankUpRef.current = tenetKnowledge.rank_up
+  }, [tenetKnowledge.rank_up])
 
   /**
    * Handle Philosophy Change

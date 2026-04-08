@@ -18,7 +18,7 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { BookOpenIcon } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Hunt XP Card Properties
@@ -68,6 +68,11 @@ export function HuntXPCard({
     setHuntXP(selectedSurvivor?.hunt_xp ?? 0)
     setHuntXPRankUp(selectedSurvivor?.hunt_xp_rank_up ?? [])
   }
+
+  // Sync ref after state updates (refs cannot be written during render)
+  useEffect(() => {
+    huntXPRankUpRef.current = huntXPRankUp
+  }, [huntXPRankUp])
 
   /**
    * Update Hunt XP

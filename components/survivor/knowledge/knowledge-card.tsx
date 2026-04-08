@@ -34,7 +34,7 @@ import {
 import { SettlementDetail, SurvivorDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { ReactElement, useCallback, useRef, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Knowledge Card Properties
@@ -199,6 +199,15 @@ export function KnowledgeCard({
       rank_up: selectedSurvivor?.knowledge_2_rank_up ?? null
     })
   }
+
+  // Sync refs after state updates (refs cannot be written during render)
+  useEffect(() => {
+    knowledge1RankUpRef.current = knowledge1.rank_up
+  }, [knowledge1.rank_up])
+
+  useEffect(() => {
+    knowledge2RankUpRef.current = knowledge2.rank_up
+  }, [knowledge2.rank_up])
 
   /**
    * Handle Observation Rank Change
