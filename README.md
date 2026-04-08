@@ -52,6 +52,22 @@ project has been tested on the following devices:
 - iPad Mini
 - iPad Pro
 
+### Storage
+
+The application uses your browser's local storage to save the following details:
+
+| Field                          | Description                                 |
+| ------------------------------ | ------------------------------------------- |
+| `disableToasts`                | User setting to disable toast notifications |
+| `selectedHuntId`               | Currently selected hunt ID                  |
+| `selectedHuntMonsterIndex`     | Currently selected hunt monster index       |
+| `selectedSettlementId`         | Currently selected settlement ID            |
+| `selectedSettlementPhaseId`    | Currently selected settlement phase ID      |
+| `selectedShowdownId`           | Currently selected showdown ID              |
+| `selectedShowdownMonsterIndex` | Currently selected showdown monster index   |
+| `selectedSurvivorId`           | Currently selected survivor ID              |
+| `selectedTab`                  | Currently selected UI tab                   |
+
 ## Development
 
 ### Prerequisites
