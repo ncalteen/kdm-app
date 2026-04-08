@@ -17,8 +17,8 @@ interface ResourceOverviewCardProps {
 /**
  * Resource Overview Card
  *
- * Displays total resource quantity by category and resource type.
- * If a resource category includes multiple values, each value is counted.
+ * Displays total resource quantity by category and resource type. If a resource
+ * includes multiple types, each value is counted.
  *
  * @param props Resource Overview Card Properties
  * @returns Resource Overview Card
