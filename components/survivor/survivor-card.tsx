@@ -86,7 +86,7 @@ export function SurvivorCard({
 }: SurvivorCardProps): ReactElement {
   return (
     <Card
-      className="w-full min-w-[430px] border-2 rounded-xl py-2 gap-2 transition-all duration-200 hover:shadow-lg bg-secondary"
+      className="w-full border-2 rounded-xl py-2 gap-2 transition-all duration-200 hover:shadow-lg bg-secondary"
       style={{
         ...getCardColorStyles(
           (selectedSurvivor?.color as ColorChoice) ?? ColorChoice.SLATE

@@ -42,7 +42,7 @@ export function SettlementPhaseSurvivorCard({
   if (!selectedSurvivor) return <></>
 
   return (
-    <Card className="w-full min-w-[430px] border-0 p-0">
+    <Card className="w-full border-0 p-0">
       <CardContent className="p-0">
         <SurvivorCard
           local={local}
