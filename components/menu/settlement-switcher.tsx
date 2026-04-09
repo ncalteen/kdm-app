@@ -13,6 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { getSettlementForUser } from '@/lib/dal/user'
@@ -146,12 +147,13 @@ export function SettlementSwitcher({
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <div className="flex items-center space-x-2">
-            <House className="size-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              Loading settlements...
-            </span>
-          </div>
+          <SidebarMenuButton size="lg" className="pointer-events-none">
+            <Skeleton className="flex aspect-square size-8 rounded-lg" />
+            <div className="flex flex-col gap-0.5 leading-none flex-1">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
     )
