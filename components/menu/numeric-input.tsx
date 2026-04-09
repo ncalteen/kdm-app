@@ -11,7 +11,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { Minus, Plus } from 'lucide-react'
-import { ReactElement, RefObject, useState } from 'react'
+import {
+  KeyboardEvent,
+  ReactElement,
+  RefObject,
+  useCallback,
+  useState
+} from 'react'
 
 /**
  * Numeric Input Properties
@@ -64,30 +70,58 @@ export function NumericInput({
   /**
    * Handle Increment
    */
-  const handleIncrement = () => {
-    const newValue = draftValue + step
-
-    if (max === undefined || newValue <= max) setDraftValue(newValue)
-  }
+  const handleIncrement = useCallback(
+    () =>
+      setDraftValue((prev) => {
+        const newValue = prev + step
+        return max === undefined || newValue <= max ? newValue : prev
+      }),
+    [step, max]
+  )
 
   /**
    * Handle Decrement
    */
-  const handleDecrement = () => {
-    const newValue = draftValue - step
-
-    if (min === undefined || newValue >= min) setDraftValue(newValue)
-  }
+  const handleDecrement = useCallback(
+    () =>
+      setDraftValue((prev) => {
+        const newValue = prev - step
+        return min === undefined || newValue >= min ? newValue : prev
+      }),
+    [step, min]
+  )
 
   /**
    * Handle Save
    *
    * Calls the onChange handler with the draft value and closes the dialog.
    */
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (onChange) onChange(draftValue)
     setOpen(false)
-  }
+  }, [onChange, draftValue])
+
+  /**
+   * Handle Keyboard Navigation
+   *
+   * Supports ArrowLeft to decrement, ArrowRight to increment, and Enter to
+   * save.
+   */
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        handleDecrement()
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        handleIncrement()
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        handleSave()
+      }
+    },
+    [handleDecrement, handleIncrement, handleSave]
+  )
 
   return disabled ? (
     <Input
@@ -120,11 +154,12 @@ export function NumericInput({
           />
         </div>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent onKeyDown={handleKeyDown}>
         <DialogHeader className="text-center">
           <DialogTitle>{label}</DialogTitle>
           <DialogDescription>
-            Adjust the value using the plus and minus buttons.
+            Adjust the value using the plus and minus buttons, or use the arrow
+            keys.
           </DialogDescription>
         </DialogHeader>
 
