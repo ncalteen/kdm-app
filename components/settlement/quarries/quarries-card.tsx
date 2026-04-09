@@ -172,13 +172,16 @@ export function QuarriesCard({
         prologue: quarryInfo.prologue,
         quarry_id: quarryId,
         monster_name: quarryInfo.monster_name,
-        node: '',
+        node: quarryInfo.node,
         unlocked: false
       }
 
       // Capture the updated quarries list so async callbacks reference it
       // instead of the stale pre-update closure value.
-      const updatedQuarries = [...selectedSettlement.quarries, optimisticRow]
+      const updatedQuarries = sortQuarries([
+        ...selectedSettlement.quarries,
+        optimisticRow
+      ])
 
       setSelectedSettlement({
         ...selectedSettlement,
@@ -357,18 +360,18 @@ export function QuarriesCard({
    * Optimistically removes a quarry from the settlement, then persists to the
    * DB.
    *
-   * @param index Settlement Quarry Index
+   * @param quarryId Settlement Quarry ID
    */
   const handleRemove = useCallback(
-    (index: number) => {
+    (quarryId: string) => {
       if (!selectedSettlement) return
 
-      const removed = selectedSettlement.quarries[index]
+      const removed = selectedSettlement.quarries.find((q) => q.id === quarryId)
       if (!removed) return
 
       setSelectedSettlement({
         ...selectedSettlement,
-        quarries: selectedSettlement.quarries.filter((n) => n.id !== removed.id)
+        quarries: selectedSettlement.quarries.filter((n) => n.id !== quarryId)
       })
 
       removeSettlementQuarry(removed.id)
@@ -376,12 +379,7 @@ export function QuarriesCard({
         .catch((err: unknown) => {
           // Revert the optimistic removal.
           setSelectedSettlement({
-            ...selectedSettlement,
-            quarries: [
-              ...selectedSettlement.quarries.slice(0, index),
-              removed,
-              ...selectedSettlement.quarries.slice(index)
-            ]
+            ...selectedSettlement
           })
 
           console.error('Quarry Remove Error:', err)
@@ -397,20 +395,20 @@ export function QuarriesCard({
    * Optimistically toggles the unlocked state of a quarry, then persists to
    * the DB.
    *
-   * @param index Quarry Index
+   * @param quarryId Settlement Quarry ID
    * @param unlocked New Unlocked State
    */
   const handleToggleUnlocked = useCallback(
-    (index: number, unlocked: boolean) => {
+    (quarryId: string, unlocked: boolean) => {
       if (!selectedSettlement) return
 
-      const target = selectedSettlement?.quarries[index]
+      const target = selectedSettlement.quarries.find((q) => q.id === quarryId)
       if (!target) return
 
       setSelectedSettlement({
         ...selectedSettlement,
-        quarries: selectedSettlement.quarries.map((n, i) =>
-          i === index ? { ...n, unlocked } : n
+        quarries: selectedSettlement.quarries.map((n) =>
+          n.id === quarryId ? { ...n, unlocked } : n
         )
       })
 
@@ -422,8 +420,8 @@ export function QuarriesCard({
           // Revert the optimistic toggle.
           setSelectedSettlement({
             ...selectedSettlement,
-            quarries: selectedSettlement.quarries.map((n, i) =>
-              i === index ? { ...n, unlocked: !unlocked } : n
+            quarries: selectedSettlement.quarries.map((n) =>
+              n.id === quarryId ? { ...n, unlocked: !unlocked } : n
             )
           })
 
@@ -432,6 +430,17 @@ export function QuarriesCard({
         })
     },
     [selectedSettlement, setSelectedSettlement, toast]
+  )
+
+  /**
+   * Sorted Quarries
+   *
+   * Quarries sorted by node level then alphabetically by name for consistent
+   * rendering order.
+   */
+  const sortedQuarries = useMemo(
+    () => sortQuarries(selectedSettlement?.quarries ?? []),
+    [selectedSettlement?.quarries]
   )
 
   return (
@@ -497,10 +506,10 @@ export function QuarriesCard({
             )}
 
             {hasFetched &&
-              selectedSettlement?.quarries.map((quarry, index) => (
+              sortedQuarries.map((quarry) => (
                 <QuarryItem
                   key={quarry.id}
-                  index={index}
+                  id={quarry.id}
                   monsterName={quarry.monster_name}
                   node={quarry.node}
                   onRemove={handleRemove}

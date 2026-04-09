@@ -11,16 +11,16 @@ import { memo, ReactElement } from 'react'
  * Quarry Item Properties
  */
 export interface QuarryItemProps {
-  /** Index */
-  index: number
+  /** Settlement Quarry ID */
+  id: string
   /** Monster Name */
   monsterName: string
   /** Monster Node */
   node: string
   /** On Remove Handler */
-  onRemove: (index: number) => void
+  onRemove: (id: string) => void
   /** On Toggle Unlocked Handler */
-  onToggleUnlocked: (index: number, unlocked: boolean) => void
+  onToggleUnlocked: (id: string, unlocked: boolean) => void
   /** Unlocked */
   unlocked: boolean
 }
@@ -35,7 +35,7 @@ export interface QuarryItemProps {
  * @returns Quarry Item Component
  */
 export const QuarryItem = memo(function QuarryItem({
-  index,
+  id,
   monsterName,
   node,
   onRemove,
@@ -46,16 +46,16 @@ export const QuarryItem = memo(function QuarryItem({
     <div className="flex items-center gap-2 pl-2">
       {/* Unlocked Checkbox */}
       <Checkbox
-        id={`quarry-unlocked-${index}`}
-        name={`quarry-unlocked-${index}`}
+        id={`quarry-unlocked-${id}`}
+        name={`quarry-unlocked-${id}`}
         checked={unlocked}
-        onCheckedChange={(checked) => onToggleUnlocked(index, !!checked)}
+        onCheckedChange={(checked) => onToggleUnlocked(id, !!checked)}
       />
 
       {/* Quarry Name */}
       <Label
         className="text-sm truncate ml-1"
-        htmlFor={`quarry-unlocked-${index}`}>
+        htmlFor={`quarry-unlocked-${id}`}>
         {monsterName}
       </Label>
 
@@ -70,7 +70,7 @@ export const QuarryItem = memo(function QuarryItem({
           variant="ghost"
           size="icon"
           type="button"
-          onClick={() => onRemove(index)}
+          onClick={() => onRemove(id)}
           title="Remove quarry">
           <TrashIcon className="h-4 w-4" />
         </Button>

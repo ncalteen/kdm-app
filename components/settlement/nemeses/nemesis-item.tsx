@@ -10,8 +10,8 @@ import { memo, ReactElement } from 'react'
  * Nemesis Item Properties
  */
 export interface NemesisItemProps {
-  /** Index */
-  index: number
+  /** Settlement Nemesis ID */
+  id: string
   /** Monster Name */
   monsterName: string
   /** Whether the Nemesis is Unlocked */
@@ -27,12 +27,12 @@ export interface NemesisItemProps {
   /** Available Level Numbers (determines which level checkboxes to show) */
   availableLevels: number[]
   /** On Remove Handler */
-  onRemove: (index: number) => void
+  onRemove: (id: string) => void
   /** On Toggle Unlocked Handler */
-  onToggleUnlocked: (index: number, unlocked: boolean) => void
+  onToggleUnlocked: (id: string, unlocked: boolean) => void
   /** On Toggle Level Defeated Handler */
   onToggleLevel: (
-    index: number,
+    id: string,
     field:
       | 'level_1_defeated'
       | 'level_2_defeated'
@@ -72,7 +72,7 @@ const LEVEL_CONFIG: {
  * @returns Nemesis Item Component
  */
 export const NemesisItem = memo(function NemesisItem({
-  index,
+  id,
   monsterName,
   unlocked,
   level1Defeated,
@@ -100,16 +100,16 @@ export const NemesisItem = memo(function NemesisItem({
     <div className="flex items-center gap-2 pl-2">
       {/* Unlocked Checkbox */}
       <Checkbox
-        id={`nemesis-unlocked-${index}`}
-        name={`nemesis-unlocked-${index}`}
+        id={`nemesis-unlocked-${id}`}
+        name={`nemesis-unlocked-${id}`}
         checked={unlocked}
-        onCheckedChange={(checked) => onToggleUnlocked(index, !!checked)}
+        onCheckedChange={(checked) => onToggleUnlocked(id, !!checked)}
       />
 
       {/* Nemesis Name */}
       <Label
         className="text-sm truncate ml-1"
-        htmlFor={`nemesis-unlocked-${index}`}>
+        htmlFor={`nemesis-unlocked-${id}`}>
         {monsterName}
       </Label>
 
@@ -125,15 +125,15 @@ export const NemesisItem = memo(function NemesisItem({
                 visibility: availableSet.has(level) ? 'visible' : 'hidden'
               }}>
               <Checkbox
-                id={`nemesis-${index}-${field}`}
-                name={`nemesis-${index}-${field}`}
+                id={`nemesis-${id}-${field}`}
+                name={`nemesis-${id}-${field}`}
                 checked={defeatedState[level]}
                 onCheckedChange={(checked) =>
-                  onToggleLevel(index, field, !!checked)
+                  onToggleLevel(id, field, !!checked)
                 }
                 disabled={!unlocked || !availableSet.has(level)}
               />
-              <Label className="text-xs" htmlFor={`nemesis-${index}-${field}`}>
+              <Label className="text-xs" htmlFor={`nemesis-${id}-${field}`}>
                 {label}
               </Label>
             </div>
@@ -144,7 +144,7 @@ export const NemesisItem = memo(function NemesisItem({
           variant="ghost"
           size="icon"
           type="button"
-          onClick={() => onRemove(index)}
+          onClick={() => onRemove(id)}
           title="Remove nemesis">
           <TrashIcon className="h-4 w-4" />
         </Button>

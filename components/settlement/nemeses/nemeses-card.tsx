@@ -183,13 +183,16 @@ export function NemesesCard({
         level_4_defeated: false,
         monster_name: nemesisInfo.monster_name,
         nemesis_id: nemesisId,
-        node: '',
+        node: nemesisInfo.node,
         unlocked: false
       }
 
       // Capture the updated nemeses list so async callbacks reference it
       // instead of the stale pre-update closure value.
-      const updatedNemeses = [...selectedSettlement.nemeses, optimisticRow]
+      const updatedNemeses = sortNemeses([
+        ...selectedSettlement.nemeses,
+        optimisticRow
+      ])
 
       setSelectedSettlement({
         ...selectedSettlement,
@@ -334,18 +337,18 @@ export function NemesesCard({
    * Optimistically removes a nemesis from the settlement, then persists to the
    * DB.
    *
-   * @param index Settlement Nemesis Index
+   * @param nemesisId Settlement Nemesis ID
    */
   const handleRemove = useCallback(
-    (index: number) => {
+    (nemesisId: string) => {
       if (!selectedSettlement) return
 
-      const removed = selectedSettlement.nemeses[index]
+      const removed = selectedSettlement.nemeses.find((n) => n.id === nemesisId)
       if (!removed) return
 
       setSelectedSettlement({
         ...selectedSettlement,
-        nemeses: selectedSettlement.nemeses.filter((n) => n.id !== removed.id)
+        nemeses: selectedSettlement.nemeses.filter((n) => n.id !== nemesisId)
       })
 
       removeSettlementNemesis(removed.id)
@@ -353,12 +356,7 @@ export function NemesesCard({
         .catch((err: unknown) => {
           // Revert the optimistic removal.
           setSelectedSettlement({
-            ...selectedSettlement,
-            nemeses: [
-              ...selectedSettlement.nemeses.slice(0, index),
-              removed,
-              ...selectedSettlement.nemeses.slice(index)
-            ]
+            ...selectedSettlement
           })
 
           console.error('Nemesis Remove Error:', err)
@@ -374,20 +372,20 @@ export function NemesesCard({
    * Optimistically toggles the unlocked state of a nemesis, then persists to
    * the DB.
    *
-   * @param index Nemesis Index
+   * @param nemesisId Settlement Nemesis ID
    * @param unlocked New Unlocked State
    */
   const handleToggleUnlocked = useCallback(
-    (index: number, unlocked: boolean) => {
+    (nemesisId: string, unlocked: boolean) => {
       if (!selectedSettlement) return
 
-      const target = selectedSettlement?.nemeses[index]
+      const target = selectedSettlement.nemeses.find((n) => n.id === nemesisId)
       if (!target) return
 
       setSelectedSettlement({
         ...selectedSettlement,
-        nemeses: selectedSettlement.nemeses.map((n, i) =>
-          i === index ? { ...n, unlocked } : n
+        nemeses: selectedSettlement.nemeses.map((n) =>
+          n.id === nemesisId ? { ...n, unlocked } : n
         )
       })
 
@@ -399,8 +397,8 @@ export function NemesesCard({
           // Revert the optimistic toggle.
           setSelectedSettlement({
             ...selectedSettlement,
-            nemeses: selectedSettlement.nemeses.map((n, i) =>
-              i === index ? { ...n, unlocked: !unlocked } : n
+            nemeses: selectedSettlement.nemeses.map((n) =>
+              n.id === nemesisId ? { ...n, unlocked: !unlocked } : n
             )
           })
 
@@ -416,13 +414,13 @@ export function NemesesCard({
    *
    * Optimistically toggles a defeated-level flag, then persists to the DB.
    *
-   * @param index Nemesis Index
+   * @param nemesisId Settlement Nemesis ID
    * @param field Defeated Level Field
    * @param defeated Defeated Status
    */
   const handleToggleLevel = useCallback(
     (
-      index: number,
+      nemesisId: string,
       field:
         | 'level_1_defeated'
         | 'level_2_defeated'
@@ -432,13 +430,13 @@ export function NemesesCard({
     ) => {
       if (!selectedSettlement) return
 
-      const target = selectedSettlement.nemeses[index]
+      const target = selectedSettlement.nemeses.find((n) => n.id === nemesisId)
       if (!target) return
 
       setSelectedSettlement({
         ...selectedSettlement,
-        nemeses: selectedSettlement.nemeses.map((n, i) =>
-          i === index ? { ...n, [field]: defeated } : n
+        nemeses: selectedSettlement.nemeses.map((n) =>
+          n.id === nemesisId ? { ...n, [field]: defeated } : n
         )
       })
 
@@ -448,8 +446,8 @@ export function NemesesCard({
           // Revert the optimistic toggle.
           setSelectedSettlement({
             ...selectedSettlement,
-            nemeses: selectedSettlement.nemeses.map((n, i) =>
-              i === index ? { ...n, [field]: !defeated } : n
+            nemeses: selectedSettlement.nemeses.map((n) =>
+              n.id === nemesisId ? { ...n, [field]: !defeated } : n
             )
           })
 
@@ -458,6 +456,17 @@ export function NemesesCard({
         })
     },
     [selectedSettlement, setSelectedSettlement, toast]
+  )
+
+  /**
+   * Sorted Nemeses
+   *
+   * Nemeses sorted by node level then alphabetically by name for consistent
+   * rendering order.
+   */
+  const sortedNemeses = useMemo(
+    () => sortNemeses(selectedSettlement?.nemeses ?? []),
+    [selectedSettlement?.nemeses]
   )
 
   return (
@@ -523,10 +532,10 @@ export function NemesesCard({
             )}
 
             {hasFetched &&
-              selectedSettlement?.nemeses.map((nemesis, index) => (
+              sortedNemeses.map((nemesis) => (
                 <NemesisItem
                   key={nemesis.id}
-                  index={index}
+                  id={nemesis.id}
                   monsterName={nemesis.monster_name}
                   unlocked={nemesis.unlocked}
                   level1Defeated={nemesis.level_1_defeated}
