@@ -553,7 +553,8 @@ export function EditMonsterCard({
       for (const [levelNum, subMonsters] of Object.entries(levels)) {
         for (const sub of subMonsters) {
           const levelParsed = parseInt(levelNum)
-          const levelData = {
+
+          const levelData: Record<string, unknown> = {
             ...sub,
             level_number: sub.level_number || levelParsed,
             ai_deck_remaining:
@@ -563,10 +564,13 @@ export function EditMonsterCard({
               sub.overtone_cards
           }
 
+          // Quarry levels don't have a `life` column; strip it.
+          if (isQuarry) delete levelData.life
+
           if (sub.id && !sub.id.startsWith('temp-')) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { id, ...updateData } = levelData
-            await fns.updateLevel(sub.id, updateData)
+            await fns.updateLevel(sub.id, updateData as never)
           } else {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { id, ...insertData } = levelData
@@ -885,65 +889,44 @@ export function EditMonsterCard({
         <Separator />
 
         {/* Timeline Events */}
-        <div className="space-y-2">
+        <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-semibold">Timeline Events</Label>
+            <h5 className="text-sm font-semibold">Timeline</h5>
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() =>
                 setTimelineEvents((prev) => [
                   ...prev,
-                  { id: `temp-${Date.now()}`, year_number: 0, entries: [''] }
+                  { id: `temp-${Date.now()}`, year_number: 0, entries: [] }
                 ])
               }>
-              <PlusIcon className="h-3 w-3" />
+              <PlusIcon className="h-3 w-3 mr-1" />
+              Add Year
             </Button>
           </div>
-          {timelineEvents.map((te, teIdx) => (
-            <div key={teIdx} className="border rounded-lg p-3">
-              <div className="flex gap-3">
-                {/* Year number and delete button */}
-                <div className="flex flex-col items-start gap-1 shrink-0">
-                  <div className="flex items-center gap-1">
-                    <Label className="text-xs pr-2">Year</Label>
-                    <NumericInput
-                      label="Year"
-                      value={te.year_number}
-                      min={0}
-                      onChange={(v) => {
-                        const next = [...timelineEvents]
-                        next[teIdx] = { ...next[teIdx], year_number: v }
-                        setTimelineEvents(next)
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() =>
-                        setTimelineEvents(
-                          timelineEvents.filter((_, i) => i !== teIdx)
-                        )
-                      }>
-                      <Trash2Icon className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Entries column */}
-                <div className="flex-1 space-y-1">
-                  {te.entries.map((entry, eIdx) => (
-                    <div key={eIdx} className="flex items-center gap-1">
-                      <Input
-                        value={entry}
-                        placeholder="Timeline entry"
-                        onChange={(e) => {
+          {timelineEvents.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No timeline entries defined.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {timelineEvents.map((te, teIdx) => (
+                <div key={teIdx} className="rounded-md border p-3">
+                  <div className="flex items-start gap-2">
+                    {/* Year label + number + delete */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Label className="text-xs shrink-0">Year</Label>
+                      <NumericInput
+                        className="w-16 h-8"
+                        label="Year number"
+                        min={0}
+                        max={50}
+                        value={te.year_number}
+                        onChange={(v) => {
                           const next = [...timelineEvents]
-                          const entries = [...next[teIdx].entries]
-                          entries[eIdx] = e.target.value
-                          next[teIdx] = { ...next[teIdx], entries }
+                          next[teIdx] = { ...next[teIdx], year_number: v }
                           setTimelineEvents(next)
                         }}
                       />
@@ -951,41 +934,77 @@ export function EditMonsterCard({
                         type="button"
                         variant="ghost"
                         size="icon"
+                        className="h-6 w-6"
+                        onClick={() =>
+                          setTimelineEvents(
+                            timelineEvents.filter((_, i) => i !== teIdx)
+                          )
+                        }
+                        title="Remove year">
+                        <Trash2Icon className="h-3 w-3" />
+                      </Button>
+                    </div>
+
+                    {/* Entries */}
+                    <div className="flex-1 space-y-1 min-w-0">
+                      {te.entries.map((entry, eIdx) => (
+                        <div key={eIdx} className="flex items-center gap-1">
+                          <Input
+                            className="h-8 text-sm"
+                            value={entry}
+                            placeholder="Timeline entry"
+                            onChange={(e) => {
+                              const next = [...timelineEvents]
+                              const entries = [...next[teIdx].entries]
+                              entries[eIdx] = e.target.value
+                              next[teIdx] = { ...next[teIdx], entries }
+                              setTimelineEvents(next)
+                            }}
+                            aria-label={`Year ${te.year_number} entry ${eIdx + 1}`}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0"
+                            onClick={() => {
+                              const next = [...timelineEvents]
+                              next[teIdx] = {
+                                ...next[teIdx],
+                                entries: next[teIdx].entries.filter(
+                                  (_, i) => i !== eIdx
+                                )
+                              }
+                              setTimelineEvents(next)
+                            }}
+                            title="Remove entry">
+                            <XIcon className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
                         onClick={() => {
                           const next = [...timelineEvents]
                           next[teIdx] = {
                             ...next[teIdx],
-                            entries: next[teIdx].entries.filter(
-                              (_, i) => i !== eIdx
-                            )
+                            entries: [...next[teIdx].entries, '']
                           }
                           setTimelineEvents(next)
                         }}>
-                        <Trash2Icon className="h-3 w-3" />
+                        <PlusIcon className="h-3 w-3 mr-1" />
+                        Add Entry
                       </Button>
                     </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => {
-                      const next = [...timelineEvents]
-                      next[teIdx] = {
-                        ...next[teIdx],
-                        entries: [...next[teIdx].entries, '']
-                      }
-                      setTimelineEvents(next)
-                    }}>
-                    <PlusIcon className="h-3 w-3 mr-1" />
-                    Add Entry
-                  </Button>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </section>
 
         {/* CC Rewards (Quarry Only) */}
         {monsterType === MonsterType.QUARRY && (
