@@ -204,7 +204,12 @@ export function HeadCard({
                     )
                   }
                 />
-                <Label className="text-xs">Intracranial Hemorrhage</Label>
+                <Label className="text-xs">
+                  <span className="lg:hidden">Intra Hem</span>
+                  <span className="hidden lg:inline">
+                    Intracranial Hemorrhage
+                  </span>
+                </Label>
               </div>
             </div>
 

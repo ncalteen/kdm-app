@@ -178,7 +178,10 @@ export function LegsCard({
                     />
                   ))}
                 </div>
-                <span className="text-xs">Broken Leg</span>
+                <span className="text-xs">
+                  <span className="lg:hidden">Brk Leg</span>
+                  <span className="hidden lg:inline">Broken Leg</span>
+                </span>
               </div>
 
               <div className="flex flex-row gap-2">
@@ -204,7 +207,10 @@ export function LegsCard({
                     />
                   ))}
                 </div>
-                <span className="text-xs">Dismembered Leg</span>
+                <span className="text-xs">
+                  <span className="lg:hidden">Dis Leg</span>
+                  <span className="hidden lg:inline">Dismembered Leg</span>
+                </span>
               </div>
             </div>
 

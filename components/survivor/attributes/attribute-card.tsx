@@ -335,22 +335,37 @@ export function AttributeCard({
         {(mode === SurvivorCardMode.SHOWDOWN_CARD ||
           mode === SurvivorCardMode.HUNT_CARD) && <div className="max-w-12" />}
         <div className="flex items-center justify-center">
-          <Label className="text-xs">Movement</Label>
+          <Label className="text-xs">
+            <span className="lg:hidden">Mvmt</span>
+            <span className="hidden lg:inline">Movement</span>
+          </Label>
         </div>
         <div className="flex items-center justify-center">
-          <Label className="text-xs">Accuracy</Label>
+          <Label className="text-xs">
+            <span className="lg:hidden">Acc</span>
+            <span className="hidden lg:inline">Accuracy</span>
+          </Label>
         </div>
         <div className="flex items-center justify-center">
-          <Label className="text-xs">Strength</Label>
+          <Label className="text-xs">
+            <span className="lg:hidden">Str</span>
+            <span className="hidden lg:inline">Strength</span>
+          </Label>
         </div>
         <div className="flex items-center justify-center">
-          <Label className="text-xs">Evasion</Label>
+          <Label className="text-xs">
+            <span className="lg:hidden">Eva</span>
+            <span className="hidden lg:inline">Evasion</span>
+          </Label>
         </div>
         <div className="flex items-center justify-center">
           <Label className="text-xs">Luck</Label>
         </div>
         <div className="flex items-center justify-center">
-          <Label className="text-xs">Speed</Label>
+          <Label className="text-xs">
+            <span className="lg:hidden">Spd</span>
+            <span className="hidden lg:inline">Speed</span>
+          </Label>
         </div>
         {selectedSettlement?.survivor_type ===
           DatabaseSurvivorType[SurvivorType.ARC] && (
