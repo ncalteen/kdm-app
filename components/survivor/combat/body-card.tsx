@@ -177,7 +177,10 @@ export function BodyCard({
                     />
                   ))}
                 </div>
-                <Label className="text-xs">Broken Rib</Label>
+                <Label className="text-xs">
+                  <span className="lg:hidden">Brk. Rib</span>
+                  <span className="hidden lg:inline">Broken Rib</span>
+                </Label>
               </div>
 
               {/* Severe Injuries - Gaping Chest Wound */}
@@ -202,7 +205,10 @@ export function BodyCard({
                     />
                   ))}
                 </div>
-                <Label className="text-xs">G. Chest Wound</Label>
+                <Label className="text-xs">
+                  <span className="lg:hidden">GC Wnd</span>
+                  <span className="hidden lg:inline">G Chest Wound</span>
+                </Label>
               </div>
             </div>
 

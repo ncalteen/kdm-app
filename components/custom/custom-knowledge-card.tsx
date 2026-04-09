@@ -56,6 +56,8 @@ const NO_PHILOSOPHY = '__none__'
 interface CustomKnowledgeCardProps {
   /** Local State */
   local: LocalStateType
+  /** Bumped when philosophies change externally */
+  philosophyVersion?: number
 }
 
 /**
@@ -70,7 +72,8 @@ interface CustomKnowledgeCardProps {
  * @returns Custom Knowledge Card Component
  */
 export function CustomKnowledgeCard({
-  local
+  local,
+  philosophyVersion
 }: CustomKnowledgeCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -137,6 +140,17 @@ export function CustomKnowledgeCard({
   useEffect(() => {
     loadItems()
   }, [loadItems])
+
+  // Re-fetch philosophies when they change externally
+  useEffect(() => {
+    if (philosophyVersion === undefined || philosophyVersion === 0) return
+
+    getPhilosophies()
+      .then((data) => setAvailablePhilosophies(data))
+      .catch((err: unknown) =>
+        console.error('Refresh Philosophies Error:', err)
+      )
+  }, [philosophyVersion])
 
   useEffect(() => {
     if (isAdding) newInputRef.current?.focus()

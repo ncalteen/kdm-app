@@ -229,7 +229,10 @@ export function ArmsCard({
                     />
                   ))}
                 </div>
-                <Label className="text-xs">Contracture</Label>
+                <Label className="text-xs">
+                  <span className="lg:hidden">Cont</span>
+                  <span className="hidden lg:inline">Contracture</span>
+                </Label>
               </div>
             </div>
 

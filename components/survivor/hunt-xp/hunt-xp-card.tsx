@@ -193,8 +193,10 @@ export function HuntXPCard({
         <div className="flex flex-col">
           <div className="flex items-center">
             <FormItem className="flex-1">
-              <div className="flex justify-between items-center">
-                <Label className="font-bold text-left text-sm">Hunt XP</Label>
+              <div className="flex flex-col lg:flex-row justify-between items-center gap-2 lg:gap-0">
+                <Label className="font-bold text-left text-sm self-start lg:self-center">
+                  Hunt XP
+                </Label>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 16 }, (_, i) => {
                     const checked = (huntXP ?? 0) > i
@@ -226,8 +228,8 @@ export function HuntXPCard({
           </div>
         </div>
 
-        <p className="text-xs text-muted-foreground text-right lg:hidden mt-1">
-          Long press to mark rank-up
+        <p className="text-xs text-muted-foreground text-center lg:hidden mt-1">
+          Long press for rank-up
         </p>
 
         <hr className="hidden lg:flex my-2" />

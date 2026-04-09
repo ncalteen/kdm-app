@@ -738,7 +738,7 @@ export function PhilosophyCard({
         </div>
 
         {/* Tenet Knowledge and Ranks */}
-        <div className="flex items-start gap-2 mt-1">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-2 mt-1">
           <div className="flex-grow flex flex-col gap-1">
             <TenetKnowledgeSelect
               knowledges={selectedSettlement?.knowledges ?? []}
@@ -749,8 +749,8 @@ export function PhilosophyCard({
               Tenet Knowledge
             </Label>
           </div>
-          <div className="flex flex-col gap-1">
-            <div className="flex gap-1 pt-2">
+          <div className="flex flex-col gap-1 items-center lg:items-end">
+            <div className="flex gap-1 pt-0 lg:pt-2">
               {[...Array(9)].map((_, index) => {
                 const checked = tenetKnowledge.observation_rank > index
                 const isRankUpMilestone = tenetKnowledge.rank_up === index
@@ -777,8 +777,8 @@ export function PhilosophyCard({
                 )
               })}
             </div>
-            <p className="text-xs text-muted-foreground text-right lg:hidden">
-              Long press to mark rank-up
+            <p className="text-xs text-muted-foreground text-right pr-6 lg:hidden">
+              Long press for rank-up
             </p>
           </div>
         </div>

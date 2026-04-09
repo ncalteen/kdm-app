@@ -144,7 +144,7 @@ export function HuntSurvivorCard({
   if (!selectedSurvivor) return <></>
 
   return (
-    <Card className="w-full min-w-[430px] border-0 p-0">
+    <Card className="w-full border-0 p-0">
       <CardContent className="px-2">
         <SurvivorCard
           local={local}

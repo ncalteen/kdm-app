@@ -179,8 +179,8 @@ export function WeaponProficiencyCard({
   return (
     <Card className="p-2 border-0">
       <CardContent className="p-0">
-        <div className="flex flex-row justify-between">
-          <div className="flex flex-col justify-between gap-2">
+        <div className="flex flex-col lg:flex-row justify-between gap-2">
+          <div className="flex flex-col gap-2">
             <CardTitle className="text-sm flex flex-row items-center gap-1">
               Weapon Proficiency
             </CardTitle>
@@ -190,7 +190,7 @@ export function WeaponProficiencyCard({
               onChange={handleWeaponTypeChange}
             />
           </div>
-          <div className="flex flex-col justify-between">
+          <div className="flex flex-col justify-between items-center lg:items-end gap-2">
             <div className="flex flex-row gap-2">
               {Array.from({ length: 8 }, (_, i) => (
                 <div key={i} className="w-4 h-4 flex">
@@ -209,7 +209,7 @@ export function WeaponProficiencyCard({
               ))}
             </div>
 
-            <hr />
+            <hr className="hidden lg:block w-full" />
 
             <div className="flex flex-row justify-between gap-2">
               {Array.from({ length: 2 }, (_, i) => (

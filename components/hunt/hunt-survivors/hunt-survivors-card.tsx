@@ -111,7 +111,7 @@ export function HuntSurvivorsCard({
 
   return (
     <div className="p-0">
-      <div className="survivor_carousel_controls min-w-[430px]">
+      <div className="survivor_carousel_controls">
         <div className="survivor_carousel_buttons">
           <Button
             className="h-12 w-12"

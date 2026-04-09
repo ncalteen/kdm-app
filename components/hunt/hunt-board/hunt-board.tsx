@@ -139,7 +139,7 @@ export function HuntBoard({
   }
 
   return (
-    <Card className="p-0 w-full min-w-[430px]">
+    <Card className="p-0 w-full">
       <CardContent className="p-0 w-full overflow-x-auto">
         <DndContext onDragEnd={handleDragEnd}>
           <div className="w-full overflow-x-auto gap-1 p-2 bg-muted/30 rounded-lg relative flex flex-row flex-wrap items-center justify-center">

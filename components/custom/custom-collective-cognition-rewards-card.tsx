@@ -1,5 +1,6 @@
 'use client'
 
+import { NumericInput } from '@/components/menu/numeric-input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -327,17 +328,12 @@ export function CustomCollectiveCognitionRewardsCard({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="new-ccr-value">Collective Cognition</Label>
-                  <Input
-                    id="new-ccr-value"
-                    type="number"
-                    min={0}
+                  <Label>Collective Cognition</Label>
+                  <NumericInput
+                    label="Collective Cognition"
                     value={newCC}
-                    onChange={(e) =>
-                      setNewCC(parseInt(e.target.value, 10) || 0)
-                    }
-                    onKeyDown={handleNewKeyDown}
-                    aria-label="Collective cognition value"
+                    min={0}
+                    onChange={(value) => setNewCC(value)}
                   />
                 </div>
                 <div className="flex justify-end gap-2">
@@ -374,17 +370,12 @@ export function CustomCollectiveCognitionRewardsCard({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-ccr-value">Collective Cognition</Label>
-                  <Input
-                    id="edit-ccr-value"
-                    type="number"
-                    min={0}
+                  <Label>Collective Cognition</Label>
+                  <NumericInput
+                    label="Collective Cognition"
                     value={editingCC}
-                    onChange={(e) =>
-                      setEditingCC(parseInt(e.target.value, 10) || 0)
-                    }
-                    onKeyDown={handleEditKeyDown}
-                    aria-label="Edit collective cognition value"
+                    min={0}
+                    onChange={(value) => setEditingCC(value)}
                   />
                 </div>
                 <div className="flex justify-end gap-2">

@@ -226,7 +226,10 @@ export function WaistCard({
                     />
                   ))}
                 </div>
-                <Label className="text-xs">W. Pelvis</Label>
+                <Label className="text-xs">
+                  <span className="lg:hidden">W Pelvis</span>
+                  <span className="hidden lg:inline">Warped Pelvis</span>
+                </Label>
               </div>
             </div>
 

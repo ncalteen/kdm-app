@@ -250,7 +250,7 @@ export function OverviewCard({
 
   return (
     <Card className="border-0 p-0 py-2">
-      <CardContent>
+      <CardContent className="p-0">
         {/* Desktop Layout */}
         <div className="hidden lg:flex flex-row items-start justify-between gap-4">
           {/* Survival Limit */}

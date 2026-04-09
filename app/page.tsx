@@ -137,7 +137,7 @@ function MainPage(): ReactElement {
   } = useLocal()
 
   return (
-    <div className="[--header-height:calc(--spacing(10))] min-w-[450px]">
+    <div className="[--header-height:calc(--spacing(10))]">
       <SidebarProvider>
         <SiteHeader />
 

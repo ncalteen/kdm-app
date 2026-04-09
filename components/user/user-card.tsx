@@ -41,7 +41,7 @@ import {
   ERROR_MESSAGE
 } from '@/lib/messages'
 import { UserSettingsDetail } from '@/lib/types'
-import { ReactElement, useCallback } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 
 /**
  * User Card Properties
@@ -70,6 +70,8 @@ export function UserCard({
   userSettings
 }: UserCardProps): ReactElement {
   const { toast } = useToast(local)
+  const [activeTab, setActiveTab] = useState('society')
+  const [philosophyVersion, setPhilosophyVersion] = useState(0)
 
   /**
    * Handle Killenium Butcher Unlock Change
@@ -285,8 +287,27 @@ export function UserCard({
       {/* Custom Content */}
       <h4 className="text-lg font-semibold">Custom Content</h4>
 
-      <Tabs defaultValue="society" className="w-full">
-        <TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {/* Mobile: dropdown selector */}
+        <div className="lg:hidden">
+          <Select value={activeTab} onValueChange={setActiveTab}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="society">Society</SelectItem>
+              <SelectItem value="crafting">Crafting</SelectItem>
+              <SelectItem value="arc">Arc</SelectItem>
+              <SelectItem value="survivors">Survivors</SelectItem>
+              <SelectItem value="monsters">Monsters</SelectItem>
+              <SelectItem value="wanderers">Wanderers</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop: tab row */}
+        <TabsList className="hidden lg:flex">
           <TabsTrigger value="society">Society</TabsTrigger>
           <TabsTrigger value="crafting">Crafting</TabsTrigger>
           <TabsTrigger value="arc">Arc</TabsTrigger>
@@ -318,9 +339,18 @@ export function UserCard({
         <TabsContent value="arc">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <CustomCollectiveCognitionRewardsCard local={local} />
-            <CustomPhilosophiesCard local={local} />
-            <CustomKnowledgeCard local={local} />
-            <CustomNeurosesCard local={local} />
+            <CustomPhilosophiesCard
+              local={local}
+              onPhilosophiesChange={() => setPhilosophyVersion((v) => v + 1)}
+            />
+            <CustomKnowledgeCard
+              local={local}
+              philosophyVersion={philosophyVersion}
+            />
+            <CustomNeurosesCard
+              local={local}
+              philosophyVersion={philosophyVersion}
+            />
           </div>
         </TabsContent>
         <TabsContent value="survivors">

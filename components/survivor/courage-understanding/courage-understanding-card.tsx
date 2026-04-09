@@ -128,11 +128,11 @@ export function CourageUnderstandingCard({
   return (
     <Card className="p-2 border-0">
       <CardContent className="p-0">
-        <div className="flex flex-row justify-between">
+        <div className="flex flex-col lg:flex-row justify-between gap-4 lg:gap-0">
           {/* Courage */}
-          <div className="flex flex-col w-[45%] gap-2">
+          <div className="flex flex-col lg:w-[45%] gap-2">
             <Label className="font-bold text-left text-sm">Courage</Label>
-            <div className="flex flex-row justify-between">
+            <div className="flex flex-row justify-center lg:justify-between gap-1 lg:gap-0">
               {Array.from({ length: 9 }, (_, i) => (
                 <div key={i} className="w-4 h-4 flex items-center">
                   <Checkbox
@@ -181,9 +181,9 @@ export function CourageUnderstandingCard({
           </div>
 
           {/* Understanding Section */}
-          <div className="flex flex-col w-[45%] gap-2">
+          <div className="flex flex-col lg:w-[45%] gap-2">
             <Label className="font-bold text-left text-sm">Understanding</Label>
-            <div className="flex flex-row justify-between">
+            <div className="flex flex-row justify-center lg:justify-between gap-1 lg:gap-0">
               {Array.from({ length: 9 }, (_, i) => (
                 <div key={i} className="w-4 h-4 flex items-center">
                   <Checkbox

@@ -56,6 +56,8 @@ const NO_PHILOSOPHY = '__none__'
 interface CustomNeurosesCardProps {
   /** Local State */
   local: LocalStateType
+  /** Bumped when philosophies change externally */
+  philosophyVersion?: number
 }
 
 /**
@@ -70,7 +72,8 @@ interface CustomNeurosesCardProps {
  * @returns Custom Neuroses Card Component
  */
 export function CustomNeurosesCard({
-  local
+  local,
+  philosophyVersion
 }: CustomNeurosesCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -135,6 +138,17 @@ export function CustomNeurosesCard({
   useEffect(() => {
     loadItems()
   }, [loadItems])
+
+  // Re-fetch philosophies when they change externally
+  useEffect(() => {
+    if (philosophyVersion === undefined || philosophyVersion === 0) return
+
+    getPhilosophies()
+      .then((data) => setAvailablePhilosophies(data))
+      .catch((err: unknown) =>
+        console.error('Refresh Philosophies Error:', err)
+      )
+  }, [philosophyVersion])
 
   useEffect(() => {
     if (isAdding) newInputRef.current?.focus()
