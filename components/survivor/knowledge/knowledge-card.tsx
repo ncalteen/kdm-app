@@ -831,7 +831,7 @@ export function KnowledgeCard({
 
       <CardContent className="p-0 flex flex-col">
         {/* Knowledge 1 */}
-        <div className="flex items-start gap-2">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-2">
           <div className="flex-grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
               <KnowledgeSelect
@@ -845,8 +845,8 @@ export function KnowledgeCard({
               </Label>
             </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <div className="flex gap-1 pt-2">
+          <div className="flex flex-col gap-1 items-center lg:items-end">
+            <div className="flex gap-1 pt-0 lg:pt-2">
               {[...Array(9)].map((_, index) => {
                 const checked = knowledge1.observation_rank >= index + 1
                 const isRankUpMilestone = knowledge1.rank_up === index
@@ -924,7 +924,7 @@ export function KnowledgeCard({
         <hr className="my-2 border-4" />
 
         {/* Knowledge 2 */}
-        <div className="flex items-start gap-2">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-2">
           <div className="flex-grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
               <KnowledgeSelect
@@ -938,8 +938,8 @@ export function KnowledgeCard({
               </Label>
             </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <div className="flex gap-1 pt-2">
+          <div className="flex flex-col gap-1 items-center lg:items-end">
+            <div className="flex gap-1 pt-0 lg:pt-2">
               {[...Array(9)].map((_, index) => {
                 const checked = knowledge2.observation_rank >= index + 1
                 const isRankUpMilestone = knowledge2.rank_up === index
