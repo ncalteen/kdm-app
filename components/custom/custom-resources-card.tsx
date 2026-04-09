@@ -3,7 +3,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Command,
   CommandEmpty,
@@ -462,8 +461,8 @@ export function CustomResourcesCard({
     </Popover>
   )
 
-  /** Resource type checklist component for reuse in add/edit forms */
-  const ResourceTypeChecklist = ({
+  /** Resource type multi-select dropdown for reuse in add/edit forms */
+  const ResourceTypeSelect = ({
     selected,
     onToggle,
     prefix
@@ -471,24 +470,51 @@ export function CustomResourcesCard({
     selected: DbResourceType[]
     onToggle: (type: DbResourceType) => void
     prefix: string
-  }) => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
-      {Constants.public.Enums.resource_type.map((type) => (
-        <div key={type} className="flex items-center gap-2">
-          <Checkbox
-            id={`${prefix}-${type}`}
-            checked={selected.includes(type)}
-            onCheckedChange={() => onToggle(type)}
-          />
-          <Label
-            htmlFor={`${prefix}-${type}`}
-            className="text-xs cursor-pointer">
-            {formatType(type)}
-          </Label>
-        </div>
-      ))}
-    </div>
-  )
+  }) => {
+    const [open, setOpen] = useState(false)
+
+    return (
+      <Popover modal={true} open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            aria-label={`${prefix} resource type selector`}
+            className="justify-between w-full">
+            {selected.length > 0
+              ? `${selected.length} selected`
+              : 'Select types...'}
+            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0">
+          <Command>
+            <CommandInput placeholder="Search types..." />
+            <CommandList>
+              <CommandEmpty>No types found.</CommandEmpty>
+              <CommandGroup>
+                {Constants.public.Enums.resource_type.map((type) => (
+                  <CommandItem
+                    key={type}
+                    value={formatType(type)}
+                    onSelect={() => onToggle(type)}>
+                    <Check
+                      className={cn(
+                        'h-4 w-4',
+                        selected.includes(type) ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    {formatType(type)}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    )
+  }
 
   /** Category selector for reuse in add/edit forms */
   const CategorySelector = ({
@@ -590,7 +616,7 @@ export function CustomResourcesCard({
                 )}
                 <div className="space-y-1">
                   <Label>Resource Types (optional)</Label>
-                  <ResourceTypeChecklist
+                  <ResourceTypeSelect
                     selected={newTypes}
                     onToggle={(type) => toggleType(type, newTypes, setNewTypes)}
                     prefix="new-resource"
@@ -656,7 +682,7 @@ export function CustomResourcesCard({
                 )}
                 <div className="space-y-1">
                   <Label>Resource Types (optional)</Label>
-                  <ResourceTypeChecklist
+                  <ResourceTypeSelect
                     selected={editingTypes}
                     onToggle={(type) =>
                       toggleType(type, editingTypes, setEditingTypes)
