@@ -227,7 +227,7 @@ export function HuntXPCard({
         </div>
 
         <p className="text-xs text-muted-foreground text-right lg:hidden mt-1">
-          Long press to mark rank-up
+          Long press for rank-up
         </p>
 
         <hr className="hidden lg:flex my-2" />

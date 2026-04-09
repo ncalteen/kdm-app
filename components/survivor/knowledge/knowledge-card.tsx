@@ -875,7 +875,7 @@ export function KnowledgeCard({
             </div>
 
             <p className="text-xs text-muted-foreground text-right lg:hidden">
-              Long press to mark rank-up
+              Long press for rank-up
             </p>
           </div>
         </div>
@@ -968,7 +968,7 @@ export function KnowledgeCard({
             </div>
 
             <p className="text-xs text-muted-foreground text-right lg:hidden">
-              Long press to mark rank-up
+              Long press for rank-up
             </p>
           </div>
         </div>

@@ -777,8 +777,8 @@ export function PhilosophyCard({
                 )
               })}
             </div>
-            <p className="text-xs text-muted-foreground text-right lg:hidden">
-              Long press to mark rank-up
+            <p className="text-xs text-muted-foreground text-right pr-6 lg:hidden">
+              Long press for rank-up
             </p>
           </div>
         </div>
