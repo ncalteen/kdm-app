@@ -49,6 +49,8 @@ import {
 interface CustomPhilosophiesCardProps {
   /** Local State */
   local: LocalStateType
+  /** Callback when philosophies are created, edited, or deleted */
+  onPhilosophiesChange?: () => void
 }
 
 /**
@@ -62,7 +64,8 @@ interface CustomPhilosophiesCardProps {
  * @returns Custom Philosophies Card Component
  */
 export function CustomPhilosophiesCard({
-  local
+  local,
+  onPhilosophiesChange
 }: CustomPhilosophiesCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -148,12 +151,13 @@ export function CustomPhilosophiesCard({
       )
 
       toast.success(PHILOSOPHY_CREATED_MESSAGE())
+      onPhilosophiesChange?.()
     } catch (err: unknown) {
       setItems(previous)
       console.error('Add Philosophy Error:', err)
       toast.error(ERROR_MESSAGE())
     }
-  }, [items, newName, sortItems, toast])
+  }, [items, newName, sortItems, toast, onPhilosophiesChange])
 
   /**
    * Handle Delete Philosophy
@@ -169,14 +173,17 @@ export function CustomPhilosophiesCard({
       setItems(items.filter((i) => i.id !== item.id))
 
       removePhilosophy(item.id)
-        .then(() => toast.success(PHILOSOPHY_REMOVED_MESSAGE()))
+        .then(() => {
+          toast.success(PHILOSOPHY_REMOVED_MESSAGE())
+          onPhilosophiesChange?.()
+        })
         .catch((err: unknown) => {
           setItems(previous)
           console.error('Delete Philosophy Error:', err)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [items, toast]
+    [items, toast, onPhilosophiesChange]
   )
 
   /** Enter edit mode for a philosophy */
@@ -218,13 +225,16 @@ export function CustomPhilosophiesCard({
     setEditingName('')
 
     updatePhilosophy(editingId, { philosophy_name: trimmedName })
-      .then(() => toast.success(PHILOSOPHY_UPDATED_MESSAGE()))
+      .then(() => {
+        toast.success(PHILOSOPHY_UPDATED_MESSAGE())
+        onPhilosophiesChange?.()
+      })
       .catch((err: unknown) => {
         setItems(previous)
         console.error('Update Philosophy Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [items, editingId, editingName, sortItems, toast])
+  }, [items, editingId, editingName, sortItems, toast, onPhilosophiesChange])
 
   const handleNewKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
