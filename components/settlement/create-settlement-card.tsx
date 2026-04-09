@@ -202,7 +202,7 @@ export function CreateSettlementCard({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center justify-between">
-                    <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                    <FormLabel className="text-left whitespace-nowrap">
                       Settlement
                     </FormLabel>
                     <FormControl>
@@ -230,8 +230,8 @@ export function CreateSettlementCard({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center justify-between">
-                    <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
-                      Campaign Type
+                    <FormLabel className="text-left whitespace-nowrap">
+                      Campaign
                     </FormLabel>
                     <FormControl>
                       <SelectCampaignType
@@ -253,7 +253,7 @@ export function CreateSettlementCard({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center justify-between">
-                    <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                    <FormLabel className="text-left whitespace-nowrap">
                       Survivor Type
                     </FormLabel>
                     <FormControl>
@@ -275,7 +275,7 @@ export function CreateSettlementCard({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center justify-between">
-                    <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                    <FormLabel className="text-left whitespace-nowrap">
                       Use Scouts
                     </FormLabel>
                     <FormControl>
@@ -297,7 +297,7 @@ export function CreateSettlementCard({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center justify-between">
-                    <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                    <FormLabel className="text-left whitespace-nowrap">
                       Wanderers
                     </FormLabel>
                     <FormControl>
