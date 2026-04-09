@@ -7,7 +7,7 @@ import { ReactElement } from 'react'
 
 export default function Page(): ReactElement {
   return (
-    <div className="[--header-height:calc(--spacing(10))] min-w-[450px]">
+    <div className="[--header-height:calc(--spacing(10))]">
       <SidebarProvider>
         <SiteHeader />
 
