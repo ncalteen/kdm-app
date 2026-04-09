@@ -1,17 +1,23 @@
 import { Button } from '@/components/ui/button'
 import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger
-} from '@/components/ui/drawer'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { Minus, Plus } from 'lucide-react'
-import { ReactElement, RefObject, useRef, useState } from 'react'
+import {
+  KeyboardEvent,
+  ReactElement,
+  RefObject,
+  useCallback,
+  useState
+} from 'react'
 
 /**
  * Numeric Input Properties
@@ -60,35 +66,62 @@ export function NumericInput({
 }: NumericInputProps): ReactElement {
   const [draftValue, setDraftValue] = useState(value)
   const [open, setOpen] = useState(false)
-  const scrollPosRef = useRef(0)
 
   /**
    * Handle Increment
    */
-  const handleIncrement = () => {
-    const newValue = draftValue + step
-
-    if (max === undefined || newValue <= max) setDraftValue(newValue)
-  }
+  const handleIncrement = useCallback(
+    () =>
+      setDraftValue((prev) => {
+        const newValue = prev + step
+        return max === undefined || newValue <= max ? newValue : prev
+      }),
+    [step, max]
+  )
 
   /**
    * Handle Decrement
    */
-  const handleDecrement = () => {
-    const newValue = draftValue - step
-
-    if (min === undefined || newValue >= min) setDraftValue(newValue)
-  }
+  const handleDecrement = useCallback(
+    () =>
+      setDraftValue((prev) => {
+        const newValue = prev - step
+        return min === undefined || newValue >= min ? newValue : prev
+      }),
+    [step, min]
+  )
 
   /**
    * Handle Save
    *
-   * Calls the onChange handler with the draft value and closes the drawer.
+   * Calls the onChange handler with the draft value and closes the dialog.
    */
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (onChange) onChange(draftValue)
     setOpen(false)
-  }
+  }, [onChange, draftValue])
+
+  /**
+   * Handle Keyboard Navigation
+   *
+   * Supports ArrowLeft to decrement, ArrowRight to increment, and Enter to
+   * save.
+   */
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        handleDecrement()
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        handleIncrement()
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        handleSave()
+      }
+    },
+    [handleDecrement, handleIncrement, handleSave]
+  )
 
   return disabled ? (
     <Input
@@ -99,95 +132,79 @@ export function NumericInput({
       ref={ref}
     />
   ) : (
-    <Drawer
+    <Dialog
       open={open}
       onOpenChange={(isOpen) => {
-        if (isOpen) {
-          scrollPosRef.current = window.scrollY
-          setDraftValue(value)
-        }
+        if (isOpen) setDraftValue(value)
         setOpen(isOpen)
-
-        if (!isOpen) {
-          // Restore scroll position after vaul finishes tearing down body styles
-          requestAnimationFrame(() => {
-            window.scrollTo(0, scrollPosRef.current)
-          })
-        }
       }}>
-      <DrawerTrigger asChild>
-        <div
-          onFocus={(e) => {
-            // Prevent focus on the input when opening the drawer
-            const target = e.target as HTMLElement
-            if (target.tagName === 'INPUT') target.blur()
-          }}>
+      <DialogTrigger asChild>
+        <Input
+          type="number"
+          value={value}
+          className={cn('text-center no-spinners', className)}
+          readOnly
+        />
+      </DialogTrigger>
+      <DialogContent onKeyDown={handleKeyDown}>
+        <DialogHeader className="text-center">
+          <DialogTitle>{label}</DialogTitle>
+          <DialogDescription>
+            Adjust the value using the plus and minus buttons, or use the arrow
+            keys.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex items-center justify-center gap-4">
+          {/* Decrement Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleDecrement}
+            disabled={min !== undefined && draftValue <= min}
+            className="h-12 w-12 rounded-full"
+            name="decrement"
+            id="decrement-button"
+            type="button">
+            <Minus className="h-6 w-6" />
+          </Button>
+
+          {/* Current Value Display */}
           <Input
             type="number"
-            value={value}
-            className={cn('text-center no-spinners', className)}
+            value={draftValue}
             readOnly
+            className="w-20 h-12 text-center text-xl font-semibold focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            name={`${label.toLowerCase().replace(/\s+/g, '-')}-value`}
+            id={`${label.toLowerCase().replace(/\s+/g, '-')}-value`}
             ref={ref}
           />
-        </div>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="text-center">
-          <DrawerTitle>{label}</DrawerTitle>
-          <DrawerDescription>
-            Adjust the value using the plus and minus buttons.
-          </DrawerDescription>
-        </DrawerHeader>
 
-        <div className="px-4 pb-4">
-          <div className="flex items-center justify-center gap-4">
-            {/* Decrement Button */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleDecrement}
-              disabled={min !== undefined && draftValue <= min}
-              className="h-12 w-12 rounded-full"
-              name="decrement"
-              id="decrement-button">
-              <Minus className="h-6 w-6" />
-            </Button>
-
-            {/* Current Value Display */}
-            <Input
-              type="number"
-              value={draftValue}
-              readOnly
-              className="w-20 h-12 text-center text-xl font-semibold focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              name={`${label.toLowerCase().replace(/\s+/g, '-')}-value`}
-              id={`${label.toLowerCase().replace(/\s+/g, '-')}-value`}
-              ref={ref}
-            />
-
-            {/* Increment Button */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleIncrement}
-              disabled={max !== undefined && draftValue >= max}
-              className="h-12 w-12 rounded-full"
-              name="increment"
-              id="increment-button">
-              <Plus className="h-6 w-6" />
-            </Button>
-          </div>
+          {/* Increment Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleIncrement}
+            disabled={max !== undefined && draftValue >= max}
+            className="h-12 w-12 rounded-full"
+            name="increment"
+            id="increment-button"
+            type="button">
+            <Plus className="h-6 w-6" />
+          </Button>
         </div>
 
-        <DrawerFooter className="flex justify-center w-full items-center">
+        <DialogFooter className="flex justify-center w-full items-center sm:justify-center">
           <Button
             className="w-[150px]"
             name="save-value"
             id="save-value-button"
-            onClick={handleSave}>
+            onClick={handleSave}
+            type="button">
             Save
           </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
