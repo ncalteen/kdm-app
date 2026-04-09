@@ -139,20 +139,12 @@ export function NumericInput({
         setOpen(isOpen)
       }}>
       <DialogTrigger asChild>
-        <div
-          onFocus={(e) => {
-            // Prevent focus on the input when opening the dialog
-            const target = e.target as HTMLElement
-            if (target.tagName === 'INPUT') target.blur()
-          }}>
-          <Input
-            type="number"
-            value={value}
-            className={cn('text-center no-spinners', className)}
-            readOnly
-            ref={ref}
-          />
-        </div>
+        <Input
+          type="number"
+          value={value}
+          className={cn('text-center no-spinners', className)}
+          readOnly
+        />
       </DialogTrigger>
       <DialogContent onKeyDown={handleKeyDown}>
         <DialogHeader className="text-center">
@@ -172,7 +164,8 @@ export function NumericInput({
             disabled={min !== undefined && draftValue <= min}
             className="h-12 w-12 rounded-full"
             name="decrement"
-            id="decrement-button">
+            id="decrement-button"
+            type="button">
             <Minus className="h-6 w-6" />
           </Button>
 
@@ -195,7 +188,8 @@ export function NumericInput({
             disabled={max !== undefined && draftValue >= max}
             className="h-12 w-12 rounded-full"
             name="increment"
-            id="increment-button">
+            id="increment-button"
+            type="button">
             <Plus className="h-6 w-6" />
           </Button>
         </div>
@@ -205,7 +199,8 @@ export function NumericInput({
             className="w-[150px]"
             name="save-value"
             id="save-value-button"
-            onClick={handleSave}>
+            onClick={handleSave}
+            type="button">
             Save
           </Button>
         </DialogFooter>
