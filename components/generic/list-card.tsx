@@ -71,16 +71,30 @@ export function ListCard({
 
   // Reset state when the source data or settlement changes.
   // Uses render-time comparison instead of useEffect to avoid cascading renders.
-  const [prevResetKey, setPrevResetKey] = useState(
-    () => `${selectedSettlement?.id}-${JSON.stringify(initialItems)}`
+  // Settlement changes reset everything; item-data changes sync the list but
+  // preserve interaction state (isAddingNew) so rapid-fire additions don't lose
+  // the input field.
+  const [prevSettlementId, setPrevSettlementId] = useState(
+    selectedSettlement?.id
   )
-  const currentResetKey = `${selectedSettlement?.id}-${JSON.stringify(initialItems)}`
+  const [prevInitialItems, setPrevInitialItems] = useState(() =>
+    JSON.stringify(initialItems)
+  )
+  const serializedInitialItems = JSON.stringify(initialItems)
 
-  if (prevResetKey !== currentResetKey) {
-    setPrevResetKey(currentResetKey)
+  if (prevSettlementId !== selectedSettlement?.id) {
+    // Full reset on settlement change.
+    setPrevSettlementId(selectedSettlement?.id)
+    setPrevInitialItems(serializedInitialItems)
     setItems(initialItems)
     setEditingIndices(new Set())
     setIsAddingNew(false)
+  } else if (prevInitialItems !== serializedInitialItems) {
+    // Data sync (same settlement) — preserve isAddingNew so in-progress
+    // additions aren't interrupted when a previous save is confirmed.
+    setPrevInitialItems(serializedInitialItems)
+    setItems(initialItems)
+    setEditingIndices(new Set())
   }
 
   const sensors = useSensors(
@@ -121,15 +135,15 @@ export function ListCard({
 
       // Update the database with the new list order.
       saveList(updated).catch((err: unknown) => {
-        // Revert to previous state on error.
-        setItems(items)
+        // Revert to last server-confirmed state on error.
+        setItems(initialItems)
         setEditingIndices(new Set())
 
         console.error('Error Saving List:', err)
         toast.error(ERROR_MESSAGE())
       })
     },
-    [items, saveList, toast]
+    [initialItems, items, saveList, toast]
   )
 
   /**
@@ -163,15 +177,15 @@ export function ListCard({
       setIsAddingNew(false)
 
       saveList(updated).catch((err: unknown) => {
-        // Revert to previous state on error.
-        setItems(items)
+        // Revert to last server-confirmed state on error.
+        setItems(initialItems)
         setEditingIndices(new Set())
 
         console.error('Error Saving List:', err)
         toast.error(ERROR_MESSAGE())
       })
     },
-    [items, itemName, saveList, toast]
+    [initialItems, items, itemName, saveList, toast]
   )
 
   /**
@@ -235,8 +249,8 @@ export function ListCard({
         })
 
         saveList(newOrder).catch((err: unknown) => {
-          // Revert to previous state on error.
-          setItems(items)
+          // Revert to last server-confirmed state on error.
+          setItems(initialItems)
           setEditingIndices(new Set())
 
           console.error('Error Saving List:', err)
@@ -244,7 +258,7 @@ export function ListCard({
         })
       }
     },
-    [items, saveList, toast]
+    [initialItems, items, saveList, toast]
   )
 
   return (
