@@ -740,7 +740,6 @@ export type ShowdownAIDeckDetail = Omit<
 >
 
 /**
-/**
  * Showdown State Setter
  *
  * Accepts either a direct value or a functional updater. Use the functional
