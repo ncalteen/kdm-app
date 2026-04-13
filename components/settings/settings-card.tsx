@@ -35,9 +35,11 @@ import {
 import { generateSeedData } from '@/lib/seed'
 import {
   HuntDetail,
+  HuntStateSetter,
   SettlementDetail,
   SettlementStateSetter,
-  ShowdownDetail
+  ShowdownDetail,
+  ShowdownStateSetter
 } from '@/lib/types'
 import { DatabaseIcon, Loader2, Trash2Icon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState, useTransition } from 'react'
@@ -56,7 +58,7 @@ interface SettingsCardProps {
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt ID */
   setSelectedHuntId: (huntId: string | null) => void
   /** Set Selected Settlement */
@@ -64,7 +66,7 @@ interface SettingsCardProps {
   /** Set Selected Settlement ID */
   setSelectedSettlementId: (settlementId: string | null) => void
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Set Selected Showdown ID */
   setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Survivor ID */

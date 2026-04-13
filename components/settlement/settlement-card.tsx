@@ -42,11 +42,15 @@ import {
 } from '@/lib/enums'
 import {
   HuntDetail,
+  HuntStateSetter,
   SettlementDetail,
   SettlementPhaseDetail,
   SettlementStateSetter,
   ShowdownDetail,
+  ShowdownStateSetter,
   SurvivorDetail,
+  SurvivorsStateSetter,
+  SurvivorStateSetter,
   UserSettingsDetail
 } from '@/lib/types'
 import { BookOpenIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
@@ -87,7 +91,7 @@ interface SettlementCardProps {
   /** Set Pending Special Showdown */
   setPendingSpecialShowdown: (pending: boolean) => void
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt ID */
   setSelectedHuntId: (huntId: string | null) => void
   /** Set Selected Hunt Monster Index */
@@ -103,19 +107,19 @@ interface SettlementCardProps {
   /** Set Selected Settlement Phase ID */
   setSelectedSettlementPhaseId: (settlementPhaseId: string | null) => void
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Set Selected Showdown ID */
   setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Showdown Monster Index */
   setSelectedShowdownMonsterIndex: (index: number) => void
   /** Set Selected Survivor */
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
+  setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Set User Settings */
   setUserSettings: (settings: UserSettingsDetail | null) => void
   /** Survivors */

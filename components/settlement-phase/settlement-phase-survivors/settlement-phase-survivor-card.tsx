@@ -4,7 +4,11 @@ import { SurvivorCard } from '@/components/survivor/survivor-card'
 import { Card, CardContent } from '@/components/ui/card'
 import { LocalStateType } from '@/contexts/local-context'
 import { SurvivorCardMode } from '@/lib/enums'
-import { SettlementDetail, SurvivorDetail } from '@/lib/types'
+import {
+  SettlementDetail,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { ReactElement } from 'react'
 
 /**
@@ -18,7 +22,7 @@ interface SettlementPhaseSurvivorCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }

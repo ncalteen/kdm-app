@@ -83,7 +83,6 @@ export function SurvivorDetailsPanel({
           selectedShowdown={null}
           selectedSurvivor={survivor}
           setSurvivors={() => {}}
-          survivors={[]}
           disabled={true}
         />
 

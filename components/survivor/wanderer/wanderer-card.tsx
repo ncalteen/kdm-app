@@ -19,7 +19,7 @@ import {
   SURVIVOR_DISPOSITION_UPDATED_MESSAGE,
   SURVIVOR_STATE_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SurvivorDetail } from '@/lib/types'
+import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { ReactElement, useCallback, useState } from 'react'
 
 /**
@@ -31,7 +31,7 @@ interface WandererCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -89,8 +89,8 @@ export function WandererCard({
       const oldSurvivors = [...survivors]
 
       setAenasState(value)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, aenas_state: value as 'Content' | 'Hungry' }
             : s
@@ -138,8 +138,8 @@ export function WandererCard({
       const oldSurvivors = [...survivors]
 
       setDisposition(value)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, disposition: value } : s
         )
       )

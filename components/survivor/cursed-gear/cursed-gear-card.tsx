@@ -27,7 +27,11 @@ import {
   SURVIVOR_CURSED_GEAR_REMOVED_MESSAGE,
   SURVIVOR_CURSED_GEAR_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SettlementDetail, SurvivorDetail } from '@/lib/types'
+import {
+  SettlementDetail,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
@@ -45,9 +49,7 @@ interface CursedGearCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
-  /** Survivors */
-  survivors: SurvivorDetail[]
+  setSurvivors: SurvivorsStateSetter
 }
 
 /**
@@ -65,8 +67,7 @@ export function CursedGearCard({
   local,
   selectedSettlement,
   selectedSurvivor,
-  setSurvivors,
-  survivors
+  setSurvivors
 }: CursedGearCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -138,8 +139,8 @@ export function CursedGearCard({
       const updatedCursedGear = [...cursedGear, optimisticItem]
 
       setCursedGear(updatedCursedGear)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id
             ? { ...s, cursed_gear: updatedCursedGear }
             : s
@@ -157,8 +158,8 @@ export function CursedGearCard({
         )
         .catch((error: unknown) => {
           setCursedGear(oldCursedGear)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, cursed_gear: oldCursedGear }
                 : s
@@ -169,14 +170,7 @@ export function CursedGearCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      cursedGear,
-      selectedSettlement,
-      selectedSurvivor,
-      setSurvivors,
-      survivors,
-      toast
-    ]
+    [cursedGear, selectedSettlement, selectedSurvivor, setSurvivors, toast]
   )
 
   /**
@@ -198,8 +192,8 @@ export function CursedGearCard({
       const updatedCursedGear = cursedGear.filter((_, i) => i !== index)
 
       setCursedGear(updatedCursedGear)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id
             ? { ...s, cursed_gear: updatedCursedGear }
             : s
@@ -216,8 +210,8 @@ export function CursedGearCard({
         )
         .catch((error: unknown) => {
           setCursedGear(oldCursedGear)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, cursed_gear: oldCursedGear }
                 : s
@@ -228,7 +222,7 @@ export function CursedGearCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [cursedGear, selectedSurvivor, setSurvivors, survivors, toast]
+    [cursedGear, selectedSurvivor, setSurvivors, toast]
   )
 
   return (

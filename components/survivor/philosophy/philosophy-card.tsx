@@ -36,7 +36,11 @@ import {
   SURVIVOR_TENET_KNOWLEDGE_RULES_UPDATED_MESSAGE,
   SURVIVOR_TENET_KNOWLEDGE_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SettlementDetail, SurvivorDetail } from '@/lib/types'
+import {
+  SettlementDetail,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
@@ -52,7 +56,7 @@ interface PhilosophyCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -240,8 +244,8 @@ export function PhilosophyCard({
       setNeurosis(newNeurosis)
       if (!philosophyId) setPhilosophyRank(0)
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? {
                 ...s,
@@ -269,8 +273,8 @@ export function PhilosophyCard({
           setPhilosophy(prevPhilosophy)
           setPhilosophyRank(prevPhilosophyRank)
           setNeurosis(prevNeurosis)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? {
                     ...s,
@@ -293,7 +297,6 @@ export function PhilosophyCard({
       selectedSettlement,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors,
       toast
     ]
   )
@@ -317,8 +320,8 @@ export function PhilosophyCard({
 
       setNeurosis(newNeurosis)
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, neurosis: newNeurosis } : s
         )
       )
@@ -335,8 +338,8 @@ export function PhilosophyCard({
         )
         .catch((error) => {
           setNeurosis(prevNeurosis)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, neurosis: prevNeurosis }
                 : s
@@ -347,14 +350,7 @@ export function PhilosophyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      neurosis,
-      selectedSettlement,
-      selectedSurvivor?.id,
-      setSurvivors,
-      survivors,
-      toast
-    ]
+    [neurosis, selectedSettlement, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -370,8 +366,8 @@ export function PhilosophyCard({
       tenetRankUpRef.current = newRankUp
       setTenetKnowledge((prev) => ({ ...prev, rank_up: newRankUp }))
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, tenet_knowledge_rank_up: newRankUp }
             : s
@@ -389,8 +385,8 @@ export function PhilosophyCard({
         .catch((error) => {
           tenetRankUpRef.current = prevRankUp
           setTenetKnowledge((prev) => ({ ...prev, rank_up: prevRankUp }))
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, tenet_knowledge_rank_up: prevRankUp }
                 : s
@@ -401,7 +397,7 @@ export function PhilosophyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -417,8 +413,8 @@ export function PhilosophyCard({
 
       setPhilosophyRank(value)
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, philosophy_rank: value } : s
         )
       )
@@ -427,8 +423,8 @@ export function PhilosophyCard({
         .then(() => toast.success(SURVIVOR_PHILOSOPHY_RANK_UPDATED_MESSAGE()))
         .catch((error) => {
           setPhilosophyRank(prevRank)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, philosophy_rank: prevRank }
                 : s
@@ -439,7 +435,7 @@ export function PhilosophyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [philosophyRank, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [philosophyRank, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -477,8 +473,8 @@ export function PhilosophyCard({
 
     setTenetKnowledge(newTenetKnowledge)
 
-    setSurvivors(
-      survivors.map((s) =>
+    setSurvivors((prev) =>
+      prev.map((s) =>
         s.id === selectedSurvivor?.id
           ? {
               ...s,
@@ -513,8 +509,8 @@ export function PhilosophyCard({
       )
       .catch((error) => {
         setTenetKnowledge(oldTenetKnowledge)
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? {
                   ...s,
@@ -552,8 +548,8 @@ export function PhilosophyCard({
 
     setTenetKnowledge({ ...tenetKnowledge, observation_rank: newRank })
 
-    setSurvivors(
-      survivors.map((s) =>
+    setSurvivors((prev) =>
+      prev.map((s) =>
         s.id === selectedSurvivor?.id
           ? { ...s, tenet_knowledge_observation_rank: newRank }
           : s
@@ -573,8 +569,8 @@ export function PhilosophyCard({
       )
       .catch((error) => {
         setTenetKnowledge({ ...tenetKnowledge, observation_rank: prevRank })
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? { ...s, tenet_knowledge_observation_rank: prevRank }
               : s
@@ -596,8 +592,8 @@ export function PhilosophyCard({
 
     setTenetKnowledge({ ...tenetKnowledge, rules: value })
 
-    setSurvivors(
-      survivors.map((s) =>
+    setSurvivors((prev) =>
+      prev.map((s) =>
         s.id === selectedSurvivor?.id
           ? { ...s, tenet_knowledge_rules: value }
           : s
@@ -611,8 +607,8 @@ export function PhilosophyCard({
       })
       .catch((error) => {
         setTenetKnowledge({ ...tenetKnowledge, rules: oldRules })
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? {
                   ...s,
@@ -638,8 +634,8 @@ export function PhilosophyCard({
 
     setTenetKnowledge({ ...tenetKnowledge, observation_conditions: value })
 
-    setSurvivors(
-      survivors.map((s) =>
+    setSurvivors((prev) =>
+      prev.map((s) =>
         s.id === selectedSurvivor?.id
           ? { ...s, tenet_knowledge_observation_conditions: value }
           : s
@@ -662,8 +658,8 @@ export function PhilosophyCard({
           ...tenetKnowledge,
           observation_conditions: oldConditions
         })
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? {
                   ...s,

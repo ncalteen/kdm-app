@@ -7,7 +7,9 @@ import { LocalStateType } from '@/contexts/local-context'
 import {
   SettlementDetail,
   SettlementPhaseDetail,
-  SurvivorDetail
+  SurvivorDetail,
+  SurvivorsStateSetter,
+  SurvivorStateSetter
 } from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useEffect, useMemo, useState } from 'react'
@@ -25,9 +27,9 @@ interface SettlementPhaseSurvivorsCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Survivor */
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
+  setSelectedSurvivor: SurvivorStateSetter
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }

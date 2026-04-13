@@ -45,11 +45,15 @@ import {
 import {
   HuntDetail,
   HuntHuntBoardDetail,
+  HuntStateSetter,
   SettlementDetail,
   ShowdownDetail,
   ShowdownMonsterDetail,
+  ShowdownStateSetter,
   ShowdownSurvivorDetail,
-  SurvivorDetail
+  SurvivorDetail,
+  SurvivorsStateSetter,
+  SurvivorStateSetter
 } from '@/lib/types'
 import { ChevronRightIcon, DicesIcon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
@@ -69,19 +73,19 @@ interface ActiveHuntCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt Monster Index */
   setSelectedHuntMonsterIndex: (index: number) => void
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Set Selected Showdown Monster Index */
   setSelectedShowdownMonsterIndex: (index: number) => void
   /** Set Selected Survivor */
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
+  setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -178,11 +182,15 @@ export function ActiveHuntCard({
         )
         .catch((err: unknown) => {
           // Rollback
-          setSelectedHunt({
-            ...selectedHunt,
-            survivor_position: previousSurvivorPos,
-            monster_position: previousMonsterPos
-          })
+          setSelectedHunt((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  survivor_position: previousSurvivorPos,
+                  monster_position: previousMonsterPos
+                }
+              : null
+          )
 
           console.error('Position Update Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -223,13 +231,17 @@ export function ActiveHuntCard({
         [posKey]: eventType?.toUpperCase() ?? 'BASIC'
       }).catch((err: unknown) => {
         // Rollback
-        setSelectedHunt({
-          ...selectedHunt,
-          hunt_board: {
-            ...selectedHunt.hunt_board!,
-            [posKey]: previousValue
-          }
-        })
+        setSelectedHunt((prev) =>
+          prev?.hunt_board
+            ? {
+                ...prev,
+                hunt_board: {
+                  ...prev.hunt_board,
+                  [posKey]: previousValue
+                }
+              }
+            : prev
+        )
 
         console.error('Hunt Board Update Error:', err)
         toast.error(ERROR_MESSAGE())

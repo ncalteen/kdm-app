@@ -25,7 +25,7 @@ import {
   TRAIT_REMOVED_MESSAGE,
   TRAIT_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { HuntDetail, HuntMonsterDetail } from '@/lib/types'
+import { HuntDetail, HuntMonsterDetail, HuntStateSetter } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -40,7 +40,7 @@ interface HuntMonsterCardProps {
   /** Selected Hunt Monster Index */
   selectedHuntMonsterIndex: number
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
 }
 
 /**
@@ -150,13 +150,17 @@ export function HuntMonsterCard({
         })
         .catch((err: unknown) => {
           // Rollback
-          setSelectedHunt({
-            ...selectedHunt,
-            hunt_monsters: {
-              ...selectedHunt.hunt_monsters,
-              [currentMonsterId]: previousMonster
-            }
-          })
+          setSelectedHunt((prev) =>
+            prev?.hunt_monsters
+              ? {
+                  ...prev,
+                  hunt_monsters: {
+                    ...prev.hunt_monsters,
+                    [currentMonsterId]: previousMonster
+                  }
+                }
+              : prev
+          )
           console.error('Hunt Monster Save Error:', err)
           toast.error(ERROR_MESSAGE())
         })

@@ -12,11 +12,15 @@ import { TabType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import {
   HuntDetail,
+  HuntStateSetter,
   SettlementDetail,
   SettlementPhaseDetail,
   SettlementStateSetter,
   ShowdownDetail,
+  ShowdownStateSetter,
   SurvivorDetail,
+  SurvivorsStateSetter,
+  SurvivorStateSetter,
   UserSettingsDetail
 } from '@/lib/types'
 import { saveToLocalStorage } from '@/lib/utils'
@@ -119,7 +123,7 @@ interface LocalContextType {
   /** Set Pending Special Showdown */
   setPendingSpecialShowdown: (pending: boolean) => void
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt ID */
   setSelectedHuntId: (huntId: string | null) => void
   /** Set Selected Hunt Monster Index */
@@ -135,20 +139,20 @@ interface LocalContextType {
   /** Set Selected Settlement Phase ID */
   setSelectedSettlementPhaseId: (settlementPhaseId: string | null) => void
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Set Selected Showdown ID */
   setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Showdown Monster Index */
   setSelectedShowdownMonsterIndex: (index: number) => void
   /** Set Selected Survivor */
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
+  setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
 
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 
@@ -948,7 +952,16 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    *
    * @param hunt Selected Hunt
    */
-  const setSelectedHunt = (hunt: HuntDetail | null) => {
+  const setSelectedHunt: HuntStateSetter = (huntOrUpdater) => {
+    // Functional updater form — used for safe optimistic async callbacks
+    // that must operate on the latest state instead of a stale closure.
+    if (typeof huntOrUpdater === 'function') {
+      setSelectedHuntState(huntOrUpdater)
+      return
+    }
+
+    const hunt = huntOrUpdater
+
     // When selecting a hunt, stop creation mode
     if (hunt) setIsCreatingNewHunt(false)
 
@@ -1264,7 +1277,16 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    *
    * @param showdown Selected Showdown
    */
-  const setSelectedShowdown = (showdown: ShowdownDetail | null) => {
+  const setSelectedShowdown: ShowdownStateSetter = (showdownOrUpdater) => {
+    // Functional updater form — used for safe optimistic async callbacks
+    // that must operate on the latest state instead of a stale closure.
+    if (typeof showdownOrUpdater === 'function') {
+      setSelectedShowdownState(showdownOrUpdater)
+      return
+    }
+
+    const showdown = showdownOrUpdater
+
     // When selecting a showdown, stop creation mode
     if (showdown) setIsCreatingNewShowdown(false)
 
@@ -1363,7 +1385,16 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    *
    * @param survivor Selected Survivor
    */
-  const setSelectedSurvivor = (survivor: SurvivorDetail | null) => {
+  const setSelectedSurvivor: SurvivorStateSetter = (survivorOrUpdater) => {
+    // Functional updater form — used for safe optimistic async callbacks
+    // that must operate on the latest state instead of a stale closure.
+    if (typeof survivorOrUpdater === 'function') {
+      setSelectedSurvivorState(survivorOrUpdater)
+      return
+    }
+
+    const survivor = survivorOrUpdater
+
     // When selecting a survivor, stop creation mode
     if (survivor) setIsCreatingNewSurvivor(false)
 

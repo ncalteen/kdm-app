@@ -4,7 +4,7 @@ import { HuntMonsterCard } from '@/components/hunt/hunt-monster/hunt-monster-car
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { LocalStateType } from '@/contexts/local-context'
-import { HuntDetail } from '@/lib/types'
+import { HuntDetail, HuntStateSetter } from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useMemo } from 'react'
 
@@ -19,7 +19,7 @@ interface HuntMonstersCardProps {
   /** Selected Hunt Monster Index */
   selectedHuntMonsterIndex: number
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt Monster Index */
   setSelectedHuntMonsterIndex: (index: number) => void
 }

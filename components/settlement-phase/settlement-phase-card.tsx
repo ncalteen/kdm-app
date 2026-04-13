@@ -48,7 +48,9 @@ import {
   SettlementDetail,
   SettlementPhaseDetail,
   SettlementStateSetter,
-  SurvivorDetail
+  SurvivorDetail,
+  SurvivorsStateSetter,
+  SurvivorStateSetter
 } from '@/lib/types'
 import { CircleOffIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
 import { ReactElement, useCallback } from 'react'
@@ -72,11 +74,11 @@ interface SettlementPhaseCardProps {
   /** Set Selected Settlement Phase */
   setSelectedSettlementPhase: (phase: SettlementPhaseDetail | null) => void
   /** Set Selected Survivor */
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
+  setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }

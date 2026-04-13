@@ -12,9 +12,11 @@ import { SurvivorCardMode } from '@/lib/enums'
 import { ERROR_MESSAGE, HUNT_NOTES_SAVED_MESSAGE } from '@/lib/messages'
 import {
   HuntDetail,
+  HuntStateSetter,
   HuntSurvivorDetail,
   SettlementDetail,
-  SurvivorDetail
+  SurvivorDetail,
+  SurvivorsStateSetter
 } from '@/lib/types'
 import { CheckIcon } from 'lucide-react'
 import { ReactElement, useCallback, useRef, useState } from 'react'
@@ -32,9 +34,9 @@ interface HuntSurvivorCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -115,17 +117,16 @@ export function HuntSurvivorCard({
       .then(() => toast.success(HUNT_NOTES_SAVED_MESSAGE()))
       .catch((err: unknown) => {
         // Rollback
-        const revertedSurvivors: { [key: string]: HuntSurvivorDetail } = {}
-        for (const [key, hs] of Object.entries(selectedHunt.hunt_survivors!)) {
-          revertedSurvivors[key] =
-            hs.id === huntSurvivorDetail.id
-              ? { ...hs, notes: previousNotes }
-              : hs
-        }
-
-        setSelectedHunt({
-          ...selectedHunt,
-          hunt_survivors: revertedSurvivors
+        setSelectedHunt((prev) => {
+          if (!prev?.hunt_survivors) return prev
+          const revertedSurvivors: { [key: string]: HuntSurvivorDetail } = {}
+          for (const [key, hs] of Object.entries(prev.hunt_survivors)) {
+            revertedSurvivors[key] =
+              hs.id === huntSurvivorDetail.id
+                ? { ...hs, notes: previousNotes }
+                : hs
+          }
+          return { ...prev, hunt_survivors: revertedSurvivors }
         })
         setIsNotesDirty(true)
 

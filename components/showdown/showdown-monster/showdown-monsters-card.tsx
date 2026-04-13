@@ -4,7 +4,7 @@ import { ShowdownMonsterCard } from '@/components/showdown/showdown-monster/show
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { LocalStateType } from '@/contexts/local-context'
-import { ShowdownDetail } from '@/lib/types'
+import { ShowdownDetail, ShowdownStateSetter } from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useMemo } from 'react'
 
@@ -19,7 +19,7 @@ interface ShowdownMonstersCardProps {
   /** Selected Showdown Monster Index */
   selectedShowdownMonsterIndex: number
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Set Selected Showdown Monster Index */
   setSelectedShowdownMonsterIndex: (index: number) => void
 }

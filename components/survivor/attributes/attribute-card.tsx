@@ -26,9 +26,12 @@ import {
 } from '@/lib/messages'
 import {
   HuntDetail,
+  HuntStateSetter,
   SettlementDetail,
   ShowdownDetail,
-  SurvivorDetail
+  ShowdownStateSetter,
+  SurvivorDetail,
+  SurvivorsStateSetter
 } from '@/lib/types'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
@@ -61,13 +64,11 @@ interface AttributeCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt (for optimistic token updates) */
-  setSelectedHunt?: (hunt: HuntDetail | null) => void
+  setSelectedHunt?: HuntStateSetter
   /** Set Selected Showdown (for optimistic token updates) */
-  setSelectedShowdown?: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
-  /** Survivors */
-  survivors: SurvivorDetail[]
+  setSurvivors: SurvivorsStateSetter
 }
 
 /**
@@ -90,8 +91,7 @@ export function AttributeCard({
   selectedSurvivor,
   setSelectedHunt,
   setSelectedShowdown,
-  setSurvivors,
-  survivors
+  setSurvivors
 }: AttributeCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -307,8 +307,8 @@ export function AttributeCard({
       oldLocal: number
     ) => {
       setLocal(value)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, [field]: value } : s
         )
       )
@@ -317,15 +317,15 @@ export function AttributeCard({
         .catch((error) => {
           console.error(`${String(field)} Update Error:`, error)
           setLocal(oldLocal)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, [field]: oldLocal } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, toast]
   )
 
   return (

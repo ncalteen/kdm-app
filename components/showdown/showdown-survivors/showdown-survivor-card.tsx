@@ -13,8 +13,10 @@ import { ERROR_MESSAGE, SHOWDOWN_NOTES_SAVED_MESSAGE } from '@/lib/messages'
 import {
   SettlementDetail,
   ShowdownDetail,
+  ShowdownStateSetter,
   ShowdownSurvivorDetail,
-  SurvivorDetail
+  SurvivorDetail,
+  SurvivorsStateSetter
 } from '@/lib/types'
 import { CheckIcon } from 'lucide-react'
 import { ReactElement, useCallback, useRef, useState } from 'react'
@@ -32,9 +34,9 @@ interface ShowdownSurvivorCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -106,13 +108,17 @@ export function ShowdownSurvivorCard({
       .then(() => toast.success(SHOWDOWN_NOTES_SAVED_MESSAGE()))
       .catch((err: unknown) => {
         // Rollback
-        setSelectedShowdown({
-          ...selectedShowdown,
-          showdown_survivors: {
-            ...selectedShowdown.showdown_survivors!,
-            [ssKey]: { ...showdownSurvivorDetail, notes: previousNotes }
-          }
-        })
+        setSelectedShowdown((prev) =>
+          prev?.showdown_survivors
+            ? {
+                ...prev,
+                showdown_survivors: {
+                  ...prev.showdown_survivors,
+                  [ssKey]: { ...showdownSurvivorDetail, notes: previousNotes }
+                }
+              }
+            : prev
+        )
         setIsNotesDirty(true)
         console.error('Showdown Survivor Notes Save Error:', err)
         toast.error(ERROR_MESSAGE())

@@ -30,7 +30,11 @@ import {
   SURVIVOR_DISORDER_REMOVED_MESSAGE,
   SURVIVOR_DISORDER_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { DisorderDetail, SurvivorDetail } from '@/lib/types'
+import {
+  DisorderDetail,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { Plus, PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -45,9 +49,7 @@ interface DisordersCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
-  /** Survivors */
-  survivors: SurvivorDetail[]
+  setSurvivors: SurvivorsStateSetter
 }
 
 /**
@@ -59,8 +61,7 @@ interface DisordersCardProps {
 export function DisordersCard({
   local,
   selectedSurvivor,
-  setSurvivors,
-  survivors
+  setSurvivors
 }: DisordersCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -117,8 +118,8 @@ export function DisordersCard({
       const oldDisorders = [...disorders]
 
       setDisorders([...disorders, optimisticItem])
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id
             ? { ...s, disorders: [...s.disorders, optimisticItem] }
             : s
@@ -129,8 +130,8 @@ export function DisordersCard({
         .then(() => toast.success(SURVIVOR_DISORDER_UPDATED_MESSAGE(true)))
         .catch((error: unknown) => {
           setDisorders(oldDisorders)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, disorders: oldDisorders }
                 : s
@@ -141,14 +142,7 @@ export function DisordersCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      availableDisorders,
-      disorders,
-      selectedSurvivor,
-      setSurvivors,
-      survivors,
-      toast
-    ]
+    [availableDisorders, disorders, selectedSurvivor, setSurvivors, toast]
   )
 
   /**
@@ -167,8 +161,8 @@ export function DisordersCard({
       const updated = disorders.filter((_, i) => i !== index)
 
       setDisorders(updated)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id ? { ...s, disorders: updated } : s
         )
       )
@@ -177,8 +171,8 @@ export function DisordersCard({
         .then(() => toast.success(SURVIVOR_DISORDER_REMOVED_MESSAGE()))
         .catch((error: unknown) => {
           setDisorders(oldDisorders)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, disorders: oldDisorders }
                 : s
@@ -189,7 +183,7 @@ export function DisordersCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [disorders, selectedSurvivor, setSurvivors, survivors, toast]
+    [disorders, selectedSurvivor, setSurvivors, toast]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -238,8 +232,8 @@ export function DisordersCard({
       const oldDisorders = [...disorders]
 
       setDisorders([...disorders, optimisticItem])
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id
             ? { ...s, disorders: [...s.disorders, optimisticItem] }
             : s
@@ -250,8 +244,8 @@ export function DisordersCard({
         .then(() => toast.success(SURVIVOR_DISORDER_UPDATED_MESSAGE(true)))
         .catch((error: unknown) => {
           setDisorders(oldDisorders)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, disorders: oldDisorders }
                 : s
@@ -267,15 +261,7 @@ export function DisordersCard({
     } finally {
       setCreating(false)
     }
-  }, [
-    search,
-    creating,
-    selectedSurvivor,
-    disorders,
-    setSurvivors,
-    survivors,
-    toast
-  ])
+  }, [search, creating, selectedSurvivor, disorders, setSurvivors, toast])
 
   return (
     <Card className="p-2 border-0 gap-0">

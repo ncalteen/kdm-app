@@ -36,6 +36,7 @@ import {
 } from '@/lib/messages'
 import {
   HuntDetail,
+  HuntStateSetter,
   HuntSurvivorDetail,
   QuarryDetail,
   QuarryLevelDetail,
@@ -63,7 +64,7 @@ interface CreateHuntCardProps {
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
   /** User Settings */

@@ -18,7 +18,7 @@ import {
   NAMELESS_OBJECT_ERROR_MESSAGE,
   SURVIVOR_SKIP_NEXT_HUNT_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SurvivorDetail } from '@/lib/types'
+import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import {
   closestCenter,
   DndContext,
@@ -46,9 +46,7 @@ interface AbilitiesAndImpairmentsCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
-  /** Survivors */
-  survivors: SurvivorDetail[]
+  setSurvivors: SurvivorsStateSetter
 }
 
 /**
@@ -60,8 +58,7 @@ interface AbilitiesAndImpairmentsCardProps {
 export function AbilitiesAndImpairmentsCard({
   local,
   selectedSurvivor,
-  setSurvivors,
-  survivors
+  setSurvivors
 }: AbilitiesAndImpairmentsCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -125,8 +122,8 @@ export function AbilitiesAndImpairmentsCard({
       })
 
       setAbilitiesImpairments(updated)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, abilities_impairments: updated }
             : s
@@ -139,8 +136,8 @@ export function AbilitiesAndImpairmentsCard({
         .catch((error) => {
           console.error('Ability/Impairment Remove Error:', error)
           setAbilitiesImpairments(oldAbilitiesImpairments)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, abilities_impairments: oldAbilitiesImpairments }
                 : s
@@ -149,7 +146,7 @@ export function AbilitiesAndImpairmentsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [abilitiesImpairments, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [abilitiesImpairments, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -176,8 +173,8 @@ export function AbilitiesAndImpairmentsCard({
       }
 
       setAbilitiesImpairments(updated)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, abilities_impairments: updated }
             : s
@@ -191,8 +188,8 @@ export function AbilitiesAndImpairmentsCard({
         .catch((error) => {
           console.error('Ability/Impairment Update Error:', error)
           setAbilitiesImpairments(oldAbilitiesImpairments)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, abilities_impairments: oldAbilitiesImpairments }
                 : s
@@ -201,7 +198,7 @@ export function AbilitiesAndImpairmentsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [abilitiesImpairments, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [abilitiesImpairments, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -213,8 +210,8 @@ export function AbilitiesAndImpairmentsCard({
     (checked: boolean) => {
       const old = skipNextHunt
       setSkipNextHunt(checked)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, skip_next_hunt: checked } : s
         )
       )
@@ -226,15 +223,15 @@ export function AbilitiesAndImpairmentsCard({
         .catch((error) => {
           console.error('Skip Next Hunt Update Error:', error)
           setSkipNextHunt(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, skip_next_hunt: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [skipNextHunt, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [skipNextHunt, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -252,8 +249,8 @@ export function AbilitiesAndImpairmentsCard({
       const newOrder = arrayMove(abilitiesImpairments, oldIndex, newIndex)
 
       setAbilitiesImpairments(newOrder)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, abilities_impairments: newOrder }
             : s
@@ -278,8 +275,8 @@ export function AbilitiesAndImpairmentsCard({
       }).catch((error) => {
         console.error('Ability/Impairment Reorder Error:', error)
         setAbilitiesImpairments(oldAbilitiesImpairments)
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? { ...s, abilities_impairments: oldAbilitiesImpairments }
               : s

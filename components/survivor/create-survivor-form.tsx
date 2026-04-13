@@ -26,7 +26,12 @@ import {
 } from '@/lib/enums'
 import { ERROR_MESSAGE, SURVIVOR_CREATED_MESSAGE } from '@/lib/messages'
 import { sortWanderers } from '@/lib/settlement/wanderers'
-import { SettlementDetail, SurvivorDetail, WandererDetail } from '@/lib/types'
+import {
+  SettlementDetail,
+  SurvivorDetail,
+  SurvivorsStateSetter,
+  WandererDetail
+} from '@/lib/types'
 import {
   NewSurvivorInput,
   NewSurvivorInputSchema
@@ -48,7 +53,7 @@ interface CreateSurvivorFormProps {
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivor: string | null) => void
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }

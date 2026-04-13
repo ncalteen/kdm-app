@@ -25,7 +25,11 @@ import {
   TRAIT_REMOVED_MESSAGE,
   TRAIT_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { ShowdownDetail, ShowdownMonsterDetail } from '@/lib/types'
+import {
+  ShowdownDetail,
+  ShowdownMonsterDetail,
+  ShowdownStateSetter
+} from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -40,7 +44,7 @@ interface ShowdownMonsterCardProps {
   /** Selected Showdown Monster Index */
   selectedShowdownMonsterIndex: number
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
 }
 
 /**
@@ -127,13 +131,17 @@ export function ShowdownMonsterCard({
           if (successMsg) toast.success(successMsg)
         })
         .catch((err: unknown) => {
-          setSelectedShowdown({
-            ...selectedShowdown,
-            showdown_monsters: {
-              ...selectedShowdown.showdown_monsters,
-              [currentMonsterId]: previousMonster
-            }
-          })
+          setSelectedShowdown((prev) =>
+            prev?.showdown_monsters
+              ? {
+                  ...prev,
+                  showdown_monsters: {
+                    ...prev.showdown_monsters,
+                    [currentMonsterId]: previousMonster
+                  }
+                }
+              : prev
+          )
           console.error('Showdown Monster Save Error:', err)
           toast.error(ERROR_MESSAGE())
         })

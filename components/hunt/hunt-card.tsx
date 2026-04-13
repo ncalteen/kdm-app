@@ -8,9 +8,13 @@ import { updateSettlement } from '@/lib/dal/settlement'
 import { TabType } from '@/lib/enums'
 import {
   HuntDetail,
+  HuntStateSetter,
   SettlementDetail,
   ShowdownDetail,
+  ShowdownStateSetter,
   SurvivorDetail,
+  SurvivorsStateSetter,
+  SurvivorStateSetter,
   UserSettingsDetail
 } from '@/lib/types'
 import { MapPinPlusIcon } from 'lucide-react'
@@ -33,19 +37,19 @@ interface HuntCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt Monster Index */
   setSelectedHuntMonsterIndex: (index: number) => void
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Set Selected Showdown Monster Index */
   setSelectedShowdownMonsterIndex: (index: number) => void
   /** Set Selected Survivor */
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
+  setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
   /** User Settings */

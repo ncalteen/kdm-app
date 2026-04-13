@@ -31,7 +31,10 @@ import {
   SettlementDetail,
   SettlementPhaseDetail,
   ShowdownDetail,
-  SurvivorDetail
+  ShowdownStateSetter,
+  SurvivorDetail,
+  SurvivorsStateSetter,
+  SurvivorStateSetter
 } from '@/lib/types'
 import { ChevronRightIcon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
@@ -57,15 +60,15 @@ interface ActiveShowdownCardProps {
     settlementPhase: SettlementPhaseDetail | null
   ) => void
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Set Selected Showdown Monster Index */
   setSelectedShowdownMonsterIndex: (index: number) => void
   /** Set Selected Survivor */
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
+  setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }

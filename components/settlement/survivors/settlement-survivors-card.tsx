@@ -9,7 +9,12 @@ import { useToast } from '@/hooks/use-toast'
 import { deleteSurvivor } from '@/lib/dal/survivor'
 import { DatabaseSurvivorType, SurvivorType } from '@/lib/enums'
 import { ERROR_MESSAGE, SURVIVOR_REMOVED_MESSAGE } from '@/lib/messages'
-import { SettlementDetail, SurvivorDetail } from '@/lib/types'
+import {
+  SettlementDetail,
+  SurvivorDetail,
+  SurvivorStateSetter,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
@@ -26,9 +31,9 @@ interface SettlementSurvivorsCardProps {
   /** Set Is Creating New Survivor */
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
   /** Set Selected Survivor */
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
+  setSelectedSurvivor: SurvivorStateSetter
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }

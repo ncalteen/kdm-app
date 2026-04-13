@@ -33,9 +33,12 @@ import {
 } from '@/lib/messages'
 import {
   HuntDetail,
+  HuntStateSetter,
   SettlementDetail,
   ShowdownDetail,
-  SurvivorDetail
+  ShowdownStateSetter,
+  SurvivorDetail,
+  SurvivorsStateSetter
 } from '@/lib/types'
 import { LockIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
@@ -57,13 +60,11 @@ interface SurvivalCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt (for optimistic token updates) */
-  setSelectedHunt?: (hunt: HuntDetail | null) => void
+  setSelectedHunt?: HuntStateSetter
   /** Set Selected Showdown (for optimistic token updates) */
-  setSelectedShowdown?: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
-  /** Survivors */
-  survivors: SurvivorDetail[]
+  setSurvivors: SurvivorsStateSetter
 }
 
 /**
@@ -87,8 +88,7 @@ export function SurvivalCard({
   selectedSurvivor,
   setSelectedHunt,
   setSelectedShowdown,
-  setSurvivors,
-  survivors
+  setSurvivors
 }: SurvivalCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -198,16 +198,20 @@ export function SurvivalCard({
           )
           .catch((error: unknown) => {
             // Rollback
-            setSelectedHunt({
-              ...selectedHunt,
-              hunt_survivors: {
-                ...selectedHunt.hunt_survivors,
-                [hsKey]: {
-                  ...huntSurvivorRecord,
-                  survival_tokens: previousValue
-                }
-              }
-            })
+            setSelectedHunt((prev) =>
+              prev?.hunt_survivors
+                ? {
+                    ...prev,
+                    hunt_survivors: {
+                      ...prev.hunt_survivors,
+                      [hsKey]: {
+                        ...huntSurvivorRecord,
+                        survival_tokens: previousValue
+                      }
+                    }
+                  }
+                : prev
+            )
             console.error('Survival Tokens Update Error:', error)
             toast.error(ERROR_MESSAGE())
           })
@@ -240,16 +244,20 @@ export function SurvivalCard({
           )
           .catch((error: unknown) => {
             // Rollback
-            setSelectedShowdown({
-              ...selectedShowdown,
-              showdown_survivors: {
-                ...selectedShowdown.showdown_survivors,
-                [ssKey]: {
-                  ...showdownSurvivorRecord,
-                  survival_tokens: previousValue
-                }
-              }
-            })
+            setSelectedShowdown((prev) =>
+              prev?.showdown_survivors
+                ? {
+                    ...prev,
+                    showdown_survivors: {
+                      ...prev.showdown_survivors,
+                      [ssKey]: {
+                        ...showdownSurvivorRecord,
+                        survival_tokens: previousValue
+                      }
+                    }
+                  }
+                : prev
+            )
             console.error('Survival Tokens Update Error:', error)
             toast.error(ERROR_MESSAGE())
           })
@@ -289,8 +297,8 @@ export function SurvivalCard({
       const old = survival
 
       setSurvival(value)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, survival: value } : s
         )
       )
@@ -302,8 +310,8 @@ export function SurvivalCard({
         .catch((error) => {
           console.error('Survival Update Error:', error)
           setSurvival(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, survival: old } : s
             )
           )
@@ -315,7 +323,6 @@ export function SurvivalCard({
       survival,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors,
       toast
     ]
   )
@@ -333,8 +340,8 @@ export function SurvivalCard({
       const old = canSpendSurvival
 
       setCanSpendSurvival(!checked)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, can_spend_survival: !checked }
             : s
@@ -348,8 +355,8 @@ export function SurvivalCard({
         .catch((error) => {
           console.error('Can Spend Survival Update Error:', error)
           setCanSpendSurvival(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, can_spend_survival: old }
                 : s
@@ -358,7 +365,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canSpendSurvival, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [canSpendSurvival, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -371,8 +378,8 @@ export function SurvivalCard({
       const old = canDodge
 
       setCanDodge(!!checked)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, can_dodge: !!checked } : s
         )
       )
@@ -384,15 +391,15 @@ export function SurvivalCard({
         .catch((error) => {
           console.error('Can Dodge Update Error:', error)
           setCanDodge(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, can_dodge: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canDodge, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [canDodge, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -405,8 +412,8 @@ export function SurvivalCard({
       const old = canEncourage
 
       setCanEncourage(!!checked)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, can_encourage: !!checked } : s
         )
       )
@@ -418,15 +425,15 @@ export function SurvivalCard({
         .catch((error) => {
           console.error('Can Encourage Update Error:', error)
           setCanEncourage(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, can_encourage: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canEncourage, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [canEncourage, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -439,8 +446,8 @@ export function SurvivalCard({
       const old = canSurge
 
       setCanSurge(!!checked)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, can_surge: !!checked } : s
         )
       )
@@ -452,15 +459,15 @@ export function SurvivalCard({
         .catch((error) => {
           console.error('Can Surge Update Error:', error)
           setCanSurge(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, can_surge: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canSurge, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [canSurge, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -473,8 +480,8 @@ export function SurvivalCard({
       const old = canDash
 
       setCanDash(!!checked)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, can_dash: !!checked } : s
         )
       )
@@ -484,15 +491,15 @@ export function SurvivalCard({
         .catch((error) => {
           console.error('Can Dash Update Error:', error)
           setCanDash(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, can_dash: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canDash, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [canDash, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -505,8 +512,8 @@ export function SurvivalCard({
       const old = canFistPump
 
       setCanFistPump(!!checked)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, can_fist_pump: !!checked } : s
         )
       )
@@ -518,15 +525,15 @@ export function SurvivalCard({
         .catch((error) => {
           console.error('Can Fist Pump Update Error:', error)
           setCanFistPump(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, can_fist_pump: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canFistPump, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [canFistPump, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -543,8 +550,8 @@ export function SurvivalCard({
       const old = systemicPressure
 
       setSystemicPressure(value)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, systemic_pressure: value } : s
         )
       )
@@ -554,8 +561,8 @@ export function SurvivalCard({
         .catch((error) => {
           console.error('Systemic Pressure Update Error:', error)
           setSystemicPressure(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, systemic_pressure: old }
                 : s
@@ -564,7 +571,7 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [systemicPressure, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [systemicPressure, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -577,8 +584,8 @@ export function SurvivalCard({
       const old = canEndure
 
       setCanEndure(!!checked)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, can_endure: !!checked } : s
         )
       )
@@ -590,15 +597,15 @@ export function SurvivalCard({
         .catch((error) => {
           console.error('Can Endure Update Error:', error)
           setCanEndure(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, can_endure: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [canEndure, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [canEndure, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   return (
