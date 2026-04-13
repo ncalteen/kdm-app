@@ -42,7 +42,11 @@ import {
   QUARRY_UNLOCKED_MESSAGE
 } from '@/lib/messages'
 import { sortQuarries } from '@/lib/settlement/quarries'
-import { QuarryDetail, SettlementDetail } from '@/lib/types'
+import {
+  QuarryDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { PlusIcon, SwordIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -55,7 +59,7 @@ interface QuarriesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -191,23 +195,25 @@ export function QuarriesCard({
       addSettlementQuarries([quarryId], selectedSettlement?.id)
         .then(async (row) => {
           // Replace the placeholder with the real row from the DB.
-          const finalQuarries = sortQuarries(
-            updatedQuarries.map((q) =>
-              q.id === tempId
-                ? {
-                    ...q,
-                    id: row[0].id,
-                    node: quarryInfo.node,
-                    prologue: quarryInfo.prologue
-                  }
-                : q
-            )
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  quarries: sortQuarries(
+                    prev.quarries.map((q) =>
+                      q.id === tempId
+                        ? {
+                            ...q,
+                            id: row[0].id,
+                            node: quarryInfo.node,
+                            prologue: quarryInfo.prologue
+                          }
+                        : q
+                    )
+                  )
+                }
+              : null
           )
-
-          setSelectedSettlement({
-            ...selectedSettlement,
-            quarries: finalQuarries
-          })
 
           // Add related locations, timeline events, and CC rewards
           try {
@@ -222,12 +228,9 @@ export function QuarriesCard({
               getQuarryCollectiveCognitionRewardIds(quarryId)
             ])
 
-            let updatedSettlement = {
-              ...selectedSettlement,
-              quarries: finalQuarries
-            }
+            // Collect new locations
+            let newLocationRows: SettlementDetail['locations'] = []
 
-            // Add locations not already present
             if (locationIds.length > 0) {
               const existingLocIds = new Set(
                 selectedSettlement.locations.map((l) => l.location_id)
@@ -240,71 +243,70 @@ export function QuarriesCard({
                   newLocIds,
                   selectedSettlement.id
                 )
-                const insertedLocations = inserted.map((ins) => ({
+                newLocationRows = inserted.map((ins) => ({
                   id: ins.id,
                   location_id: ins.location_id,
                   location_name: ins.location_name,
                   unlocked: false
                 }))
-
-                updatedSettlement = {
-                  ...updatedSettlement,
-                  locations: [
-                    ...updatedSettlement.locations,
-                    ...insertedLocations
-                  ]
-                }
               }
             }
 
-            // Add timeline entries to existing years or create new ones
-            if (timelineYears.length > 0) {
-              const updatedTimeline = { ...updatedSettlement.timeline }
+            // Collect timeline changes
+            const timelineUpdates: {
+              [year: number]: {
+                completed: boolean
+                entries: string[]
+                id: string
+              }
+            } = {}
 
+            if (timelineYears.length > 0) {
               for (const ty of timelineYears) {
-                const existingYear = updatedTimeline[ty.year_number]
+                const existingYear = selectedSettlement.timeline[ty.year_number]
                 if (existingYear) {
-                  // Add entries that don't already exist in this year
                   const existingEntries = new Set(existingYear.entries)
                   const newEntries = ty.entries.filter(
                     (e) => !existingEntries.has(e)
                   )
+                  let updatedEntries = existingYear.entries
                   for (const entry of newEntries) {
-                    const updated = await saveSettlementTimelineYearEntry(
+                    updatedEntries = await saveSettlementTimelineYearEntry(
                       existingYear.id,
                       entry,
-                      existingYear.entries.length
+                      updatedEntries.length
                     )
-                    existingYear.entries = updated
+                  }
+                  timelineUpdates[ty.year_number] = {
+                    ...existingYear,
+                    entries: updatedEntries
                   }
                 } else {
-                  // Create a new timeline year
                   const yearId = await addSettlementTimelineYear(
                     selectedSettlement.id,
                     ty.year_number
                   )
+                  let entries: string[] = []
                   for (let i = 0; i < ty.entries.length; i++) {
-                    const updated = await saveSettlementTimelineYearEntry(
+                    entries = await saveSettlementTimelineYearEntry(
                       yearId,
                       ty.entries[i],
                       i
                     )
-                    updatedTimeline[ty.year_number] = {
-                      id: yearId,
-                      completed: false,
-                      entries: updated
-                    }
+                  }
+                  timelineUpdates[ty.year_number] = {
+                    id: yearId,
+                    completed: false,
+                    entries
                   }
                 }
               }
-
-              updatedSettlement = {
-                ...updatedSettlement,
-                timeline: updatedTimeline
-              }
             }
 
-            // Add CC rewards not already present
+            // Collect CC rewards
+            let newCcrRows: SettlementDetail['collective_cognition_rewards'] =
+              []
+
             if (ccrIds.length > 0) {
               const existingCcrIds = new Set(
                 selectedSettlement.collective_cognition_rewards.map(
@@ -317,23 +319,58 @@ export function QuarriesCard({
                   newCcrIds,
                   selectedSettlement.id
                 )
-                updatedSettlement = {
-                  ...updatedSettlement,
-                  collective_cognition_rewards: [
-                    ...updatedSettlement.collective_cognition_rewards,
-                    ...inserted.map((ins, i) => ({
-                      id: ins.id,
-                      collective_cognition_reward_id: newCcrIds[i],
-                      reward_name: inserted[i].reward_name,
-                      collective_cognition: inserted[i].collective_cognition,
-                      unlocked: false
-                    }))
-                  ]
-                }
+                newCcrRows = inserted.map((ins, i) => ({
+                  id: ins.id,
+                  collective_cognition_reward_id: newCcrIds[i],
+                  reward_name: inserted[i].reward_name,
+                  collective_cognition: inserted[i].collective_cognition,
+                  unlocked: false
+                }))
               }
             }
 
-            setSelectedSettlement(updatedSettlement)
+            // Merge all collected changes with a functional update.
+            setSelectedSettlement((prev) => {
+              if (!prev) return null
+
+              const existingLocIds = new Set(
+                prev.locations.map((l) => l.location_id)
+              )
+              const existingCcrIds = new Set(
+                prev.collective_cognition_rewards.map(
+                  (c) => c.collective_cognition_reward_id
+                )
+              )
+
+              return {
+                ...prev,
+                locations:
+                  newLocationRows.length > 0
+                    ? [
+                        ...prev.locations,
+                        ...newLocationRows.filter(
+                          (nl) => !existingLocIds.has(nl.location_id)
+                        )
+                      ]
+                    : prev.locations,
+                timeline:
+                  Object.keys(timelineUpdates).length > 0
+                    ? { ...prev.timeline, ...timelineUpdates }
+                    : prev.timeline,
+                collective_cognition_rewards:
+                  newCcrRows.length > 0
+                    ? [
+                        ...prev.collective_cognition_rewards,
+                        ...newCcrRows.filter(
+                          (nr) =>
+                            !existingCcrIds.has(
+                              nr.collective_cognition_reward_id
+                            )
+                        )
+                      ]
+                    : prev.collective_cognition_rewards
+              }
+            })
           } catch (relatedErr) {
             console.error('Quarry Related Data Add Error:', relatedErr)
           }
@@ -341,11 +378,15 @@ export function QuarriesCard({
           toast.success(QUARRY_ADDED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert to the original quarries (before the optimistic add).
-          setSelectedSettlement({
-            ...selectedSettlement,
-            quarries: selectedSettlement.quarries
-          })
+          // Remove the optimistic placeholder.
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  quarries: prev.quarries.filter((q) => q.id !== tempId)
+                }
+              : null
+          )
 
           console.error('Quarry Add Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -377,9 +418,14 @@ export function QuarriesCard({
       removeSettlementQuarry(removed.id)
         .then(() => toast.success(QUARRY_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          // Revert the optimistic removal.
-          setSelectedSettlement({
-            ...selectedSettlement
+          // Re-add the removed quarry if it's not already present.
+          setSelectedSettlement((prev) => {
+            if (!prev || prev.quarries.some((q) => q.id === removed.id))
+              return prev
+            return {
+              ...prev,
+              quarries: sortQuarries([...prev.quarries, removed])
+            }
           })
 
           console.error('Quarry Remove Error:', err)
@@ -418,12 +464,16 @@ export function QuarriesCard({
         )
         .catch((err: unknown) => {
           // Revert the optimistic toggle.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            quarries: selectedSettlement.quarries.map((n) =>
-              n.id === quarryId ? { ...n, unlocked: !unlocked } : n
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  quarries: prev.quarries.map((n) =>
+                    n.id === target.id ? { ...n, unlocked: !unlocked } : n
+                  )
+                }
+              : null
+          )
 
           console.error('Quarry Toggle Error:', err)
           toast.error(ERROR_MESSAGE())

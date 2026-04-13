@@ -47,6 +47,7 @@ import {
 import {
   SettlementDetail,
   SettlementPhaseDetail,
+  SettlementStateSetter,
   SurvivorDetail
 } from '@/lib/types'
 import { CircleOffIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
@@ -67,7 +68,7 @@ interface SettlementPhaseCardProps {
   /** Set Pending Special Showdown */
   setPendingSpecialShowdown: (pending: boolean) => void
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
   /** Set Selected Settlement Phase */
   setSelectedSettlementPhase: (phase: SettlementPhaseDetail | null) => void
   /** Set Selected Survivor */

@@ -33,7 +33,11 @@ import {
   MILESTONE_REMOVED_MESSAGE,
   MILESTONE_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { MilestoneDetail, SettlementDetail } from '@/lib/types'
+import {
+  MilestoneDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { BadgeCheckIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -46,7 +50,7 @@ interface MilestonesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -173,22 +177,28 @@ export function MilestonesCard({
 
       addSettlementMilestones([milestoneId], selectedSettlement.id)
         .then((row) => {
-          // Replace the placeholder with the real row from the DB.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            milestones: updatedMilestones.map((m) =>
-              m.id === tempId ? { ...m, id: row[0].id } : m
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  milestones: prev.milestones.map((m) =>
+                    m.id === tempId ? { ...m, id: row[0].id } : m
+                  )
+                }
+              : null
+          )
 
           toast.success(MILESTONE_UPDATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert to the original milestones (before the optimistic add).
-          setSelectedSettlement({
-            ...selectedSettlement,
-            milestones: selectedSettlement.milestones
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  milestones: prev.milestones.filter((m) => m.id !== tempId)
+                }
+              : null
+          )
 
           console.error('Milestone Add Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -222,14 +232,10 @@ export function MilestonesCard({
       removeSettlementMilestone(removed.id)
         .then(() => toast.success(MILESTONE_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          // Revert the optimistic removal.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            milestones: [
-              ...selectedSettlement.milestones.slice(0, index),
-              removed,
-              ...selectedSettlement.milestones.slice(index)
-            ]
+          setSelectedSettlement((prev) => {
+            if (!prev || prev.milestones.some((m) => m.id === removed.id))
+              return prev
+            return { ...prev, milestones: [...prev.milestones, removed] }
           })
 
           console.error('Milestone Remove Error:', err)
@@ -265,13 +271,16 @@ export function MilestonesCard({
       updateSettlementMilestone(target.id, { complete })
         .then(() => toast.success(MILESTONE_COMPLETED_MESSAGE(complete)))
         .catch((err: unknown) => {
-          // Revert the optimistic toggle.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            milestones: selectedSettlement.milestones.map((m, i) =>
-              i === index ? { ...m, complete: !complete } : m
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  milestones: prev.milestones.map((m) =>
+                    m.id === target.id ? { ...m, complete: !complete } : m
+                  )
+                }
+              : null
+          )
 
           console.error('Milestone Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -336,18 +345,26 @@ export function MilestonesCard({
 
         addSettlementMilestones([newMilestone.id], selectedSettlement.id)
           .then((row) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              milestones: updatedMilestones.map((m) =>
-                m.id === tempId ? { ...m, id: row[0].id } : m
-              )
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    milestones: prev.milestones.map((m) =>
+                      m.id === tempId ? { ...m, id: row[0].id } : m
+                    )
+                  }
+                : null
+            )
           })
           .catch((err: unknown) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              milestones: selectedSettlement.milestones
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    milestones: prev.milestones.filter((m) => m.id !== tempId)
+                  }
+                : null
+            )
             console.error('Milestone Add Error:', err)
             toast.error(ERROR_MESSAGE())
           })

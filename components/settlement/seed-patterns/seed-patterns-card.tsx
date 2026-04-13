@@ -30,7 +30,11 @@ import {
   SEED_PATTERN_REMOVED_MESSAGE,
   SEED_PATTERN_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SeedPatternDetail, SettlementDetail } from '@/lib/types'
+import {
+  SeedPatternDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { BeanIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -43,7 +47,7 @@ interface SeedPatternsCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -153,19 +157,29 @@ export function SeedPatternsCard({
 
       addSettlementSeedPatterns([seedPatternId], selectedSettlement.id)
         .then((row) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            seed_patterns: updatedSeedPatterns.map((sp) =>
-              sp.id === tempId ? { ...sp, id: row[0].id } : sp
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  seed_patterns: prev.seed_patterns.map((sp) =>
+                    sp.id === tempId ? { ...sp, id: row[0].id } : sp
+                  )
+                }
+              : null
+          )
           toast.success(SEED_PATTERN_UPDATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            seed_patterns: selectedSettlement.seed_patterns
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  seed_patterns: prev.seed_patterns.filter(
+                    (sp) => sp.id !== tempId
+                  )
+                }
+              : null
+          )
           console.error('Seed Pattern Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -190,13 +204,13 @@ export function SeedPatternsCard({
       removeSettlementSeedPattern(removed.id)
         .then(() => toast.success(SEED_PATTERN_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            seed_patterns: [
-              ...selectedSettlement.seed_patterns.slice(0, index),
-              removed,
-              ...selectedSettlement.seed_patterns.slice(index)
-            ]
+          setSelectedSettlement((prev) => {
+            if (!prev || prev.seed_patterns.some((sp) => sp.id === removed.id))
+              return prev
+            return {
+              ...prev,
+              seed_patterns: [...prev.seed_patterns, removed]
+            }
           })
           console.error('Seed Pattern Remove Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -253,19 +267,29 @@ export function SeedPatternsCard({
 
       addSettlementSeedPatterns([newSeedPattern.id], selectedSettlement.id)
         .then((row) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            seed_patterns: updatedSeedPatterns.map((sp) =>
-              sp.id === tempId ? { ...sp, id: row[0].id } : sp
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  seed_patterns: prev.seed_patterns.map((sp) =>
+                    sp.id === tempId ? { ...sp, id: row[0].id } : sp
+                  )
+                }
+              : null
+          )
           toast.success(SEED_PATTERN_UPDATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            seed_patterns: selectedSettlement.seed_patterns
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  seed_patterns: prev.seed_patterns.filter(
+                    (sp) => sp.id !== tempId
+                  )
+                }
+              : null
+          )
           console.error('Seed Pattern Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })

@@ -14,6 +14,7 @@ import {
   HuntDetail,
   SettlementDetail,
   SettlementPhaseDetail,
+  SettlementStateSetter,
   ShowdownDetail,
   SurvivorDetail,
   UserSettingsDetail
@@ -124,7 +125,7 @@ interface LocalContextType {
   /** Set Selected Hunt Monster Index */
   setSelectedHuntMonsterIndex: (index: number) => void
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
   /** Set Selected Settlement ID */
   setSelectedSettlementId: (settlementId: string | null) => void
   /** Set Selected Settlement Phase */
@@ -1048,7 +1049,18 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    *
    * @param settlement Selected Settlement
    */
-  const setSelectedSettlement = (settlement: SettlementDetail | null) => {
+  const setSelectedSettlement: SettlementStateSetter = (
+    settlementOrUpdater
+  ) => {
+    // Functional updater form — used for safe optimistic async callbacks
+    // that must operate on the latest state instead of a stale closure.
+    if (typeof settlementOrUpdater === 'function') {
+      setSelectedSettlementState(settlementOrUpdater)
+      return
+    }
+
+    const settlement = settlementOrUpdater
+
     // When selecting a settlement, stop creation mode
     if (settlement) setIsCreatingNewSettlement(false)
 

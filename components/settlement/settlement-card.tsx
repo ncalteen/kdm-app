@@ -44,6 +44,7 @@ import {
   HuntDetail,
   SettlementDetail,
   SettlementPhaseDetail,
+  SettlementStateSetter,
   ShowdownDetail,
   SurvivorDetail,
   UserSettingsDetail
@@ -92,7 +93,7 @@ interface SettlementCardProps {
   /** Set Selected Hunt Monster Index */
   setSelectedHuntMonsterIndex: (index: number) => void
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
   /** Set Selected Settlement ID */
   setSelectedSettlementId: (settlementId: string | null) => void
   /** Set Selected Settlement Phase */

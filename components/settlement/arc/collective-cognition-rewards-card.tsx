@@ -36,7 +36,11 @@ import {
   COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE,
   ERROR_MESSAGE
 } from '@/lib/messages'
-import { CollectiveCognitionRewardDetail, SettlementDetail } from '@/lib/types'
+import {
+  CollectiveCognitionRewardDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { calculateSettlementCollectiveCognition } from '@/lib/utils'
 import { BrainIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
@@ -50,7 +54,7 @@ interface CollectiveCognitionRewardsCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -190,23 +194,30 @@ export function CollectiveCognitionRewardsCard({
 
       addSettlementCollectiveCognitionRewards([rewardId], selectedSettlement.id)
         .then((rows) => {
-          // Replace the placeholder with the real row from the DB.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            collective_cognition_rewards: updatedRewards.map((r) =>
-              r.id === tempId ? { ...r, id: rows[0].id } : r
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  collective_cognition_rewards: (
+                    prev.collective_cognition_rewards ?? []
+                  ).map((r) => (r.id === tempId ? { ...r, id: rows[0].id } : r))
+                }
+              : null
+          )
 
           toast.success(COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert to the original rewards (before the optimistic add).
-          setSelectedSettlement({
-            ...selectedSettlement,
-            collective_cognition_rewards:
-              selectedSettlement.collective_cognition_rewards
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  collective_cognition_rewards: (
+                    prev.collective_cognition_rewards ?? []
+                  ).filter((r) => r.id !== tempId)
+                }
+              : null
+          )
 
           console.error('Collective Cognition Reward Add Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -244,19 +255,21 @@ export function CollectiveCognitionRewardsCard({
           toast.success(COLLECTIVE_COGNITION_REWARD_REMOVED_MESSAGE())
         )
         .catch((err: unknown) => {
-          // Revert the optimistic removal.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            collective_cognition_rewards: [
-              ...(selectedSettlement.collective_cognition_rewards ?? []).slice(
-                0,
-                index
-              ),
-              removed,
-              ...(selectedSettlement.collective_cognition_rewards ?? []).slice(
-                index
+          setSelectedSettlement((prev) => {
+            if (
+              !prev ||
+              (prev.collective_cognition_rewards ?? []).some(
+                (r) => r.id === removed.id
               )
-            ]
+            )
+              return prev
+            return {
+              ...prev,
+              collective_cognition_rewards: [
+                ...(prev.collective_cognition_rewards ?? []),
+                removed
+              ]
+            }
           })
 
           console.error('Collective Cognition Reward Remove Error:', err)
@@ -295,14 +308,17 @@ export function CollectiveCognitionRewardsCard({
           toast.success(COLLECTIVE_COGNITION_REWARD_SAVED_MESSAGE(unlocked))
         )
         .catch((err: unknown) => {
-          // Revert the optimistic toggle.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            collective_cognition_rewards:
-              selectedSettlement.collective_cognition_rewards.map((r, i) =>
-                i === index ? { ...r, unlocked: !unlocked } : r
-              )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  collective_cognition_rewards:
+                    prev.collective_cognition_rewards.map((r) =>
+                      r.id === target.id ? { ...r, unlocked: !unlocked } : r
+                    )
+                }
+              : null
+          )
 
           console.error('Collective Cognition Reward Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -370,19 +386,30 @@ export function CollectiveCognitionRewardsCard({
           selectedSettlement.id
         )
           .then((rows) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              collective_cognition_rewards: updatedRewards.map((r) =>
-                r.id === tempId ? { ...r, id: rows[0].id } : r
-              )
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    collective_cognition_rewards: (
+                      prev.collective_cognition_rewards ?? []
+                    ).map((r) =>
+                      r.id === tempId ? { ...r, id: rows[0].id } : r
+                    )
+                  }
+                : null
+            )
           })
           .catch((err: unknown) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              collective_cognition_rewards:
-                selectedSettlement.collective_cognition_rewards
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    collective_cognition_rewards: (
+                      prev.collective_cognition_rewards ?? []
+                    ).filter((r) => r.id !== tempId)
+                  }
+                : null
+            )
             console.error('Collective Cognition Reward Add Error:', err)
             toast.error(ERROR_MESSAGE())
           })

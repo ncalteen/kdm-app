@@ -429,6 +429,20 @@ export type ResourceDetail = Omit<
 }
 
 /**
+ * Settlement State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type SettlementStateSetter = (
+  settlementOrUpdater:
+    | SettlementDetail
+    | null
+    | ((prev: SettlementDetail | null) => SettlementDetail | null)
+) => void
+
+/**
  * Settlement Detail
  *
  * Used throughout the app to represent the currently selected settlement.

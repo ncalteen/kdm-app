@@ -19,7 +19,7 @@ import {
   COLLECTIVE_COGNITION_VICTORY_SAVED_MESSAGE,
   ERROR_MESSAGE
 } from '@/lib/messages'
-import { SettlementDetail } from '@/lib/types'
+import { SettlementDetail, SettlementStateSetter } from '@/lib/types'
 import { TrophyIcon } from 'lucide-react'
 import { ReactElement, useCallback } from 'react'
 
@@ -32,7 +32,7 @@ interface CollectiveCognitionVictoriesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -117,10 +117,16 @@ export function CollectiveCognitionVictoriesCard({
         )
         .catch((err: unknown) => {
           // Revert the optimistic update.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            quarries: selectedSettlement.quarries
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  quarries: prev.quarries.map((q) =>
+                    q.id === quarry.id ? { ...q, [field]: quarry[field] } : q
+                  )
+                }
+              : null
+          )
 
           console.error('Quarry Collective Cognition Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -169,10 +175,16 @@ export function CollectiveCognitionVictoriesCard({
         )
         .catch((err: unknown) => {
           // Revert the optimistic update.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            nemeses: selectedSettlement.nemeses
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  nemeses: prev.nemeses.map((n) =>
+                    n.id === nemesis.id ? { ...n, [field]: nemesis[field] } : n
+                  )
+                }
+              : null
+          )
 
           console.error('Nemesis Collective Cognition Toggle Error:', err)
           toast.error(ERROR_MESSAGE())

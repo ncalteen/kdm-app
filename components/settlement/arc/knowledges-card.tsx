@@ -30,7 +30,11 @@ import {
   KNOWLEDGE_CREATED_MESSAGE,
   KNOWLEDGE_REMOVED_MESSAGE
 } from '@/lib/messages'
-import { KnowledgeDetail, SettlementDetail } from '@/lib/types'
+import {
+  KnowledgeDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { GraduationCapIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -43,7 +47,7 @@ interface KnowledgesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -170,22 +174,30 @@ export function KnowledgesCard({
 
       addSettlementKnowledges([knowledgeId], selectedSettlement.id)
         .then((rows) => {
-          // Replace the placeholder with the real row from the DB.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            knowledges: updatedKnowledges.map((k) =>
-              k.id === tempId ? { ...k, id: rows[0].id } : k
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  knowledges: (prev.knowledges ?? []).map((k) =>
+                    k.id === tempId ? { ...k, id: rows[0].id } : k
+                  )
+                }
+              : null
+          )
 
           toast.success(KNOWLEDGE_CREATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert to the original knowledges (before the optimistic add).
-          setSelectedSettlement({
-            ...selectedSettlement,
-            knowledges: selectedSettlement.knowledges
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  knowledges: (prev.knowledges ?? []).filter(
+                    (k) => k.id !== tempId
+                  )
+                }
+              : null
+          )
 
           console.error('Knowledge Add Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -219,14 +231,16 @@ export function KnowledgesCard({
       removeSettlementKnowledge(removed.id)
         .then(() => toast.success(KNOWLEDGE_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          // Revert the optimistic removal.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            knowledges: [
-              ...(selectedSettlement.knowledges ?? []).slice(0, index),
-              removed,
-              ...(selectedSettlement.knowledges ?? []).slice(index)
-            ]
+          setSelectedSettlement((prev) => {
+            if (
+              !prev ||
+              (prev.knowledges ?? []).some((k) => k.id === removed.id)
+            )
+              return prev
+            return {
+              ...prev,
+              knowledges: [...(prev.knowledges ?? []), removed]
+            }
           })
 
           console.error('Knowledge Remove Error:', err)
@@ -289,18 +303,28 @@ export function KnowledgesCard({
 
         addSettlementKnowledges([newKnowledge.id], selectedSettlement.id)
           .then((rows) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              knowledges: updatedKnowledges.map((k) =>
-                k.id === tempId ? { ...k, id: rows[0].id } : k
-              )
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    knowledges: (prev.knowledges ?? []).map((k) =>
+                      k.id === tempId ? { ...k, id: rows[0].id } : k
+                    )
+                  }
+                : null
+            )
           })
           .catch((err: unknown) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              knowledges: selectedSettlement.knowledges
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    knowledges: (prev.knowledges ?? []).filter(
+                      (k) => k.id !== tempId
+                    )
+                  }
+                : null
+            )
             console.error('Knowledge Add Error:', err)
             toast.error(ERROR_MESSAGE())
           })

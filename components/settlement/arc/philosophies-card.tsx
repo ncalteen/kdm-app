@@ -31,7 +31,11 @@ import {
   PHILOSOPHY_CREATED_MESSAGE,
   PHILOSOPHY_REMOVED_MESSAGE
 } from '@/lib/messages'
-import { PhilosophyDetail, SettlementDetail } from '@/lib/types'
+import {
+  PhilosophyDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { BrainCogIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -44,7 +48,7 @@ interface PhilosophiesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -177,22 +181,30 @@ export function PhilosophiesCard({
 
       addSettlementPhilosophies([philosophyId], selectedSettlement.id)
         .then((rows) => {
-          // Replace the placeholder with the real row from the DB.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            philosophies: updatedPhilosophies.map((p) =>
-              p.id === tempId ? { ...p, id: rows[0].id } : p
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  philosophies: (prev.philosophies ?? []).map((p) =>
+                    p.id === tempId ? { ...p, id: rows[0].id } : p
+                  )
+                }
+              : null
+          )
 
           toast.success(PHILOSOPHY_CREATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert to the original philosophies (before the optimistic add).
-          setSelectedSettlement({
-            ...selectedSettlement,
-            philosophies: selectedSettlement.philosophies
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  philosophies: (prev.philosophies ?? []).filter(
+                    (p) => p.id !== tempId
+                  )
+                }
+              : null
+          )
 
           console.error('Philosophy Add Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -226,14 +238,16 @@ export function PhilosophiesCard({
       removeSettlementPhilosophy(removed.id)
         .then(() => toast.success(PHILOSOPHY_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          // Revert the optimistic removal.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            philosophies: [
-              ...(selectedSettlement.philosophies ?? []).slice(0, index),
-              removed,
-              ...(selectedSettlement.philosophies ?? []).slice(index)
-            ]
+          setSelectedSettlement((prev) => {
+            if (
+              !prev ||
+              (prev.philosophies ?? []).some((p) => p.id === removed.id)
+            )
+              return prev
+            return {
+              ...prev,
+              philosophies: [...(prev.philosophies ?? []), removed]
+            }
           })
 
           console.error('Philosophy Remove Error:', err)
@@ -301,18 +315,28 @@ export function PhilosophiesCard({
 
         addSettlementPhilosophies([newPhilosophy.id], selectedSettlement.id)
           .then((rows) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              philosophies: updatedPhilosophies.map((p) =>
-                p.id === tempId ? { ...p, id: rows[0].id } : p
-              )
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    philosophies: (prev.philosophies ?? []).map((p) =>
+                      p.id === tempId ? { ...p, id: rows[0].id } : p
+                    )
+                  }
+                : null
+            )
           })
           .catch((err: unknown) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              philosophies: selectedSettlement.philosophies
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    philosophies: (prev.philosophies ?? []).filter(
+                      (p) => p.id !== tempId
+                    )
+                  }
+                : null
+            )
             console.error('Philosophy Add Error:', err)
             toast.error(ERROR_MESSAGE())
           })

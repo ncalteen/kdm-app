@@ -33,7 +33,11 @@ import {
   RESOURCE_REMOVED_MESSAGE,
   RESOURCE_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { ResourceDetail, SettlementDetail } from '@/lib/types'
+import {
+  ResourceDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { BeefIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -46,7 +50,7 @@ interface ResourcesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -169,19 +173,27 @@ export function ResourcesCard({
 
       addSettlementResources([resourceId], selectedSettlement.id)
         .then((row) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            resources: updatedResources.map((r) =>
-              r.id === tempId ? { ...r, id: row[0].id } : r
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  resources: prev.resources.map((r) =>
+                    r.id === tempId ? { ...r, id: row[0].id } : r
+                  )
+                }
+              : null
+          )
           toast.success(RESOURCE_UPDATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            resources: selectedSettlement.resources
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  resources: prev.resources.filter((r) => r.id !== tempId)
+                }
+              : null
+          )
           console.error('Resource Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -214,13 +226,10 @@ export function ResourcesCard({
       removeSettlementResource(removed.id)
         .then(() => toast.success(RESOURCE_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            resources: [
-              ...selectedSettlement.resources.slice(0, index),
-              removed,
-              ...selectedSettlement.resources.slice(index)
-            ]
+          setSelectedSettlement((prev) => {
+            if (!prev || prev.resources.some((r) => r.id === removed.id))
+              return prev
+            return { ...prev, resources: [...prev.resources, removed] }
           })
           console.error('Resource Remove Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -257,12 +266,16 @@ export function ResourcesCard({
       updateSettlementResource(target.id, { quantity })
         .then(() => toast.success(RESOURCE_UPDATED_MESSAGE(index)))
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            resources: selectedSettlement.resources.map((r, i) =>
-              i === index ? { ...r, quantity: oldQuantity } : r
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  resources: prev.resources.map((r) =>
+                    r.id === target.id ? { ...r, quantity: oldQuantity } : r
+                  )
+                }
+              : null
+          )
           console.error('Resource Quantity Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -332,19 +345,27 @@ export function ResourcesCard({
 
         addSettlementResources([newResource.id], selectedSettlement.id)
           .then((rows) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              resources: updatedResources.map((r) =>
-                r.id === tempId ? { ...r, id: rows[0].id } : r
-              )
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    resources: prev.resources.map((r) =>
+                      r.id === tempId ? { ...r, id: rows[0].id } : r
+                    )
+                  }
+                : null
+            )
             toast.success(RESOURCE_UPDATED_MESSAGE())
           })
           .catch((err: unknown) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              resources: selectedSettlement.resources
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    resources: prev.resources.filter((r) => r.id !== tempId)
+                  }
+                : null
+            )
             console.error('Resource Add Error:', err)
             toast.error(ERROR_MESSAGE())
           })
