@@ -7,7 +7,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { updateSettlement } from '@/lib/dal/settlement'
 import { ERROR_MESSAGE, SETTLEMENT_NOTES_SAVED_MESSAGE } from '@/lib/messages'
-import { SettlementDetail } from '@/lib/types'
+import { SettlementDetail, SettlementStateSetter } from '@/lib/types'
 import { CheckIcon, StickyNoteIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
 
@@ -20,7 +20,7 @@ interface NotesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -78,10 +78,9 @@ export function NotesCard({
       .then(() => toast.success(SETTLEMENT_NOTES_SAVED_MESSAGE()))
       .catch((err: unknown) => {
         // Revert the optimistic update.
-        setSelectedSettlement({
-          ...selectedSettlement,
-          notes: previousNotes
-        })
+        setSelectedSettlement((prev) =>
+          prev ? { ...prev, notes: previousNotes } : null
+        )
 
         setDraft(previousNotes ?? '')
         setIsDirty(true)

@@ -43,6 +43,7 @@ import {
   SettlementDetail,
   SettlementPhaseDetail,
   ShowdownDetail,
+  ShowdownStateSetter,
   ShowdownSurvivorDetail,
   SurvivorDetail,
   UserSettingsDetail
@@ -84,7 +85,7 @@ interface CreateShowdownCardProps {
   /** Set Pending Special Showdown */
   setPendingSpecialShowdown: (value: boolean) => void
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
   /** User Settings */

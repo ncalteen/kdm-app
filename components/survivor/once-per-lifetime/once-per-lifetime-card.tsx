@@ -18,7 +18,7 @@ import {
   SURVIVOR_ONCE_PER_LIFETIME_EVENT_REMOVED_MESSAGE,
   SURVIVOR_ONCE_PER_LIFETIME_EVENT_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SurvivorDetail } from '@/lib/types'
+import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import {
   closestCenter,
   DndContext,
@@ -46,9 +46,7 @@ interface OncePerLifetimeCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
-  /** Survivors */
-  survivors: SurvivorDetail[]
+  setSurvivors: SurvivorsStateSetter
 }
 
 /**
@@ -60,8 +58,7 @@ interface OncePerLifetimeCardProps {
 export function OncePerLifetimeCard({
   local,
   selectedSurvivor,
-  setSurvivors,
-  survivors
+  setSurvivors
 }: OncePerLifetimeCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -113,8 +110,8 @@ export function OncePerLifetimeCard({
       updated.splice(index, 1)
 
       setOncePerLifetime(updated)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, once_per_lifetime: updated }
             : s
@@ -140,8 +137,8 @@ export function OncePerLifetimeCard({
         .catch((error) => {
           console.error('Once Per Lifetime Remove Error:', error)
           setOncePerLifetime(oldOncePerLifetime)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, once_per_lifetime: oldOncePerLifetime }
                 : s
@@ -152,7 +149,7 @@ export function OncePerLifetimeCard({
 
       setIsAddingNew(false)
     },
-    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -188,8 +185,8 @@ export function OncePerLifetimeCard({
       }
 
       setOncePerLifetime(updated)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, once_per_lifetime: updated }
             : s
@@ -203,8 +200,8 @@ export function OncePerLifetimeCard({
         .catch((error) => {
           console.error('Once Per Lifetime Save Error:', error)
           setOncePerLifetime(oldOncePerLifetime)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, once_per_lifetime: oldOncePerLifetime }
                 : s
@@ -215,7 +212,7 @@ export function OncePerLifetimeCard({
 
       setIsAddingNew(false)
     },
-    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -234,8 +231,8 @@ export function OncePerLifetimeCard({
         const newOrder = arrayMove(oncePerLifetime, oldIndex, newIndex)
 
         setOncePerLifetime(newOrder)
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? { ...s, once_per_lifetime: newOrder }
               : s
@@ -263,8 +260,8 @@ export function OncePerLifetimeCard({
         }).catch((error) => {
           console.error('Once Per Lifetime Reorder Error:', error)
           setOncePerLifetime(oldOncePerLifetime)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, once_per_lifetime: oldOncePerLifetime }
                 : s
@@ -274,7 +271,7 @@ export function OncePerLifetimeCard({
         })
       }
     },
-    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [oncePerLifetime, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -287,8 +284,8 @@ export function OncePerLifetimeCard({
       const old = rerollUsed
 
       setRerollUsed(checked)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, reroll_used: checked } : s
         )
       )
@@ -300,15 +297,15 @@ export function OncePerLifetimeCard({
         .catch((error) => {
           console.error('Reroll Used Update Error:', error)
           setRerollUsed(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, reroll_used: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [rerollUsed, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [rerollUsed, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   return (

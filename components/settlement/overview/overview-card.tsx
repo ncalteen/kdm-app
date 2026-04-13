@@ -27,6 +27,7 @@ import {
 import {
   SettlementDetail,
   SettlementPhaseDetail,
+  SettlementStateSetter,
   SurvivorDetail
 } from '@/lib/types'
 import { calculateSettlementCollectiveCognition } from '@/lib/utils'
@@ -43,7 +44,7 @@ interface OverviewCardProps {
   /** Selected Settlement Phase */
   selectedSettlementPhase: SettlementPhaseDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
   /** Set Selected Settlement Phase */
   setSelectedSettlementPhase: (phase: SettlementPhaseDetail | null) => void
   /** Survivors */
@@ -196,10 +197,9 @@ export function OverviewCard({
         )
         .catch((error: unknown) => {
           // Rollback
-          setSelectedSettlement({
-            ...selectedSettlement,
-            lantern_research: previous
-          })
+          setSelectedSettlement((prev) =>
+            prev ? { ...prev, lantern_research: previous } : null
+          )
           console.error('Lantern Research Level Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })
@@ -237,10 +237,9 @@ export function OverviewCard({
         )
         .catch((error: unknown) => {
           // Rollback
-          setSelectedSettlement({
-            ...selectedSettlement,
-            survival_limit: previous
-          })
+          setSelectedSettlement((prev) =>
+            prev ? { ...prev, survival_limit: previous } : null
+          )
           console.error('Survival Limit Update Error:', error)
           toast.error(ERROR_MESSAGE())
         })

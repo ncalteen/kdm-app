@@ -4,7 +4,14 @@ import { HuntSurvivorCard } from '@/components/hunt/hunt-survivors/hunt-survivor
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { LocalStateType } from '@/contexts/local-context'
-import { HuntDetail, SettlementDetail, SurvivorDetail } from '@/lib/types'
+import {
+  HuntDetail,
+  HuntStateSetter,
+  SettlementDetail,
+  SurvivorDetail,
+  SurvivorsStateSetter,
+  SurvivorStateSetter
+} from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useEffect, useMemo, useState } from 'react'
 
@@ -21,11 +28,11 @@ interface HuntSurvivorsCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
   /** Set Selected Survivor */
-  setSelectedSurvivor: (survivor: SurvivorDetail | null) => void
+  setSelectedSurvivor: SurvivorStateSetter
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }

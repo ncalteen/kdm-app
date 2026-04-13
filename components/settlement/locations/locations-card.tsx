@@ -32,7 +32,11 @@ import {
   LOCATION_UNLOCKED_MESSAGE,
   LOCATION_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { LocationDetail, SettlementDetail } from '@/lib/types'
+import {
+  LocationDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { HouseIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -45,7 +49,7 @@ interface LocationsCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -185,21 +189,29 @@ export function LocationsCard({
       addSettlementLocations([locationId], selectedSettlement.id)
         .then((row) => {
           // Replace the placeholder with the real row from the DB.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            locations: updatedLocations.map((l) =>
-              l.id === tempId ? { ...l, id: row[0].id } : l
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  locations: prev.locations.map((l) =>
+                    l.id === tempId ? { ...l, id: row[0].id } : l
+                  )
+                }
+              : null
+          )
 
           toast.success(LOCATION_UPDATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert to the original locations (before the optimistic add).
-          setSelectedSettlement({
-            ...selectedSettlement,
-            locations: selectedSettlement.locations
-          })
+          // Remove the optimistic placeholder.
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  locations: prev.locations.filter((l) => l.id !== tempId)
+                }
+              : null
+          )
 
           console.error('Location Add Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -233,14 +245,11 @@ export function LocationsCard({
       removeSettlementLocation(removed.id)
         .then(() => toast.success(LOCATION_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          // Revert the optimistic removal.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            locations: [
-              ...selectedSettlement.locations.slice(0, index),
-              removed,
-              ...selectedSettlement.locations.slice(index)
-            ]
+          // Re-add the removed item if it's not already present.
+          setSelectedSettlement((prev) => {
+            if (!prev || prev.locations.some((l) => l.id === removed.id))
+              return prev
+            return { ...prev, locations: [...prev.locations, removed] }
           })
 
           console.error('Location Remove Error:', err)
@@ -277,12 +286,16 @@ export function LocationsCard({
         .then(() => toast.success(LOCATION_UNLOCKED_MESSAGE(unlocked)))
         .catch((err: unknown) => {
           // Revert the optimistic toggle.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            locations: selectedSettlement.locations.map((l, i) =>
-              i === index ? { ...l, unlocked: !unlocked } : l
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  locations: prev.locations.map((l) =>
+                    l.id === target.id ? { ...l, unlocked: !unlocked } : l
+                  )
+                }
+              : null
+          )
 
           console.error('Location Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -340,19 +353,27 @@ export function LocationsCard({
 
       addSettlementLocations([newLocation.id], selectedSettlement.id)
         .then((row) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            locations: updatedLocations.map((l) =>
-              l.id === tempId ? { ...l, id: row[0].id } : l
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  locations: prev.locations.map((l) =>
+                    l.id === tempId ? { ...l, id: row[0].id } : l
+                  )
+                }
+              : null
+          )
           toast.success(LOCATION_UPDATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            locations: selectedSettlement.locations
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  locations: prev.locations.filter((l) => l.id !== tempId)
+                }
+              : null
+          )
           console.error('Location Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })

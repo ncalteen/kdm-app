@@ -30,7 +30,11 @@ import {
   PATTERN_REMOVED_MESSAGE,
   PATTERN_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { PatternDetail, SettlementDetail } from '@/lib/types'
+import {
+  PatternDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { Plus, PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -43,7 +47,7 @@ interface PatternsCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -148,19 +152,27 @@ export function PatternsCard({
 
       addSettlementPatterns([patternId], selectedSettlement.id)
         .then((row) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            patterns: updatedPatterns.map((p) =>
-              p.id === tempId ? { ...p, id: row[0].id } : p
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  patterns: prev.patterns.map((p) =>
+                    p.id === tempId ? { ...p, id: row[0].id } : p
+                  )
+                }
+              : null
+          )
           toast.success(PATTERN_UPDATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            patterns: selectedSettlement.patterns
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  patterns: prev.patterns.filter((p) => p.id !== tempId)
+                }
+              : null
+          )
           console.error('Pattern Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -183,13 +195,10 @@ export function PatternsCard({
       removeSettlementPattern(removed.id)
         .then(() => toast.success(PATTERN_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            patterns: [
-              ...selectedSettlement.patterns.slice(0, index),
-              removed,
-              ...selectedSettlement.patterns.slice(index)
-            ]
+          setSelectedSettlement((prev) => {
+            if (!prev || prev.patterns.some((p) => p.id === removed.id))
+              return prev
+            return { ...prev, patterns: [...prev.patterns, removed] }
           })
           console.error('Pattern Remove Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -243,19 +252,27 @@ export function PatternsCard({
 
       addSettlementPatterns([newPattern.id], selectedSettlement.id)
         .then((row) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            patterns: updatedPatterns.map((p) =>
-              p.id === tempId ? { ...p, id: row[0].id } : p
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  patterns: prev.patterns.map((p) =>
+                    p.id === tempId ? { ...p, id: row[0].id } : p
+                  )
+                }
+              : null
+          )
           toast.success(PATTERN_UPDATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            patterns: selectedSettlement.patterns
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  patterns: prev.patterns.filter((p) => p.id !== tempId)
+                }
+              : null
+          )
           console.error('Pattern Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })

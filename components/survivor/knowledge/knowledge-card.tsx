@@ -31,7 +31,11 @@ import {
   SURVIVOR_KNOWLEDGE_RULES_UPDATED_MESSAGE,
   SURVIVOR_KNOWLEDGE_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SettlementDetail, SurvivorDetail } from '@/lib/types'
+import {
+  SettlementDetail,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
@@ -47,7 +51,7 @@ interface KnowledgeCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -232,8 +236,8 @@ export function KnowledgeCard({
         setKnowledge1((prev) => ({ ...prev, observation_rank: rank }))
       else setKnowledge2((prev) => ({ ...prev, observation_rank: rank }))
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, [fieldName]: rank } : s
         )
       )
@@ -248,8 +252,8 @@ export function KnowledgeCard({
             setKnowledge1((prev) => ({ ...prev, observation_rank: oldRank }))
           else setKnowledge2((prev) => ({ ...prev, observation_rank: oldRank }))
 
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, [fieldName]: oldRank } : s
             )
           )
@@ -258,14 +262,7 @@ export function KnowledgeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      knowledge1,
-      knowledge2,
-      selectedSurvivor?.id,
-      setSurvivors,
-      survivors,
-      toast
-    ]
+    [knowledge1, knowledge2, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -278,8 +275,8 @@ export function KnowledgeCard({
       const newValue = !checked
       const oldValue = canUseFightingArtsKnowledges
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, can_use_fighting_arts_knowledges: newValue }
             : s
@@ -297,8 +294,8 @@ export function KnowledgeCard({
           )
         )
         .catch((error) => {
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, can_use_fighting_arts_knowledges: oldValue }
                 : s
@@ -309,13 +306,7 @@ export function KnowledgeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      canUseFightingArtsKnowledges,
-      selectedSurvivor?.id,
-      setSurvivors,
-      survivors,
-      toast
-    ]
+    [canUseFightingArtsKnowledges, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -352,8 +343,8 @@ export function KnowledgeCard({
 
     setKnowledge1(newKnowledge)
 
-    setSurvivors(
-      survivors.map((s) =>
+    setSurvivors((prev) =>
+      prev.map((s) =>
         s.id === selectedSurvivor?.id
           ? {
               ...s,
@@ -390,8 +381,8 @@ export function KnowledgeCard({
         console.error('Knowledge Update Error:', error)
 
         setKnowledge1(oldKnowledge)
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? { ...s, knowledge_1: selectedSurvivor?.knowledge_1 ?? null }
               : s
@@ -430,8 +421,8 @@ export function KnowledgeCard({
         rank_up: newRankUp
       }))
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, knowledge_1_rank_up: newRankUp }
             : s
@@ -447,8 +438,8 @@ export function KnowledgeCard({
         .catch((error) => {
           knowledge1RankUpRef.current = oldRankUp
           setKnowledge1((prev) => ({ ...prev, rank_up: oldRankUp }))
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, knowledge_1_rank_up: oldRankUp }
                 : s
@@ -459,7 +450,7 @@ export function KnowledgeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -475,8 +466,8 @@ export function KnowledgeCard({
       rules: value
     })
 
-    setSurvivors(
-      survivors.map((s) =>
+    setSurvivors((prev) =>
+      prev.map((s) =>
         s.id === selectedSurvivor?.id ? { ...s, knowledge_1_rules: value } : s
       )
     )
@@ -491,8 +482,8 @@ export function KnowledgeCard({
           ...knowledge1,
           rules: oldRules
         })
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? {
                   ...s,
@@ -520,8 +511,8 @@ export function KnowledgeCard({
       observation_conditions: value
     })
 
-    setSurvivors(
-      survivors.map((s) =>
+    setSurvivors((prev) =>
+      prev.map((s) =>
         s.id === selectedSurvivor?.id
           ? { ...s, knowledge_1_observation_conditions: value }
           : s
@@ -542,8 +533,8 @@ export function KnowledgeCard({
           ...knowledge1,
           observation_conditions: oldObservationConditions
         })
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? {
                   ...s,
@@ -593,8 +584,8 @@ export function KnowledgeCard({
 
     setKnowledge2(newKnowledge)
 
-    setSurvivors(
-      survivors.map((s) =>
+    setSurvivors((prev) =>
+      prev.map((s) =>
         s.id === selectedSurvivor?.id
           ? {
               ...s,
@@ -631,8 +622,8 @@ export function KnowledgeCard({
         console.error('Knowledge Update Error:', error)
 
         setKnowledge2(oldKnowledge)
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? { ...s, knowledge_2: selectedSurvivor?.knowledge_2 ?? null }
               : s
@@ -671,8 +662,8 @@ export function KnowledgeCard({
         rank_up: newRankUp
       }))
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, knowledge_2_rank_up: newRankUp }
             : s
@@ -688,8 +679,8 @@ export function KnowledgeCard({
         .catch((error) => {
           knowledge2RankUpRef.current = oldRankUp
           setKnowledge2((prev) => ({ ...prev, rank_up: oldRankUp }))
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, knowledge_2_rank_up: oldRankUp }
                 : s
@@ -700,7 +691,7 @@ export function KnowledgeCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -716,8 +707,8 @@ export function KnowledgeCard({
       rules: value
     })
 
-    setSurvivors(
-      survivors.map((s) =>
+    setSurvivors((prev) =>
+      prev.map((s) =>
         s.id === selectedSurvivor?.id ? { ...s, knowledge_2_rules: value } : s
       )
     )
@@ -732,8 +723,8 @@ export function KnowledgeCard({
           ...knowledge2,
           rules: oldRules
         })
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? {
                   ...s,
@@ -761,8 +752,8 @@ export function KnowledgeCard({
       observation_conditions: value
     })
 
-    setSurvivors(
-      survivors.map((s) =>
+    setSurvivors((prev) =>
+      prev.map((s) =>
         s.id === selectedSurvivor?.id
           ? { ...s, knowledge_2_observation_conditions: value }
           : s
@@ -783,8 +774,8 @@ export function KnowledgeCard({
           ...knowledge2,
           observation_conditions: oldObservationConditions
         })
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? {
                   ...s,

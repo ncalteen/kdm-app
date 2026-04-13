@@ -14,7 +14,7 @@ import {
   ERROR_MESSAGE,
   SURVIVOR_COURAGE_UNDERSTANDING_ABILITY_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SurvivorDetail } from '@/lib/types'
+import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { ReactElement, useCallback, useState } from 'react'
 
 /**
@@ -26,7 +26,7 @@ interface CourageUnderstandingAbilitiesProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -123,8 +123,8 @@ export function CourageUnderstandingAbilities({
         setUnderstandingAbility(newVal)
       }
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, ...updates } : s
         )
       )
@@ -138,8 +138,8 @@ export function CourageUnderstandingAbilities({
           console.error('Courage/Understanding Ability Update Error:', error)
           setCourageAbility(oldCourageAbility)
           setUnderstandingAbility(oldUnderstandingAbility)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? {
                     ...s,
@@ -161,7 +161,6 @@ export function CourageUnderstandingAbilities({
       understandingAbility,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors,
       toast
     ]
   )

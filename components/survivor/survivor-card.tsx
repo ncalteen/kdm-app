@@ -31,9 +31,12 @@ import {
 } from '@/lib/enums'
 import {
   HuntDetail,
+  HuntStateSetter,
   SettlementDetail,
   ShowdownDetail,
-  SurvivorDetail
+  ShowdownStateSetter,
+  SurvivorDetail,
+  SurvivorsStateSetter
 } from '@/lib/types'
 import { getCardColorStyles } from '@/lib/utils'
 import { ReactElement } from 'react'
@@ -55,11 +58,11 @@ interface SurvivorCardProps extends Partial<SurvivorDetail> {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt (for optimistic token updates) */
-  setSelectedHunt?: (hunt: HuntDetail | null) => void
+  setSelectedHunt?: HuntStateSetter
   /** Set Selected Showdown (for optimistic token updates) */
-  setSelectedShowdown?: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -128,13 +131,11 @@ export function SurvivorCard({
               setSelectedHunt={setSelectedHunt}
               setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
-              survivors={survivors}
             />
             <WeaponProficiencyCard
               local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
-              survivors={survivors}
             />
             <CourageUnderstandingCard
               local={local}
@@ -147,19 +148,16 @@ export function SurvivorCard({
               local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
-              survivors={survivors}
             />
             <AbilitiesAndImpairmentsCard
               local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
-              survivors={survivors}
             />
             <OncePerLifetimeCard
               local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
-              survivors={survivors}
             />
           </div>
 
@@ -175,7 +173,6 @@ export function SurvivorCard({
               setSelectedHunt={setSelectedHunt}
               setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
-              survivors={survivors}
             />
             <SanityCard
               local={local}
@@ -189,7 +186,6 @@ export function SurvivorCard({
               setSelectedHunt={setSelectedHunt}
               setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
-              survivors={survivors}
             />
             <HeadCard
               local={local}
@@ -233,14 +229,12 @@ export function SurvivorCard({
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
-              survivors={survivors}
             />
             {mode === SurvivorCardMode.SURVIVOR_CARD && (
               <NextDepartureCard
                 local={local}
                 selectedSurvivor={selectedSurvivor}
                 setSurvivors={setSurvivors}
-                survivors={survivors}
               />
             )}
           </div>

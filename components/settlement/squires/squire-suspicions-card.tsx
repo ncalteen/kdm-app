@@ -20,7 +20,7 @@ import {
   calculateSuspicionLevels,
   calculateTotalSuspicion
 } from '@/lib/settlement/squires'
-import { SurvivorDetail } from '@/lib/types'
+import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { EyeIcon } from 'lucide-react'
 import { ReactElement, useState } from 'react'
 
@@ -31,7 +31,7 @@ interface SquireSuspicionsCardProps {
   /** Local State */
   local: LocalStateType
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }

@@ -47,7 +47,8 @@ import {
   FightingArtDetail,
   SecretFightingArtDetail,
   SettlementDetail,
-  SurvivorDetail
+  SurvivorDetail,
+  SurvivorsStateSetter
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Plus, PlusIcon, TrashIcon } from 'lucide-react'
@@ -64,7 +65,7 @@ interface FightingArtsCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -176,8 +177,8 @@ export function FightingArtsCard({
       const oldArts = [...fightingArts]
 
       setFightingArts([...fightingArts, optimisticItem])
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id
             ? { ...s, fighting_arts: [...s.fighting_arts, optimisticItem] }
             : s
@@ -190,8 +191,8 @@ export function FightingArtsCard({
         )
         .catch((error: unknown) => {
           setFightingArts(oldArts)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, fighting_arts: oldArts }
                 : s
@@ -202,14 +203,7 @@ export function FightingArtsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      availableFightingArts,
-      fightingArts,
-      selectedSurvivor,
-      setSurvivors,
-      survivors,
-      toast
-    ]
+    [availableFightingArts, fightingArts, selectedSurvivor, setSurvivors, toast]
   )
 
   /**
@@ -231,8 +225,8 @@ export function FightingArtsCard({
       const oldArts = [...secretFightingArts]
 
       setSecretFightingArts([...secretFightingArts, optimisticItem])
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id
             ? {
                 ...s,
@@ -251,8 +245,8 @@ export function FightingArtsCard({
         )
         .catch((error: unknown) => {
           setSecretFightingArts(oldArts)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, secret_fighting_arts: oldArts }
                 : s
@@ -268,7 +262,6 @@ export function FightingArtsCard({
       secretFightingArts,
       selectedSurvivor,
       setSurvivors,
-      survivors,
       toast
     ]
   )
@@ -306,8 +299,8 @@ export function FightingArtsCard({
       const updated = fightingArts.filter((_, i) => i !== index)
 
       setFightingArts(updated)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id ? { ...s, fighting_arts: updated } : s
         )
       )
@@ -316,8 +309,8 @@ export function FightingArtsCard({
         .then(() => toast.success(SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(false)))
         .catch((error: unknown) => {
           setFightingArts(oldArts)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, fighting_arts: oldArts }
                 : s
@@ -328,7 +321,7 @@ export function FightingArtsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [fightingArts, selectedSurvivor, setSurvivors, survivors, toast]
+    [fightingArts, selectedSurvivor, setSurvivors, toast]
   )
 
   /**
@@ -347,8 +340,8 @@ export function FightingArtsCard({
       const updated = secretFightingArts.filter((_, i) => i !== index)
 
       setSecretFightingArts(updated)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id
             ? { ...s, secret_fighting_arts: updated }
             : s
@@ -359,8 +352,8 @@ export function FightingArtsCard({
         .then(() => toast.success(SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(true)))
         .catch((error: unknown) => {
           setSecretFightingArts(oldArts)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, secret_fighting_arts: oldArts }
                 : s
@@ -371,7 +364,7 @@ export function FightingArtsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [secretFightingArts, selectedSurvivor, setSurvivors, survivors, toast]
+    [secretFightingArts, selectedSurvivor, setSurvivors, toast]
   )
 
   /**
@@ -384,8 +377,8 @@ export function FightingArtsCard({
       const newValue = !checked
       const oldValue = canUseFightingArtsKnowledges
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, can_use_fighting_arts_knowledges: newValue }
             : s
@@ -401,8 +394,8 @@ export function FightingArtsCard({
           )
         )
         .catch((error: unknown) => {
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, can_use_fighting_arts_knowledges: oldValue }
                 : s
@@ -413,13 +406,7 @@ export function FightingArtsCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      canUseFightingArtsKnowledges,
-      selectedSurvivor?.id,
-      setSurvivors,
-      survivors,
-      toast
-    ]
+    [canUseFightingArtsKnowledges, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /** Check if an exact match for the search term already exists in regular arts. */
@@ -464,8 +451,8 @@ export function FightingArtsCard({
       const oldArts = [...fightingArts]
 
       setFightingArts([...fightingArts, optimisticItem])
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id
             ? { ...s, fighting_arts: [...s.fighting_arts, optimisticItem] }
             : s
@@ -478,8 +465,8 @@ export function FightingArtsCard({
         )
         .catch((error: unknown) => {
           setFightingArts(oldArts)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, fighting_arts: oldArts }
                 : s
@@ -501,7 +488,6 @@ export function FightingArtsCard({
     selectedSurvivor,
     fightingArts,
     setSurvivors,
-    survivors,
     toast
   ])
 
@@ -539,8 +525,8 @@ export function FightingArtsCard({
       const oldArts = [...secretFightingArts]
 
       setSecretFightingArts([...secretFightingArts, optimisticItem])
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor.id
             ? {
                 ...s,
@@ -559,8 +545,8 @@ export function FightingArtsCard({
         )
         .catch((error: unknown) => {
           setSecretFightingArts(oldArts)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor.id
                 ? { ...s, secret_fighting_arts: oldArts }
                 : s
@@ -582,7 +568,6 @@ export function FightingArtsCard({
     selectedSurvivor,
     secretFightingArts,
     setSurvivors,
-    survivors,
     toast
   ])
 

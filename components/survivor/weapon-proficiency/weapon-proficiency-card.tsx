@@ -13,7 +13,7 @@ import {
   SURVIVOR_WEAPON_PROFICIENCY_UPDATED_MESSAGE,
   SURVIVOR_WEAPON_TYPE_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SurvivorDetail } from '@/lib/types'
+import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { ReactElement, useCallback, useState } from 'react'
 
 /**
@@ -25,9 +25,7 @@ interface WeaponProficiencyCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
-  /** Survivors */
-  survivors: SurvivorDetail[]
+  setSurvivors: SurvivorsStateSetter
 }
 
 /**
@@ -44,8 +42,7 @@ interface WeaponProficiencyCardProps {
 export function WeaponProficiencyCard({
   local,
   selectedSurvivor,
-  setSurvivors,
-  survivors
+  setSurvivors
 }: WeaponProficiencyCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -79,8 +76,8 @@ export function WeaponProficiencyCard({
 
       const oldProficiency = weaponProficiency
       setWeaponProficiency(updatedProficiency)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, weapon_proficiency: updatedProficiency }
             : s
@@ -101,8 +98,8 @@ export function WeaponProficiencyCard({
         })
         .catch((error) => {
           setWeaponProficiency(oldProficiency)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, weapon_proficiency: oldProficiency }
                 : s
@@ -113,7 +110,7 @@ export function WeaponProficiencyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [weaponProficiency, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [weaponProficiency, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -129,8 +126,8 @@ export function WeaponProficiencyCard({
       setWeaponTypeId(type || null)
       setWeaponProficiency(0)
 
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? {
                 ...s,
@@ -150,8 +147,8 @@ export function WeaponProficiencyCard({
         .catch((error) => {
           setWeaponTypeId(oldWeaponTypeId)
           setWeaponProficiency(oldProficiency)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? {
                     ...s,
@@ -166,14 +163,7 @@ export function WeaponProficiencyCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      weaponProficiency,
-      weaponTypeId,
-      selectedSurvivor?.id,
-      setSurvivors,
-      survivors,
-      toast
-    ]
+    [weaponProficiency, weaponTypeId, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   return (

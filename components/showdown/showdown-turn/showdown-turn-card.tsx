@@ -24,6 +24,7 @@ import { ERROR_MESSAGE, SHOWDOWN_TURN_MESSAGE } from '@/lib/messages'
 import {
   ShowdownDetail,
   ShowdownMonsterDetail,
+  ShowdownStateSetter,
   ShowdownSurvivorDetail,
   SurvivorDetail
 } from '@/lib/types'
@@ -43,7 +44,7 @@ interface TurnCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -100,6 +101,8 @@ export function TurnCard({
     if (!selectedShowdown) return
 
     const previousTurn = selectedShowdown.turn
+    const previousSurvivors = selectedShowdown.showdown_survivors
+    const previousMonsters = selectedShowdown.showdown_monsters
     const nextTurn: 'MONSTER' | 'SURVIVOR' =
       previousTurn === 'MONSTER' ? 'SURVIVOR' : 'MONSTER'
 
@@ -165,12 +168,17 @@ export function TurnCard({
         )
       })
       .catch((err: unknown) => {
-        // Rollback
-        setSelectedShowdown({
-          ...selectedShowdown,
-          turn: previousTurn,
-          showdown_survivors: selectedShowdown.showdown_survivors
-        })
+        // Rollback turn, survivors, and monsters to pre-optimistic state
+        setSelectedShowdown((prev) =>
+          prev
+            ? {
+                ...prev,
+                turn: previousTurn,
+                showdown_survivors: previousSurvivors,
+                showdown_monsters: previousMonsters
+              }
+            : null
+        )
         console.error('Turn Switch Error:', err)
         toast.error(ERROR_MESSAGE())
       })
@@ -207,13 +215,17 @@ export function TurnCard({
       updateShowdownSurvivor(survivorRecordId, updates).catch(
         (err: unknown) => {
           // Rollback
-          setSelectedShowdown({
-            ...selectedShowdown,
-            showdown_survivors: {
-              ...selectedShowdown.showdown_survivors,
-              [ssKey]: previous
-            }
-          })
+          setSelectedShowdown((prev) =>
+            prev?.showdown_survivors
+              ? {
+                  ...prev,
+                  showdown_survivors: {
+                    ...prev.showdown_survivors,
+                    [ssKey]: previous
+                  }
+                }
+              : prev
+          )
           console.error('Survivor Turn State Update Error:', err)
           toast.error(ERROR_MESSAGE())
         }
@@ -249,16 +261,20 @@ export function TurnCard({
         ai_card_drawn: aiCardDrawn
       }).catch((err: unknown) => {
         // Rollback
-        setSelectedShowdown({
-          ...selectedShowdown,
-          showdown_monsters: {
-            ...selectedShowdown.showdown_monsters,
-            [currentMonsterId]: {
-              ...currentMonster,
-              ai_card_drawn: previousValue
-            }
-          }
-        })
+        setSelectedShowdown((prev) =>
+          prev?.showdown_monsters
+            ? {
+                ...prev,
+                showdown_monsters: {
+                  ...prev.showdown_monsters,
+                  [currentMonsterId]: {
+                    ...currentMonster,
+                    ai_card_drawn: previousValue
+                  }
+                }
+              }
+            : prev
+        )
         console.error('AI Card Drawn Update Error:', err)
         toast.error(ERROR_MESSAGE())
       })

@@ -29,7 +29,11 @@ import {
   INNOVATION_REMOVED_MESSAGE,
   INNOVATION_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { InnovationDetail, SettlementDetail } from '@/lib/types'
+import {
+  InnovationDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { LightbulbIcon, Plus, PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -49,7 +53,7 @@ interface InnovationsCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -149,10 +153,18 @@ export function InnovationsCard({
           toast.success(INNOVATION_UPDATED_MESSAGE())
 
           if (selectedSettlement) {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              innovations: [...oldInnovations, hydratedItem]
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    innovations: [...prev.innovations, hydratedItem].filter(
+                      (inn) =>
+                        inn.id !== optimisticItem.id ||
+                        inn.id === hydratedItem.id
+                    )
+                  }
+                : null
+            )
           }
         })
         .catch((error: unknown) => {
@@ -193,10 +205,16 @@ export function InnovationsCard({
           toast.success(INNOVATION_REMOVED_MESSAGE())
 
           if (selectedSettlement) {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              innovations: updated
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    innovations: prev.innovations.filter(
+                      (inn) => inn.id !== removed.id
+                    )
+                  }
+                : null
+            )
           }
         })
         .catch((error: unknown) => {
@@ -260,10 +278,17 @@ export function InnovationsCard({
 
           toast.success(INNOVATION_UPDATED_MESSAGE())
 
-          setSelectedSettlement({
-            ...selectedSettlement,
-            innovations: [...oldInnovations, hydratedItem]
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  innovations: [...prev.innovations, hydratedItem].filter(
+                    (inn) =>
+                      inn.id !== optimisticItem.id || inn.id === hydratedItem.id
+                  )
+                }
+              : null
+          )
         })
         .catch((error: unknown) => {
           setInnovations(oldInnovations)

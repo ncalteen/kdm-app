@@ -25,9 +25,12 @@ import {
 } from '@/lib/messages'
 import {
   HuntDetail,
+  HuntStateSetter,
   SettlementDetail,
   ShowdownDetail,
-  SurvivorDetail
+  ShowdownStateSetter,
+  SurvivorDetail,
+  SurvivorsStateSetter
 } from '@/lib/types'
 import { BrainIcon, Shield } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
@@ -53,13 +56,11 @@ interface SanityCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt (for optimistic token updates) */
-  setSelectedHunt?: (hunt: HuntDetail | null) => void
+  setSelectedHunt?: HuntStateSetter
   /** Set Selected Showdown (for optimistic token updates) */
-  setSelectedShowdown?: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
-  /** Survivors */
-  survivors: SurvivorDetail[]
+  setSurvivors: SurvivorsStateSetter
 }
 
 /**
@@ -83,8 +84,7 @@ export function SanityCard({
   selectedSurvivor,
   setSelectedHunt,
   setSelectedShowdown,
-  setSurvivors,
-  survivors
+  setSurvivors
 }: SanityCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -249,8 +249,8 @@ export function SanityCard({
       const old = insanity
 
       setInsanity(value)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, insanity: value } : s
         )
       )
@@ -262,15 +262,15 @@ export function SanityCard({
         .catch((error) => {
           console.error('Insanity Update Error:', error)
           setInsanity(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, insanity: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [insanity, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [insanity, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -283,8 +283,8 @@ export function SanityCard({
       const old = brainLightDamage
 
       setBrainLightDamage(!!checked)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id
             ? { ...s, brain_light_damage: !!checked }
             : s
@@ -298,8 +298,8 @@ export function SanityCard({
         .catch((error) => {
           console.error('Brain Light Damage Update Error:', error)
           setBrainLightDamage(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, brain_light_damage: old }
                 : s
@@ -308,7 +308,7 @@ export function SanityCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [brainLightDamage, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [brainLightDamage, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -323,8 +323,8 @@ export function SanityCard({
       const old = torment
 
       setTorment(value)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, torment: value } : s
         )
       )
@@ -334,15 +334,15 @@ export function SanityCard({
         .catch((error) => {
           console.error('Torment Update Error:', error)
           setTorment(old)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, torment: old } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [torment, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [torment, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   return (

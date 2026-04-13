@@ -8,7 +8,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { COMBAT_BODY_UPDATED_MESSAGE } from '@/lib/messages'
-import { SurvivorDetail } from '@/lib/types'
+import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Shield, ShirtIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
@@ -22,7 +22,7 @@ interface BodyCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -93,8 +93,8 @@ export function BodyCard({
       const oldSurvivors = [...survivors]
 
       setter(value)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, [field]: value } : s
         )
       )

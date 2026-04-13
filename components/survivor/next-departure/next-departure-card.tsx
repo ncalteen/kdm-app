@@ -15,7 +15,7 @@ import {
   SURVIVOR_NEXT_DEPARTURE_BONUS_REMOVED_MESSAGE,
   SURVIVOR_NEXT_DEPARTURE_BONUS_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SurvivorDetail } from '@/lib/types'
+import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import {
   closestCenter,
   DndContext,
@@ -43,9 +43,7 @@ interface NextDepartureCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
-  /** Survivors */
-  survivors: SurvivorDetail[]
+  setSurvivors: SurvivorsStateSetter
 }
 
 /**
@@ -57,8 +55,7 @@ interface NextDepartureCardProps {
 export function NextDepartureCard({
   local,
   selectedSurvivor,
-  setSurvivors,
-  survivors
+  setSurvivors
 }: NextDepartureCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -107,8 +104,8 @@ export function NextDepartureCard({
 
       // Optimistic update
       setNextDeparture(updated)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, next_departure: updated } : s
         )
       )
@@ -132,8 +129,8 @@ export function NextDepartureCard({
         .catch((error) => {
           console.error('Next Departure Remove Error:', error)
           setNextDeparture(oldNextDeparture)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, next_departure: oldNextDeparture }
                 : s
@@ -142,7 +139,7 @@ export function NextDepartureCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [nextDeparture, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [nextDeparture, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -179,8 +176,8 @@ export function NextDepartureCard({
 
       // Optimistic update
       setNextDeparture(updated)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, next_departure: updated } : s
         )
       )
@@ -196,8 +193,8 @@ export function NextDepartureCard({
         .catch((error) => {
           console.error('Next Departure Save Error:', error)
           setNextDeparture(oldNextDeparture)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, next_departure: oldNextDeparture }
                 : s
@@ -206,7 +203,7 @@ export function NextDepartureCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [nextDeparture, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [nextDeparture, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   /**
@@ -226,8 +223,8 @@ export function NextDepartureCard({
 
         // Optimistic update
         setNextDeparture(newOrder)
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? { ...s, next_departure: newOrder }
               : s
@@ -255,8 +252,8 @@ export function NextDepartureCard({
         }).catch((error) => {
           console.error('Next Departure Reorder Error:', error)
           setNextDeparture(oldNextDeparture)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id
                 ? { ...s, next_departure: oldNextDeparture }
                 : s
@@ -266,7 +263,7 @@ export function NextDepartureCard({
         })
       }
     },
-    [nextDeparture, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [nextDeparture, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   return (

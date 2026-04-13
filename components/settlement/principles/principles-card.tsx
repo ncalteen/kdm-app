@@ -34,7 +34,11 @@ import {
   PRINCIPLE_REMOVED_MESSAGE,
   PRINCIPLE_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { PrincipleDetail, SettlementDetail } from '@/lib/types'
+import {
+  PrincipleDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { Plus, PlusIcon, StampIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -47,7 +51,7 @@ interface PrinciplesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -195,22 +199,28 @@ export function PrinciplesCard({
 
       addSettlementPrinciples([principleId], selectedSettlement.id)
         .then((row) => {
-          // Replace the placeholder with the real row from the DB.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            principles: updatedPrinciples.map((p) =>
-              p.id === tempId ? { ...p, id: row[0].id } : p
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  principles: prev.principles.map((p) =>
+                    p.id === tempId ? { ...p, id: row[0].id } : p
+                  )
+                }
+              : null
+          )
 
           toast.success(PRINCIPLE_UPDATED_MESSAGE(false))
         })
         .catch((err: unknown) => {
-          // Revert to the original principles (before the optimistic add).
-          setSelectedSettlement({
-            ...selectedSettlement,
-            principles: selectedSettlement.principles
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  principles: prev.principles.filter((p) => p.id !== tempId)
+                }
+              : null
+          )
 
           console.error('Principle Add Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -244,14 +254,10 @@ export function PrinciplesCard({
       removeSettlementPrinciple(removed.id)
         .then(() => toast.success(PRINCIPLE_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          // Revert the optimistic removal.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            principles: [
-              ...selectedSettlement.principles.slice(0, index),
-              removed,
-              ...selectedSettlement.principles.slice(index)
-            ]
+          setSelectedSettlement((prev) => {
+            if (!prev || prev.principles.some((p) => p.id === removed.id))
+              return prev
+            return { ...prev, principles: [...prev.principles, removed] }
           })
 
           console.error('Principle Remove Error:', err)
@@ -304,18 +310,22 @@ export function PrinciplesCard({
         })
         .catch((err: unknown) => {
           // Revert the optimistic toggle.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            principles: selectedSettlement.principles.map((p, i) =>
-              i === index
-                ? {
-                    ...p,
-                    option_1_selected: target.option_1_selected,
-                    option_2_selected: target.option_2_selected
-                  }
-                : p
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  principles: prev.principles.map((p) =>
+                    p.id === target.id
+                      ? {
+                          ...p,
+                          option_1_selected: target.option_1_selected,
+                          option_2_selected: target.option_2_selected
+                        }
+                      : p
+                  )
+                }
+              : null
+          )
 
           console.error('Principle Option Select Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -383,19 +393,27 @@ export function PrinciplesCard({
 
         addSettlementPrinciples([newPrinciple.id], selectedSettlement.id)
           .then((rows) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              principles: updatedPrinciples.map((p) =>
-                p.id === tempId ? { ...p, id: rows[0].id } : p
-              )
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    principles: prev.principles.map((p) =>
+                      p.id === tempId ? { ...p, id: rows[0].id } : p
+                    )
+                  }
+                : null
+            )
             toast.success(PRINCIPLE_UPDATED_MESSAGE(true))
           })
           .catch((err: unknown) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              principles: selectedSettlement.principles
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    principles: prev.principles.filter((p) => p.id !== tempId)
+                  }
+                : null
+            )
             console.error('Principle Add Error:', err)
             toast.error(ERROR_MESSAGE())
           })

@@ -22,7 +22,7 @@ import {
   SURVIVOR_NAME_UPDATED_MESSAGE,
   SURVIVOR_RETIRED_STATUS_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SurvivorDetail } from '@/lib/types'
+import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { getCardColorStyles, getColorStyle } from '@/lib/utils'
 import { SkullIcon, UserXIcon } from 'lucide-react'
 import { KeyboardEvent, ReactElement, useCallback, useState } from 'react'
@@ -36,7 +36,7 @@ interface StatusCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[] | null
 }

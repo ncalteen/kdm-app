@@ -41,7 +41,11 @@ import {
   NEMESIS_UNLOCKED_MESSAGE
 } from '@/lib/messages'
 import { sortNemeses } from '@/lib/settlement/nemeses'
-import { NemesisDetail, SettlementDetail } from '@/lib/types'
+import {
+  NemesisDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { PlusIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -54,7 +58,7 @@ interface NemesesCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -202,23 +206,25 @@ export function NemesesCard({
       addSettlementNemeses([nemesisId], selectedSettlement?.id)
         .then(async (row) => {
           // Replace the placeholder with the real row from the DB.
-          const finalNemeses = sortNemeses(
-            updatedNemeses.map((n) =>
-              n.id === tempId
-                ? {
-                    ...n,
-                    available_levels: row[0].available_levels,
-                    id: row[0].id,
-                    node: nemesisInfo.node
-                  }
-                : n
-            )
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  nemeses: sortNemeses(
+                    prev.nemeses.map((n) =>
+                      n.id === tempId
+                        ? {
+                            ...n,
+                            available_levels: row[0].available_levels,
+                            id: row[0].id,
+                            node: nemesisInfo.node
+                          }
+                        : n
+                    )
+                  )
+                }
+              : null
           )
-
-          setSelectedSettlement({
-            ...selectedSettlement,
-            nemeses: finalNemeses
-          })
 
           // Add related locations and timeline events
           try {
@@ -232,12 +238,9 @@ export function NemesesCard({
               getNemesisTimelineYears(nemesisId, campaignType)
             ])
 
-            let updatedSettlement = {
-              ...selectedSettlement,
-              nemeses: finalNemeses
-            }
+            // Collect new locations to merge
+            let newLocationRows: SettlementDetail['locations'] = []
 
-            // Add locations not already present
             if (locationIds.length > 0) {
               const existingLocIds = new Set(
                 selectedSettlement.locations.map((l) => l.location_id)
@@ -250,67 +253,91 @@ export function NemesesCard({
                   newLocIds,
                   selectedSettlement.id
                 )
-                updatedSettlement = {
-                  ...updatedSettlement,
-                  locations: [
-                    ...updatedSettlement.locations,
-                    ...inserted.map((ins, i) => ({
-                      id: ins.id,
-                      location_id: newLocIds[i],
-                      location_name: ins.location_name,
-                      unlocked: false
-                    }))
-                  ]
-                }
+                newLocationRows = inserted.map((ins, i) => ({
+                  id: ins.id,
+                  location_id: newLocIds[i],
+                  location_name: ins.location_name,
+                  unlocked: false
+                }))
               }
             }
 
-            // Add timeline entries to existing years or create new ones
-            if (timelineYears.length > 0) {
-              const updatedTimeline = { ...updatedSettlement.timeline }
+            // Collect timeline changes
+            const timelineUpdates: {
+              [year: number]: {
+                completed: boolean
+                entries: string[]
+                id: string
+              }
+            } = {}
 
+            if (timelineYears.length > 0) {
               for (const ty of timelineYears) {
-                const existingYear = updatedTimeline[ty.year_number]
+                const existingYear = selectedSettlement.timeline[ty.year_number]
                 if (existingYear) {
                   const existingEntries = new Set(existingYear.entries)
                   const newEntries = ty.entries.filter(
                     (e) => !existingEntries.has(e)
                   )
+                  let updatedEntries = existingYear.entries
                   for (const entry of newEntries) {
-                    const updated = await saveSettlementTimelineYearEntry(
+                    updatedEntries = await saveSettlementTimelineYearEntry(
                       existingYear.id,
                       entry,
-                      existingYear.entries.length
+                      updatedEntries.length
                     )
-                    existingYear.entries = updated
+                  }
+                  timelineUpdates[ty.year_number] = {
+                    ...existingYear,
+                    entries: updatedEntries
                   }
                 } else {
                   const yearId = await addSettlementTimelineYear(
                     selectedSettlement.id,
                     ty.year_number
                   )
+                  let entries: string[] = []
                   for (let i = 0; i < ty.entries.length; i++) {
-                    const updated = await saveSettlementTimelineYearEntry(
+                    entries = await saveSettlementTimelineYearEntry(
                       yearId,
                       ty.entries[i],
                       i
                     )
-                    updatedTimeline[ty.year_number] = {
-                      id: yearId,
-                      completed: false,
-                      entries: updated
-                    }
+                  }
+                  timelineUpdates[ty.year_number] = {
+                    id: yearId,
+                    completed: false,
+                    entries
                   }
                 }
               }
-
-              updatedSettlement = {
-                ...updatedSettlement,
-                timeline: updatedTimeline
-              }
             }
 
-            setSelectedSettlement(updatedSettlement)
+            // Merge all collected changes using a functional update.
+            setSelectedSettlement((prev) => {
+              if (!prev) return null
+
+              const existingLocIds = new Set(
+                prev.locations.map((l) => l.location_id)
+              )
+
+              return {
+                ...prev,
+                locations:
+                  newLocationRows.length > 0
+                    ? [
+                        ...prev.locations,
+                        ...newLocationRows.filter(
+                          (nl) => !existingLocIds.has(nl.location_id)
+                        )
+                      ]
+                    : prev.locations,
+                timeline:
+                  Object.keys(timelineUpdates).length > 0
+                    ? { ...prev.timeline, ...timelineUpdates }
+                    : prev.timeline
+              }
+            })
           } catch (relatedErr) {
             console.error('Nemesis Related Data Add Error:', relatedErr)
           }
@@ -318,11 +345,15 @@ export function NemesesCard({
           toast.success(NEMESIS_ADDED_MESSAGE())
         })
         .catch((err: unknown) => {
-          // Revert to the original nemeses (before the optimistic add).
-          setSelectedSettlement({
-            ...selectedSettlement,
-            nemeses: selectedSettlement.nemeses
-          })
+          // Remove the optimistic placeholder.
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  nemeses: prev.nemeses.filter((n) => n.id !== tempId)
+                }
+              : null
+          )
 
           console.error('Nemesis Add Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -354,9 +385,14 @@ export function NemesesCard({
       removeSettlementNemesis(removed.id)
         .then(() => toast.success(NEMESIS_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          // Revert the optimistic removal.
-          setSelectedSettlement({
-            ...selectedSettlement
+          // Re-add the removed nemesis if it's not already present.
+          setSelectedSettlement((prev) => {
+            if (!prev || prev.nemeses.some((n) => n.id === removed.id))
+              return prev
+            return {
+              ...prev,
+              nemeses: sortNemeses([...prev.nemeses, removed])
+            }
           })
 
           console.error('Nemesis Remove Error:', err)
@@ -395,12 +431,16 @@ export function NemesesCard({
         )
         .catch((err: unknown) => {
           // Revert the optimistic toggle.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            nemeses: selectedSettlement.nemeses.map((n) =>
-              n.id === nemesisId ? { ...n, unlocked: !unlocked } : n
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  nemeses: prev.nemeses.map((n) =>
+                    n.id === target.id ? { ...n, unlocked: !unlocked } : n
+                  )
+                }
+              : null
+          )
 
           console.error('Nemesis Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -444,12 +484,16 @@ export function NemesesCard({
         .then(() => toast.success(NEMESIS_DEFEATED_MESSAGE()))
         .catch((err: unknown) => {
           // Revert the optimistic toggle.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            nemeses: selectedSettlement.nemeses.map((n) =>
-              n.id === nemesisId ? { ...n, [field]: !defeated } : n
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  nemeses: prev.nemeses.map((n) =>
+                    n.id === target.id ? { ...n, [field]: !defeated } : n
+                  )
+                }
+              : null
+          )
 
           console.error('Nemesis Level Toggle Error:', err)
           toast.error(ERROR_MESSAGE())

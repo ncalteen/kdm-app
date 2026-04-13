@@ -143,6 +143,20 @@ export type HuntBoard = {
 }
 
 /**
+ * Hunt State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type HuntStateSetter = (
+  huntOrUpdater:
+    | HuntDetail
+    | null
+    | ((prev: HuntDetail | null) => HuntDetail | null)
+) => void
+
+/**
  * Hunt Detail
  *
  * Used throughout the app to represent the currently selected hunt.
@@ -429,6 +443,20 @@ export type ResourceDetail = Omit<
 }
 
 /**
+ * Settlement State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type SettlementStateSetter = (
+  settlementOrUpdater:
+    | SettlementDetail
+    | null
+    | ((prev: SettlementDetail | null) => SettlementDetail | null)
+) => void
+
+/**
  * Settlement Detail
  *
  * Used throughout the app to represent the currently selected settlement.
@@ -712,6 +740,20 @@ export type ShowdownAIDeckDetail = Omit<
 >
 
 /**
+ * Showdown State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type ShowdownStateSetter = (
+  showdownOrUpdater:
+    | ShowdownDetail
+    | null
+    | ((prev: ShowdownDetail | null) => ShowdownDetail | null)
+) => void
+
+/**
  * Showdown Detail
  *
  * Used throughout the app to represent the currently selected showdown.
@@ -874,6 +916,33 @@ export type SurvivorSecretFightingArtDetail = Omit<
   Tables<'survivor_secret_fighting_art'>,
   'created_at' | 'updated_at' | 'survivor_id'
 >
+
+/**
+ * Survivor State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type SurvivorStateSetter = (
+  survivorOrUpdater:
+    | SurvivorDetail
+    | null
+    | ((prev: SurvivorDetail | null) => SurvivorDetail | null)
+) => void
+
+/**
+ * Survivors State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type SurvivorsStateSetter = (
+  survivorsOrUpdater:
+    | SurvivorDetail[]
+    | ((prev: SurvivorDetail[]) => SurvivorDetail[])
+) => void
 
 /**
  * User Settings Detail

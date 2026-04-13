@@ -32,7 +32,11 @@ import {
   GEAR_REMOVED_MESSAGE,
   GEAR_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { GearDetail, SettlementDetail } from '@/lib/types'
+import {
+  GearDetail,
+  SettlementDetail,
+  SettlementStateSetter
+} from '@/lib/types'
 import { Plus, PlusIcon, WrenchIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -45,7 +49,7 @@ interface GearCardProps {
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
 }
 
 /**
@@ -165,17 +169,27 @@ export function GearCard({
         settlement_id: selectedSettlement.id
       })
         .then((id) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            gear: updatedGear.map((g) => (g.id === tempId ? { ...g, id } : g))
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  gear: prev.gear.map((g) =>
+                    g.id === tempId ? { ...g, id } : g
+                  )
+                }
+              : null
+          )
           toast.success(GEAR_UPDATED_MESSAGE())
         })
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            gear: selectedSettlement.gear
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  gear: prev.gear.filter((g) => g.id !== tempId)
+                }
+              : null
+          )
           console.error('Gear Add Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -206,13 +220,9 @@ export function GearCard({
       removeSettlementGear(removed.id)
         .then(() => toast.success(GEAR_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            gear: [
-              ...selectedSettlement.gear.slice(0, index),
-              removed,
-              ...selectedSettlement.gear.slice(index)
-            ]
+          setSelectedSettlement((prev) => {
+            if (!prev || prev.gear.some((g) => g.id === removed.id)) return prev
+            return { ...prev, gear: [...prev.gear, removed] }
           })
           console.error('Gear Remove Error:', err)
           toast.error(ERROR_MESSAGE())
@@ -249,12 +259,16 @@ export function GearCard({
       updateSettlementGear(target.id, { quantity })
         .then(() => toast.success(GEAR_UPDATED_MESSAGE(index)))
         .catch((err: unknown) => {
-          setSelectedSettlement({
-            ...selectedSettlement,
-            gear: selectedSettlement.gear.map((g, i) =>
-              i === index ? { ...g, quantity: oldQuantity } : g
-            )
-          })
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  gear: prev.gear.map((g) =>
+                    g.id === target.id ? { ...g, quantity: oldQuantity } : g
+                  )
+                }
+              : null
+          )
           console.error('Gear Quantity Error:', err)
           toast.error(ERROR_MESSAGE())
         })
@@ -313,17 +327,27 @@ export function GearCard({
           settlement_id: selectedSettlement.id
         })
           .then((id) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              gear: updatedGear.map((g) => (g.id === tempId ? { ...g, id } : g))
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    gear: prev.gear.map((g) =>
+                      g.id === tempId ? { ...g, id } : g
+                    )
+                  }
+                : null
+            )
             toast.success(GEAR_UPDATED_MESSAGE())
           })
           .catch((err: unknown) => {
-            setSelectedSettlement({
-              ...selectedSettlement,
-              gear: selectedSettlement.gear
-            })
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    gear: prev.gear.filter((g) => g.id !== tempId)
+                  }
+                : null
+            )
             console.error('Gear Add Error:', err)
             toast.error(ERROR_MESSAGE())
           })

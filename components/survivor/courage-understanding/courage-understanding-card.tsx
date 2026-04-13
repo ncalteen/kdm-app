@@ -13,7 +13,11 @@ import {
   SURVIVOR_COURAGE_UPDATED_MESSAGE,
   SURVIVOR_UNDERSTANDING_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SettlementDetail, SurvivorDetail } from '@/lib/types'
+import {
+  SettlementDetail,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { BookOpenIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
 
@@ -28,7 +32,7 @@ interface CourageUnderstandingCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -86,8 +90,8 @@ export function CourageUnderstandingCard({
       const setter = field === 'courage' ? setCourage : setUnderstanding
 
       setter(value)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, [field]: value } : s
         )
       )
@@ -96,22 +100,15 @@ export function CourageUnderstandingCard({
         .catch((error) => {
           console.error(`${field} Update Error:`, error)
           setter(oldValue)
-          setSurvivors(
-            survivors.map((s) =>
+          setSurvivors((prev) =>
+            prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, [field]: oldValue } : s
             )
           )
           toast.error(ERROR_MESSAGE())
         })
     },
-    [
-      courage,
-      understanding,
-      selectedSurvivor?.id,
-      setSurvivors,
-      survivors,
-      toast
-    ]
+    [courage, understanding, selectedSurvivor?.id, setSurvivors, toast]
   )
 
   // Determine the label texts based on campaign type. Currently only People of

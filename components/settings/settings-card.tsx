@@ -33,7 +33,14 @@ import {
   SHOWDOWN_DELETED_MESSAGE
 } from '@/lib/messages'
 import { generateSeedData } from '@/lib/seed'
-import { HuntDetail, SettlementDetail, ShowdownDetail } from '@/lib/types'
+import {
+  HuntDetail,
+  HuntStateSetter,
+  SettlementDetail,
+  SettlementStateSetter,
+  ShowdownDetail,
+  ShowdownStateSetter
+} from '@/lib/types'
 import { DatabaseIcon, Loader2, Trash2Icon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState, useTransition } from 'react'
 import { toast } from 'sonner'
@@ -51,15 +58,15 @@ interface SettingsCardProps {
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Set Selected Hunt */
-  setSelectedHunt: (hunt: HuntDetail | null) => void
+  setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt ID */
   setSelectedHuntId: (huntId: string | null) => void
   /** Set Selected Settlement */
-  setSelectedSettlement: (settlement: SettlementDetail | null) => void
+  setSelectedSettlement: SettlementStateSetter
   /** Set Selected Settlement ID */
   setSelectedSettlementId: (settlementId: string | null) => void
   /** Set Selected Showdown */
-  setSelectedShowdown: (showdown: ShowdownDetail | null) => void
+  setSelectedShowdown: ShowdownStateSetter
   /** Set Selected Showdown ID */
   setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Survivor ID */
@@ -150,10 +157,9 @@ export function SettingsCard({
         )
         .catch((err: unknown) => {
           // Revert the optimistic update.
-          setSelectedSettlement({
-            ...selectedSettlement,
-            uses_scouts: previousValue
-          })
+          setSelectedSettlement((prev) =>
+            prev ? { ...prev, uses_scouts: previousValue } : null
+          )
 
           console.error('Uses Scouts Update Error:', err)
           toast.error(ERROR_MESSAGE())

@@ -15,7 +15,11 @@ import {
   HUNT_XP_RANK_UP_MILESTONE_REMOVED_MESSAGE,
   HUNT_XP_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SettlementDetail, SurvivorDetail } from '@/lib/types'
+import {
+  SettlementDetail,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { BookOpenIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
@@ -31,7 +35,7 @@ interface HuntXPCardProps {
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
-  setSurvivors: (survivors: SurvivorDetail[]) => void
+  setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
 }
@@ -90,8 +94,8 @@ export function HuntXPCard({
       const oldSurvivors = [...survivors]
 
       setHuntXP(newHuntXP)
-      setSurvivors(
-        survivors.map((s) =>
+      setSurvivors((prev) =>
+        prev.map((s) =>
           s.id === selectedSurvivor?.id ? { ...s, hunt_xp: newHuntXP } : s
         )
       )
@@ -108,7 +112,7 @@ export function HuntXPCard({
           setSurvivors(oldSurvivors)
         })
     },
-    [huntXP, huntXPRankUp, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [huntXP, huntXPRankUp, selectedSurvivor?.id, survivors, setSurvivors, toast]
   )
 
   /**
@@ -126,8 +130,8 @@ export function HuntXPCard({
         currentRankUps.splice(rankUpIndex, 1)
         huntXPRankUpRef.current = currentRankUps
         setHuntXPRankUp(currentRankUps)
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? { ...s, hunt_xp_rank_up: currentRankUps }
               : s
@@ -153,8 +157,8 @@ export function HuntXPCard({
         currentRankUps.sort((a, b) => a - b)
         huntXPRankUpRef.current = currentRankUps
         setHuntXPRankUp(currentRankUps)
-        setSurvivors(
-          survivors.map((s) =>
+        setSurvivors((prev) =>
+          prev.map((s) =>
             s.id === selectedSurvivor?.id
               ? { ...s, hunt_xp_rank_up: currentRankUps }
               : s
