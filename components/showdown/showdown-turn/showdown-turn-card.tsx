@@ -101,6 +101,8 @@ export function TurnCard({
     if (!selectedShowdown) return
 
     const previousTurn = selectedShowdown.turn
+    const previousSurvivors = selectedShowdown.showdown_survivors
+    const previousMonsters = selectedShowdown.showdown_monsters
     const nextTurn: 'MONSTER' | 'SURVIVOR' =
       previousTurn === 'MONSTER' ? 'SURVIVOR' : 'MONSTER'
 
@@ -166,9 +168,16 @@ export function TurnCard({
         )
       })
       .catch((err: unknown) => {
-        // Rollback
+        // Rollback turn, survivors, and monsters to pre-optimistic state
         setSelectedShowdown((prev) =>
-          prev ? { ...prev, turn: previousTurn } : null
+          prev
+            ? {
+                ...prev,
+                turn: previousTurn,
+                showdown_survivors: previousSurvivors,
+                showdown_monsters: previousMonsters
+              }
+            : null
         )
         console.error('Turn Switch Error:', err)
         toast.error(ERROR_MESSAGE())
