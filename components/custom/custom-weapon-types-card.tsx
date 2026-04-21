@@ -1,8 +1,8 @@
 'use client'
 
+import { WeaponTypeDialog } from '@/components/custom/dialogs/weapon-type-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -27,21 +27,8 @@ import {
   WEAPON_TYPE_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { WeaponTypeDetail } from '@/lib/types'
-import {
-  CheckIcon,
-  PencilIcon,
-  PlusIcon,
-  Trash2Icon,
-  XIcon
-} from 'lucide-react'
-import {
-  KeyboardEvent,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
+import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 
 /**
  * Custom Weapon Types Card Component Properties
@@ -55,8 +42,9 @@ interface CustomWeaponTypesCardProps {
  * Custom Weapon Types Card Component
  *
  * Lists user's custom weapon types with options to create, edit, and delete.
- * Entries are displayed alphabetically. UI updates are optimistic and roll
- * back on database failure.
+ * Entries are displayed alphabetically. Name, specialist proficiency rules,
+ * and master proficiency rules are entered via a tabbed dialog. UI updates
+ * are optimistic and roll back on database failure.
  *
  * @param props Custom Weapon Types Card Properties
  * @returns Custom Weapon Types Card Component
@@ -68,13 +56,13 @@ export function CustomWeaponTypesCard({
 
   const [items, setItems] = useState<WeaponTypeDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isAdding, setIsAdding] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState('')
 
-  const newInputRef = useRef<HTMLInputElement>(null)
-  const editInputRef = useRef<HTMLInputElement>(null)
+  // Dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<WeaponTypeDetail | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   /** Sort items alphabetically by name */
   const sortItems = useCallback(
@@ -105,49 +93,121 @@ export function CustomWeaponTypesCard({
     loadItems()
   }, [loadItems])
 
-  useEffect(() => {
-    if (isAdding) newInputRef.current?.focus()
-  }, [isAdding])
+  /**
+   * Handle Create Weapon Type
+   *
+   * Optimistically adds a new weapon type, then persists to the database.
+   * Rolls back on failure.
+   */
+  const handleCreate = useCallback(
+    async (data: {
+      weapon_type_name: string
+      specialist_proficiency_rules: string
+      master_proficiency_rules: string
+    }) => {
+      if (saving) return
+      if (!data.weapon_type_name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('weapon type'))
 
-  useEffect(() => {
-    if (editingId) editInputRef.current?.focus()
-  }, [editingId])
+      setSaving(true)
 
-  const handleAdd = useCallback(async () => {
-    const trimmedName = newName.trim()
-
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('weapon type'))
-
-    const tempId = `temp-${Date.now()}`
-    const temp: WeaponTypeDetail = {
-      id: tempId,
-      custom: true,
-      weapon_type_name: trimmedName
-    }
-
-    const previous = [...items]
-    setItems(sortItems([...items, temp]))
-    setNewName('')
-    setIsAdding(false)
-
-    try {
-      const created = await addWeaponType({
+      const tempId = `temp-${Date.now()}`
+      const temp: WeaponTypeDetail = {
+        id: tempId,
         custom: true,
-        weapon_type_name: trimmedName
-      })
+        weapon_type_name: data.weapon_type_name,
+        specialist_proficiency_rules: data.specialist_proficiency_rules || null,
+        master_proficiency_rules: data.master_proficiency_rules || null
+      }
 
-      setItems((prev) =>
-        sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+      const previous = [...items]
+      setItems(sortItems([...items, temp]))
+      setCreateDialogOpen(false)
+
+      try {
+        const created = await addWeaponType({
+          custom: true,
+          weapon_type_name: data.weapon_type_name,
+          specialist_proficiency_rules:
+            data.specialist_proficiency_rules || null,
+          master_proficiency_rules: data.master_proficiency_rules || null
+        })
+
+        setItems((prev) =>
+          sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+        )
+
+        toast.success(WEAPON_TYPE_CREATED_MESSAGE())
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Add Weapon Type Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [items, saving, sortItems, toast]
+  )
+
+  /**
+   * Handle Edit Weapon Type
+   *
+   * Optimistically updates the weapon type, then persists to the database.
+   * Rolls back on failure.
+   */
+  const handleEdit = useCallback(
+    async (data: {
+      weapon_type_name: string
+      specialist_proficiency_rules: string
+      master_proficiency_rules: string
+    }) => {
+      if (saving || !editingItem) return
+      if (!data.weapon_type_name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('weapon type'))
+
+      setSaving(true)
+
+      const previous = [...items]
+
+      setItems(
+        sortItems(
+          items.map((i) =>
+            i.id === editingItem.id
+              ? {
+                  ...i,
+                  weapon_type_name: data.weapon_type_name,
+                  specialist_proficiency_rules:
+                    data.specialist_proficiency_rules || null,
+                  master_proficiency_rules:
+                    data.master_proficiency_rules || null
+                }
+              : i
+          )
+        )
       )
 
-      toast.success(WEAPON_TYPE_CREATED_MESSAGE())
-    } catch (err: unknown) {
-      setItems(previous)
-      console.error('Add Weapon Type Error:', err)
-      toast.error(ERROR_MESSAGE())
-    }
-  }, [items, newName, sortItems, toast])
+      setEditDialogOpen(false)
+      setEditingItem(null)
+
+      try {
+        await updateWeaponType(editingItem.id, {
+          weapon_type_name: data.weapon_type_name,
+          specialist_proficiency_rules:
+            data.specialist_proficiency_rules || null,
+          master_proficiency_rules: data.master_proficiency_rules || null
+        })
+
+        toast.success(WEAPON_TYPE_UPDATED_MESSAGE())
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Update Weapon Type Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [items, editingItem, saving, sortItems, toast]
+  )
 
   const handleDelete = useCallback(
     (item: WeaponTypeDetail) => {
@@ -165,74 +225,23 @@ export function CustomWeaponTypesCard({
     [items, toast]
   )
 
-  const handleStartEdit = useCallback((item: WeaponTypeDetail) => {
-    setEditingId(item.id)
-    setEditingName(item.weapon_type_name)
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
   }, [])
 
-  const handleCancelEdit = useCallback(() => {
-    setEditingId(null)
-    setEditingName('')
+  const openEditDialog = useCallback((item: WeaponTypeDetail) => {
+    setDialogKey((k) => k + 1)
+    setEditingItem(item)
+    setEditDialogOpen(true)
   }, [])
-
-  const handleSaveEdit = useCallback(() => {
-    const trimmedName = editingName.trim()
-
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('weapon type'))
-    if (!editingId) return
-
-    const previous = [...items]
-
-    setItems(
-      sortItems(
-        items.map((i) =>
-          i.id === editingId ? { ...i, weapon_type_name: trimmedName } : i
-        )
-      )
-    )
-
-    setEditingId(null)
-    setEditingName('')
-
-    updateWeaponType(editingId, { weapon_type_name: trimmedName })
-      .then(() => toast.success(WEAPON_TYPE_UPDATED_MESSAGE()))
-      .catch((err: unknown) => {
-        setItems(previous)
-        console.error('Update Weapon Type Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-  }, [items, editingId, editingName, sortItems, toast])
-
-  const handleNewKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleAdd()
-      else if (e.key === 'Escape') {
-        setIsAdding(false)
-        setNewName('')
-      }
-    },
-    [handleAdd]
-  )
-
-  const handleEditKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleSaveEdit()
-      else if (e.key === 'Escape') handleCancelEdit()
-    },
-    [handleCancelEdit, handleSaveEdit]
-  )
 
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center justify-between">
           <span>Weapon Types</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsAdding(true)}
-            disabled={isAdding}>
+          <Button variant="outline" size="sm" onClick={openCreateDialog}>
             <PlusIcon className="h-4 w-4 mr-2" />
             Add
           </Button>
@@ -246,7 +255,7 @@ export function CustomWeaponTypesCard({
               Peering into the darkness...
             </p>
           </div>
-        ) : items.length === 0 && !isAdding ? (
+        ) : items.length === 0 ? (
           <div className="flex items-center justify-center p-8 text-center">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
@@ -267,95 +276,27 @@ export function CustomWeaponTypesCard({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isAdding && (
-                  <TableRow>
-                    <TableCell>
-                      <Input
-                        ref={newInputRef}
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        onKeyDown={handleNewKeyDown}
-                        placeholder="Weapon type name"
-                        aria-label="New weapon type name"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleAdd}
-                          title="Save weapon type">
-                          <CheckIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setIsAdding(false)
-                            setNewName('')
-                          }}
-                          title="Cancel">
-                          <XIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-
                 {items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
-                      {editingId === item.id ? (
-                        <Input
-                          ref={editInputRef}
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          onKeyDown={handleEditKeyDown}
-                          placeholder="Weapon type name"
-                          aria-label={`Edit ${item.weapon_type_name}`}
-                        />
-                      ) : (
-                        item.weapon_type_name
-                      )}
+                      {item.weapon_type_name}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {editingId === item.id ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={handleSaveEdit}
-                              title="Save">
-                              <CheckIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={handleCancelEdit}
-                              title="Cancel">
-                              <XIcon className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStartEdit(item)}
-                              title={`Edit ${item.weapon_type_name}`}>
-                              <PencilIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(item)}
-                              title={`Delete ${item.weapon_type_name}`}>
-                              <Trash2Icon className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(item)}
+                          title={`Edit ${item.weapon_type_name}`}>
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(item)}
+                          title={`Delete ${item.weapon_type_name}`}>
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -365,6 +306,36 @@ export function CustomWeaponTypesCard({
           </div>
         )}
       </CardContent>
+
+      <WeaponTypeDialog
+        key={`create-${dialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={saving}
+        title="Create Custom Weapon Type"
+        description="A new weapon discipline emerges."
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
+
+      <WeaponTypeDialog
+        key={`edit-${dialogKey}`}
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open)
+          if (!open) setEditingItem(null)
+        }}
+        onSave={handleEdit}
+        saving={saving}
+        initialName={editingItem?.weapon_type_name}
+        initialSpecialistRules={editingItem?.specialist_proficiency_rules ?? ''}
+        initialMasterRules={editingItem?.master_proficiency_rules ?? ''}
+        title="Edit Weapon Type"
+        description="Refine the weapon discipline."
+        saveLabel="Save"
+        savingLabel="Saving..."
+      />
     </Card>
   )
 }

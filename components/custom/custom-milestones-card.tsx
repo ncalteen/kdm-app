@@ -1,9 +1,8 @@
 'use client'
 
+import { MilestoneDialog } from '@/components/custom/dialogs/milestone-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -30,14 +29,7 @@ import {
 } from '@/lib/messages'
 import { MilestoneDetail } from '@/lib/types'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
-import {
-  KeyboardEvent,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 
 /**
  * Custom Milestones Card Component Properties
@@ -51,11 +43,9 @@ interface CustomMilestonesCardProps {
  * Custom Milestones Card Component
  *
  * Lists user's custom milestones with options to create, edit, and delete.
- * Each milestone has a name, event name, and campaign type associations.
- * Entries are displayed alphabetically. UI updates are optimistic and roll
- * back on database failure.
- *
- * Campaign types are intentionally omitted here.
+ * Each milestone has a name, event name, requirements, and rules. Entries
+ * are displayed alphabetically. UI updates are optimistic and roll back on
+ * database failure.
  *
  * @param props Custom Milestones Card Properties
  * @returns Custom Milestones Card Component
@@ -68,18 +58,12 @@ export function CustomMilestonesCard({
   const [items, setItems] = useState<MilestoneDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Create form state
-  const [isAdding, setIsAdding] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [newEventName, setNewEventName] = useState('')
-
-  // Edit form state
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState('')
-  const [editingEventName, setEditingEventName] = useState('')
-
-  const newInputRef = useRef<HTMLInputElement>(null)
-  const editInputRef = useRef<HTMLInputElement>(null)
+  // Dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<MilestoneDetail | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   /** Sort items alphabetically by name */
   const sortItems = useCallback(
@@ -110,71 +94,130 @@ export function CustomMilestonesCard({
     loadItems()
   }, [loadItems])
 
-  useEffect(() => {
-    if (isAdding) newInputRef.current?.focus()
-  }, [isAdding])
-
-  useEffect(() => {
-    if (editingId) editInputRef.current?.focus()
-  }, [editingId])
-
   /**
-   * Handle Add Milestone
+   * Handle Create Milestone
    *
    * Optimistically adds a new milestone, then persists to the database.
    * Rolls back on failure.
    */
-  const handleAdd = useCallback(async () => {
-    const trimmedName = newName.trim()
-    const trimmedEvent = newEventName.trim()
+  const handleCreate = useCallback(
+    async (data: {
+      milestone_name: string
+      event_name: string
+      requirements: string
+      rules: string
+    }) => {
+      if (saving) return
+      if (!data.milestone_name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('milestone'))
+      if (!data.event_name.trim())
+        return toast.error(MILESTONE_MISSING_EVENT_ERROR())
 
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('milestone'))
-    if (!trimmedEvent) return toast.error(MILESTONE_MISSING_EVENT_ERROR())
+      setSaving(true)
 
-    const tempId = `temp-${Date.now()}`
-    const temp: MilestoneDetail = {
-      id: tempId,
-      custom: true,
-      milestone_name: trimmedName,
-      event_name: trimmedEvent,
-      campaign_types: []
-    }
-
-    const previous = [...items]
-    setItems(sortItems([...items, temp]))
-    setNewName('')
-    setNewEventName('')
-    setIsAdding(false)
-
-    try {
-      const created = await addMilestone({
+      const tempId = `temp-${Date.now()}`
+      const temp: MilestoneDetail = {
+        id: tempId,
         custom: true,
-        milestone_name: trimmedName,
-        event_name: trimmedEvent,
-        campaign_types: []
-      })
+        milestone_name: data.milestone_name,
+        event_name: data.event_name,
+        campaign_types: [],
+        requirements: data.requirements || null,
+        rules: data.rules || null
+      }
 
-      setItems((prev) =>
-        sortItems(prev.map((i) => (i.id === tempId ? created : i)))
-      )
+      const previous = [...items]
+      setItems(sortItems([...items, temp]))
+      setCreateDialogOpen(false)
 
-      toast.success(MILESTONE_CREATED_MESSAGE())
-    } catch (err: unknown) {
-      setItems(previous)
-      console.error('Add Milestone Error:', err)
-      toast.error(ERROR_MESSAGE())
-    }
-  }, [items, newName, newEventName, sortItems, toast])
+      try {
+        const created = await addMilestone({
+          custom: true,
+          milestone_name: data.milestone_name,
+          event_name: data.event_name,
+          campaign_types: [],
+          requirements: data.requirements || null,
+          rules: data.rules || null
+        })
+
+        setItems((prev) =>
+          sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+        )
+
+        toast.success(MILESTONE_CREATED_MESSAGE())
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Add Milestone Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [items, saving, sortItems, toast]
+  )
 
   /**
-   * Handle Delete Milestone
+   * Handle Edit Milestone
    *
-   * Optimistically removes the milestone, then deletes from the database.
+   * Optimistically updates the milestone, then persists to the database.
    * Rolls back on failure.
-   *
-   * @param item Milestone to delete
    */
+  const handleEdit = useCallback(
+    async (data: {
+      milestone_name: string
+      event_name: string
+      requirements: string
+      rules: string
+    }) => {
+      if (saving || !editingItem) return
+      if (!data.milestone_name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('milestone'))
+      if (!data.event_name.trim())
+        return toast.error(MILESTONE_MISSING_EVENT_ERROR())
+
+      setSaving(true)
+
+      const previous = [...items]
+
+      setItems(
+        sortItems(
+          items.map((i) =>
+            i.id === editingItem.id
+              ? {
+                  ...i,
+                  milestone_name: data.milestone_name,
+                  event_name: data.event_name,
+                  requirements: data.requirements || null,
+                  rules: data.rules || null
+                }
+              : i
+          )
+        )
+      )
+
+      setEditDialogOpen(false)
+      setEditingItem(null)
+
+      try {
+        await updateMilestone(editingItem.id, {
+          milestone_name: data.milestone_name,
+          event_name: data.event_name,
+          requirements: data.requirements || null,
+          rules: data.rules || null
+        })
+
+        toast.success(MILESTONE_UPDATED_MESSAGE())
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Update Milestone Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [items, editingItem, saving, sortItems, toast]
+  )
+
   const handleDelete = useCallback(
     (item: MilestoneDetail) => {
       const previous = [...items]
@@ -191,94 +234,15 @@ export function CustomMilestonesCard({
     [items, toast]
   )
 
-  /** Enter edit mode for a milestone */
-  const handleStartEdit = useCallback((item: MilestoneDetail) => {
-    setEditingId(item.id)
-    setEditingName(item.milestone_name)
-    setEditingEventName(item.event_name)
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
   }, [])
 
-  /** Cancel edit mode */
-  const handleCancelEdit = useCallback(() => {
-    setEditingId(null)
-    setEditingName('')
-    setEditingEventName('')
-  }, [])
-
-  /**
-   * Handle Save Edit
-   *
-   * Optimistically updates the milestone, then persists to the database.
-   * Rolls back on failure.
-   */
-  const handleSaveEdit = useCallback(() => {
-    const trimmedName = editingName.trim()
-    const trimmedEvent = editingEventName.trim()
-
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('milestone'))
-    if (!trimmedEvent) return toast.error(MILESTONE_MISSING_EVENT_ERROR())
-    if (!editingId) return
-
-    const previous = [...items]
-
-    setItems(
-      sortItems(
-        items.map((i) =>
-          i.id === editingId
-            ? {
-                ...i,
-                milestone_name: trimmedName,
-                event_name: trimmedEvent,
-                campaign_types: []
-              }
-            : i
-        )
-      )
-    )
-
-    setEditingId(null)
-    setEditingName('')
-    setEditingEventName('')
-
-    updateMilestone(editingId, {
-      milestone_name: trimmedName,
-      event_name: trimmedEvent,
-      campaign_types: []
-    })
-      .then(() => toast.success(MILESTONE_UPDATED_MESSAGE()))
-      .catch((err: unknown) => {
-        setItems(previous)
-        console.error('Update Milestone Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-  }, [items, editingId, editingName, editingEventName, sortItems, toast])
-
-  const handleNewKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleAdd()
-      else if (e.key === 'Escape') {
-        setIsAdding(false)
-        setNewName('')
-        setNewEventName('')
-      }
-    },
-    [handleAdd]
-  )
-
-  const handleEditKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleSaveEdit()
-      else if (e.key === 'Escape') handleCancelEdit()
-    },
-    [handleCancelEdit, handleSaveEdit]
-  )
-
-  /** Reset and open the add form */
-  const handleStartAdd = useCallback(() => {
-    setNewName('')
-    setNewEventName('')
-    setIsAdding(true)
+  const openEditDialog = useCallback((item: MilestoneDetail) => {
+    setDialogKey((k) => k + 1)
+    setEditingItem(item)
+    setEditDialogOpen(true)
   }, [])
 
   return (
@@ -286,11 +250,7 @@ export function CustomMilestonesCard({
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center justify-between">
           <span>Milestones</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleStartAdd}
-            disabled={isAdding}>
+          <Button variant="outline" size="sm" onClick={openCreateDialog}>
             <PlusIcon className="h-4 w-4 mr-2" />
             Add
           </Button>
@@ -304,7 +264,7 @@ export function CustomMilestonesCard({
               Peering into the darkness...
             </p>
           </div>
-        ) : items.length === 0 && !isAdding ? (
+        ) : items.length === 0 ? (
           <div className="flex items-center justify-center p-8 text-center">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
@@ -316,143 +276,85 @@ export function CustomMilestonesCard({
             </div>
           </div>
         ) : (
-          <>
-            {/* Add form */}
-            {isAdding && (
-              <div className="mb-2 rounded-md border p-3 space-y-3">
-                <div className="space-y-1">
-                  <Label htmlFor="new-milestone-name">Milestone Name</Label>
-                  <Input
-                    ref={newInputRef}
-                    id="new-milestone-name"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    onKeyDown={handleNewKeyDown}
-                    placeholder="Milestone name"
-                    aria-label="New milestone name"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="new-milestone-event">Event Name</Label>
-                  <Input
-                    id="new-milestone-event"
-                    value={newEventName}
-                    onChange={(e) => setNewEventName(e.target.value)}
-                    onKeyDown={handleNewKeyDown}
-                    placeholder="Story event name"
-                    aria-label="New milestone event name"
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setIsAdding(false)
-                      setNewName('')
-                      setNewEventName('')
-                    }}>
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={handleAdd}>
-                    Save
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Edit form */}
-            {editingId && (
-              <div className="mb-2 rounded-md border p-3 space-y-3">
-                <div className="space-y-1">
-                  <Label htmlFor="edit-milestone-name">Milestone Name</Label>
-                  <Input
-                    ref={editInputRef}
-                    id="edit-milestone-name"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    onKeyDown={handleEditKeyDown}
-                    placeholder="Milestone name"
-                    aria-label="Edit milestone name"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="edit-milestone-event">Event Name</Label>
-                  <Input
-                    id="edit-milestone-event"
-                    value={editingEventName}
-                    onChange={(e) => setEditingEventName(e.target.value)}
-                    onKeyDown={handleEditKeyDown}
-                    placeholder="Story event name"
-                    aria-label="Edit milestone event name"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Items list */}
-            {(items.length > 0 || (!isAdding && !editingId)) && (
-              <div className="max-h-[400px] overflow-y-auto rounded-md border">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10">
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="hidden sm:table-cell">
-                        Event
-                      </TableHead>
-                      <TableHead className="w-[100px] text-right">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((item) => (
-                      <TableRow
-                        key={item.id}
-                        className={
-                          editingId === item.id ? 'bg-muted/50' : undefined
-                        }>
-                        <TableCell>
-                          <div className="font-medium">
-                            {item.milestone_name}
-                          </div>
-                          {/* Show event name on mobile below the name */}
-                          <div className="text-xs text-muted-foreground sm:hidden">
-                            {item.event_name}
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
-                          {item.event_name}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStartEdit(item)}
-                              disabled={!!editingId}
-                              title={`Edit ${item.milestone_name}`}>
-                              <PencilIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(item)}
-                              disabled={!!editingId}
-                              title={`Delete ${item.milestone_name}`}>
-                              <Trash2Icon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </>
+          <div className="max-h-[400px] overflow-y-auto rounded-md border">
+            <Table>
+              <TableHeader className="sticky top-0 bg-background z-10">
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="hidden sm:table-cell">Event</TableHead>
+                  <TableHead className="w-[100px] text-right">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div className="font-medium">{item.milestone_name}</div>
+                      <div className="text-xs text-muted-foreground sm:hidden">
+                        {item.event_name}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                      {item.event_name}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(item)}
+                          title={`Edit ${item.milestone_name}`}>
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(item)}
+                          title={`Delete ${item.milestone_name}`}>
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
+
+      <MilestoneDialog
+        key={`create-${dialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={saving}
+        title="Create Custom Milestone"
+        description="A new trial looms on the horizon."
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
+
+      <MilestoneDialog
+        key={`edit-${dialogKey}`}
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open)
+          if (!open) setEditingItem(null)
+        }}
+        onSave={handleEdit}
+        saving={saving}
+        initialName={editingItem?.milestone_name}
+        initialEventName={editingItem?.event_name}
+        initialRequirements={editingItem?.requirements ?? ''}
+        initialRules={editingItem?.rules ?? ''}
+        title="Edit Milestone"
+        description="Reshape the trial."
+        saveLabel="Save"
+        savingLabel="Saving..."
+      />
     </Card>
   )
 }

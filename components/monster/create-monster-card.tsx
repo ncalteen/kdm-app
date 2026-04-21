@@ -27,6 +27,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -61,6 +62,7 @@ import {
   MonsterLevelData
 } from '@/lib/types'
 import { getAvailableNodes } from '@/lib/utils'
+import MDEditor from '@uiw/react-md-editor'
 import {
   ChevronDownIcon,
   ChevronRightIcon,
@@ -69,6 +71,7 @@ import {
   Trash2Icon,
   XIcon
 } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /** Timeline Event Form Data */
@@ -107,6 +110,8 @@ export function CreateMonsterCard({
 }: CreateMonsterCardProps): ReactElement {
   const { toast } = useToast(local)
 
+  const { resolvedTheme } = useTheme()
+
   const [isCreating, setIsCreating] = useState(false)
 
   // Basic Info
@@ -116,6 +121,14 @@ export function CreateMonsterCard({
   const [name, setName] = useState('')
   const [node, setNode] = useState<MonsterNode>(MonsterNode.NQ1)
   const [isPrologue, setIsPrologue] = useState(false)
+
+  // Monster Detail Fields
+  const [instinct, setInstinct] = useState('')
+  const [basicAction, setBasicAction] = useState('')
+  const [blindSpot, setBlindSpot] = useState('')
+  const [defeatOutcome, setDefeatOutcome] = useState('')
+  const [deploymentRules, setDeploymentRules] = useState('')
+  const [victoryOutcome, setVictoryOutcome] = useState('')
 
   // Monster Level Data
   const [levels, setLevels] = useState<{
@@ -347,6 +360,12 @@ export function CreateMonsterCard({
         monster_name: name.trim(),
         multi_monster: levelEntries.some((entry) => entry[1].length > 1),
         node,
+        instinct: instinct.trim() || null,
+        basic_action: basicAction.trim() || null,
+        blind_spot: blindSpot.trim() || null,
+        defeat_outcome: defeatOutcome.trim() || null,
+        deployment_rules: deploymentRules.trim() || null,
+        victory_outcome: victoryOutcome.trim() || null,
         ...(isQuarry ? { prologue: isPrologue } : {})
       })
 
@@ -460,6 +479,12 @@ export function CreateMonsterCard({
     monsterType,
     node,
     isPrologue,
+    instinct,
+    basicAction,
+    blindSpot,
+    defeatOutcome,
+    deploymentRules,
+    victoryOutcome,
     levels,
     levelHuntPositions,
     locations,
@@ -548,6 +573,72 @@ export function CreateMonsterCard({
               </Select>
             </div>
           </div>
+        </div>
+
+        {/* Monster Details Tabs */}
+        <Separator />
+
+        <div className="space-y-2" data-color-mode={resolvedTheme}>
+          <Label className="text-sm font-semibold">Monster Details</Label>
+          <Tabs defaultValue="instinct">
+            <TabsList className="w-full flex-wrap h-auto">
+              <TabsTrigger value="instinct">Instinct</TabsTrigger>
+              <TabsTrigger value="basicAction">Basic Action</TabsTrigger>
+              <TabsTrigger value="blindSpot">Blind Spot</TabsTrigger>
+              <TabsTrigger value="defeatOutcome">Defeat</TabsTrigger>
+              <TabsTrigger value="deploymentRules">Deployment</TabsTrigger>
+              <TabsTrigger value="victoryOutcome">Victory</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="instinct">
+              <MDEditor
+                value={instinct}
+                onChange={(val) => setInstinct(val ?? '')}
+                height={200}
+                preview="edit"
+              />
+            </TabsContent>
+            <TabsContent value="basicAction">
+              <MDEditor
+                value={basicAction}
+                onChange={(val) => setBasicAction(val ?? '')}
+                height={200}
+                preview="edit"
+              />
+            </TabsContent>
+            <TabsContent value="blindSpot">
+              <MDEditor
+                value={blindSpot}
+                onChange={(val) => setBlindSpot(val ?? '')}
+                height={200}
+                preview="edit"
+              />
+            </TabsContent>
+            <TabsContent value="defeatOutcome">
+              <MDEditor
+                value={defeatOutcome}
+                onChange={(val) => setDefeatOutcome(val ?? '')}
+                height={200}
+                preview="edit"
+              />
+            </TabsContent>
+            <TabsContent value="deploymentRules">
+              <MDEditor
+                value={deploymentRules}
+                onChange={(val) => setDeploymentRules(val ?? '')}
+                height={200}
+                preview="edit"
+              />
+            </TabsContent>
+            <TabsContent value="victoryOutcome">
+              <MDEditor
+                value={victoryOutcome}
+                onChange={(val) => setVictoryOutcome(val ?? '')}
+                height={200}
+                preview="edit"
+              />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Hunt Board (Quarry Only) */}
