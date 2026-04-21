@@ -26,16 +26,16 @@ export async function getDisorders(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('disorder')
-      .select('id, custom, disorder_name')
+      .select('id, custom, disorder_name, rules')
       .eq('custom', false),
     supabase
       .from('disorder')
-      .select('id, custom, disorder_name')
+      .select('id, custom, disorder_name, rules')
       .eq('custom', true)
       .eq('user_id', userId),
     supabase
       .from('disorder_shared_user')
-      .select('disorder(id, custom, disorder_name)')
+      .select('disorder(id, custom, disorder_name, rules)')
       .eq('shared_user_id', userId)
   ])
 
@@ -99,7 +99,7 @@ export async function addDisorder(
       ...disorder,
       ...(disorder.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, disorder_name')
+    .select('id, custom, disorder_name, rules')
     .single()
 
   if (error) throw new Error(`Error Adding Disorder: ${error.message}`)

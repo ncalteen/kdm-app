@@ -28,16 +28,16 @@ export async function getLocations(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('location')
-      .select('id, custom, location_name')
+      .select('id, custom, location_name, rules')
       .eq('custom', false),
     supabase
       .from('location')
-      .select('id, custom, location_name')
+      .select('id, custom, location_name, rules')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('location_shared_user')
-      .select('location(id, custom, location_name)')
+      .select('location(id, custom, location_name, rules)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -123,7 +123,7 @@ export async function addLocation(
       ...location,
       ...(location.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, location_name')
+    .select('id, custom, location_name, rules')
     .single()
 
   if (error) throw new Error(`Error Adding Location: ${error.message}`)

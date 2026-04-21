@@ -31,19 +31,19 @@ export async function getCollectiveCognitionRewards(): Promise<{
     // Non-custom rewards (available to all users)
     supabase
       .from('collective_cognition_reward')
-      .select('id, custom, reward_name, collective_cognition')
+      .select('id, custom, reward_name, collective_cognition, rules')
       .eq('custom', false),
     // Custom rewards created by the user
     supabase
       .from('collective_cognition_reward')
-      .select('id, custom, reward_name, collective_cognition')
+      .select('id, custom, reward_name, collective_cognition, rules')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom rewards shared with the user
     supabase
       .from('collective_cognition_reward_shared_user')
       .select(
-        'collective_cognition_reward(id, custom, reward_name, collective_cognition)'
+        'collective_cognition_reward(id, custom, reward_name, collective_cognition, rules)'
       )
       .eq('shared_user_id', user.id)
   ])
@@ -138,7 +138,7 @@ export async function addCollectiveCognitionReward(
       ...reward,
       ...(reward.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, collective_cognition, reward_name')
+    .select('id, custom, collective_cognition, reward_name, rules')
     .single()
 
   if (error)

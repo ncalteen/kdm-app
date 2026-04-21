@@ -44,7 +44,7 @@ export async function getNemeses(
     supabase
       .from('nemesis')
       .select(
-        'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+        'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
       )
       .eq('custom', false)
       .in('node', nodeTypes),
@@ -52,7 +52,7 @@ export async function getNemeses(
     supabase
       .from('nemesis')
       .select(
-        'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+        'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
       )
       .eq('custom', true)
       .eq('user_id', user.id)
@@ -61,7 +61,7 @@ export async function getNemeses(
     supabase
       .from('nemesis_shared_user')
       .select(
-        'nemesis(id, alternate_id, custom, monster_name, multi_monster, node, vignette_id)'
+        'nemesis(id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
       )
       .eq('shared_user_id', user.id)
   ])
@@ -121,7 +121,7 @@ export async function getUserCustomNemeses(): Promise<{
   const { data, error } = await supabase
     .from('nemesis')
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
     )
     .eq('custom', true)
     .eq('user_id', user.id)
@@ -152,7 +152,7 @@ export async function getNemesis(
   const { data, error } = await supabase
     .from('nemesis')
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
     )
     .eq('id', nemesisId)
     .maybeSingle()
@@ -256,7 +256,7 @@ export async function addNemesis(
       ...(nemesis.custom ? { user_id: user!.id } : {})
     })
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
     )
     .single()
 

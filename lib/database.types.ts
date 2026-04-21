@@ -40,6 +40,7 @@ export type Database = {
           created_at: string
           custom: boolean
           id: string
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
@@ -48,6 +49,7 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -56,6 +58,7 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -101,6 +104,7 @@ export type Database = {
           custom: boolean
           id: string
           reward_name: string
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
@@ -110,6 +114,7 @@ export type Database = {
           custom?: boolean
           id?: string
           reward_name: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -119,6 +124,7 @@ export type Database = {
           custom?: boolean
           id?: string
           reward_name?: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -163,6 +169,7 @@ export type Database = {
           custom: boolean
           disorder_name: string
           id: string
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
@@ -171,6 +178,7 @@ export type Database = {
           custom?: boolean
           disorder_name: string
           id?: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -179,6 +187,7 @@ export type Database = {
           custom?: boolean
           disorder_name?: string
           id?: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -223,6 +232,7 @@ export type Database = {
           custom: boolean
           fighting_art_name: string
           id: string
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
@@ -231,6 +241,7 @@ export type Database = {
           custom?: boolean
           fighting_art_name: string
           id?: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -239,6 +250,7 @@ export type Database = {
           custom?: boolean
           fighting_art_name?: string
           id?: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -702,26 +714,35 @@ export type Database = {
       }
       innovation: {
         Row: {
+          benefits: string | null
+          consequences: string | null
           created_at: string
           custom: boolean
           id: string
           innovation_name: string
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          benefits?: string | null
+          consequences?: string | null
           created_at?: string
           custom?: boolean
           id?: string
           innovation_name: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          benefits?: string | null
+          consequences?: string | null
           created_at?: string
           custom?: boolean
           id?: string
           innovation_name?: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -766,7 +787,10 @@ export type Database = {
           custom: boolean
           id: string
           knowledge_name: string
+          observation_conditions: string | null
+          observation_rank_up_milestone: number | null
           philosophy_id: string | null
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
@@ -775,7 +799,10 @@ export type Database = {
           custom?: boolean
           id?: string
           knowledge_name: string
+          observation_conditions?: string | null
+          observation_rank_up_milestone?: number | null
           philosophy_id?: string | null
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -784,7 +811,10 @@ export type Database = {
           custom?: boolean
           id?: string
           knowledge_name?: string
+          observation_conditions?: string | null
+          observation_rank_up_milestone?: number | null
           philosophy_id?: string | null
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -837,6 +867,7 @@ export type Database = {
           custom: boolean
           id: string
           location_name: string
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
@@ -845,6 +876,7 @@ export type Database = {
           custom?: boolean
           id?: string
           location_name: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -853,6 +885,7 @@ export type Database = {
           custom?: boolean
           id?: string
           location_name?: string
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -899,6 +932,8 @@ export type Database = {
           event_name: string
           id: string
           milestone_name: string
+          requirements: string | null
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
@@ -909,6 +944,8 @@ export type Database = {
           event_name: string
           id?: string
           milestone_name: string
+          requirements?: string | null
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -919,6 +956,8 @@ export type Database = {
           event_name?: string
           id?: string
           milestone_name?: string
+          requirements?: string | null
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -960,38 +999,56 @@ export type Database = {
       nemesis: {
         Row: {
           alternate_id: string | null
+          basic_action: string | null
+          blind_spot: string | null
           created_at: string
           custom: boolean
+          defeat_outcome: string | null
+          deployment_rules: string | null
           id: string
+          instinct: string | null
           monster_name: string
           multi_monster: boolean
           node: Database["public"]["Enums"]["monster_node"]
           updated_at: string
           user_id: string | null
+          victory_outcome: string | null
           vignette_id: string | null
         }
         Insert: {
           alternate_id?: string | null
+          basic_action?: string | null
+          blind_spot?: string | null
           created_at?: string
           custom?: boolean
+          defeat_outcome?: string | null
+          deployment_rules?: string | null
           id?: string
+          instinct?: string | null
           monster_name: string
           multi_monster?: boolean
           node: Database["public"]["Enums"]["monster_node"]
           updated_at?: string
           user_id?: string | null
+          victory_outcome?: string | null
           vignette_id?: string | null
         }
         Update: {
           alternate_id?: string | null
+          basic_action?: string | null
+          blind_spot?: string | null
           created_at?: string
           custom?: boolean
+          defeat_outcome?: string | null
+          deployment_rules?: string | null
           id?: string
+          instinct?: string | null
           monster_name?: string
           multi_monster?: boolean
           node?: Database["public"]["Enums"]["monster_node"]
           updated_at?: string
           user_id?: string | null
+          victory_outcome?: string | null
           vignette_id?: string | null
         }
         Relationships: [
@@ -1238,6 +1295,7 @@ export type Database = {
           id: string
           neurosis_name: string
           philosophy_id: string | null
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
@@ -1247,6 +1305,7 @@ export type Database = {
           id?: string
           neurosis_name: string
           philosophy_id?: string | null
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1256,6 +1315,7 @@ export type Database = {
           id?: string
           neurosis_name?: string
           philosophy_id?: string | null
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1366,28 +1426,45 @@ export type Database = {
         Row: {
           created_at: string
           custom: boolean
+          hunt_xp_milestones: number[] | null
           id: string
           philosophy_name: string
+          tenet_knowledge_id: string | null
+          tier: number | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           created_at?: string
           custom?: boolean
+          hunt_xp_milestones?: number[] | null
           id?: string
           philosophy_name: string
+          tenet_knowledge_id?: string | null
+          tier?: number | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           created_at?: string
           custom?: boolean
+          hunt_xp_milestones?: number[] | null
           id?: string
           philosophy_name?: string
+          tenet_knowledge_id?: string | null
+          tier?: number | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "philosophy_tenet_knowledge_id_fkey"
+            columns: ["tenet_knowledge_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       philosophy_shared_user: {
         Row: {
@@ -1429,7 +1506,9 @@ export type Database = {
           custom: boolean
           id: string
           option_1_name: string
+          option_1_rules: string | null
           option_2_name: string
+          option_2_rules: string | null
           principle_name: string
           updated_at: string
           user_id: string | null
@@ -1440,7 +1519,9 @@ export type Database = {
           custom?: boolean
           id?: string
           option_1_name: string
+          option_1_rules?: string | null
           option_2_name: string
+          option_2_rules?: string | null
           principle_name: string
           updated_at?: string
           user_id?: string | null
@@ -1451,7 +1532,9 @@ export type Database = {
           custom?: boolean
           id?: string
           option_1_name?: string
+          option_1_rules?: string | null
           option_2_name?: string
+          option_2_rules?: string | null
           principle_name?: string
           updated_at?: string
           user_id?: string | null
@@ -1494,41 +1577,59 @@ export type Database = {
       quarry: {
         Row: {
           alternate_id: string | null
+          basic_action: string | null
+          blind_spot: string | null
           created_at: string
           custom: boolean
+          defeat_outcome: string | null
+          deployment_rules: string | null
           id: string
+          instinct: string | null
           monster_name: string
           multi_monster: boolean
           node: Database["public"]["Enums"]["monster_node"]
           prologue: boolean
           updated_at: string
           user_id: string | null
+          victory_outcome: string | null
           vignette_id: string | null
         }
         Insert: {
           alternate_id?: string | null
+          basic_action?: string | null
+          blind_spot?: string | null
           created_at?: string
           custom?: boolean
+          defeat_outcome?: string | null
+          deployment_rules?: string | null
           id?: string
+          instinct?: string | null
           monster_name: string
           multi_monster?: boolean
           node: Database["public"]["Enums"]["monster_node"]
           prologue?: boolean
           updated_at?: string
           user_id?: string | null
+          victory_outcome?: string | null
           vignette_id?: string | null
         }
         Update: {
           alternate_id?: string | null
+          basic_action?: string | null
+          blind_spot?: string | null
           created_at?: string
           custom?: boolean
+          defeat_outcome?: string | null
+          deployment_rules?: string | null
           id?: string
+          instinct?: string | null
           monster_name?: string
           multi_monster?: boolean
           node?: Database["public"]["Enums"]["monster_node"]
           prologue?: boolean
           updated_at?: string
           user_id?: string | null
+          victory_outcome?: string | null
           vignette_id?: string | null
         }
         Relationships: [
@@ -1983,6 +2084,7 @@ export type Database = {
           created_at: string
           custom: boolean
           id: string
+          rules: string | null
           secret_fighting_art_name: string
           updated_at: string
           user_id: string | null
@@ -1991,6 +2093,7 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          rules?: string | null
           secret_fighting_art_name: string
           updated_at?: string
           user_id?: string | null
@@ -1999,6 +2102,7 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          rules?: string | null
           secret_fighting_art_name?: string
           updated_at?: string
           user_id?: string | null
@@ -3842,7 +3946,7 @@ export type Database = {
           unlocked_white_gigalion?: boolean
           updated_at?: string
           user_id: string
-          username?: string
+          username: string
         }
         Update: {
           created_at?: string
@@ -4022,6 +4126,8 @@ export type Database = {
           created_at: string
           custom: boolean
           id: string
+          master_proficiency_rules: string | null
+          specialist_proficiency_rules: string | null
           updated_at: string
           user_id: string | null
           weapon_type_name: string
@@ -4030,6 +4136,8 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          master_proficiency_rules?: string | null
+          specialist_proficiency_rules?: string | null
           updated_at?: string
           user_id?: string | null
           weapon_type_name: string
@@ -4038,6 +4146,8 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          master_proficiency_rules?: string | null
+          specialist_proficiency_rules?: string | null
           updated_at?: string
           user_id?: string | null
           weapon_type_name?: string
@@ -4125,7 +4235,9 @@ export type Database = {
     }
     Enums: {
       aenas_state: "Content" | "Hungry"
+      affinity: "BLUE" | "GREEN" | "RED"
       ambush_type: "SURVIVORS" | "MONSTER" | "NONE"
+      armor_location: "ARMS" | "CHEST" | "FEET" | "HEAD" | "WAIST"
       campaign_type:
         | "PEOPLE_OF_THE_DREAM_KEEPER"
         | "PEOPLE_OF_THE_LANTERN"
@@ -4156,6 +4268,68 @@ export type Database = {
         | "fuchsia"
         | "pink"
         | "rose"
+      gear_keyword:
+        | "AMBER"
+        | "AMMUNITION"
+        | "ARMOR"
+        | "ARROW"
+        | "AXE"
+        | "BALM"
+        | "BONE"
+        | "BOW"
+        | "CLEAVER"
+        | "CLUB"
+        | "DAGGER"
+        | "DEATHMETAL"
+        | "FAN"
+        | "FEATHER"
+        | "FINESSE"
+        | "FIST_AND_TOOTH"
+        | "FLAMMABLE"
+        | "FLESH"
+        | "FRAGILE"
+        | "FUR"
+        | "GLOOMY"
+        | "GORMSKIN"
+        | "GRAND"
+        | "HEAVY"
+        | "HERB"
+        | "INSTRUMENT"
+        | "ITEM"
+        | "JEWELRY"
+        | "KATANA"
+        | "KATAR"
+        | "KNIGHT"
+        | "LANTERN"
+        | "LEATHER"
+        | "MASK"
+        | "MELEE"
+        | "METAL"
+        | "MINERAL"
+        | "NOISY"
+        | "NUCLEAR"
+        | "OTHER"
+        | "PICKAXE"
+        | "RANGED"
+        | "RAWHIDE"
+        | "SAW"
+        | "SCALE"
+        | "SCIMITAR"
+        | "SCYTHE"
+        | "SEED"
+        | "SELFISH"
+        | "SHIELD"
+        | "SICKLE"
+        | "SILK"
+        | "SOLUBLE"
+        | "SPEAR"
+        | "STINKY"
+        | "SWORD"
+        | "SYMBOL"
+        | "THROWN"
+        | "TOOL"
+        | "TWO_HANDED"
+        | "WHIP"
       gender: "FEMALE" | "MALE"
       hunt_event_type: "ARC" | "BASIC" | "MONSTER" | "SCOUT"
       monster_node:
@@ -4344,7 +4518,9 @@ export const Constants = {
   public: {
     Enums: {
       aenas_state: ["Content", "Hungry"],
+      affinity: ["BLUE", "GREEN", "RED"],
       ambush_type: ["SURVIVORS", "MONSTER", "NONE"],
+      armor_location: ["ARMS", "CHEST", "FEET", "HEAD", "WAIST"],
       campaign_type: [
         "PEOPLE_OF_THE_DREAM_KEEPER",
         "PEOPLE_OF_THE_LANTERN",
@@ -4376,6 +4552,69 @@ export const Constants = {
         "fuchsia",
         "pink",
         "rose",
+      ],
+      gear_keyword: [
+        "AMBER",
+        "AMMUNITION",
+        "ARMOR",
+        "ARROW",
+        "AXE",
+        "BALM",
+        "BONE",
+        "BOW",
+        "CLEAVER",
+        "CLUB",
+        "DAGGER",
+        "DEATHMETAL",
+        "FAN",
+        "FEATHER",
+        "FINESSE",
+        "FIST_AND_TOOTH",
+        "FLAMMABLE",
+        "FLESH",
+        "FRAGILE",
+        "FUR",
+        "GLOOMY",
+        "GORMSKIN",
+        "GRAND",
+        "HEAVY",
+        "HERB",
+        "INSTRUMENT",
+        "ITEM",
+        "JEWELRY",
+        "KATANA",
+        "KATAR",
+        "KNIGHT",
+        "LANTERN",
+        "LEATHER",
+        "MASK",
+        "MELEE",
+        "METAL",
+        "MINERAL",
+        "NOISY",
+        "NUCLEAR",
+        "OTHER",
+        "PICKAXE",
+        "RANGED",
+        "RAWHIDE",
+        "SAW",
+        "SCALE",
+        "SCIMITAR",
+        "SCYTHE",
+        "SEED",
+        "SELFISH",
+        "SHIELD",
+        "SICKLE",
+        "SILK",
+        "SOLUBLE",
+        "SPEAR",
+        "STINKY",
+        "SWORD",
+        "SYMBOL",
+        "THROWN",
+        "TOOL",
+        "TWO_HANDED",
+        "WHIP",
       ],
       gender: ["FEMALE", "MALE"],
       hunt_event_type: ["ARC", "BASIC", "MONSTER", "SCOUT"],

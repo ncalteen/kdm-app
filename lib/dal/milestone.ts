@@ -29,17 +29,21 @@ export async function getMilestones(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('milestone')
-      .select('id, custom, milestone_name, event_name, campaign_types')
+      .select(
+        'id, custom, milestone_name, event_name, campaign_types, requirements, rules'
+      )
       .eq('custom', false),
     supabase
       .from('milestone')
-      .select('id, custom, milestone_name, event_name, campaign_types')
+      .select(
+        'id, custom, milestone_name, event_name, campaign_types, requirements, rules'
+      )
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('milestone_shared_user')
       .select(
-        'milestone(id, custom, milestone_name, event_name, campaign_types)'
+        'milestone(id, custom, milestone_name, event_name, campaign_types, requirements, rules)'
       )
       .eq('shared_user_id', user.id)
   ])
@@ -130,7 +134,9 @@ export async function addMilestone(
       ...milestone,
       ...(milestone.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, campaign_types, event_name, milestone_name')
+    .select(
+      'id, custom, campaign_types, event_name, milestone_name, requirements, rules'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding Milestone: ${error.message}`)

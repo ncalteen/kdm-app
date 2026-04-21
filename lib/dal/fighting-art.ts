@@ -28,16 +28,16 @@ export async function getFightingArts(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('fighting_art')
-      .select('id, custom, fighting_art_name')
+      .select('id, custom, fighting_art_name, rules')
       .eq('custom', false),
     supabase
       .from('fighting_art')
-      .select('id, custom, fighting_art_name')
+      .select('id, custom, fighting_art_name, rules')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('fighting_art_shared_user')
-      .select('fighting_art(id, custom, fighting_art_name)')
+      .select('fighting_art(id, custom, fighting_art_name, rules)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -85,7 +85,7 @@ export async function addFightingArt(
       ...fightingArt,
       ...(fightingArt.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, fighting_art_name')
+    .select('id, custom, fighting_art_name, rules')
     .single()
 
   if (error) throw new Error(`Error Adding Fighting Art: ${error.message}`)
@@ -156,7 +156,7 @@ export async function getCustomFightingArts(): Promise<{
 
   const { data, error } = await supabase
     .from('fighting_art')
-    .select('id, custom, fighting_art_name')
+    .select('id, custom, fighting_art_name, rules')
     .eq('custom', true)
     .eq('user_id', user.id)
 

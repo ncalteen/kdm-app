@@ -30,20 +30,20 @@ export async function getPrinciples(): Promise<{
     supabase
       .from('principle')
       .select(
-        'id, custom, principle_name, option_1_name, option_2_name, campaign_types'
+        'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
       )
       .eq('custom', false),
     supabase
       .from('principle')
       .select(
-        'id, custom, principle_name, option_1_name, option_2_name, campaign_types'
+        'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
       )
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('principle_shared_user')
       .select(
-        'principle(id, custom, principle_name, option_1_name, option_2_name, campaign_types)'
+        'principle(id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules)'
       )
       .eq('shared_user_id', user.id)
   ])
@@ -135,7 +135,7 @@ export async function addPrinciple(
       ...(principle.custom ? { user_id: user!.id } : {})
     })
     .select(
-      'id, custom, principle_name, option_1_name, option_2_name, campaign_types'
+      'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
     )
     .single()
 

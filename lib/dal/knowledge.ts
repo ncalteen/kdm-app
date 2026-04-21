@@ -28,16 +28,16 @@ export async function getKnowledges(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('knowledge')
-      .select('id, custom, knowledge_name, philosophy_id')
+      .select('id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone')
       .eq('custom', false),
     supabase
       .from('knowledge')
-      .select('id, custom, knowledge_name, philosophy_id')
+      .select('id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('knowledge_shared_user')
-      .select('knowledge(id, custom, knowledge_name, philosophy_id)')
+      .select('knowledge(id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -85,7 +85,7 @@ export async function addKnowledge(
       ...knowledge,
       ...(knowledge.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, knowledge_name, philosophy_id')
+    .select('id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone')
     .single()
 
   if (error) throw new Error(`Error Adding Knowledge: ${error.message}`)

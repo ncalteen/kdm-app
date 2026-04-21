@@ -30,18 +30,18 @@ export async function getCharacters(): Promise<{
     // Non-custom characters (available to all users)
     supabase
       .from('character')
-      .select('id, custom, character_name')
+      .select('id, custom, character_name, rules')
       .eq('custom', false),
     // Custom characters created by the user
     supabase
       .from('character')
-      .select('id, custom, character_name')
+      .select('id, custom, character_name, rules')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom characters shared with the user
     supabase
       .from('character_shared_user')
-      .select('character(id, custom, character_name)')
+      .select('character(id, custom, character_name, rules)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -90,7 +90,7 @@ export async function addCharacter(
       ...character,
       ...(character.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, character_name')
+    .select('id, custom, character_name, rules')
     .single()
 
   if (error) throw new Error(`Error Adding Character: ${error.message}`)

@@ -32,18 +32,20 @@ export async function getSecretFightingArts(): Promise<{
     // Non-custom secret fighting arts (available to all users)
     supabase
       .from('secret_fighting_art')
-      .select('id, custom, secret_fighting_art_name')
+      .select('id, custom, secret_fighting_art_name, rules')
       .eq('custom', false),
     // Custom secret fighting arts created by the user
     supabase
       .from('secret_fighting_art')
-      .select('id, custom, secret_fighting_art_name')
+      .select('id, custom, secret_fighting_art_name, rules')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom secret fighting arts shared with the user
     supabase
       .from('secret_fighting_art_shared_user')
-      .select('secret_fighting_art(id, custom, secret_fighting_art_name)')
+      .select(
+        'secret_fighting_art(id, custom, secret_fighting_art_name, rules)'
+      )
       .eq('shared_user_id', user.id)
   ])
 
@@ -95,7 +97,7 @@ export async function addSecretFightingArt(
       ...secretFightingArt,
       ...(secretFightingArt.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, secret_fighting_art_name')
+    .select('id, custom, secret_fighting_art_name, rules')
     .single()
 
   if (error)

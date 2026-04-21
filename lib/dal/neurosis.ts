@@ -31,18 +31,18 @@ export async function getNeuroses(): Promise<{
     // Non-custom neuroses (available to all users)
     supabase
       .from('neurosis')
-      .select('id, custom, neurosis_name, philosophy_id')
+      .select('id, custom, neurosis_name, philosophy_id, rules')
       .eq('custom', false),
     // Custom neuroses created by the user
     supabase
       .from('neurosis')
-      .select('id, custom, neurosis_name, philosophy_id')
+      .select('id, custom, neurosis_name, philosophy_id, rules')
       .eq('custom', true)
       .eq('user_id', user.id),
     // Custom neuroses shared with the user
     supabase
       .from('neurosis_shared_user')
-      .select('neurosis(id, custom, neurosis_name, philosophy_id)')
+      .select('neurosis(id, custom, neurosis_name, philosophy_id, rules)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -91,7 +91,7 @@ export async function addNeurosis(
       ...neurosis,
       ...(neurosis.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, neurosis_name, philosophy_id')
+    .select('id, custom, neurosis_name, philosophy_id, rules')
     .single()
 
   if (error) throw new Error(`Error Adding Neurosis: ${error.message}`)

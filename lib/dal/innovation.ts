@@ -28,16 +28,18 @@ export async function getInnovations(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('innovation')
-      .select('id, custom, innovation_name')
+      .select('id, custom, innovation_name, rules, consequences, benefits')
       .eq('custom', false),
     supabase
       .from('innovation')
-      .select('id, custom, innovation_name')
+      .select('id, custom, innovation_name, rules, consequences, benefits')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('innovation_shared_user')
-      .select('innovation(id, custom, innovation_name)')
+      .select(
+        'innovation(id, custom, innovation_name, rules, consequences, benefits)'
+      )
       .eq('shared_user_id', user.id)
   ])
 
@@ -124,7 +126,7 @@ export async function addInnovation(
       ...innovation,
       ...(innovation.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, innovation_name')
+    .select('id, custom, innovation_name, rules, consequences, benefits')
     .single()
 
   if (error) throw new Error(`Error Adding Innovation: ${error.message}`)

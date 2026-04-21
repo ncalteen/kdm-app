@@ -29,16 +29,16 @@ export async function getWeaponTypes(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('weapon_type')
-      .select('id, custom, weapon_type_name')
+      .select('id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules')
       .eq('custom', false),
     supabase
       .from('weapon_type')
-      .select('id, custom, weapon_type_name')
+      .select('id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules')
       .eq('custom', true)
       .eq('user_id', user.id),
     supabase
       .from('weapon_type_shared_user')
-      .select('weapon_type(id, custom, weapon_type_name)')
+      .select('weapon_type(id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules)')
       .eq('shared_user_id', user.id)
   ])
 
@@ -86,7 +86,7 @@ export async function addWeaponType(
       ...weaponType,
       ...(weaponType.custom ? { user_id: user!.id } : {})
     })
-    .select('id, custom, weapon_type_name')
+    .select('id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules')
     .single()
 
   if (error) throw new Error(`Error Adding Weapon Type: ${error.message}`)
