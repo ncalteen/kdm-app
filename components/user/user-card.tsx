@@ -307,7 +307,7 @@ export function UserCard({
         </div>
 
         {/* Desktop: tab row */}
-        <TabsList className="hidden lg:flex">
+        <TabsList className="hidden lg:flex w-full">
           <TabsTrigger value="society">Society</TabsTrigger>
           <TabsTrigger value="crafting">Crafting</TabsTrigger>
           <TabsTrigger value="arc">Arc</TabsTrigger>
