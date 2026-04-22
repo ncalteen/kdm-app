@@ -175,14 +175,22 @@ export async function updateUserSettings(
 /**
  * Remove User Settings
  *
- * Deletes a user settings record from the database.
+ * Deletes a user settings record from the database. Scoped by the
+ * authenticated user's ID to provide defense-in-depth alongside RLS: even if
+ * a policy regression exposed the row, the WHERE clause here would still
+ * block a cross-user delete.
  *
  * @param id User Settings ID
  */
 export async function removeUserSettings(id: string): Promise<void> {
+  const userId = await getUserId()
   const supabase = createClient()
 
-  const { error } = await supabase.from('user_settings').delete().eq('id', id)
+  const { error } = await supabase
+    .from('user_settings')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId)
 
   if (error) throw new Error(`Error Removing User Settings: ${error.message}`)
 }

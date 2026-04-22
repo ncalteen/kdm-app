@@ -426,14 +426,22 @@ export async function updateSettlement(
 /**
  * Remove Settlement
  *
- * Deletes a settlement record from the database.
+ * Deletes a settlement record from the database. Scoped by the authenticated
+ * user's ID to provide defense-in-depth alongside RLS: only the owner can
+ * destroy a settlement, even if a future policy regression would otherwise
+ * allow a shared user through.
  *
  * @param id Settlement ID
  */
 export async function removeSettlement(id: string): Promise<void> {
+  const userId = await getUserId()
   const supabase = createClient()
 
-  const { error } = await supabase.from('settlement').delete().eq('id', id)
+  const { error } = await supabase
+    .from('settlement')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId)
 
   if (error) throw new Error(`Error Removing Settlement: ${error.message}`)
 }
