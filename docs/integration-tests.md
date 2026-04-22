@@ -15,7 +15,7 @@ against the local Supabase CLI stack. They do **not** mock `@/lib/supabase/*`.
 3. Export the local keys:
 
    ```bash
-   eval "$(supabase status -o env | awk -F= '{print "export "$1"="$2}')"
+   eval "$(npx supabase status -o env | awk -F= '{print "export "$1"="$2}')"
    ```
 
    ```bash
