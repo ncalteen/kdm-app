@@ -1,5 +1,6 @@
 'use client'
 
+import { WeaponTypeDialog } from '@/components/custom/dialogs/weapon-type-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -64,6 +65,9 @@ export function SelectWeaponType({
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createDialogName, setCreateDialogName] = useState('')
+  const [createDialogKey, setCreateDialogKey] = useState(0)
 
   useEffect(() => {
     getWeaponTypes()
@@ -92,34 +96,61 @@ export function SelectWeaponType({
   }
 
   /**
+   * Open Create Dialog
+   *
+   * Closes the popover and opens the weapon type dialog with the current
+   * search term pre-filled as the name.
+   */
+  const openCreateDialog = useCallback(() => {
+    const name = search.trim()
+    if (!name) return
+
+    setCreateDialogName(name)
+    setCreateDialogKey((k) => k + 1)
+    setOpen(false)
+    setCreateDialogOpen(true)
+  }, [search])
+
+  /**
    * Handle Create Custom Weapon Type
    *
-   * Creates a new custom weapon type with the current search term.
+   * Creates a new custom weapon type with the provided name, specialist
+   * proficiency rules, and master proficiency rules.
    */
-  const handleCreate = useCallback(async () => {
-    const name = search.trim()
-    if (!name || creating) return
+  const handleCreate = useCallback(
+    async (data: {
+      weapon_type_name: string
+      specialist_proficiency_rules: string
+      master_proficiency_rules: string
+    }) => {
+      const name = data.weapon_type_name.trim()
+      if (!name || creating) return
 
-    setCreating(true)
+      setCreating(true)
 
-    try {
-      const newType = await addWeaponType({
-        custom: true,
-        weapon_type_name: name
-      })
+      try {
+        const newType = await addWeaponType({
+          custom: true,
+          weapon_type_name: name,
+          specialist_proficiency_rules:
+            data.specialist_proficiency_rules || null,
+          master_proficiency_rules: data.master_proficiency_rules || null
+        })
 
-      setWeaponTypes((prev) => ({ ...prev, [newType.id]: newType }))
-      onChange?.(newType.id)
-      setSearch('')
-      setOpen(false)
-      toast.success(WEAPON_TYPE_CREATED_MESSAGE())
-    } catch (error) {
-      console.error('Weapon Type Create Error:', error)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setCreating(false)
-    }
-  }, [search, creating, onChange, toast])
+        setWeaponTypes((prev) => ({ ...prev, [newType.id]: newType }))
+        onChange?.(newType.id)
+        setSearch('')
+        setCreateDialogOpen(false)
+        toast.success(WEAPON_TYPE_CREATED_MESSAGE())
+      } catch (error) {
+        console.error('Weapon Type Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
+      }
+    },
+    [creating, onChange, toast]
+  )
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -151,7 +182,7 @@ export function SelectWeaponType({
                   type="button"
                   className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
                   disabled={creating}
-                  onClick={handleCreate}>
+                  onClick={openCreateDialog}>
                   <Plus className="h-4 w-4" />
                   {creating ? 'Creating...' : `Create "${search.trim()}"`}
                 </button>
@@ -182,7 +213,7 @@ export function SelectWeaponType({
               {search.trim() && !exactMatchExists && (
                 <CommandItem
                   value={`__create__${search.trim()}`}
-                  onSelect={handleCreate}
+                  onSelect={openCreateDialog}
                   disabled={creating}>
                   <Plus className="h-4 w-4" />
                   {creating ? 'Creating...' : `Create "${search.trim()}"`}
@@ -192,6 +223,19 @@ export function SelectWeaponType({
           </CommandList>
         </Command>
       </PopoverContent>
+
+      <WeaponTypeDialog
+        key={`create-weapon-type-${createDialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={creating}
+        initialName={createDialogName}
+        title="Create Custom Weapon Type"
+        description="A new instrument of survival takes form."
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
     </Popover>
   )
 }

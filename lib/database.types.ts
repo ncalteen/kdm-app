@@ -34,6 +34,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      ability_impairment: {
+        Row: {
+          ability_impairment_name: string
+          created_at: string
+          custom: boolean
+          id: string
+          rules: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ability_impairment_name: string
+          created_at?: string
+          custom?: boolean
+          id?: string
+          rules?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ability_impairment_name?: string
+          created_at?: string
+          custom?: boolean
+          id?: string
+          rules?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ability_impairment_shared_user: {
+        Row: {
+          ability_impairment_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Insert: {
+          ability_impairment_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Update: {
+          ability_impairment_id?: string
+          shared_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ability_impairment_shared_user_ability_impairment_id_fkey"
+            columns: ["ability_impairment_id"]
+            isOneToOne: false
+            referencedRelation: "ability_impairment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       character: {
         Row: {
           character_name: string
@@ -3771,6 +3827,45 @@ export type Database = {
           },
         ]
       }
+      survivor_ability_impairment: {
+        Row: {
+          ability_impairment_id: string
+          created_at: string
+          id: string
+          survivor_id: string
+          updated_at: string
+        }
+        Insert: {
+          ability_impairment_id: string
+          created_at?: string
+          id?: string
+          survivor_id: string
+          updated_at?: string
+        }
+        Update: {
+          ability_impairment_id?: string
+          created_at?: string
+          id?: string
+          survivor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survivor_ability_impairment_ability_impairment_id_fkey"
+            columns: ["ability_impairment_id"]
+            isOneToOne: false
+            referencedRelation: "ability_impairment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_ability_impairment_survivor_id_fkey"
+            columns: ["survivor_id"]
+            isOneToOne: false
+            referencedRelation: "survivor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       survivor_cursed_gear: {
         Row: {
           created_at: string
@@ -4199,6 +4294,10 @@ export type Database = {
       initialize_user_settings: {
         Args: { p_user_id: string; p_username: string }
         Returns: undefined
+      }
+      is_ability_impairment_owner: {
+        Args: { record_id: string }
+        Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
       is_character_owner: { Args: { record_id: string }; Returns: boolean }

@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomAbilityImpairmentsCard } from '@/components/custom/custom-ability-impairments-card'
 import { CustomCharactersCard } from '@/components/custom/custom-characters-card'
 import { CustomCollectiveCognitionRewardsCard } from '@/components/custom/custom-collective-cognition-rewards-card'
 import { CustomDisordersCard } from '@/components/custom/custom-disorders-card'
@@ -359,7 +360,10 @@ export function UserCard({
               <CustomFightingArtsCard local={local} />
               <CustomSecretFightingArtsCard local={local} />
             </div>
-            <CustomDisordersCard local={local} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomDisordersCard local={local} />
+              <CustomAbilityImpairmentsCard local={local} />
+            </div>
           </div>
         </TabsContent>
         <TabsContent value="monsters">

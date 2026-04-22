@@ -1,6 +1,6 @@
 'use client'
 
-import { CreateCustomMilestoneDialog } from '@/components/settlement/milestones/create-custom-milestone-dialog'
+import { MilestoneDialog } from '@/components/custom/dialogs/milestone-dialog'
 import { MilestoneItem } from '@/components/settlement/milestones/milestone-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -301,7 +301,12 @@ export function MilestonesCard({
    * adds it to the settlement.
    */
   const handleCreate = useCallback(
-    async (data: { milestone_name: string; event_name: string }) => {
+    async (data: {
+      milestone_name: string
+      event_name: string
+      requirements: string
+      rules: string
+    }) => {
       if (creating || !selectedSettlement) return
 
       setCreating(true)
@@ -311,6 +316,8 @@ export function MilestonesCard({
           custom: true,
           milestone_name: data.milestone_name,
           event_name: data.event_name,
+          requirements: data.requirements || null,
+          rules: data.rules || null,
           campaign_types: []
         })
 
@@ -484,13 +491,17 @@ export function MilestonesCard({
         </div>
       </CardContent>
 
-      <CreateCustomMilestoneDialog
+      <MilestoneDialog
         key={dialogKey}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onCreate={handleCreate}
-        creating={creating}
+        onSave={handleCreate}
+        saving={creating}
         initialName={search.trim()}
+        title="Create Custom Milestone"
+        description="A new landmark on the path through the darkness."
+        saveLabel="Create"
+        savingLabel="Creating..."
       />
     </Card>
   )

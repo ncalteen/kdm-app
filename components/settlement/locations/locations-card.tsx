@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { LocationItem } from '@/components/settlement/locations/location-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -73,6 +74,9 @@ export function LocationsCard({
   const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createDialogName, setCreateDialogName] = useState('')
+  const [createDialogKey, setCreateDialogKey] = useState(0)
 
   // Available locations for the select dropdown (fetched once per settlement).
   const [availableLocations, setAvailableLocations] = useState<{
@@ -310,80 +314,103 @@ export function LocationsCard({
   )
 
   /**
+   * Open Create Dialog
+   *
+   * Closes the add popover and opens the custom item dialog with the current
+   * search term pre-filled as the name.
+   */
+  const openCreateDialog = useCallback(() => {
+    const name = search.trim()
+    if (!name || !selectedSettlement) return
+
+    setCreateDialogName(name)
+    setCreateDialogKey((k) => k + 1)
+    setAddOpen(false)
+    setCreateDialogOpen(true)
+  }, [search, selectedSettlement])
+
+  /**
    * Handle Create Custom Location
    *
-   * Creates a new custom location with the current search term, adds it to
-   * available locations, then links it to the settlement.
+   * Creates a new custom location with the provided name and rules, adds it
+   * to available locations, then links it to the settlement.
    */
-  const handleCreate = useCallback(async () => {
-    const name = search.trim()
-    if (!name || creating || !selectedSettlement) return
+  const handleCreate = useCallback(
+    async (data: { name: string; rules: string }) => {
+      const name = data.name.trim()
+      if (!name || creating || !selectedSettlement) return
 
-    setCreating(true)
+      setCreating(true)
 
-    try {
-      const newLocation = await addLocation({
-        custom: true,
-        location_name: name
-      })
+      try {
+        const newLocation = await addLocation({
+          custom: true,
+          location_name: name,
+          rules: data.rules || null
+        })
 
-      setAvailableLocations((prev) => ({
-        ...prev,
-        [newLocation.id]: newLocation
-      }))
+        setAvailableLocations((prev) => ({
+          ...prev,
+          [newLocation.id]: newLocation
+        }))
 
-      setSearch('')
-      setAddOpen(false)
-      toast.success(LOCATION_CREATED_MESSAGE())
+        setSearch('')
+        setCreateDialogOpen(false)
+        toast.success(LOCATION_CREATED_MESSAGE())
 
-      // Add to settlement immediately
-      const tempId = `temp-${Date.now()}`
-      const optimisticRow: SettlementDetail['locations'][0] = {
-        id: tempId,
-        location_id: newLocation.id,
-        location_name: newLocation.location_name,
-        unlocked: false
+        // Add to settlement immediately
+        const tempId = `temp-${Date.now()}`
+        const optimisticRow: SettlementDetail['locations'][0] = {
+          id: tempId,
+          location_id: newLocation.id,
+          location_name: newLocation.location_name,
+          unlocked: false
+        }
+        const updatedLocations = [
+          ...selectedSettlement.locations,
+          optimisticRow
+        ]
+
+        setSelectedSettlement({
+          ...selectedSettlement,
+          locations: updatedLocations
+        })
+
+        addSettlementLocations([newLocation.id], selectedSettlement.id)
+          .then((row) => {
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    locations: prev.locations.map((l) =>
+                      l.id === tempId ? { ...l, id: row[0].id } : l
+                    )
+                  }
+                : null
+            )
+            toast.success(LOCATION_UPDATED_MESSAGE())
+          })
+          .catch((err: unknown) => {
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    locations: prev.locations.filter((l) => l.id !== tempId)
+                  }
+                : null
+            )
+            console.error('Location Add Error:', err)
+            toast.error(ERROR_MESSAGE())
+          })
+      } catch (error) {
+        console.error('Location Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
       }
-      const updatedLocations = [...selectedSettlement.locations, optimisticRow]
-
-      setSelectedSettlement({
-        ...selectedSettlement,
-        locations: updatedLocations
-      })
-
-      addSettlementLocations([newLocation.id], selectedSettlement.id)
-        .then((row) => {
-          setSelectedSettlement((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  locations: prev.locations.map((l) =>
-                    l.id === tempId ? { ...l, id: row[0].id } : l
-                  )
-                }
-              : null
-          )
-          toast.success(LOCATION_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
-          setSelectedSettlement((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  locations: prev.locations.filter((l) => l.id !== tempId)
-                }
-              : null
-          )
-          console.error('Location Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
-    } catch (error) {
-      console.error('Location Create Error:', error)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setCreating(false)
-    }
-  }, [search, creating, selectedSettlement, setSelectedSettlement, toast])
+    },
+    [creating, selectedSettlement, setSelectedSettlement, toast]
+  )
 
   return (
     <Card className="p-0 border-1 gap-0">
@@ -416,7 +443,7 @@ export function LocationsCard({
                         type="button"
                         className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
                         disabled={creating}
-                        onClick={handleCreate}>
+                        onClick={openCreateDialog}>
                         <Plus className="h-4 w-4" />
                         {creating ? 'Creating...' : `Create "${search.trim()}"`}
                       </button>
@@ -441,7 +468,7 @@ export function LocationsCard({
                     {search.trim() && !exactMatchExists && (
                       <CommandItem
                         value={`__create__${search.trim()}`}
-                        onSelect={handleCreate}
+                        onSelect={openCreateDialog}
                         disabled={creating}>
                         <Plus className="h-4 w-4" />
                         {creating ? 'Creating...' : `Create "${search.trim()}"`}
@@ -486,6 +513,21 @@ export function LocationsCard({
           </div>
         </div>
       </CardContent>
+
+      <CustomItemDialog
+        key={`create-location-${createDialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={creating}
+        initialName={createDialogName}
+        title="Create Custom Location"
+        description="A new refuge emerges from the darkness."
+        nameLabel="Location Name"
+        namePlaceholder="Enter location name"
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
     </Card>
   )
 }

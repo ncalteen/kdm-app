@@ -1,6 +1,6 @@
 'use client'
 
-import { CreateCustomPrincipleDialog } from '@/components/settlement/principles/create-custom-principle-dialog'
+import { PrincipleDialog } from '@/components/custom/dialogs/principle-dialog'
 import { PrincipleItem } from '@/components/settlement/principles/principle-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -347,6 +347,8 @@ export function PrinciplesCard({
       principle_name: string
       option_1_name: string
       option_2_name: string
+      option_1_rules: string
+      option_2_rules: string
     }) => {
       if (creating || !selectedSettlement) return
 
@@ -358,6 +360,8 @@ export function PrinciplesCard({
           principle_name: data.principle_name,
           option_1_name: data.option_1_name,
           option_2_name: data.option_2_name,
+          option_1_rules: data.option_1_rules || null,
+          option_2_rules: data.option_2_rules || null,
           campaign_types: []
         })
 
@@ -535,13 +539,17 @@ export function PrinciplesCard({
         </div>
       </CardContent>
 
-      <CreateCustomPrincipleDialog
+      <PrincipleDialog
         key={dialogKey}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onCreate={handleCreate}
-        creating={creating}
+        onSave={handleCreate}
+        saving={creating}
         initialName={search.trim()}
+        title="Create Custom Principle"
+        description="A new tenet takes shape in the lantern's light."
+        saveLabel="Create"
+        savingLabel="Creating..."
       />
     </Card>
   )

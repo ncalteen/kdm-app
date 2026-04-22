@@ -1,6 +1,6 @@
 'use client'
 
-import { CreateCustomKnowledgeDialog } from '@/components/settlement/arc/create-custom-knowledge-dialog'
+import { KnowledgeDialog } from '@/components/custom/dialogs/knowledge-dialog'
 import { KnowledgeItem } from '@/components/settlement/arc/knowledge-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,7 @@ import {
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { addKnowledge, getKnowledges } from '@/lib/dal/knowledge'
+import { getPhilosophies } from '@/lib/dal/philosophy'
 import {
   addSettlementKnowledges,
   removeSettlementKnowledge
@@ -32,6 +33,7 @@ import {
 } from '@/lib/messages'
 import {
   KnowledgeDetail,
+  PhilosophyDetail,
   SettlementDetail,
   SettlementStateSetter
 } from '@/lib/types'
@@ -79,6 +81,11 @@ export function KnowledgesCard({
     [key: string]: KnowledgeDetail
   }>({})
 
+  // Available philosophies for the create dialog dropdown.
+  const [availablePhilosophies, setAvailablePhilosophies] = useState<{
+    [key: string]: PhilosophyDetail
+  }>({})
+
   // Track the previous settlement ID to reset state on settlement change.
   const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
     selectedSettlement?.id ?? null
@@ -96,17 +103,19 @@ export function KnowledgesCard({
 
     let cancelled = false
 
-    getKnowledges()
-      .then((knowledges) => {
+    Promise.all([getKnowledges(), getPhilosophies()])
+      .then(([knowledges, philosophies]) => {
         if (cancelled) return
 
         setAvailableKnowledges(knowledges)
+        setAvailablePhilosophies(philosophies)
         setHasFetched(true)
       })
       .catch((err: unknown) => {
         if (cancelled) return
 
         setAvailableKnowledges({})
+        setAvailablePhilosophies({})
         setHasFetched(true)
 
         console.error('Knowledges Fetch Error:', err)
@@ -262,7 +271,13 @@ export function KnowledgesCard({
    * adds it to the settlement.
    */
   const handleCreate = useCallback(
-    async (data: { knowledge_name: string; philosophy_id: string | null }) => {
+    async (data: {
+      knowledge_name: string
+      philosophy_id: string | null
+      rules: string
+      observation_conditions: string
+      observation_rank_up_milestone: number | null
+    }) => {
       if (creating || !selectedSettlement) return
 
       setCreating(true)
@@ -271,7 +286,10 @@ export function KnowledgesCard({
         const newKnowledge = await addKnowledge({
           custom: true,
           knowledge_name: data.knowledge_name,
-          philosophy_id: data.philosophy_id
+          philosophy_id: data.philosophy_id,
+          rules: data.rules || null,
+          observation_conditions: data.observation_conditions || null,
+          observation_rank_up_milestone: data.observation_rank_up_milestone
         })
 
         setAvailableKnowledges((prev) => ({
@@ -451,13 +469,18 @@ export function KnowledgesCard({
         </div>
       </CardContent>
 
-      <CreateCustomKnowledgeDialog
+      <KnowledgeDialog
         key={dialogKey}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onCreate={handleCreate}
-        creating={creating}
+        onSave={handleCreate}
+        saving={creating}
+        philosophies={availablePhilosophies}
         initialName={search.trim()}
+        title="Create Custom Knowledge"
+        description="New knowledge illuminates the settlement."
+        saveLabel="Create"
+        savingLabel="Creating..."
       />
     </Card>
   )

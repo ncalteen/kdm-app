@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -30,11 +31,7 @@ import {
   SURVIVOR_DISORDER_REMOVED_MESSAGE,
   SURVIVOR_DISORDER_UPDATED_MESSAGE
 } from '@/lib/messages'
-import {
-  DisorderDetail,
-  SurvivorDetail,
-  SurvivorsStateSetter
-} from '@/lib/types'
+import { DisorderDetail, SurvivorDetail } from '@/lib/types'
 import { Plus, PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -48,8 +45,6 @@ interface DisordersCardProps {
   local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
-  /** Set Survivors */
-  setSurvivors: SurvivorsStateSetter
 }
 
 /**
@@ -60,8 +55,7 @@ interface DisordersCardProps {
  */
 export function DisordersCard({
   local,
-  selectedSurvivor,
-  setSurvivors
+  selectedSurvivor
 }: DisordersCardProps): ReactElement {
   const { toast } = useToast(local)
 
@@ -76,6 +70,9 @@ export function DisordersCard({
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createDialogName, setCreateDialogName] = useState('')
+  const [createDialogKey, setCreateDialogKey] = useState(0)
 
   if (prevSurvivor !== selectedSurvivor) {
     setPrevSurvivor(selectedSurvivor)
@@ -113,36 +110,23 @@ export function DisordersCard({
       const optimisticItem: DisorderDetail = {
         id: disorderId,
         custom: detail.custom,
-        disorder_name: detail.disorder_name
+        disorder_name: detail.disorder_name,
+        rules: detail.rules
       }
       const oldDisorders = [...disorders]
 
       setDisorders([...disorders, optimisticItem])
-      setSurvivors((prev) =>
-        prev.map((s) =>
-          s.id === selectedSurvivor.id
-            ? { ...s, disorders: [...s.disorders, optimisticItem] }
-            : s
-        )
-      )
 
       addSurvivorDisorder(selectedSurvivor.id, disorderId)
         .then(() => toast.success(SURVIVOR_DISORDER_UPDATED_MESSAGE(true)))
         .catch((error: unknown) => {
           setDisorders(oldDisorders)
-          setSurvivors((prev) =>
-            prev.map((s) =>
-              s.id === selectedSurvivor.id
-                ? { ...s, disorders: oldDisorders }
-                : s
-            )
-          )
 
           console.error('Disorder Add Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [availableDisorders, disorders, selectedSurvivor, setSurvivors, toast]
+    [availableDisorders, disorders, selectedSurvivor, toast]
   )
 
   /**
@@ -161,29 +145,17 @@ export function DisordersCard({
       const updated = disorders.filter((_, i) => i !== index)
 
       setDisorders(updated)
-      setSurvivors((prev) =>
-        prev.map((s) =>
-          s.id === selectedSurvivor.id ? { ...s, disorders: updated } : s
-        )
-      )
 
       removeSurvivorDisorder(selectedSurvivor.id, removed.id)
         .then(() => toast.success(SURVIVOR_DISORDER_REMOVED_MESSAGE()))
         .catch((error: unknown) => {
           setDisorders(oldDisorders)
-          setSurvivors((prev) =>
-            prev.map((s) =>
-              s.id === selectedSurvivor.id
-                ? { ...s, disorders: oldDisorders }
-                : s
-            )
-          )
 
           console.error('Disorder Remove Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [disorders, selectedSurvivor, setSurvivors, toast]
+    [disorders, selectedSurvivor, toast]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -192,76 +164,89 @@ export function DisordersCard({
   )
 
   /**
-   * Handle Create Custom Disorder
+   * Open Create Dialog
    *
-   * Creates a new custom disorder with the current search term, adds it to
-   * the available disorders, then assigns it to the survivor.
+   * Closes the add popover and opens the custom item dialog with the current
+   * search term pre-filled as the name.
    */
-  const handleCreate = useCallback(async () => {
+  const openCreateDialog = useCallback(() => {
     const name = search.trim()
-    if (!name || creating || !selectedSurvivor?.id) return
+    if (!name || !selectedSurvivor?.id) return
 
     if (disorders.length >= MAX_DISORDERS) {
       toast.error(SURVIVOR_DISORDER_LIMIT_EXCEEDED_ERROR_MESSAGE())
       return
     }
 
-    setCreating(true)
+    setCreateDialogName(name)
+    setCreateDialogKey((k) => k + 1)
+    setAddOpen(false)
+    setCreateDialogOpen(true)
+  }, [search, selectedSurvivor?.id, disorders.length, toast])
 
-    try {
-      const newDisorder = await addDisorder({
-        custom: true,
-        disorder_name: name
-      })
+  /**
+   * Handle Create Custom Disorder
+   *
+   * Creates a new custom disorder with the provided name and rules, adds it
+   * to the available disorders, then assigns it to the survivor.
+   */
+  const handleCreate = useCallback(
+    async (data: { name: string; rules: string }) => {
+      if (creating || !selectedSurvivor?.id) return
+      const name = data.name.trim()
+      if (!name) return
 
-      setAvailableDisorders((prev) => ({
-        ...prev,
-        [newDisorder.id]: newDisorder
-      }))
-
-      setSearch('')
-      setAddOpen(false)
-      toast.success(DISORDER_CREATED_MESSAGE())
-
-      // Add to survivor immediately with the data we already have
-      const optimisticItem: DisorderDetail = {
-        id: newDisorder.id,
-        custom: newDisorder.custom,
-        disorder_name: newDisorder.disorder_name
+      if (disorders.length >= MAX_DISORDERS) {
+        toast.error(SURVIVOR_DISORDER_LIMIT_EXCEEDED_ERROR_MESSAGE())
+        return
       }
-      const oldDisorders = [...disorders]
 
-      setDisorders([...disorders, optimisticItem])
-      setSurvivors((prev) =>
-        prev.map((s) =>
-          s.id === selectedSurvivor.id
-            ? { ...s, disorders: [...s.disorders, optimisticItem] }
-            : s
-        )
-      )
+      setCreating(true)
 
-      addSurvivorDisorder(selectedSurvivor.id, newDisorder.id)
-        .then(() => toast.success(SURVIVOR_DISORDER_UPDATED_MESSAGE(true)))
-        .catch((error: unknown) => {
-          setDisorders(oldDisorders)
-          setSurvivors((prev) =>
-            prev.map((s) =>
-              s.id === selectedSurvivor.id
-                ? { ...s, disorders: oldDisorders }
-                : s
-            )
-          )
-
-          console.error('Disorder Add Error:', error)
-          toast.error(ERROR_MESSAGE())
+      try {
+        const newDisorder = await addDisorder({
+          custom: true,
+          disorder_name: name,
+          rules: data.rules || null
         })
-    } catch (error) {
-      console.error('Disorder Create Error:', error)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setCreating(false)
-    }
-  }, [search, creating, selectedSurvivor, disorders, setSurvivors, toast])
+
+        setAvailableDisorders((prev) => ({
+          ...prev,
+          [newDisorder.id]: newDisorder
+        }))
+
+        setSearch('')
+        setCreateDialogOpen(false)
+        toast.success(DISORDER_CREATED_MESSAGE())
+
+        // Add to survivor immediately with the data we already have
+        const optimisticItem: DisorderDetail = {
+          id: newDisorder.id,
+          custom: newDisorder.custom,
+          disorder_name: newDisorder.disorder_name,
+          rules: newDisorder.rules
+        }
+        const oldDisorders = [...disorders]
+
+        setDisorders([...disorders, optimisticItem])
+
+        addSurvivorDisorder(selectedSurvivor.id, newDisorder.id)
+          .then(() => toast.success(SURVIVOR_DISORDER_UPDATED_MESSAGE(true)))
+          .catch((error: unknown) => {
+            setDisorders(oldDisorders)
+
+            console.error('Disorder Add Error:', error)
+            toast.error(ERROR_MESSAGE())
+          })
+      } catch (error) {
+        console.error('Disorder Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
+      }
+    },
+    [creating, selectedSurvivor, disorders, toast]
+  )
 
   return (
     <Card className="p-2 border-0 gap-0">
@@ -293,7 +278,7 @@ export function DisordersCard({
                         type="button"
                         className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
                         disabled={creating}
-                        onClick={handleCreate}>
+                        onClick={openCreateDialog}>
                         <Plus className="h-4 w-4" />
                         {creating ? 'Creating...' : `Create "${search.trim()}"`}
                       </button>
@@ -325,7 +310,7 @@ export function DisordersCard({
                     {search.trim() && !exactMatchExists && (
                       <CommandItem
                         value={`__create__${search.trim()}`}
-                        onSelect={handleCreate}
+                        onSelect={openCreateDialog}
                         disabled={creating}>
                         <Plus className="h-4 w-4" />
                         {creating ? 'Creating...' : `Create "${search.trim()}"`}
@@ -359,6 +344,21 @@ export function DisordersCard({
           ))}
         </div>
       </CardContent>
+
+      <CustomItemDialog
+        key={`create-disorder-${createDialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={creating}
+        initialName={createDialogName}
+        title="Create Custom Disorder"
+        description="A new affliction takes root in the darkness."
+        nameLabel="Disorder Name"
+        namePlaceholder="Enter disorder name"
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
     </Card>
   )
 }

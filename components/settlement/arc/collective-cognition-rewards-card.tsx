@@ -1,7 +1,7 @@
 'use client'
 
+import { CollectiveCognitionRewardDialog } from '@/components/custom/dialogs/collective-cognition-reward-dialog'
 import { RewardItem } from '@/components/settlement/arc/collective-cognition-reward-item'
-import { CreateCustomCCRewardDialog } from '@/components/settlement/arc/create-custom-cc-reward-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -339,7 +339,11 @@ export function CollectiveCognitionRewardsCard({
    * available list, then adds it to the settlement.
    */
   const handleCreate = useCallback(
-    async (data: { reward_name: string; collective_cognition: number }) => {
+    async (data: {
+      reward_name: string
+      collective_cognition: number
+      rules: string
+    }) => {
       if (creating || !selectedSettlement) return
 
       setCreating(true)
@@ -348,7 +352,8 @@ export function CollectiveCognitionRewardsCard({
         const newReward = await addCollectiveCognitionReward({
           custom: true,
           reward_name: data.reward_name,
-          collective_cognition: data.collective_cognition
+          collective_cognition: data.collective_cognition,
+          rules: data.rules || null
         })
 
         setAvailableRewards((prev) => ({
@@ -546,13 +551,17 @@ export function CollectiveCognitionRewardsCard({
         </div>
       </CardContent>
 
-      <CreateCustomCCRewardDialog
+      <CollectiveCognitionRewardDialog
         key={dialogKey}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onCreate={handleCreate}
-        creating={creating}
+        onSave={handleCreate}
+        saving={creating}
         initialName={search.trim()}
+        title="Create Custom Reward"
+        description="A new collective cognition reward is forged."
+        saveLabel="Create"
+        savingLabel="Creating..."
       />
     </Card>
   )

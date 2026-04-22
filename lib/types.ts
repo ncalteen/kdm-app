@@ -36,6 +36,17 @@ export type CampaignTemplate = {
 }
 
 /**
+ * Ability/Impairment Detail
+ *
+ * Used throughout the app to represent an abilitiy/impairment object. Includes
+ * additional information not present in the ability_impairment table.
+ */
+export type AbilityImpairmentDetail = Omit<
+  Tables<'ability_impairment'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {}
+
+/**
  * Character Detail
  *
  * Used throughout the app to represent a character object. Includes additional
@@ -808,6 +819,17 @@ export type StrainMilestoneDetail = Omit<
  * Includes additional information not present in the survivor table.
  */
 export type SurvivorDetail = Tables<'survivor'> & {
+  /** Abilities and Impairments */
+  abilities_impairments: {
+    /** Ability or Impairment Name */
+    ability_impairment_name: string
+    /** Custom */
+    custom: boolean
+    /** Ability or Impairment ID */
+    id: string
+    /** Rules */
+    rules: string
+  }[]
   /** Cursed Gear */
   cursed_gear: {
     /** Cursed Gear Name */
@@ -823,6 +845,8 @@ export type SurvivorDetail = Tables<'survivor'> & {
     disorder_name: string
     /** Disorder ID */
     id: string
+    /** Rules */
+    rules: string
   }[]
   /** Survivor Embarked on Hunt/Showdown */
   embarked: boolean

@@ -7,6 +7,14 @@ import {
 } from '@/lib/enums'
 
 /**
+ * Ability/Impairment Created
+ *
+ * @returns Ability/Impairment Created Message
+ */
+export const ABILITY_IMPAIRMENT_CREATED_MESSAGE = () =>
+  'A new ability/impairment emerges from the darkness.'
+
+/**
  * Ability/Impairment Removed
  *
  * @returns Ability/Impairment Removed Message

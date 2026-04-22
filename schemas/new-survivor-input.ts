@@ -9,7 +9,7 @@ import { z } from 'zod'
  */
 export const NewSurvivorInputSchema = z.object({
   /** Abilities and Impairments */
-  abilitiesAndImpairments: z
+  abilityImpairmentIds: z
     .array(
       z.string().min(1, 'A nameless ability/impairment cannot be recorded.')
     )

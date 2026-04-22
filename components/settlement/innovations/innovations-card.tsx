@@ -1,5 +1,6 @@
 'use client'
 
+import { InnovationDialog } from '@/components/custom/dialogs/innovation-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -83,6 +84,9 @@ export function InnovationsCard({
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createDialogName, setCreateDialogName] = useState('')
+  const [createDialogKey, setCreateDialogKey] = useState(0)
 
   if (prevSettlement !== selectedSettlement) {
     setPrevSettlement(selectedSettlement)
@@ -233,83 +237,104 @@ export function InnovationsCard({
   )
 
   /**
+   * Open Create Dialog
+   *
+   * Closes the add popover and opens the innovation dialog with the current
+   * search term pre-filled as the name.
+   */
+  const openCreateDialog = useCallback(() => {
+    const name = search.trim()
+    if (!name || !selectedSettlement) return
+
+    setCreateDialogName(name)
+    setCreateDialogKey((k) => k + 1)
+    setAddOpen(false)
+    setCreateDialogOpen(true)
+  }, [search, selectedSettlement])
+
+  /**
    * Handle Create Custom Innovation
    */
-  const handleCreate = useCallback(async () => {
-    const name = search.trim()
-    if (!name || creating || !selectedSettlement) return
+  const handleCreate = useCallback(
+    async (data: {
+      innovation_name: string
+      rules: string
+      consequences: string
+      benefits: string
+    }) => {
+      const name = data.innovation_name.trim()
+      if (!name || creating || !selectedSettlement) return
 
-    setCreating(true)
+      setCreating(true)
 
-    try {
-      const newInnovation = await addInnovation({
-        custom: true,
-        innovation_name: name
-      })
+      try {
+        const newInnovation = await addInnovation({
+          custom: true,
+          innovation_name: name,
+          rules: data.rules || null,
+          consequences: data.consequences || null,
+          benefits: data.benefits || null
+        })
 
-      setAvailableInnovations((prev) => ({
-        ...prev,
-        [newInnovation.id]: newInnovation
-      }))
+        setAvailableInnovations((prev) => ({
+          ...prev,
+          [newInnovation.id]: newInnovation
+        }))
 
-      setSearch('')
-      setAddOpen(false)
-      toast.success(INNOVATION_CREATED_MESSAGE())
+        setSearch('')
+        setCreateDialogOpen(false)
+        toast.success(INNOVATION_CREATED_MESSAGE())
 
-      // Add to settlement immediately
-      const optimisticItem: InnovationItem = {
-        id: `temp-${Date.now()}`,
-        innovation_id: newInnovation.id,
-        innovation_name: newInnovation.innovation_name
-      }
-      const oldInnovations = [...innovations]
+        // Add to settlement immediately
+        const optimisticItem: InnovationItem = {
+          id: `temp-${Date.now()}`,
+          innovation_id: newInnovation.id,
+          innovation_name: newInnovation.innovation_name
+        }
+        const oldInnovations = [...innovations]
 
-      setInnovations([...innovations, optimisticItem])
+        setInnovations([...innovations, optimisticItem])
 
-      addSettlementInnovations([newInnovation.id], selectedSettlement.id)
-        .then((createdInnovations) => {
-          const hydratedItem = createdInnovations[0] ?? optimisticItem
+        addSettlementInnovations([newInnovation.id], selectedSettlement.id)
+          .then((createdInnovations) => {
+            const hydratedItem = createdInnovations[0] ?? optimisticItem
 
-          setInnovations((prev) =>
-            prev.map((item) =>
-              item.id === optimisticItem.id ? hydratedItem : item
+            setInnovations((prev) =>
+              prev.map((item) =>
+                item.id === optimisticItem.id ? hydratedItem : item
+              )
             )
-          )
 
-          toast.success(INNOVATION_UPDATED_MESSAGE())
+            toast.success(INNOVATION_UPDATED_MESSAGE())
 
-          setSelectedSettlement((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  innovations: [...prev.innovations, hydratedItem].filter(
-                    (inn) =>
-                      inn.id !== optimisticItem.id || inn.id === hydratedItem.id
-                  )
-                }
-              : null
-          )
-        })
-        .catch((error: unknown) => {
-          setInnovations(oldInnovations)
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    innovations: [...prev.innovations, hydratedItem].filter(
+                      (inn) =>
+                        inn.id !== optimisticItem.id ||
+                        inn.id === hydratedItem.id
+                    )
+                  }
+                : null
+            )
+          })
+          .catch((error: unknown) => {
+            setInnovations(oldInnovations)
 
-          console.error('Innovation Add Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
-    } catch (error) {
-      console.error('Innovation Create Error:', error)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setCreating(false)
-    }
-  }, [
-    search,
-    creating,
-    innovations,
-    selectedSettlement,
-    setSelectedSettlement,
-    toast
-  ])
+            console.error('Innovation Add Error:', error)
+            toast.error(ERROR_MESSAGE())
+          })
+      } catch (error) {
+        console.error('Innovation Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
+      }
+    },
+    [creating, innovations, selectedSettlement, setSelectedSettlement, toast]
+  )
 
   return (
     <Card className="p-0 border-1 gap-0">
@@ -341,7 +366,7 @@ export function InnovationsCard({
                         type="button"
                         className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
                         disabled={creating}
-                        onClick={handleCreate}>
+                        onClick={openCreateDialog}>
                         <Plus className="h-4 w-4" />
                         {creating ? 'Creating...' : `Create "${search.trim()}"`}
                       </button>
@@ -375,7 +400,7 @@ export function InnovationsCard({
                     {search.trim() && !exactMatchExists && (
                       <CommandItem
                         value={`__create__${search.trim()}`}
-                        onSelect={handleCreate}
+                        onSelect={openCreateDialog}
                         disabled={creating}>
                         <Plus className="h-4 w-4" />
                         {creating ? 'Creating...' : `Create "${search.trim()}"`}
@@ -411,6 +436,19 @@ export function InnovationsCard({
           </div>
         </div>
       </CardContent>
+
+      <InnovationDialog
+        key={`create-innovation-${createDialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={creating}
+        initialName={createDialogName}
+        title="Create Custom Innovation"
+        description="A spark of ingenuity illuminates the settlement."
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
     </Card>
   )
 }

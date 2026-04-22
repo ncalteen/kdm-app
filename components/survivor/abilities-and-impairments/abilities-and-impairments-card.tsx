@@ -1,41 +1,49 @@
 'use client'
 
-import {
-  AbilityImpairmentItem,
-  NewAbilityImpairmentItem
-} from '@/components/survivor/abilities-and-impairments/ability-impairment-item'
+import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
 import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
+import {
+  addAbilityImpairment,
+  getAbilityImpairments
+} from '@/lib/dal/ability-impairment'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
+  addSurvivorAbilityImpairment,
+  removeSurvivorAbilityImpairment
+} from '@/lib/dal/survivor-ability-impairment'
+import {
+  ABILITY_IMPAIRMENT_CREATED_MESSAGE,
   ABILITY_IMPAIRMENT_REMOVED_MESSAGE,
   ABILITY_IMPAIRMENT_UPDATED_MESSAGE,
   ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
   SURVIVOR_SKIP_NEXT_HUNT_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import {
-  closestCenter,
-  DndContext,
-  DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy
-} from '@dnd-kit/sortable'
-import { PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useState } from 'react'
+  AbilityImpairmentDetail,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
+import { Plus, PlusIcon, TrashIcon } from 'lucide-react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 
 /**
  * Abilities and Impairments Card Properties
@@ -52,6 +60,10 @@ interface AbilitiesAndImpairmentsCardProps {
 /**
  * Abilities and Impairments Card Component
  *
+ * Displays a survivor's abilities and impairments with a searchable popover
+ * to add from existing records or create new custom ones. Uses the
+ * survivor_ability_impairment junction table for persistence.
+ *
  * @param props Abilities and Impairments Card Properties
  * @returns Abilities and Impairments Card Component
  */
@@ -64,141 +76,188 @@ export function AbilitiesAndImpairmentsCard({
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
-  const [abilitiesImpairments, setAbilitiesImpairments] = useState<string[]>(
+  const [availableItems, setAvailableItems] = useState<{
+    [key: string]: AbilityImpairmentDetail
+  }>({})
+  const [items, setItems] = useState<AbilityImpairmentDetail[]>(
     selectedSurvivor?.abilities_impairments ?? []
   )
   const [skipNextHunt, setSkipNextHunt] = useState<boolean>(
     selectedSurvivor?.skip_next_hunt ?? false
   )
-  const [disabledInputs, setDisabledInputs] = useState<{
-    [key: number]: boolean
-  }>(
-    Object.fromEntries(
-      (selectedSurvivor?.abilities_impairments ?? []).map((_, i) => [i, true])
-    )
-  )
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
+  const [addOpen, setAddOpen] = useState<boolean>(false)
+  const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createDialogName, setCreateDialogName] = useState('')
+  const [createDialogKey, setCreateDialogKey] = useState(0)
 
   if (prevSurvivor !== selectedSurvivor) {
     setPrevSurvivor(selectedSurvivor)
-
-    setAbilitiesImpairments(selectedSurvivor?.abilities_impairments ?? [])
+    setItems([])
     setSkipNextHunt(selectedSurvivor?.skip_next_hunt ?? false)
-    setDisabledInputs(
-      Object.fromEntries(
-        (selectedSurvivor?.abilities_impairments ?? []).map((_, i) => [i, true])
-      )
-    )
   }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates
-    })
-  )
-
-  /**
-   * Handle Ability/Impairment Removal
-   *
-   * @param index Ability Index
-   */
-  const onRemove = useCallback(
-    (index: number) => {
-      const oldAbilitiesImpairments = [...abilitiesImpairments]
-      const updated = [...abilitiesImpairments]
-      updated.splice(index, 1)
-
-      setDisabledInputs((prev) => {
-        const next: { [key: number]: boolean } = {}
-
-        Object.keys(prev).forEach((k) => {
-          const num = parseInt(k)
-          if (num < index) next[num] = prev[num]
-          else if (num > index) next[num - 1] = prev[num]
-        })
-
-        return next
+  // Get the available items when the component mounts
+  useEffect(() => {
+    getAbilityImpairments()
+      .then((data) => setAvailableItems(data))
+      .catch((error) => {
+        console.error('Abilities/Impairments Fetch Error:', error)
       })
+  }, [])
 
-      setAbilitiesImpairments(updated)
-      setSurvivors((prev) =>
-        prev.map((s) =>
-          s.id === selectedSurvivor?.id
-            ? { ...s, abilities_impairments: updated }
-            : s
-        )
-      )
-      setIsAddingNew(false)
-
-      updateSurvivor(selectedSurvivor?.id, { abilities_impairments: updated })
-        .then(() => toast.success(ABILITY_IMPAIRMENT_REMOVED_MESSAGE()))
-        .catch((error) => {
-          console.error('Ability/Impairment Remove Error:', error)
-          setAbilitiesImpairments(oldAbilitiesImpairments)
-          setSurvivors((prev) =>
-            prev.map((s) =>
-              s.id === selectedSurvivor?.id
-                ? { ...s, abilities_impairments: oldAbilitiesImpairments }
-                : s
-            )
-          )
-          toast.error(ERROR_MESSAGE())
-        })
-    },
-    [abilitiesImpairments, selectedSurvivor?.id, setSurvivors, toast]
+  // Update the items when the selected survivor changes
+  useEffect(
+    () => setItems(selectedSurvivor?.abilities_impairments ?? []),
+    [selectedSurvivor]
   )
 
   /**
-   * Handle Ability/Impairment Save
+   * Handle Add Ability/Impairment
    *
-   * @param value Ability/Impairment Value
-   * @param i Ability/Impairment Index (Updates Only)
+   * @param itemId Ability/Impairment ID
    */
-  const onSave = useCallback(
-    (value?: string, i?: number) => {
-      if (!value || value.trim() === '')
-        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('ability/impairment'))
+  const handleAdd = useCallback(
+    (itemId: string) => {
+      if (!selectedSurvivor?.id || !itemId) return
 
-      const oldAbilitiesImpairments = [...abilitiesImpairments]
-      const updated = [...abilitiesImpairments]
+      const detail = availableItems[itemId]
+      if (!detail) return
 
-      if (i !== undefined) {
-        updated[i] = value
-        setDisabledInputs((prev) => ({ ...prev, [i]: true }))
-      } else {
-        updated.push(value)
-        setDisabledInputs((prev) => ({ ...prev, [updated.length - 1]: true }))
-        setIsAddingNew(false)
+      setAddOpen(false)
+      setSearch('')
+
+      const optimisticItem: AbilityImpairmentDetail = {
+        id: itemId,
+        custom: detail.custom,
+        ability_impairment_name: detail.ability_impairment_name,
+        rules: detail.rules ?? null
       }
+      const oldItems = [...items]
 
-      setAbilitiesImpairments(updated)
-      setSurvivors((prev) =>
-        prev.map((s) =>
-          s.id === selectedSurvivor?.id
-            ? { ...s, abilities_impairments: updated }
-            : s
-        )
-      )
+      setItems([...items, optimisticItem])
 
-      updateSurvivor(selectedSurvivor?.id, { abilities_impairments: updated })
-        .then(() =>
-          toast.success(ABILITY_IMPAIRMENT_UPDATED_MESSAGE(i === undefined))
-        )
-        .catch((error) => {
-          console.error('Ability/Impairment Update Error:', error)
-          setAbilitiesImpairments(oldAbilitiesImpairments)
-          setSurvivors((prev) =>
-            prev.map((s) =>
-              s.id === selectedSurvivor?.id
-                ? { ...s, abilities_impairments: oldAbilitiesImpairments }
-                : s
-            )
-          )
+      addSurvivorAbilityImpairment(selectedSurvivor.id, itemId)
+        .then(() => toast.success(ABILITY_IMPAIRMENT_UPDATED_MESSAGE(true)))
+        .catch((error: unknown) => {
+          setItems(oldItems)
+
+          console.error('Ability/Impairment Add Error:', error)
           toast.error(ERROR_MESSAGE())
         })
     },
-    [abilitiesImpairments, selectedSurvivor?.id, setSurvivors, toast]
+    [availableItems, items, selectedSurvivor, toast]
+  )
+
+  /**
+   * Handle Remove Ability/Impairment
+   *
+   * @param index Item Index
+   */
+  const handleRemove = useCallback(
+    (index: number) => {
+      if (!selectedSurvivor?.id) return
+
+      const removed = items[index]
+      if (!removed) return
+
+      const oldItems = [...items]
+      const updated = items.filter((_, i) => i !== index)
+
+      setItems(updated)
+
+      removeSurvivorAbilityImpairment(selectedSurvivor.id, removed.id)
+        .then(() => toast.success(ABILITY_IMPAIRMENT_REMOVED_MESSAGE()))
+        .catch((error: unknown) => {
+          setItems(oldItems)
+
+          console.error('Ability/Impairment Remove Error:', error)
+          toast.error(ERROR_MESSAGE())
+        })
+    },
+    [items, selectedSurvivor, toast]
+  )
+
+  /** Check if an exact match for the search term already exists. */
+  const exactMatchExists = Object.values(availableItems).some(
+    (a) =>
+      a.ability_impairment_name.toLowerCase() === search.trim().toLowerCase()
+  )
+
+  /**
+   * Open Create Dialog
+   *
+   * Closes the add popover and opens the custom item dialog with the current
+   * search term pre-filled as the name.
+   */
+  const openCreateDialog = useCallback(() => {
+    const name = search.trim()
+    if (!name || !selectedSurvivor?.id) return
+
+    setCreateDialogName(name)
+    setCreateDialogKey((k) => k + 1)
+    setAddOpen(false)
+    setCreateDialogOpen(true)
+  }, [search, selectedSurvivor?.id])
+
+  /**
+   * Handle Create Custom Ability/Impairment
+   *
+   * Creates a new custom ability/impairment with the provided name and rules,
+   * adds it to the available items, then assigns it to the survivor.
+   */
+  const handleCreate = useCallback(
+    async (data: { name: string; rules: string }) => {
+      if (creating || !selectedSurvivor?.id) return
+      const name = data.name.trim()
+      if (!name) return
+
+      setCreating(true)
+
+      try {
+        const newItem = await addAbilityImpairment({
+          custom: true,
+          ability_impairment_name: name,
+          rules: data.rules || null
+        })
+
+        setAvailableItems((prev) => ({
+          ...prev,
+          [newItem.id]: newItem
+        }))
+
+        setSearch('')
+        setCreateDialogOpen(false)
+        toast.success(ABILITY_IMPAIRMENT_CREATED_MESSAGE())
+
+        // Add to survivor immediately
+        const optimisticItem: AbilityImpairmentDetail = {
+          id: newItem.id,
+          custom: newItem.custom,
+          ability_impairment_name: newItem.ability_impairment_name,
+          rules: newItem.rules ?? null
+        }
+        const oldItems = [...items]
+
+        setItems([...items, optimisticItem])
+
+        addSurvivorAbilityImpairment(selectedSurvivor.id, newItem.id)
+          .then(() => toast.success(ABILITY_IMPAIRMENT_UPDATED_MESSAGE(true)))
+          .catch((error: unknown) => {
+            setItems(oldItems)
+
+            console.error('Ability/Impairment Add Error:', error)
+            toast.error(ERROR_MESSAGE())
+          })
+      } catch (error) {
+        console.error('Ability/Impairment Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreating(false)
+      }
+    },
+    [creating, selectedSurvivor, items, toast]
   )
 
   /**
@@ -234,119 +293,101 @@ export function AbilitiesAndImpairmentsCard({
     [skipNextHunt, selectedSurvivor?.id, setSurvivors, toast]
   )
 
-  /**
-   * Handle Drag End Event
-   *
-   * @param event Drag End Event
-   */
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-
-    if (over && active.id !== over.id) {
-      const oldIndex = parseInt(active.id.toString())
-      const newIndex = parseInt(over.id.toString())
-      const oldAbilitiesImpairments = [...abilitiesImpairments]
-      const newOrder = arrayMove(abilitiesImpairments, oldIndex, newIndex)
-
-      setAbilitiesImpairments(newOrder)
-      setSurvivors((prev) =>
-        prev.map((s) =>
-          s.id === selectedSurvivor?.id
-            ? { ...s, abilities_impairments: newOrder }
-            : s
-        )
-      )
-      setDisabledInputs((prev) => {
-        const next: { [key: number]: boolean } = {}
-
-        Object.keys(prev).forEach((k) => {
-          const num = parseInt(k)
-          if (num === oldIndex) next[newIndex] = prev[num]
-          else if (num >= newIndex && num < oldIndex) next[num + 1] = prev[num]
-          else if (num <= newIndex && num > oldIndex) next[num - 1] = prev[num]
-          else next[num] = prev[num]
-        })
-
-        return next
-      })
-
-      updateSurvivor(selectedSurvivor?.id, {
-        abilities_impairments: newOrder
-      }).catch((error) => {
-        console.error('Ability/Impairment Reorder Error:', error)
-        setAbilitiesImpairments(oldAbilitiesImpairments)
-        setSurvivors((prev) =>
-          prev.map((s) =>
-            s.id === selectedSurvivor?.id
-              ? { ...s, abilities_impairments: oldAbilitiesImpairments }
-              : s
-          )
-        )
-        toast.error(ERROR_MESSAGE())
-      })
-    }
-  }
-
   return (
     <Card className="p-2 border-0 gap-0">
-      {/* Title */}
       <CardHeader className="p-0">
         <CardTitle className="p-0 text-sm flex flex-row items-center justify-between h-8">
           Abilities & Impairments
-          {!isAddingNew && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddingNew(true)}
-              className="h-6 w-6"
-              disabled={
-                isAddingNew ||
-                Object.values(disabledInputs).some((v) => v === false)
-              }>
-              <PlusIcon />
-            </Button>
-          )}
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-6 w-6">
+                <PlusIcon />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command shouldFilter={true}>
+                <CommandInput
+                  placeholder="Search abilities/impairments..."
+                  value={search}
+                  onValueChange={setSearch}
+                />
+                <CommandList>
+                  <CommandEmpty>
+                    {search.trim() ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                        disabled={creating}
+                        onClick={openCreateDialog}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </button>
+                    ) : (
+                      'No abilities or impairments found.'
+                    )}
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {Object.values(availableItems)
+                      .filter(
+                        (a) => !items.some((existing) => existing.id === a.id)
+                      )
+                      .map((item) => (
+                        <CommandItem
+                          key={item.id}
+                          value={item.ability_impairment_name}
+                          onSelect={() => handleAdd(item.id)}>
+                          {item.ability_impairment_name}
+                          {item.custom && (
+                            <Badge
+                              variant="outline"
+                              className="ml-auto text-xs">
+                              Custom
+                            </Badge>
+                          )}
+                        </CommandItem>
+                      ))}
+                    {search.trim() && !exactMatchExists && (
+                      <CommandItem
+                        value={`__create__${search.trim()}`}
+                        onSelect={openCreateDialog}
+                        disabled={creating}>
+                        <Plus className="h-4 w-4" />
+                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
+                      </CommandItem>
+                    )}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardTitle>
       </CardHeader>
 
-      {/* Abilities/Impairments List */}
       <CardContent className="p-0">
         <div className="flex flex-col">
-          {abilitiesImpairments.length !== 0 && (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}>
-              <SortableContext
-                items={abilitiesImpairments.map((_, index) => index.toString())}
-                strategy={verticalListSortingStrategy}>
-                {abilitiesImpairments.map((ability, index) => (
-                  <AbilityImpairmentItem
-                    key={index}
-                    id={index.toString()}
-                    index={index}
-                    onRemove={onRemove}
-                    isDisabled={!!disabledInputs[index]}
-                    onSave={(value, i) => onSave(value, i)}
-                    onEdit={(index: number) =>
-                      setDisabledInputs((prev) => ({
-                        ...prev,
-                        [index]: false
-                      }))
-                    }
-                    value={ability}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-          )}
-          {isAddingNew && (
-            <NewAbilityImpairmentItem
-              onSave={onSave}
-              onCancel={() => setIsAddingNew(false)}
-            />
-          )}
+          {items.map((item, index) => {
+            console.log(item)
+            return (
+              <div
+                key={`${item.id}-${index}`}
+                className="flex items-center gap-2">
+                <span className="text-sm ml-1 flex-grow">
+                  {item.ability_impairment_name}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={() => handleRemove(index)}>
+                  <TrashIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            )
+          })}
 
           {/* Skip Next Hunt */}
           <div className="flex justify-end mt-2 pr-2">
@@ -365,6 +406,21 @@ export function AbilitiesAndImpairmentsCard({
           </div>
         </div>
       </CardContent>
+
+      <CustomItemDialog
+        key={`create-ability-impairment-${createDialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={creating}
+        initialName={createDialogName}
+        title="Create Custom Ability/Impairment"
+        description="A new trait manifests from the struggle."
+        nameLabel="Ability/Impairment Name"
+        namePlaceholder="Enter ability or impairment name"
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
     </Card>
   )
 }
