@@ -19,7 +19,7 @@ export async function getSettlementQuarries(
   const { data, error } = await supabase
     .from('settlement_quarry')
     .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(monster_name, node, prologue)'
+      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(monster_name, node, prologue, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
     )
     .eq('settlement_id', settlementId)
 
@@ -27,19 +27,38 @@ export async function getSettlementQuarries(
     throw new Error(`Error Fetching Settlement Quarries: ${error.message}`)
 
   return (
-    data?.map((item) => ({
-      collective_cognition_level_1: item.collective_cognition_level_1,
-      collective_cognition_level_2: item.collective_cognition_level_2,
-      collective_cognition_level_3: item.collective_cognition_level_3,
-      collective_cognition_prologue: item.collective_cognition_prologue,
-      id: item.id,
-      monster_name: (item.quarry as unknown as { monster_name: string })
-        .monster_name,
-      node: (item.quarry as unknown as { node: string }).node,
-      prologue: (item.quarry as unknown as { prologue: boolean }).prologue,
-      quarry_id: item.quarry_id,
-      unlocked: item.unlocked
-    })) ?? []
+    data?.map((item) => {
+      const quarry = item.quarry as unknown as {
+        monster_name: string
+        node: string
+        prologue: boolean
+        instinct: string | null
+        basic_action: string | null
+        blind_spot: string | null
+        defeat_outcome: string | null
+        deployment_rules: string | null
+        victory_outcome: string | null
+      }
+
+      return {
+        collective_cognition_level_1: item.collective_cognition_level_1,
+        collective_cognition_level_2: item.collective_cognition_level_2,
+        collective_cognition_level_3: item.collective_cognition_level_3,
+        collective_cognition_prologue: item.collective_cognition_prologue,
+        id: item.id,
+        monster_name: quarry.monster_name,
+        node: quarry.node,
+        prologue: quarry.prologue,
+        quarry_id: item.quarry_id,
+        unlocked: item.unlocked,
+        instinct: quarry.instinct,
+        basic_action: quarry.basic_action,
+        blind_spot: quarry.blind_spot,
+        defeat_outcome: quarry.defeat_outcome,
+        deployment_rules: quarry.deployment_rules,
+        victory_outcome: quarry.victory_outcome
+      }
+    }) ?? []
   )
 }
 

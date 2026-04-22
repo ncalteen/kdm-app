@@ -178,6 +178,7 @@ export function LocationsCard({
         id: tempId,
         location_id: locationId,
         location_name: locationInfo.location_name,
+        rules: locationInfo.rules ?? null,
         unlocked: false
       }
 
@@ -364,6 +365,7 @@ export function LocationsCard({
           id: tempId,
           location_id: newLocation.id,
           location_name: newLocation.location_name,
+          rules: newLocation.rules ?? null,
           unlocked: false
         }
         const updatedLocations = [

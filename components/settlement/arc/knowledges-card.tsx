@@ -168,7 +168,12 @@ export function KnowledgesCard({
       const optimisticRow: SettlementDetail['knowledges'][0] = {
         id: tempId,
         knowledge_id: knowledgeId,
-        knowledge_name: knowledgeInfo.knowledge_name
+        knowledge_name: knowledgeInfo.knowledge_name,
+        philosophy_id: knowledgeInfo.philosophy_id ?? null,
+        rules: knowledgeInfo.rules ?? null,
+        observation_conditions: knowledgeInfo.observation_conditions ?? null,
+        observation_rank_up_milestone:
+          knowledgeInfo.observation_rank_up_milestone ?? null
       }
 
       const updatedKnowledges = [
@@ -306,7 +311,12 @@ export function KnowledgesCard({
         const optimisticRow: SettlementDetail['knowledges'][0] = {
           id: tempId,
           knowledge_id: newKnowledge.id,
-          knowledge_name: newKnowledge.knowledge_name
+          knowledge_name: newKnowledge.knowledge_name,
+          philosophy_id: newKnowledge.philosophy_id ?? null,
+          rules: newKnowledge.rules ?? null,
+          observation_conditions: newKnowledge.observation_conditions ?? null,
+          observation_rank_up_milestone:
+            newKnowledge.observation_rank_up_milestone ?? null
         }
 
         const updatedKnowledges = [

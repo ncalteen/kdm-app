@@ -71,9 +71,6 @@ interface FightingArtsCardProps {
   survivors: SurvivorDetail[]
 }
 
-type FightingArtItem = { id: string; fighting_art_name: string }
-type SecretFightingArtItem = { id: string; secret_fighting_art_name: string }
-
 /**
  * Fighting Arts Card Component
  *
@@ -96,11 +93,11 @@ export function FightingArtsCard({
   }>({})
   const [availableSecretFightingArts, setAvailableSecretFightingArts] =
     useState<{ [key: string]: SecretFightingArtDetail }>({})
-  const [fightingArts, setFightingArts] = useState<FightingArtItem[]>(
+  const [fightingArts, setFightingArts] = useState<FightingArtDetail[]>(
     selectedSurvivor?.fighting_arts ?? []
   )
   const [secretFightingArts, setSecretFightingArts] = useState<
-    SecretFightingArtItem[]
+    SecretFightingArtDetail[]
   >(selectedSurvivor?.secret_fighting_arts ?? [])
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -177,9 +174,11 @@ export function FightingArtsCard({
       const detail = availableFightingArts[fightingArtId]
       if (!detail) return
 
-      const optimisticItem: FightingArtItem = {
+      const optimisticItem: FightingArtDetail = {
         id: fightingArtId,
-        fighting_art_name: detail.fighting_art_name
+        fighting_art_name: detail.fighting_art_name,
+        custom: detail.custom,
+        rules: detail.rules ?? null
       }
       const oldArts = [...fightingArts]
 
@@ -225,9 +224,11 @@ export function FightingArtsCard({
       const detail = availableSecretFightingArts[secretFightingArtId]
       if (!detail) return
 
-      const optimisticItem: SecretFightingArtItem = {
+      const optimisticItem: SecretFightingArtDetail = {
         id: secretFightingArtId,
-        secret_fighting_art_name: detail.secret_fighting_art_name
+        secret_fighting_art_name: detail.secret_fighting_art_name,
+        custom: detail.custom,
+        rules: detail.rules ?? null
       }
       const oldArts = [...secretFightingArts]
 
@@ -453,9 +454,11 @@ export function FightingArtsCard({
         toast.success(FIGHTING_ART_CREATED_MESSAGE())
 
         // Add to survivor immediately
-        const optimisticItem: FightingArtItem = {
+        const optimisticItem: FightingArtDetail = {
           id: newArt.id,
-          fighting_art_name: newArt.fighting_art_name
+          fighting_art_name: newArt.fighting_art_name,
+          custom: newArt.custom,
+          rules: newArt.rules ?? null
         }
         const oldArts = [...fightingArts]
 
@@ -524,9 +527,11 @@ export function FightingArtsCard({
         toast.success(SECRET_FIGHTING_ART_CREATED_MESSAGE())
 
         // Add to survivor immediately
-        const optimisticItem: SecretFightingArtItem = {
+        const optimisticItem: SecretFightingArtDetail = {
           id: newArt.id,
-          secret_fighting_art_name: newArt.secret_fighting_art_name
+          secret_fighting_art_name: newArt.secret_fighting_art_name,
+          custom: newArt.custom,
+          rules: newArt.rules ?? null
         }
         const oldArts = [...secretFightingArts]
 

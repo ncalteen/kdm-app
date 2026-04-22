@@ -19,20 +19,27 @@ export async function getSettlementLocations(
 
   const { data, error } = await supabase
     .from('settlement_location')
-    .select('id, location_id, unlocked, location(location_name)')
+    .select('id, location_id, unlocked, location(location_name, rules)')
     .eq('settlement_id', settlementId)
 
   if (error)
     throw new Error(`Error Fetching Settlement Locations: ${error.message}`)
 
   return (
-    data?.map((item) => ({
-      id: item.id,
-      location_id: item.location_id,
-      location_name: (item.location as unknown as { location_name: string })
-        .location_name,
-      unlocked: item.unlocked
-    })) ?? []
+    data?.map((item) => {
+      const location = item.location as unknown as {
+        location_name: string
+        rules: string | null
+      }
+
+      return {
+        id: item.id,
+        location_id: item.location_id,
+        location_name: location.location_name,
+        rules: location.rules,
+        unlocked: item.unlocked
+      }
+    }) ?? []
   )
 }
 
@@ -48,7 +55,14 @@ export async function getSettlementLocations(
 export async function addSettlementLocations(
   locationIds: string[],
   settlementId: string | null | undefined
-): Promise<{ id: string; location_id: string; location_name: string }[]> {
+): Promise<
+  {
+    id: string
+    location_id: string
+    location_name: string
+    rules: string | null
+  }[]
+> {
   if (!settlementId) throw new Error('Required: Settlement ID')
   if (locationIds.length === 0) return []
 
@@ -63,7 +77,7 @@ export async function addSettlementLocations(
         unlocked: false
       }))
     )
-    .select('id, location(id, location_name)')
+    .select('id, location(id, location_name, rules)')
 
   if (error)
     throw new Error(`Error Adding Settlement Locations: ${error.message}`)
@@ -71,12 +85,13 @@ export async function addSettlementLocations(
   return (
     data as unknown as {
       id: string
-      location: { id: string; location_name: string }
+      location: { id: string; location_name: string; rules: string | null }
     }[]
   ).map((item) => ({
     id: item.id,
     location_id: item.location.id,
-    location_name: item.location.location_name
+    location_name: item.location.location_name,
+    rules: item.location.rules
   }))
 }
 

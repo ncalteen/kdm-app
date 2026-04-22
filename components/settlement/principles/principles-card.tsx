@@ -178,8 +178,10 @@ export function PrinciplesCard({
       const optimisticRow: SettlementDetail['principles'][0] = {
         id: tempId,
         option_1_name: principleInfo.option_1_name,
+        option_1_rules: principleInfo.option_1_rules ?? null,
         option_1_selected: false,
         option_2_name: principleInfo.option_2_name,
+        option_2_rules: principleInfo.option_2_rules ?? null,
         option_2_selected: false,
         principle_id: principleId,
         principle_name: principleInfo.principle_name
@@ -379,8 +381,10 @@ export function PrinciplesCard({
         const optimisticRow: SettlementDetail['principles'][0] = {
           id: tempId,
           option_1_name: newPrinciple.option_1_name,
+          option_1_rules: newPrinciple.option_1_rules ?? null,
           option_1_selected: false,
           option_2_name: newPrinciple.option_2_name,
+          option_2_rules: newPrinciple.option_2_rules ?? null,
           option_2_selected: false,
           principle_id: newPrinciple.id,
           principle_name: newPrinciple.principle_name

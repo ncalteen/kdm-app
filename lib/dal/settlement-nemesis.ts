@@ -19,7 +19,7 @@ export async function getSettlementNemeses(
   const { data, error } = await supabase
     .from('settlement_nemesis')
     .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(monster_name, node)'
+      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
     )
     .eq('settlement_id', settlementId)
 
@@ -63,7 +63,21 @@ export async function getSettlementNemeses(
     unlocked: item.unlocked,
     monster_name: (item.nemesis as unknown as { monster_name: string })
       .monster_name,
-    node: (item.nemesis as unknown as { node: string }).node
+    node: (item.nemesis as unknown as { node: string }).node,
+    instinct: (item.nemesis as unknown as { instinct: string | null }).instinct,
+    basic_action: (item.nemesis as unknown as { basic_action: string | null })
+      .basic_action,
+    blind_spot: (item.nemesis as unknown as { blind_spot: string | null })
+      .blind_spot,
+    defeat_outcome: (
+      item.nemesis as unknown as { defeat_outcome: string | null }
+    ).defeat_outcome,
+    deployment_rules: (
+      item.nemesis as unknown as { deployment_rules: string | null }
+    ).deployment_rules,
+    victory_outcome: (
+      item.nemesis as unknown as { victory_outcome: string | null }
+    ).victory_outcome
   }))
 }
 
@@ -102,7 +116,7 @@ export async function addSettlementNemeses(
       }))
     )
     .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(monster_name, node)'
+      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
     )
 
   if (error)
@@ -142,7 +156,21 @@ export async function addSettlementNemeses(
     unlocked: item.unlocked,
     monster_name: (item.nemesis as unknown as { monster_name: string })
       .monster_name,
-    node: (item.nemesis as unknown as { node: string }).node
+    node: (item.nemesis as unknown as { node: string }).node,
+    instinct: (item.nemesis as unknown as { instinct: string | null }).instinct,
+    basic_action: (item.nemesis as unknown as { basic_action: string | null })
+      .basic_action,
+    blind_spot: (item.nemesis as unknown as { blind_spot: string | null })
+      .blind_spot,
+    defeat_outcome: (
+      item.nemesis as unknown as { defeat_outcome: string | null }
+    ).defeat_outcome,
+    deployment_rules: (
+      item.nemesis as unknown as { deployment_rules: string | null }
+    ).deployment_rules,
+    victory_outcome: (
+      item.nemesis as unknown as { victory_outcome: string | null }
+    ).victory_outcome
   }))
 }
 

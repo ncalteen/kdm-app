@@ -179,6 +179,7 @@ export function CollectiveCognitionRewardsCard({
           collective_cognition_reward_id: rewardId,
           id: tempId,
           reward_name: rewardInfo.reward_name,
+          rules: rewardInfo.rules ?? null,
           unlocked: false
         }
 
@@ -373,6 +374,7 @@ export function CollectiveCognitionRewardsCard({
             collective_cognition_reward_id: newReward.id,
             id: tempId,
             reward_name: newReward.reward_name,
+            rules: newReward.rules ?? null,
             unlocked: false
           }
 

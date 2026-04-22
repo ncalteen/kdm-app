@@ -5,7 +5,14 @@ import {
   SURVIVOR_ON_SHOWDOWN_ERROR_MESSAGE
 } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
-import { SurvivorDetail } from '@/lib/types'
+import {
+  AbilityImpairmentDetail,
+  DisorderDetail,
+  FightingArtDetail,
+  GearDetail,
+  SecretFightingArtDetail,
+  SurvivorDetail
+} from '@/lib/types'
 import { NewSurvivorInput } from '@/schemas/new-survivor-input'
 
 /**
@@ -62,6 +69,7 @@ export async function getSurvivor(
 
   // Batch all junction-table and FK lookups in parallel.
   const [
+    abilityImpairmentResult,
     cursedGearResult,
     disorderResult,
     fightingArtResult,
@@ -74,6 +82,11 @@ export async function getSurvivor(
     philosophyResult,
     tenetKnowledgeResult
   ] = await Promise.all([
+    // Abilities and Impairments
+    supabase
+      .from('survivor_ability_impairment')
+      .select('ability_impairment_id')
+      .eq('survivor_id', survivorId),
     // Cursed Gear
     supabase
       .from('survivor_cursed_gear')
@@ -110,7 +123,9 @@ export async function getSurvivor(
     data.knowledge_1_id
       ? supabase
           .from('knowledge')
-          .select('id, knowledge_name')
+          .select(
+            'id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone'
+          )
           .eq('id', data.knowledge_1_id)
           .single()
       : Promise.resolve({ data: null, error: null }),
@@ -118,7 +133,9 @@ export async function getSurvivor(
     data.knowledge_2_id
       ? supabase
           .from('knowledge')
-          .select('id, knowledge_name')
+          .select(
+            'id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone'
+          )
           .eq('id', data.knowledge_2_id)
           .single()
       : Promise.resolve({ data: null, error: null }),
@@ -126,7 +143,7 @@ export async function getSurvivor(
     data.neurosis_id
       ? supabase
           .from('neurosis')
-          .select('id, neurosis_name')
+          .select('id, neurosis_name, rules')
           .eq('id', data.neurosis_id)
           .single()
       : Promise.resolve({ data: null, error: null }),
@@ -134,7 +151,9 @@ export async function getSurvivor(
     data.philosophy_id
       ? supabase
           .from('philosophy')
-          .select('id, philosophy_name')
+          .select(
+            'id, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier'
+          )
           .eq('id', data.philosophy_id)
           .single()
       : Promise.resolve({ data: null, error: null }),
@@ -142,7 +161,9 @@ export async function getSurvivor(
     data.tenet_knowledge_id
       ? supabase
           .from('knowledge')
-          .select('id, knowledge_name')
+          .select(
+            'id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone'
+          )
           .eq('id', data.tenet_knowledge_id)
           .single()
       : Promise.resolve({ data: null, error: null })
@@ -150,6 +171,7 @@ export async function getSurvivor(
 
   // Validate all results.
   const results = [
+    { name: 'Abilities & Impairments', result: abilityImpairmentResult },
     { name: 'Cursed Gear', result: cursedGearResult },
     { name: 'Disorders', result: disorderResult },
     { name: 'Fighting Arts', result: fightingArtResult },
@@ -168,6 +190,9 @@ export async function getSurvivor(
       throw new Error(`Error Fetching ${name}: ${result.error.message}`)
 
   // Resolve junction-table FK IDs to display names.
+  const abilityImpairmentIds = (abilityImpairmentResult.data ?? []).map(
+    (x) => x.ability_impairment_id
+  )
   const cursedGearIds = (cursedGearResult.data ?? []).map((x) => x.gear_id)
   const disorderIds = (disorderResult.data ?? []).map((x) => x.disorder_id)
   const fightingArtIds = (fightingArtResult.data ?? []).map(
@@ -178,71 +203,80 @@ export async function getSurvivor(
   )
 
   const [
-    gearNamesResult,
-    disorderNamesResult,
-    fightingArtNamesResult,
-    secretFightingArtNamesResult
+    abilityImpairmentDataResult,
+    gearDataResult,
+    disorderDataResult,
+    fightingArtDataResult,
+    secretFightingArtDataResult
   ] = await Promise.all([
+    abilityImpairmentIds.length > 0
+      ? supabase
+          .from('ability_impairment')
+          .select('id, custom, ability_impairment_name, rules')
+          .in('id', abilityImpairmentIds)
+      : Promise.resolve({
+          data: [],
+          error: null
+        }),
     cursedGearIds.length > 0
       ? supabase.from('gear').select('id, gear_name').in('id', cursedGearIds)
       : Promise.resolve({
-          data: [] as { id: string; gear_name: string }[],
+          data: [],
           error: null
         }),
     disorderIds.length > 0
       ? supabase
           .from('disorder')
-          .select('id, disorder_name')
+          .select('id, custom, disorder_name, rules')
           .in('id', disorderIds)
       : Promise.resolve({
-          data: [] as { id: string; disorder_name: string }[],
+          data: [],
           error: null
         }),
     fightingArtIds.length > 0
       ? supabase
           .from('fighting_art')
-          .select('id, fighting_art_name')
+          .select('id, custom, fighting_art_name, rules')
           .in('id', fightingArtIds)
       : Promise.resolve({
-          data: [] as { id: string; fighting_art_name: string }[],
+          data: [],
           error: null
         }),
     secretFightingArtIds.length > 0
       ? supabase
           .from('secret_fighting_art')
-          .select('id, secret_fighting_art_name')
+          .select('id, custom, secret_fighting_art_name, rules')
           .in('id', secretFightingArtIds)
       : Promise.resolve({
-          data: [] as { id: string; secret_fighting_art_name: string }[],
+          data: [],
           error: null
         })
   ])
 
   for (const { name, result } of [
-    { name: 'Gear Names', result: gearNamesResult },
-    { name: 'Disorder Names', result: disorderNamesResult },
-    { name: 'Fighting Art Names', result: fightingArtNamesResult },
-    { name: 'Secret Fighting Art Names', result: secretFightingArtNamesResult }
+    { name: 'Ability & Impairment Data', result: abilityImpairmentDataResult },
+    { name: 'Gear Data', result: gearDataResult },
+    { name: 'Disorder Data', result: disorderDataResult },
+    { name: 'Fighting Art Data', result: fightingArtDataResult },
+    { name: 'Secret Fighting Art Data', result: secretFightingArtDataResult }
   ])
     if (result.error)
       throw new Error(`Error Fetching ${name}: ${result.error.message}`)
 
   return {
     ...data,
-    cursed_gear: gearNamesResult.data ?? [],
-    disorders: disorderNamesResult.data ?? [],
+    abilities_impairments: abilityImpairmentDataResult.data ?? [],
+    cursed_gear: gearDataResult.data ?? [],
+    disorders: disorderDataResult.data ?? [],
     embarked:
       (huntResult.data?.length ?? 0) > 0 ||
       (showdownResult.data?.length ?? 0) > 0,
-    fighting_arts: (fightingArtNamesResult.data ?? []).map((x) => ({
-      id: x.id,
-      fighting_art_name: x.fighting_art_name
-    })),
+    fighting_arts: fightingArtDataResult.data ?? [],
     knowledge_1: knowledge1Result.data ?? null,
     knowledge_2: knowledge2Result.data ?? null,
     neurosis: neurosisResult.data ?? null,
     philosophy: philosophyResult.data ?? null,
-    secret_fighting_arts: secretFightingArtNamesResult.data ?? [],
+    secret_fighting_arts: secretFightingArtDataResult.data ?? [],
     tenet_knowledge: tenetKnowledgeResult.data ?? null
   }
 }
@@ -278,6 +312,7 @@ export async function getSurvivors(
 
   // Batch all junction-table lookups in parallel.
   const [
+    abilityImpairmentResult,
     cursedGearResult,
     disorderResult,
     fightingArtResult,
@@ -285,6 +320,11 @@ export async function getSurvivors(
     huntResult,
     showdownResult
   ] = await Promise.all([
+    // Abilities & Impairments
+    supabase
+      .from('survivor_ability_impairment')
+      .select('survivor_id, ability_impairment_id')
+      .in('survivor_id', survivorIds),
     // Cursed Gear
     supabase
       .from('survivor_cursed_gear')
@@ -318,6 +358,7 @@ export async function getSurvivors(
   ])
 
   for (const { name, result } of [
+    { name: 'Abilities & Impairments', result: abilityImpairmentResult },
     { name: 'Cursed Gear', result: cursedGearResult },
     { name: 'Disorders', result: disorderResult },
     { name: 'Fighting Arts', result: fightingArtResult },
@@ -329,6 +370,11 @@ export async function getSurvivors(
       throw new Error(`Error Fetching ${name}: ${result.error.message}`)
 
   // Collect unique FK IDs across all survivors for batch name lookups.
+  const allAbilityImpairmentIds = [
+    ...new Set(
+      (abilityImpairmentResult.data ?? []).map((r) => r.ability_impairment_id)
+    )
+  ]
   const allGearIds = [
     ...new Set((cursedGearResult.data ?? []).map((r) => r.gear_id))
   ]
@@ -371,160 +417,192 @@ export async function getSurvivors(
 
   // Batch-fetch all name lookups in parallel.
   const [
-    gearNamesResult,
-    disorderNamesResult,
-    fightingArtNamesResult,
-    secretFightingArtNamesResult,
-    knowledgeNamesResult,
-    neurosisNamesResult,
-    philosophyNamesResult
+    abilityImpairmentDataResult,
+    gearDataResult,
+    disorderDataResult,
+    fightingArtDataResult,
+    secretFightingArtDataResult,
+    knowledgeDataResult,
+    neurosisDataResult,
+    philosophyDataResult
   ] = await Promise.all([
-    allGearIds.length > 0
-      ? supabase.from('gear').select('id, gear_name').in('id', allGearIds)
+    allAbilityImpairmentIds.length > 0
+      ? supabase
+          .from('ability_impairment')
+          .select('id, custom, ability_impairment_name, rules')
+          .in('id', allAbilityImpairmentIds)
       : Promise.resolve({
-          data: [] as { id: string; gear_name: string }[],
+          data: [],
+          error: null
+        }),
+    allGearIds.length > 0
+      ? supabase
+          .from('gear')
+          .select('id, custom, gear_name, location_id')
+          .in('id', allGearIds)
+      : Promise.resolve({
+          data: [],
           error: null
         }),
     allDisorderIds.length > 0
       ? supabase
           .from('disorder')
-          .select('id, disorder_name')
+          .select('id, custom, disorder_name, rules')
           .in('id', allDisorderIds)
       : Promise.resolve({
-          data: [] as { id: string; disorder_name: string }[],
+          data: [],
           error: null
         }),
     allFightingArtIds.length > 0
       ? supabase
           .from('fighting_art')
-          .select('id, fighting_art_name')
+          .select('id, custom, fighting_art_name, rules')
           .in('id', allFightingArtIds)
       : Promise.resolve({
-          data: [] as { id: string; fighting_art_name: string }[],
+          data: [],
           error: null
         }),
     allSecretFightingArtIds.length > 0
       ? supabase
           .from('secret_fighting_art')
-          .select('id, secret_fighting_art_name')
+          .select('id, custom, secret_fighting_art_name, rules')
           .in('id', allSecretFightingArtIds)
       : Promise.resolve({
-          data: [] as { id: string; secret_fighting_art_name: string }[],
+          data: [],
           error: null
         }),
     allKnowledgeIds.length > 0
       ? supabase
           .from('knowledge')
-          .select('id, knowledge_name')
+          .select(
+            'id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone'
+          )
           .in('id', allKnowledgeIds)
       : Promise.resolve({
-          data: [] as { id: string; knowledge_name: string }[],
+          data: [],
           error: null
         }),
     allNeurosisIds.length > 0
       ? supabase
           .from('neurosis')
-          .select('id, neurosis_name')
+          .select('id, neurosis_name, rules')
           .in('id', allNeurosisIds)
       : Promise.resolve({
-          data: [] as { id: string; neurosis_name: string }[],
+          data: [],
           error: null
         }),
     allPhilosophyIds.length > 0
       ? supabase
           .from('philosophy')
-          .select('id, philosophy_name')
+          .select(
+            'id, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier'
+          )
           .in('id', allPhilosophyIds)
       : Promise.resolve({
-          data: [] as { id: string; philosophy_name: string }[],
+          data: [],
           error: null
         })
   ])
 
   for (const { name, result } of [
-    { name: 'Gear Names', result: gearNamesResult },
-    { name: 'Disorder Names', result: disorderNamesResult },
-    { name: 'Fighting Art Names', result: fightingArtNamesResult },
-    { name: 'Secret Fighting Art Names', result: secretFightingArtNamesResult },
-    { name: 'Knowledge Names', result: knowledgeNamesResult },
-    { name: 'Neurosis Names', result: neurosisNamesResult },
-    { name: 'Philosophy Names', result: philosophyNamesResult }
+    { name: 'Ability & Impairment Data', result: abilityImpairmentDataResult },
+    { name: 'Gear Data', result: gearDataResult },
+    { name: 'Disorder Data', result: disorderDataResult },
+    { name: 'Fighting Art Data', result: fightingArtDataResult },
+    { name: 'Secret Fighting Art Data', result: secretFightingArtDataResult },
+    { name: 'Knowledge Data', result: knowledgeDataResult },
+    { name: 'Neurosis Data', result: neurosisDataResult },
+    { name: 'Philosophy Data', result: philosophyDataResult }
   ])
     if (result.error)
       throw new Error(`Error Fetching ${name}: ${result.error.message}`)
 
   // Build lookup maps for name resolution.
-  const gearNameMap = new Map(
-    (gearNamesResult.data ?? []).map((g) => [g.id, g.gear_name])
-  )
-  const disorderNameMap = new Map(
-    (disorderNamesResult.data ?? []).map((d) => [d.id, d.disorder_name])
-  )
-  const fightingArtNameMap = new Map(
-    (fightingArtNamesResult.data ?? []).map((f) => [f.id, f.fighting_art_name])
-  )
-  const secretFightingArtNameMap = new Map(
-    (secretFightingArtNamesResult.data ?? []).map((s) => [
-      s.id,
-      s.secret_fighting_art_name
+  const abilityImpairmentDataMap = new Map(
+    (abilityImpairmentDataResult.data ?? []).map((a) => [
+      a.id,
+      a.ability_impairment_name
     ])
   )
-  const knowledgeNameMap = new Map(
-    (knowledgeNamesResult.data ?? []).map((k) => [k.id, k.knowledge_name])
+  const gearDataMap = new Map((gearDataResult.data ?? []).map((g) => [g.id, g]))
+  const disorderDataMap = new Map(
+    (disorderDataResult.data ?? []).map((d) => [d.id, d])
   )
-  const neurosisNameMap = new Map(
-    (neurosisNamesResult.data ?? []).map((n) => [n.id, n.neurosis_name])
+  const fightingArtDataMap = new Map(
+    (fightingArtDataResult.data ?? []).map((f) => [f.id, f])
   )
-  const philosophyNameMap = new Map(
-    (philosophyNamesResult.data ?? []).map((p) => [p.id, p.philosophy_name])
+  const secretFightingArtDataMap = new Map(
+    (secretFightingArtDataResult.data ?? []).map((s) => [s.id, s])
+  )
+  const knowledgeDataMap = new Map(
+    (knowledgeDataResult.data ?? []).map((k) => [k.id, k])
+  )
+  const neurosisDataMap = new Map(
+    (neurosisDataResult.data ?? []).map((n) => [n.id, n])
+  )
+  const philosophyDataMap = new Map(
+    (philosophyDataResult.data ?? []).map((p) => [p.id, p])
   )
 
   // Group junction table results by survivor_id.
+  const abilityImpairmentBySurvivor = new Map<
+    string,
+    { id: string; ability_impairment: AbilityImpairmentDetail }[]
+  >()
+  for (const r of abilityImpairmentResult.data ?? []) {
+    const items = abilityImpairmentBySurvivor.get(r.survivor_id) ?? []
+    const ability_impairment = abilityImpairmentDataMap.get(
+      r.ability_impairment_id
+    )
+    if (ability_impairment)
+      items.push({ id: r.ability_impairment_id, ability_impairment })
+    abilityImpairmentBySurvivor.set(r.survivor_id, items)
+  }
+
   const cursedGearBySurvivor = new Map<
     string,
-    { id: string; gear_name: string }[]
+    { id: string; gear: GearDetail }[]
   >()
   for (const r of cursedGearResult.data ?? []) {
     const items = cursedGearBySurvivor.get(r.survivor_id) ?? []
-    const gear_name = gearNameMap.get(r.gear_id)
-    if (gear_name) items.push({ id: r.gear_id, gear_name })
+    const gear = gearDataMap.get(r.gear_id)
+    if (gear) items.push({ id: r.gear_id, gear })
     cursedGearBySurvivor.set(r.survivor_id, items)
   }
 
   const disordersBySurvivor = new Map<
     string,
-    { id: string; disorder_name: string }[]
+    { id: string; disorder: DisorderDetail }[]
   >()
   for (const r of disorderResult.data ?? []) {
     const items = disordersBySurvivor.get(r.survivor_id) ?? []
-    const disorder_name = disorderNameMap.get(r.disorder_id)
-    if (disorder_name) items.push({ id: r.disorder_id, disorder_name })
+    const disorder = disorderDataMap.get(r.disorder_id)
+    if (disorder) items.push({ id: r.disorder_id, disorder })
     disordersBySurvivor.set(r.survivor_id, items)
   }
 
   const fightingArtsBySurvivor = new Map<
     string,
-    { id: string; fighting_art_name: string }[]
+    { id: string; fighting_art: FightingArtDetail }[]
   >()
   for (const r of fightingArtResult.data ?? []) {
     const items = fightingArtsBySurvivor.get(r.survivor_id) ?? []
-    const fighting_art_name = fightingArtNameMap.get(r.fighting_art_id)
-    if (fighting_art_name)
-      items.push({ id: r.fighting_art_id, fighting_art_name })
+    const fighting_art = fightingArtDataMap.get(r.fighting_art_id)
+    if (fighting_art) items.push({ id: r.fighting_art_id, fighting_art })
     fightingArtsBySurvivor.set(r.survivor_id, items)
   }
 
   const secretFightingArtsBySurvivor = new Map<
     string,
-    { id: string; secret_fighting_art_name: string }[]
+    { id: string; secret_fighting_art: SecretFightingArtDetail }[]
   >()
   for (const r of secretFightingArtResult.data ?? []) {
     const items = secretFightingArtsBySurvivor.get(r.survivor_id) ?? []
-    const secret_fighting_art_name = secretFightingArtNameMap.get(
+    const secret_fighting_art = secretFightingArtDataMap.get(
       r.secret_fighting_art_id
     )
-    if (secret_fighting_art_name)
-      items.push({ id: r.secret_fighting_art_id, secret_fighting_art_name })
+    if (secret_fighting_art)
+      items.push({ id: r.secret_fighting_art_id, secret_fighting_art })
     secretFightingArtsBySurvivor.set(r.survivor_id, items)
   }
 
@@ -540,36 +618,20 @@ export async function getSurvivors(
     embarked: embarkedIds.has(survivor.id),
     fighting_arts: fightingArtsBySurvivor.get(survivor.id) ?? [],
     knowledge_1: survivor.knowledge_1_id
-      ? {
-          id: survivor.knowledge_1_id,
-          knowledge_name: knowledgeNameMap.get(survivor.knowledge_1_id) ?? ''
-        }
+      ? knowledgeDataMap.get(survivor.knowledge_1_id)
       : null,
     knowledge_2: survivor.knowledge_2_id
-      ? {
-          id: survivor.knowledge_2_id,
-          knowledge_name: knowledgeNameMap.get(survivor.knowledge_2_id) ?? ''
-        }
+      ? knowledgeDataMap.get(survivor.knowledge_2_id)
       : null,
     neurosis: survivor.neurosis_id
-      ? {
-          id: survivor.neurosis_id,
-          neurosis_name: neurosisNameMap.get(survivor.neurosis_id) ?? ''
-        }
+      ? neurosisDataMap.get(survivor.neurosis_id)
       : null,
     philosophy: survivor.philosophy_id
-      ? {
-          id: survivor.philosophy_id,
-          philosophy_name: philosophyNameMap.get(survivor.philosophy_id) ?? ''
-        }
+      ? philosophyDataMap.get(survivor.philosophy_id)
       : null,
     secret_fighting_arts: secretFightingArtsBySurvivor.get(survivor.id) ?? [],
     tenet_knowledge: survivor.tenet_knowledge_id
-      ? {
-          id: survivor.tenet_knowledge_id,
-          knowledge_name:
-            knowledgeNameMap.get(survivor.tenet_knowledge_id) ?? ''
-        }
+      ? knowledgeDataMap.get(survivor.tenet_knowledge_id)
       : null
   }))
 }
@@ -678,7 +740,6 @@ export async function createSurvivor(
   const supabase = createClient()
 
   const survivor: Partial<Tables<'survivor'>> = {
-    abilities_impairments: options.abilitiesAndImpairments,
     accuracy: options.accuracy,
     can_dash: options.canDash,
     can_dodge: options.canDodge,
@@ -749,6 +810,24 @@ export async function createSurvivor(
     if (junctionError)
       throw new Error(
         `Error Adding Fighting Arts to Survivor: ${junctionError.message}`
+      )
+  }
+
+  // Add abilities/impairments via junction table if provided. This is usually
+  // only done for wanderers.
+  if (options.abilityImpairmentIds?.length) {
+    const { error: junctionError } = await supabase
+      .from('survivor_ability_impairment')
+      .insert(
+        options.abilityImpairmentIds.map((abilityImpairmentId) => ({
+          survivor_id: data.id,
+          ability_impairment_id: abilityImpairmentId
+        }))
+      )
+
+    if (junctionError)
+      throw new Error(
+        `Error Adding Ability/Impairment to Survivor: ${junctionError.message}`
       )
   }
 

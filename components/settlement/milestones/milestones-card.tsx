@@ -160,7 +160,9 @@ export function MilestonesCard({
         event_name: milestoneInfo.event_name,
         id: tempId,
         milestone_id: milestoneId,
-        milestone_name: milestoneInfo.milestone_name
+        milestone_name: milestoneInfo.milestone_name,
+        requirements: milestoneInfo.requirements ?? null,
+        rules: milestoneInfo.rules ?? null
       }
 
       // Capture the updated milestones list so async callbacks reference it
@@ -337,7 +339,9 @@ export function MilestonesCard({
           event_name: newMilestone.event_name,
           id: tempId,
           milestone_id: newMilestone.id,
-          milestone_name: newMilestone.milestone_name
+          milestone_name: newMilestone.milestone_name,
+          requirements: newMilestone.requirements ?? null,
+          rules: newMilestone.rules ?? null
         }
 
         const updatedMilestones = [

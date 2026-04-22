@@ -20,7 +20,7 @@ export async function getSettlementCollectiveCognitionRewards(
   const { data, error } = await supabase
     .from('settlement_collective_cognition_reward')
     .select(
-      'collective_cognition_reward_id, id, unlocked, collective_cognition_reward(collective_cognition, reward_name)'
+      'collective_cognition_reward_id, id, unlocked, collective_cognition_reward(collective_cognition, reward_name, rules)'
     )
     .eq('settlement_id', settlementId)
 
@@ -30,21 +30,22 @@ export async function getSettlementCollectiveCognitionRewards(
     )
 
   return (
-    data?.map((item) => ({
-      collective_cognition_reward_id: item.collective_cognition_reward_id,
-      id: item.id,
-      unlocked: item.unlocked,
-      reward_name: (
-        item.collective_cognition_reward as unknown as {
-          reward_name: string
-        }
-      ).reward_name,
-      collective_cognition: (
-        item.collective_cognition_reward as unknown as {
-          collective_cognition: number
-        }
-      ).collective_cognition
-    })) ?? []
+    data?.map((item) => {
+      const reward = item.collective_cognition_reward as unknown as {
+        reward_name: string
+        collective_cognition: number
+        rules: string | null
+      }
+
+      return {
+        collective_cognition_reward_id: item.collective_cognition_reward_id,
+        id: item.id,
+        unlocked: item.unlocked,
+        reward_name: reward.reward_name,
+        collective_cognition: reward.collective_cognition,
+        rules: reward.rules
+      }
+    }) ?? []
   )
 }
 
@@ -58,7 +59,12 @@ export async function addSettlementCollectiveCognitionRewards(
   rewardIds: string[],
   settlementId: string | null | undefined
 ): Promise<
-  { id: string; collective_cognition: number; reward_name: string }[]
+  {
+    id: string
+    collective_cognition: number
+    reward_name: string
+    rules: string | null
+  }[]
 > {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
@@ -76,7 +82,7 @@ export async function addSettlementCollectiveCognitionRewards(
       }))
     )
     .select(
-      'id, collective_cognition_reward(collective_cognition, reward_name)'
+      'id, collective_cognition_reward(collective_cognition, reward_name, rules)'
     )
 
   if (error)
@@ -90,12 +96,14 @@ export async function addSettlementCollectiveCognitionRewards(
       collective_cognition_reward: {
         collective_cognition: number
         reward_name: string
+        rules: string | null
       }
     }[]
   ).map((item) => ({
     id: item.id,
     collective_cognition: item.collective_cognition_reward.collective_cognition,
-    reward_name: item.collective_cognition_reward.reward_name
+    reward_name: item.collective_cognition_reward.reward_name,
+    rules: item.collective_cognition_reward.rules
   }))
 }
 

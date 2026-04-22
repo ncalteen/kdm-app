@@ -497,6 +497,8 @@ export type SettlementDetail = Omit<
     id: string
     /** Collective Cognition Reward Name */
     reward_name: string
+    /** Collective Cognition Reward Rules */
+    rules: string | null
     /** Unlocked */
     unlocked: boolean
   }[]
@@ -519,6 +521,12 @@ export type SettlementDetail = Omit<
     innovation_id: string
     /** Innovation Name */
     innovation_name: string
+    /** Innovation Rules */
+    rules: string | null
+    /** Innovation Consequences */
+    consequences: string[] | null
+    /** Innovation Benefits */
+    benefits: string[] | null
   }[]
   /** Knowledges */
   knowledges: {
@@ -528,6 +536,14 @@ export type SettlementDetail = Omit<
     knowledge_id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Philosophy ID */
+    philosophy_id: string | null
+    /** Knowledge Rules */
+    rules: string | null
+    /** Observation Conditions */
+    observation_conditions: string | null
+    /** Observation Rank Up Milestone */
+    observation_rank_up_milestone: number | null
   }[]
   /** Locations */
   locations: {
@@ -537,6 +553,8 @@ export type SettlementDetail = Omit<
     location_id: string
     /** Location Name */
     location_name: string
+    /** Location Rules */
+    rules: string | null
     /** Unlocked */
     unlocked: boolean
   }[]
@@ -561,6 +579,10 @@ export type SettlementDetail = Omit<
     milestone_id: string
     /** Milestone Name */
     milestone_name: string
+    /** Milestone Requirements */
+    requirements: string | null
+    /** Milestone Rules */
+    rules: string | null
   }[]
   /** Nemeses */
   nemeses: {
@@ -590,6 +612,18 @@ export type SettlementDetail = Omit<
     monster_name: string
     /** Node */
     node: string
+    /** Instinct */
+    instinct: string | null
+    /** Basic Action */
+    basic_action: string | null
+    /** Blind Spot */
+    blind_spot: string | null
+    /** Defeat Outcome */
+    defeat_outcome: string | null
+    /** Deployment Rules */
+    deployment_rules: string | null
+    /** Victory Outcome */
+    victory_outcome: string | null
   }[]
   /** Patterns */
   patterns: {
@@ -608,6 +642,12 @@ export type SettlementDetail = Omit<
     philosophy_id: string
     /** Philosophy Name */
     philosophy_name: string
+    /** Hunt XP Milestones */
+    hunt_xp_milestones: number[] | null
+    /** Tenet Knowledge ID */
+    tenet_knowledge_id: string | null
+    /** Philosophy Tier */
+    tier: number | null
   }[]
   /** Principles */
   principles: {
@@ -615,10 +655,14 @@ export type SettlementDetail = Omit<
     id: string
     /** Option 1 Name */
     option_1_name: string
+    /** Option 1 Rules */
+    option_1_rules: string | null
     /** Option 1 Selected */
     option_1_selected: boolean
     /** Option 2 Name */
     option_2_name: string
+    /** Option 2 Rules */
+    option_2_rules: string | null
     /** Option 2 Selected */
     option_2_selected: boolean
     /** Principle ID */
@@ -648,6 +692,18 @@ export type SettlementDetail = Omit<
     quarry_id: string
     /** Unlocked */
     unlocked: boolean
+    /** Instinct */
+    instinct: string | null
+    /** Basic Action */
+    basic_action: string | null
+    /** Blind Spot */
+    blind_spot: string | null
+    /** Defeat Outcome */
+    defeat_outcome: string | null
+    /** Deployment Rules */
+    deployment_rules: string | null
+    /** Victory Outcome */
+    victory_outcome: string | null
   }[]
   /** Resources */
   resources: {
@@ -851,18 +907,19 @@ export type SurvivorDetail = Tables<'survivor'> & {
   /** Survivor Embarked on Hunt/Showdown */
   embarked: boolean
   /** Fighting Arts */
-  fighting_arts: {
-    /** Fighting Art Name */
-    fighting_art_name: string
-    /** Fighting Art ID */
-    id: string
-  }[]
+  fighting_arts: FightingArtDetail[]
   /** Knowledge 1 */
   knowledge_1: {
     /** Knowledge ID */
     id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Rules */
+    rules: string | null
+    /** Observation Conditions */
+    observation_conditions: string | null
+    /** Observation Rank Up Milestone */
+    observation_rank_up_milestone: number | null
   } | null
   /** Knowledge 2 */
   knowledge_2: {
@@ -870,6 +927,12 @@ export type SurvivorDetail = Tables<'survivor'> & {
     id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Rules */
+    rules: string | null
+    /** Observation Conditions */
+    observation_conditions: string | null
+    /** Observation Rank Up Milestone */
+    observation_rank_up_milestone: number | null
   } | null
   /** Neurosis */
   neurosis: {
@@ -877,6 +940,8 @@ export type SurvivorDetail = Tables<'survivor'> & {
     id: string
     /** Neurosis Name */
     neurosis_name: string
+    /** Rules */
+    rules: string | null
   } | null
   /** Philosophy */
   philosophy: {
@@ -884,20 +949,27 @@ export type SurvivorDetail = Tables<'survivor'> & {
     id: string
     /** Philosophy Name */
     philosophy_name: string
+    /** Hunt XP Milestones */
+    hunt_xp_milestones: number[] | null
+    /** Tenet Knowledge ID */
+    tenet_knowledge_id: string | null
+    /** Tier */
+    tier: number | null
   } | null
   /** Secret Fighting Arts */
-  secret_fighting_arts: {
-    /** Secret Fighting Art ID */
-    id: string
-    /** Secret Fighting Art Name */
-    secret_fighting_art_name: string
-  }[]
+  secret_fighting_arts: SecretFightingArtDetail[]
   /** Tenet Knowledge */
   tenet_knowledge: {
     /** Knowledge ID */
     id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Rules */
+    rules: string | null
+    /** Observation Conditions */
+    observation_conditions: string | null
+    /** Observation Rank Up Milestone */
+    observation_rank_up_milestone: number | null
   } | null
 }
 

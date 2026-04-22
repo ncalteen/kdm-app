@@ -19,22 +19,33 @@ export async function getSettlementMilestones(
 
   const { data, error } = await supabase
     .from('settlement_milestone')
-    .select('complete, id, milestone_id, milestone(event_name, milestone_name)')
+    .select(
+      'complete, id, milestone_id, milestone(event_name, milestone_name, requirements, rules)'
+    )
     .eq('settlement_id', settlementId)
 
   if (error)
     throw new Error(`Error Fetching Settlement Milestones: ${error.message}`)
 
   return (
-    data?.map((item) => ({
-      complete: item.complete,
-      event_name: (item.milestone as unknown as { event_name: string })
-        .event_name,
-      id: item.id,
-      milestone_id: item.milestone_id,
-      milestone_name: (item.milestone as unknown as { milestone_name: string })
-        .milestone_name
-    })) ?? []
+    data?.map((item) => {
+      const milestone = item.milestone as unknown as {
+        event_name: string
+        milestone_name: string
+        requirements: string | null
+        rules: string | null
+      }
+
+      return {
+        complete: item.complete,
+        event_name: milestone.event_name,
+        id: item.id,
+        milestone_id: item.milestone_id,
+        milestone_name: milestone.milestone_name,
+        requirements: milestone.requirements,
+        rules: milestone.rules
+      }
+    }) ?? []
   )
 }
 
