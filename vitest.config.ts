@@ -11,7 +11,14 @@ export default defineConfig({
     // setupFiles: ['__tests__/setup.ts'],
     clearMocks: true,
     include: ['__tests__/**/*.test.{ts,tsx}'],
-    exclude: ['.next', 'local', 'node_modules', 'out'],
+    exclude: [
+      '.next',
+      // Exclude integration tests from unit test runs
+      '__tests__/integration/**',
+      'local',
+      'node_modules',
+      'out'
+    ],
     coverage: {
       enabled: true,
       provider: 'v8',
