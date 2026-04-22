@@ -20,26 +20,16 @@ describe('RLS: user_settings', () => {
     owner = await createTestUser()
     attacker = await createTestUser()
 
-    // The `initialize_user_settings` trigger may auto-create a row on
-    // user creation. Look it up; otherwise create one via admin.
-    const { data: existing } = await admin
+    // `createTestUser` seeds a user_settings row for the created user (so that
+    // it satisfies the `*_shared_user.shared_user_id` FK). Look it up.
+    const { data, error } = await admin
       .from('user_settings')
       .select('id')
       .eq('user_id', owner.id)
-      .maybeSingle()
-
-    if (existing) {
-      ownerSettingsId = existing.id
-    } else {
-      const { data, error } = await admin
-        .from('user_settings')
-        .insert({ user_id: owner.id })
-        .select('id')
-        .single()
-      if (error || !data)
-        throw new Error(`seed user_settings: ${error?.message}`)
-      ownerSettingsId = data.id
-    }
+      .single()
+    if (error || !data)
+      throw new Error(`lookup user_settings: ${error?.message}`)
+    ownerSettingsId = data.id
   })
 
   afterAll(async () => {

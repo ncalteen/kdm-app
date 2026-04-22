@@ -120,13 +120,18 @@ export async function seedCatalog(): Promise<SettlementFixture['catalogIds']> {
       custom: false,
       knowledge_name: 'RLS Test Knowledge'
     }),
-    insert('milestone', { custom: false, event_name: 'RLS Test Milestone' }),
+    insert('milestone', {
+      custom: false,
+      event_name: 'RLS Test Milestone',
+      milestone_name: 'RLS Test Milestone Name'
+    }),
     insert('pattern', { custom: false, pattern_name: 'RLS Test Pattern' }),
     insert('philosophy', { custom: false, philosophy_name: 'RLS Test Philos' }),
     insert('principle', {
       custom: false,
       principle_name: 'RLS Test Principle',
-      principle_category: 'DEATH'
+      option_1_name: 'Opt 1',
+      option_2_name: 'Opt 2'
     }),
     insert('secret_fighting_art', {
       custom: false,
@@ -139,7 +144,7 @@ export async function seedCatalog(): Promise<SettlementFixture['catalogIds']> {
     insert('resource', {
       custom: false,
       resource_name: 'RLS Test Resource',
-      resource_type: 'BASIC'
+      category: 'BASIC'
     }),
     insert('ability_impairment', {
       custom: false,
@@ -234,7 +239,7 @@ export async function seedSettlementFixture(
   // 2. Survivor (before hunt/showdown because they reference it).
   const survivorId = await ins('survivor', {
     settlement_id: settlementId,
-    gender: 'F',
+    gender: 'FEMALE',
     survivor_name: 'RLS Survivor'
   })
 
@@ -375,7 +380,7 @@ export async function seedSettlementFixture(
   })
   const showdownSurvivorPersonId = await ins('survivor', {
     settlement_id: showdownSettlementId,
-    gender: 'F',
+    gender: 'FEMALE',
     survivor_name: 'RLS Showdown Survivor'
   })
   const showdownId = await ins('showdown', {

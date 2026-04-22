@@ -63,7 +63,7 @@ describe('RLS: nested entity tables', () => {
       custom: true,
       user_id: owner.id,
       wanderer_name: 'RLS Owner Wanderer',
-      gender: 'F'
+      gender: 'FEMALE'
     })
 
     rowIds.quarry_location = await ins('quarry_location', {
@@ -76,8 +76,7 @@ describe('RLS: nested entity tables', () => {
       entries: ['RLS entry']
     })
     rowIds.quarry_hunt_board = await ins('quarry_hunt_board', {
-      quarry_id: quarryId,
-      level_number: 1
+      quarry_id: quarryId
     })
     rowIds.quarry_hunt_board_position = await ins(
       'quarry_hunt_board_position',

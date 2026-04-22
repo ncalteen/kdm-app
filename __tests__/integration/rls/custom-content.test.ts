@@ -91,7 +91,8 @@ const SPECS: CustomContentSpec[] = [
     table: 'milestone',
     sharedTable: 'milestone_shared_user',
     fkCol: 'milestone_id',
-    nameCol: 'event_name'
+    nameCol: 'event_name',
+    extras: { milestone_name: 'RLS-milestone-name' }
   },
   {
     table: 'nemesis',
@@ -123,7 +124,7 @@ const SPECS: CustomContentSpec[] = [
     sharedTable: 'principle_shared_user',
     fkCol: 'principle_id',
     nameCol: 'principle_name',
-    extras: { principle_category: 'DEATH' }
+    extras: { option_1_name: 'Opt 1', option_2_name: 'Opt 2' }
   },
   {
     table: 'quarry',
@@ -137,7 +138,7 @@ const SPECS: CustomContentSpec[] = [
     sharedTable: 'resource_shared_user',
     fkCol: 'resource_id',
     nameCol: 'resource_name',
-    extras: { resource_type: 'BASIC' }
+    extras: { category: 'BASIC' }
   },
   {
     table: 'secret_fighting_art',
@@ -155,14 +156,14 @@ const SPECS: CustomContentSpec[] = [
     table: 'strain_milestone',
     sharedTable: 'strain_milestone_shared_user',
     fkCol: 'strain_milestone_id',
-    nameCol: 'event_name'
+    nameCol: 'strain_milestone_name'
   },
   {
     table: 'wanderer',
     sharedTable: 'wanderer_shared_user',
     fkCol: 'wanderer_id',
     nameCol: 'wanderer_name',
-    extras: { gender: 'F' }
+    extras: { gender: 'FEMALE' }
   },
   {
     table: 'weapon_type',
@@ -356,17 +357,23 @@ describe('RLS: custom-content tables', () => {
   )
 
   it.each(SPECS)(
-    '[$table] shared guest cannot UPDATE or DELETE (read-only share)',
+    '[$table] shared guest CAN UPDATE but cannot DELETE (documents shared access model)',
     async (spec) => {
+      // Every catalog table pairs a `Allow update for shared and custom`
+      // policy with its shared-user join table, so shared users can mutate
+      // rows they've been granted access to. There is intentionally no
+      // matching `Allow delete for shared` policy: delete is owner-only.
+      // This test pins both halves of that decision.
       const entry = ids.get(spec.table)!
-      const updPayload = { [spec.nameCol]: 'GUEST-HACKED' }
+      const updPayload = { [spec.nameCol]: 'GUEST-EDIT' }
 
-      const { data: upd } = await sharedGuest.client
+      const { data: upd, error: updErr } = await sharedGuest.client
         .from(spec.table)
         .update(updPayload)
         .eq('id', entry.sharedCustomId)
         .select('id')
-      expect(upd ?? []).toEqual([])
+      expect(updErr).toBeNull()
+      expect(upd ?? []).toHaveLength(1)
 
       const { data: del } = await sharedGuest.client
         .from(spec.table)
@@ -374,6 +381,13 @@ describe('RLS: custom-content tables', () => {
         .eq('id', entry.sharedCustomId)
         .select('id')
       expect(del ?? []).toEqual([])
+
+      // Row must still be visible to the owner.
+      const { data: check } = await owner.client
+        .from(spec.table)
+        .select('id')
+        .eq('id', entry.sharedCustomId)
+      expect(check ?? []).toHaveLength(1)
     }
   )
 

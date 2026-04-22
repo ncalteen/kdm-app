@@ -79,6 +79,18 @@ export async function createTestUser(): Promise<TestUser> {
   if (createErr || !created.user)
     throw new Error(`createUser failed: ${createErr?.message}`)
 
+  // Seed the user_settings row with a unique username. All `*_shared_user`
+  // tables have a FK from `shared_user_id` → `user_settings(user_id)`, so
+  // tests that grant a share will fail FK validation unless this row exists
+  // before the share is inserted. The `username` column has a non-empty
+  // CHECK constraint and a uniqueness constraint, so we derive it from the
+  // test email suffix.
+  const { error: settingsErr } = await admin
+    .from('user_settings')
+    .insert({ user_id: created.user.id, username: `rls-${suffix}` })
+  if (settingsErr)
+    throw new Error(`seed user_settings failed: ${settingsErr.message}`)
+
   const client = createClient(URL, ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false }
   })
@@ -143,16 +155,22 @@ export async function seedSettlement(
  * Share Settlement
  *
  * Grants `sharedUserId` access to `settlementId` via the shared-user table.
+ * `settlement_shared_user.user_id` (the grantor column) is NOT NULL, so the
+ * owner ID must be provided explicitly.
  *
  * @param settlementId Settlement ID
  * @param sharedUserId Shared User ID
+ * @param ownerId Grantor User ID (settlement owner)
  */
 export async function shareSettlement(
   settlementId: string,
-  sharedUserId: string
+  sharedUserId: string,
+  ownerId: string
 ): Promise<void> {
-  const { error } = await admin
-    .from('settlement_shared_user')
-    .insert({ settlement_id: settlementId, shared_user_id: sharedUserId })
+  const { error } = await admin.from('settlement_shared_user').insert({
+    settlement_id: settlementId,
+    shared_user_id: sharedUserId,
+    user_id: ownerId
+  })
   if (error) throw new Error(`shareSettlement: ${error.message}`)
 }

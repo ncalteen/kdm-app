@@ -41,10 +41,37 @@ describe('RLS: settlement-scoped tables', () => {
   /**
    * Matrix: { table, rowId, updatePayload }
    *
-   * Each entry corresponds to one row seeded by `seedSettlementFixture`.
-   * `updatePayload` is a harmless column bump used to detect whether an
-   * unauthorized UPDATE was silently applied.
+   * `rowId` is a lazy getter because `fixture` is populated in `beforeAll`,
+   * but Vitest evaluates `it.each(buildMatrix())` arguments at collection
+   * time (before any hooks run). Looking the ID up lazily through the
+   * closure is what keeps the matrix static while still pointing at the
+   * seeded rows at test-execution time.
    */
+  const SETTLEMENT_JUNCTION_TABLES = [
+    'settlement_collective_cognition_reward',
+    'settlement_gear',
+    'settlement_innovation',
+    'settlement_knowledge',
+    'settlement_location',
+    'settlement_milestone',
+    'settlement_nemesis',
+    'settlement_pattern',
+    'settlement_philosophy',
+    'settlement_principle',
+    'settlement_quarry',
+    'settlement_resource',
+    'settlement_seed_pattern',
+    'settlement_timeline_year'
+  ] as const
+
+  const SURVIVOR_JUNCTION_TABLES = [
+    'survivor_disorder',
+    'survivor_fighting_art',
+    'survivor_cursed_gear',
+    'survivor_secret_fighting_art',
+    'survivor_ability_impairment'
+  ] as const
+
   const buildMatrix = () => {
     const r: { table: string; rowId: () => string; update: object }[] = [
       {
@@ -109,8 +136,6 @@ describe('RLS: settlement-scoped tables', () => {
       }
     ]
 
-    // Settlement-junction rows: bump `updated_at` isn't needed — use a shared
-    // low-impact payload or fall back to a no-op update (pick a bool/int).
     const settlementJunctionUpdates: Record<string, object> = {
       settlement_collective_cognition_reward: {},
       settlement_gear: {},
@@ -127,27 +152,20 @@ describe('RLS: settlement-scoped tables', () => {
       settlement_seed_pattern: {},
       settlement_timeline_year: { completed: true }
     }
-    for (const [table, rowId] of Object.entries(fixture.settlementJunctionIds))
+    for (const table of SETTLEMENT_JUNCTION_TABLES)
       r.push({
         table,
-        rowId: () => rowId,
+        rowId: () => fixture.settlementJunctionIds[table],
         update: settlementJunctionUpdates[table] ?? {}
       })
 
-    const survivorJunctionUpdates: Record<string, object> = {
-      // All survivor_* junction tables have no mutable non-FK cols; DELETE is
-      // the only meaningful write operation. Empty update is a safe no-op.
-      survivor_disorder: {},
-      survivor_fighting_art: {},
-      survivor_cursed_gear: {},
-      survivor_secret_fighting_art: {},
-      survivor_ability_impairment: {}
-    }
-    for (const [table, rowId] of Object.entries(fixture.survivorJunctionIds))
+    // Survivor_* junction tables have no mutable non-FK cols; DELETE is the
+    // only meaningful write operation. Empty update is a safe no-op.
+    for (const table of SURVIVOR_JUNCTION_TABLES)
       r.push({
         table,
-        rowId: () => rowId,
-        update: survivorJunctionUpdates[table] ?? {}
+        rowId: () => fixture.survivorJunctionIds[table],
+        update: {}
       })
 
     return r

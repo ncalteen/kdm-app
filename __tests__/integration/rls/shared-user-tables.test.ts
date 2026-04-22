@@ -92,7 +92,8 @@ const SHARE_SPECS: ShareSpec[] = [
     parent: 'milestone',
     share: 'milestone_shared_user',
     fkCol: 'milestone_id',
-    nameCol: 'event_name'
+    nameCol: 'event_name',
+    extras: { milestone_name: 'RLS-share-milestone-name' }
   },
   {
     parent: 'nemesis',
@@ -124,7 +125,7 @@ const SHARE_SPECS: ShareSpec[] = [
     share: 'principle_shared_user',
     fkCol: 'principle_id',
     nameCol: 'principle_name',
-    extras: { principle_category: 'DEATH' }
+    extras: { option_1_name: 'Opt 1', option_2_name: 'Opt 2' }
   },
   {
     parent: 'quarry',
@@ -138,7 +139,7 @@ const SHARE_SPECS: ShareSpec[] = [
     share: 'resource_shared_user',
     fkCol: 'resource_id',
     nameCol: 'resource_name',
-    extras: { resource_type: 'BASIC' }
+    extras: { category: 'BASIC' }
   },
   {
     parent: 'secret_fighting_art',
@@ -156,7 +157,7 @@ const SHARE_SPECS: ShareSpec[] = [
     parent: 'strain_milestone',
     share: 'strain_milestone_shared_user',
     fkCol: 'strain_milestone_id',
-    nameCol: 'event_name'
+    nameCol: 'strain_milestone_name'
   },
   {
     parent: 'settlement',
@@ -181,7 +182,7 @@ const SHARE_SPECS: ShareSpec[] = [
     share: 'wanderer_shared_user',
     fkCol: 'wanderer_id',
     nameCol: 'wanderer_name',
-    extras: { gender: 'F' }
+    extras: { gender: 'FEMALE' }
   },
   {
     parent: 'weapon_type',

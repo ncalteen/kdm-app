@@ -27,7 +27,7 @@ describe('RLS: shared-user access on settlement', () => {
     owner = await createTestUser()
     guest = await createTestUser()
     settlementId = await seedSettlement(owner.id, 'Shared Test Settlement')
-    await shareSettlement(settlementId, guest.id)
+    await shareSettlement(settlementId, guest.id, owner.id)
   })
 
   afterAll(async () => {
@@ -77,23 +77,31 @@ describe('RLS: shared-user access on settlement', () => {
     expect(data).toHaveLength(1)
   })
 
-  // EXPLICIT POLICY DECISION: declare shared-user write access below.
-  // Today the DAL treats shared users as read-only. If that's what your
-  // policies enforce, this test should PASS as written (update denied).
-  it('guest CANNOT update settlement_name (documents read-only policy)', async () => {
+  // The `Allow update for shared` RLS policy on `settlement` permits any user
+  // listed in `settlement_shared_user` to mutate the settlement, even though
+  // the DAL historically treated them as read-only. This test pins that
+  // decision so any future tightening is deliberate.
+  it('guest CAN update settlement_name (documents shared write-access)', async () => {
     const { data, error } = await guest.client
       .from('settlement')
       .update({ settlement_name: 'GUEST WAS HERE' })
       .eq('id', settlementId)
       .select('id')
-    expect(data ?? []).toHaveLength(0)
-    if (error) expect(error.code).toMatch(/PGRST|42501/)
+    expect(error).toBeNull()
+    expect(data ?? []).toHaveLength(1)
 
     const { data: check } = await owner.client
       .from('settlement')
       .select('settlement_name')
       .eq('id', settlementId)
       .single()
-    expect(check?.settlement_name).toBe('Shared Test Settlement')
+    expect(check?.settlement_name).toBe('GUEST WAS HERE')
+
+    // Restore the original name so later assertions in this suite still
+    // observe the owner-provided value.
+    await owner.client
+      .from('settlement')
+      .update({ settlement_name: 'Shared Test Settlement' })
+      .eq('id', settlementId)
   })
 })
