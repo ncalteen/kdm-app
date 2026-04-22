@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -69,7 +70,8 @@ export async function addSecretFightingArtSharedUsers(
 /**
  * Remove Secret Fighting Art Shared Users
  *
- * Revokes sharing of a secret fighting art with users.
+ * Revokes sharing of a secret fighting art with users. Only allows the owner of
+ * the resource to revoke sharing.
  *
  * @param secretFightingArtId Secret Fighting Art ID
  * @param sharedUserIds Shared User IDs
@@ -80,6 +82,7 @@ export async function removeSecretFightingArtSharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -87,6 +90,7 @@ export async function removeSecretFightingArtSharedUsers(
     .delete()
     .eq('secret_fighting_art_id', secretFightingArtId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(

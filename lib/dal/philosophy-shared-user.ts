@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -63,7 +64,8 @@ export async function addPhilosophySharedUsers(
 /**
  * Remove Philosophy Shared Users
  *
- * Revokes sharing of a philosophy with users.
+ * Revokes sharing of a philosophy with users. Only allows the owner of the
+ * resource to revoke sharing.
  *
  * @param philosophyId Philosophy ID
  * @param sharedUserIds Shared User IDs
@@ -74,6 +76,7 @@ export async function removePhilosophySharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -81,6 +84,7 @@ export async function removePhilosophySharedUsers(
     .delete()
     .eq('philosophy_id', philosophyId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(`Error Removing Philosophy Shared Users: ${error.message}`)

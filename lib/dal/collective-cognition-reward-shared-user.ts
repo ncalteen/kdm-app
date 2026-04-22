@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -69,7 +70,8 @@ export async function addCollectiveCognitionRewardSharedUsers(
 /**
  * Remove Collective Cognition Reward Shared Users
  *
- * Revokes sharing of a collective cognition reward with users.
+ * Revokes sharing of a collective cognition reward with users. Only allows the
+ * owner of the resource to revoke sharing.
  *
  * @param collectiveCognitionRewardId Collective Cognition Reward ID
  * @param sharedUserIds Shared User IDs
@@ -80,6 +82,7 @@ export async function removeCollectiveCognitionRewardSharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -87,6 +90,7 @@ export async function removeCollectiveCognitionRewardSharedUsers(
     .delete()
     .eq('collective_cognition_reward_id', collectiveCognitionRewardId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(

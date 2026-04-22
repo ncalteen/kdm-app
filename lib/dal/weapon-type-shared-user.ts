@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -63,7 +64,8 @@ export async function addWeaponTypeSharedUsers(
 /**
  * Remove Weapon Type Shared Users
  *
- * Revokes sharing of a weapon type with users.
+ * Revokes sharing of a weapon type with users. Only allows the owner of the
+ * resource to revoke sharing.
  *
  * @param weaponTypeId Weapon Type ID
  * @param sharedUserIds Shared User IDs
@@ -74,6 +76,7 @@ export async function removeWeaponTypeSharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -81,6 +84,7 @@ export async function removeWeaponTypeSharedUsers(
     .delete()
     .eq('weapon_type_id', weaponTypeId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(`Error Removing Weapon Type Shared Users: ${error.message}`)

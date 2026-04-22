@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -63,7 +64,8 @@ export async function addPrincipleSharedUsers(
 /**
  * Remove Principle Shared Users
  *
- * Revokes sharing of a principle with users.
+ * Revokes sharing of a principle with users. Only allows the owner of the
+ * resource to revoke sharing.
  *
  * @param principleId Principle ID
  * @param sharedUserIds Shared User IDs
@@ -74,6 +76,7 @@ export async function removePrincipleSharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -81,6 +84,7 @@ export async function removePrincipleSharedUsers(
     .delete()
     .eq('principle_id', principleId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(`Error Removing Principle Shared Users: ${error.message}`)

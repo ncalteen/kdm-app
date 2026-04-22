@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -63,7 +64,8 @@ export async function addMilestoneSharedUsers(
 /**
  * Remove Milestone Shared Users
  *
- * Revokes sharing of a milestone with users.
+ * Revokes sharing of a milestone with users. Only allows the owner of the
+ * resource to revoke sharing.
  *
  * @param milestoneId Milestone ID
  * @param sharedUserIds Shared User IDs
@@ -74,6 +76,7 @@ export async function removeMilestoneSharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -81,6 +84,7 @@ export async function removeMilestoneSharedUsers(
     .delete()
     .eq('milestone_id', milestoneId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(`Error Removing Milestone Shared Users: ${error.message}`)

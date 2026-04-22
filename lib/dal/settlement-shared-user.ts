@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -63,7 +64,8 @@ export async function addSettlementSharedUsers(
 /**
  * Remove Settlement Shared Users
  *
- * Revokes sharing of a settlement with users.
+ * Revokes sharing of a settlement with users. Only allows the owner of the
+ * resource to revoke sharing.
  *
  * @param settlementId Settlement ID
  * @param sharedUserIds Shared User IDs
@@ -74,6 +76,7 @@ export async function removeSettlementSharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -81,6 +84,7 @@ export async function removeSettlementSharedUsers(
     .delete()
     .eq('settlement_id', settlementId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(`Error Removing Settlement Shared Users: ${error.message}`)

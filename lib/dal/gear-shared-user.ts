@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -62,7 +63,8 @@ export async function addGearSharedUsers(
 /**
  * Remove Gear Shared Users
  *
- * Revokes sharing of a gear with users.
+ * Revokes sharing of a gear with users. Only allows the owner of the resource
+ * to revoke sharing.
  *
  * @param gearId Gear ID
  * @param sharedUserIds Shared User IDs
@@ -73,6 +75,7 @@ export async function removeGearSharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -80,6 +83,7 @@ export async function removeGearSharedUsers(
     .delete()
     .eq('gear_id', gearId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(`Error Removing Gear Shared Users: ${error.message}`)

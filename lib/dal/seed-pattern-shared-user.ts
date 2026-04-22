@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -65,7 +66,8 @@ export async function addSeedPatternSharedUsers(
 /**
  * Remove Seed Pattern Shared Users
  *
- * Revokes sharing of a seed pattern with users.
+ * Revokes sharing of a seed pattern with users. Only allows the owner of the
+ * resource to revoke sharing.
  *
  * @param seedPatternId Seed Pattern ID
  * @param sharedUserIds Shared User IDs
@@ -76,6 +78,7 @@ export async function removeSeedPatternSharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -83,6 +86,7 @@ export async function removeSeedPatternSharedUsers(
     .delete()
     .eq('seed_pattern_id', seedPatternId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(
