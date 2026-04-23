@@ -3407,7 +3407,6 @@ export type Database = {
       }
       survivor: {
         Row: {
-          abilities_impairments: string[]
           absolute_reaper: boolean | null
           absolute_rust: boolean | null
           absolute_storm: boolean | null
@@ -3530,7 +3529,6 @@ export type Database = {
           weapon_type_id: string | null
         }
         Insert: {
-          abilities_impairments?: string[]
           absolute_reaper?: boolean | null
           absolute_rust?: boolean | null
           absolute_storm?: boolean | null
@@ -3653,7 +3651,6 @@ export type Database = {
           weapon_type_id?: string | null
         }
         Update: {
-          abilities_impairments?: string[]
           absolute_reaper?: boolean | null
           absolute_rust?: boolean | null
           absolute_storm?: boolean | null

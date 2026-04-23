@@ -807,7 +807,6 @@ async function createSurvivorsForSettlement(
       await supabase
         .from('survivor')
         .insert({
-          abilities_impairments: isExperienced ? ['Ability'] : ['Impairment'],
           accuracy: isExperienced ? 2 : 0,
           arc: survivorType === SurvivorType.ARC,
           can_dash: isExperienced,
