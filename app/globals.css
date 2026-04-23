@@ -8,6 +8,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Safelist for `getColorStyle` in `lib/utils.ts`. The class names there are
+ * built via template interpolation over `ColorChoice` and so are invisible to
+ * Tailwind's content scanner. Keep this list in sync with the four style types
+ * (`bg`, `border`, `border-hover`, `header`) emitted by that helper.
+ */
+@source inline("{bg,border}-{neutral,stone,zinc,slate,gray,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-500");
+@source inline("border-{neutral,stone,zinc,slate,gray,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-300/50");
+@source inline("border-{neutral,stone,zinc,slate,gray,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-400/70");
+@source inline("bg-{neutral,stone,zinc,slate,gray,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-100/30");
+@source inline("border-{neutral,stone,zinc,slate,gray,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-300/40");
+
 @theme {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
