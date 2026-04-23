@@ -61,14 +61,7 @@ import {
 } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementTimelineYearDetail } from '@/lib/types'
-import {
-  canDash,
-  canEncourage,
-  canEndure,
-  canFistPump,
-  canSurge,
-  survivorsBornWithUnderstanding
-} from '@/lib/utils'
+import { survivorsBornWithUnderstanding } from '@/lib/utils'
 import { NewSettlementInput } from '@/schemas/new-settlement-input'
 
 /**
@@ -359,11 +352,6 @@ export async function getSettlement(
 
   return {
     ...settlement,
-    can_encourage: canEncourage(innovations),
-    can_surge: canSurge(innovations),
-    can_dash: canDash(innovations),
-    can_fist_pump: canFistPump(innovations),
-    can_endure: canEndure(innovations),
     collective_cognition_rewards: collectiveCognitionRewards,
     gear,
     innovations,

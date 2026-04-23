@@ -477,16 +477,6 @@ export type SettlementDetail = Omit<
   Tables<'settlement'>,
   'created_at' | 'updated_at'
 > & {
-  /** Can Encourage */
-  can_encourage: boolean
-  /** Can Surge */
-  can_surge: boolean
-  /** Can Dash */
-  can_dash: boolean
-  /** Can Fist Pump */
-  can_fist_pump: boolean
-  /** Can Endure */
-  can_endure: boolean
   /** Collective Cognition Rewards */
   collective_cognition_rewards: {
     /** Collective Cognition Reward Collective Cognition */

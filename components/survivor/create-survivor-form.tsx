@@ -34,11 +34,18 @@ import {
   WandererDetail
 } from '@/lib/types'
 import {
+  canDash,
+  canEncourage,
+  canEndure,
+  canFistPump,
+  canSurge
+} from '@/lib/utils'
+import {
   NewSurvivorInput,
   NewSurvivorInputSchema
 } from '@/schemas/new-survivor-input'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useState } from 'react'
 import { Resolver, useForm } from 'react-hook-form'
 
 /**
@@ -100,6 +107,20 @@ export function CreateSurvivorForm({
     })
   })
 
+  // Derive settlement-level survivor capability flags from the current
+  // innovations. Computing client-side keeps these in sync with realtime
+  // innovation updates without requiring a full settlement refetch.
+  const survivorCapabilities = useMemo(() => {
+    const innovations = selectedSettlement?.innovations ?? []
+    return {
+      canDash: canDash(innovations),
+      canFistPump: canFistPump(innovations),
+      canEncourage: canEncourage(innovations),
+      canEndure: canEndure(innovations),
+      canSurge: canSurge(innovations)
+    }
+  }, [selectedSettlement?.innovations])
+
   // Set the form values when the component mounts
   useEffect(() => {
     console.debug('[CreateSurvivorForm] Initializing Form Values')
@@ -108,11 +129,7 @@ export function CreateSurvivorForm({
 
     const updatedValues = {
       settlementId: selectedSettlement?.id,
-      canDash: selectedSettlement?.can_dash ?? false,
-      canFistPump: selectedSettlement?.can_fist_pump ?? false,
-      canEncourage: selectedSettlement?.can_encourage ?? false,
-      canEndure: selectedSettlement?.can_endure ?? false,
-      canSurge: selectedSettlement?.can_surge ?? false,
+      ...survivorCapabilities,
       huntXPRankUp:
         selectedSettlement?.survivor_type !==
         DatabaseSurvivorType[SurvivorType.ARC]
@@ -131,11 +148,7 @@ export function CreateSurvivorForm({
   }, [
     form,
     selectedSettlement?.id,
-    selectedSettlement?.can_dash,
-    selectedSettlement?.can_fist_pump,
-    selectedSettlement?.can_encourage,
-    selectedSettlement?.can_endure,
-    selectedSettlement?.can_surge,
+    survivorCapabilities,
     selectedSettlement?.survivors_born_with_understanding,
     selectedSettlement?.survivor_type
   ])
@@ -158,11 +171,7 @@ export function CreateSurvivorForm({
         ...NewSurvivorInputSchema.parse({
           settlementId: selectedSettlement?.id
         }),
-        canDash: selectedSettlement?.can_dash ?? false,
-        canFistPump: selectedSettlement?.can_fist_pump ?? false,
-        canEncourage: selectedSettlement?.can_encourage ?? false,
-        canEndure: selectedSettlement?.can_endure ?? false,
-        canSurge: selectedSettlement?.can_surge ?? false,
+        ...survivorCapabilities,
         huntXPRankUp:
           selectedSettlement.survivor_type !==
           DatabaseSurvivorType[SurvivorType.ARC]
@@ -191,11 +200,7 @@ export function CreateSurvivorForm({
       ...NewSurvivorInputSchema.parse({
         settlementId: selectedSettlement?.id
       }),
-      canDash: selectedSettlement?.can_dash ?? false,
-      canFistPump: selectedSettlement?.can_fist_pump ?? false,
-      canEncourage: selectedSettlement?.can_encourage ?? false,
-      canEndure: selectedSettlement?.can_endure ?? false,
-      canSurge: selectedSettlement?.can_surge ?? false,
+      ...survivorCapabilities,
 
       // Wanderer-specific data
       abilitiesAndImpairments: wanderer.abilities_impairments,
