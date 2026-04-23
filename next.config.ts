@@ -1,7 +1,6 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
   allowedDevOrigins: [
     // Local Dev
     '127.0.0.1',
