@@ -5,9 +5,8 @@ import { SettlementCard } from '@/components/settlement/settlement-card'
 import { SiteHeader } from '@/components/side-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { ReactElement, Suspense, useEffect, useRef, useState } from 'react'
+import { ReactElement, Suspense, useEffect } from 'react'
 
 /**
  * Main Page Component
@@ -45,34 +44,23 @@ function MainPageLoading(): ReactElement {
 /**
  * Main Page Content Component
  *
+ * Consumes the shared authentication state from `LocalContext` rather than
+ * issuing its own `auth.getUser()` call, avoiding a redundant network round
+ * trip on bootstrap.
+ *
  * @returns Main Page Content Component
  */
 function MainPageContent(): ReactElement {
   const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { isAuthenticated } = useLocal()
 
-  // Track if the component is mounted
-  const isMounted = useRef(false)
-
-  // Verify authentication; redirect to login if unauthenticated
+  // Redirect to login once the provider confirms no user is signed in.
+  // `null` means the check is still in flight — keep showing the loader.
   useEffect(() => {
-    isMounted.current = true
+    if (isAuthenticated === false) router.replace('/auth/login')
+  }, [isAuthenticated, router])
 
-    const supabase = createClient()
-
-    supabase.auth.getUser().then(({ data, error }) => {
-      if (!isMounted.current) return
-
-      if (error || !data?.user) router.replace('/auth/login')
-      else setIsAuthenticated(true)
-    })
-
-    return () => {
-      isMounted.current = false
-    }
-  }, [router])
-
-  if (!isAuthenticated) return <MainPageLoading />
+  if (isAuthenticated !== true) return <MainPageLoading />
 
   return <MainPage />
 }

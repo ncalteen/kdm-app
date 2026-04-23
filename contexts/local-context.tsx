@@ -73,6 +73,16 @@ const newLocal: LocalStateType = {
  * Local Context Type
  */
 interface LocalContextType {
+  /**
+   * Authentication State
+   *
+   * `null` while the initial `auth.getUser()` check is in flight, `true`
+   * once a user is verified, `false` when no user is present. Consumers
+   * should treat `null` the same as `false` for gating data fetches, but
+   * may use it to distinguish "still checking" from "definitely signed
+   * out" (e.g. before redirecting to the login page).
+   */
+  isAuthenticated: boolean | null
   /** Is Creating New Hunt */
   isCreatingNewHunt: boolean
   /** Is Creating New Settlement */
@@ -258,7 +268,11 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     useState<boolean>(false)
 
   // Wait for authentication before fetching any data.
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  // `null` = check in flight, `true` = authenticated, `false` = not
+  // authenticated. The tri-state lets downstream consumers (e.g. `app/page.tsx`)
+  // distinguish "still checking" from "definitely signed out" without
+  // issuing a redundant `auth.getUser()` call.
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   useEffect(() => {
     let isCancelled = false
@@ -306,7 +320,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   // Subscribe to Supabase Realtime changes on gameplay tables. When another
   // tab or player modifies data, the affected domain is re-fetched.
   useRealtimeSubscriptions({
-    enabled: isAuthenticated,
+    enabled: isAuthenticated === true,
     settlementId: selectedSettlementId,
     onSettlementChange: () => {
       if (!selectedSettlementId) return
@@ -1497,6 +1511,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   return (
     <LocalContext.Provider
       value={{
+        isAuthenticated,
         isCreatingNewHunt,
         isCreatingNewSettlement,
         isCreatingNewShowdown,
