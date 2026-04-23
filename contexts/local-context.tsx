@@ -1095,17 +1095,22 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     setSelectedSettlementState(settlement)
     setSelectedSettlementIdState(settlement ? settlement.id : null)
 
-    // Only re-fetch related data when switching to a DIFFERENT settlement.
+    // Only discover related data when switching to a DIFFERENT settlement.
     // Same-ID updates are optimistic UI mutations and must not trigger
     // side-effects such as re-fetching or resetting the active tab.
+    //
+    // Note: getSettlement and getSurvivors are intentionally NOT called here
+    // because their effects (keyed on `selectedSettlementId`) will fire
+    // automatically when the ID flips above. Hunt / phase / showdown effects
+    // are gated on their own IDs being set, so we still need to discover them
+    // imperatively the first time a settlement is selected.
     if (settlement && settlement.id !== selectedSettlementId)
       Promise.all([
         getHunt(settlement.id),
         getSettlementPhase(settlement.id),
-        getShowdown(settlement.id),
-        getSurvivors(settlement.id)
+        getShowdown(settlement.id)
       ])
-        .then(([hunt, settlementPhase, showdown, survivors]) => {
+        .then(([hunt, settlementPhase, showdown]) => {
           setSelectedHuntState(hunt)
           setSelectedHuntIdState(hunt ? hunt.id : null)
           setSelectedHuntMonsterIndexState(0)
@@ -1116,7 +1121,6 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           setSelectedShowdownState(showdown)
           setSelectedShowdownIdState(showdown ? showdown.id : null)
           setSelectedShowdownMonsterIndexState(0)
-          setSurvivors(survivors ?? [])
 
           // Save the change to local storage.
           setLocalState((local) => {
@@ -1145,7 +1149,6 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           setSelectedShowdownState(null)
           setSelectedShowdownIdState(null)
           setSelectedShowdownMonsterIndexState(0)
-          setSurvivors([])
 
           // Save the change to local storage.
           setLocalState((local) => {
@@ -1179,26 +1182,26 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     // Update the state to reflect the changes.
     setSelectedSettlementIdState(settlementId)
 
-    // If a settlement is selected, also attempt to fetch the hunt, settlement
-    // phase, and showdown details to update the state.
+    // Discover the active hunt / settlement phase / showdown for the new
+    // settlement. The settlement and survivors are NOT fetched here because
+    // their effects (keyed on `selectedSettlementId`) fire automatically when
+    // the ID flips above. Hunt / phase / showdown effects are gated on their
+    // own IDs being non-null, so without this imperative discovery they would
+    // not refresh on a settlement switch.
     if (settlementId)
       Promise.all([
         getHunt(settlementId),
-        getSettlement(settlementId),
         getSettlementPhase(settlementId),
-        getShowdown(settlementId),
-        getSurvivors(settlementId)
-      ]).then(([hunt, settlement, settlementPhase, showdown, survivors]) => {
+        getShowdown(settlementId)
+      ]).then(([hunt, settlementPhase, showdown]) => {
         setSelectedHuntState(hunt)
         setSelectedHuntIdState(hunt?.id ?? null)
         setSelectedHuntMonsterIndexState(0)
-        setSelectedSettlementState(settlement)
         setSelectedSettlementPhaseState(settlementPhase)
         setSelectedSettlementPhaseIdState(settlementPhase?.id ?? null)
         setSelectedShowdownState(showdown)
         setSelectedShowdownIdState(showdown?.id ?? null)
         setSelectedShowdownMonsterIndexState(0)
-        setSurvivors(survivors ?? [])
 
         // Save the change to local storage.
         setLocalState((local) => {
