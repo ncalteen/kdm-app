@@ -18,6 +18,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { getNemeses } from '@/lib/dal/nemesis'
@@ -48,7 +49,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { PlusIcon, SkullIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Nemeses Card Properties
@@ -82,34 +83,13 @@ export function NemesesCard({
   const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available nemeses for the select dropdown (fetched once per settlement).
-  const [availableNemeses, setAvailableNemeses] = useState<{
+  const { data: availableNemeses, isLoaded: hasFetched } = useCatalogFetch<{
     [key: string]: NemesisDetail
-  }>({})
-
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  /**
-   * Fetch settlement nemeses and available nemesis options when the settlement
-   * changes. Both queries run in parallel to minimize load time.
-   */
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    Promise.all([
+  }>(
+    selectedSettlement?.id,
+    () =>
       // Don't include alternates or vignettes in the dropdown
       getNemeses(
         [
@@ -121,28 +101,14 @@ export function NemesesCard({
         ],
         false,
         false
-      )
-    ])
-      .then(([nemeses]) => {
-        if (cancelled) return
-
-        setAvailableNemeses(nemeses)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        setAvailableNemeses({})
-        setHasFetched(true)
-
-        console.error('Settlement Nemeses Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
+      ),
+    {
+      initial: {},
+      errorContext: 'Settlement Nemeses Fetch Error',
+      onReset: () => setAddOpen(false),
+      onError: () => toast.error(ERROR_MESSAGE())
     }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  )
 
   /**
    * Available Nemeses Not Yet Added

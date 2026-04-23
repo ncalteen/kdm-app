@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useToast } from '@/hooks/use-toast'
 import { createSurvivor } from '@/lib/dal/survivor'
 import { getWanderers } from '@/lib/dal/wanderer'
@@ -83,48 +84,14 @@ export function CreateSurvivorForm({
   const [activeTab, setActiveTab] = useState<'custom' | 'wanderer'>('custom')
   const [selectedWanderer, setSelectedWanderer] =
     useState<WandererDetail | null>(null)
-  const [availableWanderers, setAvailableWanderers] = useState<{
+
+  const { data: availableWanderers } = useCatalogFetch<{
     [key: string]: WandererDetail
-  }>({})
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
-
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAvailableWanderers({})
-    setHasFetched(false)
-  }
-
-  /**
-   * Fetch wanderers when the settlement changes.
-   */
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    Promise.all([getWanderers()])
-      .then(([wanderers]) => {
-        if (cancelled) return
-
-        setAvailableWanderers(sortWanderers(wanderers))
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        console.error('Wanderers Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, async () => sortWanderers(await getWanderers()), {
+    initial: {},
+    errorContext: 'Wanderers Fetch Error',
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   const form = useForm<NewSurvivorInput>({
     resolver: zodResolver(NewSurvivorInputSchema) as Resolver<NewSurvivorInput>,

@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addPrinciple, getPrinciples } from '@/lib/dal/principle'
@@ -41,7 +42,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { Plus, PlusIcon, StampIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Principles Card Properties
@@ -74,55 +75,24 @@ export function PrinciplesCard({
   const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [dialogKey, setDialogKey] = useState(0)
 
   // Available principles for the select dropdown (fetched once per settlement).
-  const [availablePrinciples, setAvailablePrinciples] = useState<{
+  const {
+    data: availablePrinciples,
+    isLoaded: hasFetched,
+    setData: setAvailablePrinciples
+  } = useCatalogFetch<{
     [key: string]: PrincipleDetail
-  }>({})
-
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  // Fetch available principle options when settlement changes.
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getPrinciples()
-      .then((principles) => {
-        if (cancelled) return
-
-        setAvailablePrinciples(principles)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        setAvailablePrinciples({})
-        setHasFetched(true)
-
-        console.error('Settlement Principles Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getPrinciples(), {
+    initial: {},
+    errorContext: 'Settlement Principles Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   /**
    * Available Principles Not Yet Added
@@ -436,7 +406,14 @@ export function PrinciplesCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
+    [
+      creating,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate,
+      setAvailablePrinciples
+    ]
   )
 
   /** Open the create dialog with the current search term pre-filled */

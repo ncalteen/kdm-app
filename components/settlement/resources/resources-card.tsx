@@ -19,6 +19,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addResource, getResources } from '@/lib/dal/resource'
@@ -40,7 +41,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { BeefIcon, Plus, PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Resources Card Properties
@@ -73,49 +74,23 @@ export function ResourcesCard({
   const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [dialogKey, setDialogKey] = useState(0)
 
-  const [availableResources, setAvailableResources] = useState<{
+  const {
+    data: availableResources,
+    isLoaded: hasFetched,
+    setData: setAvailableResources
+  } = useCatalogFetch<{
     [key: string]: ResourceDetail
-  }>({})
-
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getResources()
-      .then((resources) => {
-        if (cancelled) return
-        setAvailableResources(resources)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setAvailableResources({})
-        setHasFetched(true)
-        console.error('Settlement Resources Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getResources(), {
+    initial: {},
+    errorContext: 'Settlement Resources Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   const selectableResources = useMemo(() => {
     const linkedIds = new Set(
@@ -384,7 +359,14 @@ export function ResourcesCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
+    [
+      creating,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate,
+      setAvailableResources
+    ]
   )
 
   /** Open the create dialog with the current search term pre-filled */

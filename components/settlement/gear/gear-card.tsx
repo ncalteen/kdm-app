@@ -19,6 +19,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addGear, getGear } from '@/lib/dal/gear'
@@ -39,7 +40,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { Plus, PlusIcon, WrenchIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Gear Card Properties
@@ -72,49 +73,23 @@ export function GearCard({
   const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [dialogKey, setDialogKey] = useState(0)
 
-  const [availableGear, setAvailableGear] = useState<{
+  const {
+    data: availableGear,
+    isLoaded: hasFetched,
+    setData: setAvailableGear
+  } = useCatalogFetch<{
     [key: string]: GearDetail
-  }>({})
-
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getGear()
-      .then((gear) => {
-        if (cancelled) return
-        setAvailableGear(gear)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setAvailableGear({})
-        setHasFetched(true)
-        console.error('Settlement Gear Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getGear(), {
+    initial: {},
+    errorContext: 'Settlement Gear Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   const selectableGear = useMemo(() => {
     const linkedIds = new Set(
@@ -366,7 +341,14 @@ export function GearCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
+    [
+      creating,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate,
+      setAvailableGear
+    ]
   )
 
   /** Open the create dialog with the current search term pre-filled */

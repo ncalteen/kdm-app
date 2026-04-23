@@ -18,6 +18,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addSeedPattern, getSeedPatterns } from '@/lib/dal/seed-pattern'
@@ -37,7 +38,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { BeanIcon, Plus, PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Seed Patterns Card Properties
@@ -70,47 +71,21 @@ export function SeedPatternsCard({
   const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
 
-  const [availableSeedPatterns, setAvailableSeedPatterns] = useState<{
+  const {
+    data: availableSeedPatterns,
+    isLoaded: hasFetched,
+    setData: setAvailableSeedPatterns
+  } = useCatalogFetch<{
     [key: string]: SeedPatternDetail
-  }>({})
-
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getSeedPatterns()
-      .then((seedPatterns) => {
-        if (cancelled) return
-        setAvailableSeedPatterns(seedPatterns)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setAvailableSeedPatterns({})
-        setHasFetched(true)
-        console.error('Settlement Seed Patterns Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getSeedPatterns(), {
+    initial: {},
+    errorContext: 'Settlement Seed Patterns Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   const selectableSeedPatterns = useMemo(() => {
     const linkedIds = new Set(
@@ -312,7 +287,8 @@ export function SeedPatternsCard({
     selectedSettlement,
     setSelectedSettlement,
     toast,
-    mutate
+    mutate,
+    setAvailableSeedPatterns
   ])
 
   return (

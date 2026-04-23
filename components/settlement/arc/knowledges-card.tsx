@@ -19,6 +19,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addKnowledge, getKnowledges } from '@/lib/dal/knowledge'
@@ -39,7 +40,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { GraduationCapIcon, Plus, PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Knowledges Card Properties
@@ -72,62 +73,32 @@ export function KnowledgesCard({
   const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [dialogKey, setDialogKey] = useState(0)
 
   // Available knowledges for the select dropdown (fetched once per settlement).
-  const [availableKnowledges, setAvailableKnowledges] = useState<{
+  const {
+    data: availableKnowledges,
+    isLoaded: hasFetched,
+    setData: setAvailableKnowledges
+  } = useCatalogFetch<{
     [key: string]: KnowledgeDetail
-  }>({})
+  }>(selectedSettlement?.id, () => getKnowledges(), {
+    initial: {},
+    errorContext: 'Knowledges Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   // Available philosophies for the create dialog dropdown.
-  const [availablePhilosophies, setAvailablePhilosophies] = useState<{
+  const { data: availablePhilosophies } = useCatalogFetch<{
     [key: string]: PhilosophyDetail
-  }>({})
-
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  // Fetch available knowledge options when settlement changes.
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    Promise.all([getKnowledges(), getPhilosophies()])
-      .then(([knowledges, philosophies]) => {
-        if (cancelled) return
-
-        setAvailableKnowledges(knowledges)
-        setAvailablePhilosophies(philosophies)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        setAvailableKnowledges({})
-        setAvailablePhilosophies({})
-        setHasFetched(true)
-
-        console.error('Knowledges Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getPhilosophies(), {
+    initial: {},
+    errorContext: 'Philosophies Fetch Error'
+  })
 
   /**
    * Sorted Knowledges
@@ -367,7 +338,14 @@ export function KnowledgesCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
+    [
+      creating,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate,
+      setAvailableKnowledges
+    ]
   )
 
   /** Open the create dialog with the current search term pre-filled. */

@@ -19,6 +19,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addLocation, getLocations } from '@/lib/dal/location'
@@ -40,7 +41,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { HouseIcon, Plus, PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Locations Card Properties
@@ -73,7 +74,6 @@ export function LocationsCard({
   const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -81,48 +81,18 @@ export function LocationsCard({
   const [createDialogKey, setCreateDialogKey] = useState(0)
 
   // Available locations for the select dropdown (fetched once per settlement).
-  const [availableLocations, setAvailableLocations] = useState<{
+  const {
+    data: availableLocations,
+    isLoaded: hasFetched,
+    setData: setAvailableLocations
+  } = useCatalogFetch<{
     [key: string]: LocationDetail
-  }>({})
-
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  // Fetch available location options when settlement changes.
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getLocations()
-      .then((locations) => {
-        if (cancelled) return
-
-        setAvailableLocations(locations)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        setAvailableLocations({})
-        setHasFetched(true)
-
-        console.error('Settlement Locations Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getLocations(), {
+    initial: {},
+    errorContext: 'Settlement Locations Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   /**
    * Available Locations Not Yet Added
@@ -415,7 +385,14 @@ export function LocationsCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
+    [
+      creating,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate,
+      setAvailableLocations
+    ]
   )
 
   return (

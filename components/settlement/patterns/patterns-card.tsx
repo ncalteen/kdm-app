@@ -18,6 +18,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addPattern, getPatterns } from '@/lib/dal/pattern'
@@ -37,7 +38,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { Plus, PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Patterns Card Properties
@@ -70,47 +71,21 @@ export function PatternsCard({
   const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
 
-  const [availablePatterns, setAvailablePatterns] = useState<{
+  const {
+    data: availablePatterns,
+    isLoaded: hasFetched,
+    setData: setAvailablePatterns
+  } = useCatalogFetch<{
     [key: string]: PatternDetail
-  }>({})
-
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getPatterns()
-      .then((patterns) => {
-        if (cancelled) return
-        setAvailablePatterns(patterns)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setAvailablePatterns({})
-        setHasFetched(true)
-        console.error('Settlement Patterns Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getPatterns(), {
+    initial: {},
+    errorContext: 'Settlement Patterns Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   const selectablePatterns = useMemo(() => {
     const linkedIds = new Set(
@@ -295,7 +270,8 @@ export function PatternsCard({
     selectedSettlement,
     setSelectedSettlement,
     toast,
-    mutate
+    mutate,
+    setAvailablePatterns
   ])
 
   return (
