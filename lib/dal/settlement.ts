@@ -75,8 +75,13 @@ import { NewSettlementInput } from '@/schemas/new-settlement-input'
  * Create Settlement
  *
  * Takes either the preselected campaign or custom campaign data and uses it to
- * create a new settlement. Parallelizes independent data lookups for nemesis,
- * quarry, and wanderer timeline/location data to reduce latency.
+ * create a new settlement. After the initial settlement insert, all
+ * settlement-id-dependent inserts (innovations, milestones, principles,
+ * nemeses, quarries) and all catalog lookups (conditional locations and
+ * nemesis/quarry/wanderer timeline/location/CC-reward data) run concurrently
+ * in a single Promise.all to minimize round-trip latency. The accumulated
+ * locations / timeline / CC-reward data is then committed in one final
+ * parallel batch.
  *
  * @param options Settlement Input Data
  * @returns Settlement ID
@@ -125,13 +130,6 @@ export async function createSettlement(
 
   const settlementId = settlementData.id
 
-  // Simple parallel inserts that don't affect other tables.
-  await Promise.all([
-    addSettlementInnovations(template.innovationIds, settlementId),
-    addSettlementMilestones(template.milestoneIds, settlementId),
-    addSettlementPrinciples(template.principleIds, settlementId)
-  ])
-
   // Accumulators for data that depends on nemesis/quarry/wanderer lookups.
   const settlementCollectiveCognitionRewardIds = [
     ...template.collectiveCognitionRewardIds
@@ -151,11 +149,6 @@ export async function createSettlement(
     conditionalLocationNames.push('Forum')
   if (options.usesScouts) conditionalLocationNames.push('Outskirts')
 
-  if (conditionalLocationNames.length > 0)
-    settlementLocationIds.push(
-      ...(await getLocationIds(conditionalLocationNames, false, undefined))
-    )
-
   // Nemeses
   const nemesisIds = [
     ...options.monsterIds.NN1,
@@ -173,46 +166,66 @@ export async function createSettlement(
     ...options.monsterIds.NQ4
   ]
 
-  // Insert nemeses, quarries, and wanderers in parallel.
-  await Promise.all([
-    addSettlementNemeses(nemesisIds, settlementId),
-    addSettlementQuarries(quarryIds, settlementId)
+  // All settlement-id-dependent inserts and all catalog lookups are
+  // independent of each other once `settlementId` exists, so dispatch them
+  // concurrently. The accumulators are then merged from the lookup results
+  // before the final batch insert below.
+  const [
+    ,
+    ,
+    conditionalLocationIds,
+    nemesisDataResults,
+    quarryDataResults,
+    wandererDataResults
+  ] = await Promise.all([
+    // Template-driven inserts (settlementId only).
+    Promise.all([
+      addSettlementInnovations(template.innovationIds, settlementId),
+      addSettlementMilestones(template.milestoneIds, settlementId),
+      addSettlementPrinciples(template.principleIds, settlementId)
+    ]),
+    // Monster junction inserts (settlementId only).
+    Promise.all([
+      addSettlementNemeses(nemesisIds, settlementId),
+      addSettlementQuarries(quarryIds, settlementId)
+    ]),
+    // Conditional locations lookup (options only).
+    conditionalLocationNames.length > 0
+      ? getLocationIds(conditionalLocationNames, false, undefined)
+      : Promise.resolve<string[]>([]),
+    // All nemesis catalog lookups in parallel.
+    Promise.all(
+      nemesisIds.map(async (nemesisId) => {
+        const [timelineYears, locationIds] = await Promise.all([
+          getNemesisTimelineYears(nemesisId, options.campaignType),
+          getNemesisLocationIds(nemesisId)
+        ])
+        return { timelineYears, locationIds }
+      })
+    ),
+    // All quarry catalog lookups in parallel.
+    Promise.all(
+      quarryIds.map(async (quarryId) => {
+        const [timelineYears, locationIds, collectiveCognitionRewardIds] =
+          await Promise.all([
+            getQuarryTimelineYears(quarryId, options.campaignType),
+            getQuarryLocationIds(quarryId),
+            getQuarryCollectiveCognitionRewardIds(quarryId)
+          ])
+        return { timelineYears, locationIds, collectiveCognitionRewardIds }
+      })
+    ),
+    // All wanderer catalog lookups in parallel.
+    Promise.all(
+      options.wandererIds.map(async (wandererId) => {
+        const timelineYears = await getWandererTimelineYears(wandererId)
+        return { timelineYears }
+      })
+    )
   ])
 
-  // Fetch all timeline/location/collective-cognition-reward data in parallel
-  // per-entity.
-  const [nemesisDataResults, quarryDataResults, wandererDataResults] =
-    await Promise.all([
-      // All nemesis lookups in parallel
-      Promise.all(
-        nemesisIds.map(async (nemesisId) => {
-          const [timelineYears, locationIds] = await Promise.all([
-            getNemesisTimelineYears(nemesisId, options.campaignType),
-            getNemesisLocationIds(nemesisId)
-          ])
-          return { timelineYears, locationIds }
-        })
-      ),
-      // All quarry lookups in parallel
-      Promise.all(
-        quarryIds.map(async (quarryId) => {
-          const [timelineYears, locationIds, collectiveCognitionRewardIds] =
-            await Promise.all([
-              getQuarryTimelineYears(quarryId, options.campaignType),
-              getQuarryLocationIds(quarryId),
-              getQuarryCollectiveCognitionRewardIds(quarryId)
-            ])
-          return { timelineYears, locationIds, collectiveCognitionRewardIds }
-        })
-      ),
-      // All wanderer lookups in parallel
-      Promise.all(
-        options.wandererIds.map(async (wandererId) => {
-          const timelineYears = await getWandererTimelineYears(wandererId)
-          return { timelineYears }
-        })
-      )
-    ])
+  // Merge conditional locations into the accumulator.
+  settlementLocationIds.push(...conditionalLocationIds)
 
   // Merge nemesis data into accumulators.
   for (const { timelineYears, locationIds } of nemesisDataResults) {
