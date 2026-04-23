@@ -102,6 +102,7 @@
     "autoprefixer": "^10.4.27",
     "eslint": "^9",
     "eslint-config-next": "^16.2.2",
+    "eslint-plugin-jsdoc": "^62.9.0",
     "postcss": "^8",
     "prettier": "^3",
     "tailwindcss": "^4.1.16",

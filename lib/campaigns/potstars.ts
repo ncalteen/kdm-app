@@ -15,6 +15,8 @@ import { CampaignTemplate } from '@/lib/types'
 
 /**
  * Get People of the Stars Campaign Template
+ *
+ * @returns People of the Stars Campaign Template
  */
 export async function getPeopleOfTheStarsTemplate(): Promise<CampaignTemplate> {
   return {

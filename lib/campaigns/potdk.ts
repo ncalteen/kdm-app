@@ -15,6 +15,8 @@ import { CampaignTemplate } from '@/lib/types'
 
 /**
  * Get People of the Dream Keeper Campaign Template
+ *
+ * @returns People of the Dream Keeper Campaign Template
  */
 export async function getPeopleOfTheDreamKeeperTemplate(): Promise<CampaignTemplate> {
   return {
