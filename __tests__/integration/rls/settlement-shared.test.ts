@@ -1,11 +1,11 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   createTestUser,
   deleteTestUser,
   seedSettlement,
   shareSettlement,
   TestUser
-} from '../helpers/supabase'
+} from '@/__tests__/integration/helpers/supabase'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 /**
  * RLS — Shared-User Access Semantics

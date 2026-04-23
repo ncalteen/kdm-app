@@ -1,10 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   admin,
   createTestUser,
   deleteTestUser,
   TestUser
-} from '../helpers/supabase'
+} from '@/__tests__/integration/helpers/supabase'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 /**
  * RLS — Custom-Content Tables

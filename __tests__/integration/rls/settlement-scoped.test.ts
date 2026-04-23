@@ -1,11 +1,15 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   deleteCatalog,
   seedCatalog,
   seedSettlementFixture,
   SettlementFixture
-} from '../helpers/fixtures'
-import { createTestUser, deleteTestUser, TestUser } from '../helpers/supabase'
+} from '@/__tests__/integration/helpers/fixtures'
+import {
+  createTestUser,
+  deleteTestUser,
+  TestUser
+} from '@/__tests__/integration/helpers/supabase'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 /**
  * RLS — Settlement-Scoped Tables
