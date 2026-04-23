@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { FightingArtDetail } from '@/lib/types'
@@ -15,15 +16,8 @@ import { FightingArtDetail } from '@/lib/types'
 export async function getFightingArts(): Promise<{
   [key: string]: FightingArtDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
@@ -34,11 +28,11 @@ export async function getFightingArts(): Promise<{
       .from('fighting_art')
       .select('id, custom, fighting_art_name, rules')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('fighting_art_shared_user')
       .select('fighting_art(id, custom, fighting_art_name, rules)')
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -69,21 +63,16 @@ export async function addFightingArt(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<FightingArtDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (fightingArt.custom && !user) throw new Error('Not Authenticated')
+  if (fightingArt.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('fighting_art')
     .insert({
       ...fightingArt,
-      ...(fightingArt.custom ? { user_id: user!.id } : {})
+      ...(fightingArt.custom ? { user_id: userId! } : {})
     })
     .select('id, custom, fighting_art_name, rules')
     .single()
@@ -144,21 +133,14 @@ export async function removeFightingArt(id: string): Promise<void> {
 export async function getCustomFightingArts(): Promise<{
   [key: string]: FightingArtDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('fighting_art')
     .select('id, custom, fighting_art_name, rules')
     .eq('custom', true)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(`Error Fetching Custom Fighting Arts: ${error.message}`)

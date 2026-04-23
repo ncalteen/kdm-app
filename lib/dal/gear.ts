@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { GearDetail } from '@/lib/types'
@@ -15,15 +16,8 @@ import { GearDetail } from '@/lib/types'
 export async function getGear(): Promise<{
   [key: string]: GearDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
@@ -34,11 +28,11 @@ export async function getGear(): Promise<{
       .from('gear')
       .select('id, custom, gear_name, location_id')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('gear_shared_user')
       .select('gear(id, custom, gear_name, location_id)')
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -69,21 +63,16 @@ export async function addGear(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<GearDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (gear.custom && !user) throw new Error('Not Authenticated')
+  if (gear.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('gear')
     .insert({
       ...gear,
-      ...(gear.custom ? { user_id: user!.id } : {})
+      ...(gear.custom ? { user_id: userId! } : {})
     })
     .select('id, custom, gear_name, location_id')
     .single()
@@ -138,21 +127,14 @@ export async function removeGear(id: string): Promise<void> {
 export async function getCustomGear(): Promise<{
   [key: string]: GearDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('gear')
     .select('id, custom, gear_name, location_id')
     .eq('custom', true)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error) throw new Error(`Error Fetching Custom Gear: ${error.message}`)
 

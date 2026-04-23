@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { LocationDetail } from '@/lib/types'
@@ -15,15 +16,8 @@ import { LocationDetail } from '@/lib/types'
 export async function getLocations(): Promise<{
   [key: string]: LocationDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
@@ -34,11 +28,11 @@ export async function getLocations(): Promise<{
       .from('location')
       .select('id, custom, location_name, rules')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('location_shared_user')
       .select('location(id, custom, location_name, rules)')
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -107,21 +101,16 @@ export async function addLocation(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<LocationDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (location.custom && !user) throw new Error('Not Authenticated')
+  if (location.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('location')
     .insert({
       ...location,
-      ...(location.custom ? { user_id: user!.id } : {})
+      ...(location.custom ? { user_id: userId! } : {})
     })
     .select('id, custom, location_name, rules')
     .single()

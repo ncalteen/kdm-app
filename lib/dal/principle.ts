@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
@@ -16,15 +17,8 @@ import { PrincipleDetail } from '@/lib/types'
 export async function getPrinciples(): Promise<{
   [key: string]: PrincipleDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
@@ -39,13 +33,13 @@ export async function getPrinciples(): Promise<{
         'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
       )
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('principle_shared_user')
       .select(
         'principle(id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules)'
       )
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -118,21 +112,16 @@ export async function addPrinciple(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<PrincipleDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (principle.custom && !user) throw new Error('Not Authenticated')
+  if (principle.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('principle')
     .insert({
       ...principle,
-      ...(principle.custom ? { user_id: user!.id } : {})
+      ...(principle.custom ? { user_id: userId! } : {})
     })
     .select(
       'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'

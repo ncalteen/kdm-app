@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CharacterDetail } from '@/lib/types'
@@ -15,15 +16,8 @@ import { CharacterDetail } from '@/lib/types'
 export async function getCharacters(): Promise<{
   [key: string]: CharacterDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of characters in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
@@ -37,12 +31,12 @@ export async function getCharacters(): Promise<{
       .from('character')
       .select('id, custom, character_name, rules')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     // Custom characters shared with the user
     supabase
       .from('character_shared_user')
       .select('character(id, custom, character_name, rules)')
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -74,21 +68,16 @@ export async function addCharacter(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<CharacterDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (character.custom && !user) throw new Error('Not Authenticated')
+  if (character.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('character')
     .insert({
       ...character,
-      ...(character.custom ? { user_id: user!.id } : {})
+      ...(character.custom ? { user_id: userId! } : {})
     })
     .select('id, custom, character_name, rules')
     .single()

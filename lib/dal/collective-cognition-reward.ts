@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CollectiveCognitionRewardDetail } from '@/lib/types'
@@ -16,15 +17,8 @@ import { CollectiveCognitionRewardDetail } from '@/lib/types'
 export async function getCollectiveCognitionRewards(): Promise<{
   [key: string]: CollectiveCognitionRewardDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of rewards in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
@@ -38,14 +32,14 @@ export async function getCollectiveCognitionRewards(): Promise<{
       .from('collective_cognition_reward')
       .select('id, custom, reward_name, collective_cognition, rules')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     // Custom rewards shared with the user
     supabase
       .from('collective_cognition_reward_shared_user')
       .select(
         'collective_cognition_reward(id, custom, reward_name, collective_cognition, rules)'
       )
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -122,21 +116,16 @@ export async function addCollectiveCognitionReward(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<CollectiveCognitionRewardDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (reward.custom && !user) throw new Error('Not Authenticated')
+  if (reward.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('collective_cognition_reward')
     .insert({
       ...reward,
-      ...(reward.custom ? { user_id: user!.id } : {})
+      ...(reward.custom ? { user_id: userId! } : {})
     })
     .select('id, custom, collective_cognition, reward_name, rules')
     .single()

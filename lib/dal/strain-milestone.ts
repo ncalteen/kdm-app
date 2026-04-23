@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { StrainMilestoneDetail } from '@/lib/types'
@@ -16,15 +17,8 @@ import { StrainMilestoneDetail } from '@/lib/types'
 export async function getStrainMilestones(): Promise<{
   [key: string]: StrainMilestoneDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
@@ -35,11 +29,11 @@ export async function getStrainMilestones(): Promise<{
       .from('strain_milestone')
       .select('id, custom, strain_milestone_name')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('strain_milestone_shared_user')
       .select('strain_milestone(id, custom, strain_milestone_name)')
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -72,21 +66,16 @@ export async function addStrainMilestone(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<StrainMilestoneDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (strainMilestone.custom && !user) throw new Error('Not Authenticated')
+  if (strainMilestone.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('strain_milestone')
     .insert({
       ...strainMilestone,
-      ...(strainMilestone.custom ? { user_id: user!.id } : {})
+      ...(strainMilestone.custom ? { user_id: userId! } : {})
     })
     .select('id, custom, strain_milestone_name')
     .single()

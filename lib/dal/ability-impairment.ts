@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 import { AbilityImpairmentDetail } from '@/lib/types'
 
@@ -14,15 +15,8 @@ import { AbilityImpairmentDetail } from '@/lib/types'
 export async function getAbilityImpairments(): Promise<{
   [key: string]: AbilityImpairmentDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
@@ -33,11 +27,11 @@ export async function getAbilityImpairments(): Promise<{
       .from('ability_impairment')
       .select('id, custom, ability_impairment_name, rules')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('ability_impairment_shared_user')
       .select('ability_impairment(id, custom, ability_impairment_name, rules)')
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -73,21 +67,16 @@ export async function addAbilityImpairment(data: {
   ability_impairment_name: string
   rules?: string | null
 }): Promise<AbilityImpairmentDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (data.custom && !user) throw new Error('Not Authenticated')
+  if (data.custom && !userId) throw new Error('Not Authenticated')
 
   const { data: result, error } = await supabase
     .from('ability_impairment')
     .insert({
       ...data,
-      ...(data.custom ? { user_id: user!.id } : {})
+      ...(data.custom ? { user_id: userId! } : {})
     })
     .select('id, custom, ability_impairment_name, rules')
     .single()
