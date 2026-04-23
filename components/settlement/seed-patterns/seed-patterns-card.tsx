@@ -138,7 +138,7 @@ export function SeedPatternsCard({
 
       setAddOpen(false)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['seed_patterns'][0] = {
         id: tempId,
         seed_pattern_id: seedPatternId,
@@ -249,7 +249,7 @@ export function SeedPatternsCard({
       toast.success(SEED_PATTERN_CREATED_MESSAGE())
 
       // Add to settlement immediately
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['seed_patterns'][0] = {
         id: tempId,
         seed_pattern_id: newSeedPattern.id,

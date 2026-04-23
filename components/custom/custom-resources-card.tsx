@@ -193,7 +193,7 @@ export function CustomResourcesCard({
 
     const effectiveQuarryId = newCategory === 'MONSTER' ? newQuarryId : null
 
-    const tempId = `temp-${Date.now()}`
+    const tempId = `temp-${crypto.randomUUID()}`
     const temp: ResourceDetail = {
       id: tempId,
       custom: true,

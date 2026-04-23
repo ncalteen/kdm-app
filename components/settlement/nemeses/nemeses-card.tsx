@@ -174,7 +174,7 @@ export function NemesesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['nemeses'][0] = {
         available_levels: [],
         collective_cognition_level_1: false,

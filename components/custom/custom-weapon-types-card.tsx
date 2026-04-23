@@ -111,7 +111,7 @@ export function CustomWeaponTypesCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: WeaponTypeDetail = {
         id: tempId,
         custom: true,

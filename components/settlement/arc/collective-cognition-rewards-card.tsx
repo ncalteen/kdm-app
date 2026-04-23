@@ -172,7 +172,7 @@ export function CollectiveCognitionRewardsCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['collective_cognition_rewards'][0] =
         {
           collective_cognition: rewardInfo.collective_cognition,
@@ -367,7 +367,7 @@ export function CollectiveCognitionRewardsCard({
         toast.success(COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE())
 
         // Add to settlement immediately.
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['collective_cognition_rewards'][0] =
           {
             collective_cognition: newReward.collective_cognition,

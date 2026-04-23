@@ -173,7 +173,7 @@ export function LocationsCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['locations'][0] = {
         id: tempId,
         location_id: locationId,
@@ -360,7 +360,7 @@ export function LocationsCard({
         toast.success(LOCATION_CREATED_MESSAGE())
 
         // Add to settlement immediately
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['locations'][0] = {
           id: tempId,
           location_id: newLocation.id,

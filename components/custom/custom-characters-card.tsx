@@ -112,7 +112,7 @@ export function CustomCharactersCard({
       setSaving(true)
 
       // Optimistically add with a temp ID
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const tempCharacter: CharacterDetail = {
         id: tempId,
         custom: true,

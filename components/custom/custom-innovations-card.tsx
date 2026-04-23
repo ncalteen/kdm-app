@@ -112,7 +112,7 @@ export function CustomInnovationsCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: InnovationDetail = {
         id: tempId,
         custom: true,

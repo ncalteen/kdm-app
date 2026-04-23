@@ -166,7 +166,7 @@ export function QuarriesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['quarries'][0] = {
         collective_cognition_level_1: false,
         collective_cognition_level_2: [false, false],

@@ -148,7 +148,7 @@ export function GearCard({
 
       setAddOpen(false)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['gear'][0] = {
         gear_id: gearId,
         gear_name: gearInfo.gear_name,
@@ -307,7 +307,7 @@ export function GearCard({
         toast.success(GEAR_CREATED_MESSAGE())
 
         // Add to settlement immediately
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['gear'][0] = {
           gear_id: newGear.id,
           gear_name: newGear.gear_name,

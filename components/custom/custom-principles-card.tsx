@@ -115,7 +115,7 @@ export function CustomPrinciplesCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: PrincipleDetail = {
         id: tempId,
         custom: true,

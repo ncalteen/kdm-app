@@ -150,7 +150,7 @@ export function ResourcesCard({
 
       setAddOpen(false)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
 
       const optimisticRow: SettlementDetail['resources'][0] = {
         category: resourceInfo.category,
@@ -321,7 +321,7 @@ export function ResourcesCard({
         toast.success(RESOURCE_CREATED_MESSAGE())
 
         // Add to settlement immediately
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['resources'][0] = {
           category: data.category,
           id: tempId,

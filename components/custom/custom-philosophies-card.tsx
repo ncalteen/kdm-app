@@ -124,7 +124,7 @@ export function CustomPhilosophiesCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: PhilosophyDetail = {
         id: tempId,
         custom: true,

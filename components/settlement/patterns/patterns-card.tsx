@@ -136,7 +136,7 @@ export function PatternsCard({
 
       setAddOpen(false)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['patterns'][0] = {
         id: tempId,
         pattern_id: patternId,
@@ -237,7 +237,7 @@ export function PatternsCard({
       toast.success(PATTERN_CREATED_MESSAGE())
 
       // Add to settlement immediately
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['patterns'][0] = {
         id: tempId,
         pattern_id: newPattern.id,

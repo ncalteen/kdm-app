@@ -106,7 +106,7 @@ export function CustomFightingArtsCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: FightingArtDetail = {
         id: tempId,
         custom: true,

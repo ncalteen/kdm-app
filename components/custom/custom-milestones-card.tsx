@@ -115,7 +115,7 @@ export function CustomMilestonesCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: MilestoneDetail = {
         id: tempId,
         custom: true,

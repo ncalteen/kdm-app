@@ -112,7 +112,7 @@ export function CustomCollectiveCognitionRewardsCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: CollectiveCognitionRewardDetail = {
         id: tempId,
         custom: true,

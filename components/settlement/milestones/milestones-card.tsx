@@ -154,7 +154,7 @@ export function MilestonesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['milestones'][0] = {
         complete: false,
         event_name: milestoneInfo.event_name,
@@ -333,7 +333,7 @@ export function MilestonesCard({
         toast.success(MILESTONE_CREATED_MESSAGE())
 
         // Add to settlement immediately.
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['milestones'][0] = {
           complete: false,
           event_name: newMilestone.event_name,

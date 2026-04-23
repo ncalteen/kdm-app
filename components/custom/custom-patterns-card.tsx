@@ -123,7 +123,7 @@ export function CustomPatternsCard({
     if (!trimmedName)
       return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('pattern'))
 
-    const tempId = `temp-${Date.now()}`
+    const tempId = `temp-${crypto.randomUUID()}`
     const temp: PatternDetail = {
       id: tempId,
       custom: true,

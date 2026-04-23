@@ -413,7 +413,7 @@ export function EditMonsterCard({
         ...(prev[level] ?? []),
         {
           ...baseMonsterLevelData,
-          id: `temp-${Date.now()}`,
+          id: `temp-${crypto.randomUUID()}`,
           ai_deck_remaining: 0,
           level_number: level,
           survivor_statuses: []
@@ -996,7 +996,7 @@ export function EditMonsterCard({
               onClick={() =>
                 setTimelineEvents((prev) => [
                   ...prev,
-                  { id: `temp-${Date.now()}`, year_number: 0, entries: [] }
+                  { id: `temp-${crypto.randomUUID()}`, year_number: 0, entries: [] }
                 ])
               }>
               <PlusIcon className="h-3 w-3 mr-1" />

@@ -136,7 +136,7 @@ export function InnovationsCard({
 
       // Optimistic placeholder — the real junction ID comes from the DB.
       const optimisticItem: InnovationItem = {
-        id: `temp-${Date.now()}`,
+        id: `temp-${crypto.randomUUID()}`,
         innovation_id: innovationId,
         innovation_name: detail.innovation_name
       }
@@ -287,7 +287,7 @@ export function InnovationsCard({
 
         // Add to settlement immediately
         const optimisticItem: InnovationItem = {
-          id: `temp-${Date.now()}`,
+          id: `temp-${crypto.randomUUID()}`,
           innovation_id: newInnovation.id,
           innovation_name: newInnovation.innovation_name
         }

@@ -104,7 +104,7 @@ export function CustomLocationsCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: LocationDetail = {
         id: tempId,
         custom: true,

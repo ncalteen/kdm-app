@@ -162,7 +162,7 @@ export function PhilosophiesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['philosophies'][0] = {
         id: tempId,
         philosophy_id: philosophyId,
@@ -297,7 +297,7 @@ export function PhilosophiesCard({
         toast.success(PHILOSOPHY_CREATED_MESSAGE())
 
         // Add to settlement immediately
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['philosophies'][0] = {
           id: tempId,
           philosophy_id: newPhilosophy.id,

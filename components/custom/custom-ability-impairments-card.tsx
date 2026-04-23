@@ -107,7 +107,7 @@ export function CustomAbilityImpairmentsCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: AbilityImpairmentDetail = {
         id: tempId,
         custom: true,

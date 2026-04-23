@@ -141,7 +141,7 @@ export function CustomNeurosesCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: NeurosisDetail = {
         id: tempId,
         custom: true,

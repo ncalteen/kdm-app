@@ -164,7 +164,7 @@ export function KnowledgesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['knowledges'][0] = {
         id: tempId,
         knowledge_id: knowledgeId,
@@ -307,7 +307,7 @@ export function KnowledgesCard({
         toast.success(KNOWLEDGE_CREATED_MESSAGE())
 
         // Add to settlement immediately.
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['knowledges'][0] = {
           id: tempId,
           knowledge_id: newKnowledge.id,

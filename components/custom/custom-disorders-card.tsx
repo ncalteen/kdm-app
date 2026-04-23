@@ -104,7 +104,7 @@ export function CustomDisordersCard({
 
       setSaving(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const temp: DisorderDetail = {
         id: tempId,
         custom: true,

@@ -174,7 +174,7 @@ export function PrinciplesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['principles'][0] = {
         id: tempId,
         option_1_name: principleInfo.option_1_name,
@@ -377,7 +377,7 @@ export function PrinciplesCard({
         toast.success(PRINCIPLE_CREATED_MESSAGE())
 
         // Add to settlement immediately
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['principles'][0] = {
           id: tempId,
           option_1_name: newPrinciple.option_1_name,
