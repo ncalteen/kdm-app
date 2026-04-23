@@ -4,6 +4,7 @@ import { TimelineContent } from '@/components/settlement/timeline/timeline-conte
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import {
   addSettlementTimelineYear,
@@ -13,7 +14,6 @@ import {
 } from '@/lib/dal/settlement-timeline-year'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import {
-  ERROR_MESSAGE,
   TIMELINE_EVENT_EMPTY_ERROR_MESSAGE,
   TIMELINE_EVENT_EMPTY_WARNING_MESSAGE,
   TIMELINE_EVENT_REMOVED_MESSAGE,
@@ -64,6 +64,7 @@ export function TimelineCard({
   setSelectedSettlement
 }: TimelineCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [editingEvents, setEditingEvents] = useState<{
     [key: string]: boolean
@@ -152,12 +153,14 @@ export function TimelineCard({
       if (eventIndex >= currentEntries.length) return
 
       // Remove the entry from the database
-      removeSettlementTimelineYearEntry(
-        selectedSettlement.timeline[yearNumber].id,
-        eventIndex
-      )
-        .then((updatedEntries) => {
-          // Update local state with the new entries for this year
+      void mutate({
+        context: 'Timeline Event Remove',
+        persist: () =>
+          removeSettlementTimelineYearEntry(
+            selectedSettlement.timeline[yearNumber].id,
+            eventIndex
+          ),
+        onSuccess: (updatedEntries) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -172,11 +175,8 @@ export function TimelineCard({
                 }
               : null
           )
-          toast.success(TIMELINE_EVENT_REMOVED_MESSAGE())
-        })
-        .catch((err: unknown) => {
-          // Revert the optimistic removal by re-adding the entry to the
-          // timeline and setting it as being edited again.
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -202,12 +202,11 @@ export function TimelineCard({
             ...prev,
             [inputKey]: true
           }))
-
-          console.error('Timeline Event Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: TIMELINE_EVENT_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -241,13 +240,15 @@ export function TimelineCard({
       })
 
       // Save the entry to the database
-      saveSettlementTimelineYearEntry(
-        selectedSettlement.timeline[yearNumber].id,
-        newEventValue,
-        entryIndex
-      )
-        .then((updatedEntries) => {
-          // Update local state with the new entries for this year
+      void mutate({
+        context: 'Timeline Event Save',
+        persist: () =>
+          saveSettlementTimelineYearEntry(
+            selectedSettlement.timeline[yearNumber].id,
+            newEventValue,
+            entryIndex
+          ),
+        onSuccess: (updatedEntries) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -262,11 +263,8 @@ export function TimelineCard({
                 }
               : null
           )
-          toast.success(TIMELINE_EVENT_SAVED_MESSAGE())
-        })
-        .catch((err: unknown) => {
-          // Revert the optimistic update by setting the input back to the
-          // previous value and re-adding the editing state.
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -288,12 +286,11 @@ export function TimelineCard({
             ...prev,
             [inputKey]: true
           }))
-
-          console.error('Timeline Event Save Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: TIMELINE_EVENT_SAVED_MESSAGE()
+      })
     },
-    [inputRefs, selectedSettlement, setSelectedSettlement, toast]
+    [inputRefs, selectedSettlement, setSelectedSettlement, toast, mutate]
   )
 
   /**
@@ -309,13 +306,15 @@ export function TimelineCard({
       if (!selectedSettlement) return
 
       // Save the entry to the database
-      toggleSettlementYearCompletionStatus(
-        selectedSettlement.timeline[yearNumber].id,
-        yearNumber,
-        completed
-      )
-        .then(() => {
-          // Update local state with the new completion status for this year
+      void mutate({
+        context: 'Timeline Year Completion Toggle',
+        persist: () =>
+          toggleSettlementYearCompletionStatus(
+            selectedSettlement.timeline[yearNumber].id,
+            yearNumber,
+            completed
+          ),
+        onSuccess: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -330,11 +329,8 @@ export function TimelineCard({
                 }
               : null
           )
-
-          toast.success(TIMELINE_YEAR_COMPLETED_MESSAGE(completed))
-        })
-        .catch((err: unknown) => {
-          // Revert the optimistic update.
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -349,12 +345,11 @@ export function TimelineCard({
                 }
               : null
           )
-
-          console.error('Timeline Year Completion Toggle Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: TIMELINE_YEAR_COMPLETED_MESSAGE(completed)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -369,9 +364,11 @@ export function TimelineCard({
     const yearNumber = yearKeys.length === 0 ? 0 : Math.max(...yearKeys) + 1
 
     // Add the year to the database
-    addSettlementTimelineYear(selectedSettlement.id, yearNumber)
-      .then((id) => {
-        // Update local state with the new year
+    void mutate({
+      context: 'Timeline Year Add',
+      persist: () =>
+        addSettlementTimelineYear(selectedSettlement.id, yearNumber),
+      onSuccess: (id) => {
         setSelectedSettlement((prev) =>
           prev
             ? {
@@ -387,21 +384,18 @@ export function TimelineCard({
               }
             : null
         )
-        toast.success(TIMELINE_YEAR_ADDED_MESSAGE())
-      })
-      .catch((err: unknown) => {
-        // Revert by removing the year from local state.
+      },
+      rollback: () => {
         setSelectedSettlement((prev) => {
           if (!prev) return null
           const newTimeline = { ...prev.timeline }
           delete newTimeline[yearNumber]
           return { ...prev, timeline: newTimeline }
         })
-
-        console.error('Timeline Year Add Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-  }, [selectedSettlement, setSelectedSettlement, toast])
+      },
+      successMessage: TIMELINE_YEAR_ADDED_MESSAGE()
+    })
+  }, [selectedSettlement, setSelectedSettlement, mutate])
 
   /**
    * Edit an Event in the Timeline

@@ -18,6 +18,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { getQuarries } from '@/lib/dal/quarry'
 import { getQuarryCollectiveCognitionRewardIds } from '@/lib/dal/quarry-collective-cognition-reward'
@@ -78,6 +79,7 @@ export function QuarriesCard({
   setSelectedSettlement
 }: QuarriesCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
@@ -198,8 +200,11 @@ export function QuarriesCard({
         quarries: updatedQuarries
       })
 
-      addSettlementQuarries([quarryId], selectedSettlement?.id)
-        .then(async (row) => {
+      void mutate({
+        context: 'Quarry Add',
+        persist: () =>
+          addSettlementQuarries([quarryId], selectedSettlement?.id),
+        onSuccess: async (row) => {
           // Replace the placeholder with the real row from the DB.
           setSelectedSettlement((prev) =>
             prev
@@ -382,10 +387,8 @@ export function QuarriesCard({
           } catch (relatedErr) {
             console.error('Quarry Related Data Add Error:', relatedErr)
           }
-
-          toast.success(QUARRY_ADDED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           // Remove the optimistic placeholder.
           setSelectedSettlement((prev) =>
             prev
@@ -395,12 +398,11 @@ export function QuarriesCard({
                 }
               : null
           )
-
-          console.error('Quarry Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: QUARRY_ADDED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableQuarries, setSelectedSettlement, toast]
+    [selectedSettlement, availableQuarries, setSelectedSettlement, mutate]
   )
 
   /**
@@ -423,10 +425,10 @@ export function QuarriesCard({
         quarries: selectedSettlement.quarries.filter((n) => n.id !== quarryId)
       })
 
-      removeSettlementQuarry(removed.id)
-        .then(() => toast.success(QUARRY_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          // Re-add the removed quarry if it's not already present.
+      void mutate({
+        context: 'Quarry Remove',
+        persist: () => removeSettlementQuarry(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.quarries.some((q) => q.id === removed.id))
               return prev
@@ -435,12 +437,11 @@ export function QuarriesCard({
               quarries: sortQuarries([...prev.quarries, removed])
             }
           })
-
-          console.error('Quarry Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: QUARRY_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -466,12 +467,10 @@ export function QuarriesCard({
         )
       })
 
-      updateSettlementQuarry(target.id, { unlocked })
-        .then(() =>
-          toast.success(QUARRY_UNLOCKED_MESSAGE(target.monster_name, unlocked))
-        )
-        .catch((err: unknown) => {
-          // Revert the optimistic toggle.
+      void mutate({
+        context: 'Quarry Toggle',
+        persist: () => updateSettlementQuarry(target.id, { unlocked }),
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -482,12 +481,11 @@ export function QuarriesCard({
                 }
               : null
           )
-
-          console.error('Quarry Toggle Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: QUARRY_UNLOCKED_MESSAGE(target.monster_name, unlocked)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**

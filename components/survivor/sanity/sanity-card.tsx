@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
@@ -15,7 +16,6 @@ import {
   SurvivorType
 } from '@/lib/enums'
 import {
-  ERROR_MESSAGE,
   INSANITY_MINIMUM_ERROR_MESSAGE,
   SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE,
   SURVIVOR_BRAIN_LIGHT_DAMAGE_UPDATED_MESSAGE,
@@ -87,6 +87,7 @@ export function SanityCard({
   setSurvivors
 }: SanityCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [insanity, setInsanity] = useState(selectedSurvivor?.insanity ?? 0)
@@ -161,12 +162,13 @@ export function SanityCard({
           }
         })
 
-        updateHuntSurvivor(huntSurvivorRecord.id, { insanity_tokens: value })
-          .then(() =>
-            toast.success(SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('insanity'))
-          )
-          .catch((error: unknown) => {
-            // Rollback
+        void mutate({
+          context: 'Insanity Tokens Update',
+          persist: () =>
+            updateHuntSurvivor(huntSurvivorRecord.id, {
+              insanity_tokens: value
+            }),
+          rollback: () => {
             setSelectedHunt({
               ...selectedHunt,
               hunt_survivors: {
@@ -177,9 +179,9 @@ export function SanityCard({
                 }
               }
             })
-            console.error('Insanity Tokens Update Error:', error)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('insanity')
+        })
       } else if (
         mode === SurvivorCardMode.SHOWDOWN_CARD &&
         showdownSurvivorRecord &&
@@ -201,14 +203,13 @@ export function SanityCard({
           }
         })
 
-        updateShowdownSurvivor(showdownSurvivorRecord.id, {
-          insanity_tokens: value
-        })
-          .then(() =>
-            toast.success(SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('insanity'))
-          )
-          .catch((error: unknown) => {
-            // Rollback
+        void mutate({
+          context: 'Insanity Tokens Update',
+          persist: () =>
+            updateShowdownSurvivor(showdownSurvivorRecord.id, {
+              insanity_tokens: value
+            }),
+          rollback: () => {
             setSelectedShowdown({
               ...selectedShowdown,
               showdown_survivors: {
@@ -219,9 +220,9 @@ export function SanityCard({
                 }
               }
             })
-            console.error('Insanity Tokens Update Error:', error)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('insanity')
+        })
       }
     },
     [
@@ -233,7 +234,7 @@ export function SanityCard({
       showdownSurvivorRecord,
       setSelectedHunt,
       setSelectedShowdown,
-      toast
+      mutate
     ]
   )
 
@@ -255,22 +256,22 @@ export function SanityCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { insanity: value })
-        .then(() =>
-          toast.success(SURVIVOR_INSANITY_UPDATED_MESSAGE(old, value))
-        )
-        .catch((error) => {
-          console.error('Insanity Update Error:', error)
+      void mutate({
+        context: 'Insanity Update',
+        persist: () =>
+          updateSurvivor(selectedSurvivor?.id, { insanity: value }),
+        rollback: () => {
           setInsanity(old)
           setSurvivors((prev) =>
             prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, insanity: old } : s
             )
           )
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_INSANITY_UPDATED_MESSAGE(old, value)
+      })
     },
-    [insanity, selectedSurvivor?.id, setSurvivors, toast]
+    [insanity, selectedSurvivor?.id, setSurvivors, toast, mutate]
   )
 
   /**
@@ -291,12 +292,13 @@ export function SanityCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { brain_light_damage: !!checked })
-        .then(() =>
-          toast.success(SURVIVOR_BRAIN_LIGHT_DAMAGE_UPDATED_MESSAGE(!!checked))
-        )
-        .catch((error) => {
-          console.error('Brain Light Damage Update Error:', error)
+      void mutate({
+        context: 'Brain Light Damage Update',
+        persist: () =>
+          updateSurvivor(selectedSurvivor?.id, {
+            brain_light_damage: !!checked
+          }),
+        rollback: () => {
           setBrainLightDamage(old)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -305,10 +307,11 @@ export function SanityCard({
                 : s
             )
           )
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_BRAIN_LIGHT_DAMAGE_UPDATED_MESSAGE(!!checked)
+      })
     },
-    [brainLightDamage, selectedSurvivor?.id, setSurvivors, toast]
+    [brainLightDamage, selectedSurvivor?.id, setSurvivors, mutate]
   )
 
   /**
@@ -329,20 +332,21 @@ export function SanityCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { torment: value })
-        .then(() => toast.success(SURVIVOR_TORMENT_UPDATED_MESSAGE()))
-        .catch((error) => {
-          console.error('Torment Update Error:', error)
+      void mutate({
+        context: 'Torment Update',
+        persist: () => updateSurvivor(selectedSurvivor?.id, { torment: value }),
+        rollback: () => {
           setTorment(old)
           setSurvivors((prev) =>
             prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, torment: old } : s
             )
           )
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_TORMENT_UPDATED_MESSAGE()
+      })
     },
-    [torment, selectedSurvivor?.id, setSurvivors, toast]
+    [torment, selectedSurvivor?.id, setSurvivors, toast, mutate]
   )
 
   return (

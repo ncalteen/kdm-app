@@ -20,6 +20,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import {
   addAbilityImpairment,
@@ -73,6 +74,7 @@ export function AbilitiesAndImpairmentsCard({
   setSurvivors
 }: AbilitiesAndImpairmentsCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
@@ -140,16 +142,17 @@ export function AbilitiesAndImpairmentsCard({
 
       setItems([...items, optimisticItem])
 
-      addSurvivorAbilityImpairment(selectedSurvivor.id, itemId)
-        .then(() => toast.success(ABILITY_IMPAIRMENT_UPDATED_MESSAGE(true)))
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Ability/Impairment Add',
+        persist: () =>
+          addSurvivorAbilityImpairment(selectedSurvivor.id, itemId),
+        rollback: () => {
           setItems(oldItems)
-
-          console.error('Ability/Impairment Add Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: ABILITY_IMPAIRMENT_UPDATED_MESSAGE(true)
+      })
     },
-    [availableItems, items, selectedSurvivor, toast]
+    [availableItems, items, selectedSurvivor, mutate]
   )
 
   /**
@@ -169,16 +172,17 @@ export function AbilitiesAndImpairmentsCard({
 
       setItems(updated)
 
-      removeSurvivorAbilityImpairment(selectedSurvivor.id, removed.id)
-        .then(() => toast.success(ABILITY_IMPAIRMENT_REMOVED_MESSAGE()))
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Ability/Impairment Remove',
+        persist: () =>
+          removeSurvivorAbilityImpairment(selectedSurvivor.id, removed.id),
+        rollback: () => {
           setItems(oldItems)
-
-          console.error('Ability/Impairment Remove Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: ABILITY_IMPAIRMENT_REMOVED_MESSAGE()
+      })
     },
-    [items, selectedSurvivor, toast]
+    [items, selectedSurvivor, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -244,14 +248,15 @@ export function AbilitiesAndImpairmentsCard({
 
         setItems([...items, optimisticItem])
 
-        addSurvivorAbilityImpairment(selectedSurvivor.id, newItem.id)
-          .then(() => toast.success(ABILITY_IMPAIRMENT_UPDATED_MESSAGE(true)))
-          .catch((error: unknown) => {
+        void mutate({
+          context: 'Ability/Impairment Add',
+          persist: () =>
+            addSurvivorAbilityImpairment(selectedSurvivor.id, newItem.id),
+          rollback: () => {
             setItems(oldItems)
-
-            console.error('Ability/Impairment Add Error:', error)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: ABILITY_IMPAIRMENT_UPDATED_MESSAGE(true)
+        })
       } catch (error) {
         console.error('Ability/Impairment Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -259,7 +264,7 @@ export function AbilitiesAndImpairmentsCard({
         setCreating(false)
       }
     },
-    [creating, selectedSurvivor, items, toast]
+    [creating, selectedSurvivor, items, toast, mutate]
   )
 
   /**
@@ -277,22 +282,22 @@ export function AbilitiesAndImpairmentsCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { skip_next_hunt: checked })
-        .then(() =>
-          toast.success(SURVIVOR_SKIP_NEXT_HUNT_UPDATED_MESSAGE(checked))
-        )
-        .catch((error) => {
-          console.error('Skip Next Hunt Update Error:', error)
+      void mutate({
+        context: 'Skip Next Hunt Update',
+        persist: () =>
+          updateSurvivor(selectedSurvivor?.id, { skip_next_hunt: checked }),
+        rollback: () => {
           setSkipNextHunt(old)
           setSurvivors((prev) =>
             prev.map((s) =>
               s.id === selectedSurvivor?.id ? { ...s, skip_next_hunt: old } : s
             )
           )
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_SKIP_NEXT_HUNT_UPDATED_MESSAGE(checked)
+      })
     },
-    [skipNextHunt, selectedSurvivor?.id, setSurvivors, toast]
+    [skipNextHunt, selectedSurvivor?.id, setSurvivors, mutate]
   )
 
   return (

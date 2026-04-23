@@ -19,6 +19,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addNeurosis } from '@/lib/dal/neurosis'
 import { addPhilosophy, getPhilosophies } from '@/lib/dal/philosophy'
@@ -67,6 +68,7 @@ export function PhilosophiesCard({
   setSelectedSettlement
 }: PhilosophiesCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
@@ -182,8 +184,11 @@ export function PhilosophiesCard({
         philosophies: updatedPhilosophies
       })
 
-      addSettlementPhilosophies([philosophyId], selectedSettlement.id)
-        .then((rows) => {
+      void mutate({
+        context: 'Philosophy Add',
+        persist: () =>
+          addSettlementPhilosophies([philosophyId], selectedSettlement.id),
+        onSuccess: (rows) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -194,10 +199,8 @@ export function PhilosophiesCard({
                 }
               : null
           )
-
-          toast.success(PHILOSOPHY_CREATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -208,12 +211,11 @@ export function PhilosophiesCard({
                 }
               : null
           )
-
-          console.error('Philosophy Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: PHILOSOPHY_CREATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availablePhilosophies, setSelectedSettlement, toast]
+    [selectedSettlement, availablePhilosophies, setSelectedSettlement, mutate]
   )
 
   /**
@@ -238,9 +240,10 @@ export function PhilosophiesCard({
         )
       })
 
-      removeSettlementPhilosophy(removed.id)
-        .then(() => toast.success(PHILOSOPHY_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Philosophy Remove',
+        persist: () => removeSettlementPhilosophy(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (
               !prev ||
@@ -252,12 +255,11 @@ export function PhilosophiesCard({
               philosophies: [...(prev.philosophies ?? []), removed]
             }
           })
-
-          console.error('Philosophy Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: PHILOSOPHY_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -319,8 +321,14 @@ export function PhilosophiesCard({
           philosophies: updatedPhilosophies
         })
 
-        addSettlementPhilosophies([newPhilosophy.id], selectedSettlement.id)
-          .then((rows) => {
+        void mutate({
+          context: 'Philosophy Add',
+          persist: () =>
+            addSettlementPhilosophies(
+              [newPhilosophy.id],
+              selectedSettlement.id
+            ),
+          onSuccess: (rows) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -331,8 +339,8 @@ export function PhilosophiesCard({
                   }
                 : null
             )
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -343,9 +351,8 @@ export function PhilosophiesCard({
                   }
                 : null
             )
-            console.error('Philosophy Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          }
+        })
       } catch (error) {
         console.error('Philosophy Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -353,7 +360,7 @@ export function PhilosophiesCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
   )
 
   /** Open the create dialog with the current search term pre-filled */

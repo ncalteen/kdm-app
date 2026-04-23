@@ -18,6 +18,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addDisorder, getDisorders } from '@/lib/dal/disorder'
 import {
@@ -58,6 +59,7 @@ export function DisordersCard({
   selectedSurvivor
 }: DisordersCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
@@ -119,16 +121,16 @@ export function DisordersCard({
 
       setDisorders([...disorders, optimisticItem])
 
-      addSurvivorDisorder(selectedSurvivor.id, disorderId)
-        .then(() => toast.success(SURVIVOR_DISORDER_UPDATED_MESSAGE(true)))
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Disorder Add',
+        persist: () => addSurvivorDisorder(selectedSurvivor.id, disorderId),
+        rollback: () => {
           setDisorders(oldDisorders)
-
-          console.error('Disorder Add Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_DISORDER_UPDATED_MESSAGE(true)
+      })
     },
-    [availableDisorders, disorders, selectedSurvivor, toast]
+    [availableDisorders, disorders, selectedSurvivor, mutate, toast]
   )
 
   /**
@@ -148,16 +150,16 @@ export function DisordersCard({
 
       setDisorders(updated)
 
-      removeSurvivorDisorder(selectedSurvivor.id, removed.id)
-        .then(() => toast.success(SURVIVOR_DISORDER_REMOVED_MESSAGE()))
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Disorder Remove',
+        persist: () => removeSurvivorDisorder(selectedSurvivor.id, removed.id),
+        rollback: () => {
           setDisorders(oldDisorders)
-
-          console.error('Disorder Remove Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_DISORDER_REMOVED_MESSAGE()
+      })
     },
-    [disorders, selectedSurvivor, toast]
+    [disorders, selectedSurvivor, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -232,14 +234,15 @@ export function DisordersCard({
 
         setDisorders([...disorders, optimisticItem])
 
-        addSurvivorDisorder(selectedSurvivor.id, newDisorder.id)
-          .then(() => toast.success(SURVIVOR_DISORDER_UPDATED_MESSAGE(true)))
-          .catch((error: unknown) => {
+        void mutate({
+          context: 'Disorder Add',
+          persist: () =>
+            addSurvivorDisorder(selectedSurvivor.id, newDisorder.id),
+          rollback: () => {
             setDisorders(oldDisorders)
-
-            console.error('Disorder Add Error:', error)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: SURVIVOR_DISORDER_UPDATED_MESSAGE(true)
+        })
       } catch (error) {
         console.error('Disorder Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -247,7 +250,7 @@ export function DisordersCard({
         setCreating(false)
       }
     },
-    [creating, selectedSurvivor, disorders, toast]
+    [creating, selectedSurvivor, disorders, toast, mutate]
   )
 
   return (

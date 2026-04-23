@@ -21,6 +21,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addFightingArt, getFightingArts } from '@/lib/dal/fighting-art'
 import {
@@ -85,6 +86,7 @@ export function FightingArtsCard({
   survivors
 }: FightingArtsCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
@@ -207,11 +209,11 @@ export function FightingArtsCard({
         )
       )
 
-      addSurvivorFightingArt(selectedSurvivor.id, fightingArtId)
-        .then(() =>
-          toast.success(SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true))
-        )
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Fighting Art Add',
+        persist: () =>
+          addSurvivorFightingArt(selectedSurvivor.id, fightingArtId),
+        rollback: () => {
           setFightingArts(oldArts)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -220,12 +222,17 @@ export function FightingArtsCard({
                 : s
             )
           )
-
-          console.error('Fighting Art Add Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true)
+      })
     },
-    [availableFightingArts, fightingArts, selectedSurvivor, setSurvivors, toast]
+    [
+      availableFightingArts,
+      fightingArts,
+      selectedSurvivor,
+      setSurvivors,
+      mutate
+    ]
   )
 
   /**
@@ -263,11 +270,14 @@ export function FightingArtsCard({
         )
       )
 
-      addSurvivorSecretFightingArt(selectedSurvivor.id, secretFightingArtId)
-        .then(() =>
-          toast.success(SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true))
-        )
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Secret Fighting Art Add',
+        persist: () =>
+          addSurvivorSecretFightingArt(
+            selectedSurvivor.id,
+            secretFightingArtId
+          ),
+        rollback: () => {
           setSecretFightingArts(oldArts)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -276,17 +286,16 @@ export function FightingArtsCard({
                 : s
             )
           )
-
-          console.error('Secret Fighting Art Add Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true)
+      })
     },
     [
       availableSecretFightingArts,
       secretFightingArts,
       selectedSurvivor,
       setSurvivors,
-      toast
+      mutate
     ]
   )
 
@@ -329,9 +338,11 @@ export function FightingArtsCard({
         )
       )
 
-      removeSurvivorFightingArt(selectedSurvivor.id, removed.id)
-        .then(() => toast.success(SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(false)))
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Fighting Art Remove',
+        persist: () =>
+          removeSurvivorFightingArt(selectedSurvivor.id, removed.id),
+        rollback: () => {
           setFightingArts(oldArts)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -340,12 +351,11 @@ export function FightingArtsCard({
                 : s
             )
           )
-
-          console.error('Fighting Art Remove Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(false)
+      })
     },
-    [fightingArts, selectedSurvivor, setSurvivors, toast]
+    [fightingArts, selectedSurvivor, setSurvivors, mutate]
   )
 
   /**
@@ -372,9 +382,11 @@ export function FightingArtsCard({
         )
       )
 
-      removeSurvivorSecretFightingArt(selectedSurvivor.id, removed.id)
-        .then(() => toast.success(SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(true)))
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Secret Fighting Art Remove',
+        persist: () =>
+          removeSurvivorSecretFightingArt(selectedSurvivor.id, removed.id),
+        rollback: () => {
           setSecretFightingArts(oldArts)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -383,12 +395,11 @@ export function FightingArtsCard({
                 : s
             )
           )
-
-          console.error('Secret Fighting Art Remove Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(true)
+      })
     },
-    [secretFightingArts, selectedSurvivor, setSurvivors, toast]
+    [secretFightingArts, selectedSurvivor, setSurvivors, mutate]
   )
 
   /**
@@ -409,15 +420,13 @@ export function FightingArtsCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, {
-        can_use_fighting_arts_knowledges: newValue
-      })
-        .then(() =>
-          toast.success(
-            SURVIVOR_CAN_USE_FIGHTING_ARTS_UPDATED_MESSAGE(newValue)
-          )
-        )
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Can Use Fighting Arts Update',
+        persist: () =>
+          updateSurvivor(selectedSurvivor?.id, {
+            can_use_fighting_arts_knowledges: newValue
+          }),
+        rollback: () => {
           setSurvivors((prev) =>
             prev.map((s) =>
               s.id === selectedSurvivor?.id
@@ -425,12 +434,11 @@ export function FightingArtsCard({
                 : s
             )
           )
-
-          console.error('Can Use Fighting Arts Update Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_CAN_USE_FIGHTING_ARTS_UPDATED_MESSAGE(newValue)
+      })
     },
-    [canUseFightingArtsKnowledges, selectedSurvivor?.id, setSurvivors, toast]
+    [canUseFightingArtsKnowledges, selectedSurvivor?.id, setSurvivors, mutate]
   )
 
   /** Check if an exact match for the search term already exists in regular arts. */
@@ -487,11 +495,10 @@ export function FightingArtsCard({
           )
         )
 
-        addSurvivorFightingArt(selectedSurvivor.id, newArt.id)
-          .then(() =>
-            toast.success(SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true))
-          )
-          .catch((error: unknown) => {
+        void mutate({
+          context: 'Fighting Art Add',
+          persist: () => addSurvivorFightingArt(selectedSurvivor.id, newArt.id),
+          rollback: () => {
             setFightingArts(oldArts)
             setSurvivors((prev) =>
               prev.map((s) =>
@@ -500,10 +507,9 @@ export function FightingArtsCard({
                   : s
               )
             )
-
-            console.error('Fighting Art Add Error:', error)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true)
+        })
       } catch (error) {
         console.error('Fighting Art Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -511,7 +517,14 @@ export function FightingArtsCard({
         setCreatingRegular(false)
       }
     },
-    [creatingRegular, selectedSurvivor, fightingArts, setSurvivors, toast]
+    [
+      creatingRegular,
+      selectedSurvivor,
+      fightingArts,
+      setSurvivors,
+      toast,
+      mutate
+    ]
   )
 
   /**
@@ -566,11 +579,11 @@ export function FightingArtsCard({
           )
         )
 
-        addSurvivorSecretFightingArt(selectedSurvivor.id, newArt.id)
-          .then(() =>
-            toast.success(SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true))
-          )
-          .catch((error: unknown) => {
+        void mutate({
+          context: 'Secret Fighting Art Add',
+          persist: () =>
+            addSurvivorSecretFightingArt(selectedSurvivor.id, newArt.id),
+          rollback: () => {
             setSecretFightingArts(oldArts)
             setSurvivors((prev) =>
               prev.map((s) =>
@@ -579,10 +592,9 @@ export function FightingArtsCard({
                   : s
               )
             )
-
-            console.error('Secret Fighting Art Add Error:', error)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true)
+        })
       } catch (error) {
         console.error('Secret Fighting Art Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -590,7 +602,14 @@ export function FightingArtsCard({
         setCreatingSecret(false)
       }
     },
-    [creatingSecret, selectedSurvivor, secretFightingArts, setSurvivors, toast]
+    [
+      creatingSecret,
+      selectedSurvivor,
+      secretFightingArts,
+      setSurvivors,
+      toast,
+      mutate
+    ]
   )
 
   /**
