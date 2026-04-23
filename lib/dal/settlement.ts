@@ -61,7 +61,6 @@ import {
 } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementTimelineYearDetail } from '@/lib/types'
-import { survivorsBornWithUnderstanding } from '@/lib/utils'
 import { NewSettlementInput } from '@/schemas/new-settlement-input'
 
 /**
@@ -366,8 +365,6 @@ export async function getSettlement(
     quarries,
     resources,
     seed_patterns: seedPatterns,
-    survivors_born_with_understanding:
-      survivorsBornWithUnderstanding(innovations),
     timeline: timelineYears
   }
 }

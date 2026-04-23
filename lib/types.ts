@@ -727,8 +727,6 @@ export type SettlementDetail = Omit<
   }[]
   /** Shared Settlement */
   shared: boolean
-  /** Survivors Born with +1 Understanding */
-  survivors_born_with_understanding: boolean
   /** Settlement Timeline */
   timeline: {
     /** Year Number */

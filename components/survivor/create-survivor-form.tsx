@@ -38,7 +38,8 @@ import {
   canEncourage,
   canEndure,
   canFistPump,
-  canSurge
+  canSurge,
+  survivorsBornWithUnderstanding
 } from '@/lib/utils'
 import {
   NewSurvivorInput,
@@ -121,6 +122,12 @@ export function CreateSurvivorForm({
     }
   }, [selectedSettlement?.innovations])
 
+  // Separate derivation so it doesn't leak into `form.reset` via spread.
+  const bornWithUnderstanding = useMemo(
+    () => survivorsBornWithUnderstanding(selectedSettlement?.innovations ?? []),
+    [selectedSettlement?.innovations]
+  )
+
   // Set the form values when the component mounts
   useEffect(() => {
     console.debug('[CreateSurvivorForm] Initializing Form Values')
@@ -135,9 +142,7 @@ export function CreateSurvivorForm({
         DatabaseSurvivorType[SurvivorType.ARC]
           ? [2, 6, 10, 15] // Core
           : [2], // Arc
-      understanding: selectedSettlement?.survivors_born_with_understanding
-        ? 1
-        : 0
+      understanding: bornWithUnderstanding ? 1 : 0
     }
 
     // Reset form with updated values while preserving user-entered fields
@@ -149,7 +154,7 @@ export function CreateSurvivorForm({
     form,
     selectedSettlement?.id,
     survivorCapabilities,
-    selectedSettlement?.survivors_born_with_understanding,
+    bornWithUnderstanding,
     selectedSettlement?.survivor_type
   ])
 
@@ -177,9 +182,7 @@ export function CreateSurvivorForm({
           DatabaseSurvivorType[SurvivorType.ARC]
             ? [2, 6, 10, 15]
             : [2],
-        understanding: selectedSettlement?.survivors_born_with_understanding
-          ? 1
-          : 0
+        understanding: bornWithUnderstanding ? 1 : 0
       })
     }
   }
