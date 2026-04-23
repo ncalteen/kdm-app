@@ -19,6 +19,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addKnowledge, getKnowledges } from '@/lib/dal/knowledge'
 import { getPhilosophies } from '@/lib/dal/philosophy'
@@ -68,6 +69,7 @@ export function KnowledgesCard({
   setSelectedSettlement
 }: KnowledgesCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
@@ -186,8 +188,11 @@ export function KnowledgesCard({
         knowledges: updatedKnowledges
       })
 
-      addSettlementKnowledges([knowledgeId], selectedSettlement.id)
-        .then((rows) => {
+      void mutate({
+        context: 'Knowledge Add',
+        persist: () =>
+          addSettlementKnowledges([knowledgeId], selectedSettlement.id),
+        onSuccess: (rows) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -198,10 +203,8 @@ export function KnowledgesCard({
                 }
               : null
           )
-
-          toast.success(KNOWLEDGE_CREATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -212,12 +215,11 @@ export function KnowledgesCard({
                 }
               : null
           )
-
-          console.error('Knowledge Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: KNOWLEDGE_CREATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableKnowledges, setSelectedSettlement, toast]
+    [selectedSettlement, availableKnowledges, setSelectedSettlement, mutate]
   )
 
   /**
@@ -242,9 +244,10 @@ export function KnowledgesCard({
         )
       })
 
-      removeSettlementKnowledge(removed.id)
-        .then(() => toast.success(KNOWLEDGE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Knowledge Remove',
+        persist: () => removeSettlementKnowledge(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (
               !prev ||
@@ -256,12 +259,11 @@ export function KnowledgesCard({
               knowledges: [...(prev.knowledges ?? []), removed]
             }
           })
-
-          console.error('Knowledge Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: KNOWLEDGE_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -329,8 +331,11 @@ export function KnowledgesCard({
           knowledges: updatedKnowledges
         })
 
-        addSettlementKnowledges([newKnowledge.id], selectedSettlement.id)
-          .then((rows) => {
+        void mutate({
+          context: 'Knowledge Add',
+          persist: () =>
+            addSettlementKnowledges([newKnowledge.id], selectedSettlement.id),
+          onSuccess: (rows) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -341,8 +346,8 @@ export function KnowledgesCard({
                   }
                 : null
             )
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -353,9 +358,8 @@ export function KnowledgesCard({
                   }
                 : null
             )
-            console.error('Knowledge Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          }
+        })
       } catch (error) {
         console.error('Knowledge Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -363,7 +367,7 @@ export function KnowledgesCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
   )
 
   /** Open the create dialog with the current search term pre-filled. */

@@ -19,6 +19,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import {
   addCollectiveCognitionReward,
@@ -74,6 +75,7 @@ export function CollectiveCognitionRewardsCard({
   setSelectedSettlement
 }: CollectiveCognitionRewardsCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
@@ -193,8 +195,14 @@ export function CollectiveCognitionRewardsCard({
         collective_cognition_rewards: updatedRewards
       })
 
-      addSettlementCollectiveCognitionRewards([rewardId], selectedSettlement.id)
-        .then((rows) => {
+      void mutate({
+        context: 'Collective Cognition Reward Add',
+        persist: () =>
+          addSettlementCollectiveCognitionRewards(
+            [rewardId],
+            selectedSettlement.id
+          ),
+        onSuccess: (rows) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -205,10 +213,8 @@ export function CollectiveCognitionRewardsCard({
                 }
               : null
           )
-
-          toast.success(COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -219,12 +225,11 @@ export function CollectiveCognitionRewardsCard({
                 }
               : null
           )
-
-          console.error('Collective Cognition Reward Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableRewards, setSelectedSettlement, toast]
+    [selectedSettlement, availableRewards, setSelectedSettlement, mutate]
   )
 
   /**
@@ -251,11 +256,10 @@ export function CollectiveCognitionRewardsCard({
         ).filter((r) => r.id !== removed.id)
       })
 
-      removeSettlementCollectiveCognitionReward(removed.id)
-        .then(() =>
-          toast.success(COLLECTIVE_COGNITION_REWARD_REMOVED_MESSAGE())
-        )
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Collective Cognition Reward Remove',
+        persist: () => removeSettlementCollectiveCognitionReward(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (
               !prev ||
@@ -272,12 +276,11 @@ export function CollectiveCognitionRewardsCard({
               ]
             }
           })
-
-          console.error('Collective Cognition Reward Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: COLLECTIVE_COGNITION_REWARD_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -304,11 +307,11 @@ export function CollectiveCognitionRewardsCard({
           )
       })
 
-      updateSettlementCollectiveCognitionReward(target.id, { unlocked })
-        .then(() =>
-          toast.success(COLLECTIVE_COGNITION_REWARD_SAVED_MESSAGE(unlocked))
-        )
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Collective Cognition Reward Toggle',
+        persist: () =>
+          updateSettlementCollectiveCognitionReward(target.id, { unlocked }),
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -320,12 +323,11 @@ export function CollectiveCognitionRewardsCard({
                 }
               : null
           )
-
-          console.error('Collective Cognition Reward Toggle Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: COLLECTIVE_COGNITION_REWARD_SAVED_MESSAGE(unlocked)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -388,11 +390,14 @@ export function CollectiveCognitionRewardsCard({
           collective_cognition_rewards: updatedRewards
         })
 
-        addSettlementCollectiveCognitionRewards(
-          [newReward.id],
-          selectedSettlement.id
-        )
-          .then((rows) => {
+        void mutate({
+          context: 'Collective Cognition Reward Add',
+          persist: () =>
+            addSettlementCollectiveCognitionRewards(
+              [newReward.id],
+              selectedSettlement.id
+            ),
+          onSuccess: (rows) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -405,8 +410,8 @@ export function CollectiveCognitionRewardsCard({
                   }
                 : null
             )
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -417,9 +422,8 @@ export function CollectiveCognitionRewardsCard({
                   }
                 : null
             )
-            console.error('Collective Cognition Reward Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          }
+        })
       } catch (error) {
         console.error('Collective Cognition Reward Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -427,7 +431,7 @@ export function CollectiveCognitionRewardsCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
   )
 
   /** Open the create dialog with the current search term pre-filled. */

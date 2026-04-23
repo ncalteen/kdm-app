@@ -19,6 +19,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addResource, getResources } from '@/lib/dal/resource'
 import {
@@ -69,6 +70,7 @@ export function ResourcesCard({
   setSelectedSettlement
 }: ResourcesCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
@@ -171,8 +173,11 @@ export function ResourcesCard({
         resources: updatedResources
       })
 
-      addSettlementResources([resourceId], selectedSettlement.id)
-        .then((row) => {
+      void mutate({
+        context: 'Resource Add',
+        persist: () =>
+          addSettlementResources([resourceId], selectedSettlement.id),
+        onSuccess: (row) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -183,9 +188,8 @@ export function ResourcesCard({
                 }
               : null
           )
-          toast.success(RESOURCE_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -194,11 +198,11 @@ export function ResourcesCard({
                 }
               : null
           )
-          console.error('Resource Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: RESOURCE_UPDATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableResources, setSelectedSettlement, toast]
+    [selectedSettlement, availableResources, setSelectedSettlement, mutate]
   )
 
   /**
@@ -223,19 +227,20 @@ export function ResourcesCard({
         )
       })
 
-      removeSettlementResource(removed.id)
-        .then(() => toast.success(RESOURCE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Resource Remove',
+        persist: () => removeSettlementResource(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.resources.some((r) => r.id === removed.id))
               return prev
             return { ...prev, resources: [...prev.resources, removed] }
           })
-          console.error('Resource Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: RESOURCE_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -263,9 +268,10 @@ export function ResourcesCard({
         )
       })
 
-      updateSettlementResource(target.id, { quantity })
-        .then(() => toast.success(RESOURCE_UPDATED_MESSAGE(index)))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Resource Quantity',
+        persist: () => updateSettlementResource(target.id, { quantity }),
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -276,11 +282,11 @@ export function ResourcesCard({
                 }
               : null
           )
-          console.error('Resource Quantity Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: RESOURCE_UPDATED_MESSAGE(index)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -343,8 +349,11 @@ export function ResourcesCard({
           resources: updatedResources
         })
 
-        addSettlementResources([newResource.id], selectedSettlement.id)
-          .then((rows) => {
+        void mutate({
+          context: 'Resource Add',
+          persist: () =>
+            addSettlementResources([newResource.id], selectedSettlement.id),
+          onSuccess: (rows) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -355,9 +364,8 @@ export function ResourcesCard({
                   }
                 : null
             )
-            toast.success(RESOURCE_UPDATED_MESSAGE())
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -366,9 +374,9 @@ export function ResourcesCard({
                   }
                 : null
             )
-            console.error('Resource Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: RESOURCE_UPDATED_MESSAGE()
+        })
       } catch (error) {
         console.error('Resource Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -376,7 +384,7 @@ export function ResourcesCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
   )
 
   /** Open the create dialog with the current search term pre-filled */

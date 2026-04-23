@@ -19,6 +19,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addLocation, getLocations } from '@/lib/dal/location'
 import {
@@ -69,6 +70,7 @@ export function LocationsCard({
   setSelectedSettlement
 }: LocationsCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
@@ -191,8 +193,11 @@ export function LocationsCard({
         locations: updatedLocations
       })
 
-      addSettlementLocations([locationId], selectedSettlement.id)
-        .then((row) => {
+      void mutate({
+        context: 'Location Add',
+        persist: () =>
+          addSettlementLocations([locationId], selectedSettlement.id),
+        onSuccess: (row) => {
           // Replace the placeholder with the real row from the DB.
           setSelectedSettlement((prev) =>
             prev
@@ -204,10 +209,8 @@ export function LocationsCard({
                 }
               : null
           )
-
-          toast.success(LOCATION_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           // Remove the optimistic placeholder.
           setSelectedSettlement((prev) =>
             prev
@@ -217,12 +220,11 @@ export function LocationsCard({
                 }
               : null
           )
-
-          console.error('Location Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: LOCATION_UPDATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableLocations, setSelectedSettlement, toast]
+    [selectedSettlement, availableLocations, setSelectedSettlement, mutate]
   )
 
   /**
@@ -247,21 +249,21 @@ export function LocationsCard({
         )
       })
 
-      removeSettlementLocation(removed.id)
-        .then(() => toast.success(LOCATION_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Location Remove',
+        persist: () => removeSettlementLocation(removed.id),
+        rollback: () => {
           // Re-add the removed item if it's not already present.
           setSelectedSettlement((prev) => {
             if (!prev || prev.locations.some((l) => l.id === removed.id))
               return prev
             return { ...prev, locations: [...prev.locations, removed] }
           })
-
-          console.error('Location Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: LOCATION_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -287,9 +289,10 @@ export function LocationsCard({
         )
       })
 
-      updateSettlementLocation(target.id, { unlocked })
-        .then(() => toast.success(LOCATION_UNLOCKED_MESSAGE(unlocked)))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Location Toggle',
+        persist: () => updateSettlementLocation(target.id, { unlocked }),
+        rollback: () => {
           // Revert the optimistic toggle.
           setSelectedSettlement((prev) =>
             prev
@@ -301,12 +304,11 @@ export function LocationsCard({
                 }
               : null
           )
-
-          console.error('Location Toggle Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: LOCATION_UNLOCKED_MESSAGE(unlocked)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -378,8 +380,11 @@ export function LocationsCard({
           locations: updatedLocations
         })
 
-        addSettlementLocations([newLocation.id], selectedSettlement.id)
-          .then((row) => {
+        void mutate({
+          context: 'Location Add',
+          persist: () =>
+            addSettlementLocations([newLocation.id], selectedSettlement.id),
+          onSuccess: (row) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -390,9 +395,8 @@ export function LocationsCard({
                   }
                 : null
             )
-            toast.success(LOCATION_UPDATED_MESSAGE())
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -401,9 +405,9 @@ export function LocationsCard({
                   }
                 : null
             )
-            console.error('Location Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: LOCATION_UPDATED_MESSAGE()
+        })
       } catch (error) {
         console.error('Location Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -411,7 +415,7 @@ export function LocationsCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
   )
 
   return (

@@ -19,6 +19,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addGear, getGear } from '@/lib/dal/gear'
 import {
@@ -68,6 +69,7 @@ export function GearCard({
   setSelectedSettlement
 }: GearCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
@@ -163,12 +165,15 @@ export function GearCard({
         gear: updatedGear
       })
 
-      addSettlementGear({
-        gear_id: gearId,
-        quantity: 1,
-        settlement_id: selectedSettlement.id
-      })
-        .then((id) => {
+      void mutate({
+        context: 'Gear Add',
+        persist: () =>
+          addSettlementGear({
+            gear_id: gearId,
+            quantity: 1,
+            settlement_id: selectedSettlement.id
+          }),
+        onSuccess: (id) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -179,9 +184,8 @@ export function GearCard({
                 }
               : null
           )
-          toast.success(GEAR_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -190,11 +194,11 @@ export function GearCard({
                 }
               : null
           )
-          console.error('Gear Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: GEAR_UPDATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableGear, setSelectedSettlement, toast]
+    [selectedSettlement, availableGear, setSelectedSettlement, mutate]
   )
 
   /**
@@ -217,18 +221,19 @@ export function GearCard({
         gear: selectedSettlement.gear.filter((g) => g.id !== removed.id)
       })
 
-      removeSettlementGear(removed.id)
-        .then(() => toast.success(GEAR_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Gear Remove',
+        persist: () => removeSettlementGear(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.gear.some((g) => g.id === removed.id)) return prev
             return { ...prev, gear: [...prev.gear, removed] }
           })
-          console.error('Gear Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: GEAR_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -256,9 +261,10 @@ export function GearCard({
         )
       })
 
-      updateSettlementGear(target.id, { quantity })
-        .then(() => toast.success(GEAR_UPDATED_MESSAGE(index)))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Gear Quantity',
+        persist: () => updateSettlementGear(target.id, { quantity }),
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -269,11 +275,11 @@ export function GearCard({
                 }
               : null
           )
-          console.error('Gear Quantity Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: GEAR_UPDATED_MESSAGE(index)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -321,12 +327,15 @@ export function GearCard({
           gear: updatedGear
         })
 
-        addSettlementGear({
-          gear_id: newGear.id,
-          quantity: 1,
-          settlement_id: selectedSettlement.id
-        })
-          .then((id) => {
+        void mutate({
+          context: 'Gear Add',
+          persist: () =>
+            addSettlementGear({
+              gear_id: newGear.id,
+              quantity: 1,
+              settlement_id: selectedSettlement.id
+            }),
+          onSuccess: (id) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -337,9 +346,8 @@ export function GearCard({
                   }
                 : null
             )
-            toast.success(GEAR_UPDATED_MESSAGE())
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -348,9 +356,9 @@ export function GearCard({
                   }
                 : null
             )
-            console.error('Gear Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: GEAR_UPDATED_MESSAGE()
+        })
       } catch (error) {
         console.error('Gear Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -358,7 +366,7 @@ export function GearCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [creating, selectedSettlement, setSelectedSettlement, toast, mutate]
   )
 
   /** Open the create dialog with the current search term pre-filled */

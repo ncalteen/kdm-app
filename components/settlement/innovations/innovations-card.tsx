@@ -18,6 +18,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addInnovation, getInnovations } from '@/lib/dal/innovation'
 import {
@@ -72,6 +73,7 @@ export function InnovationsCard({
   setSelectedSettlement
 }: InnovationsCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [prevSettlement, setPrevSettlement] = useState(selectedSettlement)
 
@@ -146,8 +148,11 @@ export function InnovationsCard({
 
       setInnovations([...innovations, optimisticItem])
 
-      addSettlementInnovations([innovationId], selectedSettlement.id)
-        .then((createdInnovations) => {
+      void mutate({
+        context: 'Innovation Add',
+        persist: () =>
+          addSettlementInnovations([innovationId], selectedSettlement.id),
+        onSuccess: (createdInnovations) => {
           const hydratedItem = createdInnovations[0] ?? optimisticItem
 
           setInnovations((prev) =>
@@ -155,8 +160,6 @@ export function InnovationsCard({
               item.id === optimisticItem.id ? hydratedItem : item
             )
           )
-
-          toast.success(INNOVATION_UPDATED_MESSAGE())
 
           if (selectedSettlement) {
             setSelectedSettlement((prev) =>
@@ -172,20 +175,19 @@ export function InnovationsCard({
                 : null
             )
           }
-        })
-        .catch((error: unknown) => {
+        },
+        rollback: () => {
           setInnovations(oldInnovations)
-
-          console.error('Innovation Add Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: INNOVATION_UPDATED_MESSAGE()
+      })
     },
     [
       availableInnovations,
       innovations,
       selectedSettlement,
       setSelectedSettlement,
-      toast
+      mutate
     ]
   )
 
@@ -206,10 +208,10 @@ export function InnovationsCard({
 
       setInnovations(updated)
 
-      removeSettlementInnovation(removed.id)
-        .then(() => {
-          toast.success(INNOVATION_REMOVED_MESSAGE())
-
+      void mutate({
+        context: 'Innovation Remove',
+        persist: () => removeSettlementInnovation(removed.id),
+        onSuccess: () => {
           if (selectedSettlement) {
             setSelectedSettlement((prev) =>
               prev
@@ -222,15 +224,14 @@ export function InnovationsCard({
                 : null
             )
           }
-        })
-        .catch((error: unknown) => {
+        },
+        rollback: () => {
           setInnovations(oldInnovations)
-
-          console.error('Innovation Remove Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: INNOVATION_REMOVED_MESSAGE()
+      })
     },
-    [innovations, selectedSettlement, setSelectedSettlement, toast]
+    [innovations, selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -297,8 +298,11 @@ export function InnovationsCard({
 
         setInnovations([...innovations, optimisticItem])
 
-        addSettlementInnovations([newInnovation.id], selectedSettlement.id)
-          .then((createdInnovations) => {
+        void mutate({
+          context: 'Innovation Add',
+          persist: () =>
+            addSettlementInnovations([newInnovation.id], selectedSettlement.id),
+          onSuccess: (createdInnovations) => {
             const hydratedItem = createdInnovations[0] ?? optimisticItem
 
             setInnovations((prev) =>
@@ -306,8 +310,6 @@ export function InnovationsCard({
                 item.id === optimisticItem.id ? hydratedItem : item
               )
             )
-
-            toast.success(INNOVATION_UPDATED_MESSAGE())
 
             setSelectedSettlement((prev) =>
               prev
@@ -321,13 +323,12 @@ export function InnovationsCard({
                   }
                 : null
             )
-          })
-          .catch((error: unknown) => {
+          },
+          rollback: () => {
             setInnovations(oldInnovations)
-
-            console.error('Innovation Add Error:', error)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: INNOVATION_UPDATED_MESSAGE()
+        })
       } catch (error) {
         console.error('Innovation Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -335,7 +336,14 @@ export function InnovationsCard({
         setCreating(false)
       }
     },
-    [creating, innovations, selectedSettlement, setSelectedSettlement, toast]
+    [
+      creating,
+      innovations,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate
+    ]
   )
 
   return (

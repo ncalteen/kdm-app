@@ -18,6 +18,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addSeedPattern, getSeedPatterns } from '@/lib/dal/seed-pattern'
 import {
@@ -66,6 +67,7 @@ export function SeedPatternsCard({
   setSelectedSettlement
 }: SeedPatternsCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [hasFetched, setHasFetched] = useState<boolean>(false)
@@ -155,8 +157,11 @@ export function SeedPatternsCard({
         seed_patterns: updatedSeedPatterns
       })
 
-      addSettlementSeedPatterns([seedPatternId], selectedSettlement.id)
-        .then((row) => {
+      void mutate({
+        context: 'Seed Pattern Add',
+        persist: () =>
+          addSettlementSeedPatterns([seedPatternId], selectedSettlement.id),
+        onSuccess: (row) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -167,9 +172,8 @@ export function SeedPatternsCard({
                 }
               : null
           )
-          toast.success(SEED_PATTERN_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -180,11 +184,11 @@ export function SeedPatternsCard({
                 }
               : null
           )
-          console.error('Seed Pattern Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SEED_PATTERN_UPDATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableSeedPatterns, setSelectedSettlement, toast]
+    [selectedSettlement, availableSeedPatterns, setSelectedSettlement, mutate]
   )
 
   const handleRemove = useCallback(
@@ -201,9 +205,10 @@ export function SeedPatternsCard({
         )
       })
 
-      removeSettlementSeedPattern(removed.id)
-        .then(() => toast.success(SEED_PATTERN_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Seed Pattern Remove',
+        persist: () => removeSettlementSeedPattern(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.seed_patterns.some((sp) => sp.id === removed.id))
               return prev
@@ -212,11 +217,11 @@ export function SeedPatternsCard({
               seed_patterns: [...prev.seed_patterns, removed]
             }
           })
-          console.error('Seed Pattern Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SEED_PATTERN_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -265,8 +270,11 @@ export function SeedPatternsCard({
         seed_patterns: updatedSeedPatterns
       })
 
-      addSettlementSeedPatterns([newSeedPattern.id], selectedSettlement.id)
-        .then((row) => {
+      void mutate({
+        context: 'Seed Pattern Add',
+        persist: () =>
+          addSettlementSeedPatterns([newSeedPattern.id], selectedSettlement.id),
+        onSuccess: (row) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -277,9 +285,8 @@ export function SeedPatternsCard({
                 }
               : null
           )
-          toast.success(SEED_PATTERN_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -290,16 +297,23 @@ export function SeedPatternsCard({
                 }
               : null
           )
-          console.error('Seed Pattern Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SEED_PATTERN_UPDATED_MESSAGE()
+      })
     } catch (error) {
       console.error('Seed Pattern Create Error:', error)
       toast.error(ERROR_MESSAGE())
     } finally {
       setCreating(false)
     }
-  }, [search, creating, selectedSettlement, setSelectedSettlement, toast])
+  }, [
+    search,
+    creating,
+    selectedSettlement,
+    setSelectedSettlement,
+    toast,
+    mutate
+  ])
 
   return (
     <Card className="p-0 border-1 gap-0">
