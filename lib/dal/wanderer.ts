@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { WandererDetail } from '@/lib/types'
@@ -16,15 +17,8 @@ import { WandererDetail } from '@/lib/types'
 export async function getWanderers(): Promise<{
   [key: string]: WandererDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of wanderers in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
@@ -42,14 +36,14 @@ export async function getWanderers(): Promise<{
         'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
       )
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     // Custom wanderers shared with the user
     supabase
       .from('wanderer_shared_user')
       .select(
         'wanderer(id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding)'
       )
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -84,15 +78,8 @@ export async function getWandererIds(
   custom: boolean,
   userId?: string
 ): Promise<string[]> {
+  await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const { data, error } = userId
     ? await supabase
@@ -127,21 +114,16 @@ export async function addWanderer(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<WandererDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (wanderer.custom && !user) throw new Error('Not Authenticated')
+  if (wanderer.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('wanderer')
     .insert({
       ...wanderer,
-      ...(wanderer.custom ? { user_id: user!.id } : {})
+      ...(wanderer.custom ? { user_id: userId! } : {})
     })
     .select(
       'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
@@ -201,15 +183,8 @@ export async function removeWanderer(id: string): Promise<void> {
 export async function getCustomWanderers(): Promise<{
   [key: string]: WandererDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('wanderer')
@@ -217,7 +192,7 @@ export async function getCustomWanderers(): Promise<{
       'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
     )
     .eq('custom', true)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(`Error Fetching Custom Wanderers: ${error.message}`)

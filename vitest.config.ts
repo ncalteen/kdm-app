@@ -8,7 +8,6 @@ export default defineConfig({
     environment: 'node',
     // env: loadEnv('test', process.cwd(), ''),
     silent: 'passed-only',
-    // setupFiles: ['__tests__/setup.ts'],
     clearMocks: true,
     include: ['__tests__/**/*.test.{ts,tsx}'],
     exclude: [
