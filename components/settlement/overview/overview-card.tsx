@@ -74,6 +74,16 @@ export function OverviewCard({
 
   const [lostSettlementCount, setLostSettlementCount] = useState<number>(0)
   const [isLoadingLostCount, setIsLoadingLostCount] = useState<boolean>(true)
+  const [prevSettlementId, setPrevSettlementId] = useState<string | undefined>(
+    selectedSettlement?.id
+  )
+
+  // Reset loading state at render time when the selected settlement changes,
+  // so the effect below doesn't need to call setState synchronously.
+  if (prevSettlementId !== selectedSettlement?.id) {
+    setPrevSettlementId(selectedSettlement?.id)
+    setIsLoadingLostCount(true)
+  }
 
   /** Death count derived from survivors array */
   const deathCount = useMemo(
