@@ -446,7 +446,7 @@ export function GearCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading gear...
               </p>

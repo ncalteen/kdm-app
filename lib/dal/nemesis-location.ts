@@ -75,7 +75,7 @@ export async function getNemesisLocations(
 
   const { data, error } = await supabase
     .from('nemesis_location')
-    .select('location(custom, id, location_name)')
+    .select('location(custom, id, location_name, rules)')
     .eq('nemesis_id', nemesisId)
 
   if (error)
@@ -85,7 +85,12 @@ export async function getNemesisLocations(
 
   return (
     data as unknown as {
-      location: { custom: boolean; id: string; location_name: string }
+      location: {
+        custom: boolean
+        id: string
+        location_name: string
+        rules: string | null
+      }
     }[]
   ).map((item) => ({
     ...item.location

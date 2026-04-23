@@ -164,9 +164,12 @@ export function PhilosophiesCard({
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['philosophies'][0] = {
+        hunt_xp_milestones: null,
         id: tempId,
         philosophy_id: philosophyId,
-        philosophy_name: philosophyInfo.philosophy_name
+        philosophy_name: philosophyInfo.philosophy_name,
+        tenet_knowledge_id: null,
+        tier: null
       }
 
       const updatedPhilosophies = [
@@ -299,9 +302,12 @@ export function PhilosophiesCard({
         // Add to settlement immediately
         const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['philosophies'][0] = {
+          hunt_xp_milestones: null,
           id: tempId,
           philosophy_id: newPhilosophy.id,
-          philosophy_name: newPhilosophy.philosophy_name
+          philosophy_name: newPhilosophy.philosophy_name,
+          tenet_knowledge_id: null,
+          tier: null
         }
         const updatedPhilosophies = [
           ...(selectedSettlement.philosophies ?? []),
@@ -444,7 +450,7 @@ export function PhilosophiesCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading philosophies...
               </p>

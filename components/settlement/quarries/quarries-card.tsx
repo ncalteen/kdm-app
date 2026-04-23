@@ -168,16 +168,22 @@ export function QuarriesCard({
       // Optimistic placeholder row (uses a temporary ID).
       const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['quarries'][0] = {
+        basic_action: quarryInfo.basic_action,
+        blind_spot: quarryInfo.blind_spot,
         collective_cognition_level_1: false,
         collective_cognition_level_2: [false, false],
         collective_cognition_level_3: [false, false, false],
         collective_cognition_prologue: false,
+        defeat_outcome: quarryInfo.defeat_outcome,
+        deployment_rules: quarryInfo.deployment_rules,
         id: tempId,
-        prologue: quarryInfo.prologue,
-        quarry_id: quarryId,
+        instinct: quarryInfo.instinct,
         monster_name: quarryInfo.monster_name,
         node: quarryInfo.node,
-        unlocked: false
+        prologue: quarryInfo.prologue,
+        quarry_id: quarryId,
+        unlocked: false,
+        victory_outcome: quarryInfo.victory_outcome
       }
 
       // Capture the updated quarries list so async callbacks reference it
@@ -247,6 +253,7 @@ export function QuarriesCard({
                   id: ins.id,
                   location_id: ins.location_id,
                   location_name: ins.location_name,
+                  rules: ins.rules,
                   unlocked: false
                 }))
               }
@@ -324,6 +331,7 @@ export function QuarriesCard({
                   collective_cognition_reward_id: newCcrIds[i],
                   reward_name: inserted[i].reward_name,
                   collective_cognition: inserted[i].collective_cognition,
+                  rules: inserted[i].rules,
                   unlocked: false
                 }))
               }
@@ -549,7 +557,7 @@ export function QuarriesCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading quarries...
               </p>

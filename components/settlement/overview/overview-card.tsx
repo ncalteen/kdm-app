@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { getLostSettlementCount, updateSettlement } from '@/lib/dal/settlement'
@@ -72,6 +73,7 @@ export function OverviewCard({
   const { toast } = useToast(local)
 
   const [lostSettlementCount, setLostSettlementCount] = useState<number>(0)
+  const [isLoadingLostCount, setIsLoadingLostCount] = useState<boolean>(true)
 
   /** Death count derived from survivors array */
   const deathCount = useMemo(
@@ -112,10 +114,14 @@ export function OverviewCard({
 
     getLostSettlementCount(selectedSettlement?.id)
       .then((count) => {
-        if (!isCancelled) setLostSettlementCount(count ?? 0)
+        if (!isCancelled) {
+          setLostSettlementCount(count ?? 0)
+          setIsLoadingLostCount(false)
+        }
       })
       .catch((err: unknown) => {
         if (!isCancelled) {
+          setIsLoadingLostCount(false)
           console.error('Overview Load Error:', err)
           toast.error(ERROR_MESSAGE())
         }
@@ -307,17 +313,21 @@ export function OverviewCard({
 
           {/* Lost Settlement Count (Disabled) */}
           <div className="flex flex-col items-center gap-1">
-            <Input
-              type="number"
-              min="0"
-              placeholder="0"
-              className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              defaultValue={lostSettlementCount}
-              key={`lost-settlements-${selectedSettlement?.id ?? ''}-${lostSettlementCount}`}
-              disabled
-              name="lost-settlements-desktop"
-              id="lost-settlements-desktop"
-            />
+            {isLoadingLostCount ? (
+              <Skeleton className="w-12 h-12 rounded-md" />
+            ) : (
+              <Input
+                type="number"
+                min="0"
+                placeholder="0"
+                className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                defaultValue={lostSettlementCount}
+                key={`lost-settlements-${selectedSettlement?.id ?? ''}-${lostSettlementCount}`}
+                disabled
+                name="lost-settlements-desktop"
+                id="lost-settlements-desktop"
+              />
+            )}
             <Label className="text-center text-xs">Lost Settlements</Label>
           </div>
 
@@ -435,14 +445,18 @@ export function OverviewCard({
           {/* Lost Settlement Count (Disabled) */}
           <div className="flex items-center justify-between">
             <Label className="text-sm">Lost Settlements</Label>
-            <Input
-              type="number"
-              className="w-16 h-8 text-center no-spinners text-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              value={lostSettlementCount}
-              disabled
-              name="lost-settlements-mobile"
-              id="lost-settlements-mobile"
-            />
+            {isLoadingLostCount ? (
+              <Skeleton className="w-16 h-8 rounded-md" />
+            ) : (
+              <Input
+                type="number"
+                className="w-16 h-8 text-center no-spinners text-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                value={lostSettlementCount}
+                disabled
+                name="lost-settlements-mobile"
+                id="lost-settlements-mobile"
+              />
+            )}
           </div>
 
           {/* Collective Cognition (Disabled) */}

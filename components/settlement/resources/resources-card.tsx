@@ -464,7 +464,7 @@ export function ResourcesCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading resources...
               </p>

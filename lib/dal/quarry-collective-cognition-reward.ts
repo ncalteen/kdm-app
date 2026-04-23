@@ -78,7 +78,7 @@ export async function getQuarryCollectiveCognitionRewards(
   const { data, error } = await supabase
     .from('quarry_collective_cognition_reward')
     .select(
-      'collective_cognition_reward:collective_cognition_reward_id (collective_cognition, custom, id, reward_name)'
+      'collective_cognition_reward:collective_cognition_reward_id (collective_cognition, custom, id, reward_name, rules)'
     )
     .eq('quarry_id', quarryId)
 
@@ -96,6 +96,7 @@ export async function getQuarryCollectiveCognitionRewards(
         custom: boolean
         id: string
         reward_name: string
+        rules: string | null
       }
     }[]
   ).map((item) => ({

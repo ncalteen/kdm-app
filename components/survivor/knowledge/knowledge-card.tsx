@@ -351,7 +351,12 @@ export function KnowledgeCard({
               knowledge_1: knowledgeDetail
                 ? {
                     id: knowledgeId,
-                    knowledge_name: knowledgeDetail.knowledge_name
+                    knowledge_name: knowledgeDetail.knowledge_name,
+                    rules: knowledgeDetail.rules,
+                    observation_conditions:
+                      knowledgeDetail.observation_conditions,
+                    observation_rank_up_milestone:
+                      knowledgeDetail.observation_rank_up_milestone
                   }
                 : null,
               knowledge_1_observation_rank: 0,
@@ -592,7 +597,12 @@ export function KnowledgeCard({
               knowledge_2: knowledgeDetail
                 ? {
                     id: knowledgeId,
-                    knowledge_name: knowledgeDetail.knowledge_name
+                    knowledge_name: knowledgeDetail.knowledge_name,
+                    rules: knowledgeDetail.rules,
+                    observation_conditions:
+                      knowledgeDetail.observation_conditions,
+                    observation_rank_up_milestone:
+                      knowledgeDetail.observation_rank_up_milestone
                   }
                 : null,
               knowledge_2_observation_rank: 0,

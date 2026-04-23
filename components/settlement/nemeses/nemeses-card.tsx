@@ -177,10 +177,15 @@ export function NemesesCard({
       const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['nemeses'][0] = {
         available_levels: [],
+        basic_action: nemesisInfo.basic_action,
+        blind_spot: nemesisInfo.blind_spot,
         collective_cognition_level_1: false,
         collective_cognition_level_2: false,
         collective_cognition_level_3: false,
+        defeat_outcome: nemesisInfo.defeat_outcome,
+        deployment_rules: nemesisInfo.deployment_rules,
         id: tempId,
+        instinct: nemesisInfo.instinct,
         level_1_defeated: false,
         level_2_defeated: false,
         level_3_defeated: false,
@@ -188,7 +193,8 @@ export function NemesesCard({
         monster_name: nemesisInfo.monster_name,
         nemesis_id: nemesisId,
         node: nemesisInfo.node,
-        unlocked: false
+        unlocked: false,
+        victory_outcome: nemesisInfo.victory_outcome
       }
 
       // Capture the updated nemeses list so async callbacks reference it
@@ -257,6 +263,7 @@ export function NemesesCard({
                   id: ins.id,
                   location_id: newLocIds[i],
                   location_name: ins.location_name,
+                  rules: ins.rules,
                   unlocked: false
                 }))
               }
@@ -569,7 +576,7 @@ export function NemesesCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading nemeses...
               </p>

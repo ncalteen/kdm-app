@@ -156,10 +156,9 @@ export function PhilosophyCard({
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
-  const [neurosis, setNeurosis] = useState<{
-    id: string
-    neurosis_name: string
-  } | null>(selectedSurvivor?.neurosis ?? null)
+  const [neurosis, setNeurosis] = useState<SurvivorDetail['neurosis']>(
+    selectedSurvivor?.neurosis ?? null
+  )
   const [tenetKnowledge, setTenetKnowledge] = useState({
     id: selectedSurvivor?.tenet_knowledge?.id ?? '',
     knowledge_name: selectedSurvivor?.tenet_knowledge?.knowledge_name ?? '',
@@ -172,10 +171,9 @@ export function PhilosophyCard({
   const tenetRankUpRef = useRef(
     selectedSurvivor?.tenet_knowledge_rank_up ?? null
   )
-  const [philosophy, setPhilosophy] = useState<{
-    id: string
-    philosophy_name: string
-  } | null>(selectedSurvivor?.philosophy ?? null)
+  const [philosophy, setPhilosophy] = useState<SurvivorDetail['philosophy']>(
+    selectedSurvivor?.philosophy ?? null
+  )
   const [philosophyRank, setPhilosophyRank] = useState<number>(
     selectedSurvivor?.philosophy_rank ?? 0
   )
@@ -222,7 +220,10 @@ export function PhilosophyCard({
       const newPhilosophy = philosophyDetail
         ? {
             id: philosophyId,
-            philosophy_name: philosophyDetail.philosophy_name
+            philosophy_name: philosophyDetail.philosophy_name,
+            hunt_xp_milestones: philosophyDetail.hunt_xp_milestones,
+            tenet_knowledge_id: philosophyDetail.tenet_knowledge_id,
+            tier: philosophyDetail.tier
           }
         : null
 
@@ -236,7 +237,8 @@ export function PhilosophyCard({
       const newNeurosis = matchedNeurosis
         ? {
             id: matchedNeurosis.id,
-            neurosis_name: matchedNeurosis.neurosis_name
+            neurosis_name: matchedNeurosis.neurosis_name,
+            rules: null
           }
         : null
 
@@ -315,7 +317,11 @@ export function PhilosophyCard({
         : null
 
       const newNeurosis = neurosisDetail
-        ? { id: neurosisId, neurosis_name: neurosisDetail.neurosis_name }
+        ? {
+            id: neurosisId,
+            neurosis_name: neurosisDetail.neurosis_name,
+            rules: null
+          }
         : null
 
       setNeurosis(newNeurosis)
@@ -481,7 +487,12 @@ export function PhilosophyCard({
               tenet_knowledge: knowledgeDetail
                 ? {
                     id: knowledgeId,
-                    knowledge_name: knowledgeDetail.knowledge_name
+                    knowledge_name: knowledgeDetail.knowledge_name,
+                    rules: knowledgeDetail.rules,
+                    observation_conditions:
+                      knowledgeDetail.observation_conditions,
+                    observation_rank_up_milestone:
+                      knowledgeDetail.observation_rank_up_milestone
                   }
                 : null,
               tenet_knowledge_observation_rank: 0,
