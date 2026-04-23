@@ -110,7 +110,9 @@ describe('getUserId', () => {
     })
     mockSupabase.auth.signOut.mockResolvedValue({})
 
-    await expect(getUserId()).rejects.toThrow('Auth Error: Auth failed')
+    await expect(getUserId()).rejects.toThrow(
+      'Error Fetching User: Auth failed'
+    )
     expect(mockSupabase.auth.signOut).toHaveBeenCalled()
   })
 
@@ -256,22 +258,33 @@ describe('updateUserSettings', () => {
 
 describe('removeUserSettings', () => {
   it('removes user settings', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ error: null })
+    const mockEqUser = vi.fn().mockResolvedValue({ error: null })
+    const mockEq = vi.fn().mockReturnValue({ eq: mockEqUser })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'user-1' } },
+      error: null
+    })
 
     await removeUserSettings('us-1')
 
     expect(mockSupabase.from).toHaveBeenCalledWith('user_settings')
     expect(mockEq).toHaveBeenCalledWith('id', 'us-1')
+    expect(mockEqUser).toHaveBeenCalledWith('user_id', 'user-1')
   })
 
   it('throws on DB error', async () => {
-    const mockEq = vi
+    const mockEqUser = vi
       .fn()
       .mockResolvedValue({ error: { message: 'delete error' } })
+    const mockEq = vi.fn().mockReturnValue({ eq: mockEqUser })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'user-1' } },
+      error: null
+    })
 
     await expect(removeUserSettings('us-1')).rejects.toThrow(
       'Error Removing User Settings: delete error'

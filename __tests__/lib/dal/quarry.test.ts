@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MonsterNode } from '@/lib/enums'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
   auth: { getUser: vi.fn() },
@@ -534,7 +534,7 @@ describe('addQuarry', () => {
         custom: false,
         node: MonsterNode.NQ1
       })
-    ).rejects.toThrow('Auth Error: Auth error')
+    ).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when DB insert fails', async () => {
