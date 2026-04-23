@@ -68,7 +68,7 @@ export async function addCharacterSharedUsers(
  * resource to revoke sharing.
  *
  * @param characterId Character ID
- * @param sharedUserId Shared User IDs
+ * @param sharedUserIds Shared User IDs
  */
 export async function removeCharacterSharedUsers(
   characterId: string,

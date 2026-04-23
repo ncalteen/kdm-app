@@ -51,6 +51,7 @@ export async function getSettlementLocations(
  *
  * @param locationIds Location IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Location Rows
  */
 export async function addSettlementLocations(
   locationIds: string[],

@@ -55,6 +55,7 @@ export async function getSettlementInnovations(
  *
  * @param innovationIds Innovation IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Innovation Records
  */
 export async function addSettlementInnovations(
   innovationIds: string[],

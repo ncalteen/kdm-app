@@ -43,6 +43,9 @@ interface SurvivorSelectionDrawerProps {
 
 /**
  * Survivor Selection Drawer Component
+ *
+ * @param props Survivor Selection Drawer Properties
+ * @returns Survivor Selection Drawer Component
  */
 export function SurvivorSelectionDrawer({
   description,
@@ -68,6 +71,7 @@ export function SurvivorSelectionDrawer({
    * Handle Survivor Toggle
    *
    * @param survivorId Survivor ID to Toggle Selection
+   * @returns Void; toggles the survivor in the selection list, capped at `maxSelection`
    */
   const handleSurvivorToggle = (survivorId: string) =>
     setTempSelection((prev) => {
@@ -90,11 +94,15 @@ export function SurvivorSelectionDrawer({
 
   /**
    * Handle Confirm Selection
+   *
+   * @returns Void; commits the temporary selection by invoking the parent callback
    */
   const handleConfirm = () => onSelectionChange(tempSelection)
 
   /**
    * Handle Cancel Selection
+   *
+   * @returns Void; reverts the temporary selection back to the originally selected survivors
    */
   const handleCancel = () => setTempSelection(selectedSurvivors)
 

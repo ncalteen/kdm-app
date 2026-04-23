@@ -5,6 +5,15 @@ import { Button } from '@/components/ui/button'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { ReactElement } from 'react'
 
+/**
+ * Not Found Page
+ *
+ * Rendered by Next.js when no route matches the requested path. Displays a
+ * thematic 404 message and a button that returns the player to the home
+ * screen.
+ *
+ * @returns Not Found Page Component
+ */
 export default function Page(): ReactElement {
   return (
     <div className="[--header-height:calc(--spacing(10))]">

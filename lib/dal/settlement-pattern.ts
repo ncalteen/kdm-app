@@ -43,6 +43,7 @@ export async function getSettlementPatterns(
  *
  * @param patternIds Pattern IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Pattern Rows
  */
 export async function addSettlementPatterns(
   patternIds: string[],

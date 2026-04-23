@@ -89,6 +89,7 @@ export async function getSettlementNemeses(
  *
  * @param nemesisIds Nemesis IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Nemesis Records
  */
 export async function addSettlementNemeses(
   nemesisIds: string[],

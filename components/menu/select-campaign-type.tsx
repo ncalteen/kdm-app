@@ -56,6 +56,7 @@ export function SelectCampaignType({
    * Select Campaign Option
    *
    * @param currentValue Selected Campaign Value
+   * @returns Void; updates the selection state and notifies the parent
    */
   const handleSelect = (currentValue: string) => {
     // Do not allow clearing the selection

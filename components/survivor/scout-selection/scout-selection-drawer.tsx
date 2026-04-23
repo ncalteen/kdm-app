@@ -74,6 +74,8 @@ export function ScoutSelectionDrawer({
    * Handle Survivor Toggle
    *
    * @param survivorId Survivor ID
+   * @returns Void; toggles the scout selection between the given survivor and
+   * none
    */
   const handleSurvivorToggle = (survivorId: string) =>
     // If clicking the currently selected scout, deselect them
@@ -93,11 +95,15 @@ export function ScoutSelectionDrawer({
 
   /**
    * Handle Confirm Selection
+   *
+   * @returns Void; commits the temporary selection by invoking the parent callback
    */
   const handleConfirm = () => onSelectionChange(tempSelection)
 
   /**
    * Handle Cancel Selection
+   *
+   * @returns Void; reverts the temporary selection back to the originally selected scout
    */
   const handleCancel = () => setTempSelection(selectedScout)
 

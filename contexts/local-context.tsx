@@ -964,7 +964,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Hunt
    *
-   * @param hunt Selected Hunt
+   * @param huntOrUpdater Selected Hunt or functional updater receiving the
+   * previous hunt state
    */
   const setSelectedHunt: HuntStateSetter = (huntOrUpdater) => {
     // Functional updater form — used for safe optimistic async callbacks
@@ -1001,7 +1002,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Hunt ID
    *
-   * @param hunt Selected Hunt ID
+   * @param huntId Selected Hunt ID
    */
   const setSelectedHuntId = (huntId: string | null) => {
     // When selecting a hunt, stop creation mode
@@ -1074,7 +1075,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Settlement
    *
-   * @param settlement Selected Settlement
+   * @param settlementOrUpdater Selected Settlement or functional updater
+   * receiving the previous settlement state
    */
   const setSelectedSettlement: SettlementStateSetter = (
     settlementOrUpdater
@@ -1292,7 +1294,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Showdown
    *
-   * @param showdown Selected Showdown
+   * @param showdownOrUpdater Selected Showdown or functional updater receiving
+   * the previous showdown state
    */
   const setSelectedShowdown: ShowdownStateSetter = (showdownOrUpdater) => {
     // Functional updater form — used for safe optimistic async callbacks
@@ -1400,7 +1403,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Survivor
    *
-   * @param survivor Selected Survivor
+   * @param survivorOrUpdater Selected Survivor or functional updater receiving
+   * the previous survivor state
    */
   const setSelectedSurvivor: SurvivorStateSetter = (survivorOrUpdater) => {
     // Functional updater form — used for safe optimistic async callbacks
@@ -1573,6 +1577,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
 /**
  * Local Context Hook
+ *
+ * @returns Local Context Value
  */
 export function useLocal(): LocalContextType {
   const context = useContext(LocalContext)

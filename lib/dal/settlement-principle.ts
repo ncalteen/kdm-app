@@ -60,6 +60,7 @@ export async function getSettlementPrinciples(
  *
  * @param principleIds Principle IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Principle Rows
  */
 export async function addSettlementPrinciples(
   principleIds: string[],

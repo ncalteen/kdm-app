@@ -56,6 +56,7 @@ export async function getSettlementPhilosophies(
  *
  * @param philosophyIds Philosophy IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Philosophy Rows
  */
 export async function addSettlementPhilosophies(
   philosophyIds: string[],

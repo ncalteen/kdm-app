@@ -57,6 +57,7 @@ export async function getSettlementMilestones(
  *
  * @param milestoneIds Milestone IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Milestone Rows
  */
 export async function addSettlementMilestones(
   milestoneIds: string[],

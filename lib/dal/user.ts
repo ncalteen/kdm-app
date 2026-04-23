@@ -32,6 +32,8 @@ let trackedClients: SupabaseClient[] = []
  *
  * Clears the cached promise whenever the session changes. Called lazily on
  * the first `getUserId()` invocation per client.
+ *
+ * @param supabase Supabase Client Instance
  */
 function ensureAuthListener(supabase: SupabaseClient): void {
   if (listenerAttached.has(supabase)) return

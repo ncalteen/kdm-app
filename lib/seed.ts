@@ -12,6 +12,8 @@ import { toast } from 'sonner'
  * This needs to be done as part of the application instead of a SQL script,
  * because the user must exist in the database before we can create the other
  * resources.
+ *
+ * @returns Resolves once seed data is created (or a toast is shown on error)
  */
 export async function generateSeedData() {
   // Only generating seed data in development mode

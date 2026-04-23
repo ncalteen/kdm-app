@@ -10,6 +10,16 @@ import { Laptop, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useTransition } from 'react'
 
+/**
+ * Theme Switcher
+ *
+ * Dropdown control that lets the player toggle between light, dark, and system
+ * color schemes via `next-themes`. Defers the active theme update inside
+ * `startTransition` to avoid cascading re-renders, and renders nothing on the
+ * first paint until `next-themes` has resolved the active theme.
+ *
+ * @returns Theme Switcher Component
+ */
 const ThemeSwitcher = () => {
   const [, startTransition] = useTransition()
   const { theme, setTheme } = useTheme()

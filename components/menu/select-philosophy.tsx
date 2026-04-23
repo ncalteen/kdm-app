@@ -57,17 +57,13 @@ export function SelectPhilosophy({
    * Handle Philosophy Selection
    *
    * @param currentValue Selected Philosophy Value
+   * @returns Void; closes the popover and notifies the parent
    */
   const handleSelect = (currentValue: string) => {
     setOpen(false)
     onChange?.(currentValue)
   }
 
-  /**
-   * Handle Key Down Event
-   *
-   * @param e Keyboard Event
-   */
   const handleKeyDown = (e: KeyboardEvent) => onKeyDown?.(e)
 
   const philosophyOptions = [

@@ -67,7 +67,7 @@ export async function getCollectiveCognitionRewards(): Promise<{
  * are custom rewards (requires the user ID if so). This is used to populate
  * new settlements created from templates.
  *
- * @param rewardName Reward Name
+ * @param rewardNames Reward Names
  * @param custom Custom
  * @param userId User ID
  * @returns Collective Cognition Reward IDs

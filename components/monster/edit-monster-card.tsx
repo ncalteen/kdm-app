@@ -89,6 +89,9 @@ interface EditMonsterCardProps {
 /**
  * Convert a quarry hunt board row to the form's `HuntBoardDraft` shape (drops
  * the row id + foreign key).
+ *
+ * @param board Quarry Hunt Board Row
+ * @returns Hunt Board Draft
  */
 function toHuntBoardDraft(board: QuarryHuntBoardDetail): HuntBoardDraft {
   return {

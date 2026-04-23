@@ -70,7 +70,7 @@ export async function getSettlementQuarries(
  *
  * @param quarryIds Quarry IDs
  * @param settlementId Settlement ID
- * @return Added Settlement Quarries Data
+ * @returns Inserted Settlement Quarry Rows
  */
 export async function addSettlementQuarries(
   quarryIds: string[],

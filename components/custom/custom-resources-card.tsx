@@ -384,7 +384,12 @@ export function CustomResourcesCard({
     setIsAdding(true)
   }, [])
 
-  /** Quarry selector component for reuse in add/edit forms */
+  /**
+   * Quarry selector component for reuse in add/edit forms.
+   *
+   * @param props Quarry Selector Properties
+   * @returns Quarry Selector Component
+   */
   const QuarrySelector = ({
     quarryId,
     setQuarryIdFn,
@@ -461,7 +466,12 @@ export function CustomResourcesCard({
     </Popover>
   )
 
-  /** Resource type multi-select dropdown for reuse in add/edit forms */
+  /**
+   * Resource type multi-select dropdown for reuse in add/edit forms.
+   *
+   * @param props Resource Type Select Properties
+   * @returns Resource Type Select Component
+   */
   const ResourceTypeSelect = ({
     selected,
     onToggle,
@@ -516,7 +526,12 @@ export function CustomResourcesCard({
     )
   }
 
-  /** Category selector for reuse in add/edit forms */
+  /**
+   * Category selector for reuse in add/edit forms.
+   *
+   * @param props Category Selector Properties
+   * @returns Category Selector Component
+   */
   const CategorySelector = ({
     value,
     onChangeFn,

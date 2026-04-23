@@ -54,6 +54,7 @@ export async function getSettlementCollectiveCognitionRewards(
  *
  * @param rewardIds Collective Cognition Reward IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Collective Cognition Reward Rows
  */
 export async function addSettlementCollectiveCognitionRewards(
   rewardIds: string[],

@@ -7,7 +7,7 @@ import { SurvivorDetail } from '@/lib/types'
  * suspicion level for the settlement.
  *
  * @param survivors Array of Survivors
- * @return Total Suspicion Level
+ * @returns Total Suspicion Level
  */
 export function calculateTotalSuspicion(survivors: SurvivorDetail[]): number {
   return survivors.reduce((total, survivor) => {

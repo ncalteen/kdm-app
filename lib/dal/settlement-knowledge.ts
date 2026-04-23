@@ -58,6 +58,7 @@ export async function getSettlementKnowledges(
  *
  * @param knowledgeIds Knowledge IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Knowledge Rows
  */
 export async function addSettlementKnowledges(
   knowledgeIds: string[],

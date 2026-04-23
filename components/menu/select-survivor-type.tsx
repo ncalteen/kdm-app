@@ -57,6 +57,7 @@ export function SelectSurvivorType({
    * Handle Survivor Type Selection
    *
    * @param currentValue Selected Survivor Value
+   * @returns Void; updates the selection state and notifies the parent
    */
   const handleSelect = (currentValue: string) => {
     // Don't allow changes if disabled
