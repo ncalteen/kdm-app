@@ -87,6 +87,7 @@ export function InnovationsCard({
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [createDialogName, setCreateDialogName] = useState('')
   const [createDialogKey, setCreateDialogKey] = useState(0)
+  const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   if (prevSettlement !== selectedSettlement) {
     setPrevSettlement(selectedSettlement)
@@ -118,6 +119,7 @@ export function InnovationsCard({
       .catch((error) => {
         console.error('Innovations Fetch Error:', error)
       })
+      .finally(() => setHasFetched(true))
   }, [])
 
   /**
@@ -370,6 +372,8 @@ export function InnovationsCard({
                         <Plus className="h-4 w-4" />
                         {creating ? 'Creating...' : `Create "${search.trim()}"`}
                       </button>
+                    ) : !hasFetched ? (
+                      'Loading innovations...'
                     ) : (
                       'No innovations found.'
                     )}

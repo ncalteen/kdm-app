@@ -91,6 +91,7 @@ export function AbilitiesAndImpairmentsCard({
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [createDialogName, setCreateDialogName] = useState('')
   const [createDialogKey, setCreateDialogKey] = useState(0)
+  const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   if (prevSurvivor !== selectedSurvivor) {
     setPrevSurvivor(selectedSurvivor)
@@ -105,6 +106,7 @@ export function AbilitiesAndImpairmentsCard({
       .catch((error) => {
         console.error('Abilities/Impairments Fetch Error:', error)
       })
+      .finally(() => setHasFetched(true))
   }, [])
 
   // Update the items when the selected survivor changes
@@ -326,6 +328,8 @@ export function AbilitiesAndImpairmentsCard({
                         <Plus className="h-4 w-4" />
                         {creating ? 'Creating...' : `Create "${search.trim()}"`}
                       </button>
+                    ) : !hasFetched ? (
+                      'Loading abilities and impairments...'
                     ) : (
                       'No abilities or impairments found.'
                     )}

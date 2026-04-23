@@ -109,6 +109,7 @@ export function FightingArtsCard({
   >('regular')
   const [createDialogName, setCreateDialogName] = useState('')
   const [createDialogKey, setCreateDialogKey] = useState(0)
+  const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   const canUseFightingArtsKnowledges =
     survivors.find((s) => s.id === selectedSurvivor?.id)
@@ -121,16 +122,31 @@ export function FightingArtsCard({
   }
 
   useEffect(() => {
+    let regularLoaded = false
+    let secretLoaded = false
+
+    const markLoaded = () => {
+      if (regularLoaded && secretLoaded) setHasFetched(true)
+    }
+
     getFightingArts()
       .then((arts) => setAvailableFightingArts(arts))
       .catch((error) => {
         console.error('Fighting Arts Fetch Error:', error)
+      })
+      .finally(() => {
+        regularLoaded = true
+        markLoaded()
       })
 
     getSecretFightingArts()
       .then((arts) => setAvailableSecretFightingArts(arts))
       .catch((error) => {
         console.error('Secret Fighting Arts Fetch Error:', error)
+      })
+      .finally(() => {
+        secretLoaded = true
+        markLoaded()
       })
   }, [])
 
@@ -668,6 +684,8 @@ export function FightingArtsCard({
                           </button>
                         )}
                       </div>
+                    ) : !hasFetched ? (
+                      'Loading fighting arts...'
                     ) : (
                       'No fighting arts found.'
                     )}

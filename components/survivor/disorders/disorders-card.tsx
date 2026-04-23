@@ -73,6 +73,7 @@ export function DisordersCard({
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [createDialogName, setCreateDialogName] = useState('')
   const [createDialogKey, setCreateDialogKey] = useState(0)
+  const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   if (prevSurvivor !== selectedSurvivor) {
     setPrevSurvivor(selectedSurvivor)
@@ -85,6 +86,7 @@ export function DisordersCard({
       .catch((error) => {
         console.error('Disorders Fetch Error:', error)
       })
+      .finally(() => setHasFetched(true))
   }, [])
 
   /**
@@ -282,6 +284,8 @@ export function DisordersCard({
                         <Plus className="h-4 w-4" />
                         {creating ? 'Creating...' : `Create "${search.trim()}"`}
                       </button>
+                    ) : !hasFetched ? (
+                      'Loading disorders...'
                     ) : (
                       'No disorders found.'
                     )}
