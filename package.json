@@ -17,17 +17,18 @@
   "scripts": {
     "build": "next build",
     "ci-test": "vitest run",
+    "coverage": "make-coverage-badge --output-path ./badges/coverage.svg",
     "db:generate": "supabase gen types typescript --local > lib/database.types.ts",
     "db:migrate": "supabase migration up",
     "db:reset": "supabase db reset",
     "dev": "next dev",
     "format:check": "prettier --check '**'",
     "format:write": "prettier --write '**'",
+    "integration-test": "./scripts/integration.sh",
     "lint": "eslint .",
     "start": "next start",
     "test": "vitest",
-    "test:integration": "./scripts/integration.sh",
-    "all": "npm run format:check && npm run lint && npm run ci-test && npm run build"
+    "all": "npm run format:write && npm run lint && npm run ci-test && npm run integration-test && npm run coverage && npm run build"
   },
   "license": "MIT",
   "dependencies": {
@@ -103,6 +104,7 @@
     "eslint": "^9",
     "eslint-config-next": "^16.2.2",
     "eslint-plugin-jsdoc": "^62.9.0",
+    "make-coverage-badge": "^1.2.0",
     "postcss": "^8",
     "prettier": "^3",
     "tailwindcss": "^4.1.16",

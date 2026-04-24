@@ -73,14 +73,15 @@ export function PhilosophiesCard({
   const [search, setSearch] = useState('')
 
   // Available philosophies for the select dropdown (fetched once per settlement).
-  const { data: availablePhilosophies, isLoaded: hasFetched } = useCatalogFetch<{
-    [key: string]: PhilosophyDetail
-  }>(selectedSettlement?.id, () => getPhilosophies(), {
-    initial: {},
-    errorContext: 'Philosophies Fetch Error',
-    onReset: () => setAddOpen(false),
-    onError: () => toast.error(ERROR_MESSAGE())
-  })
+  const { data: availablePhilosophies, isLoaded: hasFetched } =
+    useCatalogFetch<{
+      [key: string]: PhilosophyDetail
+    }>(selectedSettlement?.id, () => getPhilosophies(), {
+      initial: {},
+      errorContext: 'Philosophies Fetch Error',
+      onReset: () => setAddOpen(false),
+      onError: () => toast.error(ERROR_MESSAGE())
+    })
 
   /**
    * Sorted Philosophies
