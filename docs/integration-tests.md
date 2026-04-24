@@ -30,7 +30,7 @@ against the local Supabase CLI stack. They do **not** mock `@/lib/supabase/*`.
 ## Run
 
 ```bash
-npm run test:integration
+npm run integration-test
 ```
 
 Tests use `fileParallelism: false` because each file owns its schema fixtures.

@@ -6,7 +6,7 @@
 # - Exports the local URL + keys under the names the test helpers expect
 #   (see __tests__/integration/helpers/supabase.ts).
 # - Runs vitest against vitest.integration.config.ts and forwards any extra
-#   CLI arguments (e.g. `npm run test:integration -- path/to/one.test.ts`).
+#   CLI arguments (e.g. `npm run integration-test -- path/to/one.test.ts`).
 set -euo pipefail
 
 # Boot Supabase. `supabase start` is a no-op if the stack is already up.

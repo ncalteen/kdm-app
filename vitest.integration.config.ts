@@ -9,7 +9,7 @@ import { defineConfig } from 'vitest/config'
  *
  * Usage:
  *   supabase start
- *   npm run test:integration
+ *   npm run integration-test
  */
 export default defineConfig({
   resolve: {

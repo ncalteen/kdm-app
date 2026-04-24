@@ -92,7 +92,7 @@ jobs:
 
       - name: Run Integration Tests
         id: integration-test
-        run: npm run test:integration
+        run: npm run integration-test
 
       - if: ${{ always() }}
         name: Stop Supabase
