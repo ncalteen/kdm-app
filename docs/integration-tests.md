@@ -6,13 +6,13 @@ against the local Supabase CLI stack. They do **not** mock `@/lib/supabase/*`.
 ## Prerequisites
 
 1. Supabase CLI installed (`brew install supabase/tap/supabase`).
-2. Stack running:
+1. Stack running:
 
    ```bash
    supabase start
    ```
 
-3. Export the local keys:
+1. Export the local keys:
 
    ```bash
    eval "$(npx supabase status -o env | awk -F= '{print "export "$1"="$2}')"
