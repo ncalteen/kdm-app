@@ -267,9 +267,9 @@ export function OverviewCard({
     <Card className="border-0 p-0 py-2">
       <CardContent className="p-0">
         {/* Desktop Layout */}
-        <div className="hidden lg:flex flex-row items-start justify-between gap-4">
+        <div className="hidden lg:flex flex-row items-start gap-4">
           {/* Survival Limit */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-1 flex-col items-center gap-1">
             <NumericInput
               label="Survival Limit"
               className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -286,7 +286,7 @@ export function OverviewCard({
           />
 
           {/* Population (Disabled) */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-1 flex-col items-center gap-1">
             <Input
               type="number"
               className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -304,7 +304,7 @@ export function OverviewCard({
           />
 
           {/* Death Count (Disabled) */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-1 flex-col items-center gap-1">
             <Input
               type="number"
               className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -322,7 +322,7 @@ export function OverviewCard({
           />
 
           {/* Lost Settlement Count (Disabled) */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-1 flex-col items-center gap-1">
             {isLoadingLostCount ? (
               <Skeleton className="w-12 h-12 rounded-md" />
             ) : (
@@ -350,7 +350,7 @@ export function OverviewCard({
                 className="mx-2 data-[orientation=vertical]:h-12"
               />
 
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-1 flex-col items-center gap-1">
                 <Input
                   type="number"
                   className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -377,7 +377,7 @@ export function OverviewCard({
                 className="mx-2 data-[orientation=vertical]:h-12"
               />
 
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-1 flex-col items-center gap-1">
                 <NumericInput
                   label="Lantern Research"
                   className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -398,7 +398,7 @@ export function OverviewCard({
                 className="mx-2 data-[orientation=vertical]:h-12"
               />
 
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-1 flex-col items-center gap-1">
                 <NumericInput
                   label="Endeavors"
                   className="w-12 h-12 text-center no-spinners text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
