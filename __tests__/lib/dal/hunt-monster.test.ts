@@ -60,7 +60,8 @@ describe('getHuntMonsters', () => {
         ...rawMonster,
         ai_deck: rawMonster.hunt_ai_deck,
         traits: [],
-        moods: []
+        moods: [],
+        survivor_statuses: []
       }
     })
     expect(mockSupabase.from).toHaveBeenCalledWith('hunt_monster')
