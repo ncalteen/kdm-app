@@ -168,7 +168,7 @@ export const createColumns = ({
         )
       },
       cell: ({ row }) => (
-        <div className="text-sm hidden md:flex md:justify-center">
+        <div className="text-sm hidden md:flex md:justify-center md:items-center">
           <Badge variant="outline">{Gender[row.original.gender]}</Badge>
         </div>
       ),
@@ -191,7 +191,7 @@ export const createColumns = ({
         )
       },
       cell: ({ row }) => (
-        <div className="text-sm flex justify-center">
+        <div className="text-sm flex justify-center items-center">
           <Badge variant="outline">{row.original.hunt_xp}</Badge>
         </div>
       ),
@@ -214,12 +214,12 @@ export const createColumns = ({
         )
       },
       cell: ({ row }) => (
-        <div className="text-left text-sm hidden md:block">
+        <div className="text-center text-sm hidden md:flex md:justify-center md:items-center">
           {row.original.philosophy?.philosophy_name}
         </div>
       ),
       meta: {
-        className: 'hidden md:table-cell md:w-[140px]'
+        className: 'hidden md:table-cell md:w-[140px] text-center'
       }
     },
     {
@@ -238,7 +238,7 @@ export const createColumns = ({
       },
       cell: ({ row }) =>
         row.getValue('retired') && (
-          <div className="flex justify-center">
+          <div className="flex justify-center items-center">
             <Badge variant="secondary" className="text-sm h-8 w-8">
               <ShieldOffIcon />
             </Badge>
@@ -264,7 +264,7 @@ export const createColumns = ({
       },
       cell: ({ row }) =>
         row.getValue('dead') && (
-          <div className="flex justify-center">
+          <div className="flex justify-center items-center">
             <Badge variant="destructive" className="text-sm h-8 w-8">
               <SkullIcon />
             </Badge>
