@@ -1,6 +1,5 @@
 'use client'
 
-import { CreateCustomPhilosophyDialog } from '@/components/settlement/arc/create-custom-philosophy-dialog'
 import { PhilosophyItem } from '@/components/settlement/arc/philosophy-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,8 +21,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
-import { addNeurosis } from '@/lib/dal/neurosis'
-import { addPhilosophy, getPhilosophies } from '@/lib/dal/philosophy'
+import { getPhilosophies } from '@/lib/dal/philosophy'
 import {
   addSettlementPhilosophies,
   removeSettlementPhilosophy
@@ -38,7 +36,7 @@ import {
   SettlementDetail,
   SettlementStateSetter
 } from '@/lib/types'
-import { BrainCogIcon, Plus, PlusIcon } from 'lucide-react'
+import { BrainCogIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
@@ -73,16 +71,9 @@ export function PhilosophiesCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
-  const [creating, setCreating] = useState(false)
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [dialogKey, setDialogKey] = useState(0)
 
   // Available philosophies for the select dropdown (fetched once per settlement).
-  const {
-    data: availablePhilosophies,
-    isLoaded: hasFetched,
-    setData: setAvailablePhilosophies
-  } = useCatalogFetch<{
+  const { data: availablePhilosophies, isLoaded: hasFetched } = useCatalogFetch<{
     [key: string]: PhilosophyDetail
   }>(selectedSettlement?.id, () => getPhilosophies(), {
     initial: {},
@@ -138,6 +129,7 @@ export function PhilosophiesCard({
       const optimisticRow: SettlementDetail['philosophies'][0] = {
         hunt_xp_milestones: null,
         id: tempId,
+        neurosis_id: null,
         philosophy_id: philosophyId,
         philosophy_name: philosophyInfo.philosophy_name,
         tenet_knowledge_id: null,
@@ -232,120 +224,6 @@ export function PhilosophiesCard({
     [selectedSettlement, setSelectedSettlement, mutate]
   )
 
-  /** Check if an exact match for the search term already exists. */
-  const exactMatchExists = Object.values(availablePhilosophies).some(
-    (p) => p.philosophy_name.toLowerCase() === search.trim().toLowerCase()
-  )
-
-  /**
-   * Handle Create Custom Philosophy
-   */
-  const handleCreate = useCallback(
-    async (data: { philosophy_name: string; neurosis_name: string | null }) => {
-      if (creating || !selectedSettlement) return
-
-      setCreating(true)
-
-      try {
-        const newPhilosophy = await addPhilosophy({
-          custom: true,
-          philosophy_name: data.philosophy_name
-        })
-
-        // If a neurosis name was provided, create it linked to this philosophy
-        if (data.neurosis_name) {
-          await addNeurosis({
-            custom: true,
-            neurosis_name: data.neurosis_name,
-            philosophy_id: newPhilosophy.id
-          })
-        }
-
-        setAvailablePhilosophies((prev) => ({
-          ...prev,
-          [newPhilosophy.id]: newPhilosophy
-        }))
-
-        setCreateDialogOpen(false)
-        setSearch('')
-        setAddOpen(false)
-        toast.success(PHILOSOPHY_CREATED_MESSAGE())
-
-        // Add to settlement immediately
-        const tempId = `temp-${crypto.randomUUID()}`
-        const optimisticRow: SettlementDetail['philosophies'][0] = {
-          hunt_xp_milestones: null,
-          id: tempId,
-          philosophy_id: newPhilosophy.id,
-          philosophy_name: newPhilosophy.philosophy_name,
-          tenet_knowledge_id: null,
-          tier: null
-        }
-        const updatedPhilosophies = [
-          ...(selectedSettlement.philosophies ?? []),
-          optimisticRow
-        ]
-
-        setSelectedSettlement({
-          ...selectedSettlement,
-          philosophies: updatedPhilosophies
-        })
-
-        void mutate({
-          context: 'Philosophy Add',
-          persist: () =>
-            addSettlementPhilosophies(
-              [newPhilosophy.id],
-              selectedSettlement.id
-            ),
-          onSuccess: (rows) => {
-            setSelectedSettlement((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    philosophies: (prev.philosophies ?? []).map((p) =>
-                      p.id === tempId ? { ...p, id: rows[0].id } : p
-                    )
-                  }
-                : null
-            )
-          },
-          rollback: () => {
-            setSelectedSettlement((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    philosophies: (prev.philosophies ?? []).filter(
-                      (p) => p.id !== tempId
-                    )
-                  }
-                : null
-            )
-          }
-        })
-      } catch (error) {
-        console.error('Philosophy Create Error:', error)
-        toast.error(ERROR_MESSAGE())
-      } finally {
-        setCreating(false)
-      }
-    },
-    [
-      creating,
-      selectedSettlement,
-      setSelectedSettlement,
-      toast,
-      mutate,
-      setAvailablePhilosophies
-    ]
-  )
-
-  /** Open the create dialog with the current search term pre-filled */
-  const openCreateDialog = useCallback(() => {
-    setDialogKey((k) => k + 1)
-    setCreateDialogOpen(true)
-  }, [])
-
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -370,19 +248,7 @@ export function PhilosophiesCard({
                   onValueChange={setSearch}
                 />
                 <CommandList>
-                  <CommandEmpty>
-                    {search.trim() ? (
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
-                        onClick={openCreateDialog}>
-                        <Plus className="h-4 w-4" />
-                        Create &quot;{search.trim()}&quot;
-                      </button>
-                    ) : (
-                      'No philosophies found.'
-                    )}
-                  </CommandEmpty>
+                  <CommandEmpty>No philosophies found.</CommandEmpty>
                   <CommandGroup>
                     {Object.values(availablePhilosophies)
                       .filter(
@@ -406,14 +272,6 @@ export function PhilosophiesCard({
                           )}
                         </CommandItem>
                       ))}
-                    {search.trim() && !exactMatchExists && (
-                      <CommandItem
-                        value={`__create__${search.trim()}`}
-                        onSelect={openCreateDialog}>
-                        <Plus className="h-4 w-4" />
-                        Create &quot;{search.trim()}&quot;
-                      </CommandItem>
-                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -452,15 +310,6 @@ export function PhilosophiesCard({
           </div>
         </div>
       </CardContent>
-
-      <CreateCustomPhilosophyDialog
-        key={dialogKey}
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onCreate={handleCreate}
-        creating={creating}
-        initialName={search.trim()}
-      />
     </Card>
   )
 }
