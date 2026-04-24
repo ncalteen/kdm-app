@@ -591,6 +591,7 @@ export type Database = {
           luck: number
           luck_tokens: number
           monster_name: string | null
+          moods: string[]
           movement: number
           movement_tokens: number
           notes: string
@@ -600,6 +601,7 @@ export type Database = {
           strength: number
           strength_tokens: number
           toughness: number
+          traits: string[]
           updated_at: string
           wounds: number
         }
@@ -619,6 +621,7 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
+          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -628,6 +631,7 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
+          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -647,6 +651,7 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
+          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -656,6 +661,7 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
+          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -1270,6 +1276,7 @@ export type Database = {
           life: number | null
           luck: number
           luck_tokens: number
+          moods: string[]
           movement: number
           movement_tokens: number
           nemesis_id: string
@@ -1282,6 +1289,7 @@ export type Database = {
           survivor_statuses: string[]
           toughness: number
           toughness_tokens: number
+          traits: string[]
           updated_at: string
         }
         Insert: {
@@ -1301,6 +1309,7 @@ export type Database = {
           life?: number | null
           luck?: number
           luck_tokens?: number
+          moods?: string[]
           movement?: number
           movement_tokens?: number
           nemesis_id: string
@@ -1313,6 +1322,7 @@ export type Database = {
           survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
+          traits?: string[]
           updated_at?: string
         }
         Update: {
@@ -1332,6 +1342,7 @@ export type Database = {
           life?: number | null
           luck?: number
           luck_tokens?: number
+          moods?: string[]
           movement?: number
           movement_tokens?: number
           nemesis_id?: string
@@ -1344,6 +1355,7 @@ export type Database = {
           survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
+          traits?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -1391,6 +1403,45 @@ export type Database = {
             columns: ["nemesis_level_id"]
             isOneToOne: false
             referencedRelation: "nemesis_level"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nemesis_level_survivor_status: {
+        Row: {
+          created_at: string
+          id: string
+          nemesis_level_id: string
+          survivor_status_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nemesis_level_id: string
+          survivor_status_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nemesis_level_id?: string
+          survivor_status_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nemesis_level_survivor_status_nemesis_level_id_fkey"
+            columns: ["nemesis_level_id"]
+            isOneToOne: false
+            referencedRelation: "nemesis_level"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nemesis_level_survivor_status_survivor_status_id_fkey"
+            columns: ["survivor_status_id"]
+            isOneToOne: false
+            referencedRelation: "survivor_status"
             referencedColumns: ["id"]
           },
         ]
@@ -2092,6 +2143,7 @@ export type Database = {
           level_number: number
           luck: number
           luck_tokens: number
+          moods: string[]
           movement: number
           movement_tokens: number
           overtone_cards: number
@@ -2104,6 +2156,7 @@ export type Database = {
           survivor_statuses: string[]
           toughness: number
           toughness_tokens: number
+          traits: string[]
           updated_at: string
         }
         Insert: {
@@ -2122,6 +2175,7 @@ export type Database = {
           level_number: number
           luck?: number
           luck_tokens?: number
+          moods?: string[]
           movement?: number
           movement_tokens?: number
           overtone_cards?: number
@@ -2134,6 +2188,7 @@ export type Database = {
           survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
+          traits?: string[]
           updated_at?: string
         }
         Update: {
@@ -2152,6 +2207,7 @@ export type Database = {
           level_number?: number
           luck?: number
           luck_tokens?: number
+          moods?: string[]
           movement?: number
           movement_tokens?: number
           overtone_cards?: number
@@ -2164,6 +2220,7 @@ export type Database = {
           survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
+          traits?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -2211,6 +2268,45 @@ export type Database = {
             columns: ["quarry_level_id"]
             isOneToOne: false
             referencedRelation: "quarry_level"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quarry_level_survivor_status: {
+        Row: {
+          created_at: string
+          id: string
+          quarry_level_id: string
+          survivor_status_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quarry_level_id: string
+          survivor_status_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quarry_level_id?: string
+          survivor_status_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quarry_level_survivor_status_quarry_level_id_fkey"
+            columns: ["quarry_level_id"]
+            isOneToOne: false
+            referencedRelation: "quarry_level"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quarry_level_survivor_status_survivor_status_id_fkey"
+            columns: ["survivor_status_id"]
+            isOneToOne: false
+            referencedRelation: "survivor_status"
             referencedColumns: ["id"]
           },
         ]
@@ -3450,6 +3546,7 @@ export type Database = {
           luck: number
           luck_tokens: number
           monster_name: string | null
+          moods: string[]
           movement: number
           movement_tokens: number
           notes: string
@@ -3460,6 +3557,7 @@ export type Database = {
           strength: number
           strength_tokens: number
           toughness: number
+          traits: string[]
           updated_at: string
           wounds: number
         }
@@ -3479,6 +3577,7 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
+          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -3489,6 +3588,7 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
+          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -3508,6 +3608,7 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
+          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -3518,6 +3619,7 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
+          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -4397,6 +4499,62 @@ export type Database = {
           },
         ]
       }
+      survivor_status: {
+        Row: {
+          created_at: string
+          custom: boolean
+          id: string
+          rules: string | null
+          survivor_status_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          rules?: string | null
+          survivor_status_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          rules?: string | null
+          survivor_status_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      survivor_status_shared_user: {
+        Row: {
+          shared_user_id: string
+          survivor_status_id: string
+          user_id: string
+        }
+        Insert: {
+          shared_user_id: string
+          survivor_status_id: string
+          user_id: string
+        }
+        Update: {
+          shared_user_id?: string
+          survivor_status_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survivor_status_shared_user_survivor_status_id_fkey"
+            columns: ["survivor_status_id"]
+            isOneToOne: false
+            referencedRelation: "survivor_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trait: {
         Row: {
           created_at: string
@@ -4758,6 +4916,10 @@ export type Database = {
       is_seed_pattern_owner: { Args: { record_id: string }; Returns: boolean }
       is_settlement_owner: { Args: { record_id: string }; Returns: boolean }
       is_strain_milestone_owner: {
+        Args: { record_id: string }
+        Returns: boolean
+      }
+      is_survivor_status_owner: {
         Args: { record_id: string }
         Returns: boolean
       }

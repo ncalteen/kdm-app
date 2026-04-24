@@ -1,6 +1,11 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { MoodDetail, QuarryLevelDetail, TraitDetail } from '@/lib/types'
+import {
+  MoodDetail,
+  QuarryLevelDetail,
+  SurvivorStatusDetail,
+  TraitDetail
+} from '@/lib/types'
 
 /**
  * Get Quarry Levels
@@ -20,7 +25,7 @@ export async function getQuarryLevels(
   const { data: levels, error: levelsError } = await supabase
     .from('quarry_level')
     .select(
-      'id, accuracy, accuracy_tokens, advanced_cards, ai_deck_remaining, basic_cards, damage, damage_tokens, evasion, evasion_tokens, legendary_cards, level_number, luck, luck_tokens, movement, movement_tokens, overtone_cards, speed, speed_tokens, strength, strength_tokens, sub_monster_name, survivor_statuses, toughness, toughness_tokens, quarry_level_trait(trait(id, custom, trait_name, rules)), quarry_level_mood(mood(id, custom, mood_name, rules))'
+      'id, accuracy, accuracy_tokens, advanced_cards, ai_deck_remaining, basic_cards, damage, damage_tokens, evasion, evasion_tokens, legendary_cards, level_number, luck, luck_tokens, movement, movement_tokens, overtone_cards, speed, speed_tokens, strength, strength_tokens, sub_monster_name, toughness, toughness_tokens, quarry_level_trait(trait(id, custom, trait_name, rules)), quarry_level_mood(mood(id, custom, mood_name, rules)), quarry_level_survivor_status(survivor_status(id, custom, survivor_status_name, rules))'
     )
     .eq('quarry_id', quarryId)
 
@@ -54,6 +59,13 @@ export async function getQuarryLevels(
         quarry_level_mood: { mood: MoodDetail | null }[]
       }
     ).quarry_level_mood
+    const statusRows = (
+      level as unknown as {
+        quarry_level_survivor_status: {
+          survivor_status: SurvivorStatusDetail | null
+        }[]
+      }
+    ).quarry_level_survivor_status
 
     return {
       ...level,
@@ -64,7 +76,10 @@ export async function getQuarryLevels(
         .filter((t): t is TraitDetail => t !== null),
       moods: (moodRows ?? [])
         .map((r) => r.mood)
-        .filter((m): m is MoodDetail => m !== null)
+        .filter((m): m is MoodDetail => m !== null),
+      survivor_statuses: (statusRows ?? [])
+        .map((r) => r.survivor_status)
+        .filter((s): s is SurvivorStatusDetail => s !== null)
     }
   })
 

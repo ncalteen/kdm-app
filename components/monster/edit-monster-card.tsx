@@ -184,7 +184,9 @@ export function EditMonsterCard({
         for (const lvl of monsterLevels) {
           if (!groupedLevels[lvl.level_number])
             groupedLevels[lvl.level_number] = []
-          groupedLevels[lvl.level_number].push(lvl as MonsterLevelDraft)
+          groupedLevels[lvl.level_number].push(
+            lvl as unknown as MonsterLevelDraft
+          )
         }
 
         let huntBoard: HuntBoardDraft | undefined

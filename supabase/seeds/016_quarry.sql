@@ -65,7 +65,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -99,7 +98,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       17,
       0
     )
@@ -128,7 +126,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -154,7 +151,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -239,7 +235,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -273,7 +268,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       11,
       0
     ),
@@ -307,7 +301,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       12,
       0
     )
@@ -336,7 +329,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -362,7 +354,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -462,7 +453,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -496,7 +486,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       10,
       0
     ),
@@ -530,7 +519,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       16,
       0
     )
@@ -559,7 +547,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -585,7 +572,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -685,7 +671,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -719,7 +704,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       7,
       0
     ),
@@ -753,7 +737,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       9,
       0
     ),
@@ -787,7 +770,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       15,
       0
     )
@@ -816,7 +798,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -842,7 +823,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -972,7 +952,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -1006,7 +985,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       13,
       0
     ),
@@ -1040,7 +1018,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       15,
       0
     ),
@@ -1074,7 +1051,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       17,
       0
     )
@@ -1103,7 +1079,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -1129,7 +1104,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -1240,7 +1214,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -1274,7 +1247,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       12,
       0
     ),
@@ -1308,7 +1280,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       14,
       0
     ),
@@ -1342,7 +1313,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       18,
       0
     )
@@ -1371,7 +1341,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -1397,7 +1366,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -1494,7 +1462,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -1528,7 +1495,6 @@ with quarry_level_source (
       0,
       0,
       2,
-      '{}',
       6,
       0
     ),
@@ -1562,7 +1528,6 @@ with quarry_level_source (
       0,
       0,
       1,
-      '{}',
       8,
       0
     ),
@@ -1596,7 +1561,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       11,
       0
     )
@@ -1625,7 +1589,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -1651,7 +1614,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -1761,7 +1723,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -1795,7 +1756,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       8,
       0
     ),
@@ -1829,7 +1789,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       11,
       0
     ),
@@ -1863,7 +1822,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       17,
       0
     )
@@ -1892,7 +1850,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -1918,7 +1875,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -2029,7 +1985,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -2063,7 +2018,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       8,
       0
     ),
@@ -2097,7 +2051,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       11,
       0
     ),
@@ -2131,7 +2084,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       15,
       0
     )
@@ -2160,7 +2112,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -2186,7 +2137,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -2311,7 +2261,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -2345,7 +2294,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       19,
       0
     ),
@@ -2379,7 +2327,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       22,
       0
     ),
@@ -2413,7 +2360,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       25,
       0
     )
@@ -2442,7 +2388,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -2468,7 +2413,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -2596,7 +2540,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -2630,7 +2573,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       14,
       0
     ),
@@ -2664,7 +2606,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       16,
       0
     ),
@@ -2698,7 +2639,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       21,
       0
     )
@@ -2727,7 +2667,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -2753,7 +2692,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -2850,7 +2788,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -2884,7 +2821,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{"Dreaded Decade"}',
       10,
       0
     ),
@@ -2918,7 +2854,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{"Dreaded Decade"}',
       12,
       0
     ),
@@ -2952,7 +2887,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{"Dreaded Decade"}',
       17,
       0
     )
@@ -2981,7 +2915,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -3007,7 +2940,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -3148,7 +3080,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -3182,7 +3113,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       8,
       0
     ),
@@ -3216,7 +3146,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       10,
       0
     ),
@@ -3250,7 +3179,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       12,
       0
     )
@@ -3279,7 +3207,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -3305,7 +3232,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -3433,7 +3359,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -3467,7 +3392,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{"Bloody Hands"}',
       7,
       0
     ),
@@ -3501,7 +3425,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{"Bloody Hands"}',
       9,
       0
     ),
@@ -3535,7 +3458,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{"Bloody Hands"}',
       12,
       0
     )
@@ -3564,7 +3486,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -3590,7 +3511,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -3718,7 +3638,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -3752,7 +3671,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       8,
       0
     ),
@@ -3786,7 +3704,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       10,
       0
     ),
@@ -3820,7 +3737,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       12,
       0
     )
@@ -3849,7 +3765,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -3875,7 +3790,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -3972,7 +3886,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -4006,7 +3919,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       10,
       0
     ),
@@ -4040,7 +3952,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       12,
       0
     ),
@@ -4074,7 +3985,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       16,
       0
     )
@@ -4103,7 +4013,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -4129,7 +4038,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
@@ -4253,7 +4161,6 @@ with quarry_level_source (
   strength,
   strength_tokens,
   survivor_hunt_pos,
-  survivor_statuses,
   toughness,
   toughness_tokens
 ) as (
@@ -4287,7 +4194,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       8,
       0
     ),
@@ -4321,7 +4227,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       10,
       0
     ),
@@ -4355,7 +4260,6 @@ with quarry_level_source (
       0,
       0,
       0,
-      '{}',
       14,
       0
     )
@@ -4384,7 +4288,6 @@ inserted_quarry_levels as (
       speed_tokens,
       strength,
       strength_tokens,
-      survivor_statuses,
       toughness,
       toughness_tokens
     )
@@ -4410,7 +4313,6 @@ inserted_quarry_levels as (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses::varchar [],
     toughness,
     toughness_tokens
   from quarry_level_source
