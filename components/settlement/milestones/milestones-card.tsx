@@ -388,8 +388,7 @@ export function MilestonesCard({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="border-0 h-8 w-8"
-                disabled={selectableMilestones.length === 0}>
+                className="border-0 h-8 w-8">
                 <PlusIcon className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
