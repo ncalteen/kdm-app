@@ -140,7 +140,7 @@ values -------------------------------------------------------------------------
     )
   ),
   (
-    'Legion II`',
+    'Legion II',
     (
       select id
       from philosophy
@@ -1318,7 +1318,7 @@ values -------------------------------------------------------------------------
     )
   ),
   (
-    'Despari I',
+    'Despair I',
     (
       select id
       from philosophy
@@ -1326,7 +1326,7 @@ values -------------------------------------------------------------------------
     )
   ),
   (
-    'Despari II',
+    'Despair II',
     (
       select id
       from philosophy
@@ -1334,7 +1334,7 @@ values -------------------------------------------------------------------------
     )
   ),
   (
-    'Despari III',
+    'Despair III',
     (
       select id
       from philosophy
@@ -1473,7 +1473,7 @@ values -------------------------------------------------------------------------
     )
   ),
   (
-    'Desperate Strike IIIa',
+    'Desperate Strike III',
     (
       select id
       from philosophy
@@ -1596,7 +1596,7 @@ values -------------------------------------------------------------------------
     )
   ),
   (
-    'Hissing Arns I',
+    'Hissing Arms I',
     (
       select id
       from philosophy
@@ -1604,7 +1604,7 @@ values -------------------------------------------------------------------------
     )
   ),
   (
-    'Hissing Arns II',
+    'Hissing Arms II',
     (
       select id
       from philosophy
@@ -1612,7 +1612,7 @@ values -------------------------------------------------------------------------
     )
   ),
   (
-    'Hissing Arns III',
+    'Hissing Arms III',
     (
       select id
       from philosophy
@@ -1708,6 +1708,14 @@ values -------------------------------------------------------------------------
   ------------------------------------------------------------------------------
   -- Wanderer - Death Drifter
   ------------------------------------------------------------------------------
+  (
+    'Chain Dash I',
+    (
+      select id
+      from philosophy
+      where philosophy_name = 'Wanderer - Death Drifter'
+    )
+  ),
   (
     'Chain Dash II',
     (

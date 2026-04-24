@@ -15,7 +15,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Chosen'
+    where knowledge_name = 'Chosen I'
   ),
   neurosis_id = (
     select id
@@ -28,7 +28,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'All for One'
+    where knowledge_name = 'All for One I'
   ),
   neurosis_id = (
     select id
@@ -41,7 +41,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Death Poet'
+    where knowledge_name = 'Death Poet I'
   ),
   neurosis_id = (
     select id
@@ -54,7 +54,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Guardian'
+    where knowledge_name = 'Guardian I'
   ),
   neurosis_id = (
     select id
@@ -67,7 +67,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Physiognomy'
+    where knowledge_name = 'Physiognomy I'
   ),
   neurosis_id = (
     select id
@@ -80,7 +80,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Invasive'
+    where knowledge_name = 'Invasive I'
   ),
   neurosis_id = (
     select id
@@ -93,7 +93,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Health'
+    where knowledge_name = 'Health I'
   ),
   neurosis_id = (
     select id
@@ -106,7 +106,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Dark Impulse'
+    where knowledge_name = 'Dark Impulse I'
   ),
   neurosis_id = (
     select id
@@ -119,7 +119,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Shatterstar'
+    where knowledge_name = 'Shatterstar I'
   ),
   neurosis_id = (
     select id
@@ -132,7 +132,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Death Collector'
+    where knowledge_name = 'Death Collector I'
   ),
   neurosis_id = (
     select id
@@ -145,7 +145,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Osteophage'
+    where knowledge_name = 'Osteophage I'
   ),
   neurosis_id = (
     select id
@@ -158,7 +158,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Positivity'
+    where knowledge_name = 'Positivity I'
   ),
   neurosis_id = (
     select id
@@ -171,7 +171,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Find the Castle'
+    where knowledge_name = 'Find the Castle I'
   ),
   neurosis_id = (
     select id
@@ -197,7 +197,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Tenacity'
+    where knowledge_name = 'Tenacity I'
   ),
   neurosis_id = (
     select id
@@ -210,7 +210,7 @@ update philosophy
 set tenet_knowledge_id = (
     select id
     from knowledge
-    where knowledge_name = 'Hissing Arms'
+    where knowledge_name = 'Hissing Arms I'
   ),
   neurosis_id = (
     select id
@@ -218,3 +218,81 @@ set tenet_knowledge_id = (
     where neurosis_name = 'Frailty'
   )
 where philosophy_name = 'Verminism';
+-- Wanderer - Aenas
+update philosophy
+set tenet_knowledge_id = (
+    select id
+    from knowledge
+    where knowledge_name = 'Dubious Fare I'
+  ),
+  neurosis_id = (
+    select id
+    from neurosis
+    where neurosis_name = 'Cravings'
+  )
+where philosophy_name = 'Wanderer - Aenas';
+-- Wanderer - Candy & Cola
+update philosophy
+set tenet_knowledge_id = (
+    select id
+    from knowledge
+    where knowledge_name = 'Chain Dash I'
+  ),
+  neurosis_id = (
+    select id
+    from neurosis
+    where neurosis_name = 'Afflicted'
+  )
+where philosophy_name = 'Wanderer - Candy & Cola';
+-- Wanderer - Death Drifter
+update philosophy
+set tenet_knowledge_id = (
+    select id
+    from knowledge
+    where knowledge_name = 'Reframe I'
+  ),
+  neurosis_id = (
+    select id
+    from neurosis
+    where neurosis_name = 'Compound Grief'
+  )
+where philosophy_name = 'Wanderer - Death Drifter';
+-- Wanderer - Goth
+update philosophy
+set tenet_knowledge_id = (
+    select id
+    from knowledge
+    where knowledge_name = 'Adrenaline I'
+  ),
+  neurosis_id = (
+    select id
+    from neurosis
+    where neurosis_name = 'Rotter'
+  )
+where philosophy_name = 'Wanderer - Goth';
+-- Wanderer - Luck
+update philosophy
+set tenet_knowledge_id = (
+    select id
+    from knowledge
+    where knowledge_name = 'Fortune & Misfortune I'
+  ),
+  neurosis_id = (
+    select id
+    from neurosis
+    where neurosis_name = 'Woebegone'
+  )
+where philosophy_name = 'Wanderer - Luck';
+-- Wanderer - Preacher
+update philosophy
+set tenet_knowledge_id = (
+    select id
+    from knowledge
+    where knowledge_name = 'Virtuous I'
+  ),
+  neurosis_id = (
+    select id
+    from neurosis
+    where neurosis_name = 'Revered'
+  )
+where philosophy_name = 'Wanderer - Preacher';
