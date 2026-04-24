@@ -14,6 +14,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   syncMonsterMoods,
+  syncMonsterSurvivorStatuses,
   syncMonsterTraits
 } from '@/lib/dal/monster-trait-mood'
 import { updateShowdownMonster } from '@/lib/dal/showdown-monster'
@@ -23,6 +24,8 @@ import {
   MOOD_UPDATED_MESSAGE,
   SHOWDOWN_MONSTER_KNOCKED_DOWN_MESSAGE,
   SHOWDOWN_NOTES_SAVED_MESSAGE,
+  SURVIVOR_STATUS_REMOVED_MESSAGE,
+  SURVIVOR_STATUS_UPDATED_MESSAGE,
   TRAIT_REMOVED_MESSAGE,
   TRAIT_UPDATED_MESSAGE
 } from '@/lib/messages'
@@ -31,6 +34,7 @@ import {
   ShowdownDetail,
   ShowdownMonsterDetail,
   ShowdownStateSetter,
+  SurvivorStatusDetail,
   TraitDetail
 } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
@@ -99,8 +103,9 @@ export function ShowdownMonsterCard({
         }
       })
 
-      // Split off traits/moods — those map to junction tables, not columns.
-      const { traits, moods, ...columnUpdates } = updateData
+      // Split off traits/moods/survivor_statuses — those map to junction
+      // tables, not columns.
+      const { traits, moods, survivor_statuses, ...columnUpdates } = updateData
       const writes: Promise<unknown>[] = []
       if (Object.keys(columnUpdates).length > 0)
         writes.push(updateShowdownMonster(currentMonsterId, columnUpdates))
@@ -118,6 +123,14 @@ export function ShowdownMonsterCard({
             'showdown_monster_mood',
             currentMonsterId,
             moods.map((m) => m.mood_name)
+          )
+        )
+      if (survivor_statuses !== undefined)
+        writes.push(
+          syncMonsterSurvivorStatuses(
+            'showdown_monster_survivor_status',
+            currentMonsterId,
+            survivor_statuses.map((s) => s.survivor_status_name)
           )
         )
 
@@ -166,6 +179,18 @@ export function ShowdownMonsterCard({
       saveMonsterData({ moods }, successMsg)
     },
     [monster?.moods, saveMonsterData]
+  )
+
+  const onSurvivorStatusesChange = useCallback(
+    (survivor_statuses: SurvivorStatusDetail[]) => {
+      const prevStatuses = monster?.survivor_statuses ?? []
+      const successMsg =
+        survivor_statuses.length > prevStatuses.length
+          ? SURVIVOR_STATUS_UPDATED_MESSAGE()
+          : SURVIVOR_STATUS_REMOVED_MESSAGE()
+      saveMonsterData({ survivor_statuses }, successMsg)
+    },
+    [monster?.survivor_statuses, saveMonsterData]
   )
 
   const handleSaveNotes = useCallback(() => {
@@ -236,6 +261,7 @@ export function ShowdownMonsterCard({
               monster={monster}
               onTraitsChange={onTraitsChange}
               onMoodsChange={onMoodsChange}
+              onSurvivorStatusesChange={onSurvivorStatusesChange}
             />
             <Separator className="my-2" />
             <div className="flex flex-col gap-2 pb-2">

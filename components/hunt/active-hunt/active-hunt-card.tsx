@@ -361,7 +361,7 @@ export function ActiveHuntCard({
           wounds: huntMonster.wounds
         })
 
-        // Copy trait/mood junctions from the hunt monster.
+        // Copy trait/mood/survivor-status junctions from the hunt monster.
         await Promise.all([
           copyMonsterJunctions(
             { table: 'hunt_monster_trait', parentId: huntMonster.id },
@@ -374,6 +374,16 @@ export function ActiveHuntCard({
             { table: 'hunt_monster_mood', parentId: huntMonster.id },
             {
               table: 'showdown_monster_mood',
+              parentId: showdownMonsterId
+            }
+          ),
+          copyMonsterJunctions(
+            {
+              table: 'hunt_monster_survivor_status',
+              parentId: huntMonster.id
+            },
+            {
+              table: 'showdown_monster_survivor_status',
               parentId: showdownMonsterId
             }
           )
@@ -406,6 +416,7 @@ export function ActiveHuntCard({
           strength_tokens: huntMonster.strength_tokens,
           toughness: huntMonster.toughness,
           traits: huntMonster.traits,
+          survivor_statuses: huntMonster.survivor_statuses,
           wounds: huntMonster.wounds,
           ai_deck: showdownAIDeck
         }

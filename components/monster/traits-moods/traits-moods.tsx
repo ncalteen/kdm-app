@@ -18,11 +18,13 @@ import {
 } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { getMoods } from '@/lib/dal/mood'
+import { getSurvivorStatuses } from '@/lib/dal/survivor-status'
 import { getTraits } from '@/lib/dal/trait'
 import {
   HuntMonsterDetail,
   MoodDetail,
   ShowdownMonsterDetail,
+  SurvivorStatusDetail,
   TraitDetail
 } from '@/lib/types'
 import { PlusIcon, Trash2Icon } from 'lucide-react'
@@ -38,15 +40,18 @@ interface TraitsMoodsProps {
   onTraitsChange: (traits: TraitDetail[]) => void
   /** Called when the moods list should change */
   onMoodsChange: (moods: MoodDetail[]) => void
+  /** Called when the survivor statuses list should change */
+  onSurvivorStatusesChange: (statuses: SurvivorStatusDetail[]) => void
 }
 
 /**
  * Monster Traits Moods Component
  *
- * Displays and manages the monster's traits and moods using catalog pickers
- * (popover + `Command`), matching the pattern used by `MonsterForm`. New
- * traits/moods are not authored here — users select from their available
- * catalog (built-in + owned + shared) entries. Removal is instantaneous.
+ * Displays and manages the monster's traits, moods, and survivor statuses
+ * using catalog pickers (popover + `Command`), matching the pattern used by
+ * `MonsterForm`. New entries are not authored here — users select from their
+ * available catalog (built-in + owned + shared) entries. Removal is
+ * instantaneous.
  *
  * @param props Monster Traits Moods Properties
  * @returns Monster Traits Moods Component
@@ -54,7 +59,8 @@ interface TraitsMoodsProps {
 export function TraitsMoods({
   monster,
   onTraitsChange,
-  onMoodsChange
+  onMoodsChange,
+  onSurvivorStatusesChange
 }: TraitsMoodsProps): ReactElement {
   const [availableTraits, setAvailableTraits] = useState<{
     [key: string]: TraitDetail
@@ -62,21 +68,26 @@ export function TraitsMoods({
   const [availableMoods, setAvailableMoods] = useState<{
     [key: string]: MoodDetail
   }>({})
+  const [availableStatuses, setAvailableStatuses] = useState<{
+    [key: string]: SurvivorStatusDetail
+  }>({})
   const [openTraitPicker, setOpenTraitPicker] = useState(false)
   const [openMoodPicker, setOpenMoodPicker] = useState(false)
+  const [openStatusPicker, setOpenStatusPicker] = useState(false)
 
   // Load catalogs once. Catalog entries (built-in + owned + shared) are
   // stable across the session, so no refresh is needed after mount.
   useEffect(() => {
     let cancelled = false
-    Promise.all([getTraits(), getMoods()])
-      .then(([traits, moods]) => {
+    Promise.all([getTraits(), getMoods(), getSurvivorStatuses()])
+      .then(([traits, moods, statuses]) => {
         if (cancelled) return
         setAvailableTraits(traits)
         setAvailableMoods(moods)
+        setAvailableStatuses(statuses)
       })
       .catch((err: unknown) => {
-        console.error('Monster Traits/Moods Catalog Fetch Error:', err)
+        console.error('Monster Traits/Moods/Statuses Catalog Fetch Error:', err)
       })
     return () => {
       cancelled = true
@@ -90,6 +101,12 @@ export function TraitsMoods({
   const selectableMoods = Object.values(availableMoods)
     .filter((m) => !monster.moods.some((mm) => mm.id === m.id))
     .sort((a, b) => a.mood_name.localeCompare(b.mood_name))
+
+  const selectableStatuses = Object.values(availableStatuses)
+    .filter((s) => !monster.survivor_statuses.some((ms) => ms.id === s.id))
+    .sort((a, b) =>
+      a.survivor_status_name.localeCompare(b.survivor_status_name)
+    )
 
   return (
     <>
@@ -199,7 +216,7 @@ export function TraitsMoods({
         </div>
       </div>
 
-      <div className="flex flex-col gap-1 pb-2">
+      <div className="flex flex-col gap-1">
         {monster.moods.map((mood) => (
           <div key={mood.id} className="flex items-center gap-1">
             <Input value={mood.mood_name} disabled />
@@ -211,6 +228,74 @@ export function TraitsMoods({
                 onMoodsChange(monster.moods.filter((m) => m.id !== mood.id))
               }
               title="Remove mood">
+              <Trash2Icon className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      <Separator className="my-2" />
+
+      {/* Survivor Statuses */}
+      <div className="mb-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-semibold text-muted-foreground flex-1 text-center">
+            Survivor Statuses
+          </Label>
+          <Popover open={openStatusPicker} onOpenChange={setOpenStatusPicker}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-0 h-6 w-6"
+                disabled={selectableStatuses.length === 0}
+                title="Add a survivor status">
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0" align="end">
+              <Command>
+                <CommandInput placeholder="Search survivor statuses..." />
+                <CommandList>
+                  <CommandEmpty>No survivor statuses found.</CommandEmpty>
+                  <CommandGroup>
+                    {selectableStatuses.map((status) => (
+                      <CommandItem
+                        key={status.id}
+                        value={status.survivor_status_name}
+                        onSelect={() => {
+                          onSurvivorStatusesChange([
+                            ...monster.survivor_statuses,
+                            status
+                          ])
+                          setOpenStatusPicker(false)
+                        }}>
+                        {status.survivor_status_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1 pb-2">
+        {monster.survivor_statuses.map((status) => (
+          <div key={status.id} className="flex items-center gap-1">
+            <Input value={status.survivor_status_name} disabled />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                onSurvivorStatusesChange(
+                  monster.survivor_statuses.filter((s) => s.id !== status.id)
+                )
+              }
+              title="Remove survivor status">
               <Trash2Icon className="h-4 w-4" />
             </Button>
           </div>

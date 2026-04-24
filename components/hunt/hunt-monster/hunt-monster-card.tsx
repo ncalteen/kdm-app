@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast'
 import { updateHuntMonster } from '@/lib/dal/hunt-monster'
 import {
   syncMonsterMoods,
+  syncMonsterSurvivorStatuses,
   syncMonsterTraits
 } from '@/lib/dal/monster-trait-mood'
 import {
@@ -23,6 +24,8 @@ import {
   MONSTER_STARTS_SHOWDOWN_KNOCKED_DOWN_MESSAGE,
   MOOD_REMOVED_MESSAGE,
   MOOD_UPDATED_MESSAGE,
+  SURVIVOR_STATUS_REMOVED_MESSAGE,
+  SURVIVOR_STATUS_UPDATED_MESSAGE,
   TRAIT_REMOVED_MESSAGE,
   TRAIT_UPDATED_MESSAGE
 } from '@/lib/messages'
@@ -31,6 +34,7 @@ import {
   HuntMonsterDetail,
   HuntStateSetter,
   MoodDetail,
+  SurvivorStatusDetail,
   TraitDetail
 } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
@@ -114,8 +118,9 @@ export function HuntMonsterCard({
         }
       })
 
-      // Split off traits/moods — those map to junction tables, not columns.
-      const { traits, moods, ...columnUpdates } = updateData
+      // Split off traits/moods/survivor_statuses — those map to junction
+      // tables, not columns.
+      const { traits, moods, survivor_statuses, ...columnUpdates } = updateData
       const writes: Promise<unknown>[] = []
       if (Object.keys(columnUpdates).length > 0)
         writes.push(updateHuntMonster(currentMonsterId, columnUpdates))
@@ -133,6 +138,14 @@ export function HuntMonsterCard({
             'hunt_monster_mood',
             currentMonsterId,
             moods.map((m) => m.mood_name)
+          )
+        )
+      if (survivor_statuses !== undefined)
+        writes.push(
+          syncMonsterSurvivorStatuses(
+            'hunt_monster_survivor_status',
+            currentMonsterId,
+            survivor_statuses.map((s) => s.survivor_status_name)
           )
         )
 
@@ -192,6 +205,23 @@ export function HuntMonsterCard({
       saveMonsterData({ moods }, successMsg)
     },
     [monster?.moods, saveMonsterData]
+  )
+
+  /**
+   * Handle Survivor Status List Change
+   *
+   * @param survivor_statuses New list of selected survivor statuses
+   */
+  const onSurvivorStatusesChange = useCallback(
+    (survivor_statuses: SurvivorStatusDetail[]) => {
+      const prevStatuses = monster?.survivor_statuses ?? []
+      const successMsg =
+        survivor_statuses.length > prevStatuses.length
+          ? SURVIVOR_STATUS_UPDATED_MESSAGE()
+          : SURVIVOR_STATUS_REMOVED_MESSAGE()
+      saveMonsterData({ survivor_statuses }, successMsg)
+    },
+    [monster?.survivor_statuses, saveMonsterData]
   )
 
   /**
@@ -270,6 +300,7 @@ export function HuntMonsterCard({
               monster={monster}
               onTraitsChange={onTraitsChange}
               onMoodsChange={onMoodsChange}
+              onSurvivorStatusesChange={onSurvivorStatusesChange}
             />
 
             <Separator className="my-2" />

@@ -722,6 +722,45 @@ export type Database = {
           },
         ]
       }
+      hunt_monster_survivor_status: {
+        Row: {
+          created_at: string
+          hunt_monster_id: string
+          id: string
+          survivor_status_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hunt_monster_id: string
+          id?: string
+          survivor_status_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hunt_monster_id?: string
+          id?: string
+          survivor_status_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hunt_monster_survivor_status_hunt_monster_id_fkey"
+            columns: ["hunt_monster_id"]
+            isOneToOne: false
+            referencedRelation: "hunt_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hunt_monster_survivor_status_survivor_status_id_fkey"
+            columns: ["survivor_status_id"]
+            isOneToOne: false
+            referencedRelation: "survivor_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hunt_monster_trait: {
         Row: {
           created_at: string
@@ -3652,6 +3691,45 @@ export type Database = {
             columns: ["showdown_monster_id"]
             isOneToOne: false
             referencedRelation: "showdown_monster"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      showdown_monster_survivor_status: {
+        Row: {
+          created_at: string
+          id: string
+          showdown_monster_id: string
+          survivor_status_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          showdown_monster_id: string
+          survivor_status_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          showdown_monster_id?: string
+          survivor_status_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showdown_monster_survivor_status_showdown_monster_id_fkey"
+            columns: ["showdown_monster_id"]
+            isOneToOne: false
+            referencedRelation: "showdown_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showdown_monster_survivor_status_survivor_status_id_fkey"
+            columns: ["survivor_status_id"]
+            isOneToOne: false
+            referencedRelation: "survivor_status"
             referencedColumns: ["id"]
           },
         ]

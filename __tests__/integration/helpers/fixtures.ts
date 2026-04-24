@@ -59,6 +59,7 @@ export interface SettlementFixture {
     seedPatternId: string
     abilityImpairmentId: string
     traitId: string
+    survivorStatusId: string
   }
 }
 
@@ -105,7 +106,8 @@ export async function seedCatalog(): Promise<SettlementFixture['catalogIds']> {
     resourceId,
     abilityImpairmentId,
     traitId,
-    moodId
+    moodId,
+    survivorStatusId
   ] = await Promise.all([
     insert('collective_cognition_reward', {
       custom: false,
@@ -157,7 +159,11 @@ export async function seedCatalog(): Promise<SettlementFixture['catalogIds']> {
       ability_impairment_name: 'RLS Test A&I'
     }),
     insert('trait', { custom: false, trait_name: 'RLS Test Trait' }),
-    insert('mood', { custom: false, mood_name: 'RLS Test Mood' })
+    insert('mood', { custom: false, mood_name: 'RLS Test Mood' }),
+    insert('survivor_status', {
+      custom: false,
+      survivor_status_name: 'RLS Test Survivor Status'
+    })
   ])
 
   // Gear depends on location FK being nullable — pass null.
@@ -197,7 +203,8 @@ export async function seedCatalog(): Promise<SettlementFixture['catalogIds']> {
     secretFightingArtId,
     seedPatternId,
     abilityImpairmentId,
-    traitId
+    traitId,
+    survivorStatusId
   }
 }
 
@@ -434,7 +441,18 @@ export async function seedSettlementFixture(
     showdown_monster_mood: await ins('showdown_monster_mood', {
       showdown_monster_id: showdownMonsterId,
       mood_id: catalog.moodId
-    })
+    }),
+    hunt_monster_survivor_status: await ins('hunt_monster_survivor_status', {
+      hunt_monster_id: huntMonsterId,
+      survivor_status_id: catalog.survivorStatusId
+    }),
+    showdown_monster_survivor_status: await ins(
+      'showdown_monster_survivor_status',
+      {
+        showdown_monster_id: showdownMonsterId,
+        survivor_status_id: catalog.survivorStatusId
+      }
+    )
   }
 
   return {
@@ -486,7 +504,8 @@ export async function deleteCatalog(
     ['seed_pattern', catalog.seedPatternId],
     ['ability_impairment', catalog.abilityImpairmentId],
     ['trait', catalog.traitId],
-    ['mood', catalog.moodId]
+    ['mood', catalog.moodId],
+    ['survivor_status', catalog.survivorStatusId]
   ]
   // Deletes cascade to dependent rows via FK ON DELETE CASCADE.
   await Promise.all(

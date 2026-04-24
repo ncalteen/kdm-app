@@ -240,6 +240,8 @@ export type HuntMonsterDetail = Omit<
   traits: TraitDetail[]
   /** Moods (joined from hunt_monster_mood → mood) */
   moods: MoodDetail[]
+  /** Survivor statuses (joined from hunt_monster_survivor_status → survivor_status) */
+  survivor_statuses: SurvivorStatusDetail[]
 }
 
 /**
@@ -901,6 +903,8 @@ export type ShowdownMonsterDetail = Omit<
   traits: TraitDetail[]
   /** Moods (joined from showdown_monster_mood → mood) */
   moods: MoodDetail[]
+  /** Survivor statuses (joined from showdown_monster_survivor_status → survivor_status) */
+  survivor_statuses: SurvivorStatusDetail[]
 }
 
 /**

@@ -20,6 +20,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   syncMonsterMoods,
+  syncMonsterSurvivorStatuses,
   syncMonsterTraits
 } from '@/lib/dal/monster-trait-mood'
 import { getNemesis } from '@/lib/dal/nemesis'
@@ -499,7 +500,8 @@ export function CreateShowdownCard({
         }
         const showdownMonsterId = await addShowdownMonster(showdownMonster)
 
-        // Link the monster's traits and moods via the junction tables.
+        // Link the monster's traits, moods, and survivor statuses via the
+        // junction tables.
         if (level.traits.length > 0)
           await syncMonsterTraits(
             'showdown_monster_trait',
@@ -512,12 +514,19 @@ export function CreateShowdownCard({
             showdownMonsterId,
             level.moods.map((m) => m.mood_name)
           )
+        if (level.survivor_statuses.length > 0)
+          await syncMonsterSurvivorStatuses(
+            'showdown_monster_survivor_status',
+            showdownMonsterId,
+            level.survivor_statuses.map((s) => s.survivor_status_name)
+          )
 
         showdownMonsters[showdownMonsterId] = {
           id: showdownMonsterId,
           ...showdownMonster,
           traits: level.traits,
           moods: level.moods,
+          survivor_statuses: level.survivor_statuses,
           ai_deck: {
             id: aiDeck.id,
             basic_cards: aiDeck.basic_cards,

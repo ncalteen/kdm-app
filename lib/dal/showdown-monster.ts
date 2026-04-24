@@ -1,6 +1,11 @@
 import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { MoodDetail, ShowdownMonsterDetail, TraitDetail } from '@/lib/types'
+import {
+  MoodDetail,
+  ShowdownMonsterDetail,
+  SurvivorStatusDetail,
+  TraitDetail
+} from '@/lib/types'
 
 /**
  * Get Showdown Monsters
@@ -20,7 +25,7 @@ export async function getShowdownMonsters(
   const { data, error } = await supabase
     .from('showdown_monster')
     .select(
-      'id, accuracy, accuracy_tokens, ai_card_drawn, ai_deck_id, ai_deck_remaining, damage, damage_tokens, evasion, evasion_tokens, knocked_down, luck, luck_tokens, monster_name, movement, movement_tokens, notes, settlement_id, showdown_id, speed, speed_tokens, strength, strength_tokens, toughness, wounds, showdown_ai_deck(id, advanced_cards, basic_cards, legendary_cards, overtone_cards), showdown_monster_trait(trait(id, custom, trait_name, rules)), showdown_monster_mood(mood(id, custom, mood_name, rules))'
+      'id, accuracy, accuracy_tokens, ai_card_drawn, ai_deck_id, ai_deck_remaining, damage, damage_tokens, evasion, evasion_tokens, knocked_down, luck, luck_tokens, monster_name, movement, movement_tokens, notes, settlement_id, showdown_id, speed, speed_tokens, strength, strength_tokens, toughness, wounds, showdown_ai_deck(id, advanced_cards, basic_cards, legendary_cards, overtone_cards), showdown_monster_trait(trait(id, custom, trait_name, rules)), showdown_monster_mood(mood(id, custom, mood_name, rules)), showdown_monster_survivor_status(survivor_status(id, custom, survivor_status_name, rules))'
     )
     .eq('showdown_id', showdownId)
 
@@ -43,6 +48,13 @@ export async function getShowdownMonsters(
         showdown_monster_mood: { mood: MoodDetail | null }[]
       }
     ).showdown_monster_mood
+    const statusRows = (
+      m as unknown as {
+        showdown_monster_survivor_status: {
+          survivor_status: SurvivorStatusDetail | null
+        }[]
+      }
+    ).showdown_monster_survivor_status
 
     showdownMonsterMap[m.id] = {
       ...m,
@@ -52,7 +64,10 @@ export async function getShowdownMonsters(
         .filter((t): t is TraitDetail => t !== null),
       moods: (moodRows ?? [])
         .map((r) => r.mood)
-        .filter((m): m is MoodDetail => m !== null)
+        .filter((m): m is MoodDetail => m !== null),
+      survivor_statuses: (statusRows ?? [])
+        .map((r) => r.survivor_status)
+        .filter((s): s is SurvivorStatusDetail => s !== null)
     }
   }
 

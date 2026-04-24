@@ -80,8 +80,10 @@ describe('RLS: settlement-scoped tables', () => {
   const MONSTER_JUNCTION_TABLES = [
     'hunt_monster_trait',
     'hunt_monster_mood',
+    'hunt_monster_survivor_status',
     'showdown_monster_trait',
-    'showdown_monster_mood'
+    'showdown_monster_mood',
+    'showdown_monster_survivor_status'
   ] as const
 
   const buildMatrix = () => {

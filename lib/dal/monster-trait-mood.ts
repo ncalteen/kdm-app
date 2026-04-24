@@ -13,8 +13,10 @@ import { createClient } from '@/lib/supabase/client'
 type JunctionTable =
   | 'hunt_monster_trait'
   | 'hunt_monster_mood'
+  | 'hunt_monster_survivor_status'
   | 'showdown_monster_trait'
   | 'showdown_monster_mood'
+  | 'showdown_monster_survivor_status'
   | 'quarry_level_trait'
   | 'quarry_level_mood'
   | 'quarry_level_survivor_status'
@@ -29,11 +31,19 @@ const COLUMNS: Record<
 > = {
   hunt_monster_trait: { parent: 'hunt_monster_id', catalog: 'trait_id' },
   hunt_monster_mood: { parent: 'hunt_monster_id', catalog: 'mood_id' },
+  hunt_monster_survivor_status: {
+    parent: 'hunt_monster_id',
+    catalog: 'survivor_status_id'
+  },
   showdown_monster_trait: {
     parent: 'showdown_monster_id',
     catalog: 'trait_id'
   },
   showdown_monster_mood: { parent: 'showdown_monster_id', catalog: 'mood_id' },
+  showdown_monster_survivor_status: {
+    parent: 'showdown_monster_id',
+    catalog: 'survivor_status_id'
+  },
   quarry_level_trait: { parent: 'quarry_level_id', catalog: 'trait_id' },
   quarry_level_mood: { parent: 'quarry_level_id', catalog: 'mood_id' },
   quarry_level_survivor_status: {
