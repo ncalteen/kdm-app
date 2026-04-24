@@ -319,8 +319,10 @@ export function UserCard({
         </TabsList>
         <TabsContent value="society">
           <div className="grid grid-cols-1 gap-4">
-            <CustomMilestonesCard local={local} />
-            <CustomPrinciplesCard local={local} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomMilestonesCard local={local} />
+              <CustomPrinciplesCard local={local} />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <CustomInnovationsCard local={local} />
               <CustomLocationsCard local={local} />
