@@ -379,7 +379,6 @@ export function AbilitiesAndImpairmentsCard({
       <CardContent className="p-0">
         <div className="flex flex-col">
           {items.map((item, index) => {
-            console.log(item)
             return (
               <div
                 key={`${item.id}-${index}`}

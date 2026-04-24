@@ -232,7 +232,7 @@ export type HuntHuntBoardDetail = Omit<
  */
 export type HuntMonsterDetail = Omit<
   Tables<'hunt_monster'>,
-  'created_at' | 'updated_at' | 'moods' | 'traits'
+  'created_at' | 'updated_at'
 > & {
   /** AI Deck */
   ai_deck: HuntAIDeckDetail
@@ -369,12 +369,7 @@ export type NemesisDetail = Omit<
  */
 export type NemesisLevelDetail = Omit<
   Tables<'nemesis_level'>,
-  | 'created_at'
-  | 'updated_at'
-  | 'nemesis_id'
-  | 'survivor_statuses'
-  | 'moods'
-  | 'traits'
+  'created_at' | 'updated_at' | 'nemesis_id'
 > & {
   /** Traits (joined from nemesis_level_trait → trait) */
   traits: TraitDetail[]
@@ -482,12 +477,7 @@ export type QuarryHuntBoardPositionDetail = Omit<
  */
 export type QuarryLevelDetail = Omit<
   Tables<'quarry_level'>,
-  | 'created_at'
-  | 'updated_at'
-  | 'quarry_id'
-  | 'survivor_statuses'
-  | 'moods'
-  | 'traits'
+  'created_at' | 'updated_at' | 'quarry_id'
 > & {
   /** Monster Hunt Position (joined from quarry_hunt_board_position) */
   hunt_pos: number
@@ -903,7 +893,7 @@ export type ShowdownDetail = Omit<
  */
 export type ShowdownMonsterDetail = Omit<
   Tables<'showdown_monster'>,
-  'created_at' | 'updated_at' | 'moods' | 'traits'
+  'created_at' | 'updated_at'
 > & {
   /** AI Deck */
   ai_deck: ShowdownAIDeckDetail
@@ -1123,8 +1113,21 @@ export type UserSettingsDetail = Omit<
  */
 export type WandererDetail = Omit<
   Tables<'wanderer'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
->
+  'created_at' | 'updated_at' | 'user_id'
+> & {
+  /** Abilities and Impairments (resolved via junction table) */
+  abilities_impairments: WandererAbilityImpairmentDetail[]
+}
+
+/**
+ * Wanderer Ability / Impairment Detail
+ *
+ * Represents an ability/impairment linked to a wanderer. The wanderer → ability/
+ * impairment relationship is stored in the `wanderer_ability_impairment`
+ * junction table; at read time the junction is flattened to the underlying
+ * `ability_impairment` row so consumers can work with a single object shape.
+ */
+export type WandererAbilityImpairmentDetail = AbilityImpairmentDetail
 
 /**
  * Wanderer Timeline Year Detail

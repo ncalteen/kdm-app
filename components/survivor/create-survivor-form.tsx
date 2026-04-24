@@ -206,7 +206,7 @@ export function CreateSurvivorForm({
       ...survivorCapabilities,
 
       // Wanderer-specific data
-      abilitiesAndImpairments: wanderer.abilities_impairments,
+      abilityImpairmentIds: wanderer.abilities_impairments.map((ai) => ai.id),
       accuracy: wanderer.accuracy,
       courage: wanderer.courage,
       disposition: wanderer.disposition,
@@ -217,7 +217,7 @@ export function CreateSurvivorForm({
       huntXPRankUp: wanderer.hunt_xp_rank_up,
       insanity: wanderer.insanity,
       luck: wanderer.luck,
-      movement: wanderer.movement,
+      movement: wanderer.movement ?? 5,
       survivorName: wanderer.wanderer_name,
       speed: wanderer.speed,
       strength: wanderer.strength,
@@ -267,6 +267,7 @@ export function CreateSurvivorForm({
    * @param values Form Values
    */
   function onSubmit(values: NewSurvivorInput) {
+    console.log('Form Values:', values)
     const originalSurvivors = [...survivors]
 
     // Optimistic placeholder row (uses a temporary ID).
@@ -280,6 +281,8 @@ export function CreateSurvivorForm({
       dead: false,
       embarked: false
     } as SurvivorDetail
+
+    console.log('Optimistic Survivor:', optimisticSurvivor)
 
     setSurvivors([...survivors, optimisticSurvivor])
 
@@ -303,7 +306,12 @@ export function CreateSurvivorForm({
 
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit, () => {
+      onSubmit={form.handleSubmit(onSubmit, (errors) => {
+        // Without logging the raw error bag, a wanderer-derived payload that
+        // fails schema validation (e.g. a custom wanderer saved with
+        // movement < 1) produces a generic toast with no indication of the
+        // offending field. Logging keeps those cases debuggable.
+        console.error('Create Survivor Validation Error:', errors)
         toast.error(ERROR_MESSAGE())
       })}
       className="py-3 space-y-6">

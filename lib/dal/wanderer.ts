@@ -1,7 +1,36 @@
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { WandererDetail } from '@/lib/types'
+import { WandererAbilityImpairmentDetail, WandererDetail } from '@/lib/types'
+
+/**
+ * Raw wanderer row shape as returned by PostgREST for the shared select
+ * projection. The generated types can't express the embedded-junction
+ * projection precisely, so a focused interface keeps the mapper type-safe.
+ */
+type RawWandererRow = Omit<WandererDetail, 'abilities_impairments'> & {
+  abilities_impairments: {
+    ability_impairment: WandererAbilityImpairmentDetail | null
+  }[]
+}
+
+/**
+ * Flattens the `abilities_impairments:wanderer_ability_impairment(ability_impairment(...))`
+ * embed returned by PostgREST into a plain `WandererAbilityImpairmentDetail[]`.
+ *
+ * @param row Raw Wanderer Row
+ * @returns Wanderer Detail
+ */
+function flattenWanderer(row: RawWandererRow): WandererDetail {
+  const { abilities_impairments, ...wanderer } = row
+
+  return {
+    ...wanderer,
+    abilities_impairments: abilities_impairments
+      .map((r) => r.ability_impairment)
+      .filter((x): x is WandererAbilityImpairmentDetail => Boolean(x))
+  }
+}
 
 /**
  * Get Wanderers
@@ -26,14 +55,14 @@ export async function getWanderers(): Promise<{
     supabase
       .from('wanderer')
       .select(
-        'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+        'id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules))'
       )
       .eq('custom', false),
     // Custom wanderers created by the user
     supabase
       .from('wanderer')
       .select(
-        'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+        'id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules))'
       )
       .eq('custom', true)
       .eq('user_id', userId),
@@ -41,7 +70,7 @@ export async function getWanderers(): Promise<{
     supabase
       .from('wanderer_shared_user')
       .select(
-        'wanderer(id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding)'
+        'wanderer(id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules)))'
       )
       .eq('shared_user_id', userId)
   ])
@@ -53,10 +82,14 @@ export async function getWanderers(): Promise<{
   // Collect wanderers from all sources, deduplicating by ID
   const wandererMap: { [key: string]: WandererDetail } = {}
 
-  for (const w of nonCustomResult.data ?? []) wandererMap[w.id] = w
-  for (const w of userCustomResult.data ?? []) wandererMap[w.id] = w
-  for (const row of sharedResult.data ?? [])
-    wandererMap[row.wanderer[0].id] = row.wanderer[0]
+  for (const w of nonCustomResult.data ?? [])
+    wandererMap[w.id] = flattenWanderer(w as unknown as RawWandererRow)
+  for (const w of userCustomResult.data ?? [])
+    wandererMap[w.id] = flattenWanderer(w as unknown as RawWandererRow)
+  for (const row of sharedResult.data ?? []) {
+    const w = Array.isArray(row.wanderer) ? row.wanderer[0] : row.wanderer
+    if (w) wandererMap[w.id] = flattenWanderer(w as unknown as RawWandererRow)
+  }
 
   return wandererMap
 }
@@ -126,13 +159,13 @@ export async function addWanderer(
       ...(wanderer.custom ? { user_id: userId! } : {})
     })
     .select(
-      'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+      'id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules))'
     )
     .single()
 
   if (error) throw new Error(`Error Adding Wanderer: ${error.message}`)
 
-  return data
+  return flattenWanderer(data as unknown as RawWandererRow)
 }
 
 /**
@@ -189,7 +222,7 @@ export async function getCustomWanderers(): Promise<{
   const { data, error } = await supabase
     .from('wanderer')
     .select(
-      'id, custom, abilities_impairments, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding'
+      'id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules))'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -198,7 +231,8 @@ export async function getCustomWanderers(): Promise<{
     throw new Error(`Error Fetching Custom Wanderers: ${error.message}`)
 
   const wandererMap: { [key: string]: WandererDetail } = {}
-  for (const w of data ?? []) wandererMap[w.id] = w
+  for (const w of data ?? [])
+    wandererMap[w.id] = flattenWanderer(w as unknown as RawWandererRow)
 
   return wandererMap
 }

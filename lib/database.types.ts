@@ -4616,7 +4616,6 @@ export type Database = {
       }
       wanderer: {
         Row: {
-          abilities_impairments: string[]
           accuracy: number
           arc: boolean
           courage: number
@@ -4646,7 +4645,6 @@ export type Database = {
           wanderer_name: string
         }
         Insert: {
-          abilities_impairments?: string[]
           accuracy?: number
           arc?: boolean
           courage?: number
@@ -4676,7 +4674,6 @@ export type Database = {
           wanderer_name: string
         }
         Update: {
-          abilities_impairments?: string[]
           accuracy?: number
           arc?: boolean
           courage?: number
@@ -4706,6 +4703,45 @@ export type Database = {
           wanderer_name?: string
         }
         Relationships: []
+      }
+      wanderer_ability_impairment: {
+        Row: {
+          ability_impairment_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          wanderer_id: string
+        }
+        Insert: {
+          ability_impairment_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          wanderer_id: string
+        }
+        Update: {
+          ability_impairment_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          wanderer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wanderer_ability_impairment_ability_impairment_id_fkey"
+            columns: ["ability_impairment_id"]
+            isOneToOne: false
+            referencedRelation: "ability_impairment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wanderer_ability_impairment_wanderer_id_fkey"
+            columns: ["wanderer_id"]
+            isOneToOne: false
+            referencedRelation: "wanderer"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wanderer_shared_user: {
         Row: {
