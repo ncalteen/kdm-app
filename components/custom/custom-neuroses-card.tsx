@@ -1,6 +1,6 @@
 'use client'
 
-import { NeurosisDialog } from '@/components/custom/dialogs/neurosis-dialog'
+import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -98,9 +98,9 @@ export function CustomNeurosesCard({
    * Rolls back on failure.
    */
   const handleCreate = useCallback(
-    async (data: { neurosis_name: string; rules: string }) => {
+    async (data: { name: string; rules: string }) => {
       if (saving) return
-      if (!data.neurosis_name.trim())
+      if (!data.name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('neurosis'))
 
       setSaving(true)
@@ -109,7 +109,7 @@ export function CustomNeurosesCard({
       const temp: NeurosisDetail = {
         id: tempId,
         custom: true,
-        neurosis_name: data.neurosis_name,
+        neurosis_name: data.name,
         rules: data.rules || null
       }
 
@@ -120,7 +120,7 @@ export function CustomNeurosesCard({
       try {
         const created = await addNeurosis({
           custom: true,
-          neurosis_name: data.neurosis_name,
+          neurosis_name: data.name,
           rules: data.rules || null
         })
 
@@ -147,9 +147,9 @@ export function CustomNeurosesCard({
    * Rolls back on failure.
    */
   const handleEdit = useCallback(
-    async (data: { neurosis_name: string; rules: string }) => {
+    async (data: { name: string; rules: string }) => {
       if (saving || !editingItem) return
-      if (!data.neurosis_name.trim())
+      if (!data.name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('neurosis'))
 
       setSaving(true)
@@ -162,7 +162,7 @@ export function CustomNeurosesCard({
             i.id === editingItem.id
               ? {
                   ...i,
-                  neurosis_name: data.neurosis_name,
+                  neurosis_name: data.name,
                   rules: data.rules || null
                 }
               : i
@@ -175,7 +175,7 @@ export function CustomNeurosesCard({
 
       try {
         await updateNeurosis(editingItem.id, {
-          neurosis_name: data.neurosis_name,
+          neurosis_name: data.name,
           rules: data.rules || null
         })
 
@@ -291,7 +291,7 @@ export function CustomNeurosesCard({
         )}
       </CardContent>
 
-      <NeurosisDialog
+      <CustomItemDialog
         key={`create-${dialogKey}`}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
@@ -299,11 +299,13 @@ export function CustomNeurosesCard({
         saving={saving}
         title="Create Custom Neurosis"
         description="A new compulsion takes root in the mind."
+        nameLabel="Neurosis Name"
+        namePlaceholder="Enter neurosis name"
         saveLabel="Create"
         savingLabel="Creating..."
       />
 
-      <NeurosisDialog
+      <CustomItemDialog
         key={`edit-${dialogKey}`}
         open={editDialogOpen}
         onOpenChange={(open) => {
@@ -316,6 +318,8 @@ export function CustomNeurosesCard({
         initialRules={editingItem?.rules ?? ''}
         title="Edit Neurosis"
         description="Reshape the compulsion."
+        nameLabel="Neurosis Name"
+        namePlaceholder="Enter neurosis name"
         saveLabel="Save"
         savingLabel="Saving..."
       />

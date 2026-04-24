@@ -300,8 +300,8 @@ export function getCardColorStyles(color: ColorChoice): CSSProperties {
 /**
  * Get the Overwhelming Darkness Label
  *
- * When hunting the Flower Knight, Overwhelming Darkness is replaced with The
- * Forest Wants What it Wants.
+ * When hunting the Flower Knight or Spidicules, Overwhelming Darkness is
+ * replaced with The Forest Wants What it Wants.
  *
  * @param monsterName Monster Name
  * @returns Overwhelming Darkness Label
@@ -309,7 +309,9 @@ export function getCardColorStyles(color: ColorChoice): CSSProperties {
 export function getOverwhelmingDarknessLabel(
   monsterName: string | undefined
 ): string {
-  return monsterName && monsterName.toLowerCase() === 'flower knight'
+  return monsterName &&
+    (monsterName.toLowerCase() === 'flower knight' ||
+      monsterName.toLowerCase() === 'spidicules')
     ? 'The Forest Wants What it Wants'
     : 'Overwhelming Darkness'
 }

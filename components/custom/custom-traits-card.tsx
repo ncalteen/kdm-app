@@ -1,6 +1,6 @@
 'use client'
 
-import { TraitDialog } from '@/components/custom/dialogs/trait-dialog'
+import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -87,9 +87,9 @@ export function CustomTraitsCard({
   }, [loadItems])
 
   const handleCreate = useCallback(
-    async (data: { trait_name: string; rules: string }) => {
+    async (data: { name: string; rules: string }) => {
       if (saving) return
-      if (!data.trait_name.trim())
+      if (!data.name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('trait'))
 
       setSaving(true)
@@ -98,7 +98,7 @@ export function CustomTraitsCard({
       const temp: TraitDetail = {
         id: tempId,
         custom: true,
-        trait_name: data.trait_name,
+        trait_name: data.name,
         rules: data.rules || null
       }
 
@@ -109,7 +109,7 @@ export function CustomTraitsCard({
       try {
         const created = await addTrait({
           custom: true,
-          trait_name: data.trait_name,
+          trait_name: data.name,
           rules: data.rules || null
         })
 
@@ -130,9 +130,9 @@ export function CustomTraitsCard({
   )
 
   const handleEdit = useCallback(
-    async (data: { trait_name: string; rules: string }) => {
+    async (data: { name: string; rules: string }) => {
       if (saving || !editingItem) return
-      if (!data.trait_name.trim())
+      if (!data.name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('trait'))
 
       setSaving(true)
@@ -145,7 +145,7 @@ export function CustomTraitsCard({
             i.id === editingItem.id
               ? {
                   ...i,
-                  trait_name: data.trait_name,
+                  trait_name: data.name,
                   rules: data.rules || null
                 }
               : i
@@ -158,7 +158,7 @@ export function CustomTraitsCard({
 
       try {
         await updateTrait(editingItem.id, {
-          trait_name: data.trait_name,
+          trait_name: data.name,
           rules: data.rules || null
         })
 
@@ -274,7 +274,7 @@ export function CustomTraitsCard({
         )}
       </CardContent>
 
-      <TraitDialog
+      <CustomItemDialog
         key={`create-${dialogKey}`}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
@@ -282,11 +282,13 @@ export function CustomTraitsCard({
         saving={saving}
         title="Create Custom Trait"
         description="A new mark defines the beast."
+        nameLabel="Trait Name"
+        namePlaceholder="Enter trait name"
         saveLabel="Create"
         savingLabel="Creating..."
       />
 
-      <TraitDialog
+      <CustomItemDialog
         key={`edit-${dialogKey}`}
         open={editDialogOpen}
         onOpenChange={(open) => {
@@ -299,6 +301,8 @@ export function CustomTraitsCard({
         initialRules={editingItem?.rules ?? ''}
         title="Edit Trait"
         description="Reshape the mark."
+        nameLabel="Trait Name"
+        namePlaceholder="Enter trait name"
         saveLabel="Save"
         savingLabel="Saving..."
       />

@@ -1,6 +1,6 @@
 'use client'
 
-import { SurvivorStatusDialog } from '@/components/custom/dialogs/survivor-status-dialog'
+import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -96,9 +96,9 @@ export function CustomSurvivorStatusesCard({
   }, [loadItems])
 
   const handleCreate = useCallback(
-    async (data: { survivor_status_name: string; rules: string }) => {
+    async (data: { name: string; rules: string }) => {
       if (saving) return
-      if (!data.survivor_status_name.trim())
+      if (!data.name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('survivor status'))
 
       setSaving(true)
@@ -107,7 +107,7 @@ export function CustomSurvivorStatusesCard({
       const temp: SurvivorStatusDetail = {
         id: tempId,
         custom: true,
-        survivor_status_name: data.survivor_status_name,
+        survivor_status_name: data.name,
         rules: data.rules || null
       }
 
@@ -118,7 +118,7 @@ export function CustomSurvivorStatusesCard({
       try {
         const created = await addSurvivorStatus({
           custom: true,
-          survivor_status_name: data.survivor_status_name,
+          survivor_status_name: data.name,
           rules: data.rules || null
         })
 
@@ -139,9 +139,9 @@ export function CustomSurvivorStatusesCard({
   )
 
   const handleEdit = useCallback(
-    async (data: { survivor_status_name: string; rules: string }) => {
+    async (data: { name: string; rules: string }) => {
       if (saving || !editingItem) return
-      if (!data.survivor_status_name.trim())
+      if (!data.name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('survivor status'))
 
       setSaving(true)
@@ -154,7 +154,7 @@ export function CustomSurvivorStatusesCard({
             i.id === editingItem.id
               ? {
                   ...i,
-                  survivor_status_name: data.survivor_status_name,
+                  survivor_status_name: data.name,
                   rules: data.rules || null
                 }
               : i
@@ -167,7 +167,7 @@ export function CustomSurvivorStatusesCard({
 
       try {
         await updateSurvivorStatus(editingItem.id, {
-          survivor_status_name: data.survivor_status_name,
+          survivor_status_name: data.name,
           rules: data.rules || null
         })
 
@@ -285,7 +285,7 @@ export function CustomSurvivorStatusesCard({
         )}
       </CardContent>
 
-      <SurvivorStatusDialog
+      <CustomItemDialog
         key={`create-${dialogKey}`}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
@@ -293,11 +293,13 @@ export function CustomSurvivorStatusesCard({
         saving={saving}
         title="Create Custom Survivor Status"
         description="A new affliction takes hold."
+        nameLabel="Status Name"
+        namePlaceholder="Enter status name"
         saveLabel="Create"
         savingLabel="Creating..."
       />
 
-      <SurvivorStatusDialog
+      <CustomItemDialog
         key={`edit-${dialogKey}`}
         open={editDialogOpen}
         onOpenChange={(open) => {
@@ -310,6 +312,8 @@ export function CustomSurvivorStatusesCard({
         initialRules={editingItem?.rules ?? ''}
         title="Edit Survivor Status"
         description="Reshape the affliction."
+        nameLabel="Status Name"
+        namePlaceholder="Enter status name"
         saveLabel="Save"
         savingLabel="Saving..."
       />

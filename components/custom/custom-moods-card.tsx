@@ -1,6 +1,6 @@
 'use client'
 
-import { MoodDialog } from '@/components/custom/dialogs/mood-dialog'
+import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -85,9 +85,9 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
   }, [loadItems])
 
   const handleCreate = useCallback(
-    async (data: { mood_name: string; rules: string }) => {
+    async (data: { name: string; rules: string }) => {
       if (saving) return
-      if (!data.mood_name.trim())
+      if (!data.name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('mood'))
 
       setSaving(true)
@@ -96,7 +96,7 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
       const temp: MoodDetail = {
         id: tempId,
         custom: true,
-        mood_name: data.mood_name,
+        mood_name: data.name,
         rules: data.rules || null
       }
 
@@ -107,7 +107,7 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
       try {
         const created = await addMood({
           custom: true,
-          mood_name: data.mood_name,
+          mood_name: data.name,
           rules: data.rules || null
         })
 
@@ -128,9 +128,9 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
   )
 
   const handleEdit = useCallback(
-    async (data: { mood_name: string; rules: string }) => {
+    async (data: { name: string; rules: string }) => {
       if (saving || !editingItem) return
-      if (!data.mood_name.trim())
+      if (!data.name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('mood'))
 
       setSaving(true)
@@ -143,7 +143,7 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
             i.id === editingItem.id
               ? {
                   ...i,
-                  mood_name: data.mood_name,
+                  mood_name: data.name,
                   rules: data.rules || null
                 }
               : i
@@ -156,7 +156,7 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
 
       try {
         await updateMood(editingItem.id, {
-          mood_name: data.mood_name,
+          mood_name: data.name,
           rules: data.rules || null
         })
 
@@ -272,7 +272,7 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
         )}
       </CardContent>
 
-      <MoodDialog
+      <CustomItemDialog
         key={`create-${dialogKey}`}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
@@ -280,11 +280,13 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
         saving={saving}
         title="Create Custom Mood"
         description="A new temperament grips the beast."
+        nameLabel="Mood Name"
+        namePlaceholder="Enter mood name"
         saveLabel="Create"
         savingLabel="Creating..."
       />
 
-      <MoodDialog
+      <CustomItemDialog
         key={`edit-${dialogKey}`}
         open={editDialogOpen}
         onOpenChange={(open) => {
@@ -297,6 +299,8 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
         initialRules={editingItem?.rules ?? ''}
         title="Edit Mood"
         description="Reshape the temperament."
+        nameLabel="Mood Name"
+        namePlaceholder="Enter mood name"
         saveLabel="Save"
         savingLabel="Saving..."
       />
