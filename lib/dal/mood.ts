@@ -59,6 +59,7 @@ export async function getMoods(): Promise<{ [key: string]: MoodDetail }> {
 export async function addMood(data: {
   custom: boolean
   mood_name: string
+  rules?: string | null
 }): Promise<MoodDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
@@ -89,7 +90,7 @@ export async function addMood(data: {
  */
 export async function updateMood(
   id: string,
-  data: { mood_name?: string }
+  data: { mood_name?: string; rules?: string | null }
 ): Promise<void> {
   const supabase = createClient()
 

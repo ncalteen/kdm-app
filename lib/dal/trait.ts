@@ -59,6 +59,7 @@ export async function getTraits(): Promise<{ [key: string]: TraitDetail }> {
 export async function addTrait(data: {
   custom: boolean
   trait_name: string
+  rules?: string | null
 }): Promise<TraitDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
@@ -89,7 +90,7 @@ export async function addTrait(data: {
  */
 export async function updateTrait(
   id: string,
-  data: { trait_name?: string }
+  data: { trait_name?: string; rules?: string | null }
 ): Promise<void> {
   const supabase = createClient()
 

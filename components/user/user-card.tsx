@@ -10,6 +10,7 @@ import { CustomInnovationsCard } from '@/components/custom/custom-innovations-ca
 import { CustomKnowledgeCard } from '@/components/custom/custom-knowledge-card'
 import { CustomLocationsCard } from '@/components/custom/custom-locations-card'
 import { CustomMilestonesCard } from '@/components/custom/custom-milestones-card'
+import { CustomMoodsCard } from '@/components/custom/custom-moods-card'
 import { CustomNeurosesCard } from '@/components/custom/custom-neuroses-card'
 import { CustomPatternsCard } from '@/components/custom/custom-patterns-card'
 import { CustomPhilosophiesCard } from '@/components/custom/custom-philosophies-card'
@@ -18,6 +19,8 @@ import { CustomResourcesCard } from '@/components/custom/custom-resources-card'
 import { CustomSecretFightingArtsCard } from '@/components/custom/custom-secret-fighting-arts-card'
 import { CustomSeedPatternsCard } from '@/components/custom/custom-seed-patterns-card'
 import { CustomStrainMilestonesCard } from '@/components/custom/custom-strain-milestones-card'
+import { CustomSurvivorStatusesCard } from '@/components/custom/custom-survivor-statuses-card'
+import { CustomTraitsCard } from '@/components/custom/custom-traits-card'
 import { CustomWanderersCard } from '@/components/custom/custom-wanderers-card'
 import { CustomWeaponTypesCard } from '@/components/custom/custom-weapon-types-card'
 import { CustomMonstersCard } from '@/components/monster/custom-monsters-card'
@@ -366,7 +369,14 @@ export function UserCard({
           </div>
         </TabsContent>
         <TabsContent value="monsters">
-          <CustomMonstersCard local={local} />
+          <div className="grid grid-cols-1 gap-4">
+            <CustomMonstersCard local={local} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomMoodsCard local={local} />
+              <CustomTraitsCard local={local} />
+            </div>
+            <CustomSurvivorStatusesCard local={local} />
+          </div>
         </TabsContent>
         <TabsContent value="wanderers">
           <CustomWanderersCard local={local} />
