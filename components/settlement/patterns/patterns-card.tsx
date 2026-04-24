@@ -18,6 +18,8 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addPattern, getPatterns } from '@/lib/dal/pattern'
 import {
@@ -36,7 +38,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { Plus, PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Patterns Card Properties
@@ -66,49 +68,24 @@ export function PatternsCard({
   setSelectedSettlement
 }: PatternsCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
 
-  const [availablePatterns, setAvailablePatterns] = useState<{
+  const {
+    data: availablePatterns,
+    isLoaded: hasFetched,
+    setData: setAvailablePatterns
+  } = useCatalogFetch<{
     [key: string]: PatternDetail
-  }>({})
-
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getPatterns()
-      .then((patterns) => {
-        if (cancelled) return
-        setAvailablePatterns(patterns)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setAvailablePatterns({})
-        setHasFetched(true)
-        console.error('Settlement Patterns Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getPatterns(), {
+    initial: {},
+    errorContext: 'Settlement Patterns Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   const selectablePatterns = useMemo(() => {
     const linkedIds = new Set(
@@ -136,7 +113,7 @@ export function PatternsCard({
 
       setAddOpen(false)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['patterns'][0] = {
         id: tempId,
         pattern_id: patternId,
@@ -150,8 +127,11 @@ export function PatternsCard({
         patterns: updatedPatterns
       })
 
-      addSettlementPatterns([patternId], selectedSettlement.id)
-        .then((row) => {
+      void mutate({
+        context: 'Pattern Add',
+        persist: () =>
+          addSettlementPatterns([patternId], selectedSettlement.id),
+        onSuccess: (row) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -162,9 +142,8 @@ export function PatternsCard({
                 }
               : null
           )
-          toast.success(PATTERN_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -173,11 +152,11 @@ export function PatternsCard({
                 }
               : null
           )
-          console.error('Pattern Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: PATTERN_UPDATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availablePatterns, setSelectedSettlement, toast]
+    [selectedSettlement, availablePatterns, setSelectedSettlement, mutate]
   )
 
   const handleRemove = useCallback(
@@ -192,19 +171,20 @@ export function PatternsCard({
         patterns: selectedSettlement.patterns.filter((p) => p.id !== removed.id)
       })
 
-      removeSettlementPattern(removed.id)
-        .then(() => toast.success(PATTERN_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Pattern Remove',
+        persist: () => removeSettlementPattern(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.patterns.some((p) => p.id === removed.id))
               return prev
             return { ...prev, patterns: [...prev.patterns, removed] }
           })
-          console.error('Pattern Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: PATTERN_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -237,7 +217,7 @@ export function PatternsCard({
       toast.success(PATTERN_CREATED_MESSAGE())
 
       // Add to settlement immediately
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['patterns'][0] = {
         id: tempId,
         pattern_id: newPattern.id,
@@ -250,8 +230,11 @@ export function PatternsCard({
         patterns: updatedPatterns
       })
 
-      addSettlementPatterns([newPattern.id], selectedSettlement.id)
-        .then((row) => {
+      void mutate({
+        context: 'Pattern Add',
+        persist: () =>
+          addSettlementPatterns([newPattern.id], selectedSettlement.id),
+        onSuccess: (row) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -262,9 +245,8 @@ export function PatternsCard({
                 }
               : null
           )
-          toast.success(PATTERN_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -273,16 +255,24 @@ export function PatternsCard({
                 }
               : null
           )
-          console.error('Pattern Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: PATTERN_UPDATED_MESSAGE()
+      })
     } catch (error) {
       console.error('Pattern Create Error:', error)
       toast.error(ERROR_MESSAGE())
     } finally {
       setCreating(false)
     }
-  }, [search, creating, selectedSettlement, setSelectedSettlement, toast])
+  }, [
+    search,
+    creating,
+    selectedSettlement,
+    setSelectedSettlement,
+    toast,
+    mutate,
+    setAvailablePatterns
+  ])
 
   return (
     <Card className="p-0 border-1 gap-0">

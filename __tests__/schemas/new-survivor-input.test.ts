@@ -10,7 +10,7 @@ describe('NewSurvivorInputSchema', () => {
     it('applies all default values when only settlementId is provided', () => {
       const result = NewSurvivorInputSchema.parse(minimalValidInput)
 
-      expect(result.abilitiesAndImpairments).toEqual([])
+      expect(result.abilityImpairmentIds).toEqual([])
       expect(result.accuracy).toBe(0)
       expect(result.aenasState).toBeUndefined()
       expect(result.canDash).toBe(false)
@@ -72,14 +72,14 @@ describe('NewSurvivorInputSchema', () => {
     })
   })
 
-  describe('abilitiesAndImpairments', () => {
+  describe('abilityImpairmentIds', () => {
     it('accepts an array of non-empty strings', () => {
       const result = NewSurvivorInputSchema.parse({
         ...minimalValidInput,
-        abilitiesAndImpairments: ['Mighty Strike', 'Club Foot']
+        abilityImpairmentIds: ['Mighty Strike', 'Club Foot']
       })
 
-      expect(result.abilitiesAndImpairments).toEqual([
+      expect(result.abilityImpairmentIds).toEqual([
         'Mighty Strike',
         'Club Foot'
       ])
@@ -89,7 +89,7 @@ describe('NewSurvivorInputSchema', () => {
       expect(() =>
         NewSurvivorInputSchema.parse({
           ...minimalValidInput,
-          abilitiesAndImpairments: ['']
+          abilityImpairmentIds: ['']
         })
       ).toThrow('A nameless ability/impairment cannot be recorded.')
     })

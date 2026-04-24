@@ -19,22 +19,34 @@ export async function getSettlementPhilosophies(
 
   const { data, error } = await supabase
     .from('settlement_philosophy')
-    .select('id,  philosophy_id, philosophy(philosophy_name)')
+    .select(
+      'id,  philosophy_id, philosophy(philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id)'
+    )
     .eq('settlement_id', settlementId)
 
   if (error)
     throw new Error(`Error Fetching Settlement Philosophies: ${error.message}`)
 
   return (
-    data?.map((item) => ({
-      id: item.id,
-      philosophy_id: item.philosophy_id,
-      philosophy_name: (
-        item.philosophy as unknown as {
-          philosophy_name: string
-        }
-      ).philosophy_name
-    })) ?? []
+    data?.map((item) => {
+      const philosophy = item.philosophy as unknown as {
+        philosophy_name: string
+        hunt_xp_milestones: number[] | null
+        tenet_knowledge_id: string | null
+        tier: number | null
+        neurosis_id: string | null
+      }
+
+      return {
+        id: item.id,
+        philosophy_id: item.philosophy_id,
+        philosophy_name: philosophy.philosophy_name,
+        hunt_xp_milestones: philosophy.hunt_xp_milestones,
+        tenet_knowledge_id: philosophy.tenet_knowledge_id,
+        tier: philosophy.tier,
+        neurosis_id: philosophy.neurosis_id
+      }
+    }) ?? []
   )
 }
 
@@ -46,6 +58,7 @@ export async function getSettlementPhilosophies(
  *
  * @param philosophyIds Philosophy IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Philosophy Rows
  */
 export async function addSettlementPhilosophies(
   philosophyIds: string[],

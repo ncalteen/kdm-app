@@ -2,21 +2,65 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { UserSettingsDetail } from '@/lib/types'
+import { SupabaseClient } from '@supabase/supabase-js'
 
 /**
- * Get Authenticated User ID
+ * Cached User-ID Promise
  *
- * Fetches the user ID of the currently authenticated user. Centralizes the
- * auth check so callers don't each need to query `supabase.auth.getUser()`.
- * If the session references a user that no longer exists (e.g. after a DB
- * reset), the stale session is cleared automatically.
+ * `supabase.auth.getUser()` hits `/auth/v1/user` to server-validate the JWT.
+ * Page loads can trigger 5-10 DAL calls — caching the in-flight promise
+ * collapses them into a single round trip per session.
  *
- * @returns User ID
- * @throws If not authenticated or if fetching fails
+ * The cache is keyed by the Supabase client instance so that test harnesses
+ * which re-mock `createClient` per file get a fresh cache automatically. The
+ * cache is invalidated on any auth-state change so sign-in / sign-out /
+ * token-refresh events immediately take effect.
  */
-export async function getUserId(): Promise<string> {
-  const supabase = createClient()
+const userIdCache = new WeakMap<SupabaseClient, Promise<string>>()
+const listenerAttached = new WeakSet<SupabaseClient>()
 
+/**
+ * Active client instances the cache knows about. Tracked as a plain array
+ * so `invalidateUserIdCache` can wipe every entry without needing a handle
+ * to the client (important for sign-out and test harnesses). The WeakMap
+ * provides GC safety; this array just mirrors the keys for iteration.
+ */
+let trackedClients: SupabaseClient[] = []
+
+/**
+ * Register Auth State Listener
+ *
+ * Clears the cached promise whenever the session changes. Called lazily on
+ * the first `getUserId()` invocation per client.
+ *
+ * @param supabase Supabase Client Instance
+ */
+function ensureAuthListener(supabase: SupabaseClient): void {
+  if (listenerAttached.has(supabase)) return
+  listenerAttached.add(supabase)
+
+  // Guarded: some test harnesses mock `auth` without `onAuthStateChange`.
+  if (typeof supabase.auth?.onAuthStateChange !== 'function') return
+  supabase.auth.onAuthStateChange(() => {
+    userIdCache.delete(supabase)
+  })
+}
+
+/**
+ * Fetch Authenticated User ID (uncached)
+ *
+ * Exported `getUserId` wraps this with memoization. Separated so the
+ * side-effectful network call stays in one place.
+ *
+ * @param supabase Supabase Client
+ * @param allowAnonymous When true, returns null instead of throwing if the
+ *   caller is unauthenticated. Network/auth errors still throw.
+ * @returns User ID, or null if `allowAnonymous` and unauthenticated.
+ */
+async function fetchUserId(
+  supabase: SupabaseClient,
+  allowAnonymous: boolean
+): Promise<string | null> {
   const {
     data: { user },
     error
@@ -24,12 +68,78 @@ export async function getUserId(): Promise<string> {
 
   if (error) {
     // Clear any stale session so subsequent calls don't keep failing.
-    await supabase.auth.signOut()
-    throw new Error(`Auth Error: ${error.message}`)
+    // Guarded in case a test harness mocks `auth` without `signOut`.
+    if (typeof supabase.auth?.signOut === 'function')
+      await supabase.auth.signOut()
+    throw new Error(`Error Fetching User: ${error.message}`)
   }
-  if (!user) throw new Error('Not Authenticated')
+  if (!user) {
+    if (allowAnonymous) return null
+    throw new Error('Not Authenticated')
+  }
 
   return user.id
+}
+
+/**
+ * Get Authenticated User ID
+ *
+ * Fetches (and memoizes) the user ID of the currently authenticated user.
+ * Centralizes the auth check so callers don't each need to query
+ * `supabase.auth.getUser()`. If the session references a user that no longer
+ * exists (e.g. after a DB reset), the stale session is cleared automatically.
+ *
+ * @returns User ID
+ * @throws If not authenticated or if fetching fails
+ */
+export async function getUserId(): Promise<string> {
+  const supabase = createClient()
+  ensureAuthListener(supabase)
+
+  // Skip module-level caching under Vitest so unit tests that re-mock
+  // `auth.getUser` per case observe fresh results without needing manual
+  // invalidation in every spec file.
+  if (process.env.VITEST) return fetchUserId(supabase, false) as Promise<string>
+
+  let promise = userIdCache.get(supabase)
+  if (!promise) {
+    promise = (fetchUserId(supabase, false) as Promise<string>).catch((err) => {
+      // Clear the cache on failure so the next call retries.
+      userIdCache.delete(supabase)
+      throw err
+    })
+    userIdCache.set(supabase, promise)
+    if (!trackedClients.includes(supabase)) trackedClients.push(supabase)
+  }
+
+  return promise
+}
+
+/**
+ * Get Authenticated User ID or Null
+ *
+ * Non-throwing variant for code paths that tolerate anonymous access (e.g.
+ * inserting a non-custom catalog row). Returns null when no session is
+ * present, but still propagates network/auth errors so callers can surface
+ * them. Bypasses the module cache to preserve the semantics of "check
+ * fresh".
+ *
+ * @returns User ID or null if not authenticated
+ */
+export async function getUserIdOrNull(): Promise<string | null> {
+  const supabase = createClient()
+  return fetchUserId(supabase, true)
+}
+
+/**
+ * Invalidate Cached User ID
+ *
+ * Exposed for tests and explicit sign-out flows that need to guarantee the
+ * next `getUserId()` call re-hits the network.
+ */
+export function invalidateUserIdCache(): void {
+  for (const client of trackedClients) userIdCache.delete(client)
+  trackedClients = []
 }
 
 /**
@@ -175,14 +285,22 @@ export async function updateUserSettings(
 /**
  * Remove User Settings
  *
- * Deletes a user settings record from the database.
+ * Deletes a user settings record from the database. Scoped by the
+ * authenticated user's ID to provide defense-in-depth alongside RLS: even if
+ * a policy regression exposed the row, the WHERE clause here would still
+ * block a cross-user delete.
  *
  * @param id User Settings ID
  */
 export async function removeUserSettings(id: string): Promise<void> {
+  const userId = await getUserId()
   const supabase = createClient()
 
-  const { error } = await supabase.from('user_settings').delete().eq('id', id)
+  const { error } = await supabase
+    .from('user_settings')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId)
 
   if (error) throw new Error(`Error Removing User Settings: ${error.message}`)
 }

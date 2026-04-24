@@ -1,6 +1,11 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { QuarryLevelDetail } from '@/lib/types'
+import {
+  MoodDetail,
+  QuarryLevelDetail,
+  SurvivorStatusDetail,
+  TraitDetail
+} from '@/lib/types'
 
 /**
  * Get Quarry Levels
@@ -20,7 +25,7 @@ export async function getQuarryLevels(
   const { data: levels, error: levelsError } = await supabase
     .from('quarry_level')
     .select(
-      'id, accuracy, accuracy_tokens, advanced_cards, ai_deck_remaining, basic_cards, damage, damage_tokens, evasion, evasion_tokens, legendary_cards, level_number, luck, luck_tokens, moods, movement, movement_tokens, overtone_cards, speed, speed_tokens, strength, strength_tokens, sub_monster_name, survivor_statuses, toughness, toughness_tokens, traits'
+      'id, accuracy, accuracy_tokens, advanced_cards, ai_deck_remaining, basic_cards, damage, damage_tokens, evasion, evasion_tokens, legendary_cards, level_number, luck, luck_tokens, movement, movement_tokens, overtone_cards, speed, speed_tokens, strength, strength_tokens, sub_monster_name, toughness, toughness_tokens, quarry_level_trait(trait(id, custom, trait_name, rules)), quarry_level_mood(mood(id, custom, mood_name, rules)), quarry_level_survivor_status(survivor_status(id, custom, survivor_status_name, rules))'
     )
     .eq('quarry_id', quarryId)
 
@@ -44,10 +49,37 @@ export async function getQuarryLevels(
   const mergedLevels = (levels ?? []).map((level) => {
     const position = positionsByLevel.get(level.level_number)
 
+    const traitRows = (
+      level as unknown as {
+        quarry_level_trait: { trait: TraitDetail | null }[]
+      }
+    ).quarry_level_trait
+    const moodRows = (
+      level as unknown as {
+        quarry_level_mood: { mood: MoodDetail | null }[]
+      }
+    ).quarry_level_mood
+    const statusRows = (
+      level as unknown as {
+        quarry_level_survivor_status: {
+          survivor_status: SurvivorStatusDetail | null
+        }[]
+      }
+    ).quarry_level_survivor_status
+
     return {
       ...level,
       hunt_pos: position?.monster_hunt_pos ?? 12,
-      survivor_hunt_pos: position?.survivor_hunt_pos ?? 0
+      survivor_hunt_pos: position?.survivor_hunt_pos ?? 0,
+      traits: (traitRows ?? [])
+        .map((r) => r.trait)
+        .filter((t): t is TraitDetail => t !== null),
+      moods: (moodRows ?? [])
+        .map((r) => r.mood)
+        .filter((m): m is MoodDetail => m !== null),
+      survivor_statuses: (statusRows ?? [])
+        .map((r) => r.survivor_status)
+        .filter((s): s is SurvivorStatusDetail => s !== null)
     }
   })
 

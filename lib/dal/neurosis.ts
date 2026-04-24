@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { NeurosisDetail } from '@/lib/types'
@@ -16,34 +17,27 @@ import { NeurosisDetail } from '@/lib/types'
 export async function getNeuroses(): Promise<{
   [key: string]: NeurosisDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of neuroses in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     // Non-custom neuroses (available to all users)
     supabase
       .from('neurosis')
-      .select('id, custom, neurosis_name, philosophy_id')
+      .select('id, custom, neurosis_name, rules')
       .eq('custom', false),
     // Custom neuroses created by the user
     supabase
       .from('neurosis')
-      .select('id, custom, neurosis_name, philosophy_id')
+      .select('id, custom, neurosis_name, rules')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     // Custom neuroses shared with the user
     supabase
       .from('neurosis_shared_user')
-      .select('neurosis(id, custom, neurosis_name, philosophy_id)')
-      .eq('shared_user_id', user.id)
+      .select('neurosis(id, custom, neurosis_name, rules)')
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -75,23 +69,18 @@ export async function addNeurosis(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<NeurosisDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (neurosis.custom && !user) throw new Error('Not Authenticated')
+  if (neurosis.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('neurosis')
     .insert({
       ...neurosis,
-      ...(neurosis.custom ? { user_id: user!.id } : {})
+      ...(neurosis.custom ? { user_id: userId! } : {})
     })
-    .select('id, custom, neurosis_name, philosophy_id')
+    .select('id, custom, neurosis_name, rules')
     .single()
 
   if (error) throw new Error(`Error Adding Neurosis: ${error.message}`)

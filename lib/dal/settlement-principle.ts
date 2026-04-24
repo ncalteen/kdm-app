@@ -20,7 +20,7 @@ export async function getSettlementPrinciples(
   const { data, error } = await supabase
     .from('settlement_principle')
     .select(
-      'id,  option_1_selected, option_2_selected, principle_id, principle(principle_name, option_1_name, option_2_name)'
+      'id,  option_1_selected, option_2_selected, principle_id, principle(principle_name, option_1_name, option_2_name, option_1_rules, option_2_rules)'
     )
     .eq('settlement_id', settlementId)
 
@@ -28,33 +28,27 @@ export async function getSettlementPrinciples(
     throw new Error(`Error Fetching Settlement Principles: ${error.message}`)
 
   return (
-    data?.map((item) => ({
-      id: item.id,
-      option_1_name: (
-        item.principle as unknown as {
-          principle_name: string
-          option_1_name: string
-          option_2_name: string
-        }
-      ).option_1_name,
-      option_1_selected: item.option_1_selected,
-      option_2_name: (
-        item.principle as unknown as {
-          principle_name: string
-          option_1_name: string
-          option_2_name: string
-        }
-      ).option_2_name,
-      option_2_selected: item.option_2_selected,
-      principle_id: item.principle_id,
-      principle_name: (
-        item.principle as unknown as {
-          principle_name: string
-          option_1_name: string
-          option_2_name: string
-        }
-      ).principle_name
-    })) ?? []
+    data?.map((item) => {
+      const principle = item.principle as unknown as {
+        principle_name: string
+        option_1_name: string
+        option_2_name: string
+        option_1_rules: string | null
+        option_2_rules: string | null
+      }
+
+      return {
+        id: item.id,
+        option_1_name: principle.option_1_name,
+        option_1_rules: principle.option_1_rules,
+        option_1_selected: item.option_1_selected,
+        option_2_name: principle.option_2_name,
+        option_2_rules: principle.option_2_rules,
+        option_2_selected: item.option_2_selected,
+        principle_id: item.principle_id,
+        principle_name: principle.principle_name
+      }
+    }) ?? []
   )
 }
 
@@ -66,6 +60,7 @@ export async function getSettlementPrinciples(
  *
  * @param principleIds Principle IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Principle Rows
  */
 export async function addSettlementPrinciples(
   principleIds: string[],

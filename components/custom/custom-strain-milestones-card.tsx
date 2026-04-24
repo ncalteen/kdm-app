@@ -119,7 +119,7 @@ export function CustomStrainMilestonesCard({
     if (!trimmedName)
       return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('strain milestone'))
 
-    const tempId = `temp-${Date.now()}`
+    const tempId = `temp-${crypto.randomUUID()}`
     const temp: StrainMilestoneDetail = {
       id: tempId,
       custom: true,

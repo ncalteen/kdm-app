@@ -153,27 +153,27 @@ describe('getSurvivor', () => {
   })
 
   it('returns survivor with empty related data when no FK IDs set', async () => {
-    // First call: main survivor query
+    const survivorRow = {
+      ...baseSurvivor,
+      abilities_impairments: [],
+      cursed_gear: [],
+      disorders: [],
+      fighting_arts: [],
+      secret_fighting_arts: [],
+      hunt_survivor: [],
+      showdown_survivor: [],
+      knowledge_1: null,
+      knowledge_2: null,
+      neurosis: null,
+      philosophy: null,
+      tenet_knowledge: null
+    }
     const mockMaybeSingle = vi
       .fn()
-      .mockResolvedValue({ data: baseSurvivor, error: null })
-    const mockSurvivorEq = vi
-      .fn()
-      .mockReturnValue({ maybeSingle: mockMaybeSingle })
-    const mockSurvivorSelect = vi.fn().mockReturnValue({ eq: mockSurvivorEq })
-
-    // Junction table calls (all return empty)
-    const emptyResult = { data: [], error: null }
-    const mockLimit = vi.fn().mockResolvedValue(emptyResult)
-    const mockIn = vi.fn().mockResolvedValue(emptyResult)
-    const mockJunctionEq = vi.fn().mockReturnValue({ limit: mockLimit })
-    const mockJunctionSelect = vi
-      .fn()
-      .mockReturnValue({ eq: mockJunctionEq, in: mockIn })
-
-    mockSupabase.from
-      .mockReturnValueOnce({ select: mockSurvivorSelect })
-      .mockReturnValue({ select: mockJunctionSelect })
+      .mockResolvedValue({ data: survivorRow, error: null })
+    const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
+    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
+    mockSupabase.from.mockReturnValue({ select: mockSelect })
 
     const result = await getSurvivor('s-1')
 
@@ -191,27 +191,6 @@ describe('getSurvivor', () => {
       tenet_knowledge: null
     })
   })
-
-  it('throws when a junction table query fails', async () => {
-    const mockMaybeSingle = vi
-      .fn()
-      .mockResolvedValue({ data: baseSurvivor, error: null })
-    const mockSurvivorEq = vi
-      .fn()
-      .mockReturnValue({ maybeSingle: mockMaybeSingle })
-    const mockSurvivorSelect = vi.fn().mockReturnValue({ eq: mockSurvivorEq })
-
-    const errorResult = { data: null, error: { message: 'junction error' } }
-    const mockLimit = vi.fn().mockResolvedValue(errorResult)
-    const mockJunctionEq = vi.fn().mockReturnValue({ limit: mockLimit })
-    const mockJunctionSelect = vi.fn().mockReturnValue({ eq: mockJunctionEq })
-
-    mockSupabase.from
-      .mockReturnValueOnce({ select: mockSurvivorSelect })
-      .mockReturnValue({ select: mockJunctionSelect })
-
-    await expect(getSurvivor('s-1')).rejects.toThrow('junction error')
-  })
 })
 
 describe('getSurvivors', () => {
@@ -222,7 +201,8 @@ describe('getSurvivors', () => {
   })
 
   it('returns null when no survivors found', async () => {
-    const mockOrder = vi.fn().mockResolvedValue({ data: [], error: null })
+    const mockReturns = vi.fn().mockResolvedValue({ data: [], error: null })
+    const mockOrder = vi.fn().mockReturnValue({ returns: mockReturns })
     const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -232,9 +212,10 @@ describe('getSurvivors', () => {
   })
 
   it('throws on main query error', async () => {
-    const mockOrder = vi
+    const mockReturns = vi
       .fn()
       .mockResolvedValue({ data: null, error: { message: 'query error' } })
+    const mockOrder = vi.fn().mockReturnValue({ returns: mockReturns })
     const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -245,23 +226,28 @@ describe('getSurvivors', () => {
   })
 
   it('returns survivors with empty related data', async () => {
-    const survivor = { ...baseSurvivor }
-
-    // Main survivor query
-    const mockOrder = vi
+    const survivorRow = {
+      ...baseSurvivor,
+      abilities_impairments: [],
+      cursed_gear: [],
+      disorders: [],
+      fighting_arts: [],
+      secret_fighting_arts: [],
+      hunt_survivor: [],
+      showdown_survivor: [],
+      knowledge_1: null,
+      knowledge_2: null,
+      neurosis: null,
+      philosophy: null,
+      tenet_knowledge: null
+    }
+    const mockReturns = vi
       .fn()
-      .mockResolvedValue({ data: [survivor], error: null })
-    const mockSurvivorEq = vi.fn().mockReturnValue({ order: mockOrder })
-    const mockSurvivorSelect = vi.fn().mockReturnValue({ eq: mockSurvivorEq })
-
-    // Junction tables
-    const emptyResult = { data: [], error: null }
-    const mockIn = vi.fn().mockResolvedValue(emptyResult)
-    const mockJunctionSelect = vi.fn().mockReturnValue({ in: mockIn })
-
-    mockSupabase.from
-      .mockReturnValueOnce({ select: mockSurvivorSelect })
-      .mockReturnValue({ select: mockJunctionSelect })
+      .mockResolvedValue({ data: [survivorRow], error: null })
+    const mockOrder = vi.fn().mockReturnValue({ returns: mockReturns })
+    const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
+    mockSupabase.from.mockReturnValue({ select: mockSelect })
 
     const result = await getSurvivors('set-1')
     expect(result).toHaveLength(1)

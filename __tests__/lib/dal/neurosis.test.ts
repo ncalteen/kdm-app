@@ -23,20 +23,17 @@ describe('getNeuroses', () => {
   const nonCustomNeurosis = {
     id: 'n1',
     custom: false,
-    neurosis_name: 'Agoraphobia',
-    philosophy_id: 'p1'
+    neurosis_name: 'Agoraphobia'
   }
   const userCustomNeurosis = {
     id: 'n2',
     custom: true,
-    neurosis_name: 'My Neurosis',
-    philosophy_id: 'p2'
+    neurosis_name: 'My Neurosis'
   }
   const sharedNeurosis = {
     id: 'n3',
     custom: true,
-    neurosis_name: 'Shared Neurosis',
-    philosophy_id: 'p3'
+    neurosis_name: 'Shared Neurosis'
   }
 
   it('returns neuroses from all three sources', async () => {
@@ -232,8 +229,7 @@ describe('addNeurosis', () => {
   const mockNeurosis = {
     id: 'n1',
     custom: false,
-    neurosis_name: 'Agoraphobia',
-    philosophy_id: 'p1'
+    neurosis_name: 'Agoraphobia'
   }
 
   it('inserts a non-custom neurosis without user_id', async () => {
@@ -251,15 +247,13 @@ describe('addNeurosis', () => {
 
     const result = await addNeurosis({
       neurosis_name: 'Agoraphobia',
-      custom: false,
-      philosophy_id: 'p1'
+      custom: false
     })
 
     expect(result).toEqual(mockNeurosis)
     expect(mockInsert).toHaveBeenCalledWith({
       neurosis_name: 'Agoraphobia',
-      custom: false,
-      philosophy_id: 'p1'
+      custom: false
     })
   })
 
@@ -272,8 +266,7 @@ describe('addNeurosis', () => {
     const customNeurosis = {
       id: 'n2',
       custom: true,
-      neurosis_name: 'My Neurosis',
-      philosophy_id: 'p1'
+      neurosis_name: 'My Neurosis'
     }
     const mockSingle = vi
       .fn()
@@ -284,15 +277,13 @@ describe('addNeurosis', () => {
 
     const result = await addNeurosis({
       neurosis_name: 'My Neurosis',
-      custom: true,
-      philosophy_id: 'p1'
+      custom: true
     })
 
     expect(result).toEqual(customNeurosis)
     expect(mockInsert).toHaveBeenCalledWith({
       neurosis_name: 'My Neurosis',
       custom: true,
-      philosophy_id: 'p1',
       user_id: mockUser.id
     })
   })
@@ -306,8 +297,7 @@ describe('addNeurosis', () => {
     await expect(
       addNeurosis({
         neurosis_name: 'My Neurosis',
-        custom: true,
-        philosophy_id: 'p1'
+        custom: true
       })
     ).rejects.toThrow('Not Authenticated')
   })
@@ -321,8 +311,7 @@ describe('addNeurosis', () => {
     await expect(
       addNeurosis({
         neurosis_name: 'Agoraphobia',
-        custom: false,
-        philosophy_id: 'p1'
+        custom: false
       })
     ).rejects.toThrow('Error Fetching User: Auth error')
   })
@@ -343,8 +332,7 @@ describe('addNeurosis', () => {
     await expect(
       addNeurosis({
         neurosis_name: 'Agoraphobia',
-        custom: false,
-        philosophy_id: 'p1'
+        custom: false
       })
     ).rejects.toThrow('Error Adding Neurosis: Insert failed')
   })

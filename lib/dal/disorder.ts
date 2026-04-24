@@ -1,4 +1,4 @@
-import { getUserId } from '@/lib/dal/user'
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { DisorderDetail } from '@/lib/types'
@@ -26,16 +26,16 @@ export async function getDisorders(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('disorder')
-      .select('id, custom, disorder_name')
+      .select('id, custom, disorder_name, rules')
       .eq('custom', false),
     supabase
       .from('disorder')
-      .select('id, custom, disorder_name')
+      .select('id, custom, disorder_name, rules')
       .eq('custom', true)
       .eq('user_id', userId),
     supabase
       .from('disorder_shared_user')
-      .select('disorder(id, custom, disorder_name)')
+      .select('disorder(id, custom, disorder_name, rules)')
       .eq('shared_user_id', userId)
   ])
 
@@ -83,23 +83,18 @@ export async function addDisorder(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<DisorderDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (disorder.custom && !user) throw new Error('Not Authenticated')
+  if (disorder.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('disorder')
     .insert({
       ...disorder,
-      ...(disorder.custom ? { user_id: user!.id } : {})
+      ...(disorder.custom ? { user_id: userId! } : {})
     })
-    .select('id, custom, disorder_name')
+    .select('id, custom, disorder_name, rules')
     .single()
 
   if (error) throw new Error(`Error Adding Disorder: ${error.message}`)

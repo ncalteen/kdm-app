@@ -833,7 +833,7 @@ are tracked as part of user settings.
 | Properties   | :x:                 |
 | Activations  | :x:                 |
 
-### Wanderers
+### Wanderer
 
 | Name                       | Tracked            |
 | -------------------------- | ------------------ |

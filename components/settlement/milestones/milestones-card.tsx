@@ -1,6 +1,6 @@
 'use client'
 
-import { CreateCustomMilestoneDialog } from '@/components/settlement/milestones/create-custom-milestone-dialog'
+import { MilestoneDialog } from '@/components/custom/dialogs/milestone-dialog'
 import { MilestoneItem } from '@/components/settlement/milestones/milestone-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,8 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addMilestone, getMilestones } from '@/lib/dal/milestone'
 import {
@@ -39,7 +41,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { BadgeCheckIcon, Plus, PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Milestones Card Properties
@@ -69,57 +71,27 @@ export function MilestonesCard({
   setSelectedSettlement
 }: MilestonesCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [dialogKey, setDialogKey] = useState(0)
 
   // Available milestones for the select dropdown (fetched once per settlement).
-  const [availableMilestones, setAvailableMilestones] = useState<{
+  const {
+    data: availableMilestones,
+    isLoaded: hasFetched,
+    setData: setAvailableMilestones
+  } = useCatalogFetch<{
     [key: string]: MilestoneDetail
-  }>({})
-
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  // Fetch available milestone options when settlement changes.
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getMilestones()
-      .then((milestones) => {
-        if (cancelled) return
-
-        setAvailableMilestones(milestones)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        setAvailableMilestones({})
-        setHasFetched(true)
-
-        console.error('Settlement Milestones Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getMilestones(), {
+    initial: {},
+    errorContext: 'Settlement Milestones Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   /**
    * Available Milestones Not Yet Added
@@ -154,13 +126,15 @@ export function MilestonesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['milestones'][0] = {
         complete: false,
         event_name: milestoneInfo.event_name,
         id: tempId,
         milestone_id: milestoneId,
-        milestone_name: milestoneInfo.milestone_name
+        milestone_name: milestoneInfo.milestone_name,
+        requirements: milestoneInfo.requirements ?? null,
+        rules: milestoneInfo.rules ?? null
       }
 
       // Capture the updated milestones list so async callbacks reference it
@@ -175,8 +149,11 @@ export function MilestonesCard({
         milestones: updatedMilestones
       })
 
-      addSettlementMilestones([milestoneId], selectedSettlement.id)
-        .then((row) => {
+      void mutate({
+        context: 'Milestone Add',
+        persist: () =>
+          addSettlementMilestones([milestoneId], selectedSettlement.id),
+        onSuccess: (row) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -187,10 +164,8 @@ export function MilestonesCard({
                 }
               : null
           )
-
-          toast.success(MILESTONE_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -199,12 +174,11 @@ export function MilestonesCard({
                 }
               : null
           )
-
-          console.error('Milestone Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: MILESTONE_UPDATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableMilestones, setSelectedSettlement, toast]
+    [selectedSettlement, availableMilestones, setSelectedSettlement, mutate]
   )
 
   /**
@@ -229,20 +203,20 @@ export function MilestonesCard({
         )
       })
 
-      removeSettlementMilestone(removed.id)
-        .then(() => toast.success(MILESTONE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Milestone Remove',
+        persist: () => removeSettlementMilestone(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.milestones.some((m) => m.id === removed.id))
               return prev
             return { ...prev, milestones: [...prev.milestones, removed] }
           })
-
-          console.error('Milestone Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: MILESTONE_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -268,9 +242,10 @@ export function MilestonesCard({
         )
       })
 
-      updateSettlementMilestone(target.id, { complete })
-        .then(() => toast.success(MILESTONE_COMPLETED_MESSAGE(complete)))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Milestone Toggle',
+        persist: () => updateSettlementMilestone(target.id, { complete }),
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -281,12 +256,11 @@ export function MilestonesCard({
                 }
               : null
           )
-
-          console.error('Milestone Toggle Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: MILESTONE_COMPLETED_MESSAGE(complete)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -301,7 +275,12 @@ export function MilestonesCard({
    * adds it to the settlement.
    */
   const handleCreate = useCallback(
-    async (data: { milestone_name: string; event_name: string }) => {
+    async (data: {
+      milestone_name: string
+      event_name: string
+      requirements: string
+      rules: string
+    }) => {
       if (creating || !selectedSettlement) return
 
       setCreating(true)
@@ -311,6 +290,8 @@ export function MilestonesCard({
           custom: true,
           milestone_name: data.milestone_name,
           event_name: data.event_name,
+          requirements: data.requirements || null,
+          rules: data.rules || null,
           campaign_types: []
         })
 
@@ -324,13 +305,15 @@ export function MilestonesCard({
         toast.success(MILESTONE_CREATED_MESSAGE())
 
         // Add to settlement immediately.
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['milestones'][0] = {
           complete: false,
           event_name: newMilestone.event_name,
           id: tempId,
           milestone_id: newMilestone.id,
-          milestone_name: newMilestone.milestone_name
+          milestone_name: newMilestone.milestone_name,
+          requirements: newMilestone.requirements ?? null,
+          rules: newMilestone.rules ?? null
         }
 
         const updatedMilestones = [
@@ -343,8 +326,11 @@ export function MilestonesCard({
           milestones: updatedMilestones
         })
 
-        addSettlementMilestones([newMilestone.id], selectedSettlement.id)
-          .then((row) => {
+        void mutate({
+          context: 'Milestone Add',
+          persist: () =>
+            addSettlementMilestones([newMilestone.id], selectedSettlement.id),
+          onSuccess: (row) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -355,8 +341,8 @@ export function MilestonesCard({
                   }
                 : null
             )
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -365,9 +351,8 @@ export function MilestonesCard({
                   }
                 : null
             )
-            console.error('Milestone Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          }
+        })
       } catch (error) {
         console.error('Milestone Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -375,7 +360,14 @@ export function MilestonesCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [
+      creating,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate,
+      setAvailableMilestones
+    ]
   )
 
   /** Open the create dialog with the current search term pre-filled. */
@@ -396,8 +388,7 @@ export function MilestonesCard({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="border-0 h-8 w-8"
-                disabled={selectableMilestones.length === 0}>
+                className="border-0 h-8 w-8">
                 <PlusIcon className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
@@ -464,7 +455,7 @@ export function MilestonesCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading milestones...
               </p>
@@ -484,13 +475,17 @@ export function MilestonesCard({
         </div>
       </CardContent>
 
-      <CreateCustomMilestoneDialog
+      <MilestoneDialog
         key={dialogKey}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onCreate={handleCreate}
-        creating={creating}
+        onSave={handleCreate}
+        saving={creating}
         initialName={search.trim()}
+        title="Create Custom Milestone"
+        description="A new landmark on the path through the darkness."
+        saveLabel="Create"
+        savingLabel="Creating..."
       />
     </Card>
   )

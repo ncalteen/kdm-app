@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
@@ -28,15 +29,8 @@ export async function getNemeses(
   includeAlternates = true,
   includeVignettes = true
 ): Promise<{ [key: string]: NemesisDetail }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of nemeses in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
@@ -44,7 +38,7 @@ export async function getNemeses(
     supabase
       .from('nemesis')
       .select(
-        'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+        'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
       )
       .eq('custom', false)
       .in('node', nodeTypes),
@@ -52,18 +46,18 @@ export async function getNemeses(
     supabase
       .from('nemesis')
       .select(
-        'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+        'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
       )
       .eq('custom', true)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .in('node', nodeTypes),
     // Custom nemeses shared with the user
     supabase
       .from('nemesis_shared_user')
       .select(
-        'nemesis(id, alternate_id, custom, monster_name, multi_monster, node, vignette_id)'
+        'nemesis(id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
       )
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -108,23 +102,16 @@ export async function getNemeses(
 export async function getUserCustomNemeses(): Promise<{
   [key: string]: NemesisDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('nemesis')
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
     )
     .eq('custom', true)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error) throw new Error(`Error Fetching Custom Nemeses: ${error.message}`)
 
@@ -152,7 +139,7 @@ export async function getNemesis(
   const { data, error } = await supabase
     .from('nemesis')
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
     )
     .eq('id', nemesisId)
     .maybeSingle()
@@ -239,24 +226,19 @@ export async function addNemesis(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<NemesisDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (nemesis.custom && !user) throw new Error('Not Authenticated')
+  if (nemesis.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('nemesis')
     .insert({
       ...nemesis,
-      ...(nemesis.custom ? { user_id: user!.id } : {})
+      ...(nemesis.custom ? { user_id: userId! } : {})
     })
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
     )
     .single()
 

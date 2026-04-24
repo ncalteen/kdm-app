@@ -36,6 +36,51 @@ export type CampaignTemplate = {
 }
 
 /**
+ * Ability/Impairment Detail
+ *
+ * Used throughout the app to represent an abilitiy/impairment object. Includes
+ * additional information not present in the ability_impairment table.
+ */
+export type AbilityImpairmentDetail = Omit<
+  Tables<'ability_impairment'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {}
+
+/**
+ * Trait Detail
+ *
+ * Used throughout the app to represent a monster trait. Custom traits are
+ * scoped to a single user; non-custom traits are part of the shared catalog.
+ */
+export type TraitDetail = Omit<
+  Tables<'trait'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {}
+
+/**
+ * Mood Detail
+ *
+ * Used throughout the app to represent a monster mood. Custom moods are scoped
+ * to a single user; non-custom moods are part of the shared catalog.
+ */
+export type MoodDetail = Omit<
+  Tables<'mood'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {}
+
+/**
+ * Survivor Status Detail
+ *
+ * Used throughout the app to represent a survivor status inflicted by a
+ * nemesis or quarry level. Custom statuses are scoped to a single user;
+ * non-custom statuses are part of the shared catalog.
+ */
+export type SurvivorStatusDetail = Omit<
+  Tables<'survivor_status'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {}
+
+/**
  * Character Detail
  *
  * Used throughout the app to represent a character object. Includes additional
@@ -191,6 +236,12 @@ export type HuntMonsterDetail = Omit<
 > & {
   /** AI Deck */
   ai_deck: HuntAIDeckDetail
+  /** Traits (joined from hunt_monster_trait → trait) */
+  traits: TraitDetail[]
+  /** Moods (joined from hunt_monster_mood → mood) */
+  moods: MoodDetail[]
+  /** Survivor statuses (joined from hunt_monster_survivor_status → survivor_status) */
+  survivor_statuses: SurvivorStatusDetail[]
 }
 
 /**
@@ -295,9 +346,11 @@ export type MonsterLevelData = {
   /** Life (nemesis only) */
   life: number
   /** Traits */
-  traits: string[]
+  traits: TraitDetail[]
   /** Moods */
-  moods: string[]
+  moods: MoodDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: SurvivorStatusDetail[]
 }
 
 /**
@@ -319,7 +372,14 @@ export type NemesisDetail = Omit<
 export type NemesisLevelDetail = Omit<
   Tables<'nemesis_level'>,
   'created_at' | 'updated_at' | 'nemesis_id'
->
+> & {
+  /** Traits (joined from nemesis_level_trait → trait) */
+  traits: TraitDetail[]
+  /** Moods (joined from nemesis_level_mood → mood) */
+  moods: MoodDetail[]
+  /** Survivor statuses (joined from nemesis_level_survivor_status → survivor_status) */
+  survivor_statuses: SurvivorStatusDetail[]
+}
 
 /**
  * Nemesis Timeline Detail
@@ -359,6 +419,16 @@ export type PatternDetail = Omit<
 export type PhilosophyDetail = Omit<
   Tables<'philosophy'>,
   'created_at' | 'updated_at' | 'user_id'
+>
+
+/**
+ * Philosophy Rank Detail
+ *
+ * Used throughout the app to represent a rank within a philosophy.
+ */
+export type PhilosophyRankDetail = Omit<
+  Tables<'philosophy_rank'>,
+  'created_at' | 'updated_at'
 >
 
 /**
@@ -415,6 +485,12 @@ export type QuarryLevelDetail = Omit<
   hunt_pos: number
   /** Survivor Hunt Position (joined from quarry_hunt_board_position) */
   survivor_hunt_pos: number
+  /** Traits (joined from quarry_level_trait → trait) */
+  traits: TraitDetail[]
+  /** Moods (joined from quarry_level_mood → mood) */
+  moods: MoodDetail[]
+  /** Survivor statuses (joined from quarry_level_survivor_status → survivor_status) */
+  survivor_statuses: SurvivorStatusDetail[]
 }
 
 /**
@@ -466,16 +542,6 @@ export type SettlementDetail = Omit<
   Tables<'settlement'>,
   'created_at' | 'updated_at'
 > & {
-  /** Can Encourage */
-  can_encourage: boolean
-  /** Can Surge */
-  can_surge: boolean
-  /** Can Dash */
-  can_dash: boolean
-  /** Can Fist Pump */
-  can_fist_pump: boolean
-  /** Can Endure */
-  can_endure: boolean
   /** Collective Cognition Rewards */
   collective_cognition_rewards: {
     /** Collective Cognition Reward Collective Cognition */
@@ -486,6 +552,8 @@ export type SettlementDetail = Omit<
     id: string
     /** Collective Cognition Reward Name */
     reward_name: string
+    /** Collective Cognition Reward Rules */
+    rules: string | null
     /** Unlocked */
     unlocked: boolean
   }[]
@@ -508,6 +576,12 @@ export type SettlementDetail = Omit<
     innovation_id: string
     /** Innovation Name */
     innovation_name: string
+    /** Innovation Rules */
+    rules: string | null
+    /** Innovation Consequences */
+    consequences: string[] | null
+    /** Innovation Benefits */
+    benefits: string[] | null
   }[]
   /** Knowledges */
   knowledges: {
@@ -517,6 +591,14 @@ export type SettlementDetail = Omit<
     knowledge_id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Philosophy ID */
+    philosophy_id: string | null
+    /** Knowledge Rules */
+    rules: string | null
+    /** Observation Conditions */
+    observation_conditions: string | null
+    /** Observation Rank Up Milestone */
+    observation_rank_up_milestone: number | null
   }[]
   /** Locations */
   locations: {
@@ -526,6 +608,8 @@ export type SettlementDetail = Omit<
     location_id: string
     /** Location Name */
     location_name: string
+    /** Location Rules */
+    rules: string | null
     /** Unlocked */
     unlocked: boolean
   }[]
@@ -535,8 +619,6 @@ export type SettlementDetail = Omit<
     id: string
     /** Neurosis Name */
     neurosis_name: string
-    /** Philosophy ID */
-    philosophy_id: string | null
   }[]
   /** Milestones */
   milestones: {
@@ -550,6 +632,10 @@ export type SettlementDetail = Omit<
     milestone_id: string
     /** Milestone Name */
     milestone_name: string
+    /** Milestone Requirements */
+    requirements: string | null
+    /** Milestone Rules */
+    rules: string | null
   }[]
   /** Nemeses */
   nemeses: {
@@ -579,6 +665,18 @@ export type SettlementDetail = Omit<
     monster_name: string
     /** Node */
     node: string
+    /** Instinct */
+    instinct: string | null
+    /** Basic Action */
+    basic_action: string | null
+    /** Blind Spot */
+    blind_spot: string | null
+    /** Defeat Outcome */
+    defeat_outcome: string | null
+    /** Deployment Rules */
+    deployment_rules: string | null
+    /** Victory Outcome */
+    victory_outcome: string | null
   }[]
   /** Patterns */
   patterns: {
@@ -597,6 +695,14 @@ export type SettlementDetail = Omit<
     philosophy_id: string
     /** Philosophy Name */
     philosophy_name: string
+    /** Hunt XP Milestones */
+    hunt_xp_milestones: number[] | null
+    /** Tenet Knowledge ID */
+    tenet_knowledge_id: string | null
+    /** Philosophy Tier */
+    tier: number | null
+    /** Linked Neurosis ID */
+    neurosis_id: string | null
   }[]
   /** Principles */
   principles: {
@@ -604,10 +710,14 @@ export type SettlementDetail = Omit<
     id: string
     /** Option 1 Name */
     option_1_name: string
+    /** Option 1 Rules */
+    option_1_rules: string | null
     /** Option 1 Selected */
     option_1_selected: boolean
     /** Option 2 Name */
     option_2_name: string
+    /** Option 2 Rules */
+    option_2_rules: string | null
     /** Option 2 Selected */
     option_2_selected: boolean
     /** Principle ID */
@@ -637,6 +747,18 @@ export type SettlementDetail = Omit<
     quarry_id: string
     /** Unlocked */
     unlocked: boolean
+    /** Instinct */
+    instinct: string | null
+    /** Basic Action */
+    basic_action: string | null
+    /** Blind Spot */
+    blind_spot: string | null
+    /** Defeat Outcome */
+    defeat_outcome: string | null
+    /** Deployment Rules */
+    deployment_rules: string | null
+    /** Victory Outcome */
+    victory_outcome: string | null
   }[]
   /** Resources */
   resources: {
@@ -670,8 +792,6 @@ export type SettlementDetail = Omit<
   }[]
   /** Shared Settlement */
   shared: boolean
-  /** Survivors Born with +1 Understanding */
-  survivors_born_with_understanding: boolean
   /** Settlement Timeline */
   timeline: {
     /** Year Number */
@@ -779,6 +899,12 @@ export type ShowdownMonsterDetail = Omit<
 > & {
   /** AI Deck */
   ai_deck: ShowdownAIDeckDetail
+  /** Traits (joined from showdown_monster_trait → trait) */
+  traits: TraitDetail[]
+  /** Moods (joined from showdown_monster_mood → mood) */
+  moods: MoodDetail[]
+  /** Survivor statuses (joined from showdown_monster_survivor_status → survivor_status) */
+  survivor_statuses: SurvivorStatusDetail[]
 }
 
 /**
@@ -808,6 +934,17 @@ export type StrainMilestoneDetail = Omit<
  * Includes additional information not present in the survivor table.
  */
 export type SurvivorDetail = Tables<'survivor'> & {
+  /** Abilities and Impairments */
+  abilities_impairments: {
+    /** Ability or Impairment Name */
+    ability_impairment_name: string
+    /** Custom */
+    custom: boolean
+    /** Ability or Impairment ID */
+    id: string
+    /** Rules */
+    rules: string
+  }[]
   /** Cursed Gear */
   cursed_gear: {
     /** Cursed Gear Name */
@@ -823,22 +960,25 @@ export type SurvivorDetail = Tables<'survivor'> & {
     disorder_name: string
     /** Disorder ID */
     id: string
+    /** Rules */
+    rules: string
   }[]
   /** Survivor Embarked on Hunt/Showdown */
   embarked: boolean
   /** Fighting Arts */
-  fighting_arts: {
-    /** Fighting Art Name */
-    fighting_art_name: string
-    /** Fighting Art ID */
-    id: string
-  }[]
+  fighting_arts: FightingArtDetail[]
   /** Knowledge 1 */
   knowledge_1: {
     /** Knowledge ID */
     id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Rules */
+    rules: string | null
+    /** Observation Conditions */
+    observation_conditions: string | null
+    /** Observation Rank Up Milestone */
+    observation_rank_up_milestone: number | null
   } | null
   /** Knowledge 2 */
   knowledge_2: {
@@ -846,6 +986,12 @@ export type SurvivorDetail = Tables<'survivor'> & {
     id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Rules */
+    rules: string | null
+    /** Observation Conditions */
+    observation_conditions: string | null
+    /** Observation Rank Up Milestone */
+    observation_rank_up_milestone: number | null
   } | null
   /** Neurosis */
   neurosis: {
@@ -853,6 +999,8 @@ export type SurvivorDetail = Tables<'survivor'> & {
     id: string
     /** Neurosis Name */
     neurosis_name: string
+    /** Rules */
+    rules: string | null
   } | null
   /** Philosophy */
   philosophy: {
@@ -860,20 +1008,27 @@ export type SurvivorDetail = Tables<'survivor'> & {
     id: string
     /** Philosophy Name */
     philosophy_name: string
+    /** Hunt XP Milestones */
+    hunt_xp_milestones: number[] | null
+    /** Tenet Knowledge ID */
+    tenet_knowledge_id: string | null
+    /** Tier */
+    tier: number | null
   } | null
   /** Secret Fighting Arts */
-  secret_fighting_arts: {
-    /** Secret Fighting Art ID */
-    id: string
-    /** Secret Fighting Art Name */
-    secret_fighting_art_name: string
-  }[]
+  secret_fighting_arts: SecretFightingArtDetail[]
   /** Tenet Knowledge */
   tenet_knowledge: {
     /** Knowledge ID */
     id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Rules */
+    rules: string | null
+    /** Observation Conditions */
+    observation_conditions: string | null
+    /** Observation Rank Up Milestone */
+    observation_rank_up_milestone: number | null
   } | null
 }
 
@@ -962,8 +1117,21 @@ export type UserSettingsDetail = Omit<
  */
 export type WandererDetail = Omit<
   Tables<'wanderer'>,
-  'created_at' | 'updated_at' | 'custom' | 'user_id'
->
+  'created_at' | 'updated_at' | 'user_id'
+> & {
+  /** Abilities and Impairments (resolved via junction table) */
+  abilities_impairments: WandererAbilityImpairmentDetail[]
+}
+
+/**
+ * Wanderer Ability / Impairment Detail
+ *
+ * Represents an ability/impairment linked to a wanderer. The wanderer → ability/
+ * impairment relationship is stored in the `wanderer_ability_impairment`
+ * junction table; at read time the junction is flattened to the underlying
+ * `ability_impairment` row so consumers can work with a single object shape.
+ */
+export type WandererAbilityImpairmentDetail = AbilityImpairmentDetail
 
 /**
  * Wanderer Timeline Year Detail

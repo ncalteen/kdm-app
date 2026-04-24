@@ -19,6 +19,8 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addResource, getResources } from '@/lib/dal/resource'
 import {
@@ -39,7 +41,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { BeefIcon, Plus, PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Resources Card Properties
@@ -69,51 +71,26 @@ export function ResourcesCard({
   setSelectedSettlement
 }: ResourcesCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [dialogKey, setDialogKey] = useState(0)
 
-  const [availableResources, setAvailableResources] = useState<{
+  const {
+    data: availableResources,
+    isLoaded: hasFetched,
+    setData: setAvailableResources
+  } = useCatalogFetch<{
     [key: string]: ResourceDetail
-  }>({})
-
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getResources()
-      .then((resources) => {
-        if (cancelled) return
-        setAvailableResources(resources)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setAvailableResources({})
-        setHasFetched(true)
-        console.error('Settlement Resources Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getResources(), {
+    initial: {},
+    errorContext: 'Settlement Resources Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   const selectableResources = useMemo(() => {
     const linkedIds = new Set(
@@ -150,7 +127,7 @@ export function ResourcesCard({
 
       setAddOpen(false)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
 
       const optimisticRow: SettlementDetail['resources'][0] = {
         category: resourceInfo.category,
@@ -171,8 +148,11 @@ export function ResourcesCard({
         resources: updatedResources
       })
 
-      addSettlementResources([resourceId], selectedSettlement.id)
-        .then((row) => {
+      void mutate({
+        context: 'Resource Add',
+        persist: () =>
+          addSettlementResources([resourceId], selectedSettlement.id),
+        onSuccess: (row) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -183,9 +163,8 @@ export function ResourcesCard({
                 }
               : null
           )
-          toast.success(RESOURCE_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -194,11 +173,11 @@ export function ResourcesCard({
                 }
               : null
           )
-          console.error('Resource Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: RESOURCE_UPDATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableResources, setSelectedSettlement, toast]
+    [selectedSettlement, availableResources, setSelectedSettlement, mutate]
   )
 
   /**
@@ -223,19 +202,20 @@ export function ResourcesCard({
         )
       })
 
-      removeSettlementResource(removed.id)
-        .then(() => toast.success(RESOURCE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Resource Remove',
+        persist: () => removeSettlementResource(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.resources.some((r) => r.id === removed.id))
               return prev
             return { ...prev, resources: [...prev.resources, removed] }
           })
-          console.error('Resource Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: RESOURCE_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -263,9 +243,10 @@ export function ResourcesCard({
         )
       })
 
-      updateSettlementResource(target.id, { quantity })
-        .then(() => toast.success(RESOURCE_UPDATED_MESSAGE(index)))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Resource Quantity',
+        persist: () => updateSettlementResource(target.id, { quantity }),
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -276,11 +257,11 @@ export function ResourcesCard({
                 }
               : null
           )
-          console.error('Resource Quantity Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: RESOURCE_UPDATED_MESSAGE(index)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -321,7 +302,7 @@ export function ResourcesCard({
         toast.success(RESOURCE_CREATED_MESSAGE())
 
         // Add to settlement immediately
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['resources'][0] = {
           category: data.category,
           id: tempId,
@@ -343,8 +324,11 @@ export function ResourcesCard({
           resources: updatedResources
         })
 
-        addSettlementResources([newResource.id], selectedSettlement.id)
-          .then((rows) => {
+        void mutate({
+          context: 'Resource Add',
+          persist: () =>
+            addSettlementResources([newResource.id], selectedSettlement.id),
+          onSuccess: (rows) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -355,9 +339,8 @@ export function ResourcesCard({
                   }
                 : null
             )
-            toast.success(RESOURCE_UPDATED_MESSAGE())
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -366,9 +349,9 @@ export function ResourcesCard({
                   }
                 : null
             )
-            console.error('Resource Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: RESOURCE_UPDATED_MESSAGE()
+        })
       } catch (error) {
         console.error('Resource Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -376,7 +359,14 @@ export function ResourcesCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [
+      creating,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate,
+      setAvailableResources
+    ]
   )
 
   /** Open the create dialog with the current search term pre-filled */
@@ -464,7 +454,7 @@ export function ResourcesCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading resources...
               </p>

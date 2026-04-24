@@ -118,8 +118,38 @@ export function survivorsBornWithUnderstanding(
   )
 }
 
+/** Style types supported by {@link getColorStyle}. */
+type ColorStyleType = 'bg' | 'border' | 'border-hover' | 'header'
+
+/**
+ * Color style class strings for each {@link ColorChoice}, keyed by style type.
+ *
+ * Built once at module load by mapping over {@link ColorChoice}'s values
+ * (whose values are intentionally the matching Tailwind palette names). The
+ * literal class strings emitted here are NOT scanned by Tailwind because they
+ * use template interpolation; the corresponding utilities are kept in the
+ * compiled CSS via `@source inline(...)` directives in `app/globals.css`.
+ */
+const COLOR_STYLE_MAP: Record<
+  ColorChoice,
+  Record<ColorStyleType, string>
+> = Object.fromEntries(
+  Object.values(ColorChoice).map((c) => [
+    c,
+    {
+      bg: `bg-${c}-500`,
+      border: `border-${c}-300/50`,
+      'border-hover': `border-${c}-400/70`,
+      header: `bg-${c}-100/30 border-${c}-300/40`
+    }
+  ])
+) as Record<ColorChoice, Record<ColorStyleType, string>>
+
 /**
  * Get Color Style for Display
+ *
+ * Falls back to slate when an unknown {@link ColorChoice} is supplied so
+ * callers always receive a usable Tailwind class.
  *
  * @param color Color Choice
  * @param type Style Type
@@ -127,146 +157,11 @@ export function survivorsBornWithUnderstanding(
  */
 export function getColorStyle(
   color: ColorChoice,
-  type: 'bg' | 'border' | 'border-hover' | 'header' = 'bg'
+  type: ColorStyleType = 'bg'
 ): string {
-  const colorMap: Record<ColorChoice, Record<string, string>> = {
-    [ColorChoice.NEUTRAL]: {
-      bg: 'bg-neutral-500',
-      border: 'border-neutral-300/50',
-      'border-hover': 'border-neutral-400/70',
-      header: 'bg-neutral-100/30 border-neutral-300/40'
-    },
-    [ColorChoice.STONE]: {
-      bg: 'bg-stone-500',
-      border: 'border-stone-300/50',
-      'border-hover': 'border-stone-400/70',
-      header: 'bg-stone-100/30 border-stone-300/40'
-    },
-    [ColorChoice.ZINC]: {
-      bg: 'bg-zinc-500',
-      border: 'border-zinc-300/50',
-      'border-hover': 'border-zinc-400/70',
-      header: 'bg-zinc-100/30 border-zinc-300/40'
-    },
-    [ColorChoice.SLATE]: {
-      bg: 'bg-slate-500',
-      border: 'border-slate-300/50',
-      'border-hover': 'border-slate-400/70',
-      header: 'bg-slate-100/30 border-slate-300/40'
-    },
-    [ColorChoice.GRAY]: {
-      bg: 'bg-gray-500',
-      border: 'border-gray-300/50',
-      'border-hover': 'border-gray-400/70',
-      header: 'bg-gray-100/30 border-gray-300/40'
-    },
-    [ColorChoice.RED]: {
-      bg: 'bg-red-500',
-      border: 'border-red-300/50',
-      'border-hover': 'border-red-400/70',
-      header: 'bg-red-100/30 border-red-300/40'
-    },
-    [ColorChoice.ORANGE]: {
-      bg: 'bg-orange-500',
-      border: 'border-orange-300/50',
-      'border-hover': 'border-orange-400/70',
-      header: 'bg-orange-100/30 border-orange-300/40'
-    },
-    [ColorChoice.AMBER]: {
-      bg: 'bg-amber-500',
-      border: 'border-amber-300/50',
-      'border-hover': 'border-amber-400/70',
-      header: 'bg-amber-100/30 border-amber-300/40'
-    },
-    [ColorChoice.YELLOW]: {
-      bg: 'bg-yellow-500',
-      border: 'border-yellow-300/50',
-      'border-hover': 'border-yellow-400/70',
-      header: 'bg-yellow-100/30 border-yellow-300/40'
-    },
-    [ColorChoice.LIME]: {
-      bg: 'bg-lime-500',
-      border: 'border-lime-300/50',
-      'border-hover': 'border-lime-400/70',
-      header: 'bg-lime-100/30 border-lime-300/40'
-    },
-    [ColorChoice.GREEN]: {
-      bg: 'bg-green-500',
-      border: 'border-green-300/50',
-      'border-hover': 'border-green-400/70',
-      header: 'bg-green-100/30 border-green-300/40'
-    },
-    [ColorChoice.EMERALD]: {
-      bg: 'bg-emerald-500',
-      border: 'border-emerald-300/50',
-      'border-hover': 'border-emerald-400/70',
-      header: 'bg-emerald-100/30 border-emerald-300/40'
-    },
-    [ColorChoice.TEAL]: {
-      bg: 'bg-teal-500',
-      border: 'border-teal-300/50',
-      'border-hover': 'border-teal-400/70',
-      header: 'bg-teal-100/30 border-teal-300/40'
-    },
-    [ColorChoice.CYAN]: {
-      bg: 'bg-cyan-500',
-      border: 'border-cyan-300/50',
-      'border-hover': 'border-cyan-400/70',
-      header: 'bg-cyan-100/30 border-cyan-300/40'
-    },
-    [ColorChoice.SKY]: {
-      bg: 'bg-sky-500',
-      border: 'border-sky-300/50',
-      'border-hover': 'border-sky-400/70',
-      header: 'bg-sky-100/30 border-sky-300/40'
-    },
-    [ColorChoice.BLUE]: {
-      bg: 'bg-blue-500',
-      border: 'border-blue-300/50',
-      'border-hover': 'border-blue-400/70',
-      header: 'bg-blue-100/30 border-blue-300/40'
-    },
-    [ColorChoice.INDIGO]: {
-      bg: 'bg-indigo-500',
-      border: 'border-indigo-300/50',
-      'border-hover': 'border-indigo-400/70',
-      header: 'bg-indigo-100/30 border-indigo-300/40'
-    },
-    [ColorChoice.VIOLET]: {
-      bg: 'bg-violet-500',
-      border: 'border-violet-300/50',
-      'border-hover': 'border-violet-400/70',
-      header: 'bg-violet-100/30 border-violet-300/40'
-    },
-    [ColorChoice.PURPLE]: {
-      bg: 'bg-purple-500',
-      border: 'border-purple-300/50',
-      'border-hover': 'border-purple-400/70',
-      header: 'bg-purple-100/30 border-purple-300/40'
-    },
-    [ColorChoice.FUCHSIA]: {
-      bg: 'bg-fuchsia-500',
-      border: 'border-fuchsia-300/50',
-      'border-hover': 'border-fuchsia-400/70',
-      header: 'bg-fuchsia-100/30 border-fuchsia-300/40'
-    },
-    [ColorChoice.PINK]: {
-      bg: 'bg-pink-500',
-      border: 'border-pink-300/50',
-      'border-hover': 'border-pink-400/70',
-      header: 'bg-pink-100/30 border-pink-300/40'
-    },
-    [ColorChoice.ROSE]: {
-      bg: 'bg-rose-500',
-      border: 'border-rose-300/50',
-      'border-hover': 'border-rose-400/70',
-      header: 'bg-rose-100/30 border-rose-300/40'
-    }
-  }
-
   return (
-    colorMap[color]?.[type] ??
-    colorMap[ColorChoice.SLATE][type] ??
+    COLOR_STYLE_MAP[color]?.[type] ??
+    COLOR_STYLE_MAP[ColorChoice.SLATE][type] ??
     'bg-slate-500'
   )
 }
@@ -405,8 +300,8 @@ export function getCardColorStyles(color: ColorChoice): CSSProperties {
 /**
  * Get the Overwhelming Darkness Label
  *
- * When hunting the Flower Knight, Overwhelming Darkness is replaced with The
- * Forest Wants What it Wants.
+ * When hunting the Flower Knight or Spidicules, Overwhelming Darkness is
+ * replaced with The Forest Wants What it Wants.
  *
  * @param monsterName Monster Name
  * @returns Overwhelming Darkness Label
@@ -414,7 +309,9 @@ export function getCardColorStyles(color: ColorChoice): CSSProperties {
 export function getOverwhelmingDarknessLabel(
   monsterName: string | undefined
 ): string {
-  return monsterName && monsterName.toLowerCase() === 'flower knight'
+  return monsterName &&
+    (monsterName.toLowerCase() === 'flower knight' ||
+      monsterName.toLowerCase() === 'spidicules')
     ? 'The Forest Wants What it Wants'
     : 'Overwhelming Darkness'
 }

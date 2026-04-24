@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,6 +21,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addFightingArt, getFightingArts } from '@/lib/dal/fighting-art'
 import {
@@ -70,9 +72,6 @@ interface FightingArtsCardProps {
   survivors: SurvivorDetail[]
 }
 
-type FightingArtItem = { id: string; fighting_art_name: string }
-type SecretFightingArtItem = { id: string; secret_fighting_art_name: string }
-
 /**
  * Fighting Arts Card Component
  *
@@ -87,6 +86,7 @@ export function FightingArtsCard({
   survivors
 }: FightingArtsCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
@@ -95,16 +95,23 @@ export function FightingArtsCard({
   }>({})
   const [availableSecretFightingArts, setAvailableSecretFightingArts] =
     useState<{ [key: string]: SecretFightingArtDetail }>({})
-  const [fightingArts, setFightingArts] = useState<FightingArtItem[]>(
+  const [fightingArts, setFightingArts] = useState<FightingArtDetail[]>(
     selectedSurvivor?.fighting_arts ?? []
   )
   const [secretFightingArts, setSecretFightingArts] = useState<
-    SecretFightingArtItem[]
+    SecretFightingArtDetail[]
   >(selectedSurvivor?.secret_fighting_arts ?? [])
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [creatingRegular, setCreatingRegular] = useState(false)
   const [creatingSecret, setCreatingSecret] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createDialogType, setCreateDialogType] = useState<
+    'regular' | 'secret'
+  >('regular')
+  const [createDialogName, setCreateDialogName] = useState('')
+  const [createDialogKey, setCreateDialogKey] = useState(0)
+  const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   const canUseFightingArtsKnowledges =
     survivors.find((s) => s.id === selectedSurvivor?.id)
@@ -117,16 +124,31 @@ export function FightingArtsCard({
   }
 
   useEffect(() => {
+    let regularLoaded = false
+    let secretLoaded = false
+
+    const markLoaded = () => {
+      if (regularLoaded && secretLoaded) setHasFetched(true)
+    }
+
     getFightingArts()
       .then((arts) => setAvailableFightingArts(arts))
       .catch((error) => {
         console.error('Fighting Arts Fetch Error:', error)
+      })
+      .finally(() => {
+        regularLoaded = true
+        markLoaded()
       })
 
     getSecretFightingArts()
       .then((arts) => setAvailableSecretFightingArts(arts))
       .catch((error) => {
         console.error('Secret Fighting Arts Fetch Error:', error)
+      })
+      .finally(() => {
+        secretLoaded = true
+        markLoaded()
       })
   }, [])
 
@@ -170,9 +192,11 @@ export function FightingArtsCard({
       const detail = availableFightingArts[fightingArtId]
       if (!detail) return
 
-      const optimisticItem: FightingArtItem = {
+      const optimisticItem: FightingArtDetail = {
         id: fightingArtId,
-        fighting_art_name: detail.fighting_art_name
+        fighting_art_name: detail.fighting_art_name,
+        custom: detail.custom,
+        rules: detail.rules ?? null
       }
       const oldArts = [...fightingArts]
 
@@ -185,11 +209,11 @@ export function FightingArtsCard({
         )
       )
 
-      addSurvivorFightingArt(selectedSurvivor.id, fightingArtId)
-        .then(() =>
-          toast.success(SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true))
-        )
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Fighting Art Add',
+        persist: () =>
+          addSurvivorFightingArt(selectedSurvivor.id, fightingArtId),
+        rollback: () => {
           setFightingArts(oldArts)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -198,12 +222,17 @@ export function FightingArtsCard({
                 : s
             )
           )
-
-          console.error('Fighting Art Add Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true)
+      })
     },
-    [availableFightingArts, fightingArts, selectedSurvivor, setSurvivors, toast]
+    [
+      availableFightingArts,
+      fightingArts,
+      selectedSurvivor,
+      setSurvivors,
+      mutate
+    ]
   )
 
   /**
@@ -218,9 +247,11 @@ export function FightingArtsCard({
       const detail = availableSecretFightingArts[secretFightingArtId]
       if (!detail) return
 
-      const optimisticItem: SecretFightingArtItem = {
+      const optimisticItem: SecretFightingArtDetail = {
         id: secretFightingArtId,
-        secret_fighting_art_name: detail.secret_fighting_art_name
+        secret_fighting_art_name: detail.secret_fighting_art_name,
+        custom: detail.custom,
+        rules: detail.rules ?? null
       }
       const oldArts = [...secretFightingArts]
 
@@ -239,11 +270,14 @@ export function FightingArtsCard({
         )
       )
 
-      addSurvivorSecretFightingArt(selectedSurvivor.id, secretFightingArtId)
-        .then(() =>
-          toast.success(SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true))
-        )
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Secret Fighting Art Add',
+        persist: () =>
+          addSurvivorSecretFightingArt(
+            selectedSurvivor.id,
+            secretFightingArtId
+          ),
+        rollback: () => {
           setSecretFightingArts(oldArts)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -252,17 +286,16 @@ export function FightingArtsCard({
                 : s
             )
           )
-
-          console.error('Secret Fighting Art Add Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true)
+      })
     },
     [
       availableSecretFightingArts,
       secretFightingArts,
       selectedSurvivor,
       setSurvivors,
-      toast
+      mutate
     ]
   )
 
@@ -305,9 +338,11 @@ export function FightingArtsCard({
         )
       )
 
-      removeSurvivorFightingArt(selectedSurvivor.id, removed.id)
-        .then(() => toast.success(SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(false)))
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Fighting Art Remove',
+        persist: () =>
+          removeSurvivorFightingArt(selectedSurvivor.id, removed.id),
+        rollback: () => {
           setFightingArts(oldArts)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -316,12 +351,11 @@ export function FightingArtsCard({
                 : s
             )
           )
-
-          console.error('Fighting Art Remove Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(false)
+      })
     },
-    [fightingArts, selectedSurvivor, setSurvivors, toast]
+    [fightingArts, selectedSurvivor, setSurvivors, mutate]
   )
 
   /**
@@ -348,9 +382,11 @@ export function FightingArtsCard({
         )
       )
 
-      removeSurvivorSecretFightingArt(selectedSurvivor.id, removed.id)
-        .then(() => toast.success(SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(true)))
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Secret Fighting Art Remove',
+        persist: () =>
+          removeSurvivorSecretFightingArt(selectedSurvivor.id, removed.id),
+        rollback: () => {
           setSecretFightingArts(oldArts)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -359,12 +395,11 @@ export function FightingArtsCard({
                 : s
             )
           )
-
-          console.error('Secret Fighting Art Remove Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(true)
+      })
     },
-    [secretFightingArts, selectedSurvivor, setSurvivors, toast]
+    [secretFightingArts, selectedSurvivor, setSurvivors, mutate]
   )
 
   /**
@@ -385,15 +420,13 @@ export function FightingArtsCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, {
-        can_use_fighting_arts_knowledges: newValue
-      })
-        .then(() =>
-          toast.success(
-            SURVIVOR_CAN_USE_FIGHTING_ARTS_UPDATED_MESSAGE(newValue)
-          )
-        )
-        .catch((error: unknown) => {
+      void mutate({
+        context: 'Can Use Fighting Arts Update',
+        persist: () =>
+          updateSurvivor(selectedSurvivor?.id, {
+            can_use_fighting_arts_knowledges: newValue
+          }),
+        rollback: () => {
           setSurvivors((prev) =>
             prev.map((s) =>
               s.id === selectedSurvivor?.id
@@ -401,12 +434,11 @@ export function FightingArtsCard({
                 : s
             )
           )
-
-          console.error('Can Use Fighting Arts Update Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: SURVIVOR_CAN_USE_FIGHTING_ARTS_UPDATED_MESSAGE(newValue)
+      })
     },
-    [canUseFightingArtsKnowledges, selectedSurvivor?.id, setSurvivors, toast]
+    [canUseFightingArtsKnowledges, selectedSurvivor?.id, setSurvivors, mutate]
   )
 
   /** Check if an exact match for the search term already exists in regular arts. */
@@ -423,153 +455,194 @@ export function FightingArtsCard({
   /**
    * Handle Create Custom Fighting Art
    *
-   * Creates a new custom fighting art with the current search term, adds it
-   * to the available arts, then assigns it to the survivor.
+   * Creates a new custom fighting art with the provided name and rules, adds
+   * it to the available arts, then assigns it to the survivor.
    */
-  const handleCreateRegular = useCallback(async () => {
-    const name = search.trim()
-    if (!name || creatingRegular || !selectedSurvivor?.id) return
+  const handleCreateRegular = useCallback(
+    async (data: { name: string; rules: string }) => {
+      const name = data.name.trim()
+      if (!name || creatingRegular || !selectedSurvivor?.id) return
 
-    setCreatingRegular(true)
+      setCreatingRegular(true)
 
-    try {
-      const newArt = await addFightingArt({
-        custom: true,
-        fighting_art_name: name
-      })
-
-      setAvailableFightingArts((prev) => ({ ...prev, [newArt.id]: newArt }))
-      setSearch('')
-      setAddOpen(false)
-      toast.success(FIGHTING_ART_CREATED_MESSAGE())
-
-      // Add to survivor immediately
-      const optimisticItem: FightingArtItem = {
-        id: newArt.id,
-        fighting_art_name: newArt.fighting_art_name
-      }
-      const oldArts = [...fightingArts]
-
-      setFightingArts([...fightingArts, optimisticItem])
-      setSurvivors((prev) =>
-        prev.map((s) =>
-          s.id === selectedSurvivor.id
-            ? { ...s, fighting_arts: [...s.fighting_arts, optimisticItem] }
-            : s
-        )
-      )
-
-      addSurvivorFightingArt(selectedSurvivor.id, newArt.id)
-        .then(() =>
-          toast.success(SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true))
-        )
-        .catch((error: unknown) => {
-          setFightingArts(oldArts)
-          setSurvivors((prev) =>
-            prev.map((s) =>
-              s.id === selectedSurvivor.id
-                ? { ...s, fighting_arts: oldArts }
-                : s
-            )
-          )
-
-          console.error('Fighting Art Add Error:', error)
-          toast.error(ERROR_MESSAGE())
+      try {
+        const newArt = await addFightingArt({
+          custom: true,
+          fighting_art_name: name,
+          rules: data.rules || null
         })
-    } catch (error) {
-      console.error('Fighting Art Create Error:', error)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setCreatingRegular(false)
-    }
-  }, [
-    search,
-    creatingRegular,
-    selectedSurvivor,
-    fightingArts,
-    setSurvivors,
-    toast
-  ])
+
+        setAvailableFightingArts((prev) => ({ ...prev, [newArt.id]: newArt }))
+        setSearch('')
+        setCreateDialogOpen(false)
+        toast.success(FIGHTING_ART_CREATED_MESSAGE())
+
+        // Add to survivor immediately
+        const optimisticItem: FightingArtDetail = {
+          id: newArt.id,
+          fighting_art_name: newArt.fighting_art_name,
+          custom: newArt.custom,
+          rules: newArt.rules ?? null
+        }
+        const oldArts = [...fightingArts]
+
+        setFightingArts([...fightingArts, optimisticItem])
+        setSurvivors((prev) =>
+          prev.map((s) =>
+            s.id === selectedSurvivor.id
+              ? { ...s, fighting_arts: [...s.fighting_arts, optimisticItem] }
+              : s
+          )
+        )
+
+        void mutate({
+          context: 'Fighting Art Add',
+          persist: () => addSurvivorFightingArt(selectedSurvivor.id, newArt.id),
+          rollback: () => {
+            setFightingArts(oldArts)
+            setSurvivors((prev) =>
+              prev.map((s) =>
+                s.id === selectedSurvivor.id
+                  ? { ...s, fighting_arts: oldArts }
+                  : s
+              )
+            )
+          },
+          successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true)
+        })
+      } catch (error) {
+        console.error('Fighting Art Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreatingRegular(false)
+      }
+    },
+    [
+      creatingRegular,
+      selectedSurvivor,
+      fightingArts,
+      setSurvivors,
+      toast,
+      mutate
+    ]
+  )
 
   /**
    * Handle Create Custom Secret Fighting Art
    *
-   * Creates a new custom secret fighting art with the current search term,
-   * adds it to the available arts, then assigns it to the survivor.
+   * Creates a new custom secret fighting art with the provided name and
+   * rules, adds it to the available arts, then assigns it to the survivor.
    */
-  const handleCreateSecret = useCallback(async () => {
-    const name = search.trim()
-    if (!name || creatingSecret || !selectedSurvivor?.id) return
+  const handleCreateSecret = useCallback(
+    async (data: { name: string; rules: string }) => {
+      const name = data.name.trim()
+      if (!name || creatingSecret || !selectedSurvivor?.id) return
 
-    setCreatingSecret(true)
+      setCreatingSecret(true)
 
-    try {
-      const newArt = await addSecretFightingArt({
-        custom: true,
-        secret_fighting_art_name: name
-      })
-
-      setAvailableSecretFightingArts((prev) => ({
-        ...prev,
-        [newArt.id]: newArt
-      }))
-      setSearch('')
-      setAddOpen(false)
-      toast.success(SECRET_FIGHTING_ART_CREATED_MESSAGE())
-
-      // Add to survivor immediately
-      const optimisticItem: SecretFightingArtItem = {
-        id: newArt.id,
-        secret_fighting_art_name: newArt.secret_fighting_art_name
-      }
-      const oldArts = [...secretFightingArts]
-
-      setSecretFightingArts([...secretFightingArts, optimisticItem])
-      setSurvivors((prev) =>
-        prev.map((s) =>
-          s.id === selectedSurvivor.id
-            ? {
-                ...s,
-                secret_fighting_arts: [
-                  ...s.secret_fighting_arts,
-                  optimisticItem
-                ]
-              }
-            : s
-        )
-      )
-
-      addSurvivorSecretFightingArt(selectedSurvivor.id, newArt.id)
-        .then(() =>
-          toast.success(SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true))
-        )
-        .catch((error: unknown) => {
-          setSecretFightingArts(oldArts)
-          setSurvivors((prev) =>
-            prev.map((s) =>
-              s.id === selectedSurvivor.id
-                ? { ...s, secret_fighting_arts: oldArts }
-                : s
-            )
-          )
-
-          console.error('Secret Fighting Art Add Error:', error)
-          toast.error(ERROR_MESSAGE())
+      try {
+        const newArt = await addSecretFightingArt({
+          custom: true,
+          secret_fighting_art_name: name,
+          rules: data.rules || null
         })
-    } catch (error) {
-      console.error('Secret Fighting Art Create Error:', error)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setCreatingSecret(false)
-    }
-  }, [
-    search,
-    creatingSecret,
-    selectedSurvivor,
-    secretFightingArts,
-    setSurvivors,
-    toast
-  ])
+
+        setAvailableSecretFightingArts((prev) => ({
+          ...prev,
+          [newArt.id]: newArt
+        }))
+        setSearch('')
+        setCreateDialogOpen(false)
+        toast.success(SECRET_FIGHTING_ART_CREATED_MESSAGE())
+
+        // Add to survivor immediately
+        const optimisticItem: SecretFightingArtDetail = {
+          id: newArt.id,
+          secret_fighting_art_name: newArt.secret_fighting_art_name,
+          custom: newArt.custom,
+          rules: newArt.rules ?? null
+        }
+        const oldArts = [...secretFightingArts]
+
+        setSecretFightingArts([...secretFightingArts, optimisticItem])
+        setSurvivors((prev) =>
+          prev.map((s) =>
+            s.id === selectedSurvivor.id
+              ? {
+                  ...s,
+                  secret_fighting_arts: [
+                    ...s.secret_fighting_arts,
+                    optimisticItem
+                  ]
+                }
+              : s
+          )
+        )
+
+        void mutate({
+          context: 'Secret Fighting Art Add',
+          persist: () =>
+            addSurvivorSecretFightingArt(selectedSurvivor.id, newArt.id),
+          rollback: () => {
+            setSecretFightingArts(oldArts)
+            setSurvivors((prev) =>
+              prev.map((s) =>
+                s.id === selectedSurvivor.id
+                  ? { ...s, secret_fighting_arts: oldArts }
+                  : s
+              )
+            )
+          },
+          successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true)
+        })
+      } catch (error) {
+        console.error('Secret Fighting Art Create Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setCreatingSecret(false)
+      }
+    },
+    [
+      creatingSecret,
+      selectedSurvivor,
+      secretFightingArts,
+      setSurvivors,
+      toast,
+      mutate
+    ]
+  )
+
+  /**
+   * Open Create Dialog
+   *
+   * Closes the add popover and opens the custom item dialog for creating a
+   * regular or secret fighting art, pre-filled with the current search term.
+   */
+  const openCreateDialog = useCallback(
+    (type: 'regular' | 'secret') => {
+      const name = search.trim()
+      if (!name || !selectedSurvivor?.id) return
+
+      if (type === 'regular' && isAtRegularLimit) return
+      if (type === 'secret' && isAtSecretLimit) return
+
+      setCreateDialogType(type)
+      setCreateDialogName(name)
+      setCreateDialogKey((k) => k + 1)
+      setAddOpen(false)
+      setCreateDialogOpen(true)
+    },
+    [search, selectedSurvivor?.id, isAtRegularLimit, isAtSecretLimit]
+  )
+
+  /** Dispatch dialog save to the appropriate creator. */
+  const handleDialogSave = useCallback(
+    (data: { name: string; rules: string }) => {
+      if (createDialogType === 'regular') return handleCreateRegular(data)
+      return handleCreateSecret(data)
+    },
+    [createDialogType, handleCreateRegular, handleCreateSecret]
+  )
 
   if (selectedSettlement?.campaign_type === 'SQUIRES_OF_THE_CITADEL')
     return <></>
@@ -610,7 +683,7 @@ export function FightingArtsCard({
                             type="button"
                             className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
                             disabled={creatingRegular}
-                            onClick={handleCreateRegular}>
+                            onClick={() => openCreateDialog('regular')}>
                             <Plus className="h-4 w-4" />
                             {creatingRegular
                               ? 'Creating...'
@@ -622,7 +695,7 @@ export function FightingArtsCard({
                             type="button"
                             className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
                             disabled={creatingSecret}
-                            onClick={handleCreateSecret}>
+                            onClick={() => openCreateDialog('secret')}>
                             <Plus className="h-4 w-4" />
                             {creatingSecret
                               ? 'Creating...'
@@ -630,6 +703,8 @@ export function FightingArtsCard({
                           </button>
                         )}
                       </div>
+                    ) : !hasFetched ? (
+                      'Loading fighting arts...'
                     ) : (
                       'No fighting arts found.'
                     )}
@@ -654,7 +729,7 @@ export function FightingArtsCard({
                       {search.trim() && !exactRegularMatch && (
                         <CommandItem
                           value={`__create_regular__${search.trim()}`}
-                          onSelect={handleCreateRegular}
+                          onSelect={() => openCreateDialog('regular')}
                           disabled={creatingRegular}>
                           <Plus className="h-4 w-4" />
                           {creatingRegular
@@ -685,7 +760,7 @@ export function FightingArtsCard({
                       {search.trim() && !exactSecretMatch && (
                         <CommandItem
                           value={`__create_secret__${search.trim()}`}
-                          onSelect={handleCreateSecret}
+                          onSelect={() => openCreateDialog('secret')}
                           disabled={creatingSecret}>
                           <Plus className="h-4 w-4" />
                           {creatingSecret
@@ -754,6 +829,35 @@ export function FightingArtsCard({
           </div>
         </div>
       </CardContent>
+
+      <CustomItemDialog
+        key={`create-fighting-art-${createDialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleDialogSave}
+        saving={
+          createDialogType === 'regular' ? creatingRegular : creatingSecret
+        }
+        initialName={createDialogName}
+        title={
+          createDialogType === 'regular'
+            ? 'Create Custom Fighting Art'
+            : 'Create Custom Secret Fighting Art'
+        }
+        description="A new discipline is mastered against the odds."
+        nameLabel={
+          createDialogType === 'regular'
+            ? 'Fighting Art Name'
+            : 'Secret Fighting Art Name'
+        }
+        namePlaceholder={
+          createDialogType === 'regular'
+            ? 'Enter fighting art name'
+            : 'Enter secret fighting art name'
+        }
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
     </Card>
   )
 }

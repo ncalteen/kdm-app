@@ -125,7 +125,7 @@ export function CustomSeedPatternsCard({
     if (!trimmedName)
       return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('seed pattern'))
 
-    const tempId = `temp-${Date.now()}`
+    const tempId = `temp-${crypto.randomUUID()}`
     const temp: SeedPatternDetail = {
       id: tempId,
       custom: true,

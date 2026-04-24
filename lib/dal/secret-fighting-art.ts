@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SecretFightingArtDetail } from '@/lib/types'
@@ -17,34 +18,29 @@ import { SecretFightingArtDetail } from '@/lib/types'
 export async function getSecretFightingArts(): Promise<{
   [key: string]: SecretFightingArtDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of secret fighting arts in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     // Non-custom secret fighting arts (available to all users)
     supabase
       .from('secret_fighting_art')
-      .select('id, custom, secret_fighting_art_name')
+      .select('id, custom, secret_fighting_art_name, rules')
       .eq('custom', false),
     // Custom secret fighting arts created by the user
     supabase
       .from('secret_fighting_art')
-      .select('id, custom, secret_fighting_art_name')
+      .select('id, custom, secret_fighting_art_name, rules')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     // Custom secret fighting arts shared with the user
     supabase
       .from('secret_fighting_art_shared_user')
-      .select('secret_fighting_art(id, custom, secret_fighting_art_name)')
-      .eq('shared_user_id', user.id)
+      .select(
+        'secret_fighting_art(id, custom, secret_fighting_art_name, rules)'
+      )
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -79,23 +75,18 @@ export async function addSecretFightingArt(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<SecretFightingArtDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (secretFightingArt.custom && !user) throw new Error('Not Authenticated')
+  if (secretFightingArt.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('secret_fighting_art')
     .insert({
       ...secretFightingArt,
-      ...(secretFightingArt.custom ? { user_id: user!.id } : {})
+      ...(secretFightingArt.custom ? { user_id: userId! } : {})
     })
-    .select('id, custom, secret_fighting_art_name')
+    .select('id, custom, secret_fighting_art_name, rules')
     .single()
 
   if (error)

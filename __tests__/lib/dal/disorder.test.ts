@@ -12,12 +12,13 @@ vi.mock('@/lib/supabase/client', () => ({
 }))
 
 vi.mock('@/lib/dal/user', () => ({
-  getUserId: vi.fn()
+  getUserId: vi.fn(),
+  getUserIdOrNull: vi.fn()
 }))
 
 const { getDisorders, addDisorder, updateDisorder, removeDisorder } =
   await import('@/lib/dal/disorder')
-const { getUserId } = await import('@/lib/dal/user')
+const { getUserId, getUserIdOrNull } = await import('@/lib/dal/user')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -236,10 +237,7 @@ describe('addDisorder', () => {
   const mockDisorder = { id: 'd1', custom: false, disorder_name: 'Anxiety' }
 
   it('inserts a non-custom disorder without user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
-    })
+    vi.mocked(getUserIdOrNull).mockResolvedValue(mockUser.id)
 
     const mockSingle = vi
       .fn()
@@ -261,10 +259,7 @@ describe('addDisorder', () => {
   })
 
   it('inserts a custom disorder with user_id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
-    })
+    vi.mocked(getUserIdOrNull).mockResolvedValue(mockUser.id)
 
     const customDisorder = {
       id: 'd2',
@@ -292,10 +287,7 @@ describe('addDisorder', () => {
   })
 
   it('throws when custom disorder requires auth but user is null', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: null },
-      error: null
-    })
+    vi.mocked(getUserIdOrNull).mockResolvedValue(null)
 
     await expect(
       addDisorder({ disorder_name: 'My Disorder', custom: true })
@@ -304,10 +296,9 @@ describe('addDisorder', () => {
   })
 
   it('throws when auth returns an error', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: null },
-      error: { message: 'Auth error' }
-    })
+    vi.mocked(getUserIdOrNull).mockRejectedValue(
+      new Error('Error Fetching User: Auth error')
+    )
 
     await expect(
       addDisorder({ disorder_name: 'Anxiety', custom: false })
@@ -315,10 +306,7 @@ describe('addDisorder', () => {
   })
 
   it('throws when DB insert fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
-    })
+    vi.mocked(getUserIdOrNull).mockResolvedValue(mockUser.id)
 
     const mockSingle = vi
       .fn()

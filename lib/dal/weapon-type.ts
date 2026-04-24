@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { WeaponTypeDetail } from '@/lib/types'
@@ -16,30 +17,29 @@ import { WeaponTypeDetail } from '@/lib/types'
 export async function getWeaponTypes(): Promise<{
   [key: string]: WeaponTypeDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('weapon_type')
-      .select('id, custom, weapon_type_name')
+      .select(
+        'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules'
+      )
       .eq('custom', false),
     supabase
       .from('weapon_type')
-      .select('id, custom, weapon_type_name')
+      .select(
+        'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules'
+      )
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('weapon_type_shared_user')
-      .select('weapon_type(id, custom, weapon_type_name)')
-      .eq('shared_user_id', user.id)
+      .select(
+        'weapon_type(id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules)'
+      )
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -70,23 +70,20 @@ export async function addWeaponType(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<WeaponTypeDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (weaponType.custom && !user) throw new Error('Not Authenticated')
+  if (weaponType.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('weapon_type')
     .insert({
       ...weaponType,
-      ...(weaponType.custom ? { user_id: user!.id } : {})
+      ...(weaponType.custom ? { user_id: userId! } : {})
     })
-    .select('id, custom, weapon_type_name')
+    .select(
+      'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding Weapon Type: ${error.message}`)

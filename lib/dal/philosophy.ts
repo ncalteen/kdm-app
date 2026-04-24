@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { PhilosophyDetail } from '@/lib/types'
@@ -15,34 +16,33 @@ import { PhilosophyDetail } from '@/lib/types'
 export async function getPhilosophies(): Promise<{
   [key: string]: PhilosophyDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of philosophies in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     // Non-custom philosophies (available to all users)
     supabase
       .from('philosophy')
-      .select('id, custom, philosophy_name')
+      .select(
+        'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id'
+      )
       .eq('custom', false),
     // Custom philosophies created by the user
     supabase
       .from('philosophy')
-      .select('id, custom, philosophy_name')
+      .select(
+        'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id'
+      )
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     // Custom philosophies shared with the user
     supabase
       .from('philosophy_shared_user')
-      .select('philosophy(id, custom, philosophy_name)')
-      .eq('shared_user_id', user.id)
+      .select(
+        'philosophy(id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id)'
+      )
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -74,23 +74,20 @@ export async function addPhilosophy(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<PhilosophyDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (philosophy.custom && !user) throw new Error('Not Authenticated')
+  if (philosophy.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('philosophy')
     .insert({
       ...philosophy,
-      ...(philosophy.custom ? { user_id: user!.id } : {})
+      ...(philosophy.custom ? { user_id: userId! } : {})
     })
-    .select('id, custom, philosophy_name')
+    .select(
+      'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding Philosophy: ${error.message}`)
@@ -120,7 +117,9 @@ export async function updatePhilosophy(
     .from('philosophy')
     .update(philosophy)
     .eq('id', id)
-    .select('id, custom, philosophy_name')
+    .select(
+      'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id'
+    )
     .single()
 
   if (error) throw new Error(`Error Updating Philosophy: ${error.message}`)

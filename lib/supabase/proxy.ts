@@ -1,6 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Update Session
+ *
+ * Refreshes the user's Supabase auth session for an incoming request and
+ * returns a `NextResponse` with any updated auth cookies attached. Used by the
+ * root middleware to keep the SSR session in sync with the browser.
+ *
+ * @param request Incoming Next.js Request
+ * @returns Next.js Response carrying refreshed session cookies
+ */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request

@@ -23,6 +23,11 @@ import { addHuntAIDeck } from '@/lib/dal/hunt-ai-deck'
 import { addHuntHuntBoard } from '@/lib/dal/hunt-hunt-board'
 import { addHuntMonster } from '@/lib/dal/hunt-monster'
 import { addHuntSurvivor } from '@/lib/dal/hunt-survivor'
+import {
+  syncMonsterMoods,
+  syncMonsterSurvivorStatuses,
+  syncMonsterTraits
+} from '@/lib/dal/monster-trait-mood'
 import { getQuarry } from '@/lib/dal/quarry'
 import { getQuarryHuntBoard } from '@/lib/dal/quarry-hunt-board'
 import { getQuarryLevels } from '@/lib/dal/quarry-level'
@@ -480,7 +485,6 @@ export function CreateHuntCard({
           luck: level.luck,
           luck_tokens: level.luck_tokens,
           monster_name: monsterName,
-          moods: level.moods,
           movement: level.movement,
           movement_tokens: level.movement_tokens,
           notes: '',
@@ -490,10 +494,30 @@ export function CreateHuntCard({
           strength: level.strength,
           strength_tokens: level.strength_tokens,
           toughness: level.toughness,
-          traits: level.traits,
           wounds: 0
         }
         const huntMonsterId = await addHuntMonster(huntMonster)
+
+        // Link the monster's traits, moods, and survivor statuses via the
+        // junction tables.
+        if (level.traits.length > 0)
+          await syncMonsterTraits(
+            'hunt_monster_trait',
+            huntMonsterId,
+            level.traits.map((t) => t.trait_name)
+          )
+        if (level.moods.length > 0)
+          await syncMonsterMoods(
+            'hunt_monster_mood',
+            huntMonsterId,
+            level.moods.map((m) => m.mood_name)
+          )
+        if (level.survivor_statuses.length > 0)
+          await syncMonsterSurvivorStatuses(
+            'hunt_monster_survivor_status',
+            huntMonsterId,
+            level.survivor_statuses.map((s) => s.survivor_status_name)
+          )
 
         huntMonsters[huntMonsterId] = {
           ai_deck: {
@@ -504,6 +528,9 @@ export function CreateHuntCard({
             overtone_cards: aiDeck.overtone_cards
           },
           id: huntMonsterId,
+          traits: level.traits,
+          moods: level.moods,
+          survivor_statuses: level.survivor_statuses,
           ...huntMonster
         }
       }

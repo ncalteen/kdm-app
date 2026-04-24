@@ -10,7 +10,6 @@ import { ReactElement } from 'react'
  *
  * A draggable token representing the stage on the settlement phase board.
  *
- * @param props Settlement Phase Board Token Properties
  * @returns Settlement Phase Board Token Component
  */
 export function SettlementPhaseBoardToken(): ReactElement {

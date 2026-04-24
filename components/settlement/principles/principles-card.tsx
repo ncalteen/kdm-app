@@ -1,6 +1,6 @@
 'use client'
 
-import { CreateCustomPrincipleDialog } from '@/components/settlement/principles/create-custom-principle-dialog'
+import { PrincipleDialog } from '@/components/custom/dialogs/principle-dialog'
 import { PrincipleItem } from '@/components/settlement/principles/principle-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addPrinciple, getPrinciples } from '@/lib/dal/principle'
 import {
@@ -40,7 +42,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { Plus, PlusIcon, StampIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Principles Card Properties
@@ -70,57 +72,27 @@ export function PrinciplesCard({
   setSelectedSettlement
 }: PrinciplesCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [dialogKey, setDialogKey] = useState(0)
 
   // Available principles for the select dropdown (fetched once per settlement).
-  const [availablePrinciples, setAvailablePrinciples] = useState<{
+  const {
+    data: availablePrinciples,
+    isLoaded: hasFetched,
+    setData: setAvailablePrinciples
+  } = useCatalogFetch<{
     [key: string]: PrincipleDetail
-  }>({})
-
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  // Fetch available principle options when settlement changes.
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getPrinciples()
-      .then((principles) => {
-        if (cancelled) return
-
-        setAvailablePrinciples(principles)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        setAvailablePrinciples({})
-        setHasFetched(true)
-
-        console.error('Settlement Principles Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getPrinciples(), {
+    initial: {},
+    errorContext: 'Settlement Principles Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   /**
    * Available Principles Not Yet Added
@@ -174,12 +146,14 @@ export function PrinciplesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['principles'][0] = {
         id: tempId,
         option_1_name: principleInfo.option_1_name,
+        option_1_rules: principleInfo.option_1_rules ?? null,
         option_1_selected: false,
         option_2_name: principleInfo.option_2_name,
+        option_2_rules: principleInfo.option_2_rules ?? null,
         option_2_selected: false,
         principle_id: principleId,
         principle_name: principleInfo.principle_name
@@ -197,8 +171,11 @@ export function PrinciplesCard({
         principles: updatedPrinciples
       })
 
-      addSettlementPrinciples([principleId], selectedSettlement.id)
-        .then((row) => {
+      void mutate({
+        context: 'Principle Add',
+        persist: () =>
+          addSettlementPrinciples([principleId], selectedSettlement.id),
+        onSuccess: (row) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -209,10 +186,8 @@ export function PrinciplesCard({
                 }
               : null
           )
-
-          toast.success(PRINCIPLE_UPDATED_MESSAGE(false))
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -221,12 +196,11 @@ export function PrinciplesCard({
                 }
               : null
           )
-
-          console.error('Principle Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: PRINCIPLE_UPDATED_MESSAGE(false)
+      })
     },
-    [selectedSettlement, availablePrinciples, setSelectedSettlement, toast]
+    [selectedSettlement, availablePrinciples, setSelectedSettlement, mutate]
   )
 
   /**
@@ -251,20 +225,20 @@ export function PrinciplesCard({
         )
       })
 
-      removeSettlementPrinciple(removed.id)
-        .then(() => toast.success(PRINCIPLE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Principle Remove',
+        persist: () => removeSettlementPrinciple(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.principles.some((p) => p.id === removed.id))
               return prev
             return { ...prev, principles: [...prev.principles, removed] }
           })
-
-          console.error('Principle Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: PRINCIPLE_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -299,16 +273,17 @@ export function PrinciplesCard({
         )
       })
 
-      updateSettlementPrinciple(target.id, {
-        option_1_selected: updatedOption1,
-        option_2_selected: updatedOption2
-      })
-        .then(() => {
-          const optionName =
-            option === 1 ? target.option_1_name : target.option_2_name
-          toast.success(PRINCIPLE_OPTION_SELECTED_MESSAGE(optionName))
-        })
-        .catch((err: unknown) => {
+      const optionName =
+        option === 1 ? target.option_1_name : target.option_2_name
+
+      void mutate({
+        context: 'Principle Option Select',
+        persist: () =>
+          updateSettlementPrinciple(target.id, {
+            option_1_selected: updatedOption1,
+            option_2_selected: updatedOption2
+          }),
+        rollback: () => {
           // Revert the optimistic toggle.
           setSelectedSettlement((prev) =>
             prev
@@ -326,12 +301,11 @@ export function PrinciplesCard({
                 }
               : null
           )
-
-          console.error('Principle Option Select Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: PRINCIPLE_OPTION_SELECTED_MESSAGE(optionName)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -347,6 +321,8 @@ export function PrinciplesCard({
       principle_name: string
       option_1_name: string
       option_2_name: string
+      option_1_rules: string
+      option_2_rules: string
     }) => {
       if (creating || !selectedSettlement) return
 
@@ -358,6 +334,8 @@ export function PrinciplesCard({
           principle_name: data.principle_name,
           option_1_name: data.option_1_name,
           option_2_name: data.option_2_name,
+          option_1_rules: data.option_1_rules || null,
+          option_2_rules: data.option_2_rules || null,
           campaign_types: []
         })
 
@@ -371,12 +349,14 @@ export function PrinciplesCard({
         toast.success(PRINCIPLE_CREATED_MESSAGE())
 
         // Add to settlement immediately
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['principles'][0] = {
           id: tempId,
           option_1_name: newPrinciple.option_1_name,
+          option_1_rules: newPrinciple.option_1_rules ?? null,
           option_1_selected: false,
           option_2_name: newPrinciple.option_2_name,
+          option_2_rules: newPrinciple.option_2_rules ?? null,
           option_2_selected: false,
           principle_id: newPrinciple.id,
           principle_name: newPrinciple.principle_name
@@ -391,8 +371,11 @@ export function PrinciplesCard({
           principles: updatedPrinciples
         })
 
-        addSettlementPrinciples([newPrinciple.id], selectedSettlement.id)
-          .then((rows) => {
+        void mutate({
+          context: 'Principle Add',
+          persist: () =>
+            addSettlementPrinciples([newPrinciple.id], selectedSettlement.id),
+          onSuccess: (rows) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -403,9 +386,8 @@ export function PrinciplesCard({
                   }
                 : null
             )
-            toast.success(PRINCIPLE_UPDATED_MESSAGE(true))
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -414,9 +396,9 @@ export function PrinciplesCard({
                   }
                 : null
             )
-            console.error('Principle Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: PRINCIPLE_UPDATED_MESSAGE(true)
+        })
       } catch (error) {
         console.error('Principle Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -424,7 +406,14 @@ export function PrinciplesCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [
+      creating,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate,
+      setAvailablePrinciples
+    ]
   )
 
   /** Open the create dialog with the current search term pre-filled */
@@ -445,8 +434,7 @@ export function PrinciplesCard({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="border-0 h-8 w-8"
-                disabled={selectablePrinciples.length === 0}>
+                className="border-0 h-8 w-8">
                 <PlusIcon className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
@@ -513,7 +501,7 @@ export function PrinciplesCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading principles...
               </p>
@@ -535,13 +523,17 @@ export function PrinciplesCard({
         </div>
       </CardContent>
 
-      <CreateCustomPrincipleDialog
+      <PrincipleDialog
         key={dialogKey}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onCreate={handleCreate}
-        creating={creating}
+        onSave={handleCreate}
+        saving={creating}
         initialName={search.trim()}
+        title="Create Custom Principle"
+        description="A new tenet takes shape in the lantern's light."
+        saveLabel="Create"
+        savingLabel="Creating..."
       />
     </Card>
   )

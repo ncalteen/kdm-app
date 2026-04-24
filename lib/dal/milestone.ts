@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
@@ -16,32 +17,29 @@ import { MilestoneDetail } from '@/lib/types'
 export async function getMilestones(): Promise<{
   [key: string]: MilestoneDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('milestone')
-      .select('id, custom, milestone_name, event_name, campaign_types')
+      .select(
+        'id, custom, milestone_name, event_name, campaign_types, requirements, rules'
+      )
       .eq('custom', false),
     supabase
       .from('milestone')
-      .select('id, custom, milestone_name, event_name, campaign_types')
+      .select(
+        'id, custom, milestone_name, event_name, campaign_types, requirements, rules'
+      )
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('milestone_shared_user')
       .select(
-        'milestone(id, custom, milestone_name, event_name, campaign_types)'
+        'milestone(id, custom, milestone_name, event_name, campaign_types, requirements, rules)'
       )
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -114,23 +112,20 @@ export async function addMilestone(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<MilestoneDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (milestone.custom && !user) throw new Error('Not Authenticated')
+  if (milestone.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('milestone')
     .insert({
       ...milestone,
-      ...(milestone.custom ? { user_id: user!.id } : {})
+      ...(milestone.custom ? { user_id: userId! } : {})
     })
-    .select('id, custom, campaign_types, event_name, milestone_name')
+    .select(
+      'id, custom, campaign_types, event_name, milestone_name, requirements, rules'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding Milestone: ${error.message}`)

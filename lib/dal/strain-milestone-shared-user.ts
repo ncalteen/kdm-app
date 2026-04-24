@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -67,7 +68,8 @@ export async function addStrainMilestoneSharedUsers(
 /**
  * Remove Strain Milestone Shared Users
  *
- * Revokes sharing of a strain milestone with users.
+ * Revokes sharing of a strain milestone with users. Only allows the owner of
+ * the resource to revoke sharing.
  *
  * @param strainMilestoneId Strain Milestone ID
  * @param sharedUserIds Shared User IDs
@@ -78,6 +80,7 @@ export async function removeStrainMilestoneSharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -85,6 +88,7 @@ export async function removeStrainMilestoneSharedUsers(
     .delete()
     .eq('strain_milestone_id', strainMilestoneId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(

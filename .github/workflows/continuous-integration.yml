@@ -50,3 +50,51 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build
+
+  integration-tests:
+    name: Integration Tests (RLS)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Setup Supabase CLI
+        id: setup-supabase
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        id: supabase-start
+        run: supabase start
+
+      - name: Export Supabase Env
+        id: supabase-env
+        run: |
+          {
+            echo "SUPABASE_URL=$(supabase status -o env | awk -F'=' '/^API_URL=/ {print $2}' | tr -d '"')"
+            echo "SUPABASE_ANON_KEY=$(supabase status -o env | awk -F'=' '/^ANON_KEY=/ {print $2}' | tr -d '"')"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o env | awk -F'=' '/^SERVICE_ROLE_KEY=/ {print $2}' | tr -d '"')"
+          } >> "$GITHUB_ENV"
+
+      - name: Install Dependencies
+        id: install
+        run: npm install
+
+      - name: Run Integration Tests
+        id: integration-test
+        run: npm run integration-test
+
+      - if: ${{ always() }}
+        name: Stop Supabase
+        id: supabase-stop
+        run: supabase stop || true

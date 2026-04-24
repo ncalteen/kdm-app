@@ -48,9 +48,8 @@ export async function getSettlementTimelineYears(
  * Insers timeline data for a settlement by adding records to the
  * settlement_timeline_year table.
  *
- * @remark Settlement ID is not required as a parameter here because it is part
- *         of the timeline year data being inserted.
- *
+ * @remarks Settlement ID is not required as a parameter here because it is part
+ * of the timeline year data being inserted.
  * @param timelineYears Timeline Year Data
  */
 export async function addSettlementTimelineYears(
@@ -77,6 +76,7 @@ export async function addSettlementTimelineYears(
  *
  * @param settlementId Settlement ID
  * @param yearNumber Year Number
+ * @returns Inserted Timeline Year ID
  */
 export async function addSettlementTimelineYear(
   settlementId: string | null | undefined,
@@ -230,6 +230,7 @@ export async function saveSettlementTimelineYearEntry(
  * record in the settlement_timeline_year table.
  *
  * @param settlementTimelineYearId Settlement Timeline Year ID
+ * @param yearNumber Year Number
  * @param completed New Completion Status
  */
 export async function toggleSettlementYearCompletionStatus(

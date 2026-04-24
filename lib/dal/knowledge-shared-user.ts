@@ -1,3 +1,4 @@
+import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -63,7 +64,8 @@ export async function addKnowledgeSharedUsers(
 /**
  * Remove Knowledge Shared Users
  *
- * Revokes sharing of a knowledge with users.
+ * Revokes sharing of a knowledge with users. Only allows the owner of the
+ * resource to revoke sharing.
  *
  * @param knowledgeId Knowledge ID
  * @param sharedUserIds Shared User IDs
@@ -74,6 +76,7 @@ export async function removeKnowledgeSharedUsers(
 ): Promise<void> {
   if (sharedUserIds.length === 0) return
 
+  const userId = await getUserId()
   const supabase = createClient()
 
   const { error } = await supabase
@@ -81,6 +84,7 @@ export async function removeKnowledgeSharedUsers(
     .delete()
     .eq('knowledge_id', knowledgeId)
     .in('shared_user_id', sharedUserIds)
+    .eq('user_id', userId)
 
   if (error)
     throw new Error(`Error Removing Knowledge Shared Users: ${error.message}`)

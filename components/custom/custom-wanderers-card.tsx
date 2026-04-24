@@ -14,11 +14,17 @@ import {
 } from '@/components/ui/table'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
+import { getAbilityImpairments } from '@/lib/dal/ability-impairment'
 import { getFightingArts } from '@/lib/dal/fighting-art'
 import { getGear } from '@/lib/dal/gear'
 import { getCustomWanderers, removeWanderer } from '@/lib/dal/wanderer'
 import { ERROR_MESSAGE, WANDERER_REMOVED_MESSAGE } from '@/lib/messages'
-import { FightingArtDetail, GearDetail, WandererDetail } from '@/lib/types'
+import {
+  AbilityImpairmentDetail,
+  FightingArtDetail,
+  GearDetail,
+  WandererDetail
+} from '@/lib/types'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -60,19 +66,23 @@ export function CustomWanderersCard({
   const [availableGear, setAvailableGear] = useState<{
     [key: string]: GearDetail
   }>({})
+  const [availableAbilityImpairments, setAvailableAbilityImpairments] =
+    useState<{ [key: string]: AbilityImpairmentDetail }>({})
 
   /** Load wanderers and reference data */
   const loadData = useCallback(async () => {
     setIsLoading(true)
 
     try {
-      const [wandererData, fightingArtData, gearData] = await Promise.all([
-        // Only get the wanderers created by the user, not the default ones
-        getCustomWanderers(),
-        // Get all the available fighting arts and gear
-        getFightingArts(),
-        getGear()
-      ])
+      const [wandererData, fightingArtData, gearData, abilityImpairmentData] =
+        await Promise.all([
+          // Only get the wanderers created by the user, not the default ones
+          getCustomWanderers(),
+          // Get all the available fighting arts and gear
+          getFightingArts(),
+          getGear(),
+          getAbilityImpairments()
+        ])
 
       setWanderers(
         Object.values(wandererData).sort((a, b) =>
@@ -81,6 +91,7 @@ export function CustomWanderersCard({
       )
       setAvailableFightingArts(fightingArtData)
       setAvailableGear(gearData)
+      setAvailableAbilityImpairments(abilityImpairmentData)
     } catch (err: unknown) {
       console.error('Load Wanderers Error:', err)
       toast.error(ERROR_MESSAGE())
@@ -141,6 +152,7 @@ export function CustomWanderersCard({
         wandererId={editingWandererId}
         availableFightingArts={availableFightingArts}
         availableGear={availableGear}
+        availableAbilityImpairments={availableAbilityImpairments}
         onDone={handleDone}
         onCancel={handleCancel}
       />

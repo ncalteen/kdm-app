@@ -19,7 +19,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -28,10 +27,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     15,
@@ -49,7 +46,6 @@ values (
     null,
     0,
     0,
-    '{}',
     5,
     0,
     (
@@ -63,10 +59,8 @@ values (
     0,
     0,
     0,
-    '{}',
     13,
-    0,
-    '{"Scorn", "Self-Aware"}'
+    0
   ),
   (
     21,
@@ -84,7 +78,6 @@ values (
     null,
     0,
     0,
-    '{}',
     5,
     0,
     (
@@ -98,10 +91,8 @@ values (
     0,
     0,
     0,
-    '{"Infectious Lunacy"}',
     16,
-    0,
-    '{"Berzerker", "Invincible", "Scorn", "Self-Aware", "Indomitable"}'
+    0
   );
 --------------------------------------------------------------------------------
 -- Atnas the Child Eater
@@ -136,7 +127,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -145,10 +135,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     12,
@@ -166,7 +154,6 @@ values (
     null,
     0,
     0,
-    '{}',
     6,
     0,
     (
@@ -180,10 +167,8 @@ values (
     0,
     0,
     0,
-    '{}',
     11,
-    0,
-    '{"Old Battle Scars", "Master''s Presence", "Mad Master", "Spark of Joy"}'
+    0
   ),
   (
     16,
@@ -201,7 +186,6 @@ values (
     null,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -215,10 +199,8 @@ values (
     0,
     0,
     0,
-    '{}',
     14,
-    0,
-    '{"Curb Stomp", "Mad Master", "Master''s Presence", "Old Battle Scars", "Spark of Joy"}'
+    0
   ),
   (
     21,
@@ -236,7 +218,6 @@ values (
     null,
     0,
     1,
-    '{}',
     7,
     0,
     (
@@ -250,10 +231,8 @@ values (
     0,
     0,
     0,
-    '{}',
     19,
-    0,
-    '{"Curb Stomp", "Keen Eyes", "Mad Master", "Master''s Presence", "Old Battle Scars", "Spark of Joy", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -327,7 +306,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -336,10 +314,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     12,
@@ -357,7 +333,6 @@ values (
     null,
     0,
     0,
-    '{}',
     6,
     0,
     (
@@ -371,10 +346,8 @@ values (
     0,
     0,
     0,
-    '{}',
     10,
-    4,
-    '{"Red Preference", "Sheer Cliffs", "Smash", "Spry"}'
+    4
   ),
   (
     16,
@@ -392,7 +365,6 @@ values (
     null,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -406,10 +378,8 @@ values (
     0,
     0,
     0,
-    '{}',
     10,
-    6,
-    '{"Red Preference", "Sheer Cliffs", "Smash", "Spry", "Unsteady"}'
+    6
   ),
   (
     22,
@@ -427,7 +397,6 @@ values (
     null,
     0,
     0,
-    '{}',
     8,
     0,
     (
@@ -441,10 +410,8 @@ values (
     0,
     0,
     0,
-    '{}',
     10,
-    8,
-    '{"Red Preference", "Seasoned Duelist", "Sheer Cliffs", "Smash", "Spry", "Unsteady", "Indomitable"}'
+    8
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -496,7 +463,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -505,10 +471,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     12,
@@ -526,7 +490,6 @@ values (
     null,
     0,
     0,
-    '{}',
     5,
     0,
     (
@@ -540,10 +503,8 @@ values (
     0,
     0,
     0,
-    '{"Infectious Lunacy"}',
     9,
-    0,
-    '{"Berserker", "Dreaded Trophies", "Fast Target"}'
+    0
   ),
   (
     15,
@@ -561,7 +522,6 @@ values (
     null,
     0,
     0,
-    '{}',
     5,
     0,
     (
@@ -575,10 +535,8 @@ values (
     0,
     0,
     0,
-    '{"Infectious Lunacy"}',
     12,
-    0,
-    '{"Dreaded Trophies", "Fast Target", "Frenzied Berserker"}'
+    0
   ),
   (
     21,
@@ -596,7 +554,6 @@ values (
     null,
     0,
     0,
-    '{}',
     5,
     0,
     (
@@ -610,10 +567,8 @@ values (
     0,
     0,
     0,
-    '{"Infectious Lunacy"}',
     15,
-    0,
-    '{"Dreaded Trophies", "Fast Target", "Frenzied Berserker", "Invincible", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -704,7 +659,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -713,10 +667,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     11,
@@ -734,7 +686,6 @@ values (
     20,
     0,
     0,
-    '{}',
     10,
     0,
     (
@@ -748,10 +699,8 @@ values (
     0,
     0,
     0,
-    '{}',
     17,
-    0,
-    '{"Irradiate", "Smolder", "Trample", "Unseen Agony"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -792,7 +741,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -801,10 +749,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     21,
@@ -822,7 +768,6 @@ values (
     null,
     0,
     10000,
-    '{}',
     8,
     0,
     (
@@ -836,10 +781,8 @@ values (
     0,
     0,
     0,
-    '{}',
     20,
-    0,
-    '{"Critical Failure", "Dice Bag", "Double or Death", "Gambler''s Dice", "Magister Ludi"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -880,7 +823,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -889,10 +831,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     12,
@@ -910,7 +850,6 @@ values (
     30,
     0,
     0,
-    '{}',
     -1,
     0,
     (
@@ -924,10 +863,8 @@ values (
     0,
     0,
     0,
-    '{}',
     30,
-    0,
-    '{"Old Blood", "Reinforcements", "True Ghost Step", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -974,7 +911,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -983,10 +919,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     18,
@@ -1004,7 +938,6 @@ values (
     null,
     0,
     0,
-    '{}',
     8,
     0,
     (
@@ -1018,10 +951,8 @@ values (
     0,
     0,
     0,
-    '{}',
     27,
-    0,
-    '{"Blacken", "Frustration", "Mauler", "Secondary Forge", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -1068,7 +999,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -1077,10 +1007,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     10,
@@ -1098,7 +1026,6 @@ values (
     null,
     0,
     0,
-    '{}',
     5,
     0,
     (
@@ -1112,10 +1039,8 @@ values (
     0,
     0,
     0,
-    '{"Polarized Aura"}',
     14,
-    0,
-    '{"Applause", "Blue Lens - Closed", "Ghost Step", "Green Lens - Closed", "Impossible Eyes", "Red Lens - Closed"}'
+    0
   ),
   (
     11,
@@ -1133,7 +1058,6 @@ values (
     null,
     0,
     0,
-    '{}',
     6,
     0,
     (
@@ -1147,10 +1071,8 @@ values (
     0,
     0,
     0,
-    '{"Polarized Aura"}',
     15,
-    0,
-    '{"Applause", "Blue Lens - Closed", "Ghost Step", "Green Lens - Closed", "Impossible Eyes", "Red Lens - Closed"}'
+    0
   ),
   (
     12,
@@ -1168,7 +1090,6 @@ values (
     null,
     0,
     0,
-    '{}',
     6,
     0,
     (
@@ -1182,10 +1103,8 @@ values (
     0,
     0,
     0,
-    '{"Polarized Aura"}',
     30,
-    0,
-    '{"Applause", "Blue Lens - Closed", "Ghost Step", "Green Lens - Closed", "Impossible Eyes", "Red Lens - Closed", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -1254,7 +1173,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -1263,10 +1181,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     12,
@@ -1284,7 +1200,6 @@ values (
     null,
     0,
     0,
-    '{}',
     5,
     0,
     (
@@ -1298,10 +1213,8 @@ values (
     0,
     0,
     0,
-    '{"Battle Tempo"}',
     12,
-    0,
-    '{"King''s Aura", "King''s Combat", "Out-Fighting", "Weak Spot"}'
+    0
   ),
   (
     16,
@@ -1319,7 +1232,6 @@ values (
     null,
     0,
     0,
-    '{}',
     6,
     0,
     (
@@ -1333,10 +1245,8 @@ values (
     0,
     0,
     0,
-    '{"Battle Tempo"}',
     15,
-    0,
-    '{"King''s Aura", "King''s Combat", "Out-Fighting", "Silent Hymn", "Weak Spot"}'
+    0
   ),
   (
     19,
@@ -1354,7 +1264,6 @@ values (
     null,
     0,
     0,
-    '{}',
     6,
     0,
     (
@@ -1368,10 +1277,8 @@ values (
     0,
     0,
     0,
-    '{"Battle Tempo"}',
     18,
-    0,
-    '{"King''s Aura", "King''s Combat", "Out-Fighting", "Silent Hymn", "Weak Spot", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -1473,7 +1380,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -1482,10 +1388,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     12,
@@ -1503,7 +1407,6 @@ values (
     null,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -1517,10 +1420,8 @@ values (
     0,
     0,
     0,
-    '{}',
     10,
-    0,
-    '{"Outburst", "Zeal"}'
+    0
   ),
   (
     15,
@@ -1538,7 +1439,6 @@ values (
     null,
     0,
     0,
-    '{}',
     8,
     0,
     (
@@ -1552,10 +1452,8 @@ values (
     0,
     0,
     0,
-    '{}',
     12,
-    0,
-    '{"Drama Lessons", "Outburst", "Zeal"}'
+    0
   ),
   (
     21,
@@ -1573,7 +1471,6 @@ values (
     null,
     0,
     0,
-    '{}',
     9,
     0,
     (
@@ -1587,10 +1484,8 @@ values (
     0,
     0,
     0,
-    '{}',
     15,
-    0,
-    '{"Drama Lessons", "Last Act", "Outburst", "Zeal", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -1670,7 +1565,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -1679,10 +1573,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     10,
@@ -1700,7 +1592,6 @@ values (
     null,
     0,
     0,
-    '{}',
     0,
     0,
     (
@@ -1714,10 +1605,8 @@ values (
     0,
     0,
     0,
-    '{}',
     10,
-    0,
-    '{"Bear Fruit", "Impenetrable Trunk", "Nightmare Fruit"}'
+    0
   ),
   (
     14,
@@ -1735,7 +1624,6 @@ values (
     null,
     0,
     0,
-    '{}',
     0,
     0,
     (
@@ -1749,10 +1637,8 @@ values (
     0,
     0,
     0,
-    '{}',
     13,
-    0,
-    '{"Bear Fruit", "Impenetrable Trunk", "Moving Ground", "Nightmare Fruit"}'
+    0
   ),
   (
     15,
@@ -1770,7 +1656,6 @@ values (
     20,
     0,
     0,
-    '{}',
     0,
     0,
     (
@@ -1784,10 +1669,8 @@ values (
     0,
     0,
     0,
-    '{}',
     17,
-    0,
-    '{"Bear Fruit", "Impenetrable Trunk", "Moving Ground", "Nightmare Fruit"}'
+    0
   );
 ------------------------------------------------------------------------------
 -- Manhunter
@@ -1822,7 +1705,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -1831,10 +1713,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     10,
@@ -1852,7 +1732,6 @@ values (
     null,
     0,
     0,
-    '{}',
     6,
     0,
     (
@@ -1866,10 +1745,8 @@ values (
     0,
     0,
     0,
-    '{}',
     8,
-    0,
-    '{"Gritty Armament", "Gun Action", "Short Stride", "Tombstone"}'
+    0
   ),
   (
     13,
@@ -1887,7 +1764,6 @@ values (
     null,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -1901,10 +1777,8 @@ values (
     0,
     0,
     0,
-    '{}',
     11,
-    0,
-    '{"Full Stride", "Gritty Armament", "Gun Action", "Tombstone"}'
+    0
   ),
   (
     16,
@@ -1922,7 +1796,6 @@ values (
     null,
     0,
     0,
-    '{}',
     8,
     0,
     (
@@ -1936,10 +1809,8 @@ values (
     0,
     0,
     0,
-    '{}',
     11,
-    0,
-    '{"Full Stride", "Gritty Armament", "Gun Action", "Tombstone", "Indomitable"}'
+    0
   ),
   (
     18,
@@ -1957,7 +1828,6 @@ values (
     null,
     0,
     0,
-    '{}',
     9,
     0,
     (
@@ -1971,10 +1841,8 @@ values (
     0,
     0,
     0,
-    '{}',
     13,
-    0,
-    '{"Full Stride", "Gritty Armament", "Gun Action", "Tombstone", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -2048,7 +1916,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -2057,10 +1924,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     12,
@@ -2078,7 +1943,6 @@ values (
     null,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -2092,10 +1956,8 @@ values (
     0,
     0,
     0,
-    '{"Somatic Static"}',
     10,
-    0,
-    '{"Somatic Empathy"}'
+    0
   ),
   (
     16,
@@ -2113,7 +1975,6 @@ values (
     null,
     0,
     0,
-    '{}',
     8,
     0,
     (
@@ -2127,10 +1988,8 @@ values (
     0,
     0,
     0,
-    '{"Somatic Static"}',
     13,
-    0,
-    '{"Cyclopean Cruelty", "Somatic Empathy"}'
+    0
   ),
   (
     18,
@@ -2148,7 +2007,6 @@ values (
     null,
     0,
     1,
-    '{}',
     8,
     0,
     (
@@ -2162,10 +2020,8 @@ values (
     0,
     0,
     0,
-    '{"Somatic Static"}',
     17,
-    0,
-    '{"Cyclopean Cruelty", "Inverted", "Jagged Grotto", "Somatic Empathy", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -2223,7 +2079,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -2232,10 +2087,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     12,
@@ -2253,7 +2106,6 @@ values (
     10,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -2267,10 +2119,8 @@ values (
     0,
     0,
     0,
-    '{}',
     11,
-    0,
-    '{"Boiling Blood", "Discouraging Presence"}'
+    0
   ),
   (
     12,
@@ -2288,7 +2138,6 @@ values (
     10,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -2302,10 +2151,8 @@ values (
     0,
     0,
     0,
-    '{}',
     11,
-    0,
-    '{"Discouraging Presence"}'
+    0
   ),
   (
     12,
@@ -2323,7 +2170,6 @@ values (
     8,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -2337,10 +2183,8 @@ values (
     0,
     0,
     0,
-    '{}',
     13,
-    0,
-    '{"Red Initiate", "Witching Cloak"}'
+    0
   ),
   (
     12,
@@ -2358,7 +2202,6 @@ values (
     10,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -2372,10 +2215,8 @@ values (
     0,
     0,
     0,
-    '{}',
     11,
-    0,
-    '{"Discouraging Presence", "Indomitable"}'
+    0
   ),
   (
     12,
@@ -2393,7 +2234,6 @@ values (
     8,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -2407,10 +2247,8 @@ values (
     0,
     0,
     0,
-    '{}',
     13,
-    0,
-    '{"Red Initiate", "Witching Cloak", "Indomitable"}'
+    0
   ),
   (
     12,
@@ -2428,7 +2266,6 @@ values (
     6,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -2442,10 +2279,8 @@ values (
     0,
     0,
     0,
-    '{}',
     17,
-    0,
-    '{"Red Secret", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -2514,7 +2349,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -2523,10 +2357,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     12,
@@ -2544,7 +2376,6 @@ values (
     null,
     0,
     0,
-    '{}',
     6,
     0,
     (
@@ -2558,10 +2389,8 @@ values (
     0,
     0,
     0,
-    '{"Madness Inversion"}',
     11,
-    0,
-    '{"Ensnare", "Gloom"}'
+    0
   ),
   (
     15,
@@ -2579,7 +2408,6 @@ values (
     null,
     0,
     0,
-    '{}',
     6,
     0,
     (
@@ -2593,10 +2421,8 @@ values (
     0,
     0,
     0,
-    '{"Madness Inversion"}',
     13,
-    0,
-    '{"Ensnare", "Gloom"}'
+    0
   ),
   (
     20,
@@ -2614,7 +2440,6 @@ values (
     null,
     0,
     1,
-    '{}',
     6,
     0,
     (
@@ -2628,10 +2453,8 @@ values (
     0,
     0,
     0,
-    '{"Madness Inversion"}',
     17,
-    0,
-    '{"Ensnare", "Gloom", "Hounds", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -2711,7 +2534,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -2720,10 +2542,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     20,
@@ -2741,7 +2561,6 @@ values (
     null,
     0,
     2,
-    '{}',
     16,
     0,
     (
@@ -2755,10 +2574,8 @@ values (
     0,
     0,
     0,
-    '{}',
     18,
-    0,
-    '{"Light & Shadow", "Living Shadows", "Monochrome", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -2805,7 +2622,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -2814,10 +2630,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     11,
@@ -2835,7 +2649,6 @@ values (
     null,
     0,
     0,
-    '{}',
     6,
     0,
     (
@@ -2849,10 +2662,8 @@ values (
     0,
     0,
     0,
-    '{}',
     8,
-    0,
-    '{"Crooked Step", "Destiny''s Marrow", "Spectral Blast"}'
+    0
   ),
   (
     14,
@@ -2870,7 +2681,6 @@ values (
     null,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -2884,10 +2694,8 @@ values (
     0,
     0,
     0,
-    '{}',
     10,
-    0,
-    '{"Crooked Step", "Destiny''s Marrow", "Quickened", "Spectral Blast"}'
+    0
   ),
   (
     22,
@@ -2905,7 +2713,6 @@ values (
     null,
     0,
     0,
-    '{}',
     7,
     0,
     (
@@ -2919,10 +2726,8 @@ values (
     0,
     0,
     0,
-    '{}',
     14,
-    0,
-    '{"Crooked Step", "Destiny''s Marrow", "Quickened", "Spectral Blast", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (
@@ -2985,7 +2790,6 @@ insert into nemesis_level (
     life,
     luck,
     luck_tokens,
-    moods,
     movement,
     movement_tokens,
     nemesis_id,
@@ -2994,10 +2798,8 @@ insert into nemesis_level (
     speed_tokens,
     strength,
     strength_tokens,
-    survivor_statuses,
     toughness,
-    toughness_tokens,
-    traits
+    toughness_tokens
   )
 values (
     12,
@@ -3015,7 +2817,6 @@ values (
     15,
     0,
     0,
-    '{}',
     -1,
     0,
     (
@@ -3029,10 +2830,8 @@ values (
     0,
     0,
     0,
-    '{"Retinue"}',
     0,
-    0,
-    '{"Audience", "Lantern Vortex", "Vapor of Nothingness", "Indomitable"}'
+    0
   );
 insert into nemesis_timeline_year (campaign_types, entries, nemesis_id, year_number)
 values (

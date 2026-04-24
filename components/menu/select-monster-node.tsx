@@ -100,6 +100,7 @@ export function SelectMonsterNode({
    * Toggle Monster Selection
    *
    * @param monsterId Monster ID to Toggle
+   * @returns Void; toggles the monster's presence in the selection list
    */
   const handleToggle = (monsterId: string) => {
     if (!onChange) return
@@ -115,6 +116,7 @@ export function SelectMonsterNode({
    * Remove Monster from Selection
    *
    * @param monsterId Monster ID to Remove
+   * @returns Void; removes the monster from the selection list
    */
   const handleRemove = (monsterId: string) =>
     onChange?.(propValue.filter((monster) => monster !== monsterId))

@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomAbilityImpairmentsCard } from '@/components/custom/custom-ability-impairments-card'
 import { CustomCharactersCard } from '@/components/custom/custom-characters-card'
 import { CustomCollectiveCognitionRewardsCard } from '@/components/custom/custom-collective-cognition-rewards-card'
 import { CustomDisordersCard } from '@/components/custom/custom-disorders-card'
@@ -9,6 +10,7 @@ import { CustomInnovationsCard } from '@/components/custom/custom-innovations-ca
 import { CustomKnowledgeCard } from '@/components/custom/custom-knowledge-card'
 import { CustomLocationsCard } from '@/components/custom/custom-locations-card'
 import { CustomMilestonesCard } from '@/components/custom/custom-milestones-card'
+import { CustomMoodsCard } from '@/components/custom/custom-moods-card'
 import { CustomNeurosesCard } from '@/components/custom/custom-neuroses-card'
 import { CustomPatternsCard } from '@/components/custom/custom-patterns-card'
 import { CustomPhilosophiesCard } from '@/components/custom/custom-philosophies-card'
@@ -17,6 +19,8 @@ import { CustomResourcesCard } from '@/components/custom/custom-resources-card'
 import { CustomSecretFightingArtsCard } from '@/components/custom/custom-secret-fighting-arts-card'
 import { CustomSeedPatternsCard } from '@/components/custom/custom-seed-patterns-card'
 import { CustomStrainMilestonesCard } from '@/components/custom/custom-strain-milestones-card'
+import { CustomSurvivorStatusesCard } from '@/components/custom/custom-survivor-statuses-card'
+import { CustomTraitsCard } from '@/components/custom/custom-traits-card'
 import { CustomWanderersCard } from '@/components/custom/custom-wanderers-card'
 import { CustomWeaponTypesCard } from '@/components/custom/custom-weapon-types-card'
 import { CustomMonstersCard } from '@/components/monster/custom-monsters-card'
@@ -307,7 +311,7 @@ export function UserCard({
         </div>
 
         {/* Desktop: tab row */}
-        <TabsList className="hidden lg:flex">
+        <TabsList className="hidden lg:flex w-full">
           <TabsTrigger value="society">Society</TabsTrigger>
           <TabsTrigger value="crafting">Crafting</TabsTrigger>
           <TabsTrigger value="arc">Arc</TabsTrigger>
@@ -318,8 +322,10 @@ export function UserCard({
         </TabsList>
         <TabsContent value="society">
           <div className="grid grid-cols-1 gap-4">
-            <CustomMilestonesCard local={local} />
-            <CustomPrinciplesCard local={local} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomMilestonesCard local={local} />
+              <CustomPrinciplesCard local={local} />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <CustomInnovationsCard local={local} />
               <CustomLocationsCard local={local} />
@@ -347,10 +353,7 @@ export function UserCard({
               local={local}
               philosophyVersion={philosophyVersion}
             />
-            <CustomNeurosesCard
-              local={local}
-              philosophyVersion={philosophyVersion}
-            />
+            <CustomNeurosesCard local={local} />
           </div>
         </TabsContent>
         <TabsContent value="survivors">
@@ -359,11 +362,21 @@ export function UserCard({
               <CustomFightingArtsCard local={local} />
               <CustomSecretFightingArtsCard local={local} />
             </div>
-            <CustomDisordersCard local={local} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomDisordersCard local={local} />
+              <CustomAbilityImpairmentsCard local={local} />
+            </div>
           </div>
         </TabsContent>
         <TabsContent value="monsters">
-          <CustomMonstersCard local={local} />
+          <div className="grid grid-cols-1 gap-4">
+            <CustomMonstersCard local={local} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomMoodsCard local={local} />
+              <CustomTraitsCard local={local} />
+            </div>
+            <CustomSurvivorStatusesCard local={local} />
+          </div>
         </TabsContent>
         <TabsContent value="wanderers">
           <CustomWanderersCard local={local} />

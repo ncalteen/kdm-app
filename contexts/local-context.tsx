@@ -73,6 +73,16 @@ const newLocal: LocalStateType = {
  * Local Context Type
  */
 interface LocalContextType {
+  /**
+   * Authentication State
+   *
+   * `null` while the initial `auth.getUser()` check is in flight, `true`
+   * once a user is verified, `false` when no user is present. Consumers
+   * should treat `null` the same as `false` for gating data fetches, but
+   * may use it to distinguish "still checking" from "definitely signed
+   * out" (e.g. before redirecting to the login page).
+   */
+  isAuthenticated: boolean | null
   /** Is Creating New Hunt */
   isCreatingNewHunt: boolean
   /** Is Creating New Settlement */
@@ -258,7 +268,11 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     useState<boolean>(false)
 
   // Wait for authentication before fetching any data.
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  // `null` = check in flight, `true` = authenticated, `false` = not
+  // authenticated. The tri-state lets downstream consumers (e.g. `app/page.tsx`)
+  // distinguish "still checking" from "definitely signed out" without
+  // issuing a redundant `auth.getUser()` call.
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   useEffect(() => {
     let isCancelled = false
@@ -306,7 +320,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   // Subscribe to Supabase Realtime changes on gameplay tables. When another
   // tab or player modifies data, the affected domain is re-fetched.
   useRealtimeSubscriptions({
-    enabled: isAuthenticated,
+    enabled: isAuthenticated === true,
     settlementId: selectedSettlementId,
     onSettlementChange: () => {
       if (!selectedSettlementId) return
@@ -950,7 +964,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Hunt
    *
-   * @param hunt Selected Hunt
+   * @param huntOrUpdater Selected Hunt or functional updater receiving the
+   * previous hunt state
    */
   const setSelectedHunt: HuntStateSetter = (huntOrUpdater) => {
     // Functional updater form — used for safe optimistic async callbacks
@@ -987,7 +1002,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Hunt ID
    *
-   * @param hunt Selected Hunt ID
+   * @param huntId Selected Hunt ID
    */
   const setSelectedHuntId = (huntId: string | null) => {
     // When selecting a hunt, stop creation mode
@@ -1060,7 +1075,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Settlement
    *
-   * @param settlement Selected Settlement
+   * @param settlementOrUpdater Selected Settlement or functional updater
+   * receiving the previous settlement state
    */
   const setSelectedSettlement: SettlementStateSetter = (
     settlementOrUpdater
@@ -1081,17 +1097,22 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     setSelectedSettlementState(settlement)
     setSelectedSettlementIdState(settlement ? settlement.id : null)
 
-    // Only re-fetch related data when switching to a DIFFERENT settlement.
+    // Only discover related data when switching to a DIFFERENT settlement.
     // Same-ID updates are optimistic UI mutations and must not trigger
     // side-effects such as re-fetching or resetting the active tab.
+    //
+    // Note: getSettlement and getSurvivors are intentionally NOT called here
+    // because their effects (keyed on `selectedSettlementId`) will fire
+    // automatically when the ID flips above. Hunt / phase / showdown effects
+    // are gated on their own IDs being set, so we still need to discover them
+    // imperatively the first time a settlement is selected.
     if (settlement && settlement.id !== selectedSettlementId)
       Promise.all([
         getHunt(settlement.id),
         getSettlementPhase(settlement.id),
-        getShowdown(settlement.id),
-        getSurvivors(settlement.id)
+        getShowdown(settlement.id)
       ])
-        .then(([hunt, settlementPhase, showdown, survivors]) => {
+        .then(([hunt, settlementPhase, showdown]) => {
           setSelectedHuntState(hunt)
           setSelectedHuntIdState(hunt ? hunt.id : null)
           setSelectedHuntMonsterIndexState(0)
@@ -1102,7 +1123,6 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           setSelectedShowdownState(showdown)
           setSelectedShowdownIdState(showdown ? showdown.id : null)
           setSelectedShowdownMonsterIndexState(0)
-          setSurvivors(survivors ?? [])
 
           // Save the change to local storage.
           setLocalState((local) => {
@@ -1131,7 +1151,6 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           setSelectedShowdownState(null)
           setSelectedShowdownIdState(null)
           setSelectedShowdownMonsterIndexState(0)
-          setSurvivors([])
 
           // Save the change to local storage.
           setLocalState((local) => {
@@ -1165,26 +1184,26 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     // Update the state to reflect the changes.
     setSelectedSettlementIdState(settlementId)
 
-    // If a settlement is selected, also attempt to fetch the hunt, settlement
-    // phase, and showdown details to update the state.
+    // Discover the active hunt / settlement phase / showdown for the new
+    // settlement. The settlement and survivors are NOT fetched here because
+    // their effects (keyed on `selectedSettlementId`) fire automatically when
+    // the ID flips above. Hunt / phase / showdown effects are gated on their
+    // own IDs being non-null, so without this imperative discovery they would
+    // not refresh on a settlement switch.
     if (settlementId)
       Promise.all([
         getHunt(settlementId),
-        getSettlement(settlementId),
         getSettlementPhase(settlementId),
-        getShowdown(settlementId),
-        getSurvivors(settlementId)
-      ]).then(([hunt, settlement, settlementPhase, showdown, survivors]) => {
+        getShowdown(settlementId)
+      ]).then(([hunt, settlementPhase, showdown]) => {
         setSelectedHuntState(hunt)
         setSelectedHuntIdState(hunt?.id ?? null)
         setSelectedHuntMonsterIndexState(0)
-        setSelectedSettlementState(settlement)
         setSelectedSettlementPhaseState(settlementPhase)
         setSelectedSettlementPhaseIdState(settlementPhase?.id ?? null)
         setSelectedShowdownState(showdown)
         setSelectedShowdownIdState(showdown?.id ?? null)
         setSelectedShowdownMonsterIndexState(0)
-        setSurvivors(survivors ?? [])
 
         // Save the change to local storage.
         setLocalState((local) => {
@@ -1275,7 +1294,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Showdown
    *
-   * @param showdown Selected Showdown
+   * @param showdownOrUpdater Selected Showdown or functional updater receiving
+   * the previous showdown state
    */
   const setSelectedShowdown: ShowdownStateSetter = (showdownOrUpdater) => {
     // Functional updater form — used for safe optimistic async callbacks
@@ -1383,7 +1403,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Set Selected Survivor
    *
-   * @param survivor Selected Survivor
+   * @param survivorOrUpdater Selected Survivor or functional updater receiving
+   * the previous survivor state
    */
   const setSelectedSurvivor: SurvivorStateSetter = (survivorOrUpdater) => {
     // Functional updater form — used for safe optimistic async callbacks
@@ -1497,6 +1518,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   return (
     <LocalContext.Provider
       value={{
+        isAuthenticated,
         isCreatingNewHunt,
         isCreatingNewSettlement,
         isCreatingNewShowdown,
@@ -1555,6 +1577,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
 /**
  * Local Context Hook
+ *
+ * @returns Local Context Value
  */
 export function useLocal(): LocalContextType {
   const context = useContext(LocalContext)

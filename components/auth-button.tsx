@@ -3,6 +3,15 @@ import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
+/**
+ * Auth Button
+ *
+ * Server component that resolves the current Supabase session and renders
+ * either a greeting plus logout control (when signed in) or sign-in / sign-up
+ * links (when signed out).
+ *
+ * @returns Auth Button Component
+ */
 export async function AuthButton() {
   const supabase = await createClient()
 

@@ -20,7 +20,9 @@ export async function getSettlementInnovations(
 
   const { data, error } = await supabase
     .from('settlement_innovation')
-    .select('id, innovation_id, innovation(innovation_name)')
+    .select(
+      'id, innovation_id, innovation(innovation_name, rules, consequences, benefits)'
+    )
     .eq('settlement_id', settlementId)
 
   if (error)
@@ -37,7 +39,10 @@ export async function getSettlementInnovations(
       return {
         id: item.id,
         innovation_id: item.innovation_id,
-        innovation_name: innovation?.innovation_name ?? ''
+        innovation_name: innovation?.innovation_name ?? '',
+        rules: innovation?.rules ?? null,
+        consequences: innovation?.consequences ?? null,
+        benefits: innovation?.benefits ?? null
       }
     }) ?? []
   )
@@ -50,6 +55,7 @@ export async function getSettlementInnovations(
  *
  * @param innovationIds Innovation IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Innovation Records
  */
 export async function addSettlementInnovations(
   innovationIds: string[],
@@ -68,7 +74,9 @@ export async function addSettlementInnovations(
         settlement_id: settlementId
       }))
     )
-    .select('id, innovation_id, innovation(innovation_name)')
+    .select(
+      'id, innovation_id, innovation(innovation_name, rules, consequences, benefits)'
+    )
 
   if (error)
     throw new Error(`Error Adding Settlement Innovations: ${error.message}`)
@@ -82,7 +90,10 @@ export async function addSettlementInnovations(
       return {
         id: item.id,
         innovation_id: item.innovation_id,
-        innovation_name: innovation?.innovation_name ?? ''
+        innovation_name: innovation?.innovation_name ?? '',
+        rules: innovation?.rules ?? null,
+        consequences: innovation?.consequences ?? null,
+        benefits: innovation?.benefits ?? null
       }
     }) ?? []
   )

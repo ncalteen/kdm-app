@@ -3,6 +3,8 @@ import { GrabIcon, ScrollIcon } from 'lucide-react'
 
 /**
  * Get Squires of the Citadel Campaign Template
+ *
+ * @returns Squires of the Citadel Campaign Template
  */
 export async function getSquiresOfTheCitadelTemplate(): Promise<CampaignTemplate> {
   return {

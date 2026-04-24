@@ -159,11 +159,11 @@ export function SurvivorDetailsPanel({
                 </h4>
               </div>
               <div className="p-3 space-y-1 max-h-32 overflow-y-auto">
-                {survivor.abilities_impairments.map((ability, index) => (
+                {survivor.abilities_impairments.map((ability) => (
                   <div
-                    key={index}
+                    key={ability.id}
                     className="text-xs bg-background/60 rounded px-2 py-1">
-                    {ability}
+                    {ability.ability_impairment_name}
                   </div>
                 ))}
               </div>

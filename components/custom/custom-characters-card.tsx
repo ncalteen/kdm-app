@@ -1,8 +1,8 @@
 'use client'
 
+import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -27,21 +27,8 @@ import {
   NAMELESS_OBJECT_ERROR_MESSAGE
 } from '@/lib/messages'
 import { CharacterDetail } from '@/lib/types'
-import {
-  CheckIcon,
-  PencilIcon,
-  PlusIcon,
-  Trash2Icon,
-  XIcon
-} from 'lucide-react'
-import {
-  KeyboardEvent,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
+import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 
 /**
  * Custom Characters Card Component Properties
@@ -55,8 +42,8 @@ interface CustomCharactersCardProps {
  * Custom Characters Card Component
  *
  * Lists user's custom characters with options to create, edit, and delete.
- * Entries are displayed alphabetically. UI updates are optimistic and roll
- * back on database failure.
+ * Entries are displayed alphabetically. Character name and rules are entered
+ * via a dialog. UI updates are optimistic and roll back on database failure.
  *
  * @param props Custom Characters Card Properties
  * @returns Custom Characters Card Component
@@ -68,13 +55,14 @@ export function CustomCharactersCard({
 
   const [characters, setCharacters] = useState<CharacterDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isAdding, setIsAdding] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState('')
 
-  const newInputRef = useRef<HTMLInputElement>(null)
-  const editInputRef = useRef<HTMLInputElement>(null)
+  // Dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingCharacter, setEditingCharacter] =
+    useState<CharacterDetail | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   /** Sort characters alphabetically by name */
   const sortCharacters = useCallback(
@@ -107,59 +95,111 @@ export function CustomCharactersCard({
     loadCharacters()
   }, [loadCharacters])
 
-  // Auto-focus the new character input when adding
-  useEffect(() => {
-    if (isAdding) newInputRef.current?.focus()
-  }, [isAdding])
-
-  // Auto-focus the edit input when editing
-  useEffect(() => {
-    if (editingId) editInputRef.current?.focus()
-  }, [editingId])
-
   /**
-   * Handle Add Character
+   * Handle Create Character
    *
    * Optimistically adds a new character to the list, then persists to the
    * database. Rolls back on failure.
+   *
+   * @param data Character name and rules
    */
-  const handleAdd = useCallback(async () => {
-    const trimmedName = newName.trim()
+  const handleCreate = useCallback(
+    async (data: { name: string; rules: string }) => {
+      if (saving) return
+      if (!data.name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('character'))
 
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('character'))
+      setSaving(true)
 
-    // Optimistically add with a temp ID
-    const tempId = `temp-${Date.now()}`
-    const tempCharacter: CharacterDetail = {
-      id: tempId,
-      custom: true,
-      character_name: trimmedName
-    }
-
-    const previousCharacters = [...characters]
-    setCharacters(sortCharacters([...characters, tempCharacter]))
-    setNewName('')
-    setIsAdding(false)
-
-    try {
-      const created = await addCharacter({
+      // Optimistically add with a temp ID
+      const tempId = `temp-${crypto.randomUUID()}`
+      const tempCharacter: CharacterDetail = {
+        id: tempId,
         custom: true,
-        character_name: trimmedName
-      })
+        character_name: data.name,
+        rules: data.rules || null
+      }
 
-      // Replace temp entry with the real one
-      setCharacters((prev) =>
-        sortCharacters(prev.map((c) => (c.id === tempId ? created : c)))
+      const previousCharacters = [...characters]
+      setCharacters(sortCharacters([...characters, tempCharacter]))
+      setCreateDialogOpen(false)
+
+      try {
+        const created = await addCharacter({
+          custom: true,
+          character_name: data.name,
+          rules: data.rules || null
+        })
+
+        // Replace temp entry with the real one
+        setCharacters((prev) =>
+          sortCharacters(prev.map((c) => (c.id === tempId ? created : c)))
+        )
+
+        toast.success(CHARACTER_CREATED_MESSAGE())
+      } catch (err: unknown) {
+        setCharacters(previousCharacters)
+        console.error('Add Character Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [characters, saving, sortCharacters, toast]
+  )
+
+  /**
+   * Handle Edit Character
+   *
+   * Optimistically updates the character, then persists to the database.
+   * Rolls back on failure.
+   *
+   * @param data Updated character name and rules
+   */
+  const handleEdit = useCallback(
+    async (data: { name: string; rules: string }) => {
+      if (saving || !editingCharacter) return
+      if (!data.name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('character'))
+
+      setSaving(true)
+
+      const previousCharacters = [...characters]
+
+      setCharacters(
+        sortCharacters(
+          characters.map((c) =>
+            c.id === editingCharacter.id
+              ? {
+                  ...c,
+                  character_name: data.name,
+                  rules: data.rules || null
+                }
+              : c
+          )
+        )
       )
 
-      toast.success(CHARACTER_CREATED_MESSAGE())
-    } catch (err: unknown) {
-      setCharacters(previousCharacters)
-      console.error('Add Character Error:', err)
-      toast.error(ERROR_MESSAGE())
-    }
-  }, [characters, newName, sortCharacters, toast])
+      setEditDialogOpen(false)
+      setEditingCharacter(null)
+
+      try {
+        await updateCharacter(editingCharacter.id, {
+          character_name: data.name,
+          rules: data.rules || null
+        })
+
+        toast.success(CHARACTER_UPDATED_MESSAGE(data.name))
+      } catch (err: unknown) {
+        setCharacters(previousCharacters)
+        console.error('Update Character Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [characters, editingCharacter, saving, sortCharacters, toast]
+  )
 
   /**
    * Handle Delete Character
@@ -187,95 +227,18 @@ export function CustomCharactersCard({
     [characters, toast]
   )
 
-  /**
-   * Handle Start Edit
-   *
-   * Enters edit mode for a character.
-   *
-   * @param character Character to edit
-   */
-  const handleStartEdit = useCallback((character: CharacterDetail) => {
-    setEditingId(character.id)
-    setEditingName(character.character_name)
+  /** Open the create dialog with a fresh key to reset state */
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
   }, [])
 
-  /**
-   * Handle Cancel Edit
-   *
-   * Cancels edit mode.
-   */
-  const handleCancelEdit = useCallback(() => {
-    setEditingId(null)
-    setEditingName('')
+  /** Open the edit dialog for a specific character */
+  const openEditDialog = useCallback((character: CharacterDetail) => {
+    setDialogKey((k) => k + 1)
+    setEditingCharacter(character)
+    setEditDialogOpen(true)
   }, [])
-
-  /**
-   * Handle Save Edit
-   *
-   * Optimistically updates the character name, then persists to the database.
-   * Rolls back on failure.
-   */
-  const handleSaveEdit = useCallback(() => {
-    const trimmedName = editingName.trim()
-
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('character'))
-    if (!editingId) return
-
-    const previousCharacters = [...characters]
-
-    setCharacters(
-      sortCharacters(
-        characters.map((c) =>
-          c.id === editingId ? { ...c, character_name: trimmedName } : c
-        )
-      )
-    )
-
-    setEditingId(null)
-    setEditingName('')
-
-    updateCharacter(editingId, { character_name: trimmedName })
-      .then(() => toast.success(CHARACTER_UPDATED_MESSAGE(trimmedName)))
-      .catch((err: unknown) => {
-        setCharacters(previousCharacters)
-        console.error('Update Character Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-  }, [characters, editingId, editingName, sortCharacters, toast])
-
-  /**
-   * Handle New Character Key Down
-   *
-   * Saves on Enter, cancels on Escape.
-   *
-   * @param e Keyboard Event
-   */
-  const handleNewKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleAdd()
-      else if (e.key === 'Escape') {
-        setIsAdding(false)
-        setNewName('')
-      }
-    },
-    [handleAdd]
-  )
-
-  /**
-   * Handle Edit Key Down
-   *
-   * Saves on Enter, cancels on Escape.
-   *
-   * @param e Keyboard Event
-   */
-  const handleEditKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleSaveEdit()
-      else if (e.key === 'Escape') handleCancelEdit()
-    },
-    [handleCancelEdit, handleSaveEdit]
-  )
 
   return (
     <Card className="p-0 border-1 gap-0">
@@ -285,8 +248,7 @@ export function CustomCharactersCard({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsAdding(true)}
-            disabled={isAdding}
+            onClick={openCreateDialog}
             name="add-character"
             id="add-character">
             <PlusIcon className="h-4 w-4 mr-2" />
@@ -302,7 +264,7 @@ export function CustomCharactersCard({
               Peering into the darkness...
             </p>
           </div>
-        ) : characters.length === 0 && !isAdding ? (
+        ) : characters.length === 0 ? (
           <div className="flex items-center justify-center p-8 text-center">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
@@ -323,113 +285,31 @@ export function CustomCharactersCard({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {/* New character input row */}
-                {isAdding && (
-                  <TableRow>
-                    <TableCell>
-                      <Input
-                        ref={newInputRef}
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        onKeyDown={handleNewKeyDown}
-                        placeholder="Character name"
-                        name="new-character-name"
-                        id="new-character-name"
-                        aria-label="New character name"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleAdd}
-                          title="Save character"
-                          name="save-new-character"
-                          id="save-new-character">
-                          <CheckIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setIsAdding(false)
-                            setNewName('')
-                          }}
-                          title="Cancel"
-                          name="cancel-new-character"
-                          id="cancel-new-character">
-                          <XIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-
-                {/* Existing character rows */}
                 {characters.map((character) => (
                   <TableRow key={character.id}>
                     <TableCell className="font-medium">
-                      {editingId === character.id ? (
-                        <Input
-                          ref={editInputRef}
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          onKeyDown={handleEditKeyDown}
-                          placeholder="Character name"
-                          name={`edit-character-name-${character.id}`}
-                          id={`edit-character-name-${character.id}`}
-                          aria-label={`Edit ${character.character_name}`}
-                        />
-                      ) : (
-                        character.character_name
-                      )}
+                      {character.character_name}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {editingId === character.id ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={handleSaveEdit}
-                              title="Save"
-                              name={`save-edit-character-${character.id}`}
-                              id={`save-edit-character-${character.id}`}>
-                              <CheckIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={handleCancelEdit}
-                              title="Cancel"
-                              name={`cancel-edit-character-${character.id}`}
-                              id={`cancel-edit-character-${character.id}`}>
-                              <XIcon className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStartEdit(character)}
-                              title={`Edit ${character.character_name}`}
-                              name={`edit-character-${character.id}`}
-                              id={`edit-character-${character.id}`}>
-                              <PencilIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(character)}
-                              title={`Delete ${character.character_name}`}
-                              name={`delete-character-${character.id}`}
-                              id={`delete-character-${character.id}`}>
-                              <Trash2Icon className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(character)}
+                          title={`Edit ${character.character_name}`}
+                          name={`edit-character-${character.id}`}
+                          id={`edit-character-${character.id}`}>
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(character)}
+                          title={`Delete ${character.character_name}`}
+                          name={`delete-character-${character.id}`}
+                          id={`delete-character-${character.id}`}>
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -439,6 +319,41 @@ export function CustomCharactersCard({
           </div>
         )}
       </CardContent>
+
+      {/* Create Character Dialog */}
+      <CustomItemDialog
+        key={`create-${dialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={saving}
+        title="Create Custom Character"
+        description="A new face emerges from the darkness."
+        nameLabel="Character Name"
+        namePlaceholder="Enter character name"
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
+
+      {/* Edit Character Dialog */}
+      <CustomItemDialog
+        key={`edit-${dialogKey}`}
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open)
+          if (!open) setEditingCharacter(null)
+        }}
+        onSave={handleEdit}
+        saving={saving}
+        initialName={editingCharacter?.character_name}
+        initialRules={editingCharacter?.rules ?? ''}
+        title="Edit Character"
+        description="Rewrite this survivor's tale."
+        nameLabel="Character Name"
+        namePlaceholder="Enter character name"
+        saveLabel="Save"
+        savingLabel="Saving..."
+      />
     </Card>
   )
 }

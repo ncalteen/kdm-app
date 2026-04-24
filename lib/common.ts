@@ -65,7 +65,8 @@ export const baseMonsterLevelData: MonsterLevelData = {
   toughness_tokens: 0,
   life: 0,
   traits: [],
-  moods: []
+  moods: [],
+  survivor_statuses: []
 }
 
 /**

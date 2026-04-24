@@ -1,7 +1,6 @@
 'use client'
 
 import { MultiSelectDropdown } from '@/components/generic/multi-select-dropdown'
-import { StringArraySection } from '@/components/generic/string-array-section'
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,6 +23,7 @@ import {
   getCustomWanderers,
   updateWanderer
 } from '@/lib/dal/wanderer'
+import { setWandererAbilityImpairments } from '@/lib/dal/wanderer-ability-impairment'
 import {
   addWandererTimelineYear,
   getWandererTimelineYears,
@@ -37,7 +37,11 @@ import {
   WANDERER_CREATED_MESSAGE,
   WANDERER_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { FightingArtDetail, GearDetail } from '@/lib/types'
+import {
+  AbilityImpairmentDetail,
+  FightingArtDetail,
+  GearDetail
+} from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ArrowLeftIcon, PlusIcon, Trash2Icon, XIcon } from 'lucide-react'
 import {
@@ -67,7 +71,9 @@ interface StatField {
  * Core Attributes
  */
 const CORE_ATTRIBUTES: StatField[] = [
-  { key: 'movement', label: 'Movement' },
+  // Movement must be at least 1 — survivors created from this wanderer are
+  // validated against the `NewSurvivorInputSchema` which enforces the same.
+  { key: 'movement', label: 'Movement', min: 1 },
   { key: 'accuracy', label: 'Accuracy' },
   { key: 'strength', label: 'Strength' },
   { key: 'evasion', label: 'Evasion' },
@@ -103,6 +109,8 @@ interface WandererFormProps {
   availableFightingArts: { [key: string]: FightingArtDetail }
   /** Available Gear */
   availableGear: { [key: string]: GearDetail }
+  /** Available Abilities/Impairments */
+  availableAbilityImpairments: { [key: string]: AbilityImpairmentDetail }
   /** On Done Callback */
   onDone: () => void
   /** On Cancel Callback */
@@ -126,6 +134,7 @@ export function WandererForm({
   wandererId,
   availableFightingArts,
   availableGear,
+  availableAbilityImpairments,
   onDone,
   onCancel
 }: WandererFormProps): ReactElement {
@@ -140,7 +149,10 @@ export function WandererForm({
 
   // Core attributes
   const [attributes, setAttributes] = useState<{ [key: string]: number }>({
-    movement: 0,
+    // Movement defaults to 5 to match the survivor schema's minimum and the
+    // baseline KDM survivor statline. A 0 here would make the created
+    // survivor fail validation downstream.
+    movement: 5,
     accuracy: 0,
     strength: 0,
     evasion: 0,
@@ -160,7 +172,7 @@ export function WandererForm({
   // Arrays
   const [fightingArtIds, setFightingArtIds] = useState<string[]>([])
   const [rareGearIds, setRareGearIds] = useState<string[]>([])
-  const [abilitiesImpairments, setAbilitiesImpairments] = useState<string[]>([])
+  const [abilityImpairmentIds, setAbilityImpairmentIds] = useState<string[]>([])
   const [huntXpRankUp, setHuntXpRankUp] = useState<number[]>([])
 
   // Timeline
@@ -187,6 +199,15 @@ export function WandererForm({
         a.gear_name.localeCompare(b.gear_name)
       ),
     [availableGear]
+  )
+
+  /** Sorted abilities/impairments for selection */
+  const sortedAbilityImpairments = useMemo(
+    () =>
+      Object.values(availableAbilityImpairments).sort((a, b) =>
+        a.ability_impairment_name.localeCompare(b.ability_impairment_name)
+      ),
+    [availableAbilityImpairments]
   )
 
   // Load existing wanderer data for edit mode
@@ -228,7 +249,7 @@ export function WandererForm({
         })
         setFightingArtIds([...w.fighting_art_ids])
         setRareGearIds([...w.rare_gear_ids])
-        setAbilitiesImpairments([...w.abilities_impairments])
+        setAbilityImpairmentIds(w.abilities_impairments.map((ai) => ai.id))
         setHuntXpRankUp([...w.hunt_xp_rank_up])
 
         const sorted = Object.values(timelineData).sort(
@@ -273,31 +294,12 @@ export function WandererForm({
     )
   }, [])
 
-  // String array helpers
-  const addStringItem = useCallback(
-    (setter: (fn: (prev: string[]) => string[]) => void) => {
-      setter((prev) => [...prev, ''])
-    },
-    []
-  )
-
-  const removeStringItem = useCallback(
-    (setter: (fn: (prev: string[]) => string[]) => void, index: number) => {
-      setter((prev) => prev.filter((_, i) => i !== index))
-    },
-    []
-  )
-
-  const updateStringItem = useCallback(
-    (
-      setter: (fn: (prev: string[]) => string[]) => void,
-      index: number,
-      value: string
-    ) => {
-      setter((prev) => prev.map((v, i) => (i === index ? value : v)))
-    },
-    []
-  )
+  /** Toggle an ability/impairment ID */
+  const toggleAbilityImpairment = useCallback((id: string) => {
+    setAbilityImpairmentIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }, [])
 
   // Timeline helpers
   const addTimelineYear = useCallback(() => {
@@ -377,7 +379,6 @@ export function WandererForm({
         ...attributes,
         fighting_art_ids: fightingArtIds,
         rare_gear_ids: rareGearIds,
-        abilities_impairments: abilitiesImpairments.filter((s) => s.trim()),
         permanent_injuries: [], // Not currently supported, but leaving the field in place for future use
         hunt_xp_rank_up: huntXpRankUp
       }
@@ -387,6 +388,8 @@ export function WandererForm({
           custom: true,
           ...wandererData
         })
+
+        await setWandererAbilityImpairments(created.id, abilityImpairmentIds)
 
         // Save timeline entries
         for (const te of timelineEntries) {
@@ -402,6 +405,8 @@ export function WandererForm({
         toast.success(WANDERER_CREATED_MESSAGE())
       } else if (wandererId) {
         await updateWanderer(wandererId, wandererData)
+
+        await setWandererAbilityImpairments(wandererId, abilityImpairmentIds)
 
         // Delete removed timeline years
         for (const id of deletedTimelineIds) {
@@ -446,7 +451,7 @@ export function WandererForm({
     attributes,
     fightingArtIds,
     rareGearIds,
-    abilitiesImpairments,
+    abilityImpairmentIds,
     huntXpRankUp,
     timelineEntries,
     deletedTimelineIds,
@@ -692,17 +697,41 @@ export function WandererForm({
           </div>
 
           {/* Abilities & Impairments */}
-          <div className="md:w-1/3">
-            <StringArraySection
-              title="Abilities & Impairments"
-              items={abilitiesImpairments}
-              placeholder="Ability or impairment"
-              onAdd={() => addStringItem(setAbilitiesImpairments)}
-              onRemove={(i) => removeStringItem(setAbilitiesImpairments, i)}
-              onUpdate={(i, v) =>
-                updateStringItem(setAbilitiesImpairments, i, v)
+          <div className="space-y-2 md:w-1/3">
+            <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Abilities & Impairments
+            </h5>
+            <MultiSelectDropdown
+              items={sortedAbilityImpairments.map((a) => ({
+                id: a.id,
+                name: a.ability_impairment_name
+              }))}
+              selectedIds={abilityImpairmentIds}
+              onToggle={toggleAbilityImpairment}
+              placeholder="Search..."
+              emptyMessage="No abilities or impairments found."
+              triggerLabel={
+                abilityImpairmentIds.length > 0
+                  ? `${abilityImpairmentIds.length} selected`
+                  : 'Select...'
               }
             />
+            {abilityImpairmentIds.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {abilityImpairmentIds.map((id) => (
+                  <Badge key={id} variant="secondary" className="text-xs">
+                    {availableAbilityImpairments[id]?.ability_impairment_name ??
+                      id}
+                    <button
+                      type="button"
+                      className="ml-1 hover:text-destructive"
+                      onClick={() => toggleAbilityImpairment(id)}>
+                      <XIcon className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

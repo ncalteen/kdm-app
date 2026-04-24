@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useToast } from '@/hooks/use-toast'
 import { createSurvivor } from '@/lib/dal/survivor'
 import { getWanderers } from '@/lib/dal/wanderer'
@@ -33,11 +34,19 @@ import {
   WandererDetail
 } from '@/lib/types'
 import {
+  canDash,
+  canEncourage,
+  canEndure,
+  canFistPump,
+  canSurge,
+  survivorsBornWithUnderstanding
+} from '@/lib/utils'
+import {
   NewSurvivorInput,
   NewSurvivorInputSchema
 } from '@/schemas/new-survivor-input'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useState } from 'react'
 import { Resolver, useForm } from 'react-hook-form'
 
 /**
@@ -83,48 +92,14 @@ export function CreateSurvivorForm({
   const [activeTab, setActiveTab] = useState<'custom' | 'wanderer'>('custom')
   const [selectedWanderer, setSelectedWanderer] =
     useState<WandererDetail | null>(null)
-  const [availableWanderers, setAvailableWanderers] = useState<{
+
+  const { data: availableWanderers } = useCatalogFetch<{
     [key: string]: WandererDetail
-  }>({})
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
-
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAvailableWanderers({})
-    setHasFetched(false)
-  }
-
-  /**
-   * Fetch wanderers when the settlement changes.
-   */
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    Promise.all([getWanderers()])
-      .then(([wanderers]) => {
-        if (cancelled) return
-
-        setAvailableWanderers(sortWanderers(wanderers))
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        console.error('Wanderers Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, async () => sortWanderers(await getWanderers()), {
+    initial: {},
+    errorContext: 'Wanderers Fetch Error',
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   const form = useForm<NewSurvivorInput>({
     resolver: zodResolver(NewSurvivorInputSchema) as Resolver<NewSurvivorInput>,
@@ -132,6 +107,26 @@ export function CreateSurvivorForm({
       settlementId: selectedSettlement?.id
     })
   })
+
+  // Derive settlement-level survivor capability flags from the current
+  // innovations. Computing client-side keeps these in sync with realtime
+  // innovation updates without requiring a full settlement refetch.
+  const survivorCapabilities = useMemo(() => {
+    const innovations = selectedSettlement?.innovations ?? []
+    return {
+      canDash: canDash(innovations),
+      canFistPump: canFistPump(innovations),
+      canEncourage: canEncourage(innovations),
+      canEndure: canEndure(innovations),
+      canSurge: canSurge(innovations)
+    }
+  }, [selectedSettlement?.innovations])
+
+  // Separate derivation so it doesn't leak into `form.reset` via spread.
+  const bornWithUnderstanding = useMemo(
+    () => survivorsBornWithUnderstanding(selectedSettlement?.innovations ?? []),
+    [selectedSettlement?.innovations]
+  )
 
   // Set the form values when the component mounts
   useEffect(() => {
@@ -141,19 +136,13 @@ export function CreateSurvivorForm({
 
     const updatedValues = {
       settlementId: selectedSettlement?.id,
-      canDash: selectedSettlement?.can_dash ?? false,
-      canFistPump: selectedSettlement?.can_fist_pump ?? false,
-      canEncourage: selectedSettlement?.can_encourage ?? false,
-      canEndure: selectedSettlement?.can_endure ?? false,
-      canSurge: selectedSettlement?.can_surge ?? false,
+      ...survivorCapabilities,
       huntXPRankUp:
         selectedSettlement?.survivor_type !==
         DatabaseSurvivorType[SurvivorType.ARC]
           ? [2, 6, 10, 15] // Core
           : [2], // Arc
-      understanding: selectedSettlement?.survivors_born_with_understanding
-        ? 1
-        : 0
+      understanding: bornWithUnderstanding ? 1 : 0
     }
 
     // Reset form with updated values while preserving user-entered fields
@@ -164,12 +153,8 @@ export function CreateSurvivorForm({
   }, [
     form,
     selectedSettlement?.id,
-    selectedSettlement?.can_dash,
-    selectedSettlement?.can_fist_pump,
-    selectedSettlement?.can_encourage,
-    selectedSettlement?.can_endure,
-    selectedSettlement?.can_surge,
-    selectedSettlement?.survivors_born_with_understanding,
+    survivorCapabilities,
+    bornWithUnderstanding,
     selectedSettlement?.survivor_type
   ])
 
@@ -191,19 +176,13 @@ export function CreateSurvivorForm({
         ...NewSurvivorInputSchema.parse({
           settlementId: selectedSettlement?.id
         }),
-        canDash: selectedSettlement?.can_dash ?? false,
-        canFistPump: selectedSettlement?.can_fist_pump ?? false,
-        canEncourage: selectedSettlement?.can_encourage ?? false,
-        canEndure: selectedSettlement?.can_endure ?? false,
-        canSurge: selectedSettlement?.can_surge ?? false,
+        ...survivorCapabilities,
         huntXPRankUp:
           selectedSettlement.survivor_type !==
           DatabaseSurvivorType[SurvivorType.ARC]
             ? [2, 6, 10, 15]
             : [2],
-        understanding: selectedSettlement?.survivors_born_with_understanding
-          ? 1
-          : 0
+        understanding: bornWithUnderstanding ? 1 : 0
       })
     }
   }
@@ -224,14 +203,10 @@ export function CreateSurvivorForm({
       ...NewSurvivorInputSchema.parse({
         settlementId: selectedSettlement?.id
       }),
-      canDash: selectedSettlement?.can_dash ?? false,
-      canFistPump: selectedSettlement?.can_fist_pump ?? false,
-      canEncourage: selectedSettlement?.can_encourage ?? false,
-      canEndure: selectedSettlement?.can_endure ?? false,
-      canSurge: selectedSettlement?.can_surge ?? false,
+      ...survivorCapabilities,
 
       // Wanderer-specific data
-      abilitiesAndImpairments: wanderer.abilities_impairments,
+      abilityImpairmentIds: wanderer.abilities_impairments.map((ai) => ai.id),
       accuracy: wanderer.accuracy,
       courage: wanderer.courage,
       disposition: wanderer.disposition,
@@ -242,7 +217,7 @@ export function CreateSurvivorForm({
       huntXPRankUp: wanderer.hunt_xp_rank_up,
       insanity: wanderer.insanity,
       luck: wanderer.luck,
-      movement: wanderer.movement,
+      movement: wanderer.movement ?? 5,
       survivorName: wanderer.wanderer_name,
       speed: wanderer.speed,
       strength: wanderer.strength,
@@ -292,6 +267,7 @@ export function CreateSurvivorForm({
    * @param values Form Values
    */
   function onSubmit(values: NewSurvivorInput) {
+    console.log('Form Values:', values)
     const originalSurvivors = [...survivors]
 
     // Optimistic placeholder row (uses a temporary ID).
@@ -305,6 +281,8 @@ export function CreateSurvivorForm({
       dead: false,
       embarked: false
     } as SurvivorDetail
+
+    console.log('Optimistic Survivor:', optimisticSurvivor)
 
     setSurvivors([...survivors, optimisticSurvivor])
 
@@ -328,7 +306,12 @@ export function CreateSurvivorForm({
 
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit, () => {
+      onSubmit={form.handleSubmit(onSubmit, (errors) => {
+        // Without logging the raw error bag, a wanderer-derived payload that
+        // fails schema validation (e.g. a custom wanderer saved with
+        // movement < 1) produces a generic toast with no indication of the
+        // offending field. Logging keeps those cases debuggable.
+        console.error('Create Survivor Validation Error:', errors)
         toast.error(ERROR_MESSAGE())
       })}
       className="py-3 space-y-6">

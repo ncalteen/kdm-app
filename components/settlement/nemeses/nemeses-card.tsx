@@ -18,6 +18,8 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { getNemeses } from '@/lib/dal/nemesis'
 import { getNemesisLocationIds } from '@/lib/dal/nemesis-location'
@@ -47,7 +49,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { PlusIcon, SkullIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Nemeses Card Properties
@@ -78,36 +80,16 @@ export function NemesesCard({
   setSelectedSettlement
 }: NemesesCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available nemeses for the select dropdown (fetched once per settlement).
-  const [availableNemeses, setAvailableNemeses] = useState<{
+  const { data: availableNemeses, isLoaded: hasFetched } = useCatalogFetch<{
     [key: string]: NemesisDetail
-  }>({})
-
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  /**
-   * Fetch settlement nemeses and available nemesis options when the settlement
-   * changes. Both queries run in parallel to minimize load time.
-   */
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    Promise.all([
+  }>(
+    selectedSettlement?.id,
+    () =>
       // Don't include alternates or vignettes in the dropdown
       getNemeses(
         [
@@ -119,28 +101,14 @@ export function NemesesCard({
         ],
         false,
         false
-      )
-    ])
-      .then(([nemeses]) => {
-        if (cancelled) return
-
-        setAvailableNemeses(nemeses)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        setAvailableNemeses({})
-        setHasFetched(true)
-
-        console.error('Settlement Nemeses Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
+      ),
+    {
+      initial: {},
+      errorContext: 'Settlement Nemeses Fetch Error',
+      onReset: () => setAddOpen(false),
+      onError: () => toast.error(ERROR_MESSAGE())
     }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  )
 
   /**
    * Available Nemeses Not Yet Added
@@ -174,13 +142,18 @@ export function NemesesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['nemeses'][0] = {
         available_levels: [],
+        basic_action: nemesisInfo.basic_action,
+        blind_spot: nemesisInfo.blind_spot,
         collective_cognition_level_1: false,
         collective_cognition_level_2: false,
         collective_cognition_level_3: false,
+        defeat_outcome: nemesisInfo.defeat_outcome,
+        deployment_rules: nemesisInfo.deployment_rules,
         id: tempId,
+        instinct: nemesisInfo.instinct,
         level_1_defeated: false,
         level_2_defeated: false,
         level_3_defeated: false,
@@ -188,7 +161,8 @@ export function NemesesCard({
         monster_name: nemesisInfo.monster_name,
         nemesis_id: nemesisId,
         node: nemesisInfo.node,
-        unlocked: false
+        unlocked: false,
+        victory_outcome: nemesisInfo.victory_outcome
       }
 
       // Capture the updated nemeses list so async callbacks reference it
@@ -203,8 +177,11 @@ export function NemesesCard({
         nemeses: updatedNemeses
       })
 
-      addSettlementNemeses([nemesisId], selectedSettlement?.id)
-        .then(async (row) => {
+      void mutate({
+        context: 'Nemesis Add',
+        persist: () =>
+          addSettlementNemeses([nemesisId], selectedSettlement?.id),
+        onSuccess: async (row) => {
           // Replace the placeholder with the real row from the DB.
           setSelectedSettlement((prev) =>
             prev
@@ -257,6 +234,7 @@ export function NemesesCard({
                   id: ins.id,
                   location_id: newLocIds[i],
                   location_name: ins.location_name,
+                  rules: ins.rules,
                   unlocked: false
                 }))
               }
@@ -341,10 +319,8 @@ export function NemesesCard({
           } catch (relatedErr) {
             console.error('Nemesis Related Data Add Error:', relatedErr)
           }
-
-          toast.success(NEMESIS_ADDED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           // Remove the optimistic placeholder.
           setSelectedSettlement((prev) =>
             prev
@@ -354,12 +330,11 @@ export function NemesesCard({
                 }
               : null
           )
-
-          console.error('Nemesis Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: NEMESIS_ADDED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableNemeses, setSelectedSettlement, toast]
+    [selectedSettlement, availableNemeses, setSelectedSettlement, mutate]
   )
 
   /**
@@ -382,10 +357,10 @@ export function NemesesCard({
         nemeses: selectedSettlement.nemeses.filter((n) => n.id !== nemesisId)
       })
 
-      removeSettlementNemesis(removed.id)
-        .then(() => toast.success(NEMESIS_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          // Re-add the removed nemesis if it's not already present.
+      void mutate({
+        context: 'Nemesis Remove',
+        persist: () => removeSettlementNemesis(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.nemeses.some((n) => n.id === removed.id))
               return prev
@@ -394,12 +369,11 @@ export function NemesesCard({
               nemeses: sortNemeses([...prev.nemeses, removed])
             }
           })
-
-          console.error('Nemesis Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: NEMESIS_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -425,12 +399,10 @@ export function NemesesCard({
         )
       })
 
-      updateSettlementNemesis(target.id, { unlocked })
-        .then(() =>
-          toast.success(NEMESIS_UNLOCKED_MESSAGE(target.monster_name, unlocked))
-        )
-        .catch((err: unknown) => {
-          // Revert the optimistic toggle.
+      void mutate({
+        context: 'Nemesis Toggle',
+        persist: () => updateSettlementNemesis(target.id, { unlocked }),
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -441,12 +413,11 @@ export function NemesesCard({
                 }
               : null
           )
-
-          console.error('Nemesis Toggle Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: NEMESIS_UNLOCKED_MESSAGE(target.monster_name, unlocked)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -480,10 +451,11 @@ export function NemesesCard({
         )
       })
 
-      updateSettlementNemesis(target.id, { [field]: defeated })
-        .then(() => toast.success(NEMESIS_DEFEATED_MESSAGE()))
-        .catch((err: unknown) => {
-          // Revert the optimistic toggle.
+      void mutate({
+        context: 'Nemesis Level Toggle',
+        persist: () =>
+          updateSettlementNemesis(target.id, { [field]: defeated }),
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -494,12 +466,11 @@ export function NemesesCard({
                 }
               : null
           )
-
-          console.error('Nemesis Level Toggle Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: NEMESIS_DEFEATED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -569,7 +540,7 @@ export function NemesesCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading nemeses...
               </p>

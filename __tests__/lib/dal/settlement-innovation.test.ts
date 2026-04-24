@@ -48,7 +48,14 @@ describe('getSettlementInnovations', () => {
     const result = await getSettlementInnovations('settlement-1')
 
     expect(result).toEqual([
-      { id: 'si-1', innovation_id: 'i-1', innovation_name: 'Cooking' }
+      {
+        id: 'si-1',
+        innovation_id: 'i-1',
+        innovation_name: 'Cooking',
+        rules: null,
+        consequences: null,
+        benefits: null
+      }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_innovation')
   })
@@ -68,7 +75,14 @@ describe('getSettlementInnovations', () => {
     const result = await getSettlementInnovations('settlement-1')
 
     expect(result).toEqual([
-      { id: 'si-1', innovation_id: 'i-1', innovation_name: 'Cooking' }
+      {
+        id: 'si-1',
+        innovation_id: 'i-1',
+        innovation_name: 'Cooking',
+        rules: null,
+        consequences: null,
+        benefits: null
+      }
     ])
   })
 
@@ -129,7 +143,14 @@ describe('addSettlementInnovations', () => {
     const result = await addSettlementInnovations(['i-1'], 'settlement-1')
 
     expect(result).toEqual([
-      { id: 'si-1', innovation_id: 'i-1', innovation_name: 'Cooking' }
+      {
+        id: 'si-1',
+        innovation_id: 'i-1',
+        innovation_name: 'Cooking',
+        rules: null,
+        consequences: null,
+        benefits: null
+      }
     ])
     expect(mockInsert).toHaveBeenCalledWith([
       { innovation_id: 'i-1', settlement_id: 'settlement-1' }

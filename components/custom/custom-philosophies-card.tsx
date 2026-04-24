@@ -1,8 +1,12 @@
 'use client'
 
+import {
+  PhilosophyDialog,
+  PhilosophyDialogPayload,
+  PhilosophyRankDraft
+} from '@/components/custom/dialogs/philosophy-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -13,6 +17,8 @@ import {
 } from '@/components/ui/table'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
+import { getKnowledges } from '@/lib/dal/knowledge'
+import { getNeuroses } from '@/lib/dal/neurosis'
 import {
   addPhilosophy,
   getPhilosophies,
@@ -20,28 +26,21 @@ import {
   updatePhilosophy
 } from '@/lib/dal/philosophy'
 import {
+  addPhilosophyRank,
+  getPhilosophyRanks,
+  removePhilosophyRank,
+  updatePhilosophyRank
+} from '@/lib/dal/philosophy-rank'
+import {
   ERROR_MESSAGE,
   NAMELESS_OBJECT_ERROR_MESSAGE,
   PHILOSOPHY_CREATED_MESSAGE,
   PHILOSOPHY_REMOVED_MESSAGE,
   PHILOSOPHY_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { PhilosophyDetail } from '@/lib/types'
-import {
-  CheckIcon,
-  PencilIcon,
-  PlusIcon,
-  Trash2Icon,
-  XIcon
-} from 'lucide-react'
-import {
-  KeyboardEvent,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
+import { KnowledgeDetail, NeurosisDetail, PhilosophyDetail } from '@/lib/types'
+import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 
 /**
  * Custom Philosophies Card Component Properties
@@ -57,8 +56,9 @@ interface CustomPhilosophiesCardProps {
  * Custom Philosophies Card Component
  *
  * Lists user's custom philosophies with options to create, edit, and delete.
- * Entries are displayed alphabetically. UI updates are optimistic and roll
- * back on database failure.
+ * Each philosophy has a name, hunt XP milestones, optional tenet knowledge,
+ * tier, optional neurosis link, and 1–5 ranks (each with a rank number and
+ * Markdown rules). Entries are displayed alphabetically.
  *
  * @param props Custom Philosophies Card Properties
  * @returns Custom Philosophies Card Component
@@ -71,13 +71,20 @@ export function CustomPhilosophiesCard({
 
   const [items, setItems] = useState<PhilosophyDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isAdding, setIsAdding] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState('')
+  const [availableKnowledges, setAvailableKnowledges] = useState<{
+    [key: string]: KnowledgeDetail
+  }>({})
+  const [availableNeuroses, setAvailableNeuroses] = useState<{
+    [key: string]: NeurosisDetail
+  }>({})
 
-  const newInputRef = useRef<HTMLInputElement>(null)
-  const editInputRef = useRef<HTMLInputElement>(null)
+  // Dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<PhilosophyDetail | null>(null)
+  const [editingRanks, setEditingRanks] = useState<PhilosophyRankDraft[]>([])
+  const [saving, setSaving] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   /** Sort items alphabetically by name */
   const sortItems = useCallback(
@@ -88,14 +95,21 @@ export function CustomPhilosophiesCard({
     []
   )
 
-  /** Load custom philosophies from the database */
+  /** Load custom philosophies, knowledges, and neuroses */
   const loadItems = useCallback(async () => {
     setIsLoading(true)
 
     try {
-      const data = await getPhilosophies()
-      const custom = Object.values(data).filter((i) => i.custom)
+      const [philosophyData, knowledgeData, neurosisData] = await Promise.all([
+        getPhilosophies(),
+        getKnowledges(),
+        getNeuroses()
+      ])
+
+      const custom = Object.values(philosophyData).filter((i) => i.custom)
       setItems(sortItems(custom))
+      setAvailableKnowledges(knowledgeData)
+      setAvailableNeuroses(neurosisData)
     } catch (err: unknown) {
       console.error('Load Philosophies Error:', err)
       toast.error(ERROR_MESSAGE())
@@ -108,65 +122,159 @@ export function CustomPhilosophiesCard({
     loadItems()
   }, [loadItems])
 
-  useEffect(() => {
-    if (isAdding) newInputRef.current?.focus()
-  }, [isAdding])
+  /**
+   * Handle Create Philosophy
+   *
+   * Persists the philosophy and its ranks. Refreshes the list on success so
+   * the row reflects the saved record. Rolls back by removing the partially
+   * created row on failure.
+   */
+  const handleCreate = useCallback(
+    async (data: PhilosophyDialogPayload) => {
+      if (saving) return
+      if (!data.philosophy_name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('philosophy'))
 
-  useEffect(() => {
-    if (editingId) editInputRef.current?.focus()
-  }, [editingId])
+      setSaving(true)
+
+      let createdId: string | null = null
+
+      try {
+        const created = await addPhilosophy({
+          custom: true,
+          philosophy_name: data.philosophy_name,
+          hunt_xp_milestones: data.hunt_xp_milestones,
+          tenet_knowledge_id: data.tenet_knowledge_id,
+          tier: data.tier,
+          neurosis_id: data.neurosis_id
+        })
+        createdId = created.id
+
+        // Persist ranks sequentially so a failure halts early and can roll
+        // back the philosophy row.
+        for (const rank of data.ranks)
+          await addPhilosophyRank({
+            philosophy_id: created.id,
+            rank_number: rank.rank_number,
+            rules: rank.rules || null
+          })
+
+        setItems((prev) => sortItems([...prev, created]))
+        setCreateDialogOpen(false)
+        toast.success(PHILOSOPHY_CREATED_MESSAGE())
+        onPhilosophiesChange?.()
+      } catch (err: unknown) {
+        console.error('Add Philosophy Error:', err)
+        if (createdId) {
+          try {
+            await removePhilosophy(createdId)
+          } catch (cleanupErr: unknown) {
+            console.error('Add Philosophy Rollback Error:', cleanupErr)
+          }
+        }
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [saving, sortItems, toast, onPhilosophiesChange]
+  )
 
   /**
-   * Handle Add Philosophy
+   * Handle Edit Philosophy
    *
-   * Optimistically adds a new philosophy, then persists to the database.
-   * Rolls back on failure.
+   * Optimistically updates the philosophy fields, then reconciles its ranks
+   * (add / update / delete) against the submitted draft set. Rolls back the
+   * optimistic row state on failure.
    */
-  const handleAdd = useCallback(async () => {
-    const trimmedName = newName.trim()
+  const handleEdit = useCallback(
+    async (data: PhilosophyDialogPayload) => {
+      if (saving || !editingItem) return
+      if (!data.philosophy_name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('philosophy'))
 
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('philosophy'))
+      setSaving(true)
 
-    const tempId = `temp-${Date.now()}`
-    const temp: PhilosophyDetail = {
-      id: tempId,
-      custom: true,
-      philosophy_name: trimmedName
-    }
+      const previous = [...items]
+      const previousRanks = editingRanks
+      const targetId = editingItem.id
 
-    const previous = [...items]
-    setItems(sortItems([...items, temp]))
-    setNewName('')
-    setIsAdding(false)
-
-    try {
-      const created = await addPhilosophy({
-        custom: true,
-        philosophy_name: trimmedName
-      })
-
-      setItems((prev) =>
-        sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+      setItems(
+        sortItems(
+          items.map((i) =>
+            i.id === targetId
+              ? {
+                  ...i,
+                  philosophy_name: data.philosophy_name,
+                  hunt_xp_milestones: data.hunt_xp_milestones,
+                  tenet_knowledge_id: data.tenet_knowledge_id,
+                  tier: data.tier,
+                  neurosis_id: data.neurosis_id
+                }
+              : i
+          )
+        )
       )
 
-      toast.success(PHILOSOPHY_CREATED_MESSAGE())
-      onPhilosophiesChange?.()
-    } catch (err: unknown) {
-      setItems(previous)
-      console.error('Add Philosophy Error:', err)
-      toast.error(ERROR_MESSAGE())
-    }
-  }, [items, newName, sortItems, toast, onPhilosophiesChange])
+      setEditDialogOpen(false)
+      setEditingItem(null)
+      setEditingRanks([])
 
-  /**
-   * Handle Delete Philosophy
-   *
-   * Optimistically removes the philosophy, then deletes from the database.
-   * Rolls back on failure.
-   *
-   * @param item Philosophy to delete
-   */
+      try {
+        await updatePhilosophy(targetId, {
+          philosophy_name: data.philosophy_name,
+          hunt_xp_milestones: data.hunt_xp_milestones,
+          tenet_knowledge_id: data.tenet_knowledge_id,
+          tier: data.tier,
+          neurosis_id: data.neurosis_id
+        })
+
+        // Reconcile ranks: remove deleted, update existing, insert new.
+        const submittedIds = new Set(
+          data.ranks.map((r) => r.id).filter((id): id is string => !!id)
+        )
+        const toRemove = previousRanks.filter(
+          (r) => r.id && !submittedIds.has(r.id)
+        )
+        for (const rank of toRemove)
+          if (rank.id) await removePhilosophyRank(rank.id)
+
+        for (const rank of data.ranks) {
+          if (rank.id) {
+            await updatePhilosophyRank(rank.id, {
+              rank_number: rank.rank_number,
+              rules: rank.rules || null
+            })
+          } else {
+            await addPhilosophyRank({
+              philosophy_id: targetId,
+              rank_number: rank.rank_number,
+              rules: rank.rules || null
+            })
+          }
+        }
+
+        toast.success(PHILOSOPHY_UPDATED_MESSAGE())
+        onPhilosophiesChange?.()
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Update Philosophy Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [
+      items,
+      editingItem,
+      editingRanks,
+      saving,
+      sortItems,
+      toast,
+      onPhilosophiesChange
+    ]
+  )
+
   const handleDelete = useCallback(
     (item: PhilosophyDetail) => {
       const previous = [...items]
@@ -186,73 +294,40 @@ export function CustomPhilosophiesCard({
     [items, toast, onPhilosophiesChange]
   )
 
-  /** Enter edit mode for a philosophy */
-  const handleStartEdit = useCallback((item: PhilosophyDetail) => {
-    setEditingId(item.id)
-    setEditingName(item.philosophy_name)
-  }, [])
-
-  /** Cancel edit mode */
-  const handleCancelEdit = useCallback(() => {
-    setEditingId(null)
-    setEditingName('')
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
   }, [])
 
   /**
-   * Handle Save Edit
+   * Open Edit Dialog
    *
-   * Optimistically updates the philosophy name, then persists to the database.
-   * Rolls back on failure.
+   * Fetches the target philosophy's ranks before opening so the dialog can
+   * render them as tabs. Falls back to an empty rank list on fetch failure
+   * so the user can still edit the top-level fields.
    */
-  const handleSaveEdit = useCallback(() => {
-    const trimmedName = editingName.trim()
-
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('philosophy'))
-    if (!editingId) return
-
-    const previous = [...items]
-
-    setItems(
-      sortItems(
-        items.map((i) =>
-          i.id === editingId ? { ...i, philosophy_name: trimmedName } : i
+  const openEditDialog = useCallback(
+    async (item: PhilosophyDetail) => {
+      try {
+        const ranks = await getPhilosophyRanks(item.id)
+        setEditingRanks(
+          ranks.map((r) => ({
+            id: r.id,
+            rank_number: r.rank_number,
+            rules: r.rules ?? ''
+          }))
         )
-      )
-    )
-
-    setEditingId(null)
-    setEditingName('')
-
-    updatePhilosophy(editingId, { philosophy_name: trimmedName })
-      .then(() => {
-        toast.success(PHILOSOPHY_UPDATED_MESSAGE())
-        onPhilosophiesChange?.()
-      })
-      .catch((err: unknown) => {
-        setItems(previous)
-        console.error('Update Philosophy Error:', err)
+      } catch (err: unknown) {
+        console.error('Load Philosophy Ranks Error:', err)
         toast.error(ERROR_MESSAGE())
-      })
-  }, [items, editingId, editingName, sortItems, toast, onPhilosophiesChange])
-
-  const handleNewKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleAdd()
-      else if (e.key === 'Escape') {
-        setIsAdding(false)
-        setNewName('')
+        setEditingRanks([])
       }
-    },
-    [handleAdd]
-  )
 
-  const handleEditKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleSaveEdit()
-      else if (e.key === 'Escape') handleCancelEdit()
+      setDialogKey((k) => k + 1)
+      setEditingItem(item)
+      setEditDialogOpen(true)
     },
-    [handleCancelEdit, handleSaveEdit]
+    [toast]
   )
 
   return (
@@ -260,11 +335,7 @@ export function CustomPhilosophiesCard({
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center justify-between">
           <span>Philosophies</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsAdding(true)}
-            disabled={isAdding}>
+          <Button variant="outline" size="sm" onClick={openCreateDialog}>
             <PlusIcon className="h-4 w-4 mr-2" />
             Add
           </Button>
@@ -278,7 +349,7 @@ export function CustomPhilosophiesCard({
               Peering into the darkness...
             </p>
           </div>
-        ) : items.length === 0 && !isAdding ? (
+        ) : items.length === 0 ? (
           <div className="flex items-center justify-center p-8 text-center">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
@@ -299,95 +370,27 @@ export function CustomPhilosophiesCard({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isAdding && (
-                  <TableRow>
-                    <TableCell>
-                      <Input
-                        ref={newInputRef}
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        onKeyDown={handleNewKeyDown}
-                        placeholder="Philosophy name"
-                        aria-label="New philosophy name"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleAdd}
-                          title="Save philosophy">
-                          <CheckIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setIsAdding(false)
-                            setNewName('')
-                          }}
-                          title="Cancel">
-                          <XIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-
                 {items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
-                      {editingId === item.id ? (
-                        <Input
-                          ref={editInputRef}
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          onKeyDown={handleEditKeyDown}
-                          placeholder="Philosophy name"
-                          aria-label={`Edit ${item.philosophy_name}`}
-                        />
-                      ) : (
-                        item.philosophy_name
-                      )}
+                      {item.philosophy_name}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {editingId === item.id ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={handleSaveEdit}
-                              title="Save">
-                              <CheckIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={handleCancelEdit}
-                              title="Cancel">
-                              <XIcon className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStartEdit(item)}
-                              title={`Edit ${item.philosophy_name}`}>
-                              <PencilIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(item)}
-                              title={`Delete ${item.philosophy_name}`}>
-                              <Trash2Icon className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(item)}
+                          title={`Edit ${item.philosophy_name}`}>
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(item)}
+                          title={`Delete ${item.philosophy_name}`}>
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -397,6 +400,46 @@ export function CustomPhilosophiesCard({
           </div>
         )}
       </CardContent>
+
+      <PhilosophyDialog
+        key={`create-${dialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={saving}
+        knowledges={availableKnowledges}
+        neuroses={availableNeuroses}
+        title="Create Custom Philosophy"
+        description="A new school of thought takes form."
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
+
+      <PhilosophyDialog
+        key={`edit-${dialogKey}`}
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open)
+          if (!open) {
+            setEditingItem(null)
+            setEditingRanks([])
+          }
+        }}
+        onSave={handleEdit}
+        saving={saving}
+        knowledges={availableKnowledges}
+        neuroses={availableNeuroses}
+        initialName={editingItem?.philosophy_name}
+        initialHuntXpMilestones={editingItem?.hunt_xp_milestones ?? []}
+        initialTenetKnowledgeId={editingItem?.tenet_knowledge_id}
+        initialTier={editingItem?.tier}
+        initialNeurosisId={editingItem?.neurosis_id}
+        initialRanks={editingRanks}
+        title="Edit Philosophy"
+        description="Reshape the school of thought."
+        saveLabel="Save"
+        savingLabel="Saving..."
+      />
     </Card>
   )
 }

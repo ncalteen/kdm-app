@@ -23,6 +23,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { removeHunt, updateHunt } from '@/lib/dal/hunt'
 import { updateHuntHuntBoard } from '@/lib/dal/hunt-hunt-board'
+import { copyMonsterJunctions } from '@/lib/dal/monster-trait-mood'
 import { addShowdown } from '@/lib/dal/showdown'
 import { addShowdownAIDeck } from '@/lib/dal/showdown-ai-deck'
 import { addShowdownMonster } from '@/lib/dal/showdown-monster'
@@ -347,7 +348,6 @@ export function ActiveHuntCard({
           luck: huntMonster.luck,
           luck_tokens: huntMonster.luck_tokens,
           monster_name: huntMonster.monster_name,
-          moods: huntMonster.moods,
           movement: huntMonster.movement,
           movement_tokens: huntMonster.movement_tokens,
           notes: huntMonster.notes,
@@ -358,9 +358,36 @@ export function ActiveHuntCard({
           strength: huntMonster.strength,
           strength_tokens: huntMonster.strength_tokens,
           toughness: huntMonster.toughness,
-          traits: huntMonster.traits,
           wounds: huntMonster.wounds
         })
+
+        // Copy trait/mood/survivor-status junctions from the hunt monster.
+        await Promise.all([
+          copyMonsterJunctions(
+            { table: 'hunt_monster_trait', parentId: huntMonster.id },
+            {
+              table: 'showdown_monster_trait',
+              parentId: showdownMonsterId
+            }
+          ),
+          copyMonsterJunctions(
+            { table: 'hunt_monster_mood', parentId: huntMonster.id },
+            {
+              table: 'showdown_monster_mood',
+              parentId: showdownMonsterId
+            }
+          ),
+          copyMonsterJunctions(
+            {
+              table: 'hunt_monster_survivor_status',
+              parentId: huntMonster.id
+            },
+            {
+              table: 'showdown_monster_survivor_status',
+              parentId: showdownMonsterId
+            }
+          )
+        ])
 
         showdownMonsters[showdownMonsterId] = {
           id: showdownMonsterId,
@@ -389,6 +416,7 @@ export function ActiveHuntCard({
           strength_tokens: huntMonster.strength_tokens,
           toughness: huntMonster.toughness,
           traits: huntMonster.traits,
+          survivor_statuses: huntMonster.survivor_statuses,
           wounds: huntMonster.wounds,
           ai_deck: showdownAIDeck
         }

@@ -8,11 +8,16 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
+vi.mock('@/lib/dal/user', () => ({
+  getUserId: vi.fn()
+}))
+
 const {
   getStrainMilestoneSharedUsers,
   addStrainMilestoneSharedUsers,
   removeStrainMilestoneSharedUsers
 } = await import('@/lib/dal/strain-milestone-shared-user')
+const { getUserId } = await import('@/lib/dal/user')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -133,7 +138,9 @@ describe('removeStrainMilestoneSharedUsers', () => {
   })
 
   it('deletes shared users correctly', async () => {
-    const mockIn = vi.fn().mockResolvedValue({ error: null })
+    vi.mocked(getUserId).mockResolvedValue('user-1')
+    const mockEqUser = vi.fn().mockResolvedValue({ error: null })
+    const mockIn = vi.fn().mockReturnValue({ eq: mockEqUser })
     const mockEq = vi.fn().mockReturnValue({ in: mockIn })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
@@ -148,12 +155,15 @@ describe('removeStrainMilestoneSharedUsers', () => {
       'strain_milestone-1'
     )
     expect(mockIn).toHaveBeenCalledWith('shared_user_id', ['u-1', 'u-2'])
+    expect(mockEqUser).toHaveBeenCalledWith('user_id', 'user-1')
   })
 
   it('throws on error', async () => {
-    const mockIn = vi
+    vi.mocked(getUserId).mockResolvedValue('user-1')
+    const mockEqUser = vi
       .fn()
       .mockResolvedValue({ error: { message: 'Delete failed' } })
+    const mockIn = vi.fn().mockReturnValue({ eq: mockEqUser })
     const mockEq = vi.fn().mockReturnValue({ in: mockIn })
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })

@@ -60,6 +60,7 @@ export async function getSettlementResources(
  *
  * @param resourceIds Resource IDs
  * @param settlementId Settlement ID
+ * @returns Inserted Settlement Resource Rows
  */
 export async function addSettlementResources(
   resourceIds: string[],

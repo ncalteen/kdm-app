@@ -1,6 +1,11 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { HuntMonsterDetail } from '@/lib/types'
+import {
+  HuntMonsterDetail,
+  MoodDetail,
+  SurvivorStatusDetail,
+  TraitDetail
+} from '@/lib/types'
 
 /**
  * Get Hunt Monsters
@@ -20,7 +25,7 @@ export async function getHuntMonsters(
   const { data, error } = await supabase
     .from('hunt_monster')
     .select(
-      'id, accuracy, accuracy_tokens, ai_deck_id, ai_deck_remaining, damage, damage_tokens, evasion, evasion_tokens, hunt_id, knocked_down, luck, luck_tokens, monster_name, moods, movement, movement_tokens, notes, settlement_id, speed, speed_tokens, strength, strength_tokens, toughness, traits, wounds, hunt_ai_deck(id, advanced_cards, basic_cards, legendary_cards, overtone_cards)'
+      'id, accuracy, accuracy_tokens, ai_deck_id, ai_deck_remaining, damage, damage_tokens, evasion, evasion_tokens, hunt_id, knocked_down, luck, luck_tokens, monster_name, movement, movement_tokens, notes, settlement_id, speed, speed_tokens, strength, strength_tokens, toughness, wounds, hunt_ai_deck(id, advanced_cards, basic_cards, legendary_cards, overtone_cards), hunt_monster_trait(trait(id, custom, trait_name, rules)), hunt_monster_mood(mood(id, custom, mood_name, rules)), hunt_monster_survivor_status(survivor_status(id, custom, survivor_status_name, rules))'
     )
     .eq('hunt_id', huntId)
 
@@ -31,7 +36,37 @@ export async function getHuntMonsters(
 
   for (const m of data ?? []) {
     const aiDeck = m.hunt_ai_deck as unknown as HuntMonsterDetail['ai_deck']
-    huntMonsterMap[m.id] = { ...m, ai_deck: aiDeck ?? null }
+    const traitRows = (
+      m as unknown as {
+        hunt_monster_trait: { trait: TraitDetail | null }[]
+      }
+    ).hunt_monster_trait
+    const moodRows = (
+      m as unknown as {
+        hunt_monster_mood: { mood: MoodDetail | null }[]
+      }
+    ).hunt_monster_mood
+    const statusRows = (
+      m as unknown as {
+        hunt_monster_survivor_status: {
+          survivor_status: SurvivorStatusDetail | null
+        }[]
+      }
+    ).hunt_monster_survivor_status
+
+    huntMonsterMap[m.id] = {
+      ...m,
+      ai_deck: aiDeck ?? null,
+      traits: (traitRows ?? [])
+        .map((r) => r.trait)
+        .filter((t): t is TraitDetail => t !== null),
+      moods: (moodRows ?? [])
+        .map((r) => r.mood)
+        .filter((m): m is MoodDetail => m !== null),
+      survivor_statuses: (statusRows ?? [])
+        .map((r) => r.survivor_status)
+        .filter((s): s is SurvivorStatusDetail => s !== null)
+    }
   }
 
   return huntMonsterMap

@@ -144,11 +144,7 @@ export function SurvivorCard({
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
-            <DisordersCard
-              local={local}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-            />
+            <DisordersCard local={local} selectedSurvivor={selectedSurvivor} />
             <AbilitiesAndImpairmentsCard
               local={local}
               selectedSurvivor={selectedSurvivor}

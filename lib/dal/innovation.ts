@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { InnovationDetail } from '@/lib/types'
@@ -15,30 +16,25 @@ import { InnovationDetail } from '@/lib/types'
 export async function getInnovations(): Promise<{
   [key: string]: InnovationDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('innovation')
-      .select('id, custom, innovation_name')
+      .select('id, custom, innovation_name, rules, consequences, benefits')
       .eq('custom', false),
     supabase
       .from('innovation')
-      .select('id, custom, innovation_name')
+      .select('id, custom, innovation_name, rules, consequences, benefits')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('innovation_shared_user')
-      .select('innovation(id, custom, innovation_name)')
-      .eq('shared_user_id', user.id)
+      .select(
+        'innovation(id, custom, innovation_name, rules, consequences, benefits)'
+      )
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -108,23 +104,18 @@ export async function addInnovation(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<InnovationDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (innovation.custom && !user) throw new Error('Not Authenticated')
+  if (innovation.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('innovation')
     .insert({
       ...innovation,
-      ...(innovation.custom ? { user_id: user!.id } : {})
+      ...(innovation.custom ? { user_id: userId! } : {})
     })
-    .select('id, custom, innovation_name')
+    .select('id, custom, innovation_name, rules, consequences, benefits')
     .single()
 
   if (error) throw new Error(`Error Adding Innovation: ${error.message}`)

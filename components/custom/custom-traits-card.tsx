@@ -1,0 +1,311 @@
+'use client'
+
+import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
+import { LocalStateType } from '@/contexts/local-context'
+import { useToast } from '@/hooks/use-toast'
+import { addTrait, getTraits, removeTrait, updateTrait } from '@/lib/dal/trait'
+import {
+  ERROR_MESSAGE,
+  NAMELESS_OBJECT_ERROR_MESSAGE,
+  TRAIT_CREATED_MESSAGE,
+  TRAIT_REMOVED_MESSAGE,
+  TRAIT_UPDATED_MESSAGE
+} from '@/lib/messages'
+import { TraitDetail } from '@/lib/types'
+import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
+
+/**
+ * Custom Traits Card Component Properties
+ */
+interface CustomTraitsCardProps {
+  /** Local State */
+  local: LocalStateType
+}
+
+/**
+ * Custom Traits Card Component
+ *
+ * Lists user's custom monster traits with options to create, edit, and delete.
+ * Entries are displayed alphabetically. UI updates are optimistic and roll back
+ * on database failure.
+ *
+ * @param props Custom Traits Card Properties
+ * @returns Custom Traits Card Component
+ */
+export function CustomTraitsCard({
+  local
+}: CustomTraitsCardProps): ReactElement {
+  const { toast } = useToast(local)
+
+  const [items, setItems] = useState<TraitDetail[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<TraitDetail | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
+
+  /** Sort items alphabetically by name */
+  const sortItems = useCallback(
+    (list: TraitDetail[]): TraitDetail[] =>
+      [...list].sort((a, b) => a.trait_name.localeCompare(b.trait_name)),
+    []
+  )
+
+  /** Load custom traits */
+  const loadItems = useCallback(async () => {
+    setIsLoading(true)
+
+    try {
+      const traitData = await getTraits()
+
+      const custom = Object.values(traitData).filter((i) => i.custom)
+      setItems(sortItems(custom))
+    } catch (err: unknown) {
+      console.error('Load Traits Error:', err)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setIsLoading(false)
+    }
+  }, [sortItems, toast])
+
+  useEffect(() => {
+    loadItems()
+  }, [loadItems])
+
+  const handleCreate = useCallback(
+    async (data: { name: string; rules: string }) => {
+      if (saving) return
+      if (!data.name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('trait'))
+
+      setSaving(true)
+
+      const tempId = `temp-${crypto.randomUUID()}`
+      const temp: TraitDetail = {
+        id: tempId,
+        custom: true,
+        trait_name: data.name,
+        rules: data.rules || null
+      }
+
+      const previous = [...items]
+      setItems(sortItems([...items, temp]))
+      setCreateDialogOpen(false)
+
+      try {
+        const created = await addTrait({
+          custom: true,
+          trait_name: data.name,
+          rules: data.rules || null
+        })
+
+        setItems((prev) =>
+          sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+        )
+
+        toast.success(TRAIT_CREATED_MESSAGE())
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Add Trait Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [items, saving, sortItems, toast]
+  )
+
+  const handleEdit = useCallback(
+    async (data: { name: string; rules: string }) => {
+      if (saving || !editingItem) return
+      if (!data.name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('trait'))
+
+      setSaving(true)
+
+      const previous = [...items]
+
+      setItems(
+        sortItems(
+          items.map((i) =>
+            i.id === editingItem.id
+              ? {
+                  ...i,
+                  trait_name: data.name,
+                  rules: data.rules || null
+                }
+              : i
+          )
+        )
+      )
+
+      setEditDialogOpen(false)
+      setEditingItem(null)
+
+      try {
+        await updateTrait(editingItem.id, {
+          trait_name: data.name,
+          rules: data.rules || null
+        })
+
+        toast.success(TRAIT_UPDATED_MESSAGE())
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Update Trait Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [items, editingItem, saving, sortItems, toast]
+  )
+
+  const handleDelete = useCallback(
+    (item: TraitDetail) => {
+      const previous = [...items]
+      setItems(items.filter((i) => i.id !== item.id))
+
+      removeTrait(item.id)
+        .then(() => toast.success(TRAIT_REMOVED_MESSAGE()))
+        .catch((err: unknown) => {
+          setItems(previous)
+          console.error('Delete Trait Error:', err)
+          toast.error(ERROR_MESSAGE())
+        })
+    },
+    [items, toast]
+  )
+
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
+  }, [])
+
+  const openEditDialog = useCallback((item: TraitDetail) => {
+    setDialogKey((k) => k + 1)
+    setEditingItem(item)
+    setEditDialogOpen(true)
+  }, [])
+
+  return (
+    <Card className="p-0 border-1 gap-0">
+      <CardHeader className="px-4 pt-4 pb-2">
+        <CardTitle className="text-md flex flex-row items-center justify-between">
+          <span>Traits</span>
+          <Button variant="outline" size="sm" onClick={openCreateDialog}>
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Add
+          </Button>
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="p-2">
+        {isLoading ? (
+          <div className="flex items-center justify-center p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Peering into the darkness...
+            </p>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex items-center justify-center p-8 text-center">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                No custom traits mark the beasts yet.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Create a custom trait to see it appear here.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="max-h-[400px] overflow-y-auto rounded-md border">
+            <Table>
+              <TableHeader className="sticky top-0 bg-background z-10">
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="w-[100px] text-right">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div className="font-medium">{item.trait_name}</div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(item)}
+                          title={`Edit ${item.trait_name}`}>
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(item)}
+                          title={`Delete ${item.trait_name}`}>
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+
+      <CustomItemDialog
+        key={`create-${dialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={saving}
+        title="Create Custom Trait"
+        description="A new mark defines the beast."
+        nameLabel="Trait Name"
+        namePlaceholder="Enter trait name"
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
+
+      <CustomItemDialog
+        key={`edit-${dialogKey}`}
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open)
+          if (!open) setEditingItem(null)
+        }}
+        onSave={handleEdit}
+        saving={saving}
+        initialName={editingItem?.trait_name}
+        initialRules={editingItem?.rules ?? ''}
+        title="Edit Trait"
+        description="Reshape the mark."
+        nameLabel="Trait Name"
+        namePlaceholder="Enter trait name"
+        saveLabel="Save"
+        savingLabel="Saving..."
+      />
+    </Card>
+  )
+}

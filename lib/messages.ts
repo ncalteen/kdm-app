@@ -7,6 +7,14 @@ import {
 } from '@/lib/enums'
 
 /**
+ * Ability/Impairment Created
+ *
+ * @returns Ability/Impairment Created Message
+ */
+export const ABILITY_IMPAIRMENT_CREATED_MESSAGE = () =>
+  'A new ability/impairment emerges from the darkness.'
+
+/**
  * Ability/Impairment Removed
  *
  * @returns Ability/Impairment Removed Message
@@ -2375,3 +2383,27 @@ export const TRAIT_REMOVED_MESSAGE = () => 'The trait fades from memory.'
  * @returns Trait Updated Message
  */
 export const TRAIT_UPDATED_MESSAGE = () => 'The trait has been updated.'
+
+/**
+ * Survivor Status Created
+ *
+ * @returns Survivor Status Created Message
+ */
+export const SURVIVOR_STATUS_CREATED_MESSAGE = () =>
+  'A new affliction takes hold.'
+
+/**
+ * Survivor Status Removed
+ *
+ * @returns Survivor Status Removed Message
+ */
+export const SURVIVOR_STATUS_REMOVED_MESSAGE = () =>
+  'The affliction has passed.'
+
+/**
+ * Survivor Status Updated
+ *
+ * @returns Survivor Status Updated Message
+ */
+export const SURVIVOR_STATUS_UPDATED_MESSAGE = () =>
+  'The affliction has been updated.'

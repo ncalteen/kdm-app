@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
@@ -27,15 +28,8 @@ export async function getQuarries(
   includeAlternates = true,
   includeVignettes = true
 ): Promise<{ [key: string]: QuarryDetail }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   // Fetch all three categories of quarries in parallel
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
@@ -43,7 +37,7 @@ export async function getQuarries(
     supabase
       .from('quarry')
       .select(
-        'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
+        'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
       )
       .eq('custom', false)
       .in('node', nodeTypes),
@@ -51,18 +45,18 @@ export async function getQuarries(
     supabase
       .from('quarry')
       .select(
-        'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
+        'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
       )
       .eq('custom', true)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .in('node', nodeTypes),
     // Custom quarries shared with the user
     supabase
       .from('quarry_shared_user')
       .select(
-        'quarry(id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id)'
+        'quarry(id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
       )
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -107,23 +101,16 @@ export async function getQuarries(
 export async function getUserCustomQuarries(): Promise<{
   [key: string]: QuarryDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('quarry')
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
     )
     .eq('custom', true)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error) throw new Error(`Error Fetching Custom Quarries: ${error.message}`)
 
@@ -151,7 +138,7 @@ export async function getQuarry(
   const { data, error } = await supabase
     .from('quarry')
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
     )
     .eq('id', quarryId)
     .maybeSingle()
@@ -239,21 +226,16 @@ export async function addQuarry(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<QuarryDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Auth Error: ${userError.message}`)
-  if (quarry.custom && !user) throw new Error('Not Authenticated')
+  if (quarry.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('quarry')
-    .insert({ ...quarry, ...(quarry.custom ? { user_id: user!.id } : {}) })
+    .insert({ ...quarry, ...(quarry.custom ? { user_id: userId! } : {}) })
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id'
+      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
     )
     .single()
 

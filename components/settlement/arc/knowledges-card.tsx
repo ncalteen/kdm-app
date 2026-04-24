@@ -1,6 +1,6 @@
 'use client'
 
-import { CreateCustomKnowledgeDialog } from '@/components/settlement/arc/create-custom-knowledge-dialog'
+import { KnowledgeDialog } from '@/components/custom/dialogs/knowledge-dialog'
 import { KnowledgeItem } from '@/components/settlement/arc/knowledge-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,8 +19,11 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addKnowledge, getKnowledges } from '@/lib/dal/knowledge'
+import { getPhilosophies } from '@/lib/dal/philosophy'
 import {
   addSettlementKnowledges,
   removeSettlementKnowledge
@@ -32,11 +35,12 @@ import {
 } from '@/lib/messages'
 import {
   KnowledgeDetail,
+  PhilosophyDetail,
   SettlementDetail,
   SettlementStateSetter
 } from '@/lib/types'
 import { GraduationCapIcon, Plus, PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Knowledges Card Properties
@@ -66,57 +70,35 @@ export function KnowledgesCard({
   setSelectedSettlement
 }: KnowledgesCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [dialogKey, setDialogKey] = useState(0)
 
   // Available knowledges for the select dropdown (fetched once per settlement).
-  const [availableKnowledges, setAvailableKnowledges] = useState<{
+  const {
+    data: availableKnowledges,
+    isLoaded: hasFetched,
+    setData: setAvailableKnowledges
+  } = useCatalogFetch<{
     [key: string]: KnowledgeDetail
-  }>({})
+  }>(selectedSettlement?.id, () => getKnowledges(), {
+    initial: {},
+    errorContext: 'Knowledges Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  // Fetch available knowledge options when settlement changes.
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getKnowledges()
-      .then((knowledges) => {
-        if (cancelled) return
-
-        setAvailableKnowledges(knowledges)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        setAvailableKnowledges({})
-        setHasFetched(true)
-
-        console.error('Knowledges Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  // Available philosophies for the create dialog dropdown.
+  const { data: availablePhilosophies } = useCatalogFetch<{
+    [key: string]: PhilosophyDetail
+  }>(selectedSettlement?.id, () => getPhilosophies(), {
+    initial: {},
+    errorContext: 'Philosophies Fetch Error'
+  })
 
   /**
    * Sorted Knowledges
@@ -155,11 +137,16 @@ export function KnowledgesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['knowledges'][0] = {
         id: tempId,
         knowledge_id: knowledgeId,
-        knowledge_name: knowledgeInfo.knowledge_name
+        knowledge_name: knowledgeInfo.knowledge_name,
+        philosophy_id: knowledgeInfo.philosophy_id ?? null,
+        rules: knowledgeInfo.rules ?? null,
+        observation_conditions: knowledgeInfo.observation_conditions ?? null,
+        observation_rank_up_milestone:
+          knowledgeInfo.observation_rank_up_milestone ?? null
       }
 
       const updatedKnowledges = [
@@ -172,8 +159,11 @@ export function KnowledgesCard({
         knowledges: updatedKnowledges
       })
 
-      addSettlementKnowledges([knowledgeId], selectedSettlement.id)
-        .then((rows) => {
+      void mutate({
+        context: 'Knowledge Add',
+        persist: () =>
+          addSettlementKnowledges([knowledgeId], selectedSettlement.id),
+        onSuccess: (rows) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -184,10 +174,8 @@ export function KnowledgesCard({
                 }
               : null
           )
-
-          toast.success(KNOWLEDGE_CREATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -198,12 +186,11 @@ export function KnowledgesCard({
                 }
               : null
           )
-
-          console.error('Knowledge Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: KNOWLEDGE_CREATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableKnowledges, setSelectedSettlement, toast]
+    [selectedSettlement, availableKnowledges, setSelectedSettlement, mutate]
   )
 
   /**
@@ -228,9 +215,10 @@ export function KnowledgesCard({
         )
       })
 
-      removeSettlementKnowledge(removed.id)
-        .then(() => toast.success(KNOWLEDGE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Knowledge Remove',
+        persist: () => removeSettlementKnowledge(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (
               !prev ||
@@ -242,12 +230,11 @@ export function KnowledgesCard({
               knowledges: [...(prev.knowledges ?? []), removed]
             }
           })
-
-          console.error('Knowledge Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: KNOWLEDGE_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -262,7 +249,13 @@ export function KnowledgesCard({
    * adds it to the settlement.
    */
   const handleCreate = useCallback(
-    async (data: { knowledge_name: string; philosophy_id: string | null }) => {
+    async (data: {
+      knowledge_name: string
+      philosophy_id: string | null
+      rules: string
+      observation_conditions: string
+      observation_rank_up_milestone: number | null
+    }) => {
       if (creating || !selectedSettlement) return
 
       setCreating(true)
@@ -271,7 +264,10 @@ export function KnowledgesCard({
         const newKnowledge = await addKnowledge({
           custom: true,
           knowledge_name: data.knowledge_name,
-          philosophy_id: data.philosophy_id
+          philosophy_id: data.philosophy_id,
+          rules: data.rules || null,
+          observation_conditions: data.observation_conditions || null,
+          observation_rank_up_milestone: data.observation_rank_up_milestone
         })
 
         setAvailableKnowledges((prev) => ({
@@ -284,11 +280,16 @@ export function KnowledgesCard({
         toast.success(KNOWLEDGE_CREATED_MESSAGE())
 
         // Add to settlement immediately.
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['knowledges'][0] = {
           id: tempId,
           knowledge_id: newKnowledge.id,
-          knowledge_name: newKnowledge.knowledge_name
+          knowledge_name: newKnowledge.knowledge_name,
+          philosophy_id: newKnowledge.philosophy_id ?? null,
+          rules: newKnowledge.rules ?? null,
+          observation_conditions: newKnowledge.observation_conditions ?? null,
+          observation_rank_up_milestone:
+            newKnowledge.observation_rank_up_milestone ?? null
         }
 
         const updatedKnowledges = [
@@ -301,8 +302,11 @@ export function KnowledgesCard({
           knowledges: updatedKnowledges
         })
 
-        addSettlementKnowledges([newKnowledge.id], selectedSettlement.id)
-          .then((rows) => {
+        void mutate({
+          context: 'Knowledge Add',
+          persist: () =>
+            addSettlementKnowledges([newKnowledge.id], selectedSettlement.id),
+          onSuccess: (rows) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -313,8 +317,8 @@ export function KnowledgesCard({
                   }
                 : null
             )
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -325,9 +329,8 @@ export function KnowledgesCard({
                   }
                 : null
             )
-            console.error('Knowledge Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          }
+        })
       } catch (error) {
         console.error('Knowledge Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -335,7 +338,14 @@ export function KnowledgesCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [
+      creating,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate,
+      setAvailableKnowledges
+    ]
   )
 
   /** Open the create dialog with the current search term pre-filled. */
@@ -432,7 +442,7 @@ export function KnowledgesCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading knowledges...
               </p>
@@ -451,13 +461,18 @@ export function KnowledgesCard({
         </div>
       </CardContent>
 
-      <CreateCustomKnowledgeDialog
+      <KnowledgeDialog
         key={dialogKey}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onCreate={handleCreate}
-        creating={creating}
+        onSave={handleCreate}
+        saving={creating}
+        philosophies={availablePhilosophies}
         initialName={search.trim()}
+        title="Create Custom Knowledge"
+        description="New knowledge illuminates the settlement."
+        saveLabel="Create"
+        savingLabel="Creating..."
       />
     </Card>
   )

@@ -12,26 +12,33 @@ import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
+import {
+  syncMonsterMoods,
+  syncMonsterSurvivorStatuses,
+  syncMonsterTraits
+} from '@/lib/dal/monster-trait-mood'
 import { updateShowdownMonster } from '@/lib/dal/showdown-monster'
 import {
   ERROR_MESSAGE,
-  MOOD_CREATED_MESSAGE,
   MOOD_REMOVED_MESSAGE,
   MOOD_UPDATED_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
   SHOWDOWN_MONSTER_KNOCKED_DOWN_MESSAGE,
   SHOWDOWN_NOTES_SAVED_MESSAGE,
-  TRAIT_CREATED_MESSAGE,
+  SURVIVOR_STATUS_REMOVED_MESSAGE,
+  SURVIVOR_STATUS_UPDATED_MESSAGE,
   TRAIT_REMOVED_MESSAGE,
   TRAIT_UPDATED_MESSAGE
 } from '@/lib/messages'
 import {
+  MoodDetail,
   ShowdownDetail,
   ShowdownMonsterDetail,
-  ShowdownStateSetter
+  ShowdownStateSetter,
+  SurvivorStatusDetail,
+  TraitDetail
 } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Showdown Monster Card Component Properties
@@ -74,43 +81,27 @@ export function ShowdownMonsterCard({
     ? selectedShowdown?.showdown_monsters?.[currentMonsterId]
     : undefined
 
-  const initialDisabledTraits = useMemo(() => {
-    const next: { [key: number]: boolean } = {}
-    monster?.traits?.forEach((_: string, i: number) => {
-      next[i] = true
-    })
-    return next
-  }, [monster?.traits])
-
-  const initialDisabledMoods = useMemo(() => {
-    const next: { [key: number]: boolean } = {}
-    monster?.moods?.forEach((_: string, i: number) => {
-      next[i] = true
-    })
-    return next
-  }, [monster?.moods])
-
-  const [disabledTraits, setDisabledTraits] = useState<{
-    [key: number]: boolean
-  }>(initialDisabledTraits)
-  const [disabledMoods, setDisabledMoods] = useState<{
-    [key: number]: boolean
-  }>(initialDisabledMoods)
-  const [isAddingTrait, setIsAddingTrait] = useState(false)
-  const [isAddingMood, setIsAddingMood] = useState(false)
+  // State for managing monster notes. Tracks the last-seen monster id and
+  // persisted notes so we can reset the draft when either changes without
+  // using an effect (see https://react.dev/learn/you-might-not-need-an-effect).
   const [notesDraft, setNotesDraft] = useState(monster?.notes ?? '')
   const [isNotesDirty, setIsNotesDirty] = useState(false)
+  const [lastMonsterId, setLastMonsterId] = useState<string | undefined>(
+    currentMonsterId
+  )
+  const [lastPersistedNotes, setLastPersistedNotes] = useState<string>(
+    monster?.notes ?? ''
+  )
 
-  useEffect(() => {
+  if (
+    lastMonsterId !== currentMonsterId ||
+    lastPersistedNotes !== (monster?.notes ?? '')
+  ) {
+    setLastMonsterId(currentMonsterId)
+    setLastPersistedNotes(monster?.notes ?? '')
     setNotesDraft(monster?.notes ?? '')
     setIsNotesDirty(false)
-  }, [monster?.notes, currentMonsterId])
-  useEffect(() => {
-    setDisabledTraits(initialDisabledTraits)
-  }, [initialDisabledTraits])
-  useEffect(() => {
-    setDisabledMoods(initialDisabledMoods)
-  }, [initialDisabledMoods])
+  }
 
   const saveMonsterData = useCallback(
     (updateData: Partial<ShowdownMonsterDetail>, successMsg?: string) => {
@@ -126,7 +117,38 @@ export function ShowdownMonsterCard({
         }
       })
 
-      updateShowdownMonster(currentMonsterId, updateData)
+      // Split off traits/moods/survivor_statuses — those map to junction
+      // tables, not columns.
+      const { traits, moods, survivor_statuses, ...columnUpdates } = updateData
+      const writes: Promise<unknown>[] = []
+      if (Object.keys(columnUpdates).length > 0)
+        writes.push(updateShowdownMonster(currentMonsterId, columnUpdates))
+      if (traits !== undefined)
+        writes.push(
+          syncMonsterTraits(
+            'showdown_monster_trait',
+            currentMonsterId,
+            traits.map((t) => t.trait_name)
+          )
+        )
+      if (moods !== undefined)
+        writes.push(
+          syncMonsterMoods(
+            'showdown_monster_mood',
+            currentMonsterId,
+            moods.map((m) => m.mood_name)
+          )
+        )
+      if (survivor_statuses !== undefined)
+        writes.push(
+          syncMonsterSurvivorStatuses(
+            'showdown_monster_survivor_status',
+            currentMonsterId,
+            survivor_statuses.map((s) => s.survivor_status_name)
+          )
+        )
+
+      Promise.all(writes)
         .then(() => {
           if (successMsg) toast.success(successMsg)
         })
@@ -149,88 +171,40 @@ export function ShowdownMonsterCard({
     [selectedShowdown, currentMonsterId, monster, setSelectedShowdown, toast]
   )
 
-  const onRemoveTrait = useCallback(
-    (index: number) => {
-      const currentTraits = [...(monster?.traits ?? [])]
-      currentTraits.splice(index, 1)
-      setDisabledTraits((prev) => {
-        const next: { [key: number]: boolean } = {}
-        Object.keys(prev).forEach((k) => {
-          const num = parseInt(k)
-          if (num < index) next[num] = prev[num]
-          else if (num > index) next[num - 1] = prev[num]
-        })
-        return next
-      })
-      saveMonsterData({ traits: currentTraits }, TRAIT_REMOVED_MESSAGE())
+  const onTraitsChange = useCallback(
+    (traits: TraitDetail[]) => {
+      const prevTraits = monster?.traits ?? []
+      const successMsg =
+        traits.length > prevTraits.length
+          ? TRAIT_UPDATED_MESSAGE()
+          : TRAIT_REMOVED_MESSAGE()
+      saveMonsterData({ traits }, successMsg)
     },
     [monster?.traits, saveMonsterData]
   )
 
-  const onSaveTrait = useCallback(
-    (value?: string, i?: number) => {
-      if (!value || value.trim() === '')
-        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('trait'))
-      const updatedTraits = [...(monster?.traits ?? [])]
-      if (i !== undefined) {
-        updatedTraits[i] = value
-        setDisabledTraits((prev) => ({ ...prev, [i]: true }))
-      } else {
-        updatedTraits.push(value)
-        setDisabledTraits((prev) => ({
-          ...prev,
-          [updatedTraits.length - 1]: true
-        }))
-      }
-      saveMonsterData(
-        { traits: updatedTraits },
-        i !== undefined ? TRAIT_UPDATED_MESSAGE() : TRAIT_CREATED_MESSAGE()
-      )
-      setIsAddingTrait(false)
-    },
-    [monster?.traits, saveMonsterData, toast]
-  )
-
-  const onRemoveMood = useCallback(
-    (index: number) => {
-      const currentMoods = [...(monster?.moods ?? [])]
-      currentMoods.splice(index, 1)
-      setDisabledMoods((prev) => {
-        const next: { [key: number]: boolean } = {}
-        Object.keys(prev).forEach((k) => {
-          const num = parseInt(k)
-          if (num < index) next[num] = prev[num]
-          else if (num > index) next[num - 1] = prev[num]
-        })
-        return next
-      })
-      saveMonsterData({ moods: currentMoods }, MOOD_REMOVED_MESSAGE())
+  const onMoodsChange = useCallback(
+    (moods: MoodDetail[]) => {
+      const prevMoods = monster?.moods ?? []
+      const successMsg =
+        moods.length > prevMoods.length
+          ? MOOD_UPDATED_MESSAGE()
+          : MOOD_REMOVED_MESSAGE()
+      saveMonsterData({ moods }, successMsg)
     },
     [monster?.moods, saveMonsterData]
   )
 
-  const onSaveMood = useCallback(
-    (value?: string, i?: number) => {
-      if (!value || value.trim() === '')
-        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('mood'))
-      const updatedMoods = [...(monster?.moods ?? [])]
-      if (i !== undefined) {
-        updatedMoods[i] = value
-        setDisabledMoods((prev) => ({ ...prev, [i]: true }))
-      } else {
-        updatedMoods.push(value)
-        setDisabledMoods((prev) => ({
-          ...prev,
-          [updatedMoods.length - 1]: true
-        }))
-      }
-      saveMonsterData(
-        { moods: updatedMoods },
-        i !== undefined ? MOOD_UPDATED_MESSAGE() : MOOD_CREATED_MESSAGE()
-      )
-      setIsAddingMood(false)
+  const onSurvivorStatusesChange = useCallback(
+    (survivor_statuses: SurvivorStatusDetail[]) => {
+      const prevStatuses = monster?.survivor_statuses ?? []
+      const successMsg =
+        survivor_statuses.length > prevStatuses.length
+          ? SURVIVOR_STATUS_UPDATED_MESSAGE()
+          : SURVIVOR_STATUS_REMOVED_MESSAGE()
+      saveMonsterData({ survivor_statuses }, successMsg)
     },
-    [monster?.moods, saveMonsterData, toast]
+    [monster?.survivor_statuses, saveMonsterData]
   )
 
   const handleSaveNotes = useCallback(() => {
@@ -299,22 +273,9 @@ export function ShowdownMonsterCard({
           <div className="flex flex-col flex-1">
             <TraitsMoods
               monster={monster}
-              disabledTraits={disabledTraits}
-              disabledMoods={disabledMoods}
-              isAddingTrait={isAddingTrait}
-              isAddingMood={isAddingMood}
-              setIsAddingTrait={setIsAddingTrait}
-              setIsAddingMood={setIsAddingMood}
-              onEditTrait={(index) =>
-                setDisabledTraits((prev) => ({ ...prev, [index]: false }))
-              }
-              onSaveTrait={onSaveTrait}
-              onRemoveTrait={onRemoveTrait}
-              onEditMood={(index) =>
-                setDisabledMoods((prev) => ({ ...prev, [index]: false }))
-              }
-              onSaveMood={onSaveMood}
-              onRemoveMood={onRemoveMood}
+              onTraitsChange={onTraitsChange}
+              onMoodsChange={onMoodsChange}
+              onSurvivorStatusesChange={onSurvivorStatusesChange}
             />
             <Separator className="my-2" />
             <div className="flex flex-col gap-2 pb-2">

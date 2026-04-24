@@ -18,6 +18,8 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { getQuarries } from '@/lib/dal/quarry'
 import { getQuarryCollectiveCognitionRewardIds } from '@/lib/dal/quarry-collective-cognition-reward'
@@ -48,7 +50,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { PlusIcon, SwordIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Quarries Card Properties
@@ -78,61 +80,29 @@ export function QuarriesCard({
   setSelectedSettlement
 }: QuarriesCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
 
   // Available quarries for the select dropdown (fetched once per settlement).
-  const [availableQuarries, setAvailableQuarries] = useState<{
+  const { data: availableQuarries, isLoaded: hasFetched } = useCatalogFetch<{
     [key: string]: QuarryDetail
-  }>({})
-
-  // Track the previous settlement ID to reset state on settlement change.
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  // Fetch settlement quarries and available quarry options when settlement
-  // changes.
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    Promise.all([
+  }>(
+    selectedSettlement?.id,
+    () =>
       // Don't include alternates or vignettes in the dropdown
       getQuarries(
         [MonsterNode.NQ1, MonsterNode.NQ2, MonsterNode.NQ3, MonsterNode.NQ4],
         false,
         false
-      )
-    ])
-      .then(([quarries]) => {
-        if (cancelled) return
-
-        setAvailableQuarries(quarries)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-
-        setAvailableQuarries({})
-        setHasFetched(true)
-
-        console.error('Settlement Quarries Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
+      ),
+    {
+      initial: {},
+      errorContext: 'Settlement Quarries Fetch Error',
+      onReset: () => setAddOpen(false),
+      onError: () => toast.error(ERROR_MESSAGE())
     }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  )
 
   /**
    * Available Quarries Not Yet Added
@@ -166,18 +136,24 @@ export function QuarriesCard({
       setAddOpen(false)
 
       // Optimistic placeholder row (uses a temporary ID).
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['quarries'][0] = {
+        basic_action: quarryInfo.basic_action,
+        blind_spot: quarryInfo.blind_spot,
         collective_cognition_level_1: false,
         collective_cognition_level_2: [false, false],
         collective_cognition_level_3: [false, false, false],
         collective_cognition_prologue: false,
+        defeat_outcome: quarryInfo.defeat_outcome,
+        deployment_rules: quarryInfo.deployment_rules,
         id: tempId,
-        prologue: quarryInfo.prologue,
-        quarry_id: quarryId,
+        instinct: quarryInfo.instinct,
         monster_name: quarryInfo.monster_name,
         node: quarryInfo.node,
-        unlocked: false
+        prologue: quarryInfo.prologue,
+        quarry_id: quarryId,
+        unlocked: false,
+        victory_outcome: quarryInfo.victory_outcome
       }
 
       // Capture the updated quarries list so async callbacks reference it
@@ -192,8 +168,11 @@ export function QuarriesCard({
         quarries: updatedQuarries
       })
 
-      addSettlementQuarries([quarryId], selectedSettlement?.id)
-        .then(async (row) => {
+      void mutate({
+        context: 'Quarry Add',
+        persist: () =>
+          addSettlementQuarries([quarryId], selectedSettlement?.id),
+        onSuccess: async (row) => {
           // Replace the placeholder with the real row from the DB.
           setSelectedSettlement((prev) =>
             prev
@@ -247,6 +226,7 @@ export function QuarriesCard({
                   id: ins.id,
                   location_id: ins.location_id,
                   location_name: ins.location_name,
+                  rules: ins.rules,
                   unlocked: false
                 }))
               }
@@ -324,6 +304,7 @@ export function QuarriesCard({
                   collective_cognition_reward_id: newCcrIds[i],
                   reward_name: inserted[i].reward_name,
                   collective_cognition: inserted[i].collective_cognition,
+                  rules: inserted[i].rules,
                   unlocked: false
                 }))
               }
@@ -374,10 +355,8 @@ export function QuarriesCard({
           } catch (relatedErr) {
             console.error('Quarry Related Data Add Error:', relatedErr)
           }
-
-          toast.success(QUARRY_ADDED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           // Remove the optimistic placeholder.
           setSelectedSettlement((prev) =>
             prev
@@ -387,12 +366,11 @@ export function QuarriesCard({
                 }
               : null
           )
-
-          console.error('Quarry Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: QUARRY_ADDED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableQuarries, setSelectedSettlement, toast]
+    [selectedSettlement, availableQuarries, setSelectedSettlement, mutate]
   )
 
   /**
@@ -415,10 +393,10 @@ export function QuarriesCard({
         quarries: selectedSettlement.quarries.filter((n) => n.id !== quarryId)
       })
 
-      removeSettlementQuarry(removed.id)
-        .then(() => toast.success(QUARRY_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          // Re-add the removed quarry if it's not already present.
+      void mutate({
+        context: 'Quarry Remove',
+        persist: () => removeSettlementQuarry(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.quarries.some((q) => q.id === removed.id))
               return prev
@@ -427,12 +405,11 @@ export function QuarriesCard({
               quarries: sortQuarries([...prev.quarries, removed])
             }
           })
-
-          console.error('Quarry Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: QUARRY_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -458,12 +435,10 @@ export function QuarriesCard({
         )
       })
 
-      updateSettlementQuarry(target.id, { unlocked })
-        .then(() =>
-          toast.success(QUARRY_UNLOCKED_MESSAGE(target.monster_name, unlocked))
-        )
-        .catch((err: unknown) => {
-          // Revert the optimistic toggle.
+      void mutate({
+        context: 'Quarry Toggle',
+        persist: () => updateSettlementQuarry(target.id, { unlocked }),
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -474,12 +449,11 @@ export function QuarriesCard({
                 }
               : null
           )
-
-          console.error('Quarry Toggle Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: QUARRY_UNLOCKED_MESSAGE(target.monster_name, unlocked)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -549,7 +523,7 @@ export function QuarriesCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading quarries...
               </p>

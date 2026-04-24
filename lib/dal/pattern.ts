@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { PatternDetail } from '@/lib/types'
@@ -16,15 +17,8 @@ import { PatternDetail } from '@/lib/types'
 export async function getPatterns(): Promise<{
   [key: string]: PatternDetail
 }> {
+  const userId = await getUserId()
   const supabase = createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (!user) throw new Error('Not Authenticated')
 
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
@@ -35,11 +29,11 @@ export async function getPatterns(): Promise<{
       .from('pattern')
       .select('id, custom, pattern_name')
       .eq('custom', true)
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('pattern_shared_user')
       .select('pattern(id, custom, pattern_name)')
-      .eq('shared_user_id', user.id)
+      .eq('shared_user_id', userId)
   ])
 
   for (const result of [nonCustomResult, userCustomResult, sharedResult])
@@ -70,21 +64,16 @@ export async function addPattern(
     'id' | 'created_at' | 'updated_at' | 'user_id'
   >
 ): Promise<PatternDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError) throw new Error(`Error Fetching User: ${userError.message}`)
-  if (pattern.custom && !user) throw new Error('Not Authenticated')
+  if (pattern.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('pattern')
     .insert({
       ...pattern,
-      ...(pattern.custom ? { user_id: user!.id } : {})
+      ...(pattern.custom ? { user_id: userId! } : {})
     })
     .select('id, custom, pattern_name')
     .single()

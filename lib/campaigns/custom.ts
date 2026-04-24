@@ -8,6 +8,8 @@ import { CampaignTemplate } from '@/lib/types'
  *
  * For a custom campaign, all arrays are empty except for milestones, which
  * includes the core milestones by default.
+ *
+ * @returns Custom Campaign Template
  */
 export async function getCustomCampaignTemplate(): Promise<CampaignTemplate> {
   return {

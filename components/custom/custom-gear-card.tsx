@@ -147,7 +147,7 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
 
     if (!trimmedName) return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('gear'))
 
-    const tempId = `temp-${Date.now()}`
+    const tempId = `temp-${crypto.randomUUID()}`
     const temp: GearDetail = {
       id: tempId,
       custom: true,

@@ -52,7 +52,7 @@ export function SettlementPhaseBoard({
   /**
    * Handle Click Event
    *
-   * @param event Click Event
+   * @param index Selected Space Index
    */
   const handleClick = (index: number) => {
     if (index >= 0 && index <= 10) onPositionUpdate(index)

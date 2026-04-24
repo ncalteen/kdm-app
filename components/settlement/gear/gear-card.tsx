@@ -19,6 +19,8 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
+import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
+import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import { addGear, getGear } from '@/lib/dal/gear'
 import {
@@ -38,7 +40,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { Plus, PlusIcon, WrenchIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Gear Card Properties
@@ -68,51 +70,26 @@ export function GearCard({
   setSelectedSettlement
 }: GearCardProps): ReactElement {
   const { toast } = useToast(local)
+  const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
-  const [hasFetched, setHasFetched] = useState<boolean>(false)
   const [search, setSearch] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [dialogKey, setDialogKey] = useState(0)
 
-  const [availableGear, setAvailableGear] = useState<{
+  const {
+    data: availableGear,
+    isLoaded: hasFetched,
+    setData: setAvailableGear
+  } = useCatalogFetch<{
     [key: string]: GearDetail
-  }>({})
-
-  const [prevSettlementId, setPrevSettlementId] = useState<string | null>(
-    selectedSettlement?.id ?? null
-  )
-
-  if (selectedSettlement?.id !== prevSettlementId) {
-    setPrevSettlementId(selectedSettlement?.id ?? null)
-    setAddOpen(false)
-    setHasFetched(false)
-  }
-
-  useEffect(() => {
-    if (!selectedSettlement?.id || hasFetched) return
-
-    let cancelled = false
-
-    getGear()
-      .then((gear) => {
-        if (cancelled) return
-        setAvailableGear(gear)
-        setHasFetched(true)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setAvailableGear({})
-        setHasFetched(true)
-        console.error('Settlement Gear Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedSettlement?.id, hasFetched, toast])
+  }>(selectedSettlement?.id, () => getGear(), {
+    initial: {},
+    errorContext: 'Settlement Gear Fetch Error',
+    onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   const selectableGear = useMemo(() => {
     const linkedIds = new Set(
@@ -148,7 +125,7 @@ export function GearCard({
 
       setAddOpen(false)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['gear'][0] = {
         gear_id: gearId,
         gear_name: gearInfo.gear_name,
@@ -163,12 +140,15 @@ export function GearCard({
         gear: updatedGear
       })
 
-      addSettlementGear({
-        gear_id: gearId,
-        quantity: 1,
-        settlement_id: selectedSettlement.id
-      })
-        .then((id) => {
+      void mutate({
+        context: 'Gear Add',
+        persist: () =>
+          addSettlementGear({
+            gear_id: gearId,
+            quantity: 1,
+            settlement_id: selectedSettlement.id
+          }),
+        onSuccess: (id) => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -179,9 +159,8 @@ export function GearCard({
                 }
               : null
           )
-          toast.success(GEAR_UPDATED_MESSAGE())
-        })
-        .catch((err: unknown) => {
+        },
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -190,11 +169,11 @@ export function GearCard({
                 }
               : null
           )
-          console.error('Gear Add Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: GEAR_UPDATED_MESSAGE()
+      })
     },
-    [selectedSettlement, availableGear, setSelectedSettlement, toast]
+    [selectedSettlement, availableGear, setSelectedSettlement, mutate]
   )
 
   /**
@@ -217,18 +196,19 @@ export function GearCard({
         gear: selectedSettlement.gear.filter((g) => g.id !== removed.id)
       })
 
-      removeSettlementGear(removed.id)
-        .then(() => toast.success(GEAR_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Gear Remove',
+        persist: () => removeSettlementGear(removed.id),
+        rollback: () => {
           setSelectedSettlement((prev) => {
             if (!prev || prev.gear.some((g) => g.id === removed.id)) return prev
             return { ...prev, gear: [...prev.gear, removed] }
           })
-          console.error('Gear Remove Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: GEAR_REMOVED_MESSAGE()
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -256,9 +236,10 @@ export function GearCard({
         )
       })
 
-      updateSettlementGear(target.id, { quantity })
-        .then(() => toast.success(GEAR_UPDATED_MESSAGE(index)))
-        .catch((err: unknown) => {
+      void mutate({
+        context: 'Gear Quantity',
+        persist: () => updateSettlementGear(target.id, { quantity }),
+        rollback: () => {
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -269,11 +250,11 @@ export function GearCard({
                 }
               : null
           )
-          console.error('Gear Quantity Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        },
+        successMessage: GEAR_UPDATED_MESSAGE(index)
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /** Check if an exact match for the search term already exists. */
@@ -307,7 +288,7 @@ export function GearCard({
         toast.success(GEAR_CREATED_MESSAGE())
 
         // Add to settlement immediately
-        const tempId = `temp-${Date.now()}`
+        const tempId = `temp-${crypto.randomUUID()}`
         const optimisticRow: SettlementDetail['gear'][0] = {
           gear_id: newGear.id,
           gear_name: newGear.gear_name,
@@ -321,12 +302,15 @@ export function GearCard({
           gear: updatedGear
         })
 
-        addSettlementGear({
-          gear_id: newGear.id,
-          quantity: 1,
-          settlement_id: selectedSettlement.id
-        })
-          .then((id) => {
+        void mutate({
+          context: 'Gear Add',
+          persist: () =>
+            addSettlementGear({
+              gear_id: newGear.id,
+              quantity: 1,
+              settlement_id: selectedSettlement.id
+            }),
+          onSuccess: (id) => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -337,9 +321,8 @@ export function GearCard({
                   }
                 : null
             )
-            toast.success(GEAR_UPDATED_MESSAGE())
-          })
-          .catch((err: unknown) => {
+          },
+          rollback: () => {
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -348,9 +331,9 @@ export function GearCard({
                   }
                 : null
             )
-            console.error('Gear Add Error:', err)
-            toast.error(ERROR_MESSAGE())
-          })
+          },
+          successMessage: GEAR_UPDATED_MESSAGE()
+        })
       } catch (error) {
         console.error('Gear Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -358,7 +341,14 @@ export function GearCard({
         setCreating(false)
       }
     },
-    [creating, selectedSettlement, setSelectedSettlement, toast]
+    [
+      creating,
+      selectedSettlement,
+      setSelectedSettlement,
+      toast,
+      mutate,
+      setAvailableGear
+    ]
   )
 
   /** Open the create dialog with the current search term pre-filled */
@@ -446,7 +436,7 @@ export function GearCard({
                 </p>
               )}
 
-            {!hasFetched && !selectedSettlement?.id && (
+            {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Loading gear...
               </p>

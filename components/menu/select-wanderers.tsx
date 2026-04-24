@@ -74,6 +74,7 @@ export function SelectWanderers({
    * Toggle Wanderer Selection
    *
    * @param wandererId Wanderer ID to Toggle
+   * @returns Void; toggles the wanderer's presence in the selection list
    */
   const handleToggle = (wandererId: string) => {
     if (!onChange) return

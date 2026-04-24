@@ -1,10 +1,8 @@
 'use client'
 
-import { NumericInput } from '@/components/menu/numeric-input'
+import { CollectiveCognitionRewardDialog } from '@/components/custom/dialogs/collective-cognition-reward-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -30,14 +28,7 @@ import {
 } from '@/lib/messages'
 import { CollectiveCognitionRewardDetail } from '@/lib/types'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
-import {
-  KeyboardEvent,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 
 /**
  * Custom Collective Cognition Rewards Card Component Properties
@@ -51,9 +42,9 @@ interface CustomCollectiveCognitionRewardsCardProps {
  * Custom Collective Cognition Rewards Card Component
  *
  * Lists user's custom collective cognition rewards with options to create,
- * edit, and delete. Each reward has a name and a collective cognition value.
- * Entries are displayed alphabetically. UI updates are optimistic and roll
- * back on database failure.
+ * edit, and delete. Each reward has a name, collective cognition value, and
+ * rules. Entries are displayed alphabetically. Create and edit are handled
+ * via a dialog. UI updates are optimistic and roll back on database failure.
  *
  * @param props Custom Collective Cognition Rewards Card Properties
  * @returns Custom Collective Cognition Rewards Card Component
@@ -66,18 +57,13 @@ export function CustomCollectiveCognitionRewardsCard({
   const [items, setItems] = useState<CollectiveCognitionRewardDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Create form state
-  const [isAdding, setIsAdding] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [newCC, setNewCC] = useState(0)
-
-  // Edit form state
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState('')
-  const [editingCC, setEditingCC] = useState(0)
-
-  const newInputRef = useRef<HTMLInputElement>(null)
-  const editInputRef = useRef<HTMLInputElement>(null)
+  // Dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] =
+    useState<CollectiveCognitionRewardDetail | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   /** Sort items alphabetically by name */
   const sortItems = useCallback(
@@ -97,7 +83,7 @@ export function CustomCollectiveCognitionRewardsCard({
       const custom = Object.values(data).filter((i) => i.custom)
       setItems(sortItems(custom))
     } catch (err: unknown) {
-      console.error('Load CC Rewards Error:', err)
+      console.error('Load Collective Cognition Rewards Error:', err)
       toast.error(ERROR_MESSAGE())
     } finally {
       setIsLoading(false)
@@ -108,66 +94,123 @@ export function CustomCollectiveCognitionRewardsCard({
     loadItems()
   }, [loadItems])
 
-  useEffect(() => {
-    if (isAdding) newInputRef.current?.focus()
-  }, [isAdding])
-
-  useEffect(() => {
-    if (editingId) editInputRef.current?.focus()
-  }, [editingId])
-
   /**
-   * Handle Add Reward
+   * Handle Create Reward
    *
    * Optimistically adds a new reward, then persists to the database.
    * Rolls back on failure.
    */
-  const handleAdd = useCallback(async () => {
-    const trimmedName = newName.trim()
+  const handleCreate = useCallback(
+    async (data: {
+      reward_name: string
+      collective_cognition: number
+      rules: string
+    }) => {
+      if (saving) return
+      if (!data.reward_name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('reward'))
 
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('reward'))
+      setSaving(true)
 
-    const tempId = `temp-${Date.now()}`
-    const temp: CollectiveCognitionRewardDetail = {
-      id: tempId,
-      custom: true,
-      reward_name: trimmedName,
-      collective_cognition: newCC
-    }
-
-    const previous = [...items]
-    setItems(sortItems([...items, temp]))
-    setNewName('')
-    setNewCC(0)
-    setIsAdding(false)
-
-    try {
-      const created = await addCollectiveCognitionReward({
+      const tempId = `temp-${crypto.randomUUID()}`
+      const temp: CollectiveCognitionRewardDetail = {
+        id: tempId,
         custom: true,
-        reward_name: trimmedName,
-        collective_cognition: newCC
-      })
+        reward_name: data.reward_name,
+        collective_cognition: data.collective_cognition,
+        rules: data.rules || null
+      }
 
-      setItems((prev) =>
-        sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+      const previous = [...items]
+      setItems(sortItems([...items, temp]))
+      setCreateDialogOpen(false)
+
+      try {
+        const created = await addCollectiveCognitionReward({
+          custom: true,
+          reward_name: data.reward_name,
+          collective_cognition: data.collective_cognition,
+          rules: data.rules || null
+        })
+
+        setItems((prev) =>
+          sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+        )
+
+        toast.success(COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE())
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Add Collective Cognition Reward Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [items, saving, sortItems, toast]
+  )
+
+  /**
+   * Handle Edit Reward
+   *
+   * Optimistically updates the reward, then persists to the database.
+   * Rolls back on failure.
+   */
+  const handleEdit = useCallback(
+    async (data: {
+      reward_name: string
+      collective_cognition: number
+      rules: string
+    }) => {
+      if (saving || !editingItem) return
+      if (!data.reward_name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('reward'))
+
+      setSaving(true)
+
+      const previous = [...items]
+
+      setItems(
+        sortItems(
+          items.map((i) =>
+            i.id === editingItem.id
+              ? {
+                  ...i,
+                  reward_name: data.reward_name,
+                  collective_cognition: data.collective_cognition,
+                  rules: data.rules || null
+                }
+              : i
+          )
+        )
       )
 
-      toast.success(COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE())
-    } catch (err: unknown) {
-      setItems(previous)
-      console.error('Add CC Reward Error:', err)
-      toast.error(ERROR_MESSAGE())
-    }
-  }, [items, newName, newCC, sortItems, toast])
+      setEditDialogOpen(false)
+      setEditingItem(null)
+
+      try {
+        await updateCollectiveCognitionReward(editingItem.id, {
+          reward_name: data.reward_name,
+          collective_cognition: data.collective_cognition,
+          rules: data.rules || null
+        })
+
+        toast.success(COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE())
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Update Collective Cognition Reward Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [items, editingItem, saving, sortItems, toast]
+  )
 
   /**
    * Handle Delete Reward
    *
    * Optimistically removes the reward, then deletes from the database.
    * Rolls back on failure.
-   *
-   * @param item Reward to delete
    */
   const handleDelete = useCallback(
     (item: CollectiveCognitionRewardDetail) => {
@@ -180,112 +223,35 @@ export function CustomCollectiveCognitionRewardsCard({
         )
         .catch((err: unknown) => {
           setItems(previous)
-          console.error('Delete CC Reward Error:', err)
+          console.error('Delete Collective Cognition Reward Error:', err)
           toast.error(ERROR_MESSAGE())
         })
     },
     [items, toast]
   )
 
-  /** Enter edit mode for a reward */
-  const handleStartEdit = useCallback(
+  /** Open the create dialog with a fresh key to reset state */
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
+  }, [])
+
+  /** Open the edit dialog for a specific reward */
+  const openEditDialog = useCallback(
     (item: CollectiveCognitionRewardDetail) => {
-      setEditingId(item.id)
-      setEditingName(item.reward_name)
-      setEditingCC(item.collective_cognition)
+      setDialogKey((k) => k + 1)
+      setEditingItem(item)
+      setEditDialogOpen(true)
     },
     []
   )
-
-  /** Cancel edit mode */
-  const handleCancelEdit = useCallback(() => {
-    setEditingId(null)
-    setEditingName('')
-    setEditingCC(0)
-  }, [])
-
-  /**
-   * Handle Save Edit
-   *
-   * Optimistically updates the reward, then persists to the database.
-   * Rolls back on failure.
-   */
-  const handleSaveEdit = useCallback(() => {
-    const trimmedName = editingName.trim()
-
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('reward'))
-    if (!editingId) return
-
-    const previous = [...items]
-
-    setItems(
-      sortItems(
-        items.map((i) =>
-          i.id === editingId
-            ? {
-                ...i,
-                reward_name: trimmedName,
-                collective_cognition: editingCC
-              }
-            : i
-        )
-      )
-    )
-
-    setEditingId(null)
-    setEditingName('')
-    setEditingCC(0)
-
-    updateCollectiveCognitionReward(editingId, {
-      reward_name: trimmedName,
-      collective_cognition: editingCC
-    })
-      .then(() => toast.success(COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE()))
-      .catch((err: unknown) => {
-        setItems(previous)
-        console.error('Update CC Reward Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-  }, [items, editingId, editingName, editingCC, sortItems, toast])
-
-  const handleNewKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleAdd()
-      else if (e.key === 'Escape') {
-        setIsAdding(false)
-        setNewName('')
-        setNewCC(0)
-      }
-    },
-    [handleAdd]
-  )
-
-  const handleEditKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleSaveEdit()
-      else if (e.key === 'Escape') handleCancelEdit()
-    },
-    [handleCancelEdit, handleSaveEdit]
-  )
-
-  /** Reset the add form and open it */
-  const handleStartAdd = useCallback(() => {
-    setNewName('')
-    setNewCC(0)
-    setIsAdding(true)
-  }, [])
 
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center justify-between">
           <span>Collective Cognition Rewards</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleStartAdd}
-            disabled={isAdding}>
+          <Button variant="outline" size="sm" onClick={openCreateDialog}>
             <PlusIcon className="h-4 w-4 mr-2" />
             Add
           </Button>
@@ -299,7 +265,7 @@ export function CustomCollectiveCognitionRewardsCard({
               Peering into the darkness...
             </p>
           </div>
-        ) : items.length === 0 && !isAdding ? (
+        ) : items.length === 0 ? (
           <div className="flex items-center justify-center p-8 text-center">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
@@ -311,142 +277,83 @@ export function CustomCollectiveCognitionRewardsCard({
             </div>
           </div>
         ) : (
-          <>
-            {/* Add form */}
-            {isAdding && (
-              <div className="mb-2 rounded-md border p-3 space-y-3">
-                <div className="space-y-1">
-                  <Label htmlFor="new-ccr-name">Reward Name</Label>
-                  <Input
-                    ref={newInputRef}
-                    id="new-ccr-name"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    onKeyDown={handleNewKeyDown}
-                    placeholder="Reward name"
-                    aria-label="New reward name"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>Collective Cognition</Label>
-                  <NumericInput
-                    label="Collective Cognition"
-                    value={newCC}
-                    min={0}
-                    onChange={(value) => setNewCC(value)}
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setIsAdding(false)
-                      setNewName('')
-                      setNewCC(0)
-                    }}>
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={handleAdd}>
-                    Save
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Edit form */}
-            {editingId && (
-              <div className="mb-2 rounded-md border p-3 space-y-3">
-                <div className="space-y-1">
-                  <Label htmlFor="edit-ccr-name">Reward Name</Label>
-                  <Input
-                    ref={editInputRef}
-                    id="edit-ccr-name"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    onKeyDown={handleEditKeyDown}
-                    placeholder="Reward name"
-                    aria-label="Edit reward name"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>Collective Cognition</Label>
-                  <NumericInput
-                    label="Collective Cognition"
-                    value={editingCC}
-                    min={0}
-                    onChange={(value) => setEditingCC(value)}
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCancelEdit}>
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={handleSaveEdit}>
-                    Save
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Items list */}
-            {(items.length > 0 || (!isAdding && !editingId)) && (
-              <div className="max-h-[400px] overflow-y-auto rounded-md border">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10">
-                    <TableRow>
-                      <TableHead className="w-[80px] text-center">CC</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="w-[100px] text-right">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((item) => (
-                      <TableRow
-                        key={item.id}
-                        className={
-                          editingId === item.id ? 'bg-muted/50' : undefined
-                        }>
-                        <TableCell className="text-center">
-                          {item.collective_cognition}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {item.reward_name}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStartEdit(item)}
-                              disabled={!!editingId}
-                              title={`Edit ${item.reward_name}`}>
-                              <PencilIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(item)}
-                              disabled={!!editingId}
-                              title={`Delete ${item.reward_name}`}>
-                              <Trash2Icon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </>
+          <div className="max-h-[400px] overflow-y-auto rounded-md border">
+            <Table>
+              <TableHeader className="sticky top-0 bg-background z-10">
+                <TableRow>
+                  <TableHead className="w-[80px] text-center">CC</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="w-[100px] text-right">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="text-center">
+                      {item.collective_cognition}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {item.reward_name}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(item)}
+                          title={`Edit ${item.reward_name}`}>
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(item)}
+                          title={`Delete ${item.reward_name}`}>
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
+
+      {/* Create Reward Dialog */}
+      <CollectiveCognitionRewardDialog
+        key={`create-${dialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={saving}
+        title="Create Custom Reward"
+        description="A new collective cognition reward is forged."
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
+
+      {/* Edit Reward Dialog */}
+      <CollectiveCognitionRewardDialog
+        key={`edit-${dialogKey}`}
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open)
+          if (!open) setEditingItem(null)
+        }}
+        onSave={handleEdit}
+        saving={saving}
+        initialName={editingItem?.reward_name}
+        initialCollectiveCognition={editingItem?.collective_cognition}
+        initialRules={editingItem?.rules ?? ''}
+        title="Edit Reward"
+        description="Reshape the reward."
+        saveLabel="Save"
+        savingLabel="Saving..."
+      />
     </Card>
   )
 }
