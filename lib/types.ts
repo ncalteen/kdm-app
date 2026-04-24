@@ -423,6 +423,16 @@ export type PhilosophyDetail = Omit<
 >
 
 /**
+ * Philosophy Rank Detail
+ *
+ * Used throughout the app to represent a rank within a philosophy.
+ */
+export type PhilosophyRankDetail = Omit<
+  Tables<'philosophy_rank'>,
+  'created_at' | 'updated_at'
+>
+
+/**
  * Principle Detail
  *
  * Used throughout the app to represent a principle.
