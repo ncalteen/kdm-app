@@ -21,11 +21,8 @@ import {
   ERROR_MESSAGE,
   HUNT_NOTES_SAVED_MESSAGE,
   MONSTER_STARTS_SHOWDOWN_KNOCKED_DOWN_MESSAGE,
-  MOOD_CREATED_MESSAGE,
   MOOD_REMOVED_MESSAGE,
   MOOD_UPDATED_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  TRAIT_CREATED_MESSAGE,
   TRAIT_REMOVED_MESSAGE,
   TRAIT_UPDATED_MESSAGE
 } from '@/lib/messages'
@@ -83,34 +80,6 @@ export function HuntMonsterCard({
     ? selectedHunt?.hunt_monsters?.[currentMonsterId]
     : undefined
 
-  // Compute the initial disabled state based on current traits
-  const initialDisabledTraits = useMemo(() => {
-    const next: { [key: number]: boolean } = {}
-    monster?.traits?.forEach((_: TraitDetail, i: number) => {
-      next[i] = true
-    })
-    return next
-  }, [monster?.traits])
-
-  // Compute the initial disabled state based on current moods
-  const initialDisabledMoods = useMemo(() => {
-    const next: { [key: number]: boolean } = {}
-    monster?.moods?.forEach((_: MoodDetail, i: number) => {
-      next[i] = true
-    })
-    return next
-  }, [monster?.moods])
-
-  // State for managing trait and mood editing
-  const [disabledTraits, setDisabledTraits] = useState<{
-    [key: number]: boolean
-  }>(initialDisabledTraits)
-  const [disabledMoods, setDisabledMoods] = useState<{
-    [key: number]: boolean
-  }>(initialDisabledMoods)
-  const [isAddingTrait, setIsAddingTrait] = useState<boolean>(false)
-  const [isAddingMood, setIsAddingMood] = useState<boolean>(false)
-
   // State for managing monster notes
   const [notesDraft, setNotesDraft] = useState<string>(monster?.notes ?? '')
   const [isNotesDirty, setIsNotesDirty] = useState<boolean>(false)
@@ -120,15 +89,6 @@ export function HuntMonsterCard({
     setNotesDraft(monster?.notes ?? '')
     setIsNotesDirty(false)
   }, [monster?.notes, currentMonsterId])
-
-  // Update disabled inputs when the computed initial state changes
-  useEffect(() => {
-    setDisabledTraits(initialDisabledTraits)
-  }, [initialDisabledTraits])
-
-  useEffect(() => {
-    setDisabledMoods(initialDisabledMoods)
-  }, [initialDisabledMoods])
 
   /**
    * Save Monster Data
@@ -201,129 +161,37 @@ export function HuntMonsterCard({
   )
 
   /**
-   * Handle Trait Removal
+   * Handle Trait List Change
    *
-   * @param index Index of Trait to Remove
+   * @param traits New list of selected traits
    */
-  const onRemoveTrait = useCallback(
-    (index: number) => {
-      const currentTraits = [...(monster?.traits ?? [])]
-      currentTraits.splice(index, 1)
-
-      setDisabledTraits((prev) => {
-        const next: { [key: number]: boolean } = {}
-        Object.keys(prev).forEach((k) => {
-          const num = parseInt(k)
-          if (num < index) next[num] = prev[num]
-          else if (num > index) next[num - 1] = prev[num]
-        })
-        return next
-      })
-
-      saveMonsterData({ traits: currentTraits }, TRAIT_REMOVED_MESSAGE())
+  const onTraitsChange = useCallback(
+    (traits: TraitDetail[]) => {
+      const prevTraits = monster?.traits ?? []
+      const successMsg =
+        traits.length > prevTraits.length
+          ? TRAIT_UPDATED_MESSAGE()
+          : TRAIT_REMOVED_MESSAGE()
+      saveMonsterData({ traits }, successMsg)
     },
     [monster?.traits, saveMonsterData]
   )
 
   /**
-   * Handle Trait Save
+   * Handle Mood List Change
    *
-   * @param value Trait Value
-   * @param i Trait Index (Updates Only)
+   * @param moods New list of selected moods
    */
-  const onSaveTrait = useCallback(
-    (value?: string, i?: number) => {
-      if (!value || value.trim() === '')
-        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('trait'))
-
-      const updatedTraits: TraitDetail[] = [...(monster?.traits ?? [])]
-
-      if (i !== undefined) {
-        updatedTraits[i] = { ...updatedTraits[i], trait_name: value }
-        setDisabledTraits((prev) => ({ ...prev, [i]: true }))
-      } else {
-        updatedTraits.push({
-          id: '',
-          custom: true,
-          trait_name: value,
-          rules: null
-        })
-        setDisabledTraits((prev) => ({
-          ...prev,
-          [updatedTraits.length - 1]: true
-        }))
-      }
-
-      saveMonsterData(
-        { traits: updatedTraits },
-        i !== undefined ? TRAIT_UPDATED_MESSAGE() : TRAIT_CREATED_MESSAGE()
-      )
-      setIsAddingTrait(false)
-    },
-    [monster?.traits, saveMonsterData, toast]
-  )
-
-  /**
-   * Handle Mood Removal
-   *
-   * @param index Index of Mood to Remove
-   */
-  const onRemoveMood = useCallback(
-    (index: number) => {
-      const currentMoods = [...(monster?.moods ?? [])]
-      currentMoods.splice(index, 1)
-
-      setDisabledMoods((prev) => {
-        const next: { [key: number]: boolean } = {}
-        Object.keys(prev).forEach((k) => {
-          const num = parseInt(k)
-          if (num < index) next[num] = prev[num]
-          else if (num > index) next[num - 1] = prev[num]
-        })
-        return next
-      })
-
-      saveMonsterData({ moods: currentMoods }, MOOD_REMOVED_MESSAGE())
+  const onMoodsChange = useCallback(
+    (moods: MoodDetail[]) => {
+      const prevMoods = monster?.moods ?? []
+      const successMsg =
+        moods.length > prevMoods.length
+          ? MOOD_UPDATED_MESSAGE()
+          : MOOD_REMOVED_MESSAGE()
+      saveMonsterData({ moods }, successMsg)
     },
     [monster?.moods, saveMonsterData]
-  )
-
-  /**
-   * Handle Mood Save
-   *
-   * @param value Mood Value
-   * @param i Mood Index (Updates Only)
-   */
-  const onSaveMood = useCallback(
-    (value?: string, i?: number) => {
-      if (!value || value.trim() === '')
-        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('mood'))
-
-      const updatedMoods: MoodDetail[] = [...(monster?.moods ?? [])]
-
-      if (i !== undefined) {
-        updatedMoods[i] = { ...updatedMoods[i], mood_name: value }
-        setDisabledMoods((prev) => ({ ...prev, [i]: true }))
-      } else {
-        updatedMoods.push({
-          id: '',
-          custom: true,
-          mood_name: value,
-          rules: null
-        })
-        setDisabledMoods((prev) => ({
-          ...prev,
-          [updatedMoods.length - 1]: true
-        }))
-      }
-
-      saveMonsterData(
-        { moods: updatedMoods },
-        i !== undefined ? MOOD_UPDATED_MESSAGE() : MOOD_CREATED_MESSAGE()
-      )
-      setIsAddingMood(false)
-    },
-    [monster?.moods, saveMonsterData, toast]
   )
 
   /**
@@ -400,22 +268,8 @@ export function HuntMonsterCard({
           <div className="flex flex-col flex-1">
             <TraitsMoods
               monster={monster}
-              disabledTraits={disabledTraits}
-              disabledMoods={disabledMoods}
-              isAddingTrait={isAddingTrait}
-              isAddingMood={isAddingMood}
-              setIsAddingTrait={setIsAddingTrait}
-              setIsAddingMood={setIsAddingMood}
-              onEditTrait={(index: number) =>
-                setDisabledTraits((prev) => ({ ...prev, [index]: false }))
-              }
-              onSaveTrait={onSaveTrait}
-              onRemoveTrait={onRemoveTrait}
-              onEditMood={(index: number) =>
-                setDisabledMoods((prev) => ({ ...prev, [index]: false }))
-              }
-              onSaveMood={onSaveMood}
-              onRemoveMood={onRemoveMood}
+              onTraitsChange={onTraitsChange}
+              onMoodsChange={onMoodsChange}
             />
 
             <Separator className="my-2" />
