@@ -348,10 +348,7 @@ export function UserCard({
               local={local}
               philosophyVersion={philosophyVersion}
             />
-            <CustomNeurosesCard
-              local={local}
-              philosophyVersion={philosophyVersion}
-            />
+            <CustomNeurosesCard local={local} />
           </div>
         </TabsContent>
         <TabsContent value="survivors">

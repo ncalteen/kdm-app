@@ -19,7 +19,6 @@ import {
   removeNeurosis,
   updateNeurosis
 } from '@/lib/dal/neurosis'
-import { getPhilosophies } from '@/lib/dal/philosophy'
 import {
   ERROR_MESSAGE,
   NAMELESS_OBJECT_ERROR_MESSAGE,
@@ -27,7 +26,7 @@ import {
   NEUROSIS_REMOVED_MESSAGE,
   NEUROSIS_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { NeurosisDetail, PhilosophyDetail } from '@/lib/types'
+import { NeurosisDetail } from '@/lib/types'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -37,32 +36,25 @@ import { ReactElement, useCallback, useEffect, useState } from 'react'
 interface CustomNeurosesCardProps {
   /** Local State */
   local: LocalStateType
-  /** Bumped when philosophies change externally */
-  philosophyVersion?: number
 }
 
 /**
  * Custom Neuroses Card Component
  *
  * Lists user's custom neuroses with options to create, edit, and delete.
- * Each neurosis can optionally be linked to a philosophy. Entries are
- * displayed alphabetically. UI updates are optimistic and roll back on
- * database failure.
+ * Entries are displayed alphabetically. UI updates are optimistic and roll back
+ * on database failure.
  *
  * @param props Custom Neuroses Card Properties
  * @returns Custom Neuroses Card Component
  */
 export function CustomNeurosesCard({
-  local,
-  philosophyVersion
+  local
 }: CustomNeurosesCardProps): ReactElement {
   const { toast } = useToast(local)
 
   const [items, setItems] = useState<NeurosisDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [availablePhilosophies, setAvailablePhilosophies] = useState<{
-    [key: string]: PhilosophyDetail
-  }>({})
 
   // Dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -78,19 +70,15 @@ export function CustomNeurosesCard({
     []
   )
 
-  /** Load custom neuroses and available philosophies */
+  /** Load custom neuroses */
   const loadItems = useCallback(async () => {
     setIsLoading(true)
 
     try {
-      const [neurosisData, philosophyData] = await Promise.all([
-        getNeuroses(),
-        getPhilosophies()
-      ])
+      const neurosisData = await getNeuroses()
 
       const custom = Object.values(neurosisData).filter((i) => i.custom)
       setItems(sortItems(custom))
-      setAvailablePhilosophies(philosophyData)
     } catch (err: unknown) {
       console.error('Load Neuroses Error:', err)
       toast.error(ERROR_MESSAGE())
@@ -103,26 +91,6 @@ export function CustomNeurosesCard({
     loadItems()
   }, [loadItems])
 
-  // Re-fetch philosophies when they change externally
-  useEffect(() => {
-    if (philosophyVersion === undefined || philosophyVersion === 0) return
-
-    getPhilosophies()
-      .then((data) => setAvailablePhilosophies(data))
-      .catch((err: unknown) =>
-        console.error('Refresh Philosophies Error:', err)
-      )
-  }, [philosophyVersion])
-
-  /** Get philosophy name by ID */
-  const getPhilosophyName = useCallback(
-    (philosophyId: string | null): string => {
-      if (!philosophyId) return '-'
-      return availablePhilosophies[philosophyId]?.philosophy_name ?? '-'
-    },
-    [availablePhilosophies]
-  )
-
   /**
    * Handle Create Neurosis
    *
@@ -130,11 +98,7 @@ export function CustomNeurosesCard({
    * Rolls back on failure.
    */
   const handleCreate = useCallback(
-    async (data: {
-      neurosis_name: string
-      philosophy_id: string | null
-      rules: string
-    }) => {
+    async (data: { neurosis_name: string; rules: string }) => {
       if (saving) return
       if (!data.neurosis_name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('neurosis'))
@@ -146,7 +110,6 @@ export function CustomNeurosesCard({
         id: tempId,
         custom: true,
         neurosis_name: data.neurosis_name,
-        philosophy_id: data.philosophy_id,
         rules: data.rules || null
       }
 
@@ -158,7 +121,6 @@ export function CustomNeurosesCard({
         const created = await addNeurosis({
           custom: true,
           neurosis_name: data.neurosis_name,
-          philosophy_id: data.philosophy_id,
           rules: data.rules || null
         })
 
@@ -185,11 +147,7 @@ export function CustomNeurosesCard({
    * Rolls back on failure.
    */
   const handleEdit = useCallback(
-    async (data: {
-      neurosis_name: string
-      philosophy_id: string | null
-      rules: string
-    }) => {
+    async (data: { neurosis_name: string; rules: string }) => {
       if (saving || !editingItem) return
       if (!data.neurosis_name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('neurosis'))
@@ -205,7 +163,6 @@ export function CustomNeurosesCard({
               ? {
                   ...i,
                   neurosis_name: data.neurosis_name,
-                  philosophy_id: data.philosophy_id,
                   rules: data.rules || null
                 }
               : i
@@ -219,7 +176,6 @@ export function CustomNeurosesCard({
       try {
         await updateNeurosis(editingItem.id, {
           neurosis_name: data.neurosis_name,
-          philosophy_id: data.philosophy_id,
           rules: data.rules || null
         })
 
@@ -298,9 +254,6 @@ export function CustomNeurosesCard({
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">
-                    Philosophy
-                  </TableHead>
                   <TableHead className="w-[100px] text-right">
                     Actions
                   </TableHead>
@@ -311,12 +264,6 @@ export function CustomNeurosesCard({
                   <TableRow key={item.id}>
                     <TableCell>
                       <div className="font-medium">{item.neurosis_name}</div>
-                      <div className="text-xs text-muted-foreground sm:hidden">
-                        {getPhilosophyName(item.philosophy_id)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
-                      {getPhilosophyName(item.philosophy_id)}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -350,7 +297,6 @@ export function CustomNeurosesCard({
         onOpenChange={setCreateDialogOpen}
         onSave={handleCreate}
         saving={saving}
-        philosophies={availablePhilosophies}
         title="Create Custom Neurosis"
         description="A new compulsion takes root in the mind."
         saveLabel="Create"
@@ -366,9 +312,7 @@ export function CustomNeurosesCard({
         }}
         onSave={handleEdit}
         saving={saving}
-        philosophies={availablePhilosophies}
         initialName={editingItem?.neurosis_name}
-        initialPhilosophyId={editingItem?.philosophy_id}
         initialRules={editingItem?.rules ?? ''}
         title="Edit Neurosis"
         description="Reshape the compulsion."

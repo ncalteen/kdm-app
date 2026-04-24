@@ -11,26 +11,9 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import { PhilosophyDetail } from '@/lib/types'
 import MDEditor from '@uiw/react-md-editor'
 import { useTheme } from 'next-themes'
-import {
-  KeyboardEvent,
-  ReactElement,
-  useCallback,
-  useMemo,
-  useState
-} from 'react'
-
-/** No philosophy sentinel value */
-const NO_PHILOSOPHY = '__none__'
+import { KeyboardEvent, ReactElement, useCallback, useState } from 'react'
 
 /**
  * Neurosis Dialog Properties
@@ -41,19 +24,11 @@ interface NeurosisDialogProps {
   /** Callback to close the dialog */
   onOpenChange: (open: boolean) => void
   /** Callback when neurosis is saved */
-  onSave: (data: {
-    neurosis_name: string
-    philosophy_id: string | null
-    rules: string
-  }) => void
+  onSave: (data: { neurosis_name: string; rules: string }) => void
   /** Whether the save operation is in progress */
   saving: boolean
-  /** Available philosophies for the dropdown */
-  philosophies: { [key: string]: PhilosophyDetail }
   /** Initial neurosis name (for editing) */
   initialName?: string
-  /** Initial philosophy ID (for editing) */
-  initialPhilosophyId?: string | null
   /** Initial rules (for editing) */
   initialRules?: string
   /** Dialog title */
@@ -69,8 +44,8 @@ interface NeurosisDialogProps {
 /**
  * Neurosis Dialog Component
  *
- * Dialog form for creating or editing a custom neurosis with a name, optional
- * philosophy link, and markdown rules field.
+ * Dialog form for creating or editing a custom neurosis with a name and
+ * markdown rules field.
  *
  * @param props Component Properties
  * @returns Neurosis Dialog Component
@@ -80,9 +55,7 @@ export function NeurosisDialog({
   onOpenChange,
   onSave,
   saving,
-  philosophies,
   initialName = '',
-  initialPhilosophyId = null,
   initialRules = '',
   title,
   description,
@@ -92,19 +65,7 @@ export function NeurosisDialog({
   const { resolvedTheme } = useTheme()
 
   const [name, setName] = useState(initialName)
-  const [philosophyId, setPhilosophyId] = useState<string | null>(
-    initialPhilosophyId
-  )
   const [rules, setRules] = useState(initialRules)
-
-  /** Sorted philosophies for dropdown */
-  const sortedPhilosophies = useMemo(
-    () =>
-      Object.values(philosophies).sort((a, b) =>
-        a.philosophy_name.localeCompare(b.philosophy_name)
-      ),
-    [philosophies]
-  )
 
   const handleSubmit = useCallback(() => {
     const trimmed = name.trim()
@@ -112,10 +73,9 @@ export function NeurosisDialog({
 
     onSave({
       neurosis_name: trimmed,
-      philosophy_id: philosophyId,
       rules: rules.trim()
     })
-  }, [name, philosophyId, rules, saving, onSave])
+  }, [name, rules, saving, onSave])
 
   /** Save on Enter in the name field */
   const handleNameKeyDown = useCallback(
@@ -144,27 +104,6 @@ export function NeurosisDialog({
               onChange={(e) => setName(e.target.value)}
               onKeyDown={handleNameKeyDown}
             />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="neurosis-philosophy">Philosophy (optional)</Label>
-            <Select
-              value={philosophyId ?? NO_PHILOSOPHY}
-              onValueChange={(v) =>
-                setPhilosophyId(v === NO_PHILOSOPHY ? null : v)
-              }>
-              <SelectTrigger id="neurosis-philosophy">
-                <SelectValue placeholder="No philosophy" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_PHILOSOPHY}>No philosophy</SelectItem>
-                {sortedPhilosophies.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.philosophy_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="flex flex-col gap-2" data-color-mode={resolvedTheme}>
