@@ -591,7 +591,6 @@ export type Database = {
           luck: number
           luck_tokens: number
           monster_name: string | null
-          moods: string[]
           movement: number
           movement_tokens: number
           notes: string
@@ -601,7 +600,6 @@ export type Database = {
           strength: number
           strength_tokens: number
           toughness: number
-          traits: string[]
           updated_at: string
           wounds: number
         }
@@ -621,7 +619,6 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -631,7 +628,6 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
-          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -651,7 +647,6 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -661,7 +656,6 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
-          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -1276,7 +1270,6 @@ export type Database = {
           life: number | null
           luck: number
           luck_tokens: number
-          moods: string[]
           movement: number
           movement_tokens: number
           nemesis_id: string
@@ -1286,10 +1279,8 @@ export type Database = {
           strength: number
           strength_tokens: number
           sub_monster_name: string | null
-          survivor_statuses: string[]
           toughness: number
           toughness_tokens: number
-          traits: string[]
           updated_at: string
         }
         Insert: {
@@ -1309,7 +1300,6 @@ export type Database = {
           life?: number | null
           luck?: number
           luck_tokens?: number
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           nemesis_id: string
@@ -1319,10 +1309,8 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           sub_monster_name?: string | null
-          survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
-          traits?: string[]
           updated_at?: string
         }
         Update: {
@@ -1342,7 +1330,6 @@ export type Database = {
           life?: number | null
           luck?: number
           luck_tokens?: number
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           nemesis_id?: string
@@ -1352,10 +1339,8 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           sub_monster_name?: string | null
-          survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
-          traits?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -2143,7 +2128,6 @@ export type Database = {
           level_number: number
           luck: number
           luck_tokens: number
-          moods: string[]
           movement: number
           movement_tokens: number
           overtone_cards: number
@@ -2153,10 +2137,8 @@ export type Database = {
           strength: number
           strength_tokens: number
           sub_monster_name: string | null
-          survivor_statuses: string[]
           toughness: number
           toughness_tokens: number
-          traits: string[]
           updated_at: string
         }
         Insert: {
@@ -2175,7 +2157,6 @@ export type Database = {
           level_number: number
           luck?: number
           luck_tokens?: number
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           overtone_cards?: number
@@ -2185,10 +2166,8 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           sub_monster_name?: string | null
-          survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
-          traits?: string[]
           updated_at?: string
         }
         Update: {
@@ -2207,7 +2186,6 @@ export type Database = {
           level_number?: number
           luck?: number
           luck_tokens?: number
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           overtone_cards?: number
@@ -2217,10 +2195,8 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           sub_monster_name?: string | null
-          survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
-          traits?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -3546,7 +3522,6 @@ export type Database = {
           luck: number
           luck_tokens: number
           monster_name: string | null
-          moods: string[]
           movement: number
           movement_tokens: number
           notes: string
@@ -3557,7 +3532,6 @@ export type Database = {
           strength: number
           strength_tokens: number
           toughness: number
-          traits: string[]
           updated_at: string
           wounds: number
         }
@@ -3577,7 +3551,6 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -3588,7 +3561,6 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
-          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -3608,7 +3580,6 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -3619,7 +3590,6 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
-          traits?: string[]
           updated_at?: string
           wounds?: number
         }
