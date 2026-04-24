@@ -87,7 +87,11 @@ export function CustomItemDialog({
   /** Save on Enter in the name field */
   const handleNameKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleSubmit()
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        e.stopPropagation()
+        handleSubmit()
+      }
     },
     [handleSubmit]
   )
