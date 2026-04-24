@@ -20,6 +20,8 @@ describe('RLS: nested entity tables', () => {
   let nemesisId: string
   let wandererId: string
   let locationId: string
+  let customTraitId: string
+  let customMoodId: string
 
   const rowIds: Record<string, string> = {}
 
@@ -111,6 +113,36 @@ describe('RLS: nested entity tables', () => {
       year_number: 1,
       entries: ['RLS entry']
     })
+
+    // Owner-scoped custom trait + mood used by the monster-level junction
+    // rows below. They sit alongside the other catalog custom content.
+    customTraitId = await ins('trait', {
+      custom: true,
+      user_id: owner.id,
+      trait_name: 'RLS Nested Trait'
+    })
+    customMoodId = await ins('mood', {
+      custom: true,
+      user_id: owner.id,
+      mood_name: 'RLS Nested Mood'
+    })
+
+    rowIds.quarry_level_trait = await ins('quarry_level_trait', {
+      quarry_level_id: rowIds.quarry_level,
+      trait_id: customTraitId
+    })
+    rowIds.quarry_level_mood = await ins('quarry_level_mood', {
+      quarry_level_id: rowIds.quarry_level,
+      mood_id: customMoodId
+    })
+    rowIds.nemesis_level_trait = await ins('nemesis_level_trait', {
+      nemesis_level_id: rowIds.nemesis_level,
+      trait_id: customTraitId
+    })
+    rowIds.nemesis_level_mood = await ins('nemesis_level_mood', {
+      nemesis_level_id: rowIds.nemesis_level,
+      mood_id: customMoodId
+    })
   })
 
   afterAll(async () => {
@@ -119,6 +151,8 @@ describe('RLS: nested entity tables', () => {
     await admin.from('nemesis').delete().eq('id', nemesisId)
     await admin.from('wanderer').delete().eq('id', wandererId)
     await admin.from('location').delete().eq('id', locationId)
+    await admin.from('trait').delete().eq('id', customTraitId)
+    await admin.from('mood').delete().eq('id', customMoodId)
     await deleteTestUser(owner.id)
     await deleteTestUser(attacker.id)
   })
@@ -129,9 +163,13 @@ describe('RLS: nested entity tables', () => {
     'quarry_hunt_board',
     'quarry_hunt_board_position',
     'quarry_level',
+    'quarry_level_trait',
+    'quarry_level_mood',
     'nemesis_location',
     'nemesis_timeline_year',
     'nemesis_level',
+    'nemesis_level_trait',
+    'nemesis_level_mood',
     'wanderer_timeline_year'
   ] as const
 
@@ -178,6 +216,30 @@ describe('RLS: nested entity tables', () => {
     const { data, error } = await attacker.client
       .from('nemesis_location')
       .insert({ nemesis_id: nemesisId, location_id: locationId })
+      .select('id')
+    expect(data ?? []).toEqual([])
+    expect(error?.code).toMatch(/PGRST|42501/)
+  })
+
+  it('attacker cannot INSERT into a quarry_level they do not own (traits)', async () => {
+    const { data, error } = await attacker.client
+      .from('quarry_level_trait')
+      .insert({
+        quarry_level_id: rowIds.quarry_level,
+        trait_id: customTraitId
+      })
+      .select('id')
+    expect(data ?? []).toEqual([])
+    expect(error?.code).toMatch(/PGRST|42501/)
+  })
+
+  it('attacker cannot INSERT into a nemesis_level they do not own (moods)', async () => {
+    const { data, error } = await attacker.client
+      .from('nemesis_level_mood')
+      .insert({
+        nemesis_level_id: rowIds.nemesis_level,
+        mood_id: customMoodId
+      })
       .select('id')
     expect(data ?? []).toEqual([])
     expect(error?.code).toMatch(/PGRST|42501/)

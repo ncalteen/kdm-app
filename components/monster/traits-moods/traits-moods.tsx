@@ -95,8 +95,8 @@ export function TraitsMoods({
         <div className="flex-1">
           {monster.traits.map((trait, index) => (
             <TraitItem
-              key={index}
-              trait={trait}
+              key={trait.id || index}
+              trait={trait.trait_name}
               index={index}
               isDisabled={!!disabledTraits[index]}
               onEdit={onEditTrait}
@@ -138,8 +138,8 @@ export function TraitsMoods({
         <div className="flex-1">
           {monster.moods.map((mood, index) => (
             <MoodItem
-              key={index}
-              mood={mood}
+              key={mood.id || index}
+              mood={mood.mood_name}
               index={index}
               isDisabled={!!disabledMoods[index]}
               onEdit={onEditMood}

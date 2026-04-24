@@ -1141,7 +1141,6 @@ async function createHunt(
         knocked_down: false,
         luck: 0,
         luck_tokens: 0,
-        moods: Math.random() < 0.5 ? ['Aggressive'] : ['Defensive'],
         monster_name: `Monster ${i + 1}`,
         movement: 6,
         movement_tokens: 0,
@@ -1152,7 +1151,6 @@ async function createHunt(
         strength: 0,
         strength_tokens: 0,
         toughness: 8,
-        traits: Math.random() < 0.5 ? ['Ferocious'] : ['Cunning'],
         wounds: 0
       })
 
@@ -1262,7 +1260,6 @@ async function createShowdown(
         knocked_down: false,
         luck: 0,
         luck_tokens: 0,
-        moods: Math.random() < 0.5 ? ['Aggressive'] : ['Defensive'],
         monster_name: `Monster ${i + 1}`,
         movement: 6,
         movement_tokens: 0,
@@ -1274,7 +1271,6 @@ async function createShowdown(
         strength: 0,
         strength_tokens: 0,
         toughness: 8,
-        traits: Math.random() < 0.5 ? ['Ferocious'] : ['Cunning'],
         wounds: 0
       })
 
@@ -1385,7 +1381,6 @@ async function createCustomNemeses(
       life: 10,
       luck: 0,
       luck_tokens: 0,
-      moods: ['Calculating', 'Silent'],
       movement: 6,
       movement_tokens: 0,
       nemesis_id: shadowWeaver.id,
@@ -1396,8 +1391,7 @@ async function createCustomNemeses(
       strength_tokens: 0,
       survivor_statuses: ['Darkness'],
       toughness: 8,
-      toughness_tokens: 0,
-      traits: ['Shadow Step', 'Incorporeal']
+      toughness_tokens: 0
     })
 
   if (createShadowWeaverLevel1Error) throw createShadowWeaverLevel1Error
@@ -1420,7 +1414,6 @@ async function createCustomNemeses(
       life: 15,
       luck: 0,
       luck_tokens: 0,
-      moods: ['Calculating', 'Silent', 'Vengeful'],
       movement: 7,
       movement_tokens: 0,
       nemesis_id: shadowWeaver.id,
@@ -1431,8 +1424,7 @@ async function createCustomNemeses(
       strength_tokens: 0,
       survivor_statuses: ['Darkness', 'Nightmare'],
       toughness: 10,
-      toughness_tokens: 0,
-      traits: ['Shadow Step', 'Incorporeal', 'Dark Aura']
+      toughness_tokens: 0
     })
 
   if (createShadowWeaverLevel2Error) throw createShadowWeaverLevel2Error
@@ -1455,7 +1447,6 @@ async function createCustomNemeses(
       life: 20,
       luck: 1,
       luck_tokens: 0,
-      moods: ['Calculating', 'Silent', 'Vengeful', 'Frenzied'],
       movement: 8,
       movement_tokens: 0,
       nemesis_id: shadowWeaver.id,
@@ -1466,8 +1457,7 @@ async function createCustomNemeses(
       strength_tokens: 0,
       survivor_statuses: ['Darkness', 'Nightmare', 'Doomed'],
       toughness: 12,
-      toughness_tokens: 0,
-      traits: ['Shadow Step', 'Incorporeal', 'Dark Aura', 'Soul Drain']
+      toughness_tokens: 0
     })
 
   if (createShadowWeaverLevel3Error) throw createShadowWeaverLevel3Error
@@ -1576,7 +1566,6 @@ async function createCustomNemeses(
       life: 12,
       luck: 0,
       luck_tokens: 0,
-      moods: ['Ethereal'],
       movement: 5,
       movement_tokens: 0,
       nemesis_id: voidCaller.id,
@@ -1587,8 +1576,7 @@ async function createCustomNemeses(
       strength_tokens: 0,
       survivor_statuses: [],
       toughness: 6,
-      toughness_tokens: 0,
-      traits: ['Void Touch']
+      toughness_tokens: 0
     })
 
   if (createVoidCallerLevel1Error) throw createVoidCallerLevel1Error
@@ -1611,7 +1599,6 @@ async function createCustomNemeses(
       life: 18,
       luck: 0,
       luck_tokens: 0,
-      moods: ['Ethereal', 'Consuming'],
       movement: 6,
       movement_tokens: 0,
       nemesis_id: voidCaller.id,
@@ -1622,8 +1609,7 @@ async function createCustomNemeses(
       strength_tokens: 0,
       survivor_statuses: ['Void Touched'],
       toughness: 8,
-      toughness_tokens: 0,
-      traits: ['Void Touch', 'Reality Warp']
+      toughness_tokens: 0
     })
 
   if (createVoidCallerLevel2Error) throw createVoidCallerLevel2Error
@@ -1751,7 +1737,6 @@ async function createCustomQuarries(
       level_number: 1,
       luck: 0,
       luck_tokens: 0,
-      moods: ['Aggressive', 'Territorial'],
       movement: 4,
       movement_tokens: 0,
       quarry_id: ironWyrm.id,
@@ -1762,8 +1747,7 @@ async function createCustomQuarries(
       strength_tokens: 0,
       survivor_statuses: [],
       toughness: 10,
-      toughness_tokens: 0,
-      traits: ['Armored', 'Slow']
+      toughness_tokens: 0
     })
     .select('id')
     .single()
@@ -1787,7 +1771,6 @@ async function createCustomQuarries(
       level_number: 2,
       luck: 0,
       luck_tokens: 0,
-      moods: ['Aggressive', 'Territorial', 'Enraged'],
       movement: 5,
       movement_tokens: 0,
       quarry_id: ironWyrm.id,
@@ -1798,8 +1781,7 @@ async function createCustomQuarries(
       strength_tokens: 0,
       survivor_statuses: ['Bleeding'],
       toughness: 12,
-      toughness_tokens: 0,
-      traits: ['Armored', 'Slow', 'Metal Rend']
+      toughness_tokens: 0
     })
     .select('id')
     .single()
@@ -1985,7 +1967,6 @@ async function createCustomQuarries(
       level_number: 1,
       luck: 0,
       luck_tokens: 0,
-      moods: ['Cunning'],
       movement: 4,
       movement_tokens: 0,
       quarry_id: darkHorses.id,
@@ -1996,8 +1977,7 @@ async function createCustomQuarries(
       strength_tokens: 0,
       survivor_statuses: [],
       toughness: 10,
-      toughness_tokens: 0,
-      traits: ['Stampede']
+      toughness_tokens: 0
     })
     .select('id')
     .single()
@@ -2022,7 +2002,6 @@ async function createCustomQuarries(
         level_number: 2,
         luck: 0,
         luck_tokens: 0,
-        moods: ['Cunning'],
         movement: 4,
         movement_tokens: 0,
         quarry_id: darkHorses.id,
@@ -2033,8 +2012,7 @@ async function createCustomQuarries(
         strength_tokens: 0,
         survivor_statuses: [],
         toughness: 10,
-        toughness_tokens: 0,
-        traits: ['Stampede']
+        toughness_tokens: 0
       },
       {
         ai_deck_remaining: 7,
@@ -2051,7 +2029,6 @@ async function createCustomQuarries(
         level_number: 2,
         luck: 0,
         luck_tokens: 0,
-        moods: ['Skittish'],
         movement: 4,
         movement_tokens: 0,
         quarry_id: darkHorses.id,
@@ -2062,8 +2039,7 @@ async function createCustomQuarries(
         strength_tokens: 0,
         survivor_statuses: [],
         toughness: 10,
-        toughness_tokens: 0,
-        traits: ['Flee']
+        toughness_tokens: 0
       }
     ])
     .select('id')
@@ -2088,7 +2064,6 @@ async function createCustomQuarries(
         level_number: 3,
         luck: 0,
         luck_tokens: 0,
-        moods: ['Cunning'],
         movement: 4,
         movement_tokens: 0,
         quarry_id: darkHorses.id,
@@ -2099,8 +2074,7 @@ async function createCustomQuarries(
         strength_tokens: 0,
         survivor_statuses: [],
         toughness: 10,
-        toughness_tokens: 0,
-        traits: ['Stampede']
+        toughness_tokens: 0
       },
       {
         ai_deck_remaining: 7,
@@ -2117,7 +2091,6 @@ async function createCustomQuarries(
         level_number: 3,
         luck: 0,
         luck_tokens: 0,
-        moods: ['Skittish'],
         movement: 4,
         movement_tokens: 0,
         quarry_id: darkHorses.id,
@@ -2128,8 +2101,7 @@ async function createCustomQuarries(
         strength_tokens: 0,
         survivor_statuses: [],
         toughness: 10,
-        toughness_tokens: 0,
-        traits: ['Flee']
+        toughness_tokens: 0
       },
       {
         ai_deck_remaining: 7,
@@ -2146,7 +2118,6 @@ async function createCustomQuarries(
         level_number: 3,
         luck: 0,
         luck_tokens: 0,
-        moods: ['Wild'],
         movement: 4,
         movement_tokens: 0,
         quarry_id: darkHorses.id,
@@ -2157,8 +2128,7 @@ async function createCustomQuarries(
         strength_tokens: 0,
         survivor_statuses: [],
         toughness: 10,
-        toughness_tokens: 0,
-        traits: ['Rampage']
+        toughness_tokens: 0
       }
     ])
     .select('id')

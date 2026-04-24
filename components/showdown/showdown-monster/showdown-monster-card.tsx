@@ -12,6 +12,10 @@ import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
+import {
+  syncMonsterMoods,
+  syncMonsterTraits
+} from '@/lib/dal/monster-trait-mood'
 import { updateShowdownMonster } from '@/lib/dal/showdown-monster'
 import {
   ERROR_MESSAGE,
@@ -26,9 +30,11 @@ import {
   TRAIT_UPDATED_MESSAGE
 } from '@/lib/messages'
 import {
+  MoodDetail,
   ShowdownDetail,
   ShowdownMonsterDetail,
-  ShowdownStateSetter
+  ShowdownStateSetter,
+  TraitDetail
 } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
@@ -76,7 +82,7 @@ export function ShowdownMonsterCard({
 
   const initialDisabledTraits = useMemo(() => {
     const next: { [key: number]: boolean } = {}
-    monster?.traits?.forEach((_: string, i: number) => {
+    monster?.traits?.forEach((_: TraitDetail, i: number) => {
       next[i] = true
     })
     return next
@@ -84,7 +90,7 @@ export function ShowdownMonsterCard({
 
   const initialDisabledMoods = useMemo(() => {
     const next: { [key: number]: boolean } = {}
-    monster?.moods?.forEach((_: string, i: number) => {
+    monster?.moods?.forEach((_: MoodDetail, i: number) => {
       next[i] = true
     })
     return next
@@ -126,7 +132,29 @@ export function ShowdownMonsterCard({
         }
       })
 
-      updateShowdownMonster(currentMonsterId, updateData)
+      // Split off traits/moods — those map to junction tables, not columns.
+      const { traits, moods, ...columnUpdates } = updateData
+      const writes: Promise<unknown>[] = []
+      if (Object.keys(columnUpdates).length > 0)
+        writes.push(updateShowdownMonster(currentMonsterId, columnUpdates))
+      if (traits !== undefined)
+        writes.push(
+          syncMonsterTraits(
+            'showdown_monster_trait',
+            currentMonsterId,
+            traits.map((t) => t.trait_name)
+          )
+        )
+      if (moods !== undefined)
+        writes.push(
+          syncMonsterMoods(
+            'showdown_monster_mood',
+            currentMonsterId,
+            moods.map((m) => m.mood_name)
+          )
+        )
+
+      Promise.all(writes)
         .then(() => {
           if (successMsg) toast.success(successMsg)
         })
@@ -171,12 +199,17 @@ export function ShowdownMonsterCard({
     (value?: string, i?: number) => {
       if (!value || value.trim() === '')
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('trait'))
-      const updatedTraits = [...(monster?.traits ?? [])]
+      const updatedTraits: TraitDetail[] = [...(monster?.traits ?? [])]
       if (i !== undefined) {
-        updatedTraits[i] = value
+        updatedTraits[i] = { ...updatedTraits[i], trait_name: value }
         setDisabledTraits((prev) => ({ ...prev, [i]: true }))
       } else {
-        updatedTraits.push(value)
+        updatedTraits.push({
+          id: '',
+          custom: true,
+          trait_name: value,
+          rules: null
+        })
         setDisabledTraits((prev) => ({
           ...prev,
           [updatedTraits.length - 1]: true
@@ -213,12 +246,17 @@ export function ShowdownMonsterCard({
     (value?: string, i?: number) => {
       if (!value || value.trim() === '')
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('mood'))
-      const updatedMoods = [...(monster?.moods ?? [])]
+      const updatedMoods: MoodDetail[] = [...(monster?.moods ?? [])]
       if (i !== undefined) {
-        updatedMoods[i] = value
+        updatedMoods[i] = { ...updatedMoods[i], mood_name: value }
         setDisabledMoods((prev) => ({ ...prev, [i]: true }))
       } else {
-        updatedMoods.push(value)
+        updatedMoods.push({
+          id: '',
+          custom: true,
+          mood_name: value,
+          rules: null
+        })
         setDisabledMoods((prev) => ({
           ...prev,
           [updatedMoods.length - 1]: true

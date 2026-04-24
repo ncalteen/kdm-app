@@ -76,6 +76,13 @@ describe('RLS: settlement-scoped tables', () => {
     'survivor_ability_impairment'
   ] as const
 
+  const MONSTER_JUNCTION_TABLES = [
+    'hunt_monster_trait',
+    'hunt_monster_mood',
+    'showdown_monster_trait',
+    'showdown_monster_mood'
+  ] as const
+
   const buildMatrix = () => {
     const r: { table: string; rowId: () => string; update: object }[] = [
       {
@@ -169,6 +176,16 @@ describe('RLS: settlement-scoped tables', () => {
       r.push({
         table,
         rowId: () => fixture.survivorJunctionIds[table],
+        update: {}
+      })
+
+    // Monster_* junction tables (hunt_monster / showdown_monster <-> trait /
+    // mood) follow the settlement-owner pattern — no mutable non-FK cols, so
+    // DELETE-via-RLS is the meaningful cross-user assertion.
+    for (const table of MONSTER_JUNCTION_TABLES)
+      r.push({
+        table,
+        rowId: () => fixture.monsterJunctionIds[table],
         update: {}
       })
 

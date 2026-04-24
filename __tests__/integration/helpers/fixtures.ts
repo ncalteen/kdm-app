@@ -36,6 +36,8 @@ export interface SettlementFixture {
   settlementJunctionIds: Record<string, string>
   /** Map of survivor-junction table → seeded row ID */
   survivorJunctionIds: Record<string, string>
+  /** Map of monster-junction table → seeded row ID (hunt/showdown traits/moods) */
+  monsterJunctionIds: Record<string, string>
   /** Catalog IDs used by the junctions (for re-use in assertions) */
   catalogIds: {
     collectiveCognitionRewardId: string
@@ -46,6 +48,7 @@ export interface SettlementFixture {
     knowledgeId: string
     locationId: string
     milestoneId: string
+    moodId: string
     nemesisId: string
     patternId: string
     philosophyId: string
@@ -55,6 +58,7 @@ export interface SettlementFixture {
     secretFightingArtId: string
     seedPatternId: string
     abilityImpairmentId: string
+    traitId: string
   }
 }
 
@@ -99,7 +103,9 @@ export async function seedCatalog(): Promise<SettlementFixture['catalogIds']> {
     secretFightingArtId,
     seedPatternId,
     resourceId,
-    abilityImpairmentId
+    abilityImpairmentId,
+    traitId,
+    moodId
   ] = await Promise.all([
     insert('collective_cognition_reward', {
       custom: false,
@@ -149,7 +155,9 @@ export async function seedCatalog(): Promise<SettlementFixture['catalogIds']> {
     insert('ability_impairment', {
       custom: false,
       ability_impairment_name: 'RLS Test A&I'
-    })
+    }),
+    insert('trait', { custom: false, trait_name: 'RLS Test Trait' }),
+    insert('mood', { custom: false, mood_name: 'RLS Test Mood' })
   ])
 
   // Gear depends on location FK being nullable — pass null.
@@ -179,6 +187,7 @@ export async function seedCatalog(): Promise<SettlementFixture['catalogIds']> {
     knowledgeId,
     locationId,
     milestoneId,
+    moodId,
     nemesisId,
     patternId,
     philosophyId,
@@ -187,7 +196,8 @@ export async function seedCatalog(): Promise<SettlementFixture['catalogIds']> {
     resourceId,
     secretFightingArtId,
     seedPatternId,
-    abilityImpairmentId
+    abilityImpairmentId,
+    traitId
   }
 }
 
@@ -407,6 +417,26 @@ export async function seedSettlementFixture(
     settlement_id: settlementId
   })
 
+  // 8. Monster-scoped junctions (hunt_monster / showdown_monster <-> trait / mood).
+  const monsterJunctionIds: Record<string, string> = {
+    hunt_monster_trait: await ins('hunt_monster_trait', {
+      hunt_monster_id: huntMonsterId,
+      trait_id: catalog.traitId
+    }),
+    hunt_monster_mood: await ins('hunt_monster_mood', {
+      hunt_monster_id: huntMonsterId,
+      mood_id: catalog.moodId
+    }),
+    showdown_monster_trait: await ins('showdown_monster_trait', {
+      showdown_monster_id: showdownMonsterId,
+      trait_id: catalog.traitId
+    }),
+    showdown_monster_mood: await ins('showdown_monster_mood', {
+      showdown_monster_id: showdownMonsterId,
+      mood_id: catalog.moodId
+    })
+  }
+
   return {
     settlementId,
     survivorId,
@@ -422,6 +452,7 @@ export async function seedSettlementFixture(
     settlementPhaseId,
     settlementJunctionIds,
     survivorJunctionIds,
+    monsterJunctionIds,
     catalogIds: catalog
   }
 }
@@ -453,7 +484,9 @@ export async function deleteCatalog(
     ['resource', catalog.resourceId],
     ['secret_fighting_art', catalog.secretFightingArtId],
     ['seed_pattern', catalog.seedPatternId],
-    ['ability_impairment', catalog.abilityImpairmentId]
+    ['ability_impairment', catalog.abilityImpairmentId],
+    ['trait', catalog.traitId],
+    ['mood', catalog.moodId]
   ]
   // Deletes cascade to dependent rows via FK ON DELETE CASCADE.
   await Promise.all(

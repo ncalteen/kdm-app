@@ -1,6 +1,6 @@
 import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { ShowdownMonsterDetail } from '@/lib/types'
+import { MoodDetail, ShowdownMonsterDetail, TraitDetail } from '@/lib/types'
 
 /**
  * Get Showdown Monsters
@@ -20,7 +20,7 @@ export async function getShowdownMonsters(
   const { data, error } = await supabase
     .from('showdown_monster')
     .select(
-      'id, accuracy, accuracy_tokens, ai_card_drawn, ai_deck_id, ai_deck_remaining, damage, damage_tokens, evasion, evasion_tokens, knocked_down, luck, luck_tokens, monster_name, moods, movement, movement_tokens, notes, settlement_id, showdown_id, speed, speed_tokens, strength, strength_tokens, toughness, traits, wounds, showdown_ai_deck(id, advanced_cards, basic_cards, legendary_cards, overtone_cards)'
+      'id, accuracy, accuracy_tokens, ai_card_drawn, ai_deck_id, ai_deck_remaining, damage, damage_tokens, evasion, evasion_tokens, knocked_down, luck, luck_tokens, monster_name, movement, movement_tokens, notes, settlement_id, showdown_id, speed, speed_tokens, strength, strength_tokens, toughness, wounds, showdown_ai_deck(id, advanced_cards, basic_cards, legendary_cards, overtone_cards), showdown_monster_trait(trait(id, custom, trait_name, rules)), showdown_monster_mood(mood(id, custom, mood_name, rules))'
     )
     .eq('showdown_id', showdownId)
 
@@ -33,7 +33,27 @@ export async function getShowdownMonsters(
   for (const m of data ?? []) {
     const aiDeck =
       m.showdown_ai_deck as unknown as ShowdownMonsterDetail['ai_deck']
-    showdownMonsterMap[m.id] = { ...m, ai_deck: aiDeck ?? null }
+    const traitRows = (
+      m as unknown as {
+        showdown_monster_trait: { trait: TraitDetail | null }[]
+      }
+    ).showdown_monster_trait
+    const moodRows = (
+      m as unknown as {
+        showdown_monster_mood: { mood: MoodDetail | null }[]
+      }
+    ).showdown_monster_mood
+
+    showdownMonsterMap[m.id] = {
+      ...m,
+      ai_deck: aiDeck ?? null,
+      traits: (traitRows ?? [])
+        .map((r) => r.trait)
+        .filter((t): t is TraitDetail => t !== null),
+      moods: (moodRows ?? [])
+        .map((r) => r.mood)
+        .filter((m): m is MoodDetail => m !== null)
+    }
   }
 
   return showdownMonsterMap

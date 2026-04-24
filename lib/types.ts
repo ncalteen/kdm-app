@@ -47,6 +47,28 @@ export type AbilityImpairmentDetail = Omit<
 > & {}
 
 /**
+ * Trait Detail
+ *
+ * Used throughout the app to represent a monster trait. Custom traits are
+ * scoped to a single user; non-custom traits are part of the shared catalog.
+ */
+export type TraitDetail = Omit<
+  Tables<'trait'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {}
+
+/**
+ * Mood Detail
+ *
+ * Used throughout the app to represent a monster mood. Custom moods are scoped
+ * to a single user; non-custom moods are part of the shared catalog.
+ */
+export type MoodDetail = Omit<
+  Tables<'mood'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {}
+
+/**
  * Character Detail
  *
  * Used throughout the app to represent a character object. Includes additional
@@ -202,6 +224,10 @@ export type HuntMonsterDetail = Omit<
 > & {
   /** AI Deck */
   ai_deck: HuntAIDeckDetail
+  /** Traits (joined from hunt_monster_trait → trait) */
+  traits: TraitDetail[]
+  /** Moods (joined from hunt_monster_mood → mood) */
+  moods: MoodDetail[]
 }
 
 /**
@@ -330,7 +356,12 @@ export type NemesisDetail = Omit<
 export type NemesisLevelDetail = Omit<
   Tables<'nemesis_level'>,
   'created_at' | 'updated_at' | 'nemesis_id'
->
+> & {
+  /** Traits (joined from nemesis_level_trait → trait) */
+  traits: TraitDetail[]
+  /** Moods (joined from nemesis_level_mood → mood) */
+  moods: MoodDetail[]
+}
 
 /**
  * Nemesis Timeline Detail
@@ -426,6 +457,10 @@ export type QuarryLevelDetail = Omit<
   hunt_pos: number
   /** Survivor Hunt Position (joined from quarry_hunt_board_position) */
   survivor_hunt_pos: number
+  /** Traits (joined from quarry_level_trait → trait) */
+  traits: TraitDetail[]
+  /** Moods (joined from quarry_level_mood → mood) */
+  moods: MoodDetail[]
 }
 
 /**
@@ -834,6 +869,10 @@ export type ShowdownMonsterDetail = Omit<
 > & {
   /** AI Deck */
   ai_deck: ShowdownAIDeckDetail
+  /** Traits (joined from showdown_monster_trait → trait) */
+  traits: TraitDetail[]
+  /** Moods (joined from showdown_monster_mood → mood) */
+  moods: MoodDetail[]
 }
 
 /**

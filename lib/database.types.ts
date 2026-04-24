@@ -591,7 +591,6 @@ export type Database = {
           luck: number
           luck_tokens: number
           monster_name: string | null
-          moods: string[]
           movement: number
           movement_tokens: number
           notes: string
@@ -601,7 +600,6 @@ export type Database = {
           strength: number
           strength_tokens: number
           toughness: number
-          traits: string[]
           updated_at: string
           wounds: number
         }
@@ -621,7 +619,6 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -631,7 +628,6 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
-          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -651,7 +647,6 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -661,7 +656,6 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
-          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -685,6 +679,84 @@ export type Database = {
             columns: ["settlement_id"]
             isOneToOne: false
             referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hunt_monster_mood: {
+        Row: {
+          created_at: string
+          hunt_monster_id: string
+          id: string
+          mood_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hunt_monster_id: string
+          id?: string
+          mood_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hunt_monster_id?: string
+          id?: string
+          mood_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hunt_monster_mood_hunt_monster_id_fkey"
+            columns: ["hunt_monster_id"]
+            isOneToOne: false
+            referencedRelation: "hunt_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hunt_monster_mood_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "mood"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hunt_monster_trait: {
+        Row: {
+          created_at: string
+          hunt_monster_id: string
+          id: string
+          trait_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hunt_monster_id: string
+          id?: string
+          trait_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hunt_monster_id?: string
+          id?: string
+          trait_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hunt_monster_trait_hunt_monster_id_fkey"
+            columns: ["hunt_monster_id"]
+            isOneToOne: false
+            referencedRelation: "hunt_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hunt_monster_trait_trait_id_fkey"
+            columns: ["trait_id"]
+            isOneToOne: false
+            referencedRelation: "trait"
             referencedColumns: ["id"]
           },
         ]
@@ -1052,6 +1124,62 @@ export type Database = {
           },
         ]
       }
+      mood: {
+        Row: {
+          created_at: string
+          custom: boolean
+          id: string
+          mood_name: string
+          rules: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          mood_name: string
+          rules?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          mood_name?: string
+          rules?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      mood_shared_user: {
+        Row: {
+          mood_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Insert: {
+          mood_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Update: {
+          mood_id?: string
+          shared_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mood_shared_user_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "mood"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nemesis: {
         Row: {
           alternate_id: string | null
@@ -1142,7 +1270,6 @@ export type Database = {
           life: number | null
           luck: number
           luck_tokens: number
-          moods: string[]
           movement: number
           movement_tokens: number
           nemesis_id: string
@@ -1155,7 +1282,6 @@ export type Database = {
           survivor_statuses: string[]
           toughness: number
           toughness_tokens: number
-          traits: string[]
           updated_at: string
         }
         Insert: {
@@ -1175,7 +1301,6 @@ export type Database = {
           life?: number | null
           luck?: number
           luck_tokens?: number
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           nemesis_id: string
@@ -1188,7 +1313,6 @@ export type Database = {
           survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
-          traits?: string[]
           updated_at?: string
         }
         Update: {
@@ -1208,7 +1332,6 @@ export type Database = {
           life?: number | null
           luck?: number
           luck_tokens?: number
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           nemesis_id?: string
@@ -1221,7 +1344,6 @@ export type Database = {
           survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
-          traits?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -1230,6 +1352,84 @@ export type Database = {
             columns: ["nemesis_id"]
             isOneToOne: false
             referencedRelation: "nemesis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nemesis_level_mood: {
+        Row: {
+          created_at: string
+          id: string
+          mood_id: string
+          nemesis_level_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mood_id: string
+          nemesis_level_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mood_id?: string
+          nemesis_level_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nemesis_level_mood_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "mood"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nemesis_level_mood_nemesis_level_id_fkey"
+            columns: ["nemesis_level_id"]
+            isOneToOne: false
+            referencedRelation: "nemesis_level"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nemesis_level_trait: {
+        Row: {
+          created_at: string
+          id: string
+          nemesis_level_id: string
+          trait_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nemesis_level_id: string
+          trait_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nemesis_level_id?: string
+          trait_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nemesis_level_trait_nemesis_level_id_fkey"
+            columns: ["nemesis_level_id"]
+            isOneToOne: false
+            referencedRelation: "nemesis_level"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nemesis_level_trait_trait_id_fkey"
+            columns: ["trait_id"]
+            isOneToOne: false
+            referencedRelation: "trait"
             referencedColumns: ["id"]
           },
         ]
@@ -1350,7 +1550,6 @@ export type Database = {
           custom: boolean
           id: string
           neurosis_name: string
-          philosophy_id: string | null
           rules: string | null
           updated_at: string
           user_id: string | null
@@ -1360,7 +1559,6 @@ export type Database = {
           custom?: boolean
           id?: string
           neurosis_name: string
-          philosophy_id?: string | null
           rules?: string | null
           updated_at?: string
           user_id?: string | null
@@ -1370,20 +1568,11 @@ export type Database = {
           custom?: boolean
           id?: string
           neurosis_name?: string
-          philosophy_id?: string | null
           rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "neurosis_philosophy_id_fkey"
-            columns: ["philosophy_id"]
-            isOneToOne: false
-            referencedRelation: "philosophy"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       neurosis_shared_user: {
         Row: {
@@ -1484,6 +1673,7 @@ export type Database = {
           custom: boolean
           hunt_xp_milestones: number[] | null
           id: string
+          neurosis_id: string | null
           philosophy_name: string
           tenet_knowledge_id: string | null
           tier: number | null
@@ -1495,6 +1685,7 @@ export type Database = {
           custom?: boolean
           hunt_xp_milestones?: number[] | null
           id?: string
+          neurosis_id?: string | null
           philosophy_name: string
           tenet_knowledge_id?: string | null
           tier?: number | null
@@ -1506,6 +1697,7 @@ export type Database = {
           custom?: boolean
           hunt_xp_milestones?: number[] | null
           id?: string
+          neurosis_id?: string | null
           philosophy_name?: string
           tenet_knowledge_id?: string | null
           tier?: number | null
@@ -1514,10 +1706,52 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "philosophy_neurosis_id_fkey"
+            columns: ["neurosis_id"]
+            isOneToOne: false
+            referencedRelation: "neurosis"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "philosophy_tenet_knowledge_id_fkey"
             columns: ["tenet_knowledge_id"]
             isOneToOne: false
             referencedRelation: "knowledge"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      philosophy_rank: {
+        Row: {
+          created_at: string
+          id: string
+          philosophy_id: string
+          rank_number: number
+          rules: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          philosophy_id: string
+          rank_number: number
+          rules?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          philosophy_id?: string
+          rank_number?: number
+          rules?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "philosophy_rank_philosophy_id_fkey"
+            columns: ["philosophy_id"]
+            isOneToOne: false
+            referencedRelation: "philosophy"
             referencedColumns: ["id"]
           },
         ]
@@ -1858,7 +2092,6 @@ export type Database = {
           level_number: number
           luck: number
           luck_tokens: number
-          moods: string[]
           movement: number
           movement_tokens: number
           overtone_cards: number
@@ -1871,7 +2104,6 @@ export type Database = {
           survivor_statuses: string[]
           toughness: number
           toughness_tokens: number
-          traits: string[]
           updated_at: string
         }
         Insert: {
@@ -1890,7 +2122,6 @@ export type Database = {
           level_number: number
           luck?: number
           luck_tokens?: number
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           overtone_cards?: number
@@ -1903,7 +2134,6 @@ export type Database = {
           survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
-          traits?: string[]
           updated_at?: string
         }
         Update: {
@@ -1922,7 +2152,6 @@ export type Database = {
           level_number?: number
           luck?: number
           luck_tokens?: number
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           overtone_cards?: number
@@ -1935,7 +2164,6 @@ export type Database = {
           survivor_statuses?: string[]
           toughness?: number
           toughness_tokens?: number
-          traits?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -1944,6 +2172,84 @@ export type Database = {
             columns: ["quarry_id"]
             isOneToOne: false
             referencedRelation: "quarry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quarry_level_mood: {
+        Row: {
+          created_at: string
+          id: string
+          mood_id: string
+          quarry_level_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mood_id: string
+          quarry_level_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mood_id?: string
+          quarry_level_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quarry_level_mood_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "mood"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quarry_level_mood_quarry_level_id_fkey"
+            columns: ["quarry_level_id"]
+            isOneToOne: false
+            referencedRelation: "quarry_level"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quarry_level_trait: {
+        Row: {
+          created_at: string
+          id: string
+          quarry_level_id: string
+          trait_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quarry_level_id: string
+          trait_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quarry_level_id?: string
+          trait_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quarry_level_trait_quarry_level_id_fkey"
+            columns: ["quarry_level_id"]
+            isOneToOne: false
+            referencedRelation: "quarry_level"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quarry_level_trait_trait_id_fkey"
+            columns: ["trait_id"]
+            isOneToOne: false
+            referencedRelation: "trait"
             referencedColumns: ["id"]
           },
         ]
@@ -3144,7 +3450,6 @@ export type Database = {
           luck: number
           luck_tokens: number
           monster_name: string | null
-          moods: string[]
           movement: number
           movement_tokens: number
           notes: string
@@ -3155,7 +3460,6 @@ export type Database = {
           strength: number
           strength_tokens: number
           toughness: number
-          traits: string[]
           updated_at: string
           wounds: number
         }
@@ -3175,7 +3479,6 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -3186,7 +3489,6 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
-          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -3206,7 +3508,6 @@ export type Database = {
           luck?: number
           luck_tokens?: number
           monster_name?: string | null
-          moods?: string[]
           movement?: number
           movement_tokens?: number
           notes?: string
@@ -3217,7 +3518,6 @@ export type Database = {
           strength?: number
           strength_tokens?: number
           toughness?: number
-          traits?: string[]
           updated_at?: string
           wounds?: number
         }
@@ -3241,6 +3541,84 @@ export type Database = {
             columns: ["showdown_id"]
             isOneToOne: false
             referencedRelation: "showdown"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      showdown_monster_mood: {
+        Row: {
+          created_at: string
+          id: string
+          mood_id: string
+          showdown_monster_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mood_id: string
+          showdown_monster_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mood_id?: string
+          showdown_monster_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showdown_monster_mood_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "mood"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showdown_monster_mood_showdown_monster_id_fkey"
+            columns: ["showdown_monster_id"]
+            isOneToOne: false
+            referencedRelation: "showdown_monster"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      showdown_monster_trait: {
+        Row: {
+          created_at: string
+          id: string
+          showdown_monster_id: string
+          trait_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          showdown_monster_id: string
+          trait_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          showdown_monster_id?: string
+          trait_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showdown_monster_trait_showdown_monster_id_fkey"
+            columns: ["showdown_monster_id"]
+            isOneToOne: false
+            referencedRelation: "showdown_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showdown_monster_trait_trait_id_fkey"
+            columns: ["trait_id"]
+            isOneToOne: false
+            referencedRelation: "trait"
             referencedColumns: ["id"]
           },
         ]
@@ -4019,6 +4397,62 @@ export type Database = {
           },
         ]
       }
+      trait: {
+        Row: {
+          created_at: string
+          custom: boolean
+          id: string
+          rules: string | null
+          trait_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          rules?: string | null
+          trait_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          rules?: string | null
+          trait_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      trait_shared_user: {
+        Row: {
+          shared_user_id: string
+          trait_id: string
+          user_id: string
+        }
+        Insert: {
+          shared_user_id: string
+          trait_id: string
+          user_id: string
+        }
+        Update: {
+          shared_user_id?: string
+          trait_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trait_shared_user_trait_id_fkey"
+            columns: ["trait_id"]
+            isOneToOne: false
+            referencedRelation: "trait"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           created_at: string
@@ -4309,6 +4743,7 @@ export type Database = {
       is_knowledge_owner: { Args: { record_id: string }; Returns: boolean }
       is_location_owner: { Args: { record_id: string }; Returns: boolean }
       is_milestone_owner: { Args: { record_id: string }; Returns: boolean }
+      is_mood_owner: { Args: { record_id: string }; Returns: boolean }
       is_nemesis_owner: { Args: { record_id: string }; Returns: boolean }
       is_neurosis_owner: { Args: { record_id: string }; Returns: boolean }
       is_pattern_owner: { Args: { record_id: string }; Returns: boolean }
@@ -4326,6 +4761,7 @@ export type Database = {
         Args: { record_id: string }
         Returns: boolean
       }
+      is_trait_owner: { Args: { record_id: string }; Returns: boolean }
       is_wanderer_owner: { Args: { record_id: string }; Returns: boolean }
       is_weapon_type_owner: { Args: { record_id: string }; Returns: boolean }
     }

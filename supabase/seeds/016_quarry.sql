@@ -56,7 +56,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -68,8 +67,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       23,
@@ -87,7 +85,6 @@ with quarry_level_source (
       3,
       0,
       1,
-      '{"Indigestion"}',
       10,
       0,
       (
@@ -104,8 +101,7 @@ with quarry_level_source (
       0,
       '{}',
       17,
-      0,
-      '{"Bullish Charge", "Double Sphincter", "Foul Stench", "Gaseous Bloat", "Mature", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -124,7 +120,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -135,8 +130,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -152,7 +146,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -163,8 +156,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -238,7 +230,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -250,8 +241,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       16,
@@ -269,7 +259,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       9,
       0,
       (
@@ -286,8 +275,7 @@ with quarry_level_source (
       0,
       '{}',
       11,
-      0,
-      '{"Atomic Vigor - Inert", "Critical Mass - Inert", "Prehensile Tail - Inert"}'
+      0
     ),
     (
       22,
@@ -305,7 +293,6 @@ with quarry_level_source (
       3,
       0,
       0,
-      '{}',
       9,
       0,
       (
@@ -322,8 +309,7 @@ with quarry_level_source (
       0,
       '{}',
       12,
-      0,
-      '{"Atomic Vigor - Inert", "Critical Mass - Inert", "Exponential Yield", "Legendary Horns", "Prehensile Tail - Inert", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -342,7 +328,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -353,8 +338,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -370,7 +354,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -381,8 +364,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -471,7 +453,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -483,8 +464,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       15,
@@ -502,7 +482,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -519,8 +498,7 @@ with quarry_level_source (
       0,
       '{}',
       10,
-      0,
-      '{"Giga Claws", "Smart Cat", "Vicious"}'
+      0
     ),
     (
       20,
@@ -538,7 +516,6 @@ with quarry_level_source (
       3,
       0,
       1,
-      '{}',
       10,
       0,
       (
@@ -555,8 +532,7 @@ with quarry_level_source (
       0,
       '{}',
       16,
-      0,
-      '{"Giga Claws", "Golden Eyes", "Merciless", "Smart Cat", "Vicious", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -575,7 +551,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -586,8 +561,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -603,7 +577,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -614,8 +587,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -704,7 +676,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -716,8 +687,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       10,
@@ -735,7 +705,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       6,
       0,
       (
@@ -752,8 +721,7 @@ with quarry_level_source (
       0,
       '{}',
       7,
-      0,
-      '{"Adrenal Adept", "Enchanted Flesh", "Immortal Presence"}'
+      0
     ),
     (
       15,
@@ -771,7 +739,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       7,
       0,
       (
@@ -788,8 +755,7 @@ with quarry_level_source (
       0,
       '{}',
       9,
-      0,
-      '{"Adrenal Adept", "Blood Soaked", "Enchanted Flesh", "Immortal Presence"}'
+      0
     ),
     (
       20,
@@ -807,7 +773,6 @@ with quarry_level_source (
       3,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -824,8 +789,7 @@ with quarry_level_source (
       0,
       '{}',
       15,
-      0,
-      '{"Adrenal Adept", "Blood Secret", "Blood Soaked", "Enchanted Flesh", "Immortal Presence", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -844,7 +808,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -855,8 +818,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -872,7 +834,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -883,8 +844,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -1003,7 +963,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -1015,8 +974,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       12,
@@ -1034,7 +992,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       10,
       0,
       (
@@ -1051,8 +1008,7 @@ with quarry_level_source (
       0,
       '{}',
       13,
-      0,
-      '{"Irradiate", "Unseen Agony"}'
+      0
     ),
     (
       16,
@@ -1070,7 +1026,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       10,
       0,
       (
@@ -1087,8 +1042,7 @@ with quarry_level_source (
       0,
       '{}',
       15,
-      0,
-      '{"Irradiate", "Unseen Agony"}'
+      0
     ),
     (
       19,
@@ -1106,7 +1060,6 @@ with quarry_level_source (
       3,
       0,
       1,
-      '{}',
       10,
       0,
       (
@@ -1123,8 +1076,7 @@ with quarry_level_source (
       0,
       '{}',
       17,
-      0,
-      '{"Irradiate", "Smolder", "Unseen Agony", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -1143,7 +1095,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -1154,8 +1105,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -1171,7 +1121,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -1182,8 +1131,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -1283,7 +1231,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -1295,8 +1242,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       10,
@@ -1314,7 +1260,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       7,
       0,
       (
@@ -1331,8 +1276,7 @@ with quarry_level_source (
       0,
       '{}',
       12,
-      0,
-      '{"Baller", "Power Forward", "Prepared Tunnels", "Separation Anxiety"}'
+      0
     ),
     (
       14,
@@ -1350,7 +1294,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       7,
       0,
       (
@@ -1367,8 +1310,7 @@ with quarry_level_source (
       0,
       '{}',
       14,
-      0,
-      '{"Baller", "Heavy Load", "Power Forward", "Prepared Tunnels", "Separation Anxiety"}'
+      0
     ),
     (
       19,
@@ -1386,7 +1328,6 @@ with quarry_level_source (
       3,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -1403,8 +1344,7 @@ with quarry_level_source (
       0,
       '{}',
       18,
-      0,
-      '{"Burrow", "Baller", "Heavy Load", "Power Forward", "Prepared Tunnels", "Separation Anxiety", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -1423,7 +1363,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -1434,8 +1373,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -1451,7 +1389,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -1462,8 +1399,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -1549,7 +1485,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -1561,8 +1496,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       11,
@@ -1580,7 +1514,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       7,
       0,
       (
@@ -1597,8 +1530,7 @@ with quarry_level_source (
       2,
       '{}',
       6,
-      0,
-      '{"Bloom", "Set Roots"}'
+      0
     ),
     (
       13,
@@ -1616,7 +1548,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -1633,8 +1564,7 @@ with quarry_level_source (
       1,
       '{}',
       8,
-      0,
-      '{"Bloom", "Razor Bulbs", "Set Roots"}'
+      0
     ),
     (
       16,
@@ -1652,7 +1582,6 @@ with quarry_level_source (
       3,
       0,
       0,
-      '{}',
       9,
       0,
       (
@@ -1669,8 +1598,7 @@ with quarry_level_source (
       0,
       '{}',
       11,
-      0,
-      '{"Bloom", "Heart of the Woods", "Perfect Aim", "Razor Bulbs", "Set Roots", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -1689,7 +1617,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -1700,8 +1627,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -1717,7 +1643,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -1728,8 +1653,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -1828,7 +1752,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -1840,8 +1763,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       10,
@@ -1859,7 +1781,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       7,
       0,
       (
@@ -1876,8 +1797,7 @@ with quarry_level_source (
       0,
       '{}',
       8,
-      0,
-      '{"Double Sphincter", "Foul Stench", "Gaseous Bloat", "Leap"}'
+      0
     ),
     (
       14,
@@ -1895,7 +1815,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       9,
       0,
       (
@@ -1912,8 +1831,7 @@ with quarry_level_source (
       0,
       '{}',
       11,
-      0,
-      '{"Double Sphincter", "Foul Stench", "Gaseous Bloat", "Leap", "Mature"}'
+      0
     ),
     (
       19,
@@ -1931,7 +1849,6 @@ with quarry_level_source (
       3,
       0,
       0,
-      '{"Indigestion"}',
       10,
       0,
       (
@@ -1948,8 +1865,7 @@ with quarry_level_source (
       0,
       '{}',
       17,
-      0,
-      '{"Double Sphincter", "Foul Stench", "Gaseous Bloat", "Leap", "Mature", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -1968,7 +1884,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -1979,8 +1894,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -1996,7 +1910,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -2007,8 +1920,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -2108,7 +2020,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -2120,8 +2031,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       10,
@@ -2139,7 +2049,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       6,
       0,
       (
@@ -2156,8 +2065,7 @@ with quarry_level_source (
       0,
       '{}',
       8,
-      0,
-      '{}'
+      0
     ),
     (
       14,
@@ -2175,7 +2083,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       9,
       0,
       (
@@ -2192,8 +2099,7 @@ with quarry_level_source (
       0,
       '{}',
       11,
-      0,
-      '{"Gorm''s Den", "Musth"}'
+      0
     ),
     (
       20,
@@ -2211,7 +2117,6 @@ with quarry_level_source (
       3,
       0,
       1,
-      '{}',
       8,
       0,
       (
@@ -2228,8 +2133,7 @@ with quarry_level_source (
       0,
       '{}',
       15,
-      0,
-      '{"Ancient Tusks", "Gormyard", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -2248,7 +2152,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -2259,8 +2162,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -2276,7 +2178,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -2287,8 +2188,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -2402,7 +2302,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -2414,8 +2313,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       19,
@@ -2433,7 +2331,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       7,
       0,
       (
@@ -2450,8 +2347,7 @@ with quarry_level_source (
       0,
       '{}',
       19,
-      0,
-      '{"Audio Synthesis", "Current", "Ghost Geometry", "King''s New Clothes"}'
+      0
     ),
     (
       22,
@@ -2469,7 +2365,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -2486,8 +2381,7 @@ with quarry_level_source (
       0,
       '{}',
       22,
-      0,
-      '{"Audio Synthesis", "Current", "Ghost Geometry", "Half Power", "King''s New Clothes"}'
+      0
     ),
     (
       27,
@@ -2505,7 +2399,6 @@ with quarry_level_source (
       3,
       0,
       0,
-      '{}',
       9,
       0,
       (
@@ -2522,8 +2415,7 @@ with quarry_level_source (
       0,
       '{}',
       25,
-      0,
-      '{"Audio Synthesis", "Current", "Full Power", "Ghost Geometry", "King''s New Clothes", "King''s Presence", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -2542,7 +2434,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -2553,8 +2444,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -2570,7 +2460,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -2581,8 +2470,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -2699,7 +2587,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -2711,8 +2598,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       15,
@@ -2730,7 +2616,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -2747,8 +2632,7 @@ with quarry_level_source (
       0,
       '{}',
       14,
-      0,
-      '{"Heft", "Hollow Earth", "Whiplash"}'
+      0
     ),
     (
       20,
@@ -2766,7 +2650,6 @@ with quarry_level_source (
       2,
       0,
       1,
-      '{}',
       9,
       0,
       (
@@ -2783,8 +2666,7 @@ with quarry_level_source (
       0,
       '{}',
       16,
-      0,
-      '{"Divine Prowess", "Heft", "Hollow Earth", "Whiplash"}'
+      0
     ),
     (
       25,
@@ -2802,7 +2684,6 @@ with quarry_level_source (
       3,
       0,
       2,
-      '{}',
       10,
       0,
       (
@@ -2819,8 +2700,7 @@ with quarry_level_source (
       0,
       '{}',
       21,
-      0,
-      '{"Divine Prowess", "Heft", "Hollow Earth", "Immaculate Intuition", "Whiplash", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -2839,7 +2719,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -2850,8 +2729,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -2867,7 +2745,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -2878,8 +2755,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -2965,7 +2841,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -2977,8 +2852,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       12,
@@ -2996,7 +2870,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -3013,8 +2886,7 @@ with quarry_level_source (
       0,
       '{"Dreaded Decade"}',
       10,
-      0,
-      '{"Materialize", "Spiral Age", "Zeal"}'
+      0
     ),
     (
       17,
@@ -3032,7 +2904,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -3049,8 +2920,7 @@ with quarry_level_source (
       0,
       '{"Dreaded Decade"}',
       12,
-      0,
-      '{"Materialize", "Spiral Age", "Top of the Food Chain", "Zeal"}'
+      0
     ),
     (
       22,
@@ -3068,7 +2938,6 @@ with quarry_level_source (
       3,
       0,
       2,
-      '{}',
       8,
       0,
       (
@@ -3085,8 +2954,7 @@ with quarry_level_source (
       0,
       '{"Dreaded Decade"}',
       17,
-      0,
-      '{"Materialize", "Spiral Age", "Top of the Food Chain", "Zeal", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -3105,7 +2973,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -3116,8 +2983,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -3133,7 +2999,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -3144,8 +3009,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -3275,7 +3139,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -3287,8 +3150,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       10,
@@ -3306,7 +3168,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       6,
       0,
       (
@@ -3323,8 +3184,7 @@ with quarry_level_source (
       0,
       '{}',
       8,
-      0,
-      '{"Trample"}'
+      0
     ),
     (
       15,
@@ -3342,7 +3202,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -3359,8 +3218,7 @@ with quarry_level_source (
       0,
       '{}',
       10,
-      0,
-      '{"Diabolical", "Trample"}'
+      0
     ),
     (
       22,
@@ -3378,7 +3236,6 @@ with quarry_level_source (
       3,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -3395,8 +3252,7 @@ with quarry_level_source (
       0,
       '{}',
       12,
-      0,
-      '{"Diabolical", "Hypermetabolism", "Legendary Horns", "Trample", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -3415,7 +3271,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -3426,8 +3281,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -3443,7 +3297,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -3454,8 +3307,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -3572,7 +3424,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -3584,8 +3435,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       12,
@@ -3603,7 +3453,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       6,
       0,
       (
@@ -3620,8 +3469,7 @@ with quarry_level_source (
       0,
       '{"Bloody Hands"}',
       7,
-      0,
-      '{"Performing Artists", "Song Cards", "Vibration Damage"}'
+      0
     ),
     (
       17,
@@ -3639,7 +3487,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       7,
       0,
       (
@@ -3656,8 +3503,7 @@ with quarry_level_source (
       0,
       '{"Bloody Hands"}',
       9,
-      0,
-      '{"Overtone Singing", "Performing Artists", "Song Cards", "Vibration Damage"}'
+      0
     ),
     (
       25,
@@ -3675,7 +3521,6 @@ with quarry_level_source (
       3,
       0,
       0,
-      '{}',
       8,
       0,
       (
@@ -3692,8 +3537,7 @@ with quarry_level_source (
       0,
       '{"Bloody Hands"}',
       12,
-      0,
-      '{"Overtone Singing", "Performing Artists", "Singing Whale", "Song Cards", "Vibration Damage", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -3712,7 +3556,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -3723,8 +3566,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -3740,7 +3582,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -3751,8 +3592,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -3869,7 +3709,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -3881,8 +3720,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       9,
@@ -3900,7 +3738,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{"Frantic Spinning"}',
       11,
       0,
       (
@@ -3917,8 +3754,7 @@ with quarry_level_source (
       0,
       '{}',
       8,
-      0,
-      '{"Spawn", "Spiderling Action", "Twitching Leg Pile"}'
+      0
     ),
     (
       13,
@@ -3936,7 +3772,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{"Feeding Time"}',
       14,
       0,
       (
@@ -3953,8 +3788,7 @@ with quarry_level_source (
       0,
       '{}',
       10,
-      0,
-      '{"Hivemind", "Spiderling Action", "Spawn", "Twitching Leg Pile"}'
+      0
     ),
     (
       21,
@@ -3972,7 +3806,6 @@ with quarry_level_source (
       3,
       0,
       0,
-      '{"Necrotoxins"}',
       16,
       0,
       (
@@ -3989,8 +3822,7 @@ with quarry_level_source (
       0,
       '{}',
       12,
-      0,
-      '{"10,000 Teeth", "Hivemind", "Spawn", "Spiderling Action", "Twitching Leg Pile", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -4009,7 +3841,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -4020,8 +3851,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -4037,7 +3867,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -4048,8 +3877,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -4135,7 +3963,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -4147,8 +3974,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       10,
@@ -4166,7 +3992,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       16,
       0,
       (
@@ -4183,8 +4008,7 @@ with quarry_level_source (
       0,
       '{}',
       10,
-      0,
-      '{"Light & Shadow", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial"}'
+      0
     ),
     (
       15,
@@ -4202,7 +4026,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       16,
       0,
       (
@@ -4219,8 +4042,7 @@ with quarry_level_source (
       0,
       '{}',
       12,
-      0,
-      '{"Light & Shadow", "Living Shadows", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial"}'
+      0
     ),
     (
       20,
@@ -4238,7 +4060,6 @@ with quarry_level_source (
       3,
       0,
       1,
-      '{}',
       16,
       0,
       (
@@ -4255,8 +4076,7 @@ with quarry_level_source (
       0,
       '{}',
       16,
-      0,
-      '{"Light & Shadow", "Living Shadows", "Monochrome", "Shade", "Shadows of Darkness", "Solar Energy", "Sun Dial", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -4275,7 +4095,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -4286,8 +4105,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -4303,7 +4121,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -4314,8 +4131,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (
@@ -4428,7 +4244,6 @@ with quarry_level_source (
   level_number,
   luck,
   luck_tokens,
-  moods,
   movement,
   movement_tokens,
   quarry_id,
@@ -4440,8 +4255,7 @@ with quarry_level_source (
   survivor_hunt_pos,
   survivor_statuses,
   toughness,
-  toughness_tokens,
-  traits
+  toughness_tokens
 ) as (
   values (
       10,
@@ -4459,7 +4273,6 @@ with quarry_level_source (
       1,
       0,
       0,
-      '{}',
       6,
       0,
       (
@@ -4476,8 +4289,7 @@ with quarry_level_source (
       0,
       '{}',
       8,
-      0,
-      '{}'
+      0
     ),
     (
       15,
@@ -4495,7 +4307,6 @@ with quarry_level_source (
       2,
       0,
       0,
-      '{}',
       7,
       0,
       (
@@ -4512,8 +4323,7 @@ with quarry_level_source (
       0,
       '{}',
       10,
-      0,
-      '{"Cunning"}'
+      0
     ),
     (
       21,
@@ -4531,7 +4341,6 @@ with quarry_level_source (
       3,
       0,
       1,
-      '{}',
       8,
       0,
       (
@@ -4548,8 +4357,7 @@ with quarry_level_source (
       0,
       '{}',
       14,
-      0,
-      '{"Cunning", "Merciless", "Indomitable"}'
+      0
     )
 ),
 inserted_quarry_levels as (
@@ -4568,7 +4376,6 @@ inserted_quarry_levels as (
       level_number,
       luck,
       luck_tokens,
-      moods,
       movement,
       movement_tokens,
       quarry_id,
@@ -4579,8 +4386,7 @@ inserted_quarry_levels as (
       strength_tokens,
       survivor_statuses,
       toughness,
-      toughness_tokens,
-      traits
+      toughness_tokens
     )
   select ai_deck_remaining,
     basic_cards,
@@ -4596,7 +4402,6 @@ inserted_quarry_levels as (
     level_number,
     luck,
     luck_tokens,
-    moods::varchar [],
     movement,
     movement_tokens,
     quarry_id,
@@ -4607,8 +4412,7 @@ inserted_quarry_levels as (
     strength_tokens,
     survivor_statuses::varchar [],
     toughness,
-    toughness_tokens,
-    traits::varchar []
+    toughness_tokens
   from quarry_level_source
 )
 insert into quarry_hunt_board_position (

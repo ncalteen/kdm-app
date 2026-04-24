@@ -56,7 +56,12 @@ describe('getShowdownMonsters', () => {
     const result = await getShowdownMonsters('showdown-1')
 
     expect(result).toEqual({
-      'monster-1': { ...rawMonster, ai_deck: rawMonster.showdown_ai_deck }
+      'monster-1': {
+        ...rawMonster,
+        ai_deck: rawMonster.showdown_ai_deck,
+        traits: [],
+        moods: []
+      }
     })
     expect(mockSupabase.from).toHaveBeenCalledWith('showdown_monster')
   })

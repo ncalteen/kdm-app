@@ -6,6 +6,10 @@ import {
 } from '@/components/monster/monster-form'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
+import {
+  syncMonsterMoods,
+  syncMonsterTraits
+} from '@/lib/dal/monster-trait-mood'
 import { addNemesis } from '@/lib/dal/nemesis'
 import { addNemesisLevel } from '@/lib/dal/nemesis-level'
 import { addNemesisLocation } from '@/lib/dal/nemesis-location'
@@ -92,13 +96,16 @@ export function CreateMonsterCard({
         // 3. Create levels + per-level hunt positions
         const addLevel = isQuarry ? addQuarryLevel : addNemesisLevel
         const idKey = isQuarry ? 'quarry_id' : 'nemesis_id'
+        const traitTable = isQuarry
+          ? 'quarry_level_trait'
+          : 'nemesis_level_trait'
+        const moodTable = isQuarry ? 'quarry_level_mood' : 'nemesis_level_mood'
 
         for (const [levelStr, subMonsters] of levelEntries) {
           const levelNum = parseInt(levelStr, 10)
 
           for (const sub of subMonsters) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id: _id, level_number: _ln, life, ...rest } = sub
+            const { life, traits, moods, ...rest } = sub
             const insertData: Record<string, unknown> = {
               [idKey]: monster.id,
               ...rest,
@@ -114,9 +121,14 @@ export function CreateMonsterCard({
             // Quarry levels don't have a `life` column.
             if (!isQuarry) insertData.life = life || null
 
-            await (
-              addLevel as (data: Record<string, unknown>) => Promise<unknown>
+            const levelId = await (
+              addLevel as (data: Record<string, unknown>) => Promise<string>
             )(insertData)
+
+            if (traits.length > 0)
+              await syncMonsterTraits(traitTable, levelId, traits)
+            if (moods.length > 0)
+              await syncMonsterMoods(moodTable, levelId, moods)
           }
 
           if (isQuarry) {

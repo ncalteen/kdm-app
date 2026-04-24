@@ -1,6 +1,6 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { NemesisLevelDetail } from '@/lib/types'
+import { MoodDetail, NemesisLevelDetail, TraitDetail } from '@/lib/types'
 
 /**
  * Get Nemesis Levels
@@ -20,13 +20,34 @@ export async function getNemesisLevels(
   const { data, error } = await supabase
     .from('nemesis_level')
     .select(
-      'id, accuracy, accuracy_tokens, advanced_cards, ai_deck_remaining, basic_cards, damage, damage_tokens, evasion, evasion_tokens, legendary_cards, level_number, life, luck, luck_tokens, moods, movement, movement_tokens, overtone_cards, speed, speed_tokens, strength, strength_tokens, sub_monster_name, survivor_statuses, toughness, toughness_tokens, traits'
+      'id, accuracy, accuracy_tokens, advanced_cards, ai_deck_remaining, basic_cards, damage, damage_tokens, evasion, evasion_tokens, legendary_cards, level_number, life, luck, luck_tokens, movement, movement_tokens, overtone_cards, speed, speed_tokens, strength, strength_tokens, sub_monster_name, survivor_statuses, toughness, toughness_tokens, nemesis_level_trait(trait(id, custom, trait_name, rules)), nemesis_level_mood(mood(id, custom, mood_name, rules))'
     )
     .eq('nemesis_id', nemesisId)
 
   if (error) throw new Error(`Error Fetching Nemesis Levels: ${error.message}`)
 
-  return data ?? []
+  return (data ?? []).map((level) => {
+    const traitRows = (
+      level as unknown as {
+        nemesis_level_trait: { trait: TraitDetail | null }[]
+      }
+    ).nemesis_level_trait
+    const moodRows = (
+      level as unknown as {
+        nemesis_level_mood: { mood: MoodDetail | null }[]
+      }
+    ).nemesis_level_mood
+
+    return {
+      ...level,
+      traits: (traitRows ?? [])
+        .map((r) => r.trait)
+        .filter((t): t is TraitDetail => t !== null),
+      moods: (moodRows ?? [])
+        .map((r) => r.mood)
+        .filter((m): m is MoodDetail => m !== null)
+    }
+  })
 }
 
 /**

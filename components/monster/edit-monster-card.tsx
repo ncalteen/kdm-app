@@ -11,6 +11,10 @@ import {
 import { Card } from '@/components/ui/card'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
+import {
+  syncMonsterMoods,
+  syncMonsterTraits
+} from '@/lib/dal/monster-trait-mood'
 import { getNemesis, updateNemesis } from '@/lib/dal/nemesis'
 import {
   addNemesisLevel,
@@ -330,6 +334,11 @@ export function EditMonsterCard({
         for (const id of payload.deletedLevelIds) await fns.removeLevel(id)
 
         // 3. Insert new levels / update existing
+        const traitTable = isQuarry
+          ? 'quarry_level_trait'
+          : 'nemesis_level_trait'
+        const moodTable = isQuarry ? 'quarry_level_mood' : 'nemesis_level_mood'
+
         for (const [levelNumStr, subMonsters] of Object.entries(
           payload.levels
         )) {
@@ -337,7 +346,7 @@ export function EditMonsterCard({
 
           for (const sub of subMonsters) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id, level_number: _ln, ...rest } = sub
+            const { id, level_number: _ln, traits, moods, ...rest } = sub
 
             const levelData: Record<string, unknown> = {
               ...rest,
@@ -352,16 +361,21 @@ export function EditMonsterCard({
             // Quarry levels don't have a `life` column.
             if (isQuarry) delete levelData.life
 
-            if (id && !id.startsWith('temp-'))
+            let levelId: string
+            if (id && !id.startsWith('temp-')) {
               await fns.updateLevel(id, levelData as never)
-            else {
+              levelId = id
+            } else {
               const idKey = isQuarry ? 'quarry_id' : 'nemesis_id'
-              await (
+              levelId = await (
                 fns.addLevel as (
                   data: Record<string, unknown>
-                ) => Promise<unknown>
+                ) => Promise<string>
               )({ ...levelData, [idKey]: monsterId })
             }
+
+            await syncMonsterTraits(traitTable, levelId, traits)
+            await syncMonsterMoods(moodTable, levelId, moods)
           }
         }
 

@@ -56,7 +56,12 @@ describe('getHuntMonsters', () => {
     const result = await getHuntMonsters('hunt-1')
 
     expect(result).toEqual({
-      'monster-1': { ...rawMonster, ai_deck: rawMonster.hunt_ai_deck }
+      'monster-1': {
+        ...rawMonster,
+        ai_deck: rawMonster.hunt_ai_deck,
+        traits: [],
+        moods: []
+      }
     })
     expect(mockSupabase.from).toHaveBeenCalledWith('hunt_monster')
   })
