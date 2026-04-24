@@ -228,11 +228,11 @@ export function PhilosophyCard({
           }
         : null
 
-      // Auto-set neurosis based on linked philosophy_id in the neurosis table
+      // Auto-set neurosis based on the philosophy's linked neurosis_id
       const prevNeurosis = neurosis
-      const matchedNeurosis = philosophyId
+      const matchedNeurosis = philosophyDetail?.neurosis_id
         ? selectedSettlement?.neuroses.find(
-            (n) => n.philosophy_id === philosophyId
+            (n) => n.id === philosophyDetail.neurosis_id
           )
         : null
       const newNeurosis = matchedNeurosis

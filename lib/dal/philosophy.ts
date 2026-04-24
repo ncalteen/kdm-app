@@ -25,14 +25,14 @@ export async function getPhilosophies(): Promise<{
     supabase
       .from('philosophy')
       .select(
-        'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier'
+        'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id'
       )
       .eq('custom', false),
     // Custom philosophies created by the user
     supabase
       .from('philosophy')
       .select(
-        'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier'
+        'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id'
       )
       .eq('custom', true)
       .eq('user_id', userId),
@@ -40,7 +40,7 @@ export async function getPhilosophies(): Promise<{
     supabase
       .from('philosophy_shared_user')
       .select(
-        'philosophy(id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier)'
+        'philosophy(id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id)'
       )
       .eq('shared_user_id', userId)
   ])
@@ -86,7 +86,7 @@ export async function addPhilosophy(
       ...(philosophy.custom ? { user_id: userId! } : {})
     })
     .select(
-      'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier'
+      'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id'
     )
     .single()
 
@@ -118,7 +118,7 @@ export async function updatePhilosophy(
     .update(philosophy)
     .eq('id', id)
     .select(
-      'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier'
+      'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id'
     )
     .single()
 

@@ -69,6 +69,18 @@ export type MoodDetail = Omit<
 > & {}
 
 /**
+ * Survivor Status Detail
+ *
+ * Used throughout the app to represent a survivor status inflicted by a
+ * nemesis or quarry level. Custom statuses are scoped to a single user;
+ * non-custom statuses are part of the shared catalog.
+ */
+export type SurvivorStatusDetail = Omit<
+  Tables<'survivor_status'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {}
+
+/**
  * Character Detail
  *
  * Used throughout the app to represent a character object. Includes additional
@@ -220,7 +232,7 @@ export type HuntHuntBoardDetail = Omit<
  */
 export type HuntMonsterDetail = Omit<
   Tables<'hunt_monster'>,
-  'created_at' | 'updated_at'
+  'created_at' | 'updated_at' | 'moods' | 'traits'
 > & {
   /** AI Deck */
   ai_deck: HuntAIDeckDetail
@@ -355,12 +367,19 @@ export type NemesisDetail = Omit<
  */
 export type NemesisLevelDetail = Omit<
   Tables<'nemesis_level'>,
-  'created_at' | 'updated_at' | 'nemesis_id'
+  | 'created_at'
+  | 'updated_at'
+  | 'nemesis_id'
+  | 'survivor_statuses'
+  | 'moods'
+  | 'traits'
 > & {
   /** Traits (joined from nemesis_level_trait → trait) */
   traits: TraitDetail[]
   /** Moods (joined from nemesis_level_mood → mood) */
   moods: MoodDetail[]
+  /** Survivor statuses (joined from nemesis_level_survivor_status → survivor_status) */
+  survivor_statuses: SurvivorStatusDetail[]
 }
 
 /**
@@ -451,7 +470,12 @@ export type QuarryHuntBoardPositionDetail = Omit<
  */
 export type QuarryLevelDetail = Omit<
   Tables<'quarry_level'>,
-  'created_at' | 'updated_at' | 'quarry_id'
+  | 'created_at'
+  | 'updated_at'
+  | 'quarry_id'
+  | 'survivor_statuses'
+  | 'moods'
+  | 'traits'
 > & {
   /** Monster Hunt Position (joined from quarry_hunt_board_position) */
   hunt_pos: number
@@ -461,6 +485,8 @@ export type QuarryLevelDetail = Omit<
   traits: TraitDetail[]
   /** Moods (joined from quarry_level_mood → mood) */
   moods: MoodDetail[]
+  /** Survivor statuses (joined from quarry_level_survivor_status → survivor_status) */
+  survivor_statuses: SurvivorStatusDetail[]
 }
 
 /**
@@ -589,8 +615,6 @@ export type SettlementDetail = Omit<
     id: string
     /** Neurosis Name */
     neurosis_name: string
-    /** Philosophy ID */
-    philosophy_id: string | null
   }[]
   /** Milestones */
   milestones: {
@@ -673,6 +697,8 @@ export type SettlementDetail = Omit<
     tenet_knowledge_id: string | null
     /** Philosophy Tier */
     tier: number | null
+    /** Linked Neurosis ID */
+    neurosis_id: string | null
   }[]
   /** Principles */
   principles: {
@@ -865,7 +891,7 @@ export type ShowdownDetail = Omit<
  */
 export type ShowdownMonsterDetail = Omit<
   Tables<'showdown_monster'>,
-  'created_at' | 'updated_at'
+  'created_at' | 'updated_at' | 'moods' | 'traits'
 > & {
   /** AI Deck */
   ai_deck: ShowdownAIDeckDetail

@@ -130,18 +130,20 @@ type ColorStyleType = 'bg' | 'border' | 'border-hover' | 'header'
  * use template interpolation; the corresponding utilities are kept in the
  * compiled CSS via `@source inline(...)` directives in `app/globals.css`.
  */
-const COLOR_STYLE_MAP: Record<ColorChoice, Record<ColorStyleType, string>> =
-  Object.fromEntries(
-    Object.values(ColorChoice).map((c) => [
-      c,
-      {
-        bg: `bg-${c}-500`,
-        border: `border-${c}-300/50`,
-        'border-hover': `border-${c}-400/70`,
-        header: `bg-${c}-100/30 border-${c}-300/40`
-      }
-    ])
-  ) as Record<ColorChoice, Record<ColorStyleType, string>>
+const COLOR_STYLE_MAP: Record<
+  ColorChoice,
+  Record<ColorStyleType, string>
+> = Object.fromEntries(
+  Object.values(ColorChoice).map((c) => [
+    c,
+    {
+      bg: `bg-${c}-500`,
+      border: `border-${c}-300/50`,
+      'border-hover': `border-${c}-400/70`,
+      header: `bg-${c}-100/30 border-${c}-300/40`
+    }
+  ])
+) as Record<ColorChoice, Record<ColorStyleType, string>>
 
 /**
  * Get Color Style for Display

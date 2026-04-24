@@ -951,11 +951,11 @@ async function createSurvivorsForSettlement(
           neurosis_id:
             isExperienced && survivorType === SurvivorType.ARC
               ? await supabase
-                  .from('neurosis')
-                  .select('id')
-                  .eq('philosophy_id', philosophies[0].id)
+                  .from('philosophy')
+                  .select('neurosis_id')
+                  .eq('id', philosophies[0].id)
                   .maybeSingle()
-                  .then((res) => res.data?.id)
+                  .then((res) => res.data?.neurosis_id ?? undefined)
               : undefined,
           philosophy_id:
             isExperienced && survivorType === SurvivorType.ARC

@@ -20,7 +20,7 @@ export async function getSettlementPhilosophies(
   const { data, error } = await supabase
     .from('settlement_philosophy')
     .select(
-      'id,  philosophy_id, philosophy(philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier)'
+      'id,  philosophy_id, philosophy(philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id)'
     )
     .eq('settlement_id', settlementId)
 
@@ -34,6 +34,7 @@ export async function getSettlementPhilosophies(
         hunt_xp_milestones: number[] | null
         tenet_knowledge_id: string | null
         tier: number | null
+        neurosis_id: string | null
       }
 
       return {
@@ -42,7 +43,8 @@ export async function getSettlementPhilosophies(
         philosophy_name: philosophy.philosophy_name,
         hunt_xp_milestones: philosophy.hunt_xp_milestones,
         tenet_knowledge_id: philosophy.tenet_knowledge_id,
-        tier: philosophy.tier
+        tier: philosophy.tier,
+        neurosis_id: philosophy.neurosis_id
       }
     }) ?? []
   )
