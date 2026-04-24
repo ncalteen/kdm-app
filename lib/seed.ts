@@ -5,6 +5,99 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 
 /**
+ * Link Level Survivor Statuses
+ *
+ * Resolves a list of survivor status names for a freshly inserted
+ * `nemesis_level` or `quarry_level` row and inserts the corresponding
+ * junction rows. Any status name that is not already present in the catalog
+ * (non-custom) or owned by the user is created as a custom, user-owned
+ * `survivor_status` row.
+ *
+ * Matching is case-insensitive and whitespace-trimmed; duplicates in the
+ * input are collapsed.
+ *
+ * @param supabase Supabase Client
+ * @param userId User ID (owner of any newly created custom statuses)
+ * @param kind Parent level kind: `'nemesis'` or `'quarry'`
+ * @param levelId Parent level row ID
+ * @param names Desired survivor status names (may be empty)
+ */
+async function linkLevelSurvivorStatuses(
+  supabase: SupabaseClient,
+  userId: string,
+  kind: 'nemesis' | 'quarry',
+  levelId: string,
+  names: string[]
+): Promise<void> {
+  // Normalise: trim, drop empties, dedupe case-insensitively.
+  const seen = new Set<string>()
+  const normalized: { raw: string; key: string }[] = []
+  for (const n of names) {
+    const trimmed = n?.trim() ?? ''
+    if (!trimmed) continue
+    const key = trimmed.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    normalized.push({ raw: trimmed, key })
+  }
+  if (normalized.length === 0) return
+
+  // Look up existing rows visible to this user (non-custom or owned).
+  const { data: existing, error: fetchError } = await supabase
+    .from('survivor_status')
+    .select('id, survivor_status_name, custom, user_id')
+    .or(`custom.eq.false,and(custom.eq.true,user_id.eq.${userId})`)
+
+  if (fetchError) throw fetchError
+
+  const byKey = new Map<string, string>()
+  for (const row of (existing ?? []) as {
+    id: string
+    survivor_status_name: string
+  }[])
+    byKey.set(row.survivor_status_name.trim().toLowerCase(), row.id)
+
+  const statusIds: string[] = []
+  for (const entry of normalized) {
+    const existingId = byKey.get(entry.key)
+    if (existingId) {
+      statusIds.push(existingId)
+      continue
+    }
+    const { data: inserted, error: insertError } = await supabase
+      .from('survivor_status')
+      .insert({
+        custom: true,
+        user_id: userId,
+        survivor_status_name: entry.raw
+      })
+      .select('id')
+      .single()
+
+    if (insertError) throw insertError
+
+    byKey.set(entry.key, inserted.id)
+    statusIds.push(inserted.id)
+  }
+
+  const junctionTable =
+    kind === 'nemesis'
+      ? 'nemesis_level_survivor_status'
+      : 'quarry_level_survivor_status'
+  const parentColumn =
+    kind === 'nemesis' ? 'nemesis_level_id' : 'quarry_level_id'
+
+  const { error: junctionError } = await supabase.from(junctionTable).insert(
+    statusIds.map((statusId) => ({
+      [parentColumn]: levelId,
+      survivor_status_id: statusId
+    }))
+  )
+
+  if (junctionError) throw junctionError
+}
+
+/**
  * Generate Seed Data
  *
  * Creates comprehensive test data including multiple settlements of each type
@@ -1363,104 +1456,134 @@ async function createCustomNemeses(
   if (createShadowWeaverNemesisLocationError)
     throw createShadowWeaverNemesisLocationError
 
-  const { error: createShadowWeaverLevel1Error } = await supabase
-    .from('nemesis_level')
-    .insert({
-      ai_deck_remaining: 8,
-      basic_cards: 5,
-      advanced_cards: 3,
-      legendary_cards: 0,
-      overtone_cards: 0,
-      accuracy: 1,
-      accuracy_tokens: 0,
-      damage: 2,
-      damage_tokens: 0,
-      evasion: 0,
-      evasion_tokens: 0,
-      level_number: 1,
-      life: 10,
-      luck: 0,
-      luck_tokens: 0,
-      movement: 6,
-      movement_tokens: 0,
-      nemesis_id: shadowWeaver.id,
-      sub_monster_name: null,
-      speed: 2,
-      speed_tokens: 0,
-      strength: 0,
-      strength_tokens: 0,
-      survivor_statuses: ['Darkness'],
-      toughness: 8,
-      toughness_tokens: 0
-    })
+  const { data: shadowWeaverLevel1, error: createShadowWeaverLevel1Error } =
+    await supabase
+      .from('nemesis_level')
+      .insert({
+        ai_deck_remaining: 8,
+        basic_cards: 5,
+        advanced_cards: 3,
+        legendary_cards: 0,
+        overtone_cards: 0,
+        accuracy: 1,
+        accuracy_tokens: 0,
+        damage: 2,
+        damage_tokens: 0,
+        evasion: 0,
+        evasion_tokens: 0,
+        level_number: 1,
+        life: 10,
+        luck: 0,
+        luck_tokens: 0,
+        movement: 6,
+        movement_tokens: 0,
+        nemesis_id: shadowWeaver.id,
+        sub_monster_name: null,
+        speed: 2,
+        speed_tokens: 0,
+        strength: 0,
+        strength_tokens: 0,
+        toughness: 8,
+        toughness_tokens: 0
+      })
+      .select('id')
+      .single()
 
   if (createShadowWeaverLevel1Error) throw createShadowWeaverLevel1Error
 
-  const { error: createShadowWeaverLevel2Error } = await supabase
-    .from('nemesis_level')
-    .insert({
-      ai_deck_remaining: 10,
-      basic_cards: 4,
-      advanced_cards: 4,
-      legendary_cards: 2,
-      overtone_cards: 0,
-      accuracy: 2,
-      accuracy_tokens: 0,
-      damage: 3,
-      damage_tokens: 0,
-      evasion: 1,
-      evasion_tokens: 0,
-      level_number: 2,
-      life: 15,
-      luck: 0,
-      luck_tokens: 0,
-      movement: 7,
-      movement_tokens: 0,
-      nemesis_id: shadowWeaver.id,
-      sub_monster_name: null,
-      speed: 3,
-      speed_tokens: 0,
-      strength: 1,
-      strength_tokens: 0,
-      survivor_statuses: ['Darkness', 'Nightmare'],
-      toughness: 10,
-      toughness_tokens: 0
-    })
+  await linkLevelSurvivorStatuses(
+    supabase,
+    userId,
+    'nemesis',
+    shadowWeaverLevel1.id,
+    ['Darkness']
+  )
+
+  const { data: shadowWeaverLevel2, error: createShadowWeaverLevel2Error } =
+    await supabase
+      .from('nemesis_level')
+      .insert({
+        ai_deck_remaining: 10,
+        basic_cards: 4,
+        advanced_cards: 4,
+        legendary_cards: 2,
+        overtone_cards: 0,
+        accuracy: 2,
+        accuracy_tokens: 0,
+        damage: 3,
+        damage_tokens: 0,
+        evasion: 1,
+        evasion_tokens: 0,
+        level_number: 2,
+        life: 15,
+        luck: 0,
+        luck_tokens: 0,
+        movement: 7,
+        movement_tokens: 0,
+        nemesis_id: shadowWeaver.id,
+        sub_monster_name: null,
+        speed: 3,
+        speed_tokens: 0,
+        strength: 1,
+        strength_tokens: 0,
+        toughness: 10,
+        toughness_tokens: 0
+      })
+      .select('id')
+      .single()
 
   if (createShadowWeaverLevel2Error) throw createShadowWeaverLevel2Error
 
-  const { error: createShadowWeaverLevel3Error } = await supabase
-    .from('nemesis_level')
-    .insert({
-      ai_deck_remaining: 11,
-      basic_cards: 3,
-      advanced_cards: 5,
-      legendary_cards: 3,
-      overtone_cards: 0,
-      accuracy: 3,
-      accuracy_tokens: 0,
-      damage: 4,
-      damage_tokens: 0,
-      evasion: 2,
-      evasion_tokens: 0,
-      level_number: 3,
-      life: 20,
-      luck: 1,
-      luck_tokens: 0,
-      movement: 8,
-      movement_tokens: 0,
-      nemesis_id: shadowWeaver.id,
-      sub_monster_name: null,
-      speed: 4,
-      speed_tokens: 0,
-      strength: 2,
-      strength_tokens: 0,
-      survivor_statuses: ['Darkness', 'Nightmare', 'Doomed'],
-      toughness: 12,
-      toughness_tokens: 0
-    })
+  await linkLevelSurvivorStatuses(
+    supabase,
+    userId,
+    'nemesis',
+    shadowWeaverLevel2.id,
+    ['Darkness', 'Nightmare']
+  )
+
+  const { data: shadowWeaverLevel3, error: createShadowWeaverLevel3Error } =
+    await supabase
+      .from('nemesis_level')
+      .insert({
+        ai_deck_remaining: 11,
+        basic_cards: 3,
+        advanced_cards: 5,
+        legendary_cards: 3,
+        overtone_cards: 0,
+        accuracy: 3,
+        accuracy_tokens: 0,
+        damage: 4,
+        damage_tokens: 0,
+        evasion: 2,
+        evasion_tokens: 0,
+        level_number: 3,
+        life: 20,
+        luck: 1,
+        luck_tokens: 0,
+        movement: 8,
+        movement_tokens: 0,
+        nemesis_id: shadowWeaver.id,
+        sub_monster_name: null,
+        speed: 4,
+        speed_tokens: 0,
+        strength: 2,
+        strength_tokens: 0,
+        toughness: 12,
+        toughness_tokens: 0
+      })
+      .select('id')
+      .single()
 
   if (createShadowWeaverLevel3Error) throw createShadowWeaverLevel3Error
+
+  await linkLevelSurvivorStatuses(
+    supabase,
+    userId,
+    'nemesis',
+    shadowWeaverLevel3.id,
+    ['Darkness', 'Nightmare', 'Doomed']
+  )
 
   const { error: createShadowWeaverTimelineError } = await supabase
     .from('nemesis_timeline_year')
@@ -1574,45 +1697,54 @@ async function createCustomNemeses(
       speed_tokens: 0,
       strength: 0,
       strength_tokens: 0,
-      survivor_statuses: [],
       toughness: 6,
       toughness_tokens: 0
     })
 
   if (createVoidCallerLevel1Error) throw createVoidCallerLevel1Error
 
-  const { error: createVoidCallerLevel2Error } = await supabase
-    .from('nemesis_level')
-    .insert({
-      ai_deck_remaining: 10,
-      basic_cards: 5,
-      advanced_cards: 4,
-      legendary_cards: 1,
-      overtone_cards: 0,
-      accuracy: 1,
-      accuracy_tokens: 0,
-      damage: 2,
-      damage_tokens: 0,
-      evasion: 1,
-      evasion_tokens: 0,
-      level_number: 2,
-      life: 18,
-      luck: 0,
-      luck_tokens: 0,
-      movement: 6,
-      movement_tokens: 0,
-      nemesis_id: voidCaller.id,
-      sub_monster_name: null,
-      speed: 2,
-      speed_tokens: 0,
-      strength: 1,
-      strength_tokens: 0,
-      survivor_statuses: ['Void Touched'],
-      toughness: 8,
-      toughness_tokens: 0
-    })
+  const { data: voidCallerLevel2, error: createVoidCallerLevel2Error } =
+    await supabase
+      .from('nemesis_level')
+      .insert({
+        ai_deck_remaining: 10,
+        basic_cards: 5,
+        advanced_cards: 4,
+        legendary_cards: 1,
+        overtone_cards: 0,
+        accuracy: 1,
+        accuracy_tokens: 0,
+        damage: 2,
+        damage_tokens: 0,
+        evasion: 1,
+        evasion_tokens: 0,
+        level_number: 2,
+        life: 18,
+        luck: 0,
+        luck_tokens: 0,
+        movement: 6,
+        movement_tokens: 0,
+        nemesis_id: voidCaller.id,
+        sub_monster_name: null,
+        speed: 2,
+        speed_tokens: 0,
+        strength: 1,
+        strength_tokens: 0,
+        toughness: 8,
+        toughness_tokens: 0
+      })
+      .select('id')
+      .single()
 
   if (createVoidCallerLevel2Error) throw createVoidCallerLevel2Error
+
+  await linkLevelSurvivorStatuses(
+    supabase,
+    userId,
+    'nemesis',
+    voidCallerLevel2.id,
+    ['Void Touched']
+  )
 
   const { error: createVoidCallerTimelineError } = await supabase
     .from('nemesis_timeline_year')
@@ -1745,7 +1877,6 @@ async function createCustomQuarries(
       speed_tokens: 0,
       strength: 2,
       strength_tokens: 0,
-      survivor_statuses: [],
       toughness: 10,
       toughness_tokens: 0
     })
@@ -1754,39 +1885,47 @@ async function createCustomQuarries(
 
   if (createIronWyrmLevel1Error) throw createIronWyrmLevel1Error
 
-  const { error: createIronWyrmLevel2Error } = await supabase
-    .from('quarry_level')
-    .insert({
-      ai_deck_remaining: 9,
-      basic_cards: 6,
-      advanced_cards: 3,
-      legendary_cards: 0,
-      overtone_cards: 0,
-      accuracy: 1,
-      accuracy_tokens: 0,
-      damage: 3,
-      damage_tokens: 0,
-      evasion: 0,
-      evasion_tokens: 0,
-      level_number: 2,
-      luck: 0,
-      luck_tokens: 0,
-      movement: 5,
-      movement_tokens: 0,
-      quarry_id: ironWyrm.id,
-      sub_monster_name: null,
-      speed: 2,
-      speed_tokens: 0,
-      strength: 3,
-      strength_tokens: 0,
-      survivor_statuses: ['Bleeding'],
-      toughness: 12,
-      toughness_tokens: 0
-    })
-    .select('id')
-    .single()
+  const { data: ironWyrmLevel2, error: createIronWyrmLevel2Error } =
+    await supabase
+      .from('quarry_level')
+      .insert({
+        ai_deck_remaining: 9,
+        basic_cards: 6,
+        advanced_cards: 3,
+        legendary_cards: 0,
+        overtone_cards: 0,
+        accuracy: 1,
+        accuracy_tokens: 0,
+        damage: 3,
+        damage_tokens: 0,
+        evasion: 0,
+        evasion_tokens: 0,
+        level_number: 2,
+        luck: 0,
+        luck_tokens: 0,
+        movement: 5,
+        movement_tokens: 0,
+        quarry_id: ironWyrm.id,
+        sub_monster_name: null,
+        speed: 2,
+        speed_tokens: 0,
+        strength: 3,
+        strength_tokens: 0,
+        toughness: 12,
+        toughness_tokens: 0
+      })
+      .select('id')
+      .single()
 
   if (createIronWyrmLevel2Error) throw createIronWyrmLevel2Error
+
+  await linkLevelSurvivorStatuses(
+    supabase,
+    userId,
+    'quarry',
+    ironWyrmLevel2.id,
+    ['Bleeding']
+  )
 
   const { error: createIronWyrmLevelPositionsError } = await supabase
     .from('quarry_hunt_board_position')
@@ -1975,7 +2114,6 @@ async function createCustomQuarries(
       speed_tokens: 0,
       strength: 2,
       strength_tokens: 0,
-      survivor_statuses: [],
       toughness: 10,
       toughness_tokens: 0
     })
@@ -2010,7 +2148,6 @@ async function createCustomQuarries(
         speed_tokens: 0,
         strength: 2,
         strength_tokens: 0,
-        survivor_statuses: [],
         toughness: 10,
         toughness_tokens: 0
       },
@@ -2037,7 +2174,6 @@ async function createCustomQuarries(
         speed_tokens: 0,
         strength: 2,
         strength_tokens: 0,
-        survivor_statuses: [],
         toughness: 10,
         toughness_tokens: 0
       }
@@ -2072,7 +2208,6 @@ async function createCustomQuarries(
         speed_tokens: 0,
         strength: 2,
         strength_tokens: 0,
-        survivor_statuses: [],
         toughness: 10,
         toughness_tokens: 0
       },
@@ -2099,7 +2234,6 @@ async function createCustomQuarries(
         speed_tokens: 0,
         strength: 2,
         strength_tokens: 0,
-        survivor_statuses: [],
         toughness: 10,
         toughness_tokens: 0
       },
@@ -2126,7 +2260,6 @@ async function createCustomQuarries(
         speed_tokens: 0,
         strength: 2,
         strength_tokens: 0,
-        survivor_statuses: [],
         toughness: 10,
         toughness_tokens: 0
       }
