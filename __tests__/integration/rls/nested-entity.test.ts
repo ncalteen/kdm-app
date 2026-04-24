@@ -22,6 +22,9 @@ describe('RLS: nested entity tables', () => {
   let locationId: string
   let customTraitId: string
   let customMoodId: string
+  let customSurvivorStatusId: string
+  let customCcrId: string
+  let customAbilityImpairmentId: string
 
   const rowIds: Record<string, string> = {}
 
@@ -143,6 +146,55 @@ describe('RLS: nested entity tables', () => {
       nemesis_level_id: rowIds.nemesis_level,
       mood_id: customMoodId
     })
+
+    // Owner-scoped custom survivor_status, collective_cognition_reward, and
+    // ability_impairment used by the remaining nested junction rows. Seeded
+    // here so the cleanup block can cascade via the parent records above.
+    customSurvivorStatusId = await ins('survivor_status', {
+      custom: true,
+      user_id: owner.id,
+      survivor_status_name: 'RLS Nested Survivor Status'
+    })
+    customCcrId = await ins('collective_cognition_reward', {
+      custom: true,
+      user_id: owner.id,
+      reward_name: 'RLS Nested CCR',
+      collective_cognition: 1
+    })
+    customAbilityImpairmentId = await ins('ability_impairment', {
+      custom: true,
+      user_id: owner.id,
+      ability_impairment_name: 'RLS Nested A&I'
+    })
+
+    rowIds.quarry_level_survivor_status = await ins(
+      'quarry_level_survivor_status',
+      {
+        quarry_level_id: rowIds.quarry_level,
+        survivor_status_id: customSurvivorStatusId
+      }
+    )
+    rowIds.nemesis_level_survivor_status = await ins(
+      'nemesis_level_survivor_status',
+      {
+        nemesis_level_id: rowIds.nemesis_level,
+        survivor_status_id: customSurvivorStatusId
+      }
+    )
+    rowIds.quarry_collective_cognition_reward = await ins(
+      'quarry_collective_cognition_reward',
+      {
+        quarry_id: quarryId,
+        collective_cognition_reward_id: customCcrId
+      }
+    )
+    rowIds.wanderer_ability_impairment = await ins(
+      'wanderer_ability_impairment',
+      {
+        wanderer_id: wandererId,
+        ability_impairment_id: customAbilityImpairmentId
+      }
+    )
   })
 
   afterAll(async () => {
@@ -153,6 +205,18 @@ describe('RLS: nested entity tables', () => {
     await admin.from('location').delete().eq('id', locationId)
     await admin.from('trait').delete().eq('id', customTraitId)
     await admin.from('mood').delete().eq('id', customMoodId)
+    await admin
+      .from('survivor_status')
+      .delete()
+      .eq('id', customSurvivorStatusId)
+    await admin
+      .from('collective_cognition_reward')
+      .delete()
+      .eq('id', customCcrId)
+    await admin
+      .from('ability_impairment')
+      .delete()
+      .eq('id', customAbilityImpairmentId)
     await deleteTestUser(owner.id)
     await deleteTestUser(attacker.id)
   })
@@ -165,12 +229,16 @@ describe('RLS: nested entity tables', () => {
     'quarry_level',
     'quarry_level_trait',
     'quarry_level_mood',
+    'quarry_level_survivor_status',
+    'quarry_collective_cognition_reward',
     'nemesis_location',
     'nemesis_timeline_year',
     'nemesis_level',
     'nemesis_level_trait',
     'nemesis_level_mood',
-    'wanderer_timeline_year'
+    'nemesis_level_survivor_status',
+    'wanderer_timeline_year',
+    'wanderer_ability_impairment'
   ] as const
 
   it.each(NESTED_TABLES)(

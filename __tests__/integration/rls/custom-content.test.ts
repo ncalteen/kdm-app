@@ -95,6 +95,12 @@ const SPECS: CustomContentSpec[] = [
     extras: { milestone_name: 'RLS-milestone-name' }
   },
   {
+    table: 'mood',
+    sharedTable: 'mood_shared_user',
+    fkCol: 'mood_id',
+    nameCol: 'mood_name'
+  },
+  {
     table: 'nemesis',
     sharedTable: 'nemesis_shared_user',
     fkCol: 'nemesis_id',
@@ -157,6 +163,18 @@ const SPECS: CustomContentSpec[] = [
     sharedTable: 'strain_milestone_shared_user',
     fkCol: 'strain_milestone_id',
     nameCol: 'strain_milestone_name'
+  },
+  {
+    table: 'survivor_status',
+    sharedTable: 'survivor_status_shared_user',
+    fkCol: 'survivor_status_id',
+    nameCol: 'survivor_status_name'
+  },
+  {
+    table: 'trait',
+    sharedTable: 'trait_shared_user',
+    fkCol: 'trait_id',
+    nameCol: 'trait_name'
   },
   {
     table: 'wanderer',

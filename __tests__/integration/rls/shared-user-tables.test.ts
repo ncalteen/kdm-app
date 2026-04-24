@@ -96,6 +96,12 @@ const SHARE_SPECS: ShareSpec[] = [
     extras: { milestone_name: 'RLS-share-milestone-name' }
   },
   {
+    parent: 'mood',
+    share: 'mood_shared_user',
+    fkCol: 'mood_id',
+    nameCol: 'mood_name'
+  },
+  {
     parent: 'nemesis',
     share: 'nemesis_shared_user',
     fkCol: 'nemesis_id',
@@ -158,6 +164,18 @@ const SHARE_SPECS: ShareSpec[] = [
     share: 'strain_milestone_shared_user',
     fkCol: 'strain_milestone_id',
     nameCol: 'strain_milestone_name'
+  },
+  {
+    parent: 'survivor_status',
+    share: 'survivor_status_shared_user',
+    fkCol: 'survivor_status_id',
+    nameCol: 'survivor_status_name'
+  },
+  {
+    parent: 'trait',
+    share: 'trait_shared_user',
+    fkCol: 'trait_id',
+    nameCol: 'trait_name'
   },
   {
     parent: 'settlement',

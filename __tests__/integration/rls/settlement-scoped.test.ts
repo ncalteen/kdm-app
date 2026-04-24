@@ -5,6 +5,7 @@ import {
   SettlementFixture
 } from '@/__tests__/integration/helpers/fixtures'
 import {
+  admin,
   createTestUser,
   deleteTestUser,
   TestUser
@@ -236,4 +237,73 @@ describe('RLS: settlement-scoped tables', () => {
       if (error) expect(error.code).toMatch(/PGRST|42501/)
     }
   )
+
+  // `settlement_phase_returning_survivor` has a composite primary key
+  // (settlement_phase_id, survivor_id) rather than a synthetic `id`, so it
+  // can't ride the matrix above. It is still a settlement-scoped table —
+  // non-owners must not be able to observe or mutate the join row.
+  describe('settlement_phase_returning_survivor', () => {
+    beforeAll(async () => {
+      const { error } = await admin
+        .from('settlement_phase_returning_survivor')
+        .insert({
+          settlement_id: fixture.settlementId,
+          settlement_phase_id: fixture.settlementPhaseId,
+          survivor_id: fixture.survivorId
+        })
+      if (error)
+        throw new Error(
+          `seed settlement_phase_returning_survivor: ${error.message}`
+        )
+    })
+
+    it('owner CAN SELECT the join row', async () => {
+      const { data, error } = await owner.client
+        .from('settlement_phase_returning_survivor')
+        .select('settlement_phase_id')
+        .eq('settlement_phase_id', fixture.settlementPhaseId)
+        .eq('survivor_id', fixture.survivorId)
+      expect(error).toBeNull()
+      expect(data).toHaveLength(1)
+    })
+
+    it('attacker cannot SELECT the join row', async () => {
+      const { data, error } = await attacker.client
+        .from('settlement_phase_returning_survivor')
+        .select('settlement_phase_id')
+        .eq('settlement_phase_id', fixture.settlementPhaseId)
+      expect(error).toBeNull()
+      expect(data).toEqual([])
+    })
+
+    it('attacker cannot DELETE the join row', async () => {
+      const { data } = await attacker.client
+        .from('settlement_phase_returning_survivor')
+        .delete()
+        .eq('settlement_phase_id', fixture.settlementPhaseId)
+        .eq('survivor_id', fixture.survivorId)
+        .select('settlement_phase_id')
+      expect(data ?? []).toEqual([])
+
+      const { data: check } = await owner.client
+        .from('settlement_phase_returning_survivor')
+        .select('settlement_phase_id')
+        .eq('settlement_phase_id', fixture.settlementPhaseId)
+        .eq('survivor_id', fixture.survivorId)
+      expect(check).toHaveLength(1)
+    })
+
+    it('attacker cannot INSERT a join row into another user settlement', async () => {
+      const { data, error } = await attacker.client
+        .from('settlement_phase_returning_survivor')
+        .insert({
+          settlement_id: fixture.settlementId,
+          settlement_phase_id: fixture.settlementPhaseId,
+          survivor_id: fixture.survivorId
+        })
+        .select('settlement_phase_id')
+      expect(data ?? []).toEqual([])
+      expect(error?.code).toMatch(/PGRST|42501|23505/)
+    })
+  })
 })
