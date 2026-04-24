@@ -38,7 +38,7 @@ import {
   TraitDetail
 } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Hunt Monster Card Component Properties
@@ -84,15 +84,27 @@ export function HuntMonsterCard({
     ? selectedHunt?.hunt_monsters?.[currentMonsterId]
     : undefined
 
-  // State for managing monster notes
+  // State for managing monster notes. Tracks the last-seen monster id and
+  // persisted notes so we can reset the draft when either changes without
+  // using an effect (see https://react.dev/learn/you-might-not-need-an-effect).
   const [notesDraft, setNotesDraft] = useState<string>(monster?.notes ?? '')
   const [isNotesDirty, setIsNotesDirty] = useState<boolean>(false)
+  const [lastMonsterId, setLastMonsterId] = useState<string | undefined>(
+    currentMonsterId
+  )
+  const [lastPersistedNotes, setLastPersistedNotes] = useState<string>(
+    monster?.notes ?? ''
+  )
 
-  // Update notes when monster changes
-  useEffect(() => {
+  if (
+    lastMonsterId !== currentMonsterId ||
+    lastPersistedNotes !== (monster?.notes ?? '')
+  ) {
+    setLastMonsterId(currentMonsterId)
+    setLastPersistedNotes(monster?.notes ?? '')
     setNotesDraft(monster?.notes ?? '')
     setIsNotesDirty(false)
-  }, [monster?.notes, currentMonsterId])
+  }
 
   /**
    * Save Monster Data

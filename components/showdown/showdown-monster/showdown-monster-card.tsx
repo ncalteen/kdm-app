@@ -38,7 +38,7 @@ import {
   TraitDetail
 } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Showdown Monster Card Component Properties
@@ -81,13 +81,27 @@ export function ShowdownMonsterCard({
     ? selectedShowdown?.showdown_monsters?.[currentMonsterId]
     : undefined
 
+  // State for managing monster notes. Tracks the last-seen monster id and
+  // persisted notes so we can reset the draft when either changes without
+  // using an effect (see https://react.dev/learn/you-might-not-need-an-effect).
   const [notesDraft, setNotesDraft] = useState(monster?.notes ?? '')
   const [isNotesDirty, setIsNotesDirty] = useState(false)
+  const [lastMonsterId, setLastMonsterId] = useState<string | undefined>(
+    currentMonsterId
+  )
+  const [lastPersistedNotes, setLastPersistedNotes] = useState<string>(
+    monster?.notes ?? ''
+  )
 
-  useEffect(() => {
+  if (
+    lastMonsterId !== currentMonsterId ||
+    lastPersistedNotes !== (monster?.notes ?? '')
+  ) {
+    setLastMonsterId(currentMonsterId)
+    setLastPersistedNotes(monster?.notes ?? '')
     setNotesDraft(monster?.notes ?? '')
     setIsNotesDirty(false)
-  }, [monster?.notes, currentMonsterId])
+  }
 
   const saveMonsterData = useCallback(
     (updateData: Partial<ShowdownMonsterDetail>, successMsg?: string) => {
