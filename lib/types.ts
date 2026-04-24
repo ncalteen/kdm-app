@@ -344,9 +344,11 @@ export type MonsterLevelData = {
   /** Life (nemesis only) */
   life: number
   /** Traits */
-  traits: string[]
+  traits: TraitDetail[]
   /** Moods */
-  moods: string[]
+  moods: MoodDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: SurvivorStatusDetail[]
 }
 
 /**

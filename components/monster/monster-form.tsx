@@ -33,6 +33,9 @@ import { useToast } from '@/hooks/use-toast'
 import { baseMonsterLevelData, monsterAttributeTokenMap } from '@/lib/common'
 import { getCollectiveCognitionRewards } from '@/lib/dal/collective-cognition-reward'
 import { getLocations } from '@/lib/dal/location'
+import { getMoods } from '@/lib/dal/mood'
+import { getSurvivorStatuses } from '@/lib/dal/survivor-status'
+import { getTraits } from '@/lib/dal/trait'
 import { HuntEventType, MonsterNode, MonsterType } from '@/lib/enums'
 import {
   ERROR_MESSAGE,
@@ -42,7 +45,10 @@ import {
 import {
   CollectiveCognitionRewardDetail,
   LocationDetail,
-  MonsterLevelData
+  MonsterLevelData,
+  MoodDetail,
+  SurvivorStatusDetail,
+  TraitDetail
 } from '@/lib/types'
 import { getAvailableNodes } from '@/lib/utils'
 import MDEditor from '@uiw/react-md-editor'
@@ -349,12 +355,39 @@ export function MonsterForm({
     [key: string]: CollectiveCognitionRewardDetail
   }>({})
 
+  // Traits / Moods catalogs (per-sub-monster selection is handled inline)
+  const [availableTraits, setAvailableTraits] = useState<{
+    [key: string]: TraitDetail
+  }>({})
+  const [availableMoods, setAvailableMoods] = useState<{
+    [key: string]: MoodDetail
+  }>({})
+  const [availableSurvivorStatuses, setAvailableSurvivorStatuses] = useState<{
+    [key: string]: SurvivorStatusDetail
+  }>({})
+  // Track which sub-monster's trait/mood popover is open, keyed by
+  // `${levelNum}-${subIdx}`. Only one popover is open at a time.
+  const [openTraitPicker, setOpenTraitPicker] = useState<string | null>(null)
+  const [openMoodPicker, setOpenMoodPicker] = useState<string | null>(null)
+  const [openSurvivorStatusPicker, setOpenSurvivorStatusPicker] = useState<
+    string | null
+  >(null)
+
   // Fetch dropdown options on mount
   useEffect(() => {
-    Promise.all([getLocations(), getCollectiveCognitionRewards()])
-      .then(([locs, ccrs]) => {
+    Promise.all([
+      getLocations(),
+      getCollectiveCognitionRewards(),
+      getTraits(),
+      getMoods(),
+      getSurvivorStatuses()
+    ])
+      .then(([locs, ccrs, traits, moods, statuses]) => {
         setAvailableLocations(locs)
         setAvailableCCRewards(ccrs)
+        setAvailableTraits(traits)
+        setAvailableMoods(moods)
+        setAvailableSurvivorStatuses(statuses)
       })
       .catch((err: unknown) => {
         console.error('Fetch Options Error:', err)
@@ -1320,45 +1353,97 @@ export function MonsterForm({
                                   <div className="space-y-1">
                                     <div className="flex items-center justify-between">
                                       <Label>Traits</Label>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() =>
-                                          updateSubMonster(levelNum, subIdx, {
-                                            traits: [...sub.traits, '']
-                                          })
+                                      <Popover
+                                        open={
+                                          openTraitPicker ===
+                                          `${levelNum}-${subIdx}`
+                                        }
+                                        onOpenChange={(open) =>
+                                          setOpenTraitPicker(
+                                            open
+                                              ? `${levelNum}-${subIdx}`
+                                              : null
+                                          )
                                         }>
-                                        <PlusIcon className="h-3 w-3" />
-                                      </Button>
+                                        <PopoverTrigger asChild>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            disabled={
+                                              Object.keys(availableTraits)
+                                                .length === sub.traits.length
+                                            }>
+                                            <PlusIcon className="h-3 w-3" />
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                          className="p-0"
+                                          align="end">
+                                          <Command>
+                                            <CommandInput placeholder="Search traits..." />
+                                            <CommandList>
+                                              <CommandEmpty>
+                                                No traits found.
+                                              </CommandEmpty>
+                                              <CommandGroup>
+                                                {Object.values(availableTraits)
+                                                  .filter(
+                                                    (t) =>
+                                                      !sub.traits.some(
+                                                        (st) => st.id === t.id
+                                                      )
+                                                  )
+                                                  .sort((a, b) =>
+                                                    a.trait_name.localeCompare(
+                                                      b.trait_name
+                                                    )
+                                                  )
+                                                  .map((trait) => (
+                                                    <CommandItem
+                                                      key={trait.id}
+                                                      value={trait.trait_name}
+                                                      onSelect={() => {
+                                                        updateSubMonster(
+                                                          levelNum,
+                                                          subIdx,
+                                                          {
+                                                            traits: [
+                                                              ...sub.traits,
+                                                              trait
+                                                            ]
+                                                          }
+                                                        )
+                                                        setOpenTraitPicker(null)
+                                                      }}>
+                                                      {trait.trait_name}
+                                                    </CommandItem>
+                                                  ))}
+                                              </CommandGroup>
+                                            </CommandList>
+                                          </Command>
+                                        </PopoverContent>
+                                      </Popover>
                                     </div>
-                                    {sub.traits.map((trait, tIdx) => (
+                                    {sub.traits.map((trait) => (
                                       <div
-                                        key={tIdx}
+                                        key={trait.id}
                                         className="flex items-center gap-1">
                                         <Input
-                                          value={trait}
-                                          placeholder="Trait"
-                                          onChange={(e) => {
-                                            const next = [...sub.traits]
-                                            next[tIdx] = e.target.value
-                                            updateSubMonster(levelNum, subIdx, {
-                                              traits: next
-                                            })
-                                          }}
+                                          value={trait.trait_name}
+                                          disabled
                                         />
                                         <Button
                                           type="button"
                                           variant="ghost"
                                           size="icon"
-                                          onClick={() => {
-                                            const next = sub.traits.filter(
-                                              (_, i) => i !== tIdx
-                                            )
+                                          onClick={() =>
                                             updateSubMonster(levelNum, subIdx, {
-                                              traits: next
+                                              traits: sub.traits.filter(
+                                                (t) => t.id !== trait.id
+                                              )
                                             })
-                                          }}>
+                                          }>
                                           <Trash2Icon className="h-3 w-3" />
                                         </Button>
                                       </div>
@@ -1371,45 +1456,211 @@ export function MonsterForm({
                                   <div className="space-y-1">
                                     <div className="flex items-center justify-between">
                                       <Label>Moods</Label>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() =>
-                                          updateSubMonster(levelNum, subIdx, {
-                                            moods: [...sub.moods, '']
-                                          })
+                                      <Popover
+                                        open={
+                                          openMoodPicker ===
+                                          `${levelNum}-${subIdx}`
+                                        }
+                                        onOpenChange={(open) =>
+                                          setOpenMoodPicker(
+                                            open
+                                              ? `${levelNum}-${subIdx}`
+                                              : null
+                                          )
                                         }>
-                                        <PlusIcon className="h-3 w-3" />
-                                      </Button>
+                                        <PopoverTrigger asChild>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            disabled={
+                                              Object.keys(availableMoods)
+                                                .length === sub.moods.length
+                                            }>
+                                            <PlusIcon className="h-3 w-3" />
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                          className="p-0"
+                                          align="end">
+                                          <Command>
+                                            <CommandInput placeholder="Search moods..." />
+                                            <CommandList>
+                                              <CommandEmpty>
+                                                No moods found.
+                                              </CommandEmpty>
+                                              <CommandGroup>
+                                                {Object.values(availableMoods)
+                                                  .filter(
+                                                    (m) =>
+                                                      !sub.moods.some(
+                                                        (sm) => sm.id === m.id
+                                                      )
+                                                  )
+                                                  .sort((a, b) =>
+                                                    a.mood_name.localeCompare(
+                                                      b.mood_name
+                                                    )
+                                                  )
+                                                  .map((mood) => (
+                                                    <CommandItem
+                                                      key={mood.id}
+                                                      value={mood.mood_name}
+                                                      onSelect={() => {
+                                                        updateSubMonster(
+                                                          levelNum,
+                                                          subIdx,
+                                                          {
+                                                            moods: [
+                                                              ...sub.moods,
+                                                              mood
+                                                            ]
+                                                          }
+                                                        )
+                                                        setOpenMoodPicker(null)
+                                                      }}>
+                                                      {mood.mood_name}
+                                                    </CommandItem>
+                                                  ))}
+                                              </CommandGroup>
+                                            </CommandList>
+                                          </Command>
+                                        </PopoverContent>
+                                      </Popover>
                                     </div>
-                                    {sub.moods.map((mood, mIdx) => (
+                                    {sub.moods.map((mood) => (
                                       <div
-                                        key={mIdx}
+                                        key={mood.id}
                                         className="flex items-center gap-1">
                                         <Input
-                                          value={mood}
-                                          placeholder="Mood"
-                                          onChange={(e) => {
-                                            const next = [...sub.moods]
-                                            next[mIdx] = e.target.value
-                                            updateSubMonster(levelNum, subIdx, {
-                                              moods: next
-                                            })
-                                          }}
+                                          value={mood.mood_name}
+                                          disabled
                                         />
                                         <Button
                                           type="button"
                                           variant="ghost"
                                           size="icon"
-                                          onClick={() => {
-                                            const next = sub.moods.filter(
-                                              (_, i) => i !== mIdx
-                                            )
+                                          onClick={() =>
                                             updateSubMonster(levelNum, subIdx, {
-                                              moods: next
+                                              moods: sub.moods.filter(
+                                                (m) => m.id !== mood.id
+                                              )
                                             })
-                                          }}>
+                                          }>
+                                          <Trash2Icon className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  <Separator />
+
+                                  {/* Survivor Statuses */}
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                      <Label>Survivor Statuses</Label>
+                                      <Popover
+                                        open={
+                                          openSurvivorStatusPicker ===
+                                          `${levelNum}-${subIdx}`
+                                        }
+                                        onOpenChange={(open) =>
+                                          setOpenSurvivorStatusPicker(
+                                            open
+                                              ? `${levelNum}-${subIdx}`
+                                              : null
+                                          )
+                                        }>
+                                        <PopoverTrigger asChild>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            disabled={
+                                              Object.keys(
+                                                availableSurvivorStatuses
+                                              ).length ===
+                                              sub.survivor_statuses.length
+                                            }>
+                                            <PlusIcon className="h-3 w-3" />
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                          className="p-0"
+                                          align="end">
+                                          <Command>
+                                            <CommandInput placeholder="Search statuses..." />
+                                            <CommandList>
+                                              <CommandEmpty>
+                                                No survivor statuses found.
+                                              </CommandEmpty>
+                                              <CommandGroup>
+                                                {Object.values(
+                                                  availableSurvivorStatuses
+                                                )
+                                                  .filter(
+                                                    (s) =>
+                                                      !sub.survivor_statuses.some(
+                                                        (ss) => ss.id === s.id
+                                                      )
+                                                  )
+                                                  .sort((a, b) =>
+                                                    a.survivor_status_name.localeCompare(
+                                                      b.survivor_status_name
+                                                    )
+                                                  )
+                                                  .map((status) => (
+                                                    <CommandItem
+                                                      key={status.id}
+                                                      value={
+                                                        status.survivor_status_name
+                                                      }
+                                                      onSelect={() => {
+                                                        updateSubMonster(
+                                                          levelNum,
+                                                          subIdx,
+                                                          {
+                                                            survivor_statuses: [
+                                                              ...sub.survivor_statuses,
+                                                              status
+                                                            ]
+                                                          }
+                                                        )
+                                                        setOpenSurvivorStatusPicker(
+                                                          null
+                                                        )
+                                                      }}>
+                                                      {
+                                                        status.survivor_status_name
+                                                      }
+                                                    </CommandItem>
+                                                  ))}
+                                              </CommandGroup>
+                                            </CommandList>
+                                          </Command>
+                                        </PopoverContent>
+                                      </Popover>
+                                    </div>
+                                    {sub.survivor_statuses.map((status) => (
+                                      <div
+                                        key={status.id}
+                                        className="flex items-center gap-1">
+                                        <Input
+                                          value={status.survivor_status_name}
+                                          disabled
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            updateSubMonster(levelNum, subIdx, {
+                                              survivor_statuses:
+                                                sub.survivor_statuses.filter(
+                                                  (s) => s.id !== status.id
+                                                )
+                                            })
+                                          }>
                                           <Trash2Icon className="h-3 w-3" />
                                         </Button>
                                       </div>

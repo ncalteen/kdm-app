@@ -8,6 +8,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   syncMonsterMoods,
+  syncMonsterSurvivorStatuses,
   syncMonsterTraits
 } from '@/lib/dal/monster-trait-mood'
 import { addNemesis } from '@/lib/dal/nemesis'
@@ -100,12 +101,15 @@ export function CreateMonsterCard({
           ? 'quarry_level_trait'
           : 'nemesis_level_trait'
         const moodTable = isQuarry ? 'quarry_level_mood' : 'nemesis_level_mood'
+        const survivorStatusTable = isQuarry
+          ? 'quarry_level_survivor_status'
+          : 'nemesis_level_survivor_status'
 
         for (const [levelStr, subMonsters] of levelEntries) {
           const levelNum = parseInt(levelStr, 10)
 
           for (const sub of subMonsters) {
-            const { life, traits, moods, ...rest } = sub
+            const { life, traits, moods, survivor_statuses, ...rest } = sub
             const insertData: Record<string, unknown> = {
               [idKey]: monster.id,
               ...rest,
@@ -126,9 +130,23 @@ export function CreateMonsterCard({
             )(insertData)
 
             if (traits.length > 0)
-              await syncMonsterTraits(traitTable, levelId, traits)
+              await syncMonsterTraits(
+                traitTable,
+                levelId,
+                traits.map((t) => t.trait_name)
+              )
             if (moods.length > 0)
-              await syncMonsterMoods(moodTable, levelId, moods)
+              await syncMonsterMoods(
+                moodTable,
+                levelId,
+                moods.map((m) => m.mood_name)
+              )
+            if (survivor_statuses.length > 0)
+              await syncMonsterSurvivorStatuses(
+                survivorStatusTable,
+                levelId,
+                survivor_statuses.map((s) => s.survivor_status_name)
+              )
           }
 
           if (isQuarry) {

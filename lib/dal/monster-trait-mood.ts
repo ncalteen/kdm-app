@@ -1,13 +1,14 @@
 import { resolveMoodNames } from '@/lib/dal/mood'
+import { resolveSurvivorStatusNames } from '@/lib/dal/survivor-status'
 import { resolveTraitNames } from '@/lib/dal/trait'
 import { createClient } from '@/lib/supabase/client'
 
 /**
  * Monster Junction Table Names
  *
- * The eight junction tables that associate monster-bearing rows with traits
- * and moods. Shared by hunts, showdowns, and the custom quarry/nemesis level
- * editor.
+ * The junction tables that associate monster-bearing rows with traits, moods,
+ * and survivor statuses. Shared by hunts, showdowns, and the custom
+ * quarry/nemesis level editor.
  */
 type JunctionTable =
   | 'hunt_monster_trait'
@@ -16,13 +17,15 @@ type JunctionTable =
   | 'showdown_monster_mood'
   | 'quarry_level_trait'
   | 'quarry_level_mood'
+  | 'quarry_level_survivor_status'
   | 'nemesis_level_trait'
   | 'nemesis_level_mood'
+  | 'nemesis_level_survivor_status'
 
 /** Mapping from junction table → (parent FK column, catalog FK column). */
 const COLUMNS: Record<
   JunctionTable,
-  { parent: string; catalog: 'trait_id' | 'mood_id' }
+  { parent: string; catalog: 'trait_id' | 'mood_id' | 'survivor_status_id' }
 > = {
   hunt_monster_trait: { parent: 'hunt_monster_id', catalog: 'trait_id' },
   hunt_monster_mood: { parent: 'hunt_monster_id', catalog: 'mood_id' },
@@ -33,8 +36,16 @@ const COLUMNS: Record<
   showdown_monster_mood: { parent: 'showdown_monster_id', catalog: 'mood_id' },
   quarry_level_trait: { parent: 'quarry_level_id', catalog: 'trait_id' },
   quarry_level_mood: { parent: 'quarry_level_id', catalog: 'mood_id' },
+  quarry_level_survivor_status: {
+    parent: 'quarry_level_id',
+    catalog: 'survivor_status_id'
+  },
   nemesis_level_trait: { parent: 'nemesis_level_id', catalog: 'trait_id' },
-  nemesis_level_mood: { parent: 'nemesis_level_id', catalog: 'mood_id' }
+  nemesis_level_mood: { parent: 'nemesis_level_id', catalog: 'mood_id' },
+  nemesis_level_survivor_status: {
+    parent: 'nemesis_level_id',
+    catalog: 'survivor_status_id'
+  }
 }
 
 /**
@@ -139,6 +150,27 @@ export async function syncMonsterMoods(
   moodNames: string[]
 ): Promise<void> {
   const ids = await resolveMoodNames(moodNames)
+  await syncJunction(table, parentId, ids)
+}
+
+/**
+ * Sync Monster Survivor Statuses
+ *
+ * Resolves the given survivor status names (reusing existing rows where
+ * possible, else creating new custom statuses owned by the current user),
+ * then reconciles the supplied parent row's survivor-status-junction entries
+ * against the resolved IDs.
+ *
+ * @param table Survivor status junction table
+ * @param parentId Parent row ID
+ * @param statusNames Desired survivor status names
+ */
+export async function syncMonsterSurvivorStatuses(
+  table: Extract<JunctionTable, `${string}_survivor_status`>,
+  parentId: string,
+  statusNames: string[]
+): Promise<void> {
+  const ids = await resolveSurvivorStatusNames(statusNames)
   await syncJunction(table, parentId, ids)
 }
 

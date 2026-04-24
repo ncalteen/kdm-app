@@ -13,6 +13,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   syncMonsterMoods,
+  syncMonsterSurvivorStatuses,
   syncMonsterTraits
 } from '@/lib/dal/monster-trait-mood'
 import { getNemesis, updateNemesis } from '@/lib/dal/nemesis'
@@ -340,6 +341,9 @@ export function EditMonsterCard({
           ? 'quarry_level_trait'
           : 'nemesis_level_trait'
         const moodTable = isQuarry ? 'quarry_level_mood' : 'nemesis_level_mood'
+        const survivorStatusTable = isQuarry
+          ? 'quarry_level_survivor_status'
+          : 'nemesis_level_survivor_status'
 
         for (const [levelNumStr, subMonsters] of Object.entries(
           payload.levels
@@ -347,8 +351,18 @@ export function EditMonsterCard({
           const levelNum = parseInt(levelNumStr, 10)
 
           for (const sub of subMonsters) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id, level_number: _ln, traits, moods, ...rest } = sub
+            const {
+              id,
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              level_number: _ln,
+              traits,
+              moods,
+              survivor_statuses,
+              ...rest
+            } = sub as MonsterLevelDraft & {
+              hunt_pos?: number
+              survivor_hunt_pos?: number
+            }
 
             const levelData: Record<string, unknown> = {
               ...rest,
@@ -359,6 +373,20 @@ export function EditMonsterCard({
                 sub.legendary_cards +
                 sub.overtone_cards
             }
+
+            // `hunt_pos` / `survivor_hunt_pos` are attached to loaded quarry
+            // levels for UI convenience but are persisted in the separate
+            // `quarry_hunt_board_position` table, not on the level row.
+            delete levelData.hunt_pos
+            delete levelData.survivor_hunt_pos
+            // Joined relation columns returned by the `get*Levels` select are
+            // not columns on the level table itself.
+            delete levelData.quarry_level_trait
+            delete levelData.quarry_level_mood
+            delete levelData.quarry_level_survivor_status
+            delete levelData.nemesis_level_trait
+            delete levelData.nemesis_level_mood
+            delete levelData.nemesis_level_survivor_status
 
             // Quarry levels don't have a `life` column.
             if (isQuarry) delete levelData.life
@@ -376,8 +404,21 @@ export function EditMonsterCard({
               )({ ...levelData, [idKey]: monsterId })
             }
 
-            await syncMonsterTraits(traitTable, levelId, traits)
-            await syncMonsterMoods(moodTable, levelId, moods)
+            await syncMonsterTraits(
+              traitTable,
+              levelId,
+              traits.map((t) => t.trait_name)
+            )
+            await syncMonsterMoods(
+              moodTable,
+              levelId,
+              moods.map((m) => m.mood_name)
+            )
+            await syncMonsterSurvivorStatuses(
+              survivorStatusTable,
+              levelId,
+              survivor_statuses.map((s) => s.survivor_status_name)
+            )
           }
         }
 
