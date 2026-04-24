@@ -33,6 +33,9 @@ export default defineConfig({
         'dist',
         'node_modules',
         'lib/**/*.d.ts',
+        'lib/database.types.ts',
+        'lib/types.ts',
+        'lib/supabase/**',
         'src/**/*.d.ts',
         'src/**/layout.tsx',
         'src/**/globals.css'

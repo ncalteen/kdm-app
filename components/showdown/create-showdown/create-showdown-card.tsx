@@ -18,6 +18,10 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
+import {
+  syncMonsterMoods,
+  syncMonsterTraits
+} from '@/lib/dal/monster-trait-mood'
 import { getNemesis } from '@/lib/dal/nemesis'
 import { getNemesisLevels } from '@/lib/dal/nemesis-level'
 import { getQuarry } from '@/lib/dal/quarry'
@@ -467,7 +471,7 @@ export function CreateShowdownCard({
         const monsterName =
           level.sub_monster_name ?? activeMonsterName ?? baseMonsterName
 
-        const showdownMonsterId = await addShowdownMonster({
+        const showdownMonster = {
           accuracy: level.accuracy,
           accuracy_tokens: level.accuracy_tokens,
           ai_card_drawn: false,
@@ -481,7 +485,6 @@ export function CreateShowdownCard({
           luck: level.luck,
           luck_tokens: level.luck_tokens,
           monster_name: monsterName,
-          moods: level.moods,
           movement: level.movement,
           movement_tokens: level.movement_tokens,
           notes: '',
@@ -492,38 +495,29 @@ export function CreateShowdownCard({
           strength: level.strength,
           strength_tokens: level.strength_tokens,
           toughness: level.toughness,
-          traits: level.traits,
           wounds: 0
-        })
+        }
+        const showdownMonsterId = await addShowdownMonster(showdownMonster)
+
+        // Link the monster's traits and moods via the junction tables.
+        if (level.traits.length > 0)
+          await syncMonsterTraits(
+            'showdown_monster_trait',
+            showdownMonsterId,
+            level.traits.map((t) => t.trait_name)
+          )
+        if (level.moods.length > 0)
+          await syncMonsterMoods(
+            'showdown_monster_mood',
+            showdownMonsterId,
+            level.moods.map((m) => m.mood_name)
+          )
 
         showdownMonsters[showdownMonsterId] = {
           id: showdownMonsterId,
-          accuracy: level.accuracy,
-          accuracy_tokens: level.accuracy_tokens,
-          ai_card_drawn: false,
-          ai_deck_id: aiDeck.id,
-          ai_deck_remaining: level.ai_deck_remaining,
-          damage: level.damage,
-          damage_tokens: level.damage_tokens,
-          evasion: level.evasion,
-          evasion_tokens: level.evasion_tokens,
-          knocked_down: false,
-          luck: level.luck,
-          luck_tokens: level.luck_tokens,
-          monster_name: monsterName,
-          moods: level.moods,
-          movement: level.movement,
-          movement_tokens: level.movement_tokens,
-          notes: '',
-          settlement_id: selectedSettlement.id,
-          showdown_id: showdownId,
-          speed: level.speed,
-          speed_tokens: level.speed_tokens,
-          strength: level.strength,
-          strength_tokens: level.strength_tokens,
-          toughness: level.toughness,
+          ...showdownMonster,
           traits: level.traits,
-          wounds: 0,
+          moods: level.moods,
           ai_deck: {
             id: aiDeck.id,
             basic_cards: aiDeck.basic_cards,
