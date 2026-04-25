@@ -132,6 +132,18 @@ export type SecretFightingArtDetail = Omit<
 >
 
 /**
+ * Seed Pattern Gear Cost Detail
+ *
+ * Represents a single gear cost entry tied to a seed pattern.
+ */
+export type SeedPatternGearCostDetail = {
+  /** Gear ID Required to Craft the Seed Pattern */
+  cost_gear_id: string
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
  * Seed Pattern Detail
  *
  * Used throughout the app to represent a seed pattern.
@@ -139,7 +151,10 @@ export type SecretFightingArtDetail = Omit<
 export type SeedPatternDetail = Omit<
   Tables<'seed_pattern'>,
   'created_at' | 'updated_at' | 'user_id'
->
+> & {
+  /** Gear Costs Required to Craft the Seed Pattern */
+  gear_costs: SeedPatternGearCostDetail[]
+}
 
 /**
  * Gear Detail

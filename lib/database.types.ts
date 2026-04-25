@@ -2630,30 +2630,184 @@ export type Database = {
       }
       seed_pattern: {
         Row: {
+          crafted_gear_id: string | null
+          crafting_limit: number | null
+          crafting_steps: string | null
           created_at: string
           custom: boolean
+          endeavor_cost: number | null
+          era: number | null
           id: string
+          keywords: string[] | null
+          number: number | null
+          requirements: string | null
           seed_pattern_name: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          crafted_gear_id?: string | null
+          crafting_limit?: number | null
+          crafting_steps?: string | null
           created_at?: string
           custom?: boolean
+          endeavor_cost?: number | null
+          era?: number | null
           id?: string
+          keywords?: string[] | null
+          number?: number | null
+          requirements?: string | null
           seed_pattern_name: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          crafted_gear_id?: string | null
+          crafting_limit?: number | null
+          crafting_steps?: string | null
           created_at?: string
           custom?: boolean
+          endeavor_cost?: number | null
+          era?: number | null
           id?: string
+          keywords?: string[] | null
+          number?: number | null
+          requirements?: string | null
           seed_pattern_name?: string
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_crafted_gear_id_fkey"
+            columns: ["crafted_gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seed_pattern_gear_cost: {
+        Row: {
+          cost_gear_id: string
+          quantity: number
+          seed_pattern_id: string
+        }
+        Insert: {
+          cost_gear_id: string
+          quantity?: number
+          seed_pattern_id: string
+        }
+        Update: {
+          cost_gear_id?: string
+          quantity?: number
+          seed_pattern_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_gear_cost_cost_gear_id_fkey"
+            columns: ["cost_gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seed_pattern_gear_cost_seed_pattern_id_fkey"
+            columns: ["seed_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "seed_pattern"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seed_pattern_innovation_requirement: {
+        Row: {
+          innovation_id: string
+          seed_pattern_id: string
+        }
+        Insert: {
+          innovation_id: string
+          seed_pattern_id: string
+        }
+        Update: {
+          innovation_id?: string
+          seed_pattern_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_innovation_requirement_innovation_id_fkey"
+            columns: ["innovation_id"]
+            isOneToOne: false
+            referencedRelation: "innovation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seed_pattern_innovation_requirement_seed_pattern_id_fkey"
+            columns: ["seed_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "seed_pattern"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seed_pattern_resource_cost: {
+        Row: {
+          quantity: number
+          resource_id: string
+          seed_pattern_id: string
+        }
+        Insert: {
+          quantity?: number
+          resource_id: string
+          seed_pattern_id: string
+        }
+        Update: {
+          quantity?: number
+          resource_id?: string
+          seed_pattern_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_resource_cost_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resource"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seed_pattern_resource_cost_seed_pattern_id_fkey"
+            columns: ["seed_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "seed_pattern"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seed_pattern_resource_type_cost: {
+        Row: {
+          quantity: number
+          resource_type: Database["public"]["Enums"]["resource_type"]
+          seed_pattern_id: string
+        }
+        Insert: {
+          quantity?: number
+          resource_type: Database["public"]["Enums"]["resource_type"]
+          seed_pattern_id: string
+        }
+        Update: {
+          quantity?: number
+          resource_type?: Database["public"]["Enums"]["resource_type"]
+          seed_pattern_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_resource_type_cost_seed_pattern_id_fkey"
+            columns: ["seed_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "seed_pattern"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seed_pattern_shared_user: {
         Row: {

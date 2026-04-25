@@ -1,7 +1,27 @@
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { SeedPatternDetail } from '@/lib/types'
+import { SeedPatternDetail, SeedPatternGearCostDetail } from '@/lib/types'
+
+/**
+ * Normalize a Supabase seed_pattern row (with the gear cost relation joined)
+ * into a SeedPatternDetail. Strips the relation array onto a `gear_costs`
+ * field on the returned object.
+ *
+ * @param row Raw seed_pattern row including the gear cost relation.
+ * @returns Normalized SeedPatternDetail.
+ */
+function toSeedPatternDetail(
+  row: Omit<SeedPatternDetail, 'gear_costs'> & {
+    seed_pattern_gear_cost?: SeedPatternGearCostDetail[] | null
+  }
+): SeedPatternDetail {
+  const { seed_pattern_gear_cost, ...rest } = row
+  return {
+    ...rest,
+    gear_costs: seed_pattern_gear_cost ?? []
+  }
+}
 
 /**
  * Get Seed Patterns
@@ -26,18 +46,24 @@ export async function getSeedPatterns(): Promise<{
     // Non-custom seed patterns (available to all users)
     supabase
       .from('seed_pattern')
-      .select('id, custom, seed_pattern_name')
+      .select(
+        'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity)'
+      )
       .eq('custom', false),
     // Custom seed patterns created by the user
     supabase
       .from('seed_pattern')
-      .select('id, custom, seed_pattern_name')
+      .select(
+        'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity)'
+      )
       .eq('custom', true)
       .eq('user_id', userId),
     // Custom seed patterns shared with the user
     supabase
       .from('seed_pattern_shared_user')
-      .select('seed_pattern(id, custom, seed_pattern_name)')
+      .select(
+        'seed_pattern(id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity))'
+      )
       .eq('shared_user_id', userId)
   ])
 
@@ -48,11 +74,14 @@ export async function getSeedPatterns(): Promise<{
   // Collect seed patterns from all sources, deduplicating by ID
   const seedPatternMap: { [key: string]: SeedPatternDetail } = {}
 
-  for (const s of nonCustomResult.data ?? []) seedPatternMap[s.id] = s
-  for (const s of userCustomResult.data ?? []) seedPatternMap[s.id] = s
-  for (const row of sharedResult.data ?? [])
-    if (row.seed_pattern?.[0].id)
-      seedPatternMap[row.seed_pattern[0].id] = row.seed_pattern[0]
+  for (const s of nonCustomResult.data ?? [])
+    seedPatternMap[s.id] = toSeedPatternDetail(s)
+  for (const s of userCustomResult.data ?? [])
+    seedPatternMap[s.id] = toSeedPatternDetail(s)
+  for (const row of sharedResult.data ?? []) {
+    const sp = row.seed_pattern?.[0]
+    if (sp?.id) seedPatternMap[sp.id] = toSeedPatternDetail(sp)
+  }
 
   return seedPatternMap
 }
@@ -60,10 +89,11 @@ export async function getSeedPatterns(): Promise<{
 /**
  * Add Seed Pattern
  *
- * Adds a new seed pattern record to the database.
+ * Adds a new seed pattern record to the database. Gear costs are persisted
+ * separately via {@link replaceSeedPatternGearCosts}.
  *
  * @param seedPattern Seed Pattern Data
- * @returns Inserted Seed Pattern
+ * @returns Inserted Seed Pattern (with empty gear_costs)
  */
 export async function addSeedPattern(
   seedPattern: Omit<
@@ -82,12 +112,14 @@ export async function addSeedPattern(
       ...seedPattern,
       ...(seedPattern.custom ? { user_id: userId! } : {})
     })
-    .select('id, custom, seed_pattern_name')
+    .select(
+      'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding Seed Pattern: ${error.message}`)
 
-  return data
+  return { ...data, gear_costs: [] }
 }
 
 /**
@@ -129,4 +161,57 @@ export async function removeSeedPattern(id: string): Promise<void> {
   const { error } = await supabase.from('seed_pattern').delete().eq('id', id)
 
   if (error) throw new Error(`Error Removing Seed Pattern: ${error.message}`)
+}
+
+/**
+ * Replace Seed Pattern Gear Costs
+ *
+ * Replaces all gear cost rows for a seed pattern with the provided list. Any
+ * cost row not present in `costs` is removed; new entries are inserted.
+ *
+ * @param seedPatternId Seed Pattern ID
+ * @param costs Gear Cost Entries
+ */
+export async function replaceSeedPatternGearCosts(
+  seedPatternId: string,
+  costs: SeedPatternGearCostDetail[]
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error: deleteError } = await supabase
+    .from('seed_pattern_gear_cost')
+    .delete()
+    .eq('seed_pattern_id', seedPatternId)
+
+  if (deleteError)
+    throw new Error(
+      `Error Clearing Seed Pattern Gear Costs: ${deleteError.message}`
+    )
+
+  // De-duplicate by gear ID (PK is composite on seed_pattern_id +
+  // cost_gear_id) and drop invalid quantities.
+  const seen = new Set<string>()
+  const rows = costs
+    .filter((c) => {
+      if (!c.cost_gear_id || c.quantity < 1) return false
+      if (seen.has(c.cost_gear_id)) return false
+      seen.add(c.cost_gear_id)
+      return true
+    })
+    .map((c) => ({
+      seed_pattern_id: seedPatternId,
+      cost_gear_id: c.cost_gear_id,
+      quantity: c.quantity
+    }))
+
+  if (rows.length === 0) return
+
+  const { error: insertError } = await supabase
+    .from('seed_pattern_gear_cost')
+    .insert(rows)
+
+  if (insertError)
+    throw new Error(
+      `Error Saving Seed Pattern Gear Costs: ${insertError.message}`
+    )
 }

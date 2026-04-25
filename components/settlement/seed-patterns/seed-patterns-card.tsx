@@ -21,14 +21,13 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
-import { addSeedPattern, getSeedPatterns } from '@/lib/dal/seed-pattern'
+import { getSeedPatterns } from '@/lib/dal/seed-pattern'
 import {
   addSettlementSeedPatterns,
   removeSettlementSeedPattern
 } from '@/lib/dal/settlement-seed-pattern'
 import {
   ERROR_MESSAGE,
-  SEED_PATTERN_CREATED_MESSAGE,
   SEED_PATTERN_REMOVED_MESSAGE,
   SEED_PATTERN_UPDATED_MESSAGE
 } from '@/lib/messages'
@@ -37,7 +36,7 @@ import {
   SettlementDetail,
   SettlementStateSetter
 } from '@/lib/types'
-import { BeanIcon, Plus, PlusIcon } from 'lucide-react'
+import { BeanIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
@@ -72,20 +71,16 @@ export function SeedPatternsCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
-  const [creating, setCreating] = useState(false)
 
-  const {
-    data: availableSeedPatterns,
-    isLoaded: hasFetched,
-    setData: setAvailableSeedPatterns
-  } = useCatalogFetch<{
-    [key: string]: SeedPatternDetail
-  }>(selectedSettlement?.id, () => getSeedPatterns(), {
-    initial: {},
-    errorContext: 'Settlement Seed Patterns Fetch Error',
-    onReset: () => setAddOpen(false),
-    onError: () => toast.error(ERROR_MESSAGE())
-  })
+  const { data: availableSeedPatterns, isLoaded: hasFetched } =
+    useCatalogFetch<{
+      [key: string]: SeedPatternDetail
+    }>(selectedSettlement?.id, () => getSeedPatterns(), {
+      initial: {},
+      errorContext: 'Settlement Seed Patterns Fetch Error',
+      onReset: () => setAddOpen(false),
+      onError: () => toast.error(ERROR_MESSAGE())
+    })
 
   const selectableSeedPatterns = useMemo(() => {
     const linkedIds = new Set(
@@ -199,97 +194,8 @@ export function SeedPatternsCard({
     [selectedSettlement, setSelectedSettlement, mutate]
   )
 
-  /** Check if an exact match for the search term already exists. */
-  const exactMatchExists = Object.values(availableSeedPatterns).some(
-    (sp) => sp.seed_pattern_name.toLowerCase() === search.trim().toLowerCase()
-  )
-
-  /**
-   * Handle Create Custom Seed Pattern
-   */
-  const handleCreate = useCallback(async () => {
-    const name = search.trim()
-    if (!name || creating || !selectedSettlement) return
-
-    setCreating(true)
-
-    try {
-      const newSeedPattern = await addSeedPattern({
-        custom: true,
-        seed_pattern_name: name
-      })
-
-      setAvailableSeedPatterns((prev) => ({
-        ...prev,
-        [newSeedPattern.id]: newSeedPattern
-      }))
-
-      setSearch('')
-      setAddOpen(false)
-      toast.success(SEED_PATTERN_CREATED_MESSAGE())
-
-      // Add to settlement immediately
-      const tempId = `temp-${crypto.randomUUID()}`
-      const optimisticRow: SettlementDetail['seed_patterns'][0] = {
-        id: tempId,
-        seed_pattern_id: newSeedPattern.id,
-        seed_pattern_name: newSeedPattern.seed_pattern_name
-      }
-      const updatedSeedPatterns = [
-        ...selectedSettlement.seed_patterns,
-        optimisticRow
-      ]
-
-      setSelectedSettlement({
-        ...selectedSettlement,
-        seed_patterns: updatedSeedPatterns
-      })
-
-      void mutate({
-        context: 'Seed Pattern Add',
-        persist: () =>
-          addSettlementSeedPatterns([newSeedPattern.id], selectedSettlement.id),
-        onSuccess: (row) => {
-          setSelectedSettlement((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  seed_patterns: prev.seed_patterns.map((sp) =>
-                    sp.id === tempId ? { ...sp, id: row[0].id } : sp
-                  )
-                }
-              : null
-          )
-        },
-        rollback: () => {
-          setSelectedSettlement((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  seed_patterns: prev.seed_patterns.filter(
-                    (sp) => sp.id !== tempId
-                  )
-                }
-              : null
-          )
-        },
-        successMessage: SEED_PATTERN_UPDATED_MESSAGE()
-      })
-    } catch (error) {
-      console.error('Seed Pattern Create Error:', error)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setCreating(false)
-    }
-  }, [
-    search,
-    creating,
-    selectedSettlement,
-    setSelectedSettlement,
-    toast,
-    mutate,
-    setAvailableSeedPatterns
-  ])
+  // Suppress unused warning; search is bound to CommandInput state.
+  void search
 
   return (
     <Card className="p-0 border-1 gap-0">
@@ -316,20 +222,7 @@ export function SeedPatternsCard({
                   onValueChange={setSearch}
                 />
                 <CommandList>
-                  <CommandEmpty>
-                    {search.trim() ? (
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
-                        disabled={creating}
-                        onClick={handleCreate}>
-                        <Plus className="h-4 w-4" />
-                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
-                      </button>
-                    ) : (
-                      'No seed patterns found.'
-                    )}
-                  </CommandEmpty>
+                  <CommandEmpty>No seed patterns found.</CommandEmpty>
                   <CommandGroup>
                     {selectableSeedPatterns.map((sp) => (
                       <CommandItem
@@ -344,15 +237,6 @@ export function SeedPatternsCard({
                         )}
                       </CommandItem>
                     ))}
-                    {search.trim() && !exactMatchExists && (
-                      <CommandItem
-                        value={`__create__${search.trim()}`}
-                        onSelect={handleCreate}
-                        disabled={creating}>
-                        <Plus className="h-4 w-4" />
-                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
-                      </CommandItem>
-                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>
