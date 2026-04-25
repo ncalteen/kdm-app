@@ -1,6 +1,8 @@
 import { LOCAL_STORAGE_KEY } from '@/lib/common'
 import { ColorChoice, MonsterNode, MonsterType } from '@/lib/enums'
+import { SettlementDetail } from '@/lib/types'
 import {
+  calculateSettlementCollectiveCognition,
   canDash,
   canEncourage,
   canEndure,
@@ -292,5 +294,83 @@ describe('saveToLocalStorage', () => {
     saveToLocalStorage(null)
 
     expect(localStorage.setItem).toHaveBeenCalledWith(LOCAL_STORAGE_KEY, 'null')
+  })
+})
+
+describe('calculateSettlementCollectiveCognition', () => {
+  it('returns 0 when settlement is null', () => {
+    expect(calculateSettlementCollectiveCognition(null)).toBe(0)
+  })
+
+  it('returns 0 when settlement has no nemeses or quarries', () => {
+    const s = {
+      nemeses: [],
+      quarries: []
+    } as unknown as SettlementDetail
+    expect(calculateSettlementCollectiveCognition(s)).toBe(0)
+  })
+
+  it('handles missing nemeses/quarries arrays', () => {
+    const s = {} as unknown as SettlementDetail
+    expect(calculateSettlementCollectiveCognition(s)).toBe(0)
+  })
+
+  it('sums nemesis CC levels (3 each)', () => {
+    const s = {
+      nemeses: [
+        {
+          collective_cognition_level_1: true,
+          collective_cognition_level_2: true,
+          collective_cognition_level_3: false
+        },
+        {
+          collective_cognition_level_1: false,
+          collective_cognition_level_2: true,
+          collective_cognition_level_3: true
+        }
+      ],
+      quarries: []
+    } as unknown as SettlementDetail
+
+    // 3 + 3 + 3 + 3 = 12
+    expect(calculateSettlementCollectiveCognition(s)).toBe(12)
+  })
+
+  it('sums quarry CC fields with proper weights', () => {
+    const s = {
+      nemeses: [],
+      quarries: [
+        {
+          collective_cognition_prologue: true, // +1
+          collective_cognition_level_1: true, // +1
+          collective_cognition_level_2: [true, false, true], // +2 +2 = 4
+          collective_cognition_level_3: [true, true] // +3 +3 = 6
+        }
+      ]
+    } as unknown as SettlementDetail
+
+    expect(calculateSettlementCollectiveCognition(s)).toBe(12)
+  })
+
+  it('combines nemesis and quarry totals', () => {
+    const s = {
+      nemeses: [
+        {
+          collective_cognition_level_1: true,
+          collective_cognition_level_2: false,
+          collective_cognition_level_3: false
+        }
+      ],
+      quarries: [
+        {
+          collective_cognition_prologue: true,
+          collective_cognition_level_1: false,
+          collective_cognition_level_2: [],
+          collective_cognition_level_3: []
+        }
+      ]
+    } as unknown as SettlementDetail
+
+    expect(calculateSettlementCollectiveCognition(s)).toBe(4)
   })
 })

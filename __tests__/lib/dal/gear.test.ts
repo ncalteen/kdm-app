@@ -11,8 +11,16 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getGear, addGear, updateGear, removeGear, getCustomGear } =
-  await import('@/lib/dal/gear')
+const {
+  getGear,
+  addGear,
+  updateGear,
+  removeGear,
+  getCustomGear,
+  replaceGearGearCosts,
+  replaceGearResourceCosts,
+  replaceGearResourceTypeCosts
+} = await import('@/lib/dal/gear')
 
 /**
  * Augment a raw gear fixture with the normalized junction defaults that
@@ -467,5 +475,163 @@ describe('getCustomGear', () => {
     await expect(getCustomGear()).rejects.toThrow(
       'Error Fetching Custom Gear: DB error'
     )
+  })
+})
+
+describe('replaceGearGearCosts', () => {
+  it('clears and inserts deduped/filtered cost rows', async () => {
+    const deleteEq = vi.fn().mockResolvedValue({ error: null })
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({ eq: deleteEq })
+    })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    mockSupabase.from.mockReturnValueOnce({ insert })
+
+    await replaceGearGearCosts('g1', [
+      { cost_gear_id: 'a', quantity: 1 },
+      { cost_gear_id: 'a', quantity: 2 }, // dup → skipped
+      { cost_gear_id: 'b', quantity: 0 }, // q<1 → skipped
+      { cost_gear_id: 'g1', quantity: 1 }, // self → skipped
+      { cost_gear_id: '', quantity: 1 }, // empty → skipped
+      { cost_gear_id: 'c', quantity: 3 }
+    ])
+
+    expect(insert).toHaveBeenCalledWith([
+      { gear_id: 'g1', cost_gear_id: 'a', quantity: 1 },
+      { gear_id: 'g1', cost_gear_id: 'c', quantity: 3 }
+    ])
+  })
+
+  it('skips insert when no rows remain', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+
+    await replaceGearGearCosts('g1', [])
+    expect(mockSupabase.from).toHaveBeenCalledTimes(1)
+  })
+
+  it('throws on delete error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: { message: 'd' } })
+      })
+    })
+    await expect(replaceGearGearCosts('g1', [])).rejects.toThrow(
+      'Error Clearing Gear Gear Costs: d'
+    )
+  })
+
+  it('throws on insert error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValueOnce({
+      insert: vi.fn().mockResolvedValue({ error: { message: 'i' } })
+    })
+
+    await expect(
+      replaceGearGearCosts('g1', [{ cost_gear_id: 'a', quantity: 1 }])
+    ).rejects.toThrow('Error Saving Gear Gear Costs: i')
+  })
+})
+
+describe('replaceGearResourceCosts', () => {
+  it('inserts deduped/filtered cost rows', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    mockSupabase.from.mockReturnValueOnce({ insert })
+
+    await replaceGearResourceCosts('g1', [
+      { resource_id: 'r1', quantity: 1 },
+      { resource_id: 'r1', quantity: 2 }, // dup
+      { resource_id: '', quantity: 1 } // empty
+    ])
+
+    expect(insert).toHaveBeenCalledWith([
+      { gear_id: 'g1', resource_id: 'r1', quantity: 1 }
+    ])
+  })
+
+  it('throws on delete error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: { message: 'd' } })
+      })
+    })
+    await expect(replaceGearResourceCosts('g1', [])).rejects.toThrow(
+      'Error Clearing Gear Resource Costs: d'
+    )
+  })
+
+  it('throws on insert error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValueOnce({
+      insert: vi.fn().mockResolvedValue({ error: { message: 'i' } })
+    })
+    await expect(
+      replaceGearResourceCosts('g1', [{ resource_id: 'r1', quantity: 1 }])
+    ).rejects.toThrow('Error Saving Gear Resource Costs: i')
+  })
+})
+
+describe('replaceGearResourceTypeCosts', () => {
+  it('inserts deduped/filtered cost rows', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    mockSupabase.from.mockReturnValueOnce({ insert })
+
+    await replaceGearResourceTypeCosts('g1', [
+      { resource_type: 'BONE', quantity: 1 },
+      { resource_type: 'BONE', quantity: 2 }, // dup
+      { resource_type: 'CLOTH', quantity: 0 } // q<1
+    ])
+
+    expect(insert).toHaveBeenCalledWith([
+      { gear_id: 'g1', resource_type: 'BONE', quantity: 1 }
+    ])
+  })
+
+  it('throws on delete error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: { message: 'd' } })
+      })
+    })
+    await expect(replaceGearResourceTypeCosts('g1', [])).rejects.toThrow(
+      'Error Clearing Gear Resource Type Costs: d'
+    )
+  })
+
+  it('throws on insert error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValueOnce({
+      insert: vi.fn().mockResolvedValue({ error: { message: 'i' } })
+    })
+    await expect(
+      replaceGearResourceTypeCosts('g1', [
+        { resource_type: 'BONE', quantity: 1 }
+      ])
+    ).rejects.toThrow('Error Saving Gear Resource Type Costs: i')
   })
 })

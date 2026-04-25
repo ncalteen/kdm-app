@@ -15,7 +15,8 @@ const {
   getSeedPatterns,
   addSeedPattern,
   updateSeedPattern,
-  removeSeedPattern
+  removeSeedPattern,
+  replaceSeedPatternGearCosts
 } = await import('@/lib/dal/seed-pattern')
 
 /**
@@ -429,5 +430,63 @@ describe('removeSeedPattern', () => {
     await expect(removeSeedPattern('sp1')).rejects.toThrow(
       'Error Removing Seed Pattern: Delete failed'
     )
+  })
+})
+
+describe('replaceSeedPatternGearCosts', () => {
+  it('inserts deduped/filtered cost rows', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    mockSupabase.from.mockReturnValueOnce({ insert })
+
+    await replaceSeedPatternGearCosts('sp1', [
+      { cost_gear_id: 'g1', quantity: 1 },
+      { cost_gear_id: 'g1', quantity: 5 }, // dup
+      { cost_gear_id: 'g2', quantity: 0 }, // q<1
+      { cost_gear_id: '', quantity: 1 } // empty
+    ])
+
+    expect(insert).toHaveBeenCalledWith([
+      { seed_pattern_id: 'sp1', cost_gear_id: 'g1', quantity: 1 }
+    ])
+  })
+
+  it('skips insert when no rows remain', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    await replaceSeedPatternGearCosts('sp1', [])
+    expect(mockSupabase.from).toHaveBeenCalledTimes(1)
+  })
+
+  it('throws on delete error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: { message: 'd' } })
+      })
+    })
+    await expect(replaceSeedPatternGearCosts('sp1', [])).rejects.toThrow(
+      'Error Clearing Seed Pattern Gear Costs: d'
+    )
+  })
+
+  it('throws on insert error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValueOnce({
+      insert: vi.fn().mockResolvedValue({ error: { message: 'i' } })
+    })
+    await expect(
+      replaceSeedPatternGearCosts('sp1', [{ cost_gear_id: 'g1', quantity: 1 }])
+    ).rejects.toThrow('Error Saving Seed Pattern Gear Costs: i')
   })
 })
