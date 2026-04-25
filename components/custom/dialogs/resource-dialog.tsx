@@ -1,5 +1,6 @@
 'use client'
 
+import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -481,6 +482,7 @@ export function ResourceDialog({
               height={200}
               preview="edit"
             />
+            <MarkdownSyntaxHelp />
           </div>
         </div>
 

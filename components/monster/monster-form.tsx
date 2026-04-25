@@ -1,5 +1,6 @@
 'use client'
 
+import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -757,6 +758,7 @@ export function MonsterForm({
               />
             </TabsContent>
           </Tabs>
+          <MarkdownSyntaxHelp />
         </div>
 
         {/* Hunt Board (Quarry Only) */}

@@ -1,5 +1,6 @@
 'use client'
 
+import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -497,6 +498,7 @@ export function PhilosophyDialog({
                             preview="edit"
                           />
                         </div>
+                        <MarkdownSyntaxHelp />
                       </div>
                     </CollapsibleContent>
                   </Collapsible>

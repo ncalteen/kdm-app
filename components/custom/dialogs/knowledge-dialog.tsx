@@ -1,5 +1,6 @@
 'use client'
 
+import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -275,6 +276,7 @@ export function KnowledgeDialog({
               />
             </TabsContent>
           </Tabs>
+          <MarkdownSyntaxHelp />
         </div>
 
         <DialogFooter>

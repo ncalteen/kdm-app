@@ -1,5 +1,6 @@
 'use client'
 
+import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -186,6 +187,7 @@ export function PrincipleDialog({
               </div>
             </TabsContent>
           </Tabs>
+          <MarkdownSyntaxHelp />
         </div>
 
         <DialogFooter>

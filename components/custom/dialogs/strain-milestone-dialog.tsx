@@ -1,5 +1,6 @@
 'use client'
 
+import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -142,6 +143,7 @@ export function StrainMilestoneDialog({
               />
             </TabsContent>
           </Tabs>
+          <MarkdownSyntaxHelp />
         </div>
 
         <DialogFooter>
