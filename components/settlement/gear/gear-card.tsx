@@ -121,7 +121,8 @@ export function GearCard({
         gear_id: gearId,
         gear_name: gearInfo.gear_name,
         id: tempId,
-        quantity: 1
+        quantity: 1,
+        custom: gearInfo.custom ?? false
       }
 
       const updatedGear = [...selectedSettlement.gear, optimisticRow]
