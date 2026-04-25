@@ -23,20 +23,20 @@ export async function getResources(): Promise<{
     supabase
       .from('resource')
       .select(
-        'id, custom, resource_name, category, quarry_id, resource_types, quarry(monster_name, node)'
+        'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'
       )
       .eq('custom', false),
     supabase
       .from('resource')
       .select(
-        'id, custom, resource_name, category, quarry_id, resource_types, quarry(monster_name, node)'
+        'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'
       )
       .eq('custom', true)
       .eq('user_id', userId),
     supabase
       .from('resource_shared_user')
       .select(
-        `resource(${'id, custom, resource_name, category, quarry_id, resource_types, quarry(monster_name, node)'})`
+        `resource(${'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'})`
       )
       .eq('shared_user_id', userId)
   ])
@@ -60,11 +60,13 @@ export async function getResources(): Promise<{
       id: r.id as string,
       category: r.category as ResourceDetail['category'],
       custom: r.custom as boolean,
+      pattern_id: (r.pattern_id as string | null) ?? null,
       quarry_id: r.quarry_id as string | null,
       quarry_monster_name: quarry?.monster_name ?? null,
       quarry_node: quarry?.node ?? null,
       resource_name: r.resource_name as string,
-      resource_types: r.resource_types as ResourceDetail['resource_types']
+      resource_types: r.resource_types as ResourceDetail['resource_types'],
+      rules: (r.rules as string | null) ?? null
     }
   }
 
@@ -102,7 +104,7 @@ export async function addResource(
       ...(resource.custom ? { user_id: userId! } : {})
     })
     .select(
-      'id, custom, resource_name, category, quarry_id, resource_types, quarry(monster_name, node)'
+      'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'
     )
     .single()
 
@@ -118,11 +120,13 @@ export async function addResource(
     id: data.id,
     category: data.category,
     custom: data.custom,
+    pattern_id: data.pattern_id ?? null,
     quarry_id: data.quarry_id,
     quarry_monster_name: quarry?.monster_name ?? null,
     quarry_node: quarry?.node ?? null,
     resource_name: data.resource_name,
-    resource_types: data.resource_types
+    resource_types: data.resource_types,
+    rules: data.rules ?? null
   }
 }
 

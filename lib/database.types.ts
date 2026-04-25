@@ -2481,9 +2481,11 @@ export type Database = {
           created_at: string
           custom: boolean
           id: string
+          pattern_id: string | null
           quarry_id: string | null
           resource_name: string
           resource_types: Database["public"]["Enums"]["resource_type"][]
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
@@ -2492,9 +2494,11 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          pattern_id?: string | null
           quarry_id?: string | null
           resource_name: string
           resource_types?: Database["public"]["Enums"]["resource_type"][]
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -2503,13 +2507,22 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          pattern_id?: string | null
           quarry_id?: string | null
           resource_name?: string
           resource_types?: Database["public"]["Enums"]["resource_type"][]
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "resource_pattern_id_fkey"
+            columns: ["pattern_id"]
+            isOneToOne: false
+            referencedRelation: "pattern"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "resource_quarry_id_fkey"
             columns: ["quarry_id"]
