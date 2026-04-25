@@ -134,7 +134,8 @@ export function PhilosophiesCard({
         philosophy_id: philosophyId,
         philosophy_name: philosophyInfo.philosophy_name,
         tenet_knowledge_id: null,
-        tier: null
+        tier: null,
+        custom: philosophyInfo.custom ?? false
       }
 
       const updatedPhilosophies = [

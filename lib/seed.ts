@@ -98,6 +98,100 @@ async function linkLevelSurvivorStatuses(
 }
 
 /**
+ * Link Catalog Mood / Trait / Survivor Status to a Hunt or Showdown Monster
+ *
+ * Inserts at most one mood, one trait, and one survivor status into the
+ * appropriate `*_monster_*` junction tables for the given monster id. Used to
+ * exercise these junctions in seed data. Missing catalog entries are skipped.
+ *
+ * @param supabase Supabase Client
+ * @param phase Either 'hunt' or 'showdown'
+ * @param monsterId Hunt Monster ID or Showdown Monster ID
+ */
+async function linkMonsterCatalog(
+  supabase: SupabaseClient,
+  phase: 'hunt' | 'showdown',
+  monsterId: string
+): Promise<void> {
+  const monsterColumn =
+    phase === 'hunt' ? 'hunt_monster_id' : 'showdown_monster_id'
+  const moodTable = `${phase}_monster_mood`
+  const traitTable = `${phase}_monster_trait`
+  const statusTable = `${phase}_monster_survivor_status`
+
+  // Pick the first available non-custom mood/trait/status. Each lookup is
+  // independent so partial coverage still produces partial linking.
+  const [moodRes, traitRes, statusRes] = await Promise.all([
+    supabase
+      .from('mood')
+      .select('id')
+      .eq('custom', false)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('trait')
+      .select('id')
+      .eq('custom', false)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('survivor_status')
+      .select('id')
+      .eq('custom', false)
+      .limit(1)
+      .maybeSingle()
+  ])
+
+  if (moodRes.data?.id) {
+    const { error } = await supabase
+      .from(moodTable)
+      .insert({ [monsterColumn]: monsterId, mood_id: moodRes.data.id })
+    if (error) throw error
+  }
+
+  if (traitRes.data?.id) {
+    const { error } = await supabase
+      .from(traitTable)
+      .insert({ [monsterColumn]: monsterId, trait_id: traitRes.data.id })
+    if (error) throw error
+  }
+
+  if (statusRes.data?.id) {
+    const { error } = await supabase.from(statusTable).insert({
+      [monsterColumn]: monsterId,
+      survivor_status_id: statusRes.data.id
+    })
+    if (error) throw error
+  }
+}
+
+/**
+ * Link Catalog Mood / Trait / Survivor Status to a Hunt Monster
+ *
+ * @param supabase Supabase Client
+ * @param huntMonsterId Hunt Monster ID
+ */
+async function linkHuntMonsterCatalog(
+  supabase: SupabaseClient,
+  huntMonsterId: string
+): Promise<void> {
+  await linkMonsterCatalog(supabase, 'hunt', huntMonsterId)
+}
+
+/**
+ * Link Catalog Mood / Trait / Survivor Status to a Showdown Monster
+ *
+ * @param supabase Supabase Client
+ * @param showdownMonsterId Showdown Monster ID
+ */
+async function linkShowdownMonsterCatalog(
+  supabase: SupabaseClient,
+  showdownMonsterId: string
+): Promise<void> {
+  await linkMonsterCatalog(supabase, 'showdown', showdownMonsterId)
+}
+
+/**
  * Generate Seed Data
  *
  * Creates comprehensive test data including multiple settlements of each type
@@ -227,7 +321,13 @@ async function deleteUserData(supabase: SupabaseClient, userId: string) {
     'resource',
     'nemesis',
     'weapon_type',
-    'quarry'
+    'quarry',
+    'armor_set',
+    'constellation',
+    'mood',
+    'trait',
+    'ability_impairment',
+    'survivor_status'
   ]) {
     console.log(`Deleting From ${table}...`)
 
@@ -832,6 +932,26 @@ async function createSettlement(
   // Add quarries
   await addSettlementQuarries(supabase, updatedSettlement.id)
 
+  // Link a representative seed pattern to the settlement to exercise the
+  // settlement_seed_pattern junction.
+  const { data: seedPattern } = await supabase
+    .from('seed_pattern')
+    .select('id')
+    .eq('custom', false)
+    .limit(1)
+    .maybeSingle()
+
+  if (seedPattern?.id) {
+    const { error: linkSeedPatternError } = await supabase
+      .from('settlement_seed_pattern')
+      .insert({
+        settlement_id: updatedSettlement.id,
+        seed_pattern_id: seedPattern.id
+      })
+
+    if (linkSeedPatternError) throw linkSeedPatternError
+  }
+
   // Add timeline entries
   await addSettlementTimelineEntries(supabase, updatedSettlement.id, variant)
 
@@ -1220,7 +1340,7 @@ async function createHunt(
 
     if (createHuntAIDeckError) throw createHuntAIDeckError
 
-    const { error: createHuntMonsterError } = await supabase
+    const { data: huntMonster, error: createHuntMonsterError } = await supabase
       .from('hunt_monster')
       .insert({
         accuracy: 1,
@@ -1246,8 +1366,15 @@ async function createHunt(
         toughness: 8,
         wounds: 0
       })
+      .select('id')
+      .single()
 
     if (createHuntMonsterError) throw createHuntMonsterError
+
+    // Link a representative mood, trait, and survivor status to the hunt
+    // monster so the *_monster_* junctions get exercised. Failures here are
+    // ignored if no catalog entries exist yet.
+    await linkHuntMonsterCatalog(supabase, huntMonster.id)
   }
 
   // Create the hunt survivors. If the settlement uses scouts, one survivor will
@@ -1338,36 +1465,43 @@ async function createShowdown(
 
     if (createShowdownAIDeckError) throw createShowdownAIDeckError
 
-    const { error: createShowdownMonsterError } = await supabase
-      .from('showdown_monster')
-      .insert({
-        accuracy: 1,
-        accuracy_tokens: 0,
-        ai_card_drawn: false,
-        ai_deck_id: showdownAIDeck.id,
-        ai_deck_remaining: 17,
-        damage: 2,
-        damage_tokens: 0,
-        evasion: 0,
-        evasion_tokens: 0,
-        knocked_down: false,
-        luck: 0,
-        luck_tokens: 0,
-        monster_name: `Monster ${i + 1}`,
-        movement: 6,
-        movement_tokens: 0,
-        notes: `Monster ${i + 1} ready for battle`,
-        settlement_id: settlementId,
-        showdown_id: showdown.id,
-        speed: 2,
-        speed_tokens: 0,
-        strength: 0,
-        strength_tokens: 0,
-        toughness: 8,
-        wounds: 0
-      })
+    const { data: showdownMonster, error: createShowdownMonsterError } =
+      await supabase
+        .from('showdown_monster')
+        .insert({
+          accuracy: 1,
+          accuracy_tokens: 0,
+          ai_card_drawn: false,
+          ai_deck_id: showdownAIDeck.id,
+          ai_deck_remaining: 17,
+          damage: 2,
+          damage_tokens: 0,
+          evasion: 0,
+          evasion_tokens: 0,
+          knocked_down: false,
+          luck: 0,
+          luck_tokens: 0,
+          monster_name: `Monster ${i + 1}`,
+          movement: 6,
+          movement_tokens: 0,
+          notes: `Monster ${i + 1} ready for battle`,
+          settlement_id: settlementId,
+          showdown_id: showdown.id,
+          speed: 2,
+          speed_tokens: 0,
+          strength: 0,
+          strength_tokens: 0,
+          toughness: 8,
+          wounds: 0
+        })
+        .select('id')
+        .single()
 
     if (createShowdownMonsterError) throw createShowdownMonsterError
+
+    // Link a representative mood, trait, and survivor status to the showdown
+    // monster so the *_monster_* junctions get exercised.
+    await linkShowdownMonsterCatalog(supabase, showdownMonster.id)
   }
 
   // Create the showdown survivors. If the settlement uses scouts, one survivor
@@ -2364,4 +2498,51 @@ async function createSettlementPhase(
   console.log(
     `Creating Settlement Phase for Settlement ${settlementId} (Scouts: ${usesScouts})...`
   )
+
+  // Pull a few survivors from the settlement to mark as returning. The phase
+  // requires at least one returning survivor to exercise the junction table.
+  const { data: settlementSurvivors, error: getSurvivorsError } = await supabase
+    .from('survivor')
+    .select('id')
+    .eq('settlement_id', settlementId)
+    .limit(3)
+
+  if (getSurvivorsError) throw getSurvivorsError
+
+  const returningSurvivors = settlementSurvivors ?? []
+  // If scouts are enabled, designate the last returning survivor as the scout.
+  const returningScoutId =
+    usesScouts && returningSurvivors.length > 0
+      ? returningSurvivors[returningSurvivors.length - 1].id
+      : null
+
+  // Create the settlement_phase record itself.
+  const { data: phase, error: createPhaseError } = await supabase
+    .from('settlement_phase')
+    .insert({
+      settlement_id: settlementId,
+      step: 'SURVIVORS_RETURN',
+      endeavors: 2,
+      returning_scout_id: returningScoutId
+    })
+    .select('id')
+    .single()
+
+  if (createPhaseError) throw createPhaseError
+
+  // Link returning survivors via the junction table. The scout (if any) is
+  // recorded directly on the phase row above and is intentionally omitted here.
+  for (const survivor of returningSurvivors) {
+    if (survivor.id === returningScoutId) continue
+
+    const { error: linkSurvivorError } = await supabase
+      .from('settlement_phase_returning_survivor')
+      .insert({
+        settlement_id: settlementId,
+        settlement_phase_id: phase.id,
+        survivor_id: survivor.id
+      })
+
+    if (linkSurvivorError) throw linkSurvivorError
+  }
 }
