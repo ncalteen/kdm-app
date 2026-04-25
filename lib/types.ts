@@ -157,14 +157,73 @@ export type SeedPatternDetail = Omit<
 }
 
 /**
+ * Gear Affinity Bonus Requirement Detail
+ *
+ * Represents a single affinity requirement entry that must be met for the
+ * gear's affinity bonus to be active.
+ */
+export type GearAffinityRequirementDetail = {
+  /** Required Affinity Color */
+  affinity: Database['public']['Enums']['affinity']
+  /** Whether the matching affinity must form a "puzzle" */
+  puzzle: boolean
+}
+
+/**
+ * Gear Gear Cost Detail
+ *
+ * Represents a specific gear item required to craft this gear.
+ */
+export type GearGearCostDetail = {
+  /** Gear ID Required to Craft this Gear */
+  cost_gear_id: string
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
+ * Gear Resource Cost Detail
+ *
+ * Represents a specific resource required to craft this gear.
+ */
+export type GearResourceCostDetail = {
+  /** Resource ID Required to Craft this Gear */
+  resource_id: string
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
+ * Gear Resource Type Cost Detail
+ *
+ * Represents a quantity of any resource matching the given resource type
+ * required to craft this gear.
+ */
+export type GearResourceTypeCostDetail = {
+  /** Resource Type Required to Craft this Gear */
+  resource_type: Database['public']['Enums']['resource_type']
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
  * Gear Detail
  *
  * Used throughout the app to represent a gear item.
  */
 export type GearDetail = Omit<
   Tables<'gear'>,
-  'created_at' | 'updated_at' | 'user_id'
->
+  'created_at' | 'updated_at' | 'user_id' | 'affinity_bonus_requirements'
+> & {
+  /** Affinity Bonus Requirements */
+  affinity_bonus_requirements: GearAffinityRequirementDetail[]
+  /** Gear Costs Required to Craft this Gear */
+  gear_costs: GearGearCostDetail[]
+  /** Resource Costs Required to Craft this Gear */
+  resource_costs: GearResourceCostDetail[]
+  /** Resource Type Costs Required to Craft this Gear */
+  resource_type_costs: GearResourceTypeCostDetail[]
+}
 
 /**
  * Hunt AI Deck Detail
