@@ -1,6 +1,5 @@
 'use client'
 
-import { CreateCustomResourceDialog } from '@/components/settlement/resources/create-custom-resource-dialog'
 import { ResourceItem } from '@/components/settlement/resources/resource-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,16 +21,14 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
-import { addResource, getResources } from '@/lib/dal/resource'
+import { getResources } from '@/lib/dal/resource'
 import {
   addSettlementResources,
   removeSettlementResource,
   updateSettlementResource
 } from '@/lib/dal/settlement-resource'
-import { Database } from '@/lib/database.types'
 import {
   ERROR_MESSAGE,
-  RESOURCE_CREATED_MESSAGE,
   RESOURCE_REMOVED_MESSAGE,
   RESOURCE_UPDATED_MESSAGE
 } from '@/lib/messages'
@@ -40,7 +37,7 @@ import {
   SettlementDetail,
   SettlementStateSetter
 } from '@/lib/types'
-import { BeefIcon, Plus, PlusIcon } from 'lucide-react'
+import { BeefIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
@@ -75,15 +72,8 @@ export function ResourcesCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [creating, setCreating] = useState(false)
-  const [dialogKey, setDialogKey] = useState(0)
 
-  const {
-    data: availableResources,
-    isLoaded: hasFetched,
-    setData: setAvailableResources
-  } = useCatalogFetch<{
+  const { data: availableResources, isLoaded: hasFetched } = useCatalogFetch<{
     [key: string]: ResourceDetail
   }>(selectedSettlement?.id, () => getResources(), {
     initial: {},
@@ -264,117 +254,6 @@ export function ResourcesCard({
     [selectedSettlement, setSelectedSettlement, mutate]
   )
 
-  /** Check if an exact match for the search term already exists. */
-  const exactMatchExists = Object.values(availableResources).some(
-    (r) => r.resource_name.toLowerCase() === search.trim().toLowerCase()
-  )
-
-  /**
-   * Handle Create Custom Resource
-   */
-  const handleCreate = useCallback(
-    async (data: {
-      resource_name: string
-      category: Database['public']['Enums']['resource_category']
-      resource_types: Database['public']['Enums']['resource_type'][]
-      quarry_id: string | null
-    }) => {
-      if (creating || !selectedSettlement) return
-
-      setCreating(true)
-
-      try {
-        const newResource = await addResource({
-          custom: true,
-          resource_name: data.resource_name,
-          category: data.category,
-          resource_types: data.resource_types,
-          quarry_id: data.quarry_id
-        })
-
-        setAvailableResources((prev) => ({
-          ...prev,
-          [newResource.id]: newResource
-        }))
-        setCreateDialogOpen(false)
-        setSearch('')
-        setAddOpen(false)
-        toast.success(RESOURCE_CREATED_MESSAGE())
-
-        // Add to settlement immediately
-        const tempId = `temp-${crypto.randomUUID()}`
-        const optimisticRow: SettlementDetail['resources'][0] = {
-          category: data.category,
-          id: tempId,
-          quantity: 1,
-          quarry_id: newResource.quarry_id,
-          quarry_monster_name: newResource.quarry_monster_name,
-          quarry_node: newResource.quarry_node,
-          resource_id: newResource.id,
-          resource_name: newResource.resource_name,
-          resource_types: data.resource_types
-        }
-        const updatedResources = [
-          ...selectedSettlement.resources,
-          optimisticRow
-        ]
-
-        setSelectedSettlement({
-          ...selectedSettlement,
-          resources: updatedResources
-        })
-
-        void mutate({
-          context: 'Resource Add',
-          persist: () =>
-            addSettlementResources([newResource.id], selectedSettlement.id),
-          onSuccess: (rows) => {
-            setSelectedSettlement((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    resources: prev.resources.map((r) =>
-                      r.id === tempId ? { ...r, id: rows[0].id } : r
-                    )
-                  }
-                : null
-            )
-          },
-          rollback: () => {
-            setSelectedSettlement((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    resources: prev.resources.filter((r) => r.id !== tempId)
-                  }
-                : null
-            )
-          },
-          successMessage: RESOURCE_UPDATED_MESSAGE()
-        })
-      } catch (error) {
-        console.error('Resource Create Error:', error)
-        toast.error(ERROR_MESSAGE())
-      } finally {
-        setCreating(false)
-      }
-    },
-    [
-      creating,
-      selectedSettlement,
-      setSelectedSettlement,
-      toast,
-      mutate,
-      setAvailableResources
-    ]
-  )
-
-  /** Open the create dialog with the current search term pre-filled */
-  const openCreateDialog = useCallback(() => {
-    setDialogKey((k) => k + 1)
-    setCreateDialogOpen(true)
-  }, [])
-
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -400,19 +279,7 @@ export function ResourcesCard({
                   onValueChange={setSearch}
                 />
                 <CommandList>
-                  <CommandEmpty>
-                    {search.trim() ? (
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
-                        onClick={openCreateDialog}>
-                        <Plus className="h-4 w-4" />
-                        Create &quot;{search.trim()}&quot;
-                      </button>
-                    ) : (
-                      'No resources found.'
-                    )}
-                  </CommandEmpty>
+                  <CommandEmpty>No resources found.</CommandEmpty>
                   <CommandGroup>
                     {selectableResources.map((resource) => (
                       <CommandItem
@@ -427,14 +294,6 @@ export function ResourcesCard({
                         )}
                       </CommandItem>
                     ))}
-                    {search.trim() && !exactMatchExists && (
-                      <CommandItem
-                        value={`__create__${search.trim()}`}
-                        onSelect={openCreateDialog}>
-                        <Plus className="h-4 w-4" />
-                        Create &quot;{search.trim()}&quot;
-                      </CommandItem>
-                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -473,15 +332,6 @@ export function ResourcesCard({
           </div>
         </div>
       </CardContent>
-
-      <CreateCustomResourceDialog
-        key={dialogKey}
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onCreate={handleCreate}
-        creating={creating}
-        initialName={search.trim()}
-      />
     </Card>
   )
 }
