@@ -30,6 +30,13 @@ export const GITHUB_ISSUES_URL = 'https://github.com/ncalteen/kdm-app/issues'
 export const SUPPORT_EMAIL = 'ncalteen@archivist.monster'
 
 /**
+ * Markdown Syntax Reference URL
+ *
+ * Linked beneath every markdown editor as a quick reference for users.
+ */
+export const MARKDOWN_SYNTAX_URL = 'https://www.markdownguide.org/basic-syntax/'
+
+/**
  * Basic Hunt Board Configuration
  */
 export const basicHuntBoard = {
