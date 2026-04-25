@@ -193,6 +193,12 @@ export function CustomSecretFightingArtsCard({
     [items, editingItem, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Delete Secret Fighting Art
+   *
+   * Optimistically removes the secret fighting art from the list, then persists
+   * the deletion. Restores the previous list on failure.
+   */
   const handleDelete = useCallback(
     (item: SecretFightingArtDetail) => {
       const previous = [...items]
@@ -209,11 +215,23 @@ export function CustomSecretFightingArtsCard({
     [items, toast]
   )
 
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the create dialog.
+   */
   const openCreateDialog = useCallback(() => {
     setDialogKey((k) => k + 1)
     setCreateDialogOpen(true)
   }, [])
 
+  /**
+   * Open Edit Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the edit dialog seeded with the target secret fighting art's values.
+   */
   const openEditDialog = useCallback((item: SecretFightingArtDetail) => {
     setDialogKey((k) => k + 1)
     setEditingItem(item)

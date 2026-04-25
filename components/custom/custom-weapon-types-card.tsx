@@ -209,6 +209,12 @@ export function CustomWeaponTypesCard({
     [items, editingItem, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Delete Weapon Type
+   *
+   * Optimistically removes the weapon type from the list, then persists
+   * the deletion. Restores the previous list on failure.
+   */
   const handleDelete = useCallback(
     (item: WeaponTypeDetail) => {
       const previous = [...items]
@@ -225,11 +231,23 @@ export function CustomWeaponTypesCard({
     [items, toast]
   )
 
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the create dialog.
+   */
   const openCreateDialog = useCallback(() => {
     setDialogKey((k) => k + 1)
     setCreateDialogOpen(true)
   }, [])
 
+  /**
+   * Open Edit Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the edit dialog seeded with the target weapon type's values.
+   */
   const openEditDialog = useCallback((item: WeaponTypeDetail) => {
     setDialogKey((k) => k + 1)
     setEditingItem(item)

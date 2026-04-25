@@ -86,6 +86,12 @@ export function CustomTraitsCard({
     loadItems()
   }, [loadItems])
 
+  /**
+   * Handle Create Trait
+   *
+   * Optimistically adds a new trait, then persists to the database.
+   * Rolls back on failure.
+   */
   const handleCreate = useCallback(
     async (data: { name: string; rules: string }) => {
       if (saving) return
@@ -129,6 +135,12 @@ export function CustomTraitsCard({
     [items, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Edit Trait
+   *
+   * Optimistically updates the trait, then persists to the database.
+   * Rolls back on failure.
+   */
   const handleEdit = useCallback(
     async (data: { name: string; rules: string }) => {
       if (saving || !editingItem) return
@@ -174,6 +186,12 @@ export function CustomTraitsCard({
     [items, editingItem, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Delete Trait
+   *
+   * Optimistically removes the trait from the list, then persists
+   * the deletion. Restores the previous list on failure.
+   */
   const handleDelete = useCallback(
     (item: TraitDetail) => {
       const previous = [...items]
@@ -190,11 +208,23 @@ export function CustomTraitsCard({
     [items, toast]
   )
 
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the create dialog.
+   */
   const openCreateDialog = useCallback(() => {
     setDialogKey((k) => k + 1)
     setCreateDialogOpen(true)
   }, [])
 
+  /**
+   * Open Edit Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the edit dialog seeded with the target trait's values.
+   */
   const openEditDialog = useCallback((item: TraitDetail) => {
     setDialogKey((k) => k + 1)
     setEditingItem(item)

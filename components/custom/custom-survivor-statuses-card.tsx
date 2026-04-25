@@ -95,6 +95,12 @@ export function CustomSurvivorStatusesCard({
     loadItems()
   }, [loadItems])
 
+  /**
+   * Handle Create Survivor Status
+   *
+   * Optimistically adds a new survivor status, then persists to the database.
+   * Rolls back on failure.
+   */
   const handleCreate = useCallback(
     async (data: { name: string; rules: string }) => {
       if (saving) return
@@ -138,6 +144,12 @@ export function CustomSurvivorStatusesCard({
     [items, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Edit Survivor Status
+   *
+   * Optimistically updates the survivor status, then persists to the database.
+   * Rolls back on failure.
+   */
   const handleEdit = useCallback(
     async (data: { name: string; rules: string }) => {
       if (saving || !editingItem) return
@@ -183,6 +195,12 @@ export function CustomSurvivorStatusesCard({
     [items, editingItem, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Delete Survivor Status
+   *
+   * Optimistically removes the survivor status from the list, then persists
+   * the deletion. Restores the previous list on failure.
+   */
   const handleDelete = useCallback(
     (item: SurvivorStatusDetail) => {
       const previous = [...items]
@@ -199,11 +217,23 @@ export function CustomSurvivorStatusesCard({
     [items, toast]
   )
 
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the create dialog.
+   */
   const openCreateDialog = useCallback(() => {
     setDialogKey((k) => k + 1)
     setCreateDialogOpen(true)
   }, [])
 
+  /**
+   * Open Edit Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the edit dialog seeded with the target survivor status's values.
+   */
   const openEditDialog = useCallback((item: SurvivorStatusDetail) => {
     setDialogKey((k) => k + 1)
     setEditingItem(item)

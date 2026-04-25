@@ -186,6 +186,12 @@ export function CustomDisordersCard({
     [items, editingItem, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Delete Disorder
+   *
+   * Optimistically removes the disorder from the list, then persists the
+   * deletion. Restores the previous list on failure.
+   */
   const handleDelete = useCallback(
     (item: DisorderDetail) => {
       const previous = [...items]
@@ -202,11 +208,23 @@ export function CustomDisordersCard({
     [items, toast]
   )
 
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens the create
+   * dialog.
+   */
   const openCreateDialog = useCallback(() => {
     setDialogKey((k) => k + 1)
     setCreateDialogOpen(true)
   }, [])
 
+  /**
+   * Open Edit Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens the edit
+   * dialog seeded with the target disorder's values.
+   */
   const openEditDialog = useCallback((item: DisorderDetail) => {
     setDialogKey((k) => k + 1)
     setEditingItem(item)

@@ -296,11 +296,23 @@ export function CustomPatternsCard({
     [items, toast]
   )
 
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the create dialog.
+   */
   const openCreateDialog = useCallback(() => {
     setDialogKey((k) => k + 1)
     setCreateDialogOpen(true)
   }, [])
 
+  /**
+   * Open Edit Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the edit dialog seeded with the target pattern's values.
+   */
   const openEditDialog = useCallback((item: PatternDetail) => {
     setDialogKey((k) => k + 1)
     setEditingItem(item)

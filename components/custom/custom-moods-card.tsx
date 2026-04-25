@@ -84,6 +84,12 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
     loadItems()
   }, [loadItems])
 
+  /**
+   * Handle Create Mood
+   *
+   * Optimistically adds a new mood, then persists to the database. Rolls back
+   * on failure.
+   */
   const handleCreate = useCallback(
     async (data: { name: string; rules: string }) => {
       if (saving) return
@@ -127,6 +133,12 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
     [items, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Edit Mood
+   *
+   * Optimistically updates the mood, then persists to the database. Rolls back
+   * on failure.
+   */
   const handleEdit = useCallback(
     async (data: { name: string; rules: string }) => {
       if (saving || !editingItem) return
@@ -172,6 +184,12 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
     [items, editingItem, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Delete Mood
+   *
+   * Optimistically removes the mood from the list, then persists the deletion.
+   * Restores the previous list on failure.
+   */
   const handleDelete = useCallback(
     (item: MoodDetail) => {
       const previous = [...items]
@@ -188,11 +206,23 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
     [items, toast]
   )
 
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens the create
+   * dialog.
+   */
   const openCreateDialog = useCallback(() => {
     setDialogKey((k) => k + 1)
     setCreateDialogOpen(true)
   }, [])
 
+  /**
+   * Open Edit Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens the edit
+   * dialog seeded with the target mood's values.
+   */
   const openEditDialog = useCallback((item: MoodDetail) => {
     setDialogKey((k) => k + 1)
     setEditingItem(item)
