@@ -18,6 +18,15 @@ const {
   removeSeedPattern
 } = await import('@/lib/dal/seed-pattern')
 
+/**
+ * Augment a raw seed pattern fixture with the normalized junction default
+ * that `toSeedPatternDetail` adds when reading from the database.
+ */
+const withSeedPatternDefaults = <T extends Record<string, unknown>>(s: T) => ({
+  ...s,
+  gear_costs: []
+})
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -75,9 +84,9 @@ describe('getSeedPatterns', () => {
     const result = await getSeedPatterns()
 
     expect(result).toEqual({
-      sp1: nonCustomSeedPattern,
-      sp2: userCustomSeedPattern,
-      sp3: sharedSeedPattern
+      sp1: withSeedPatternDefaults(nonCustomSeedPattern),
+      sp2: withSeedPatternDefaults(userCustomSeedPattern),
+      sp3: withSeedPatternDefaults(sharedSeedPattern)
     })
   })
 
@@ -292,7 +301,7 @@ describe('addSeedPattern', () => {
       custom: false
     })
 
-    expect(result).toEqual(mockSeedPattern)
+    expect(result).toEqual(withSeedPatternDefaults(mockSeedPattern))
     expect(mockInsert).toHaveBeenCalledWith({
       seed_pattern_name: 'Cloth',
       custom: false
@@ -322,7 +331,7 @@ describe('addSeedPattern', () => {
       custom: true
     })
 
-    expect(result).toEqual(customSeedPattern)
+    expect(result).toEqual(withSeedPatternDefaults(customSeedPattern))
     expect(mockInsert).toHaveBeenCalledWith({
       seed_pattern_name: 'My Seed Pattern',
       custom: true,

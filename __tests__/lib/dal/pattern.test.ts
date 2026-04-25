@@ -14,6 +14,18 @@ vi.mock('@/lib/supabase/client', () => ({
 const { getPatterns, addPattern, updatePattern, removePattern } =
   await import('@/lib/dal/pattern')
 
+/**
+ * Augment a raw pattern fixture with the normalized junction defaults that
+ * `toPatternDetail` adds when reading from the database.
+ */
+const withPatternDefaults = <T extends Record<string, unknown>>(p: T) => ({
+  ...p,
+  gear_costs: [],
+  resource_costs: [],
+  resource_type_costs: [],
+  innovation_requirement_ids: []
+})
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -71,9 +83,9 @@ describe('getPatterns', () => {
     const result = await getPatterns()
 
     expect(result).toEqual({
-      p1: nonCustomPattern,
-      p2: userCustomPattern,
-      p3: sharedPattern
+      p1: withPatternDefaults(nonCustomPattern),
+      p2: withPatternDefaults(userCustomPattern),
+      p3: withPatternDefaults(sharedPattern)
     })
   })
 
@@ -250,7 +262,7 @@ describe('addPattern', () => {
       custom: false
     })
 
-    expect(result).toEqual(mockPattern)
+    expect(result).toEqual(withPatternDefaults(mockPattern))
     expect(mockInsert).toHaveBeenCalledWith({
       pattern_name: 'Screaming Coat',
       custom: false
@@ -276,7 +288,7 @@ describe('addPattern', () => {
       custom: true
     })
 
-    expect(result).toEqual(customPattern)
+    expect(result).toEqual(withPatternDefaults(customPattern))
     expect(mockInsert).toHaveBeenCalledWith({
       pattern_name: 'My Pattern',
       custom: true,

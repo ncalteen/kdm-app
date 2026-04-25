@@ -14,6 +14,18 @@ vi.mock('@/lib/supabase/client', () => ({
 const { getGear, addGear, updateGear, removeGear, getCustomGear } =
   await import('@/lib/dal/gear')
 
+/**
+ * Augment a raw gear fixture with the normalized junction defaults that
+ * `toGearDetail` adds when reading from the database.
+ */
+const withGearDefaults = <T extends Record<string, unknown>>(g: T) => ({
+  ...g,
+  affinity_bonus_requirements: [],
+  gear_costs: [],
+  resource_costs: [],
+  resource_type_costs: []
+})
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -72,9 +84,9 @@ describe('getGear', () => {
     const result = await getGear()
 
     expect(result).toEqual({
-      g1: nonCustomGear,
-      g2: userCustomGear,
-      g3: sharedGear
+      g1: withGearDefaults(nonCustomGear),
+      g2: withGearDefaults(userCustomGear),
+      g3: withGearDefaults(sharedGear)
     })
   })
 
@@ -245,7 +257,7 @@ describe('addGear', () => {
       location_id: 'l1'
     })
 
-    expect(result).toEqual(mockGear)
+    expect(result).toEqual(withGearDefaults(mockGear))
     expect(mockInsert).toHaveBeenCalledWith({
       gear_name: 'Lantern Helm',
       custom: false,
@@ -274,7 +286,7 @@ describe('addGear', () => {
 
     const result = await addGear({ gear_name: 'My Gear', custom: true })
 
-    expect(result).toEqual(customGear)
+    expect(result).toEqual(withGearDefaults(customGear))
     expect(mockInsert).toHaveBeenCalledWith({
       gear_name: 'My Gear',
       custom: true,
@@ -399,7 +411,7 @@ describe('getCustomGear', () => {
 
     const result = await getCustomGear()
 
-    expect(result).toEqual({ g2: customGear })
+    expect(result).toEqual({ g2: withGearDefaults(customGear) })
     expect(mockEq1).toHaveBeenCalledWith('custom', true)
     expect(mockEq2).toHaveBeenCalledWith('user_id', mockUser.id)
   })
