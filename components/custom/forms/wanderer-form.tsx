@@ -630,7 +630,8 @@ export function WandererForm({
             <MultiSelectDropdown
               items={sortedFightingArts.map((fa) => ({
                 id: fa.id,
-                name: fa.fighting_art_name
+                name: fa.fighting_art_name,
+                custom: fa.custom
               }))}
               selectedIds={fightingArtIds}
               onToggle={toggleFightingArt}
@@ -667,7 +668,8 @@ export function WandererForm({
             <MultiSelectDropdown
               items={sortedGear.map((g) => ({
                 id: g.id,
-                name: g.gear_name
+                name: g.gear_name,
+                custom: g.custom
               }))}
               selectedIds={rareGearIds}
               onToggle={toggleRareGear}
@@ -704,7 +706,8 @@ export function WandererForm({
             <MultiSelectDropdown
               items={sortedAbilityImpairments.map((a) => ({
                 id: a.id,
-                name: a.ability_impairment_name
+                name: a.ability_impairment_name,
+                custom: a.custom
               }))}
               selectedIds={abilityImpairmentIds}
               onToggle={toggleAbilityImpairment}

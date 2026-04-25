@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -355,7 +356,14 @@ export function PhilosophyDialog({
                   <SelectItem value={NO_SELECTION}>No knowledge</SelectItem>
                   {sortedKnowledges.map((k) => (
                     <SelectItem key={k.id} value={k.id}>
-                      {k.knowledge_name}
+                      <span className="flex items-center gap-2 w-full">
+                        <span>{k.knowledge_name}</span>
+                        {k.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -376,7 +384,14 @@ export function PhilosophyDialog({
                   <SelectItem value={NO_SELECTION}>No neurosis</SelectItem>
                   {sortedNeuroses.map((n) => (
                     <SelectItem key={n.id} value={n.id}>
-                      {n.neurosis_name}
+                      <span className="flex items-center gap-2 w-full">
+                        <span>{n.neurosis_name}</span>
+                        {n.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

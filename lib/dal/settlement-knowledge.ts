@@ -20,7 +20,7 @@ export async function getSettlementKnowledges(
   const { data, error } = await supabase
     .from('settlement_knowledge')
     .select(
-      'id, knowledge_id, knowledge(knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone)'
+      'id, knowledge_id, knowledge(custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone)'
     )
     .eq('settlement_id', settlementId)
 
@@ -30,6 +30,7 @@ export async function getSettlementKnowledges(
   return (
     data?.map((item) => {
       const knowledge = item.knowledge as unknown as {
+        custom: boolean
         knowledge_name: string
         philosophy_id: string | null
         rules: string | null
@@ -44,7 +45,8 @@ export async function getSettlementKnowledges(
         philosophy_id: knowledge.philosophy_id,
         rules: knowledge.rules,
         observation_conditions: knowledge.observation_conditions,
-        observation_rank_up_milestone: knowledge.observation_rank_up_milestone
+        observation_rank_up_milestone: knowledge.observation_rank_up_milestone,
+        custom: knowledge.custom
       }
     }) ?? []
   )

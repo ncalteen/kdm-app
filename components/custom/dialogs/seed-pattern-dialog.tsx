@@ -190,13 +190,21 @@ export function SeedPatternDialog({
    * names. Used to populate the keywords selector.
    */
   const monsterNameOptions = useMemo(() => {
-    const names = new Set<string>()
-    for (const q of Object.values(quarries)) names.add(q.monster_name)
-    for (const n of Object.values(nemeses)) names.add(n.monster_name)
+    // Map of monster name -> whether any source for that name is custom.
+    const map = new Map<string, boolean>()
+    const setOrUpgrade = (name: string, custom: boolean) => {
+      map.set(name, (map.get(name) ?? false) || custom)
+    }
+    for (const q of Object.values(quarries))
+      setOrUpgrade(q.monster_name, !!q.custom)
+    for (const n of Object.values(nemeses))
+      setOrUpgrade(n.monster_name, !!n.custom)
     // Preserve any pre-existing keywords that no longer match a known monster
     // so users can still see and remove them.
-    for (const k of keywords) names.add(k)
-    return [...names].sort((a, b) => a.localeCompare(b))
+    for (const k of keywords) if (!map.has(k)) map.set(k, false)
+    return [...map.entries()]
+      .map(([name, custom]) => ({ name, custom }))
+      .sort((a, b) => a.name.localeCompare(b.name))
   }, [quarries, nemeses, keywords])
 
   const toggleKeyword = useCallback((name: string) => {
@@ -560,20 +568,27 @@ export function SeedPatternDialog({
                   <CommandList>
                     <CommandEmpty>No monsters found.</CommandEmpty>
                     <CommandGroup>
-                      {monsterNameOptions.map((monsterName) => {
-                        const selected = keywords.includes(monsterName)
+                      {monsterNameOptions.map(({ name, custom }) => {
+                        const selected = keywords.includes(name)
                         return (
                           <CommandItem
-                            key={monsterName}
-                            value={monsterName}
-                            onSelect={() => toggleKeyword(monsterName)}>
+                            key={name}
+                            value={name}
+                            onSelect={() => toggleKeyword(name)}>
                             <Check
                               className={cn(
                                 'h-4 w-4',
                                 selected ? 'opacity-100' : 'opacity-0'
                               )}
                             />
-                            {monsterName}
+                            {name}
+                            {custom && (
+                              <Badge
+                                variant="outline"
+                                className="ml-auto text-xs">
+                                Custom
+                              </Badge>
+                            )}
                           </CommandItem>
                         )
                       })}

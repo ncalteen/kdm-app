@@ -1,6 +1,7 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -850,6 +851,11 @@ export function MonsterForm({
                             setLocationAddOpen(false)
                           }}>
                           {loc.location_name}
+                          {loc.custom && (
+                            <Badge variant="outline" className="ml-auto">
+                              Custom
+                            </Badge>
+                          )}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -1043,6 +1049,11 @@ export function MonsterForm({
                                 setCCRewardAddOpen(false)
                               }}>
                               {ccr.reward_name} (CC: {ccr.collective_cognition})
+                              {ccr.custom && (
+                                <Badge variant="outline" className="ml-auto">
+                                  Custom
+                                </Badge>
+                              )}
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -1417,6 +1428,13 @@ export function MonsterForm({
                                                         setOpenTraitPicker(null)
                                                       }}>
                                                       {trait.trait_name}
+                                                      {trait.custom && (
+                                                        <Badge
+                                                          variant="outline"
+                                                          className="ml-auto">
+                                                          Custom
+                                                        </Badge>
+                                                      )}
                                                     </CommandItem>
                                                   ))}
                                               </CommandGroup>
@@ -1520,6 +1538,13 @@ export function MonsterForm({
                                                         setOpenMoodPicker(null)
                                                       }}>
                                                       {mood.mood_name}
+                                                      {mood.custom && (
+                                                        <Badge
+                                                          variant="outline"
+                                                          className="ml-auto">
+                                                          Custom
+                                                        </Badge>
+                                                      )}
                                                     </CommandItem>
                                                   ))}
                                               </CommandGroup>
@@ -1633,6 +1658,13 @@ export function MonsterForm({
                                                       {
                                                         status.survivor_status_name
                                                       }
+                                                      {status.custom && (
+                                                        <Badge
+                                                          variant="outline"
+                                                          className="ml-auto">
+                                                          Custom
+                                                        </Badge>
+                                                      )}
                                                     </CommandItem>
                                                   ))}
                                               </CommandGroup>

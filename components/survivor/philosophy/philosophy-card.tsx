@@ -3,6 +3,7 @@
 import { NumericInput } from '@/components/menu/numeric-input'
 import { SelectNeurosis } from '@/components/menu/select-neurosis'
 import { SelectPhilosophy } from '@/components/menu/select-philosophy'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -66,7 +67,11 @@ interface PhilosophyCardProps {
  */
 interface TenetKnowledgeSelectProps {
   /** Available Knowledges */
-  knowledges: { knowledge_id: string; knowledge_name: string }[]
+  knowledges: {
+    knowledge_id: string
+    knowledge_name: string
+    custom?: boolean
+  }[]
   /** OnChange Handler */
   onChange: (value: string) => void
   /** Selected Knowledge ID */
@@ -129,6 +134,11 @@ function TenetKnowledgeSelect({
                       )}
                     />
                     {k.knowledge_name}
+                    {k.custom && (
+                      <Badge variant="outline" className="ml-auto">
+                        Custom
+                      </Badge>
+                    )}
                   </CommandItem>
                 ))}
             </CommandGroup>
@@ -167,6 +177,8 @@ export function PhilosophyCard({
     observation_conditions:
       selectedSurvivor?.tenet_knowledge_observation_conditions ?? '',
     observation_rank: selectedSurvivor?.tenet_knowledge_observation_rank ?? 0,
+    observation_rank_up_milestone:
+      selectedSurvivor?.tenet_knowledge?.observation_rank_up_milestone ?? null,
     rank_up: selectedSurvivor?.tenet_knowledge_rank_up ?? null
   })
   const tenetRankUpRef = useRef(
@@ -191,6 +203,9 @@ export function PhilosophyCard({
       observation_conditions:
         selectedSurvivor?.tenet_knowledge_observation_conditions ?? '',
       observation_rank: selectedSurvivor?.tenet_knowledge_observation_rank ?? 0,
+      observation_rank_up_milestone:
+        selectedSurvivor?.tenet_knowledge?.observation_rank_up_milestone ??
+        null,
       rank_up: selectedSurvivor?.tenet_knowledge_rank_up ?? null
     })
     setPhilosophy(selectedSurvivor?.philosophy ?? null)
@@ -211,6 +226,7 @@ export function PhilosophyCard({
     (philosophyId: string) => {
       const prevPhilosophy = philosophy
       const prevPhilosophyRank = philosophyRank
+      const prevTenetKnowledge = tenetKnowledge
 
       const philosophyDetail = philosophyId
         ? selectedSettlement?.philosophies.find(
@@ -243,8 +259,39 @@ export function PhilosophyCard({
           }
         : null
 
+      // Auto-set tenet knowledge based on the philosophy's linked tenet_knowledge_id.
+      // When the cascade fires, also populate the linked knowledge's catalog
+      // defaults (rules, observation conditions, rank-up milestone) and reset
+      // the survivor's per-instance progress fields.
+      const matchedKnowledge = philosophyDetail?.tenet_knowledge_id
+        ? selectedSettlement?.knowledges.find(
+            (k) => k.knowledge_id === philosophyDetail.tenet_knowledge_id
+          )
+        : null
+      const newTenetKnowledgeJoin = matchedKnowledge
+        ? {
+            id: matchedKnowledge.knowledge_id,
+            knowledge_name: matchedKnowledge.knowledge_name,
+            rules: matchedKnowledge.rules,
+            observation_conditions: matchedKnowledge.observation_conditions,
+            observation_rank_up_milestone:
+              matchedKnowledge.observation_rank_up_milestone
+          }
+        : null
+      const newTenetKnowledgeState = {
+        id: matchedKnowledge?.knowledge_id ?? '',
+        knowledge_name: matchedKnowledge?.knowledge_name ?? '',
+        rules: matchedKnowledge?.rules ?? '',
+        observation_conditions: matchedKnowledge?.observation_conditions ?? '',
+        observation_rank: 0,
+        observation_rank_up_milestone:
+          matchedKnowledge?.observation_rank_up_milestone ?? null,
+        rank_up: null
+      }
+
       setPhilosophy(newPhilosophy)
       setNeurosis(newNeurosis)
+      setTenetKnowledge(newTenetKnowledgeState)
       if (!philosophyId) setPhilosophyRank(0)
 
       setSurvivors((prev) =>
@@ -254,6 +301,12 @@ export function PhilosophyCard({
                 ...s,
                 philosophy: newPhilosophy,
                 neurosis: newNeurosis,
+                tenet_knowledge: newTenetKnowledgeJoin,
+                tenet_knowledge_rules: newTenetKnowledgeState.rules,
+                tenet_knowledge_observation_conditions:
+                  newTenetKnowledgeState.observation_conditions,
+                tenet_knowledge_observation_rank: 0,
+                tenet_knowledge_rank_up: null,
                 ...(philosophyId ? {} : { philosophy_rank: 0 })
               }
             : s
@@ -266,12 +319,19 @@ export function PhilosophyCard({
           updateSurvivor(selectedSurvivor?.id, {
             philosophy_id: philosophyId || null,
             neurosis_id: newNeurosis?.id ?? null,
+            tenet_knowledge_id: matchedKnowledge?.knowledge_id ?? null,
+            tenet_knowledge_rules: newTenetKnowledgeState.rules,
+            tenet_knowledge_observation_conditions:
+              newTenetKnowledgeState.observation_conditions,
+            tenet_knowledge_observation_rank: 0,
+            tenet_knowledge_rank_up: null,
             ...(philosophyId ? {} : { philosophy_rank: 0 })
           }),
         rollback: () => {
           setPhilosophy(prevPhilosophy)
           setPhilosophyRank(prevPhilosophyRank)
           setNeurosis(prevNeurosis)
+          setTenetKnowledge(prevTenetKnowledge)
           setSurvivors((prev) =>
             prev.map((s) =>
               s.id === selectedSurvivor?.id
@@ -279,7 +339,17 @@ export function PhilosophyCard({
                     ...s,
                     philosophy: prevPhilosophy,
                     philosophy_rank: prevPhilosophyRank,
-                    neurosis: prevNeurosis
+                    neurosis: prevNeurosis,
+                    tenet_knowledge: selectedSurvivor?.tenet_knowledge ?? null,
+                    tenet_knowledge_rules:
+                      selectedSurvivor?.tenet_knowledge_rules ?? '',
+                    tenet_knowledge_observation_conditions:
+                      selectedSurvivor?.tenet_knowledge_observation_conditions ??
+                      '',
+                    tenet_knowledge_observation_rank:
+                      selectedSurvivor?.tenet_knowledge_observation_rank ?? 0,
+                    tenet_knowledge_rank_up:
+                      selectedSurvivor?.tenet_knowledge_rank_up ?? null
                   }
                 : s
             )
@@ -294,8 +364,9 @@ export function PhilosophyCard({
       neurosis,
       philosophy,
       philosophyRank,
+      tenetKnowledge,
       selectedSettlement,
-      selectedSurvivor?.id,
+      selectedSurvivor,
       setSurvivors,
       mutate
     ]
@@ -451,21 +522,30 @@ export function PhilosophyCard({
         )
       : null
 
+    // Cascade catalog defaults from the linked knowledge row when present
+    // (rules + observation conditions). Always reset per-survivor progress
+    // (observation_rank) and clear the user's chosen rank-up level.
+    const cascadedRules = knowledgeDetail?.rules ?? ''
+    const cascadedConditions = knowledgeDetail?.observation_conditions ?? ''
+
     const newTenetKnowledge = knowledgeDetail
       ? {
           ...tenetKnowledge,
           id: knowledgeId,
           knowledge_name: knowledgeDetail.knowledge_name,
           observation_rank: 0,
+          observation_rank_up_milestone:
+            knowledgeDetail.observation_rank_up_milestone ?? null,
           rank_up: null,
-          rules: '',
-          observation_conditions: ''
+          rules: cascadedRules,
+          observation_conditions: cascadedConditions
         }
       : {
           ...tenetKnowledge,
           id: '',
           knowledge_name: '',
           observation_rank: 0,
+          observation_rank_up_milestone: null,
           rank_up: null,
           rules: '',
           observation_conditions: ''
@@ -491,8 +571,8 @@ export function PhilosophyCard({
                 : null,
               tenet_knowledge_observation_rank: 0,
               tenet_knowledge_rank_up: null,
-              tenet_knowledge_rules: '',
-              tenet_knowledge_observation_conditions: ''
+              tenet_knowledge_rules: cascadedRules,
+              tenet_knowledge_observation_conditions: cascadedConditions
             }
           : s
       )
@@ -505,8 +585,8 @@ export function PhilosophyCard({
           tenet_knowledge_id: knowledgeId || null,
           tenet_knowledge_observation_rank: 0,
           tenet_knowledge_rank_up: null,
-          tenet_knowledge_rules: '',
-          tenet_knowledge_observation_conditions: ''
+          tenet_knowledge_rules: cascadedRules,
+          tenet_knowledge_observation_conditions: cascadedConditions
         }),
       rollback: () => {
         setTenetKnowledge(oldTenetKnowledge)
@@ -747,7 +827,16 @@ export function PhilosophyCard({
             <div className="flex gap-1 pt-0 lg:pt-2">
               {[...Array(9)].map((_, index) => {
                 const checked = tenetKnowledge.observation_rank > index
-                const isRankUpMilestone = tenetKnowledge.rank_up === index
+                // Highlight the user's chosen rank-up if set; otherwise fall
+                // back to the catalog's rank-up milestone (1-based rank in DB,
+                // mapped to 0-based checkbox index).
+                const milestoneIndex =
+                  tenetKnowledge.rank_up ??
+                  (tenetKnowledge.observation_rank_up_milestone != null &&
+                  tenetKnowledge.observation_rank_up_milestone > 0
+                    ? tenetKnowledge.observation_rank_up_milestone - 1
+                    : null)
+                const isRankUpMilestone = milestoneIndex === index
                 const hasTenetKnowledge = !!tenetKnowledge.id
 
                 return (

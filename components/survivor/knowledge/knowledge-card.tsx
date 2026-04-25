@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -61,7 +62,11 @@ interface KnowledgeCardProps {
  */
 interface KnowledgeSelectProps {
   /** Available Knowledges */
-  knowledges: { knowledge_id: string; knowledge_name: string }[]
+  knowledges: {
+    knowledge_id: string
+    knowledge_name: string
+    custom?: boolean
+  }[]
   /** OnChange Handler */
   onChange: (value: string) => void
   /** Placeholder Text */
@@ -127,6 +132,11 @@ function KnowledgeSelect({
                       )}
                     />
                     {k.knowledge_name}
+                    {k.custom && (
+                      <Badge variant="outline" className="ml-auto">
+                        Custom
+                      </Badge>
+                    )}
                   </CommandItem>
                 ))}
             </CommandGroup>
@@ -163,6 +173,8 @@ export function KnowledgeCard({
     observation_conditions:
       selectedSurvivor?.knowledge_1_observation_conditions ?? '',
     observation_rank: selectedSurvivor?.knowledge_1_observation_rank ?? 0,
+    observation_rank_up_milestone:
+      selectedSurvivor?.knowledge_1?.observation_rank_up_milestone ?? null,
     rank_up: selectedSurvivor?.knowledge_1_rank_up ?? null
   })
   const knowledge1RankUpRef = useRef(knowledge1.rank_up)
@@ -173,6 +185,8 @@ export function KnowledgeCard({
     observation_conditions:
       selectedSurvivor?.knowledge_2_observation_conditions ?? '',
     observation_rank: selectedSurvivor?.knowledge_2_observation_rank ?? 0,
+    observation_rank_up_milestone:
+      selectedSurvivor?.knowledge_2?.observation_rank_up_milestone ?? null,
     rank_up: selectedSurvivor?.knowledge_2_rank_up ?? null
   })
   const knowledge2RankUpRef = useRef(knowledge2.rank_up)
@@ -192,6 +206,8 @@ export function KnowledgeCard({
       observation_conditions:
         selectedSurvivor?.knowledge_1_observation_conditions ?? '',
       observation_rank: selectedSurvivor?.knowledge_1_observation_rank ?? 0,
+      observation_rank_up_milestone:
+        selectedSurvivor?.knowledge_1?.observation_rank_up_milestone ?? null,
       rank_up: selectedSurvivor?.knowledge_1_rank_up ?? null
     })
     setKnowledge2({
@@ -201,6 +217,8 @@ export function KnowledgeCard({
       observation_conditions:
         selectedSurvivor?.knowledge_2_observation_conditions ?? '',
       observation_rank: selectedSurvivor?.knowledge_2_observation_rank ?? 0,
+      observation_rank_up_milestone:
+        selectedSurvivor?.knowledge_2?.observation_rank_up_milestone ?? null,
       rank_up: selectedSurvivor?.knowledge_2_rank_up ?? null
     })
   }
@@ -316,21 +334,28 @@ export function KnowledgeCard({
           (k) => k.knowledge_id === knowledgeId
         )
       : null
+    // Cascade catalog defaults (rules + observation conditions) when present;
+    // always reset per-survivor progress and clear the chosen rank-up level.
+    const cascadedRules = knowledgeDetail?.rules ?? ''
+    const cascadedConditions = knowledgeDetail?.observation_conditions ?? ''
     const newKnowledge = knowledgeDetail
       ? {
           ...knowledge1,
           id: knowledgeId,
           knowledge_name: knowledgeDetail.knowledge_name,
           observation_rank: 0,
+          observation_rank_up_milestone:
+            knowledgeDetail.observation_rank_up_milestone ?? null,
           rank_up: null,
-          rules: '',
-          observation_conditions: ''
+          rules: cascadedRules,
+          observation_conditions: cascadedConditions
         }
       : {
           ...knowledge1,
           id: '',
           knowledge_name: '',
           observation_rank: 0,
+          observation_rank_up_milestone: null,
           rank_up: null,
           rules: '',
           observation_conditions: ''
@@ -356,8 +381,8 @@ export function KnowledgeCard({
                 : null,
               knowledge_1_observation_rank: 0,
               knowledge_1_rank_up: null,
-              knowledge_1_rules: '',
-              knowledge_1_observation_conditions: ''
+              knowledge_1_rules: cascadedRules,
+              knowledge_1_observation_conditions: cascadedConditions
             }
           : s
       )
@@ -370,8 +395,8 @@ export function KnowledgeCard({
           knowledge_1_id: knowledgeId || null,
           knowledge_1_observation_rank: 0,
           knowledge_1_rank_up: null,
-          knowledge_1_rules: '',
-          knowledge_1_observation_conditions: ''
+          knowledge_1_rules: cascadedRules,
+          knowledge_1_observation_conditions: cascadedConditions
         }),
       rollback: () => {
         setKnowledge1(oldKnowledge)
@@ -562,21 +587,28 @@ export function KnowledgeCard({
           (k) => k.knowledge_id === knowledgeId
         )
       : null
+    // Cascade catalog defaults (rules + observation conditions) when present;
+    // always reset per-survivor progress and clear the chosen rank-up level.
+    const cascadedRules = knowledgeDetail?.rules ?? ''
+    const cascadedConditions = knowledgeDetail?.observation_conditions ?? ''
     const newKnowledge = knowledgeDetail
       ? {
           ...knowledge2,
           id: knowledgeId,
           knowledge_name: knowledgeDetail.knowledge_name,
           observation_rank: 0,
+          observation_rank_up_milestone:
+            knowledgeDetail.observation_rank_up_milestone ?? null,
           rank_up: null,
-          rules: '',
-          observation_conditions: ''
+          rules: cascadedRules,
+          observation_conditions: cascadedConditions
         }
       : {
           ...knowledge2,
           id: '',
           knowledge_name: '',
           observation_rank: 0,
+          observation_rank_up_milestone: null,
           rank_up: null,
           rules: '',
           observation_conditions: ''
@@ -602,8 +634,8 @@ export function KnowledgeCard({
                 : null,
               knowledge_2_observation_rank: 0,
               knowledge_2_rank_up: null,
-              knowledge_2_rules: '',
-              knowledge_2_observation_conditions: ''
+              knowledge_2_rules: cascadedRules,
+              knowledge_2_observation_conditions: cascadedConditions
             }
           : s
       )
@@ -616,8 +648,8 @@ export function KnowledgeCard({
           knowledge_2_id: knowledgeId || null,
           knowledge_2_observation_rank: 0,
           knowledge_2_rank_up: null,
-          knowledge_2_rules: '',
-          knowledge_2_observation_conditions: ''
+          knowledge_2_rules: cascadedRules,
+          knowledge_2_observation_conditions: cascadedConditions
         }),
       rollback: () => {
         setKnowledge2(oldKnowledge)
@@ -845,7 +877,12 @@ export function KnowledgeCard({
             <div className="flex gap-1 pt-0 lg:pt-2">
               {[...Array(9)].map((_, index) => {
                 const checked = knowledge1.observation_rank >= index + 1
-                const isRankUpMilestone = knowledge1.rank_up === index
+                const isRankUpMilestone =
+                  (knowledge1.rank_up ??
+                    (knowledge1.observation_rank_up_milestone != null &&
+                    knowledge1.observation_rank_up_milestone > 0
+                      ? knowledge1.observation_rank_up_milestone - 1
+                      : null)) === index
                 const hasKnowledge = !!knowledge1.id
 
                 return (
@@ -938,7 +975,12 @@ export function KnowledgeCard({
             <div className="flex gap-1 pt-0 lg:pt-2">
               {[...Array(9)].map((_, index) => {
                 const checked = knowledge2.observation_rank >= index + 1
-                const isRankUpMilestone = knowledge2.rank_up === index
+                const isRankUpMilestone =
+                  (knowledge2.rank_up ??
+                    (knowledge2.observation_rank_up_milestone != null &&
+                    knowledge2.observation_rank_up_milestone > 0
+                      ? knowledge2.observation_rank_up_milestone - 1
+                      : null)) === index
                 const hasKnowledge = !!knowledge2.id
 
                 return (

@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -190,7 +191,14 @@ export function KnowledgeDialog({
                   <SelectItem value={NO_PHILOSOPHY}>No philosophy</SelectItem>
                   {sortedPhilosophies.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.philosophy_name}
+                      <span className="flex items-center gap-2 w-full">
+                        <span>{p.philosophy_name}</span>
+                        {p.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

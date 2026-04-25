@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -58,7 +59,8 @@ export function SelectNeurosis({
 
   const neurosisOptions = (selectedSettlement?.neuroses ?? []).map((n) => ({
     value: n.id,
-    label: n.neurosis_name
+    label: n.neurosis_name,
+    custom: n.custom
   }))
 
   return (
@@ -96,6 +98,11 @@ export function SelectNeurosis({
                     )}
                   />
                   {n.label}
+                  {n.custom && (
+                    <Badge variant="outline" className="ml-auto">
+                      Custom
+                    </Badge>
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>

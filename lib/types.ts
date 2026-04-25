@@ -687,6 +687,8 @@ export type SettlementDetail = Omit<
     gear_name: string
     /** Quantity */
     quantity: number
+    /** Whether the underlying gear is user-defined */
+    custom: boolean
   }[]
   /** Innovations */
   innovations: {
@@ -719,6 +721,8 @@ export type SettlementDetail = Omit<
     observation_conditions: string | null
     /** Observation Rank Up Milestone */
     observation_rank_up_milestone: number | null
+    /** Whether the underlying knowledge is user-defined */
+    custom: boolean
   }[]
   /** Locations */
   locations: {
@@ -739,6 +743,8 @@ export type SettlementDetail = Omit<
     id: string
     /** Neurosis Name */
     neurosis_name: string
+    /** Whether the underlying neurosis is user-defined */
+    custom: boolean
   }[]
   /** Milestones */
   milestones: {
@@ -823,6 +829,8 @@ export type SettlementDetail = Omit<
     tier: number | null
     /** Linked Neurosis ID */
     neurosis_id: string | null
+    /** Whether the underlying philosophy is user-defined */
+    custom: boolean
   }[]
   /** Principles */
   principles: {

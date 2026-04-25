@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -23,7 +24,7 @@ import { ReactElement, useState } from 'react'
  */
 interface MultiSelectDropdownProps {
   /** Items */
-  items: { id: string; name: string }[]
+  items: { id: string; name: string; custom?: boolean }[]
   /** Selected Item IDs */
   selectedIds: string[]
   /** Toggle Item Selection */
@@ -89,6 +90,11 @@ export function MultiSelectDropdown({
                     )}
                   />
                   {item.name}
+                  {item.custom && (
+                    <Badge variant="outline" className="ml-auto">
+                      Custom
+                    </Badge>
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>
