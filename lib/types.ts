@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { Database, Tables } from '@/lib/database.types'
 import { HuntEventType } from '@/lib/enums'
 
 /**
@@ -417,6 +417,43 @@ export type NeurosisDetail = Omit<
 >
 
 /**
+ * Pattern Gear Cost Detail
+ *
+ * Represents a single gear cost entry tied to a pattern.
+ */
+export type PatternGearCostDetail = {
+  /** Gear ID Required to Craft the Pattern */
+  cost_gear_id: string
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
+ * Pattern Resource Cost Detail
+ *
+ * Represents a specific resource required to craft a pattern.
+ */
+export type PatternResourceCostDetail = {
+  /** Resource ID Required to Craft the Pattern */
+  resource_id: string
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
+ * Pattern Resource Type Cost Detail
+ *
+ * Represents a quantity of any resource matching the given resource type
+ * required to craft a pattern.
+ */
+export type PatternResourceTypeCostDetail = {
+  /** Resource Type Required to Craft the Pattern */
+  resource_type: Database['public']['Enums']['resource_type']
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
  * Pattern Detail
  *
  * Used throughout the app to represent a pattern.
@@ -424,7 +461,16 @@ export type NeurosisDetail = Omit<
 export type PatternDetail = Omit<
   Tables<'pattern'>,
   'created_at' | 'updated_at' | 'user_id'
->
+> & {
+  /** Gear Costs Required to Craft the Pattern */
+  gear_costs: PatternGearCostDetail[]
+  /** Resource Costs Required to Craft the Pattern */
+  resource_costs: PatternResourceCostDetail[]
+  /** Resource Type Costs Required to Craft the Pattern */
+  resource_type_costs: PatternResourceTypeCostDetail[]
+  /** Innovation Requirements (settlement must have all of these) */
+  innovation_requirement_ids: string[]
+}
 
 /**
  * Philosophy Detail
