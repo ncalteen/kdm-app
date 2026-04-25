@@ -1,6 +1,7 @@
 'use client'
 
 import { ListCard } from '@/components/generic/list-card'
+import { HelpCard } from '@/components/help/help-card'
 import { HuntCard } from '@/components/hunt/hunt-card'
 import { SettingsCard } from '@/components/settings/settings-card'
 import { SettlementPhaseCard } from '@/components/settlement-phase/settlement-phase-card'
@@ -199,6 +200,9 @@ export function SettlementCard({
         userSettings={userSettings}
       />
     )
+
+  // Help tab is always accessible, regardless of settlement state.
+  if (selectedTab === TabType.HELP) return <HelpCard />
 
   if (isCreatingNewSettlement)
     return (

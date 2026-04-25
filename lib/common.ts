@@ -20,6 +20,16 @@ import {
 export const LOCAL_STORAGE_KEY = 'kdm-archivist-local'
 
 /**
+ * GitHub Issues URL for the Application
+ */
+export const GITHUB_ISSUES_URL = 'https://github.com/ncalteen/kdm-app/issues'
+
+/**
+ * Support Email Address
+ */
+export const SUPPORT_EMAIL = 'ncalteen@archivist.monster'
+
+/**
  * Basic Hunt Board Configuration
  */
 export const basicHuntBoard = {

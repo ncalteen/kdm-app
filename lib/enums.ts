@@ -67,6 +67,8 @@ export enum TabType {
   ARC = 'arc',
   /** Crafting */
   CRAFTING = 'crafting',
+  /** Help */
+  HELP = 'help',
   /** Hunt */
   HUNT = 'hunt',
   /** Monsters */

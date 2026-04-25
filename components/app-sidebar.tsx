@@ -20,6 +20,7 @@ import {
 } from '@/lib/enums'
 import { SettlementDetail } from '@/lib/types'
 import {
+  CircleQuestionMarkIcon,
   HourglassIcon,
   LightbulbIcon,
   NotebookPenIcon,
@@ -141,6 +142,11 @@ const navSettings = [
     title: 'Settings',
     tab: TabType.SETTINGS,
     icon: SettingsIcon
+  },
+  {
+    title: 'Help',
+    tab: TabType.HELP,
+    icon: CircleQuestionMarkIcon
   }
 ]
 
