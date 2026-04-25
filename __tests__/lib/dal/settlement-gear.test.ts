@@ -49,7 +49,13 @@ describe('getSettlementGear', () => {
     const result = await getSettlementGear('settlement-1')
 
     expect(result).toEqual([
-      { gear_id: 'gear-1', gear_name: 'Bone Dagger', id: 'sg-1', quantity: 2 }
+      {
+        custom: false,
+        gear_id: 'gear-1',
+        gear_name: 'Bone Dagger',
+        id: 'sg-1',
+        quantity: 2
+      }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_gear')
   })
