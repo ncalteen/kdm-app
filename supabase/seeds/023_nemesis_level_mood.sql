@@ -1,0 +1,115 @@
+--------------------------------------------------------------------------------
+-- Nemesis Level Moods
+--
+-- Links built-in moods to specific nemesis levels for thematic flavor and to
+-- exercise the nemesis_level_mood junction. Patterns match the structure of
+-- 017_4_quarry_traits_moods.sql.
+--
+-- This is intentionally commented out because currently no nemesis monsters
+-- start with moods in play.
+--------------------------------------------------------------------------------
+-- -- Butcher Level 3
+-- with lvl as (
+--   select nl.id
+--   from nemesis_level nl
+--     join nemesis p on p.id = nl.nemesis_id
+--   where p.monster_name = 'Butcher'
+--     and nl.level_number = 3
+-- )
+-- insert into nemesis_level_mood (nemesis_level_id, mood_id)
+-- select lvl.id,
+--   c.id
+-- from lvl,
+--   mood c
+-- where c.mood_name in ('MOOD_NAME')
+--   and c.custom = false;
+-- -- King's Man Level 3
+-- with lvl as (
+--   select nl.id
+--   from nemesis_level nl
+--     join nemesis p on p.id = nl.nemesis_id
+--   where p.monster_name = 'King''s Man'
+--     and nl.level_number = 3
+-- )
+-- insert into nemesis_level_mood (nemesis_level_id, mood_id)
+-- select lvl.id,
+--   c.id
+-- from lvl,
+--   mood c
+-- where c.mood_name in ('MOOD_NAME')
+--   and c.custom = false;
+-- -- Manhunter Level 4
+-- with lvl as (
+--   select nl.id
+--   from nemesis_level nl
+--     join nemesis p on p.id = nl.nemesis_id
+--   where p.monster_name = 'Manhunter'
+--     and nl.level_number = 4
+-- )
+-- insert into nemesis_level_mood (nemesis_level_id, mood_id)
+-- select lvl.id,
+--   c.id
+-- from lvl,
+--   mood c
+-- where c.mood_name in ('MOOD_NAME')
+--   and c.custom = false;
+-- -- Atnas the Child Eater Level 2
+-- with lvl as (
+--   select nl.id
+--   from nemesis_level nl
+--     join nemesis p on p.id = nl.nemesis_id
+--   where p.monster_name = 'Atnas the Child Eater'
+--     and nl.level_number = 2
+-- )
+-- insert into nemesis_level_mood (nemesis_level_id, mood_id)
+-- select lvl.id,
+--   c.id
+-- from lvl,
+--   mood c
+-- where c.mood_name in ('MOOD_NAME')
+--   and c.custom = false;
+-- -- Lonely Tree Level 3
+-- with lvl as (
+--   select nl.id
+--   from nemesis_level nl
+--     join nemesis p on p.id = nl.nemesis_id
+--   where p.monster_name = 'Lonely Tree'
+--     and nl.level_number = 3
+-- )
+-- insert into nemesis_level_mood (nemesis_level_id, mood_id)
+-- select lvl.id,
+--   c.id
+-- from lvl,
+--   mood c
+-- where c.mood_name in ('MOOD_NAME')
+--   and c.custom = false;
+-- -- Slenderman Level 3
+-- with lvl as (
+--   select nl.id
+--   from nemesis_level nl
+--     join nemesis p on p.id = nl.nemesis_id
+--   where p.monster_name = 'Slenderman'
+--     and nl.level_number = 3
+-- )
+-- insert into nemesis_level_mood (nemesis_level_id, mood_id)
+-- select lvl.id,
+--   c.id
+-- from lvl,
+--   mood c
+-- where c.mood_name in ('MOOD_NAME')
+--   and c.custom = false;
+-- -- Gold Smoke Knight Level 4
+-- with lvl as (
+--   select nl.id
+--   from nemesis_level nl
+--     join nemesis p on p.id = nl.nemesis_id
+--   where p.monster_name = 'Gold Smoke Knight'
+--     and nl.level_number = 4
+-- )
+-- insert into nemesis_level_mood (nemesis_level_id, mood_id)
+-- select lvl.id,
+--   c.id
+-- from lvl,
+--   mood c
+-- where c.mood_name in ('MOOD_NAME')
+--   and c.custom = false;
