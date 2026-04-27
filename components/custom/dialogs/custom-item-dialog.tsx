@@ -1,5 +1,6 @@
 'use client'
 
+import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -98,7 +99,7 @@ export function CustomItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -126,6 +127,7 @@ export function CustomItemDialog({
               height={300}
               preview="edit"
             />
+            <MarkdownSyntaxHelp />
           </div>
         </div>
 

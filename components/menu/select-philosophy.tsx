@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -69,7 +70,8 @@ export function SelectPhilosophy({
   const philosophyOptions = [
     ...(selectedSettlement?.philosophies ?? []).map((p) => ({
       value: p.philosophy_id,
-      label: p.philosophy_name
+      label: p.philosophy_name,
+      custom: p.custom
     }))
   ]
 
@@ -109,6 +111,11 @@ export function SelectPhilosophy({
                     )}
                   />
                   {p.label}
+                  {p.custom && (
+                    <Badge variant="outline" className="ml-auto">
+                      Custom
+                    </Badge>
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>

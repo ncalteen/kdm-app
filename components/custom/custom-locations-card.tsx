@@ -186,6 +186,12 @@ export function CustomLocationsCard({
     [items, editingItem, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Delete Location
+   *
+   * Optimistically removes the location from the list, then persists the
+   * deletion. Restores the previous list on failure.
+   */
   const handleDelete = useCallback(
     (item: LocationDetail) => {
       const previous = [...items]
@@ -202,11 +208,23 @@ export function CustomLocationsCard({
     [items, toast]
   )
 
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens the create
+   * dialog.
+   */
   const openCreateDialog = useCallback(() => {
     setDialogKey((k) => k + 1)
     setCreateDialogOpen(true)
   }, [])
 
+  /**
+   * Open Edit Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens the edit
+   * dialog seeded with the target location's values.
+   */
   const openEditDialog = useCallback((item: LocationDetail) => {
     setDialogKey((k) => k + 1)
     setEditingItem(item)

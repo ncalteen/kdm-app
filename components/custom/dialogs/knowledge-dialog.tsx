@@ -1,5 +1,7 @@
 'use client'
 
+import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -154,7 +156,7 @@ export function KnowledgeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -190,7 +192,14 @@ export function KnowledgeDialog({
                   <SelectItem value={NO_PHILOSOPHY}>No philosophy</SelectItem>
                   {sortedPhilosophies.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.philosophy_name}
+                      <span className="flex items-center gap-2 w-full">
+                        <span>{p.philosophy_name}</span>
+                        {p.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -267,6 +276,7 @@ export function KnowledgeDialog({
               />
             </TabsContent>
           </Tabs>
+          <MarkdownSyntaxHelp />
         </div>
 
         <DialogFooter>

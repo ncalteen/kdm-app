@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -143,6 +144,11 @@ export function TraitsMoods({
                           setOpenTraitPicker(false)
                         }}>
                         {trait.trait_name}
+                        {trait.custom && (
+                          <Badge variant="outline" className="ml-auto">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -206,6 +212,11 @@ export function TraitsMoods({
                           setOpenMoodPicker(false)
                         }}>
                         {mood.mood_name}
+                        {mood.custom && (
+                          <Badge variant="outline" className="ml-auto">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -272,6 +283,11 @@ export function TraitsMoods({
                           setOpenStatusPicker(false)
                         }}>
                         {status.survivor_status_name}
+                        {status.custom && (
+                          <Badge variant="outline" className="ml-auto">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
                   </CommandGroup>

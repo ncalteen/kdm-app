@@ -23,16 +23,22 @@ export async function getStrainMilestones(): Promise<{
   const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
     supabase
       .from('strain_milestone')
-      .select('id, custom, strain_milestone_name')
+      .select(
+        'id, custom, strain_milestone_name, milestone_condition, permanent_effect'
+      )
       .eq('custom', false),
     supabase
       .from('strain_milestone')
-      .select('id, custom, strain_milestone_name')
+      .select(
+        'id, custom, strain_milestone_name, milestone_condition, permanent_effect'
+      )
       .eq('custom', true)
       .eq('user_id', userId),
     supabase
       .from('strain_milestone_shared_user')
-      .select('strain_milestone(id, custom, strain_milestone_name)')
+      .select(
+        'strain_milestone(id, custom, strain_milestone_name, milestone_condition, permanent_effect)'
+      )
       .eq('shared_user_id', userId)
   ])
 
@@ -77,7 +83,9 @@ export async function addStrainMilestone(
       ...strainMilestone,
       ...(strainMilestone.custom ? { user_id: userId! } : {})
     })
-    .select('id, custom, strain_milestone_name')
+    .select(
+      'id, custom, strain_milestone_name, milestone_condition, permanent_effect'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding Strain Milestone: ${error.message}`)

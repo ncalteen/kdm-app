@@ -125,9 +125,10 @@ export function CustomPhilosophiesCard({
   /**
    * Handle Create Philosophy
    *
-   * Persists the philosophy and its ranks. Refreshes the list on success so
-   * the row reflects the saved record. Rolls back by removing the partially
-   * created row on failure.
+   * Optimistically adds a temporary philosophy row, then persists the
+   * philosophy and its ranks. Replaces the temp row with the saved record on
+   * success. On failure, rolls back both the temp row and any partially created
+   * database row.
    */
   const handleCreate = useCallback(
     async (data: PhilosophyDialogPayload) => {
@@ -136,6 +137,21 @@ export function CustomPhilosophiesCard({
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('philosophy'))
 
       setSaving(true)
+
+      const tempId = `temp-${crypto.randomUUID()}`
+      const temp: PhilosophyDetail = {
+        id: tempId,
+        custom: true,
+        philosophy_name: data.philosophy_name,
+        hunt_xp_milestones: data.hunt_xp_milestones,
+        tenet_knowledge_id: data.tenet_knowledge_id,
+        tier: data.tier,
+        neurosis_id: data.neurosis_id
+      }
+
+      const previous = [...items]
+      setItems(sortItems([...items, temp]))
+      setCreateDialogOpen(false)
 
       let createdId: string | null = null
 
@@ -159,11 +175,13 @@ export function CustomPhilosophiesCard({
             rules: rank.rules || null
           })
 
-        setItems((prev) => sortItems([...prev, created]))
-        setCreateDialogOpen(false)
+        setItems((prev) =>
+          sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+        )
         toast.success(PHILOSOPHY_CREATED_MESSAGE())
         onPhilosophiesChange?.()
       } catch (err: unknown) {
+        setItems(previous)
         console.error('Add Philosophy Error:', err)
         if (createdId) {
           try {
@@ -177,7 +195,7 @@ export function CustomPhilosophiesCard({
         setSaving(false)
       }
     },
-    [saving, sortItems, toast, onPhilosophiesChange]
+    [items, saving, sortItems, toast, onPhilosophiesChange]
   )
 
   /**
@@ -275,6 +293,12 @@ export function CustomPhilosophiesCard({
     ]
   )
 
+  /**
+   * Handle Delete Philosophy
+   *
+   * Optimistically removes the philosophy from the list, then persists the
+   * deletion. Restores the previous list on failure.
+   */
   const handleDelete = useCallback(
     (item: PhilosophyDetail) => {
       const previous = [...items]
@@ -294,6 +318,12 @@ export function CustomPhilosophiesCard({
     [items, toast, onPhilosophiesChange]
   )
 
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens the create
+   * dialog.
+   */
   const openCreateDialog = useCallback(() => {
     setDialogKey((k) => k + 1)
     setCreateDialogOpen(true)

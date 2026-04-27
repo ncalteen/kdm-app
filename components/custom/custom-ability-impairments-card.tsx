@@ -193,6 +193,12 @@ export function CustomAbilityImpairmentsCard({
     [items, editingItem, saving, sortItems, toast]
   )
 
+  /**
+   * Handle Delete Ability/Impairment
+   *
+   * Optimistically removes the ability or impairment from the list, then
+   * persists the deletion. Restores the previous list on failure.
+   */
   const handleDelete = useCallback(
     (item: AbilityImpairmentDetail) => {
       const previous = [...items]
@@ -209,11 +215,23 @@ export function CustomAbilityImpairmentsCard({
     [items, toast]
   )
 
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens the create
+   * dialog.
+   */
   const openCreateDialog = useCallback(() => {
     setDialogKey((k) => k + 1)
     setCreateDialogOpen(true)
   }, [])
 
+  /**
+   * Open Edit Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens the edit
+   * dialog seeded with the target ability or impairment's values.
+   */
   const openEditDialog = useCallback((item: AbilityImpairmentDetail) => {
     setDialogKey((k) => k + 1)
     setEditingItem(item)

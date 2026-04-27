@@ -90,6 +90,92 @@ export type Database = {
           },
         ]
       }
+      armor_set: {
+        Row: {
+          armor_set_name: string
+          bonuses: string | null
+          created_at: string
+          custom: boolean
+          id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          armor_set_name: string
+          bonuses?: string | null
+          created_at?: string
+          custom?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          armor_set_name?: string
+          bonuses?: string | null
+          created_at?: string
+          custom?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      armor_set_gear: {
+        Row: {
+          armor_set_id: string
+          gear_id: string
+        }
+        Insert: {
+          armor_set_id: string
+          gear_id: string
+        }
+        Update: {
+          armor_set_id?: string
+          gear_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "armor_set_gear_armor_set_id_fkey"
+            columns: ["armor_set_id"]
+            isOneToOne: false
+            referencedRelation: "armor_set"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "armor_set_gear_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      armor_set_shared_user: {
+        Row: {
+          armor_set_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Insert: {
+          armor_set_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Update: {
+          armor_set_id?: string
+          shared_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "armor_set_shared_user_armor_set_id_fkey"
+            columns: ["armor_set_id"]
+            isOneToOne: false
+            referencedRelation: "armor_set"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       character: {
         Row: {
           character_name: string
@@ -216,6 +302,62 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_settings"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      constellation: {
+        Row: {
+          constellation_name: string
+          created_at: string
+          custom: boolean
+          id: string
+          rules: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          constellation_name: string
+          created_at?: string
+          custom?: boolean
+          id?: string
+          rules?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          constellation_name?: string
+          created_at?: string
+          custom?: boolean
+          id?: string
+          rules?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      constellation_shared_user: {
+        Row: {
+          constellation_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Insert: {
+          constellation_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Update: {
+          constellation_id?: string
+          shared_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "constellation_shared_user_constellation_id_fkey"
+            columns: ["constellation_id"]
+            isOneToOne: false
+            referencedRelation: "constellation"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -347,31 +489,76 @@ export type Database = {
       }
       gear: {
         Row: {
+          accessory: boolean | null
+          accuracy: number | null
+          affinity_bonus: string | null
+          affinity_bonus_requirements: Json
+          affinity_bottom: Database["public"]["Enums"]["affinity"] | null
+          affinity_left: Database["public"]["Enums"]["affinity"] | null
+          affinity_right: Database["public"]["Enums"]["affinity"] | null
+          affinity_top: Database["public"]["Enums"]["affinity"] | null
+          armor_location: Database["public"]["Enums"]["armor_location"] | null
+          armor_points: number | null
           created_at: string
           custom: boolean
           gear_name: string
           id: string
+          keywords: Database["public"]["Enums"]["gear_keyword"][] | null
           location_id: string | null
+          rules: string | null
+          speed: number | null
+          strength: number | null
           updated_at: string
           user_id: string | null
+          weapon_type_id: string | null
         }
         Insert: {
+          accessory?: boolean | null
+          accuracy?: number | null
+          affinity_bonus?: string | null
+          affinity_bonus_requirements?: Json
+          affinity_bottom?: Database["public"]["Enums"]["affinity"] | null
+          affinity_left?: Database["public"]["Enums"]["affinity"] | null
+          affinity_right?: Database["public"]["Enums"]["affinity"] | null
+          affinity_top?: Database["public"]["Enums"]["affinity"] | null
+          armor_location?: Database["public"]["Enums"]["armor_location"] | null
+          armor_points?: number | null
           created_at?: string
           custom?: boolean
           gear_name: string
           id?: string
+          keywords?: Database["public"]["Enums"]["gear_keyword"][] | null
           location_id?: string | null
+          rules?: string | null
+          speed?: number | null
+          strength?: number | null
           updated_at?: string
           user_id?: string | null
+          weapon_type_id?: string | null
         }
         Update: {
+          accessory?: boolean | null
+          accuracy?: number | null
+          affinity_bonus?: string | null
+          affinity_bonus_requirements?: Json
+          affinity_bottom?: Database["public"]["Enums"]["affinity"] | null
+          affinity_left?: Database["public"]["Enums"]["affinity"] | null
+          affinity_right?: Database["public"]["Enums"]["affinity"] | null
+          affinity_top?: Database["public"]["Enums"]["affinity"] | null
+          armor_location?: Database["public"]["Enums"]["armor_location"] | null
+          armor_points?: number | null
           created_at?: string
           custom?: boolean
           gear_name?: string
           id?: string
+          keywords?: Database["public"]["Enums"]["gear_keyword"][] | null
           location_id?: string | null
+          rules?: string | null
+          speed?: number | null
+          strength?: number | null
           updated_at?: string
           user_id?: string | null
+          weapon_type_id?: string | null
         }
         Relationships: [
           {
@@ -379,6 +566,275 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "location"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_weapon_type_id_fkey"
+            columns: ["weapon_type_id"]
+            isOneToOne: false
+            referencedRelation: "weapon_type"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gear_gear_cost: {
+        Row: {
+          cost_gear_id: string
+          gear_id: string
+          quantity: number
+        }
+        Insert: {
+          cost_gear_id: string
+          gear_id: string
+          quantity?: number
+        }
+        Update: {
+          cost_gear_id?: string
+          gear_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gear_gear_cost_cost_gear_id_fkey"
+            columns: ["cost_gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_gear_cost_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gear_grid: {
+        Row: {
+          created_at: string
+          custom: boolean
+          id: string
+          pos_bottom_center: string | null
+          pos_bottom_left: string | null
+          pos_bottom_right: string | null
+          pos_mid_center: string | null
+          pos_mid_left: string | null
+          pos_mid_right: string | null
+          pos_top_center: string | null
+          pos_top_left: string | null
+          pos_top_right: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          pos_bottom_center?: string | null
+          pos_bottom_left?: string | null
+          pos_bottom_right?: string | null
+          pos_mid_center?: string | null
+          pos_mid_left?: string | null
+          pos_mid_right?: string | null
+          pos_top_center?: string | null
+          pos_top_left?: string | null
+          pos_top_right?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          pos_bottom_center?: string | null
+          pos_bottom_left?: string | null
+          pos_bottom_right?: string | null
+          pos_mid_center?: string | null
+          pos_mid_left?: string | null
+          pos_mid_right?: string | null
+          pos_top_center?: string | null
+          pos_top_left?: string | null
+          pos_top_right?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gear_grid_pos_bottom_center_fkey"
+            columns: ["pos_bottom_center"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_pos_bottom_left_fkey"
+            columns: ["pos_bottom_left"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_pos_bottom_right_fkey"
+            columns: ["pos_bottom_right"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_pos_mid_center_fkey"
+            columns: ["pos_mid_center"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_pos_mid_left_fkey"
+            columns: ["pos_mid_left"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_pos_mid_right_fkey"
+            columns: ["pos_mid_right"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_pos_top_center_fkey"
+            columns: ["pos_top_center"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_pos_top_left_fkey"
+            columns: ["pos_top_left"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_pos_top_right_fkey"
+            columns: ["pos_top_right"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gear_grid_shared_user: {
+        Row: {
+          gear_grid_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Insert: {
+          gear_grid_id: string
+          shared_user_id: string
+          user_id: string
+        }
+        Update: {
+          gear_grid_id?: string
+          shared_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gear_grid_shared_user_gear_grid_id_fkey"
+            columns: ["gear_grid_id"]
+            isOneToOne: false
+            referencedRelation: "gear_grid"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gear_other_cost: {
+        Row: {
+          cost_name: string
+          gear_id: string
+          id: string
+          quantity: number
+        }
+        Insert: {
+          cost_name: string
+          gear_id: string
+          id?: string
+          quantity?: number
+        }
+        Update: {
+          cost_name?: string
+          gear_id?: string
+          id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gear_other_cost_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gear_resource_cost: {
+        Row: {
+          gear_id: string
+          quantity: number
+          resource_id: string
+        }
+        Insert: {
+          gear_id: string
+          quantity?: number
+          resource_id: string
+        }
+        Update: {
+          gear_id?: string
+          quantity?: number
+          resource_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gear_resource_cost_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_resource_cost_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resource"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gear_resource_type_cost: {
+        Row: {
+          gear_id: string
+          quantity: number
+          resource_type: Database["public"]["Enums"]["resource_type"]
+        }
+        Insert: {
+          gear_id: string
+          quantity?: number
+          resource_type: Database["public"]["Enums"]["resource_type"]
+        }
+        Update: {
+          gear_id?: string
+          quantity?: number
+          resource_type?: Database["public"]["Enums"]["resource_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gear_resource_type_cost_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
             referencedColumns: ["id"]
           },
         ]
@@ -1684,30 +2140,169 @@ export type Database = {
       }
       pattern: {
         Row: {
+          crafted_gear_id: string | null
+          crafting_limit: number | null
           created_at: string
           custom: boolean
+          endeavor_cost: number | null
           id: string
           pattern_name: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          crafted_gear_id?: string | null
+          crafting_limit?: number | null
           created_at?: string
           custom?: boolean
+          endeavor_cost?: number | null
           id?: string
           pattern_name: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          crafted_gear_id?: string | null
+          crafting_limit?: number | null
           created_at?: string
           custom?: boolean
+          endeavor_cost?: number | null
           id?: string
           pattern_name?: string
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pattern_crafted_gear_id_fkey"
+            columns: ["crafted_gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pattern_gear_cost: {
+        Row: {
+          cost_gear_id: string
+          pattern_id: string
+          quantity: number
+        }
+        Insert: {
+          cost_gear_id: string
+          pattern_id: string
+          quantity?: number
+        }
+        Update: {
+          cost_gear_id?: string
+          pattern_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pattern_gear_cost_cost_gear_id_fkey"
+            columns: ["cost_gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pattern_gear_cost_pattern_id_fkey"
+            columns: ["pattern_id"]
+            isOneToOne: false
+            referencedRelation: "pattern"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pattern_innovation_requirement: {
+        Row: {
+          innovation_id: string
+          pattern_id: string
+        }
+        Insert: {
+          innovation_id: string
+          pattern_id: string
+        }
+        Update: {
+          innovation_id?: string
+          pattern_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pattern_innovation_requirement_innovation_id_fkey"
+            columns: ["innovation_id"]
+            isOneToOne: false
+            referencedRelation: "innovation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pattern_innovation_requirement_pattern_id_fkey"
+            columns: ["pattern_id"]
+            isOneToOne: false
+            referencedRelation: "pattern"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pattern_resource_cost: {
+        Row: {
+          pattern_id: string
+          quantity: number
+          resource_id: string
+        }
+        Insert: {
+          pattern_id: string
+          quantity?: number
+          resource_id: string
+        }
+        Update: {
+          pattern_id?: string
+          quantity?: number
+          resource_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pattern_resource_cost_pattern_id_fkey"
+            columns: ["pattern_id"]
+            isOneToOne: false
+            referencedRelation: "pattern"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pattern_resource_cost_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resource"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pattern_resource_type_cost: {
+        Row: {
+          pattern_id: string
+          quantity: number
+          resource_type: Database["public"]["Enums"]["resource_type"]
+        }
+        Insert: {
+          pattern_id: string
+          quantity?: number
+          resource_type: Database["public"]["Enums"]["resource_type"]
+        }
+        Update: {
+          pattern_id?: string
+          quantity?: number
+          resource_type?: Database["public"]["Enums"]["resource_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pattern_resource_type_cost_pattern_id_fkey"
+            columns: ["pattern_id"]
+            isOneToOne: false
+            referencedRelation: "pattern"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pattern_shared_user: {
         Row: {
@@ -2481,9 +3076,11 @@ export type Database = {
           created_at: string
           custom: boolean
           id: string
+          pattern_id: string | null
           quarry_id: string | null
           resource_name: string
           resource_types: Database["public"]["Enums"]["resource_type"][]
+          rules: string | null
           updated_at: string
           user_id: string | null
         }
@@ -2492,9 +3089,11 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          pattern_id?: string | null
           quarry_id?: string | null
           resource_name: string
           resource_types?: Database["public"]["Enums"]["resource_type"][]
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -2503,13 +3102,22 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          pattern_id?: string | null
           quarry_id?: string | null
           resource_name?: string
           resource_types?: Database["public"]["Enums"]["resource_type"][]
+          rules?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "resource_pattern_id_fkey"
+            columns: ["pattern_id"]
+            isOneToOne: false
+            referencedRelation: "pattern"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "resource_quarry_id_fkey"
             columns: ["quarry_id"]
@@ -2617,30 +3225,181 @@ export type Database = {
       }
       seed_pattern: {
         Row: {
+          crafted_gear_id: string | null
+          crafting_limit: number | null
+          crafting_steps: string | null
           created_at: string
           custom: boolean
+          endeavor_cost: number | null
+          era: number | null
           id: string
+          keywords: string[] | null
+          requirements: string | null
           seed_pattern_name: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          crafted_gear_id?: string | null
+          crafting_limit?: number | null
+          crafting_steps?: string | null
           created_at?: string
           custom?: boolean
+          endeavor_cost?: number | null
+          era?: number | null
           id?: string
+          keywords?: string[] | null
+          requirements?: string | null
           seed_pattern_name: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          crafted_gear_id?: string | null
+          crafting_limit?: number | null
+          crafting_steps?: string | null
           created_at?: string
           custom?: boolean
+          endeavor_cost?: number | null
+          era?: number | null
           id?: string
+          keywords?: string[] | null
+          requirements?: string | null
           seed_pattern_name?: string
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_crafted_gear_id_fkey"
+            columns: ["crafted_gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seed_pattern_gear_cost: {
+        Row: {
+          cost_gear_id: string
+          quantity: number
+          seed_pattern_id: string
+        }
+        Insert: {
+          cost_gear_id: string
+          quantity?: number
+          seed_pattern_id: string
+        }
+        Update: {
+          cost_gear_id?: string
+          quantity?: number
+          seed_pattern_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_gear_cost_cost_gear_id_fkey"
+            columns: ["cost_gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seed_pattern_gear_cost_seed_pattern_id_fkey"
+            columns: ["seed_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "seed_pattern"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seed_pattern_innovation_requirement: {
+        Row: {
+          innovation_id: string
+          seed_pattern_id: string
+        }
+        Insert: {
+          innovation_id: string
+          seed_pattern_id: string
+        }
+        Update: {
+          innovation_id?: string
+          seed_pattern_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_innovation_requirement_innovation_id_fkey"
+            columns: ["innovation_id"]
+            isOneToOne: false
+            referencedRelation: "innovation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seed_pattern_innovation_requirement_seed_pattern_id_fkey"
+            columns: ["seed_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "seed_pattern"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seed_pattern_resource_cost: {
+        Row: {
+          quantity: number
+          resource_id: string
+          seed_pattern_id: string
+        }
+        Insert: {
+          quantity?: number
+          resource_id: string
+          seed_pattern_id: string
+        }
+        Update: {
+          quantity?: number
+          resource_id?: string
+          seed_pattern_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_resource_cost_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resource"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seed_pattern_resource_cost_seed_pattern_id_fkey"
+            columns: ["seed_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "seed_pattern"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seed_pattern_resource_type_cost: {
+        Row: {
+          quantity: number
+          resource_type: Database["public"]["Enums"]["resource_type"]
+          seed_pattern_id: string
+        }
+        Insert: {
+          quantity?: number
+          resource_type: Database["public"]["Enums"]["resource_type"]
+          seed_pattern_id: string
+        }
+        Update: {
+          quantity?: number
+          resource_type?: Database["public"]["Enums"]["resource_type"]
+          seed_pattern_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seed_pattern_resource_type_cost_seed_pattern_id_fkey"
+            columns: ["seed_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "seed_pattern"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seed_pattern_shared_user: {
         Row: {
@@ -3878,6 +4637,8 @@ export type Database = {
           created_at: string
           custom: boolean
           id: string
+          milestone_condition: string | null
+          permanent_effect: string | null
           strain_milestone_name: string
           updated_at: string
           user_id: string | null
@@ -3886,6 +4647,8 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          milestone_condition?: string | null
+          permanent_effect?: string | null
           strain_milestone_name: string
           updated_at?: string
           user_id?: string | null
@@ -3894,6 +4657,8 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          milestone_condition?: string | null
+          permanent_effect?: string | null
           strain_milestone_name?: string
           updated_at?: string
           user_id?: string | null
@@ -4973,13 +5738,16 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_armor_set_owner: { Args: { record_id: string }; Returns: boolean }
       is_character_owner: { Args: { record_id: string }; Returns: boolean }
       is_collective_cognition_reward_owner: {
         Args: { record_id: string }
         Returns: boolean
       }
+      is_constellation_owner: { Args: { record_id: string }; Returns: boolean }
       is_disorder_owner: { Args: { record_id: string }; Returns: boolean }
       is_fighting_art_owner: { Args: { record_id: string }; Returns: boolean }
+      is_gear_grid_owner: { Args: { record_id: string }; Returns: boolean }
       is_gear_owner: { Args: { record_id: string }; Returns: boolean }
       is_innovation_owner: { Args: { record_id: string }; Returns: boolean }
       is_knowledge_owner: { Args: { record_id: string }; Returns: boolean }

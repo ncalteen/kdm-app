@@ -1,8 +1,8 @@
 'use client'
 
+import { StrainMilestoneDialog } from '@/components/custom/dialogs/strain-milestone-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -27,21 +27,8 @@ import {
   STRAIN_MILESTONE_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { StrainMilestoneDetail } from '@/lib/types'
-import {
-  CheckIcon,
-  PencilIcon,
-  PlusIcon,
-  Trash2Icon,
-  XIcon
-} from 'lucide-react'
-import {
-  KeyboardEvent,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
+import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 
 /**
  * Custom Strain Milestones Card Component Properties
@@ -55,8 +42,9 @@ interface CustomStrainMilestonesCardProps {
  * Custom Strain Milestones Card Component
  *
  * Lists user's custom strain milestones with options to create, edit, and
- * delete. Entries are displayed alphabetically. UI updates are optimistic and
- * roll back on database failure.
+ * delete via a shared dialog. Each strain milestone has a name, milestone
+ * condition, and permanent effect. Entries are displayed alphabetically. UI
+ * updates are optimistic and roll back on database failure.
  *
  * @param props Custom Strain Milestones Card Properties
  * @returns Custom Strain Milestones Card Component
@@ -68,13 +56,15 @@ export function CustomStrainMilestonesCard({
 
   const [items, setItems] = useState<StrainMilestoneDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isAdding, setIsAdding] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState('')
 
-  const newInputRef = useRef<HTMLInputElement>(null)
-  const editInputRef = useRef<HTMLInputElement>(null)
+  // Dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<StrainMilestoneDetail | null>(
+    null
+  )
+  const [saving, setSaving] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
 
   /** Sort items alphabetically by name */
   const sortItems = useCallback(
@@ -105,50 +95,124 @@ export function CustomStrainMilestonesCard({
     loadItems()
   }, [loadItems])
 
-  useEffect(() => {
-    if (isAdding) newInputRef.current?.focus()
-  }, [isAdding])
+  /**
+   * Handle Create Strain Milestone
+   *
+   * Optimistically adds a new strain milestone, then persists to the
+   * database. Rolls back on failure.
+   */
+  const handleCreate = useCallback(
+    async (data: {
+      strain_milestone_name: string
+      milestone_condition: string
+      permanent_effect: string
+    }) => {
+      if (saving) return
+      if (!data.strain_milestone_name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('strain milestone'))
 
-  useEffect(() => {
-    if (editingId) editInputRef.current?.focus()
-  }, [editingId])
+      setSaving(true)
 
-  const handleAdd = useCallback(async () => {
-    const trimmedName = newName.trim()
-
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('strain milestone'))
-
-    const tempId = `temp-${crypto.randomUUID()}`
-    const temp: StrainMilestoneDetail = {
-      id: tempId,
-      custom: true,
-      strain_milestone_name: trimmedName
-    }
-
-    const previous = [...items]
-    setItems(sortItems([...items, temp]))
-    setNewName('')
-    setIsAdding(false)
-
-    try {
-      const created = await addStrainMilestone({
+      const tempId = `temp-${crypto.randomUUID()}`
+      const temp: StrainMilestoneDetail = {
+        id: tempId,
         custom: true,
-        strain_milestone_name: trimmedName
-      })
+        strain_milestone_name: data.strain_milestone_name,
+        milestone_condition: data.milestone_condition || null,
+        permanent_effect: data.permanent_effect || null
+      }
 
-      setItems((prev) =>
-        sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+      const previous = [...items]
+      setItems(sortItems([...items, temp]))
+      setCreateDialogOpen(false)
+
+      try {
+        const created = await addStrainMilestone({
+          custom: true,
+          strain_milestone_name: data.strain_milestone_name,
+          milestone_condition: data.milestone_condition || null,
+          permanent_effect: data.permanent_effect || null
+        })
+
+        setItems((prev) =>
+          sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+        )
+
+        toast.success(STRAIN_MILESTONE_CREATED_MESSAGE())
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Add Strain Milestone Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [items, saving, sortItems, toast]
+  )
+
+  /**
+   * Handle Edit Strain Milestone
+   *
+   * Optimistically updates the strain milestone, then persists to the
+   * database. Rolls back on failure.
+   */
+  const handleEdit = useCallback(
+    async (data: {
+      strain_milestone_name: string
+      milestone_condition: string
+      permanent_effect: string
+    }) => {
+      if (saving || !editingItem) return
+      if (!data.strain_milestone_name.trim())
+        return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('strain milestone'))
+
+      setSaving(true)
+
+      const previous = [...items]
+
+      setItems(
+        sortItems(
+          items.map((i) =>
+            i.id === editingItem.id
+              ? {
+                  ...i,
+                  strain_milestone_name: data.strain_milestone_name,
+                  milestone_condition: data.milestone_condition || null,
+                  permanent_effect: data.permanent_effect || null
+                }
+              : i
+          )
+        )
       )
 
-      toast.success(STRAIN_MILESTONE_CREATED_MESSAGE())
-    } catch (err: unknown) {
-      setItems(previous)
-      console.error('Add Strain Milestone Error:', err)
-      toast.error(ERROR_MESSAGE())
-    }
-  }, [items, newName, sortItems, toast])
+      setEditDialogOpen(false)
+      setEditingItem(null)
 
+      try {
+        await updateStrainMilestone(editingItem.id, {
+          strain_milestone_name: data.strain_milestone_name,
+          milestone_condition: data.milestone_condition || null,
+          permanent_effect: data.permanent_effect || null
+        })
+
+        toast.success(STRAIN_MILESTONE_UPDATED_MESSAGE())
+      } catch (err: unknown) {
+        setItems(previous)
+        console.error('Update Strain Milestone Error:', err)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [items, editingItem, saving, sortItems, toast]
+  )
+
+  /**
+   * Handle Delete Strain Milestone
+   *
+   * Optimistically removes the strain milestone from the list, then persists
+   * the deletion. Restores the previous list on failure.
+   */
   const handleDelete = useCallback(
     (item: StrainMilestoneDetail) => {
       const previous = [...items]
@@ -165,74 +229,35 @@ export function CustomStrainMilestonesCard({
     [items, toast]
   )
 
-  const handleStartEdit = useCallback((item: StrainMilestoneDetail) => {
-    setEditingId(item.id)
-    setEditingName(item.strain_milestone_name)
+  /**
+   * Open Create Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the create dialog.
+   */
+  const openCreateDialog = useCallback(() => {
+    setDialogKey((k) => k + 1)
+    setCreateDialogOpen(true)
   }, [])
 
-  const handleCancelEdit = useCallback(() => {
-    setEditingId(null)
-    setEditingName('')
+  /**
+   * Open Edit Dialog
+   *
+   * Increments the dialog key to force a fresh form state and opens
+   * the edit dialog seeded with the target strain milestone's values.
+   */
+  const openEditDialog = useCallback((item: StrainMilestoneDetail) => {
+    setDialogKey((k) => k + 1)
+    setEditingItem(item)
+    setEditDialogOpen(true)
   }, [])
-
-  const handleSaveEdit = useCallback(() => {
-    const trimmedName = editingName.trim()
-
-    if (!trimmedName)
-      return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('strain milestone'))
-    if (!editingId) return
-
-    const previous = [...items]
-
-    setItems(
-      sortItems(
-        items.map((i) =>
-          i.id === editingId ? { ...i, strain_milestone_name: trimmedName } : i
-        )
-      )
-    )
-
-    setEditingId(null)
-    setEditingName('')
-
-    updateStrainMilestone(editingId, { strain_milestone_name: trimmedName })
-      .then(() => toast.success(STRAIN_MILESTONE_UPDATED_MESSAGE()))
-      .catch((err: unknown) => {
-        setItems(previous)
-        console.error('Update Strain Milestone Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-  }, [items, editingId, editingName, sortItems, toast])
-
-  const handleNewKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleAdd()
-      else if (e.key === 'Escape') {
-        setIsAdding(false)
-        setNewName('')
-      }
-    },
-    [handleAdd]
-  )
-
-  const handleEditKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') handleSaveEdit()
-      else if (e.key === 'Escape') handleCancelEdit()
-    },
-    [handleCancelEdit, handleSaveEdit]
-  )
 
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center justify-between">
           <span>Strain Milestones</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsAdding(true)}
-            disabled={isAdding}>
+          <Button variant="outline" size="sm" onClick={openCreateDialog}>
             <PlusIcon className="h-4 w-4 mr-2" />
             Add
           </Button>
@@ -246,7 +271,7 @@ export function CustomStrainMilestonesCard({
               Peering into the darkness...
             </p>
           </div>
-        ) : items.length === 0 && !isAdding ? (
+        ) : items.length === 0 ? (
           <div className="flex items-center justify-center p-8 text-center">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
@@ -262,100 +287,34 @@ export function CustomStrainMilestonesCard({
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
-                  <TableHead className="w-[70%]">Name</TableHead>
-                  <TableHead className="w-[30%] text-right">Actions</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="w-[100px] text-right">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isAdding && (
-                  <TableRow>
-                    <TableCell>
-                      <Input
-                        ref={newInputRef}
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        onKeyDown={handleNewKeyDown}
-                        placeholder="Strain milestone name"
-                        aria-label="New strain milestone name"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleAdd}
-                          title="Save strain milestone">
-                          <CheckIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setIsAdding(false)
-                            setNewName('')
-                          }}
-                          title="Cancel">
-                          <XIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-
                 {items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
-                      {editingId === item.id ? (
-                        <Input
-                          ref={editInputRef}
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          onKeyDown={handleEditKeyDown}
-                          placeholder="Strain milestone name"
-                          aria-label={`Edit ${item.strain_milestone_name}`}
-                        />
-                      ) : (
-                        item.strain_milestone_name
-                      )}
+                      {item.strain_milestone_name}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {editingId === item.id ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={handleSaveEdit}
-                              title="Save">
-                              <CheckIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={handleCancelEdit}
-                              title="Cancel">
-                              <XIcon className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStartEdit(item)}
-                              title={`Edit ${item.strain_milestone_name}`}>
-                              <PencilIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(item)}
-                              title={`Delete ${item.strain_milestone_name}`}>
-                              <Trash2Icon className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(item)}
+                          title={`Edit ${item.strain_milestone_name}`}>
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(item)}
+                          title={`Delete ${item.strain_milestone_name}`}>
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -365,6 +324,36 @@ export function CustomStrainMilestonesCard({
           </div>
         )}
       </CardContent>
+
+      <StrainMilestoneDialog
+        key={`create-${dialogKey}`}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={handleCreate}
+        saving={saving}
+        title="Create Custom Strain Milestone"
+        description="A new strain milestone emerges from the struggle."
+        saveLabel="Create"
+        savingLabel="Creating..."
+      />
+
+      <StrainMilestoneDialog
+        key={`edit-${dialogKey}`}
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open)
+          if (!open) setEditingItem(null)
+        }}
+        onSave={handleEdit}
+        saving={saving}
+        initialName={editingItem?.strain_milestone_name}
+        initialMilestoneCondition={editingItem?.milestone_condition ?? ''}
+        initialPermanentEffect={editingItem?.permanent_effect ?? ''}
+        title="Edit Custom Strain Milestone"
+        description="Reshape this strain milestone to match the struggle."
+        saveLabel="Save"
+        savingLabel="Saving..."
+      />
     </Card>
   )
 }

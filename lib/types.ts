@@ -1,4 +1,4 @@
-import { Tables } from '@/lib/database.types'
+import { Database, Tables } from '@/lib/database.types'
 import { HuntEventType } from '@/lib/enums'
 
 /**
@@ -132,6 +132,18 @@ export type SecretFightingArtDetail = Omit<
 >
 
 /**
+ * Seed Pattern Gear Cost Detail
+ *
+ * Represents a single gear cost entry tied to a seed pattern.
+ */
+export type SeedPatternGearCostDetail = {
+  /** Gear ID Required to Craft the Seed Pattern */
+  cost_gear_id: string
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
  * Seed Pattern Detail
  *
  * Used throughout the app to represent a seed pattern.
@@ -139,7 +151,60 @@ export type SecretFightingArtDetail = Omit<
 export type SeedPatternDetail = Omit<
   Tables<'seed_pattern'>,
   'created_at' | 'updated_at' | 'user_id'
->
+> & {
+  /** Gear Costs Required to Craft the Seed Pattern */
+  gear_costs: SeedPatternGearCostDetail[]
+}
+
+/**
+ * Gear Affinity Bonus Requirement Detail
+ *
+ * Represents a single affinity requirement entry that must be met for the
+ * gear's affinity bonus to be active.
+ */
+export type GearAffinityRequirementDetail = {
+  /** Required Affinity Color */
+  affinity: Database['public']['Enums']['affinity']
+  /** Whether the matching affinity must form a "puzzle" */
+  puzzle: boolean
+}
+
+/**
+ * Gear Gear Cost Detail
+ *
+ * Represents a specific gear item required to craft this gear.
+ */
+export type GearGearCostDetail = {
+  /** Gear ID Required to Craft this Gear */
+  cost_gear_id: string
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
+ * Gear Resource Cost Detail
+ *
+ * Represents a specific resource required to craft this gear.
+ */
+export type GearResourceCostDetail = {
+  /** Resource ID Required to Craft this Gear */
+  resource_id: string
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
+ * Gear Resource Type Cost Detail
+ *
+ * Represents a quantity of any resource matching the given resource type
+ * required to craft this gear.
+ */
+export type GearResourceTypeCostDetail = {
+  /** Resource Type Required to Craft this Gear */
+  resource_type: Database['public']['Enums']['resource_type']
+  /** Quantity Required */
+  quantity: number
+}
 
 /**
  * Gear Detail
@@ -148,8 +213,17 @@ export type SeedPatternDetail = Omit<
  */
 export type GearDetail = Omit<
   Tables<'gear'>,
-  'created_at' | 'updated_at' | 'user_id'
->
+  'created_at' | 'updated_at' | 'user_id' | 'affinity_bonus_requirements'
+> & {
+  /** Affinity Bonus Requirements */
+  affinity_bonus_requirements: GearAffinityRequirementDetail[]
+  /** Gear Costs Required to Craft this Gear */
+  gear_costs: GearGearCostDetail[]
+  /** Resource Costs Required to Craft this Gear */
+  resource_costs: GearResourceCostDetail[]
+  /** Resource Type Costs Required to Craft this Gear */
+  resource_type_costs: GearResourceTypeCostDetail[]
+}
 
 /**
  * Hunt AI Deck Detail
@@ -402,6 +476,43 @@ export type NeurosisDetail = Omit<
 >
 
 /**
+ * Pattern Gear Cost Detail
+ *
+ * Represents a single gear cost entry tied to a pattern.
+ */
+export type PatternGearCostDetail = {
+  /** Gear ID Required to Craft the Pattern */
+  cost_gear_id: string
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
+ * Pattern Resource Cost Detail
+ *
+ * Represents a specific resource required to craft a pattern.
+ */
+export type PatternResourceCostDetail = {
+  /** Resource ID Required to Craft the Pattern */
+  resource_id: string
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
+ * Pattern Resource Type Cost Detail
+ *
+ * Represents a quantity of any resource matching the given resource type
+ * required to craft a pattern.
+ */
+export type PatternResourceTypeCostDetail = {
+  /** Resource Type Required to Craft the Pattern */
+  resource_type: Database['public']['Enums']['resource_type']
+  /** Quantity Required */
+  quantity: number
+}
+
+/**
  * Pattern Detail
  *
  * Used throughout the app to represent a pattern.
@@ -409,7 +520,16 @@ export type NeurosisDetail = Omit<
 export type PatternDetail = Omit<
   Tables<'pattern'>,
   'created_at' | 'updated_at' | 'user_id'
->
+> & {
+  /** Gear Costs Required to Craft the Pattern */
+  gear_costs: PatternGearCostDetail[]
+  /** Resource Costs Required to Craft the Pattern */
+  resource_costs: PatternResourceCostDetail[]
+  /** Resource Type Costs Required to Craft the Pattern */
+  resource_type_costs: PatternResourceTypeCostDetail[]
+  /** Innovation Requirements (settlement must have all of these) */
+  innovation_requirement_ids: string[]
+}
 
 /**
  * Philosophy Detail
@@ -567,6 +687,8 @@ export type SettlementDetail = Omit<
     gear_name: string
     /** Quantity */
     quantity: number
+    /** Whether the underlying gear is user-defined */
+    custom: boolean
   }[]
   /** Innovations */
   innovations: {
@@ -599,6 +721,8 @@ export type SettlementDetail = Omit<
     observation_conditions: string | null
     /** Observation Rank Up Milestone */
     observation_rank_up_milestone: number | null
+    /** Whether the underlying knowledge is user-defined */
+    custom: boolean
   }[]
   /** Locations */
   locations: {
@@ -619,6 +743,8 @@ export type SettlementDetail = Omit<
     id: string
     /** Neurosis Name */
     neurosis_name: string
+    /** Whether the underlying neurosis is user-defined */
+    custom: boolean
   }[]
   /** Milestones */
   milestones: {
@@ -703,6 +829,8 @@ export type SettlementDetail = Omit<
     tier: number | null
     /** Linked Neurosis ID */
     neurosis_id: string | null
+    /** Whether the underlying philosophy is user-defined */
+    custom: boolean
   }[]
   /** Principles */
   principles: {

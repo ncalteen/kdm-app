@@ -1,5 +1,7 @@
 'use client'
 
+import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -275,7 +277,7 @@ export function PhilosophyDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -355,7 +357,14 @@ export function PhilosophyDialog({
                   <SelectItem value={NO_SELECTION}>No knowledge</SelectItem>
                   {sortedKnowledges.map((k) => (
                     <SelectItem key={k.id} value={k.id}>
-                      {k.knowledge_name}
+                      <span className="flex items-center gap-2 w-full">
+                        <span>{k.knowledge_name}</span>
+                        {k.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -376,7 +385,14 @@ export function PhilosophyDialog({
                   <SelectItem value={NO_SELECTION}>No neurosis</SelectItem>
                   {sortedNeuroses.map((n) => (
                     <SelectItem key={n.id} value={n.id}>
-                      {n.neurosis_name}
+                      <span className="flex items-center gap-2 w-full">
+                        <span>{n.neurosis_name}</span>
+                        {n.custom && (
+                          <Badge variant="outline" className="ml-auto text-xs">
+                            Custom
+                          </Badge>
+                        )}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -482,6 +498,7 @@ export function PhilosophyDialog({
                             preview="edit"
                           />
                         </div>
+                        <MarkdownSyntaxHelp />
                       </div>
                     </CollapsibleContent>
                   </Collapsible>

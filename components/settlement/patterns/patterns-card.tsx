@@ -21,14 +21,13 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
-import { addPattern, getPatterns } from '@/lib/dal/pattern'
+import { getPatterns } from '@/lib/dal/pattern'
 import {
   addSettlementPatterns,
   removeSettlementPattern
 } from '@/lib/dal/settlement-pattern'
 import {
   ERROR_MESSAGE,
-  PATTERN_CREATED_MESSAGE,
   PATTERN_REMOVED_MESSAGE,
   PATTERN_UPDATED_MESSAGE
 } from '@/lib/messages'
@@ -37,7 +36,7 @@ import {
   SettlementDetail,
   SettlementStateSetter
 } from '@/lib/types'
-import { Plus, PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
+import { PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
@@ -72,13 +71,8 @@ export function PatternsCard({
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
-  const [creating, setCreating] = useState(false)
 
-  const {
-    data: availablePatterns,
-    isLoaded: hasFetched,
-    setData: setAvailablePatterns
-  } = useCatalogFetch<{
+  const { data: availablePatterns, isLoaded: hasFetched } = useCatalogFetch<{
     [key: string]: PatternDetail
   }>(selectedSettlement?.id, () => getPatterns(), {
     initial: {},
@@ -187,93 +181,6 @@ export function PatternsCard({
     [selectedSettlement, setSelectedSettlement, mutate]
   )
 
-  /** Check if an exact match for the search term already exists. */
-  const exactMatchExists = Object.values(availablePatterns).some(
-    (p) => p.pattern_name.toLowerCase() === search.trim().toLowerCase()
-  )
-
-  /**
-   * Handle Create Custom Pattern
-   */
-  const handleCreate = useCallback(async () => {
-    const name = search.trim()
-    if (!name || creating || !selectedSettlement) return
-
-    setCreating(true)
-
-    try {
-      const newPattern = await addPattern({
-        custom: true,
-        pattern_name: name
-      })
-
-      setAvailablePatterns((prev) => ({
-        ...prev,
-        [newPattern.id]: newPattern
-      }))
-
-      setSearch('')
-      setAddOpen(false)
-      toast.success(PATTERN_CREATED_MESSAGE())
-
-      // Add to settlement immediately
-      const tempId = `temp-${crypto.randomUUID()}`
-      const optimisticRow: SettlementDetail['patterns'][0] = {
-        id: tempId,
-        pattern_id: newPattern.id,
-        pattern_name: newPattern.pattern_name
-      }
-      const updatedPatterns = [...selectedSettlement.patterns, optimisticRow]
-
-      setSelectedSettlement({
-        ...selectedSettlement,
-        patterns: updatedPatterns
-      })
-
-      void mutate({
-        context: 'Pattern Add',
-        persist: () =>
-          addSettlementPatterns([newPattern.id], selectedSettlement.id),
-        onSuccess: (row) => {
-          setSelectedSettlement((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  patterns: prev.patterns.map((p) =>
-                    p.id === tempId ? { ...p, id: row[0].id } : p
-                  )
-                }
-              : null
-          )
-        },
-        rollback: () => {
-          setSelectedSettlement((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  patterns: prev.patterns.filter((p) => p.id !== tempId)
-                }
-              : null
-          )
-        },
-        successMessage: PATTERN_UPDATED_MESSAGE()
-      })
-    } catch (error) {
-      console.error('Pattern Create Error:', error)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setCreating(false)
-    }
-  }, [
-    search,
-    creating,
-    selectedSettlement,
-    setSelectedSettlement,
-    toast,
-    mutate,
-    setAvailablePatterns
-  ])
-
   return (
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
@@ -299,20 +206,7 @@ export function PatternsCard({
                   onValueChange={setSearch}
                 />
                 <CommandList>
-                  <CommandEmpty>
-                    {search.trim() ? (
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
-                        disabled={creating}
-                        onClick={handleCreate}>
-                        <Plus className="h-4 w-4" />
-                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
-                      </button>
-                    ) : (
-                      'No patterns found.'
-                    )}
-                  </CommandEmpty>
+                  <CommandEmpty>No patterns found.</CommandEmpty>
                   <CommandGroup>
                     {selectablePatterns.map((pattern) => (
                       <CommandItem
@@ -327,15 +221,6 @@ export function PatternsCard({
                         )}
                       </CommandItem>
                     ))}
-                    {search.trim() && !exactMatchExists && (
-                      <CommandItem
-                        value={`__create__${search.trim()}`}
-                        onSelect={handleCreate}
-                        disabled={creating}>
-                        <Plus className="h-4 w-4" />
-                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
-                      </CommandItem>
-                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>

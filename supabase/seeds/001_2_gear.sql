@@ -1,41 +1,162 @@
 --------------------------------------------------------------------------------
 -- Gear
 --------------------------------------------------------------------------------
-insert into gear (gear_name, location_id)
+insert into gear (
+    gear_name,
+    location_id,
+    armor_location,
+    weapon_type_id
+  )
 values -------------------------------------------------------------------------
+  -- Other Gear
+  ------------------------------------------------------------------------------
+  ('Imitation Butcher Helm', null, 'HEAD', null),
+  ('Tabard', null, 'WAIST', null),
+  ('White Dragon Gauntlets', null, 'ARMS', null),
+  ------------------------------------------------------------------------------
   -- Beta Gear
   ------------------------------------------------------------------------------
-  ('Acanthus Underwear', null),
-  ('Belt of Gender Swap', null),
-  ('Bitter Beastcloak', null),
-  ('Cloth Leggings', null),
-  ('Detective Cap', null),
-  ('Fetorsaurus', null),
-  ('Furnace Lantern', null),
-  ('Gilded Greatcleaver', null),
-  ('Gloom Cowl', null),
-  ('Green Boots', null),
-  ('Green Faulds', null),
-  ('Green Gloves', null),
-  ('Green Helm', null),
-  ('Green Plate', null),
-  ('Griswaldo', null),
-  ('Hard Breastplate', null),
-  ('Hysteria Powder', null),
-  ('Lagabond Hoppers', null),
-  ('Lagabond Nails', null),
-  ('Osseous Scrap Blade', null),
-  ('Pain Eater', null),
-  ('Serrated Greatcleaver', null),
-  ('Sighing Acanthus Hat', null),
-  ('Sighing Sarong', null),
-  ('Speaker Cult Pipe', null),
-  ('Stonesmasher', null),
-  ('Thermal Wrappings', null),
-  ('Twilight Revolver', null),
-  ('White Sunlion Mask', null),
-  ('Woe Hachigane', null),
-  ('Woe Kusarigama', null),
+  ('Acanthus Underwear', null, 'CHEST', null),
+  ('Belt of Gender Swap', null, null, null),
+  ('Bitter Beastcloak', null, 'CHEST', null),
+  ('Cloth Leggings', null, null, null),
+  ('Detective Cap', null, 'HEAD', null),
+  (
+    'Fetorsaurus',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  ('Furnace Lantern', null, null, null),
+  (
+    'Gilded Greatcleaver',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  ('Gloom Cowl', null, 'HEAD', null),
+  ('Green Boots', null, 'FEET', null),
+  ('Green Faulds', null, 'WAIST', null),
+  ('Green Gloves', null, 'ARMS', null),
+  ('Green Helm', null, 'HEAD', null),
+  ('Green Plate', null, 'CHEST', null),
+  (
+    'Griswaldo',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Hard Breastplate', null, 'CHEST', null),
+  ('Hysteria Powder', null, null, null),
+  ('Lagabond Hoppers', null, 'FEET', null),
+  (
+    'Lagabond Nails',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
+    )
+  ),
+  (
+    'Obligate Gallant Blade',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  (
+    'Obligate Gallant Shield',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  (
+    'Osseous Scrap Blade',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  (
+    'Pain Eater',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  (
+    'Serrated Greatcleaver',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  ('Sighing Acanthus Hat', null, 'HEAD', null),
+  ('Sighing Sarong', null, 'WAIST', null),
+  ('Speaker Cult Pipe', null, null, null),
+  (
+    'Stonesmasher',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  ('Thermal Wrappings', null, 'FEET', null),
+  (
+    'Twilight Revolver',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Ranged'
+    )
+  ),
+  ('White Sunlion Mask', null, 'HEAD', null),
+  ('Woe Hachigane', null, 'HEAD', null),
+  (
+    'Woe Kusarigama',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Scythe'
+    )
+  ),
   ------------------------------------------------------------------------------
   -- Dark Armory
   ------------------------------------------------------------------------------
@@ -50,7 +171,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Barber Surgeon'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Blue Charm',
@@ -59,7 +182,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Barber Surgeon'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Bug Trap',
@@ -68,7 +193,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Barber Surgeon'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'First Aid Kit',
@@ -77,7 +204,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Barber Surgeon'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Green Charm',
@@ -86,7 +215,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Barber Surgeon'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Musk Bomb',
@@ -95,7 +226,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Barber Surgeon'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Red Charm',
@@ -104,7 +237,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Barber Surgeon'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Scavenger Kit',
@@ -113,7 +248,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Barber Surgeon'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   ------------------------------------------------------------------------------
   -- Blacksmith
@@ -125,6 +262,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -134,6 +277,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   (
@@ -143,7 +292,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Lantern Dagger',
@@ -152,6 +303,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -161,7 +318,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Lantern Glaive',
@@ -170,6 +329,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -179,7 +344,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Lantern Helm',
@@ -188,7 +355,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Lantern Mail',
@@ -197,7 +366,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Lantern Sword',
@@ -206,6 +377,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -215,6 +392,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   (
@@ -224,7 +407,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Ring Whip',
@@ -233,6 +418,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Whip'
     )
   ),
   (
@@ -242,6 +433,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -251,6 +448,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -260,7 +463,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Wrought Longbow',
@@ -269,6 +474,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
     )
   ),
   (
@@ -278,6 +489,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
     )
   ),
   (
@@ -287,6 +504,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katana'
     )
   ),
   (
@@ -296,6 +519,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Blacksmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   ------------------------------------------------------------------------------
@@ -308,6 +537,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Bone Smith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
     )
   ),
   (
@@ -317,6 +552,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Bone Smith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -326,6 +567,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Bone Smith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
     )
   ),
   (
@@ -335,6 +582,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Bone Smith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -344,6 +597,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Bone Smith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Thrown'
     )
   ),
   (
@@ -353,6 +612,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Bone Smith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Pickaxe'
     )
   ),
   (
@@ -362,6 +627,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Bone Smith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sickle'
     )
   ),
   (
@@ -371,7 +642,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Bone Smith'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   ------------------------------------------------------------------------------
   -- Catarium
@@ -383,7 +656,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Cat Fang Knife',
@@ -392,6 +667,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -401,6 +682,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
     )
   ),
   (
@@ -410,6 +697,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Arrow'
     )
   ),
   (
@@ -419,6 +712,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Arrow'
     )
   ),
   (
@@ -428,7 +727,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Hooked Claw Knife',
@@ -437,6 +738,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -446,6 +753,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -455,6 +768,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
     )
   ),
   (
@@ -464,7 +783,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Lion Skin Cloak',
@@ -473,7 +794,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Oxidized Beast Katar',
@@ -482,6 +805,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
     )
   ),
   (
@@ -491,7 +820,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'White Lion Coat',
@@ -500,16 +831,20 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
-    'White Lion Gauntlets',
+    'White Lion Gauntlet',
     (
       select id
       from location
       where location_name = 'Catarium'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'White Lion Helm',
@@ -518,7 +853,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'White Lion Skirt',
@@ -527,7 +864,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Whisker Harp',
@@ -536,7 +875,24 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Catarium'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
     )
+  ),
+  (
+    'Lion Slayer Cape',
+    (
+      select id
+      from location
+      where location_name = 'Catarium'
+        and not custom
+    ),
+    'CHEST',
+    null
   ),
   ------------------------------------------------------------------------------
   -- Chorusseum
@@ -548,6 +904,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
     )
   ),
   (
@@ -557,6 +919,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
     )
   ),
   (
@@ -566,6 +934,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
     )
   ),
   (
@@ -575,6 +949,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -584,6 +964,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
     )
   ),
   (
@@ -593,6 +979,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
     )
   ),
   (
@@ -602,7 +994,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Singing Boots',
@@ -611,7 +1005,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Singing Breastplate',
@@ -620,7 +1016,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Singing Gloves',
@@ -629,7 +1027,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Singing Heart',
@@ -638,7 +1038,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Singing Pantaloons',
@@ -647,7 +1049,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
-    )
+    ),
+    'WAIST',
+    NULL
   ),
   (
     'Spear of Life',
@@ -656,6 +1060,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
+    ),
+    NULL,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -665,6 +1075,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Chorusseum'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   ------------------------------------------------------------------------------
@@ -677,7 +1093,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Bloodglass Cleaver',
@@ -686,6 +1104,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
     )
   ),
   (
@@ -695,6 +1119,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -704,6 +1134,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
     )
   ),
   (
@@ -713,6 +1149,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -722,6 +1164,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Saw'
     )
   ),
   (
@@ -731,6 +1179,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
     )
   ),
   (
@@ -740,7 +1194,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Crimson Faulds',
@@ -749,7 +1205,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Crimson Guard',
@@ -758,7 +1216,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Crimson Helm',
@@ -767,7 +1227,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Crimson Pearls',
@@ -776,7 +1238,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Crimson Slippers',
@@ -785,7 +1249,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Crocbone Hammer',
@@ -794,6 +1260,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
     )
   ),
   (
@@ -803,7 +1275,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Finger Darts',
@@ -812,6 +1286,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Thrown'
     )
   ),
   (
@@ -821,6 +1301,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Crimson Crockery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Scythe'
     )
   ),
   ------------------------------------------------------------------------------
@@ -833,6 +1319,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -842,6 +1334,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -851,7 +1349,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Dragon Belt',
@@ -860,7 +1360,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Dragon Bite Bolt',
@@ -869,6 +1371,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Arrow'
     )
   ),
   (
@@ -878,7 +1386,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Dragon Chakram',
@@ -887,6 +1397,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Thrown'
     )
   ),
   (
@@ -896,7 +1412,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Dragon Mantle',
@@ -905,7 +1423,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Dragonskull Helm',
@@ -914,7 +1434,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Nuclear Knife',
@@ -923,6 +1445,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -932,6 +1460,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Scythe'
     )
   ),
   (
@@ -941,7 +1475,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Shielded Quiver',
@@ -950,7 +1486,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Talon Knife',
@@ -959,6 +1497,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Dragon Armory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
     )
   ),
   ------------------------------------------------------------------------------
@@ -971,7 +1515,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Exhausted Lantern Hoard'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Oxidized Beacon Shield',
@@ -980,6 +1526,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Exhausted Lantern Hoard'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -989,6 +1541,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Exhausted Lantern Hoard'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -998,6 +1556,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Exhausted Lantern Hoard'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -1007,7 +1571,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Exhausted Lantern Hoard'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Oxidized Lantern Sword',
@@ -1016,6 +1582,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Exhausted Lantern Hoard'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -1025,6 +1597,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Exhausted Lantern Hoard'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Whip'
     )
   ),
   (
@@ -1034,7 +1612,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Exhausted Lantern Hoard'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   ------------------------------------------------------------------------------
   -- Froskrafter
@@ -1046,6 +1626,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Thrown'
     )
   ),
   (
@@ -1055,6 +1641,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
     )
   ),
   (
@@ -1064,7 +1656,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Frogdog Mask',
@@ -1073,7 +1667,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Frogdog Sleeves',
@@ -1082,7 +1678,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Frogdog Suit',
@@ -1091,7 +1689,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Frogdog Vest',
@@ -1100,7 +1700,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Frogdoggles',
@@ -1109,7 +1711,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Frogwhistle',
@@ -1118,7 +1722,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Grappleclaw',
@@ -1127,6 +1733,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Whip'
     )
   ),
   (
@@ -1136,6 +1748,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
     )
   ),
   (
@@ -1145,7 +1763,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Spiked Buckler',
@@ -1154,6 +1774,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -1163,7 +1789,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Vertabrayonet',
@@ -1172,6 +1800,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -1181,7 +1815,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Froskrafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   ------------------------------------------------------------------------------
   -- Gaming Gazebo
@@ -1193,7 +1829,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gaming Gazebo'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Fortune Lantern Dagger',
@@ -1202,6 +1840,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gaming Gazebo'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -1211,7 +1855,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gaming Gazebo'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Fortune Lantern Sword',
@@ -1220,6 +1866,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gaming Gazebo'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -1229,7 +1881,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gaming Gazebo'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   ------------------------------------------------------------------------------
   -- Gormery
@@ -1241,6 +1895,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -1250,7 +1910,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Black Sword',
@@ -1259,6 +1921,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -1268,6 +1936,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
     )
   ),
   (
@@ -1277,7 +1951,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Gorment Mask',
@@ -1286,7 +1962,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Gorment Sleeves',
@@ -1295,7 +1973,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Gorment Suit',
@@ -1304,7 +1984,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Gorn',
@@ -1313,6 +1995,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
     )
   ),
   (
@@ -1322,6 +2010,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
     )
   ),
   (
@@ -1331,6 +2025,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -1340,7 +2040,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Regeneration Suit',
@@ -1349,7 +2051,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Rib Blade',
@@ -1358,6 +2062,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   (
@@ -1367,6 +2077,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
     )
   ),
   ------------------------------------------------------------------------------
@@ -1379,7 +2095,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormchymist'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Life Elixir',
@@ -1388,7 +2106,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormchymist'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Power Potion',
@@ -1397,7 +2117,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormchymist'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Steadfast Potion',
@@ -1406,7 +2128,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormchymist'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Wisdom Potion',
@@ -1415,7 +2139,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Gormchymist'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   ------------------------------------------------------------------------------
   -- Kingsmith
@@ -1427,6 +2153,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   (
@@ -1436,6 +2168,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   (
@@ -1445,7 +2183,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Deathking Gauntlets',
@@ -1454,7 +2194,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Deathking Greaves',
@@ -1463,7 +2205,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Deathking Helm',
@@ -1472,7 +2216,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Deathking Platemail',
@@ -1481,7 +2227,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Grand Kingslayer',
@@ -1490,6 +2238,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   (
@@ -1499,6 +2253,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   (
@@ -1508,7 +2268,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Royal Medallion',
@@ -1517,7 +2279,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Royal Shield',
@@ -1526,6 +2290,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -1535,6 +2305,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Kingsmith'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   ------------------------------------------------------------------------------
@@ -1547,6 +2323,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Leather Worker'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Whip'
     )
   ),
   (
@@ -1556,7 +2338,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Leather Worker'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Leather Bracers',
@@ -1565,7 +2349,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Leather Worker'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Leather Cuirass',
@@ -1574,7 +2360,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Leather Worker'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Leather Mask',
@@ -1583,7 +2371,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Leather Worker'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Leather Skirt',
@@ -1592,7 +2382,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Leather Worker'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Round Leather Shield',
@@ -1601,16 +2393,27 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Leather Worker'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   ------------------------------------------------------------------------------
   -- Manhunter Gear
   ------------------------------------------------------------------------------
-  ('Deathpact', null),
-  ('Hunter''s Heart', null),
-  ('Manhunter''s Hat', null),
-  ('Reverberating Lantern', null),
-  ('Tool Belt', null),
+  ('Deathpact', null, null, null),
+  ('Hunter''s Heart', null, null, null),
+  ('Manhunter''s Hat', null, 'HEAD', null),
+  (
+    'Reverberating Lantern',
+    null,
+    null,
+    null
+  ),
+  ('Tool Belt', null, null, null),
   ------------------------------------------------------------------------------
   -- Mask Maker
   ------------------------------------------------------------------------------
@@ -1621,7 +2424,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Mask Maker'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Death Mask',
@@ -1630,7 +2435,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Mask Maker'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'God Mask',
@@ -1639,7 +2446,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Mask Maker'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Man Mask',
@@ -1648,7 +2457,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Mask Maker'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Phoenix Mask',
@@ -1657,7 +2468,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Mask Maker'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'White Lion Mask',
@@ -1666,18 +2479,25 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Mask Maker'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   ------------------------------------------------------------------------------
   -- Meal Gear
   ------------------------------------------------------------------------------
-  ('Fatty Crimson Goulash', null),
-  ('Fetid Frog Tea', null),
-  ('King Lantern Sausage', null),
-  ('Smog Soup', null),
-  ('Supreme Stew', null),
-  ('Time Milk', null),
-  ('White Lion Bread Box', null),
+  (
+    'Fatty Crimson Goulash',
+    null,
+    null,
+    null
+  ),
+  ('Fetid Frog Tea', null, null, null),
+  ('King Lantern Sausage', null, null, null),
+  ('Smog Soup', null, null, null),
+  ('Supreme Stew', null, null, null),
+  ('Time Milk', null, null, null),
+  ('White Lion Bread Box', null, null, null),
   ------------------------------------------------------------------------------
   -- Organ Grinder
   ------------------------------------------------------------------------------
@@ -1688,7 +2508,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Organ Grinder'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Fecal Salve',
@@ -1697,7 +2519,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Organ Grinder'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Lucky Charm',
@@ -1706,7 +2530,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Organ Grinder'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Monster Grease',
@@ -1715,7 +2541,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Organ Grinder'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Monster Tooth Necklace',
@@ -1724,7 +2552,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Organ Grinder'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Stone Noses',
@@ -1733,7 +2563,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Organ Grinder'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   ------------------------------------------------------------------------------
   -- Outskirts
@@ -1745,7 +2577,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Crimson Crocodile Tablet',
@@ -1754,7 +2588,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Disguise Kit',
@@ -1763,7 +2599,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Frogdog Tablet',
@@ -1772,7 +2610,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Grimjaw',
@@ -1781,6 +2621,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -1790,7 +2636,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'King Tablet',
@@ -1799,7 +2647,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Phoenix Tablet',
@@ -1808,7 +2658,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Scout Whistle',
@@ -1817,7 +2669,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Scout''s Lantern',
@@ -1826,7 +2680,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Screaming Antelope Tablet',
@@ -1835,7 +2691,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Smog Singers Tablet',
@@ -1844,7 +2702,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Stone Face Cloak',
@@ -1853,7 +2713,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Vermin Bellyboots',
@@ -1862,7 +2724,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'White Lion Tablet',
@@ -1871,90 +2735,498 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Outskirts'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   ------------------------------------------------------------------------------
   -- Pattern Gear
   ------------------------------------------------------------------------------
-  ('Big Bite Costume', null),
-  ('Binding Chain', null),
-  ('Black Ghost Dagger', null),
-  ('Blood Drinker', null),
-  ('Bone Chibouk', null),
-  ('Bow Scab', null),
-  ('Brazen Bat', null),
-  ('Bully Hammer', null),
-  ('Colossal Chef''s Carver', null),
-  ('Count Sandals', null),
-  ('Count Tabard', null),
-  ('Count Treukh', null),
-  ('Count Vest', null),
-  ('Count Wrappings', null),
-  ('Cruel Cleaver', null),
-  ('Curse Hammer', null),
-  ('Dashing Reaper', null),
-  ('Diamond Scab Katar', null),
-  ('Discordian', null),
-  ('Dissecting Celurit', null),
-  ('Dome Buster', null),
-  ('Drum of Hope', null),
-  ('Earl Boots', null),
-  ('Earl Jaw Guard', null),
-  ('Earl Raiment', null),
-  ('Earl Sleeves', null),
-  ('Earl Tassets', null),
-  ('Fated Dagger', null),
-  ('Fear Spear', null),
-  ('First Tree Cudgel', null),
-  ('Gold Cat Costume', null),
-  ('Greatest Gaxe', null),
-  ('Grimacing Guillotine', null),
-  ('Grim Muffler', null),
-  ('Gusk Knife', null),
-  ('Halberd Scab', null),
-  ('Holy Sword Whip', null),
-  ('Horokubiya Dagger', null),
-  ('Immortal Arm', null),
-  ('Inquisitorial Saw', null),
-  ('Jaw Saw', null),
-  ('Knife Scab', null),
-  ('Longclaw', null),
-  ('Lordsruin', null),
-  ('Mage''s Hood', null),
-  ('Marchioness Blouse', null),
-  ('Marchioness Gloves', null),
-  ('Marchioness Gorget', null),
-  ('Marchioness Sollerets', null),
-  ('Marchioness Trousers', null),
-  ('Maul Scab', null),
-  ('Oblouk Shield', null),
-  ('Poison Partisan', null),
-  ('Regal Plume', null),
-  ('Regicider', null),
-  ('Retching Costume', null),
-  ('Roaring Harmonica', null),
-  ('Saxe', null),
-  ('Screaming Costume', null),
-  ('Screaming Sun Mask', null),
-  ('Screaming Tanto', null),
-  ('Seditioner', null),
-  ('Shield of Courage', null),
-  ('Sprial Mask', null),
-  ('Stampede Glaive', null),
-  ('Sunlantern Mask', null),
-  ('Sword Scab', null),
-  ('Syncretic Vestments', null),
-  ('Tachyon Nodachi', null),
-  ('Thumping Timpani', null),
-  ('Toxicimitar', null),
-  ('Tyrant Slayer', null),
-  ('Unbreakable Zanbato', null),
-  ('Veteran Lantern Cuirass', null),
-  ('Violet Armor Charm', null),
-  ('Violet Phoenix Faulds', null),
-  ('Violet Phoenix Gauntlets', null),
-  ('Vixen Tail', null),
-  ('Voluptuous Bodysuit', null),
+  ('Big Bite Costume', null, null, null),
+  ('Binding Chain', null, null, null),
+  (
+    'Black Ghost Dagger',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Blood Drinker',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  ('Bone Chibouk', null, null, null),
+  (
+    'Bow Scab',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
+    )
+  ),
+  (
+    'Brazen Bat',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  (
+    'Bully Hammer',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  (
+    'Colossal Chef''s Carver',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  ('Count Sandals', null, 'FEET', null),
+  ('Count Tabard', null, 'WAIST', null),
+  ('Count Treukh', null, 'HEAD', null),
+  ('Count Vest', null, 'CHEST', null),
+  ('Count Wrappings', null, 'ARMS', null),
+  (
+    'Cruel Cleaver',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Cleaver'
+    )
+  ),
+  (
+    'Curse Hammer',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  (
+    'Dashing Reaper',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Diamond Scab Katar',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
+    )
+  ),
+  (
+    'Discordian',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
+    )
+  ),
+  (
+    'Dissecting Celurit',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Scythe'
+    )
+  ),
+  (
+    'Dome Buster',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  (
+    'Drum of Hope',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
+    )
+  ),
+  ('Earl Boots', null, 'FEET', null),
+  ('Earl Jaw Guard', null, 'HEAD', null),
+  ('Earl Raiment', null, 'CHEST', null),
+  ('Earl Sleeves', null, 'ARMS', null),
+  ('Earl Tassets', null, 'WAIST', null),
+  (
+    'Fated Dagger',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Fear Spear',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
+    )
+  ),
+  (
+    'First Tree Cudgel',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  ('Gold Cat Costume', null, null, null),
+  (
+    'Greatest Gaxe',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  ('Grimacing Guillotine', null, null, null),
+  ('Grim Muffler', null, 'CHEST', null),
+  (
+    'Gusk Knife',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Halberd Scab',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
+    )
+  ),
+  (
+    'Heartleech Baselard',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  (
+    'Holy Sword Whip',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  (
+    'Horokubiya Dagger',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Immortal Arm',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  (
+    'Inquisitorial Saw',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Scythe'
+    )
+  ),
+  (
+    'Jaw Saw',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  (
+    'Knife Scab',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Longclaw',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
+    )
+  ),
+  (
+    'Lordsruin',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Scythe'
+    )
+  ),
+  ('Mage''s Hood', null, 'HEAD', null),
+  ('Marchioness Blouse', null, 'CHEST', null),
+  ('Marchioness Gloves', null, 'ARMS', null),
+  ('Marchioness Gorget', null, 'HEAD', null),
+  ('Marchioness Sollerets', null, 'FEET', null),
+  ('Marchioness Trousers', null, 'WAIST', null),
+  (
+    'Maul Scab',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  (
+    'Oblouk Shield',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  (
+    'Poison Partisan',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
+    )
+  ),
+  ('Regal Plume', null, 'HEAD', null),
+  (
+    'Regicider',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  ('Retching Costume', null, null, null),
+  (
+    'Roaring Harmonica',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
+    )
+  ),
+  (
+    'Saxe',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  ('Screaming Costume', null, null, null),
+  ('Screaming Sun Mask', null, 'HEAD', null),
+  (
+    'Screaming Tanto',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Seditioner',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  (
+    'Shield of Courage',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  ('Sprial Mask', null, null, null),
+  (
+    'Stampede Glaive',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  ('Sunlantern Mask', null, 'HEAD', null),
+  (
+    'Sword Scab',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Syncretic Vestments', null, null, null),
+  (
+    'Tachyon Nodachi',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katana'
+    )
+  ),
+  (
+    'Thumping Timpani',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
+    )
+  ),
+  (
+    'Toxicimitar',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Scimitar'
+    )
+  ),
+  (
+    'Tyrant Slayer',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
+    )
+  ),
+  (
+    'Unbreakable Zanbato',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  ('Veteran Lantern Cuirass', null, 'CHEST', null),
+  ('Violet Armor Charm', null, null, null),
+  ('Violet Phoenix Faulds', null, 'WAIST', null),
+  ('Violet Phoenix Gauntlets', null, 'ARMS', null),
+  ('Vixen Tail', null, null, null),
+  ('Voluptuous Bodysuit', null, null, null),
   ------------------------------------------------------------------------------
   -- Plumery
   ------------------------------------------------------------------------------
@@ -1965,6 +3237,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
     )
   ),
   (
@@ -1974,7 +3252,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Blood Sheath',
@@ -1983,7 +3263,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Bloom Sphere',
@@ -1992,7 +3274,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Crest Crown',
@@ -2001,7 +3285,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Feather Mantle',
@@ -2010,7 +3296,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Feather Shield',
@@ -2019,6 +3307,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -2028,6 +3322,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -2037,6 +3337,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Arrow'
     )
   ),
   (
@@ -2046,6 +3352,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -2055,7 +3367,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Phoenix Faulds',
@@ -2064,7 +3378,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Phoenix Gauntlet',
@@ -2073,7 +3389,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Phoenix Greaves',
@@ -2082,7 +3400,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Phoenix Helm',
@@ -2091,7 +3411,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Phoenix Plackart',
@@ -2100,7 +3422,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Rainbow Katana',
@@ -2109,6 +3433,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katana'
     )
   ),
   (
@@ -2118,144 +3448,596 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Plumery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
     )
   ),
   ------------------------------------------------------------------------------
   -- Rare Gear
   ------------------------------------------------------------------------------
-  ('Adventure Sword', null),
-  ('Amethyst Splash', null),
-  ('Ancient Lion Claws', null),
-  ('Belching Bagpipe', null),
-  ('Black Gauntlet', null),
-  ('Black Knight Badge', null),
-  ('Bloodskin', null),
-  ('Blue Lantern', null),
-  ('Bone Charm', null),
-  ('Bone Witch Mehndi', null),
-  ('Brave''s Light', null),
-  ('Butcher Cleaver', null),
-  ('Butcher''s Blood', null),
-  ('Camping Bag', null),
-  ('Celestial Spear', null),
-  ('Chaos Elf Hat', null),
-  ('Child of Lightning', null),
-  ('Citrine Brew', null),
-  ('Common Katana', null),
-  ('Dark Water Pearl', null),
-  ('Death Crown', null),
-  ('Death Drifter Cloak', null),
-  ('Death Mehndi', null),
-  ('Deathmas Lantern Dagger', null),
-  ('Deathmas Shearling Boots', null),
-  ('Deprivation Skinsuit', null),
-  ('Dormant Twilight Cloak', null),
-  ('Dragon Vestments', null),
-  ('Emerald Dewdrop', null),
-  ('Excalibur', null),
-  ('Everburn', null),
-  ('Eye Patch', null),
-  ('Fellbrandt', null),
-  ('Fish of Abundance', null),
-  ('Flower Knight Helm', null),
-  ('Forgot''s Light', null),
-  ('Forsaker Mask', null),
-  ('Gladiator Garb', null),
-  ('Glyph of Solitude', null),
-  ('God''s String', null),
-  ('Golden Plate', null),
-  ('Great Game Crossbow', null),
-  ('Grinning Visage', null),
-  ('Hand', null),
-  ('Hammer of Judgement', null),
-  ('Hazmat Shield', null),
-  ('Hidden Crimson Jewel', null),
-  ('Hideous Disguise', null),
-  ('Hollow''s Light', null),
-  ('Holy Lantern', null),
-  ('Hope Stealer', null),
-  ('Hostox the Gloaming', null),
-  ('Husk of Destiny', null),
-  ('Illuminated Bow', null),
-  ('Iron', null),
-  ('Killennium Cleaver', null),
-  ('Lantern Brassiere', null),
-  ('Lantern Festival Horn', null),
-  ('Lantern Festival Mask', null),
-  ('Lantern Festival Midi', null),
-  ('Lantern Festival Top', null),
-  ('Lantern Halberd', null),
-  ('Lantern Mehndi', null),
-  ('Leather Bodysuit', null),
-  ('Lion God Statue', null),
-  ('Lion Knight Badge', null),
-  ('Lion Knight''s Left Claw', null),
-  ('Lion Knight''s Right Claw', null),
-  ('Lovelorn Rock', null),
-  ('Luck''s Cloak', null),
-  ('Magnum Knives', null),
-  ('Monstrous Fizz', null),
-  ('Moonwolf Charm', null),
-  ('Muramasa', null),
-  ('Natural Cardinal Staff', null),
-  ('Necromancer''s Eye', null),
-  ('Newborn', null),
-  ('Obsession', null),
-  ('Ornate Bone Blade', null),
-  ('Portable Waterphone', null),
-  ('Preserved Dogpole', null),
-  ('Prism Mace', null),
-  ('Rapture Bracelet', null),
-  ('Rawhide Corset', null),
-  ('Red''s Light', null),
-  ('Regal Edge', null),
-  ('Regal Faulds', null),
-  ('Regal Gauntlet', null),
-  ('Regal Greaves', null),
-  ('Regal Helm', null),
-  ('Regal Plackart', null),
-  ('Regal Signet Ring', null),
-  ('Replica Flower Sword', null),
-  ('Ring of Adoration', null),
-  ('Ring of Devotion', null),
-  ('Royal Decorations', null),
-  ('Royal Scalpel', null),
-  ('Ruby Cola', null),
-  ('Sanctified Rosary', null),
-  ('Sanctuary Longsword', null),
-  ('Sapphire Syrup', null),
-  ('Severing Twilight', null),
-  ('Shawl of Determination', null),
-  ('Sharpened Heel', null),
-  ('Shrieking Bow', null),
-  ('Sleeping Virus Flower', null),
-  ('Smog Lantern', null),
-  ('Speaker Cult Knife', null),
-  ('Staff of Honed Ideals', null),
-  ('Staff of Nascent Hope', null),
-  ('Staff of Resolute Vision', null),
-  ('Staff of Sage Reverie', null),
-  ('Steel Shield', null),
-  ('Steel Sword', null),
-  ('Stone Column', null),
-  ('Sunring Bow', null),
-  ('Sun Vestments', null),
-  ('Sword of Silence', null),
-  ('Teary Tonic', null),
-  ('Teeth Bikini', null),
-  ('The Weaver', null),
-  ('Thunder Maul', null),
-  ('Trash Crown', null),
-  ('Twilight Knives', null),
-  ('Twilight Sword', null),
-  ('Violet Drifter Cloak', null),
-  ('Visionary''s Circlet', null),
-  ('Visionary''s Shield', null),
-  ('Visionary''s Sword', null),
-  ('Worn Brawling Bow', null),
-  ('Worn Seeking Bow', null),
-  ('Worn Strafing Bow', null),
-  ('Wrath', null),
+  (
+    'Adventure Sword',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Amethyst Splash', null, null, null),
+  ('Ancient Lion Claws', null, 'ARMS', null),
+  (
+    'Belching Bagpipe',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
+    )
+  ),
+  ('Black Gauntlet', null, 'ARMS', null),
+  ('Black Knight Badge', null, null, null),
+  ('Bloodskin', null, null, null),
+  ('Blue Lantern', null, null, null),
+  ('Bone Charm', null, null, null),
+  ('Bone Witch Mehndi', null, null, null),
+  ('Brave''s Light', null, null, null),
+  (
+    'Butcher Cleaver',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  ('Butcher''s Blood', null, null, null),
+  ('Camping Bag', null, null, null),
+  (
+    'Celestial Spear',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
+    )
+  ),
+  ('Chaos Elf Hat', null, 'HEAD', null),
+  ('Child of Lightning', null, null, null),
+  ('Citrine Brew', null, null, null),
+  (
+    'Common Katana',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katana'
+    )
+  ),
+  ('Dark Water Pearl', null, null, null),
+  ('Death Crown', null, null, null),
+  ('Death Drifter Cloak', null, null, null),
+  ('Death Mehndi', null, null, null),
+  (
+    'Deathmas Lantern Dagger',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  ('Deathmas Shearling Boots', null, 'FEET', null),
+  ('Deprivation Skinsuit', null, null, null),
+  ('Dormant Twilight Cloak', null, 'HEAD', null),
+  ('Dragon Vestments', null, null, null),
+  ('Emerald Dewdrop', null, null, null),
+  (
+    'Excalibur',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Everburn', null, null, null),
+  ('Eye Patch', null, null, null),
+  (
+    'Fellbrandt',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  ('Fish of Abundance', null, null, null),
+  ('Flower Knight Helm', null, 'HEAD', null),
+  ('Forgot''s Light', null, null, null),
+  ('Forsaker Mask', null, 'HEAD', null),
+  ('Gladiator Garb', null, null, null),
+  ('Glyph of Solitude', null, null, null),
+  ('God''s String', null, null, null),
+  ('Golden Plate', null, null, null),
+  (
+    'Great Game Crossbow',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Crossbow'
+    )
+  ),
+  (
+    'Grinning Visage',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  (
+    'Hand',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  (
+    'Hammer of Judgement',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  (
+    'Hazmat Shield',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  ('Hidden Crimson Jewel', null, null, null),
+  ('Hideous Disguise', null, 'HEAD', null),
+  ('Hollow''s Light', null, null, null),
+  ('Holy Lantern', null, null, null),
+  (
+    'Hope Stealer',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
+    )
+  ),
+  (
+    'Hostox the Gloaming',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  ('Husk of Destiny', null, null, null),
+  (
+    'Illuminated Bow',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
+    )
+  ),
+  (
+    'Iron',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  (
+    'Killennium Cleaver',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Cleaver'
+    )
+  ),
+  ('Lantern Brassiere', null, 'CHEST', null),
+  ('Lantern Festival Horn', null, null, null),
+  ('Lantern Festival Mask', null, 'HEAD', null),
+  ('Lantern Festival Midi', null, 'WAIST', null),
+  ('Lantern Festival Top', null, 'CHEST', null),
+  (
+    'Lantern Halberd',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
+    )
+  ),
+  ('Lantern Mehndi', null, null, null),
+  ('Leather Bodysuit', null, 'CHEST', null),
+  ('Lion God Statue', null, null, null),
+  ('Lion Knight Badge', null, null, null),
+  (
+    'Lion Knight''s Left Claw',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
+    )
+  ),
+  (
+    'Lion Knight''s Right Claw',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
+    )
+  ),
+  ('Lovelorn Rock', null, null, null),
+  ('Luck''s Cloak', null, 'CHEST', null),
+  (
+    'Magnum Knives',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Monstrous Fizz', null, null, null),
+  ('Moonwolf Charm', null, null, null),
+  (
+    'Muramasa',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katana'
+    )
+  ),
+  (
+    'Natural Cardinal Staff',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  ('Necromancer''s Eye', null, 'HEAD', null),
+  ('Newborn', null, null, null),
+  (
+    'Obsession',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Ornate Bone Blade',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Portable Waterphone', null, null, null),
+  ('Preserved Dogpole', null, null, null),
+  (
+    'Prism Mace',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  ('Rapture Bracelet', null, 'HEAD', null),
+  ('Rawhide Corset', null, 'CHEST', null),
+  ('Red''s Light', null, null, null),
+  (
+    'Regal Edge',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Regal Faulds', null, 'WAIST', null),
+  ('Regal Gauntlet', null, 'ARMS', null),
+  ('Regal Greaves', null, 'FEET', null),
+  ('Regal Helm', null, 'HEAD', null),
+  ('Regal Plackart', null, 'CHEST', null),
+  ('Regal Signet Ring', null, null, null),
+  (
+    'Replica Flower Sword',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  ('Ring of Adoration', null, null, null),
+  ('Ring of Devotion', null, null, null),
+  ('Royal Decorations', null, null, null),
+  (
+    'Royal Scalpel',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  ('Ruby Cola', null, null, null),
+  ('Sanctified Rosary', null, null, null),
+  (
+    'Sanctuary Longsword',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Sapphire Syrup', null, null, null),
+  ('Severing Twilight', null, null, null),
+  ('Shawl of Determination', null, null, null),
+  (
+    'Sharpened Heel',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Shrieking Bow',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
+    )
+  ),
+  (
+    'Sleeping Virus Flower',
+    null,
+    null,
+    null
+  ),
+  ('Smog Lantern', null, null, null),
+  (
+    'Speaker Cult Knife',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  ('Staff of Honed Ideals', null, null, null),
+  ('Staff of Nascent Hope', null, null, null),
+  ('Staff of Resolute Vision', null, null, null),
+  ('Staff of Sage Reverie', null, null, null),
+  (
+    'Steel Shield',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  (
+    'Steel Sword',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  (
+    'Stone Column',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  (
+    'Sunring Bow',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
+    )
+  ),
+  ('Sun Vestments', null, null, null),
+  (
+    'Sword of Silence',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Teary Tonic', null, null, null),
+  ('Teeth Bikini', null, 'CHEST', null),
+  (
+    'The Weaver',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  (
+    'Thunder Maul',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  ('Trash Crown', null, 'HEAD', null),
+  (
+    'Twilight Knives',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Twilight Sword',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Twilight Sword'
+    )
+  ),
+  ('Violet Drifter Cloak', null, null, null),
+  ('Visionary''s Circlet', null, null, null),
+  (
+    'Visionary''s Shield',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  (
+    'Visionary''s Sword',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  (
+    'Worn Brawling Bow',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
+    )
+  ),
+  (
+    'Worn Seeking Bow',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
+    )
+  ),
+  (
+    'Worn Strafing Bow',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
+    )
+  ),
+  (
+    'Wrath',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
   ------------------------------------------------------------------------------
   -- Sanguine Extrusion
   ------------------------------------------------------------------------------
@@ -2266,7 +4048,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sanguine Extrusion'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Black & Red Cuirass',
@@ -2275,7 +4059,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sanguine Extrusion'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Black & Red Gauntlets',
@@ -2284,7 +4070,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sanguine Extrusion'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Black & Red Greaves',
@@ -2293,7 +4081,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sanguine Extrusion'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Black & Red Tonlet',
@@ -2302,7 +4092,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sanguine Extrusion'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Hyperelastic Bow',
@@ -2311,6 +4103,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sanguine Extrusion'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
     )
   ),
   (
@@ -2320,6 +4118,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sanguine Extrusion'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -2329,6 +4133,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sanguine Extrusion'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -2338,66 +4148,347 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sanguine Extrusion'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   ------------------------------------------------------------------------------
   -- Seed Pattern Gear
   ------------------------------------------------------------------------------
-  ('Armorsmith''s Tongs', null),
-  ('Backstabbing Stone', null),
-  ('Beast Hunter Helm', null),
-  ('Bloomlink Pumpkin', null),
-  ('Bravelink Pumpkin', null),
-  ('Clasping Shield', null),
-  ('Cyclops Ledger', null),
-  ('Dextral Crabaxe', null),
-  ('Dream Keeper Cowl', null),
-  ('Dream Keeper Knife', null),
-  ('Elder''s Aegis', null),
-  ('Feral Zanbato', null),
-  ('Fingernail Whip', null),
-  ('Ghostlink Pumpkin', null),
-  ('Guidon Lance of Doom', null),
-  ('Heartseeker', null),
-  ('Hollowlink Pumpkin', null),
-  ('Hushing Harmonium', null),
-  ('Hypersight Visor', null),
-  ('Imitation Butcher Mask', null),
-  ('Itemsmith''s Lense', null),
-  ('Jack O'' Lantern', null),
-  ('Jarngreipr', null),
-  ('Lucky Cat Fang Knife', null),
-  ('Masamune', null),
-  ('Master Bone Dagger', null),
-  ('Mighty Bone Axe', null),
-  ('Monster Trophy', null),
-  ('Neko Twilight Armor', null),
-  ('Ornate Rapier', null),
-  ('Piercing Claws', null),
-  ('Plasma Cutter', null),
-  ('Plated Shield', null),
-  ('Rawhide Bandana', null),
-  ('Reaperjaw', null),
-  ('Refined Lantern Axe', null),
-  ('Refined Lantern Sword', null),
-  ('Robes of Deadheim', null),
-  ('Scythe of Doom', null),
-  ('Shadow Skleaver', null),
-  ('Sinistral Crabaxe', null),
-  ('Soldier Lantern Cuirass', null),
-  ('Spinal Sickle', null),
-  ('Spite Balm', null),
-  ('Sprinter Helm', null),
-  ('Sundering Crossbow', null),
-  ('Sword of Doom', null),
-  ('Telcric Eye Tac', null),
-  ('Tempered Axe', null),
-  ('Tempered Dagger', null),
-  ('Tempered Spear', null),
-  ('Tithe Box', null),
-  ('True Lantern Halberd', null),
-  ('Vault Key Earrings', null),
-  ('Weaponsmith''s Hammer', null),
+  ('Armorsmith''s Tongs', null, null, null),
+  ('Backstabbing Stone', null, null, null),
+  ('Beast Hunter Helm', null, 'HEAD', null),
+  ('Bloomlink Pumpkin', null, null, null),
+  ('Bravelink Pumpkin', null, null, null),
+  (
+    'Clasping Shield',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  ('Cyclops Ledger', null, null, null),
+  (
+    'Dextral Crabaxe',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  ('Dream Keeper Cowl', null, 'HEAD', null),
+  (
+    'Dream Keeper Knife',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Elder''s Aegis',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  (
+    'Feral Zanbato',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  (
+    'Fingernail Whip',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Whip'
+    )
+  ),
+  ('Ghostlink Pumpkin', null, null, null),
+  (
+    'Guidon Lance of Doom',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
+    )
+  ),
+  (
+    'Heartseeker',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  ('Hollowlink Pumpkin', null, null, null),
+  (
+    'Hushing Harmonium',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
+    )
+  ),
+  ('Hypersight Visor', null, null, null),
+  ('Imitation Butcher Mask', null, 'HEAD', null),
+  ('Itemsmith''s Lense', null, 'HEAD', null),
+  ('Jack O'' Lantern', null, null, null),
+  ('Jarngreipr', null, 'HEAD', null),
+  (
+    'Lucky Cat Fang Knife',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Masamune',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katana'
+    )
+  ),
+  (
+    'Master Bone Dagger',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Mighty Bone Axe',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  ('Monster Trophy', null, null, null),
+  ('Neko Twilight Armor', null, null, null),
+  (
+    'Ornate Rapier',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  (
+    'Piercing Claws',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
+    )
+  ),
+  (
+    'Plasma Cutter',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  (
+    'Plated Shield',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
+    )
+  ),
+  ('Rawhide Bandana', null, 'HEAD', null),
+  (
+    'Reaperjaw',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Refined Lantern Axe',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  (
+    'Refined Lantern Sword',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Robes of Deadheim', null, 'CHEST', null),
+  (
+    'Scythe of Doom',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Scythe'
+    )
+  ),
+  (
+    'Shadow Skleaver',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
+    )
+  ),
+  (
+    'Sinistral Crabaxe',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  ('Soldier Lantern Cuirass', null, 'CHEST', null),
+  (
+    'Spinal Sickle',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Whip'
+    )
+  ),
+  ('Spite Balm', null, null, null),
+  ('Sprinter Helm', null, 'HEAD', null),
+  (
+    'Sundering Crossbow',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Crossbow'
+    )
+  ),
+  (
+    'Sword of Doom',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
+    )
+  ),
+  ('Telcric Eye Tac', null, null, null),
+  (
+    'Tempered Axe',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
+    )
+  ),
+  (
+    'Tempered Dagger',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
+    )
+  ),
+  (
+    'Tempered Spear',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
+    )
+  ),
+  ('Tithe Box', null, null, null),
+  (
+    'True Lantern Halberd',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
+    )
+  ),
+  ('Vault Key Earrings', null, null, null),
+  (
+    'Weaponsmith''s Hammer',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
   ------------------------------------------------------------------------------
   -- Sense Memory
   ------------------------------------------------------------------------------
@@ -2408,7 +4499,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sense Memory'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Satchel',
@@ -2417,7 +4510,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sense Memory'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Vespertine Arrow',
@@ -2426,6 +4521,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sense Memory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Arrow'
     )
   ),
   (
@@ -2435,6 +4536,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sense Memory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
     )
   ),
   (
@@ -2444,6 +4551,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sense Memory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
     )
   ),
   (
@@ -2453,6 +4566,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Sense Memory'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   ------------------------------------------------------------------------------
@@ -2465,6 +4584,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Scimitar'
     )
   ),
   (
@@ -2474,6 +4599,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -2483,7 +4614,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Green Ring',
@@ -2492,7 +4625,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Hooded Scrap Katar',
@@ -2501,6 +4636,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
     )
   ),
   (
@@ -2510,7 +4651,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Silk Body Suit',
@@ -2519,7 +4662,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Silk Bomb',
@@ -2528,7 +4673,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Silk Boots',
@@ -2537,7 +4684,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Silk Robes',
@@ -2546,7 +4695,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Silk Sash',
@@ -2555,7 +4706,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Silk Turban',
@@ -2564,7 +4717,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Silk Whip',
@@ -2573,6 +4728,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Whip'
     )
   ),
   (
@@ -2582,7 +4743,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Throwing Knife',
@@ -2591,6 +4754,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Silk Mill'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Thrown'
     )
   ),
   ------------------------------------------------------------------------------
@@ -2603,7 +4772,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skinnery'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Rawhide Boots',
@@ -2612,7 +4783,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skinnery'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Rawhide Drum',
@@ -2621,6 +4794,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skinnery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Instrument'
     )
   ),
   (
@@ -2630,7 +4809,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skinnery'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Rawhide Headband',
@@ -2639,7 +4820,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skinnery'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Rawhide Pants',
@@ -2648,7 +4831,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skinnery'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Rawhide Vest',
@@ -2657,7 +4842,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skinnery'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Rawhide Whip',
@@ -2666,10 +4853,16 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skinnery'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Whip'
     )
   ),
   ------------------------------------------------------------------------------
-  -- Skyreef Sanctuary
+  -- Sky Reef Sanctuary
   ------------------------------------------------------------------------------
   (
     'Cycloid Scale Hood',
@@ -2678,7 +4871,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Cycloid Scale Jacket',
@@ -2687,7 +4882,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Cycloid Scale Shoes',
@@ -2696,7 +4893,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Cycloid Scale Skirt',
@@ -2705,7 +4904,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Cycloid Scale Sleeves',
@@ -2714,7 +4915,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Denticle Axe',
@@ -2723,6 +4926,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
     )
   ),
   (
@@ -2732,6 +4941,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
     )
   ),
   (
@@ -2741,6 +4956,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -2750,7 +4971,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Shadow Sliva Shawl',
@@ -2759,7 +4982,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Skleaver',
@@ -2768,6 +4993,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   (
@@ -2777,6 +5008,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -2786,7 +5023,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Sunshark Arrows',
@@ -2795,6 +5034,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Arrow'
     )
   ),
   (
@@ -2804,6 +5049,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Bow'
     )
   ),
   (
@@ -2813,6 +5064,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Thrown'
     )
   ),
   (
@@ -2822,28 +5079,57 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Skyreef Sanctuary'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   ------------------------------------------------------------------------------
   -- Slenderman Gear
   ------------------------------------------------------------------------------
-  ('Dark Water Vial', null),
-  ('Gloom-Coated Arrow', null),
-  ('Gloom Bracelets', null),
-  ('Gloom Cream', null),
-  ('Gloom Hammer', null),
-  ('Gloom Katana', null),
-  ('Gloom Mehndi', null),
-  ('Gloom Sheath', null),
-  ('Raptor Worm Collar', null),
-  ('Slender Ovule', null),
+  ('Dark Water Vial', null, null, null),
+  (
+    'Gloom-Coated Arrow',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Arrow'
+    )
+  ),
+  ('Gloom Bracelets', null, 'ARMS', null),
+  ('Gloom Cream', null, null, null),
+  (
+    'Gloom Hammer',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
+    )
+  ),
+  (
+    'Gloom Katana',
+    null,
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katana'
+    )
+  ),
+  ('Gloom Mehndi', null, null, null),
+  ('Gloom Sheath', null, null, null),
+  ('Raptor Worm Collar', null, null, null),
+  ('Slender Ovule', null, null, null),
   ------------------------------------------------------------------------------
   -- Starting Gear
   ------------------------------------------------------------------------------
-  ('Beating Heartstave', null),
-  ('Bloody Cloth', null),
-  ('Cloth', null),
-  ('Founding Stone', null),
+  ('Beating Heartstave', null, null, null),
+  ('Bloody Cloth', null, null, null),
+  ('Cloth', null, null, null),
+  ('Founding Stone', null, null, null),
   ------------------------------------------------------------------------------
   -- Stone Circle
   ------------------------------------------------------------------------------
@@ -2854,6 +5140,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
     )
   ),
   (
@@ -2863,7 +5155,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Bone Earrings',
@@ -2872,7 +5166,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Boss Mehndi',
@@ -2881,7 +5177,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Brain Mint',
@@ -2890,7 +5188,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Elder Earrings',
@@ -2899,7 +5199,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Lance of Longinus',
@@ -2908,6 +5210,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -2917,7 +5225,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Screaming Coat',
@@ -2926,7 +5236,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Screaming Horns',
@@ -2935,7 +5247,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Screaming Leg Warmers',
@@ -2944,7 +5258,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Screaming Skirt',
@@ -2953,7 +5269,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Speed Powder',
@@ -2962,7 +5280,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   ------------------------------------------------------------------------------
   -- Stone Circle Hot Zone
@@ -2974,6 +5294,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle Hot Zone'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -2983,7 +5309,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle Hot Zone'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Nuclear Knuckle',
@@ -2992,6 +5320,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle Hot Zone'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
     )
   ),
   (
@@ -3001,6 +5335,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Stone Circle Hot Zone'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Whip'
     )
   ),
   ------------------------------------------------------------------------------
@@ -3013,6 +5353,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Shield'
     )
   ),
   (
@@ -3022,7 +5368,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Bullfrog Boots',
@@ -3031,7 +5379,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
-    )
+    ),
+    'FEET',
+    null
   ),
   (
     'Bullfrog Bracers',
@@ -3040,7 +5390,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
-    )
+    ),
+    'ARMS',
+    null
   ),
   (
     'Bullfrog Cuirass',
@@ -3049,7 +5401,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
-    )
+    ),
+    'CHEST',
+    null
   ),
   (
     'Bullfrog Dress',
@@ -3058,7 +5412,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
-    )
+    ),
+    'WAIST',
+    null
   ),
   (
     'Bullfrog Halberd',
@@ -3067,6 +5423,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -3076,7 +5438,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
-    )
+    ),
+    'HEAD',
+    null
   ),
   (
     'Bullfrog Mace',
@@ -3085,6 +5449,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
     )
   ),
   (
@@ -3094,6 +5464,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Scimitar'
     )
   ),
   (
@@ -3103,7 +5479,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Tuskworks'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   ------------------------------------------------------------------------------
   -- Weapon Crafter
@@ -3115,6 +5493,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Weapon Crafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Axe'
     )
   ),
   (
@@ -3124,6 +5508,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Weapon Crafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Spear'
     )
   ),
   (
@@ -3133,6 +5523,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Weapon Crafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Dagger'
     )
   ),
   (
@@ -3142,7 +5538,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Weapon Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Scrap Rebar',
@@ -3151,7 +5549,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Weapon Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Scrap Sword',
@@ -3160,6 +5560,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Weapon Crafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Sword'
     )
   ),
   (
@@ -3169,6 +5575,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Weapon Crafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Club'
     )
   ),
   (
@@ -3178,15 +5590,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Weapon Crafter'
         and not custom
-    )
-  ),
-  (
-    'Zanbato',
+    ),
+    null,
     (
       select id
-      from location
-      where location_name = 'Weapon Crafter'
-        and not custom
+      from weapon_type
+      where weapon_type_name = 'Club'
     )
   ),
   ------------------------------------------------------------------------------
@@ -3199,6 +5608,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
     )
   ),
   (
@@ -3208,7 +5623,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Calcified Juggernaut Blade',
@@ -3217,6 +5634,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   (
@@ -3226,7 +5649,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Calcified Zanbato',
@@ -3235,6 +5660,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   ),
   (
@@ -3244,7 +5675,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Century Shoulder Pads',
@@ -3253,7 +5686,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'DBK Errant Badge',
@@ -3262,7 +5697,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Digging Claw',
@@ -3271,6 +5708,12 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Katar'
     )
   ),
   (
@@ -3280,7 +5723,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Regenerating Blade',
@@ -3289,7 +5734,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Rubber Bone Harness',
@@ -3298,7 +5745,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Scarab Circlet',
@@ -3307,7 +5756,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Seasoned Monster Meat',
@@ -3316,7 +5767,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'The Beetle Bomb',
@@ -3325,7 +5778,9 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
-    )
+    ),
+    null,
+    null
   ),
   (
     'Zanbato',
@@ -3334,5 +5789,11 @@ values -------------------------------------------------------------------------
       from location
       where location_name = 'Wet Resin Crafter'
         and not custom
+    ),
+    null,
+    (
+      select id
+      from weapon_type
+      where weapon_type_name = 'Grand'
     )
   );

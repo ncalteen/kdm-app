@@ -1,6 +1,7 @@
 'use client'
 
 import { CursedGearItem } from '@/components/survivor/cursed-gear/cursed-gear-item'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -253,6 +254,11 @@ export function CursedGearCard({
                         value={gear.gear_name}
                         onSelect={() => handleAdd(gear.gear_id)}>
                         {gear.gear_name}
+                        {gear.custom && (
+                          <Badge variant="outline" className="ml-auto">
+                            Custom
+                          </Badge>
+                        )}
                       </CommandItem>
                     ))}
                   </CommandGroup>

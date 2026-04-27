@@ -146,7 +146,8 @@ export function KnowledgesCard({
         rules: knowledgeInfo.rules ?? null,
         observation_conditions: knowledgeInfo.observation_conditions ?? null,
         observation_rank_up_milestone:
-          knowledgeInfo.observation_rank_up_milestone ?? null
+          knowledgeInfo.observation_rank_up_milestone ?? null,
+        custom: knowledgeInfo.custom ?? false
       }
 
       const updatedKnowledges = [
@@ -289,7 +290,8 @@ export function KnowledgesCard({
           rules: newKnowledge.rules ?? null,
           observation_conditions: newKnowledge.observation_conditions ?? null,
           observation_rank_up_milestone:
-            newKnowledge.observation_rank_up_milestone ?? null
+            newKnowledge.observation_rank_up_milestone ?? null,
+          custom: newKnowledge.custom ?? true
         }
 
         const updatedKnowledges = [

@@ -11,8 +11,28 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
-const { getPatterns, addPattern, updatePattern, removePattern } =
-  await import('@/lib/dal/pattern')
+const {
+  getPatterns,
+  addPattern,
+  updatePattern,
+  removePattern,
+  replacePatternGearCosts,
+  replacePatternResourceCosts,
+  replacePatternResourceTypeCosts,
+  replacePatternInnovationRequirements
+} = await import('@/lib/dal/pattern')
+
+/**
+ * Augment a raw pattern fixture with the normalized junction defaults that
+ * `toPatternDetail` adds when reading from the database.
+ */
+const withPatternDefaults = <T extends Record<string, unknown>>(p: T) => ({
+  ...p,
+  gear_costs: [],
+  resource_costs: [],
+  resource_type_costs: [],
+  innovation_requirement_ids: []
+})
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -71,9 +91,9 @@ describe('getPatterns', () => {
     const result = await getPatterns()
 
     expect(result).toEqual({
-      p1: nonCustomPattern,
-      p2: userCustomPattern,
-      p3: sharedPattern
+      p1: withPatternDefaults(nonCustomPattern),
+      p2: withPatternDefaults(userCustomPattern),
+      p3: withPatternDefaults(sharedPattern)
     })
   })
 
@@ -250,7 +270,7 @@ describe('addPattern', () => {
       custom: false
     })
 
-    expect(result).toEqual(mockPattern)
+    expect(result).toEqual(withPatternDefaults(mockPattern))
     expect(mockInsert).toHaveBeenCalledWith({
       pattern_name: 'Screaming Coat',
       custom: false
@@ -276,7 +296,7 @@ describe('addPattern', () => {
       custom: true
     })
 
-    expect(result).toEqual(customPattern)
+    expect(result).toEqual(withPatternDefaults(customPattern))
     expect(mockInsert).toHaveBeenCalledWith({
       pattern_name: 'My Pattern',
       custom: true,
@@ -374,5 +394,213 @@ describe('removePattern', () => {
     await expect(removePattern('p1')).rejects.toThrow(
       'Error Removing Pattern: Delete failed'
     )
+  })
+})
+
+describe('replacePatternGearCosts', () => {
+  it('inserts deduped/filtered cost rows', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    mockSupabase.from.mockReturnValueOnce({ insert })
+
+    await replacePatternGearCosts('p1', [
+      { cost_gear_id: 'a', quantity: 1 },
+      { cost_gear_id: 'a', quantity: 2 }, // dup
+      { cost_gear_id: 'b', quantity: 0 }, // q<1
+      { cost_gear_id: '', quantity: 1 } // empty
+    ])
+
+    expect(insert).toHaveBeenCalledWith([
+      { pattern_id: 'p1', cost_gear_id: 'a', quantity: 1 }
+    ])
+  })
+
+  it('skips insert when no rows remain', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    await replacePatternGearCosts('p1', [])
+    expect(mockSupabase.from).toHaveBeenCalledTimes(1)
+  })
+
+  it('throws on delete error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: { message: 'd' } })
+      })
+    })
+    await expect(replacePatternGearCosts('p1', [])).rejects.toThrow(
+      'Error Clearing Pattern Gear Costs: d'
+    )
+  })
+
+  it('throws on insert error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValueOnce({
+      insert: vi.fn().mockResolvedValue({ error: { message: 'i' } })
+    })
+    await expect(
+      replacePatternGearCosts('p1', [{ cost_gear_id: 'a', quantity: 1 }])
+    ).rejects.toThrow('Error Saving Pattern Gear Costs: i')
+  })
+})
+
+describe('replacePatternResourceCosts', () => {
+  it('inserts deduped/filtered rows', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    mockSupabase.from.mockReturnValueOnce({ insert })
+
+    await replacePatternResourceCosts('p1', [
+      { resource_id: 'r1', quantity: 1 },
+      { resource_id: 'r1', quantity: 2 },
+      { resource_id: '', quantity: 1 }
+    ])
+
+    expect(insert).toHaveBeenCalledWith([
+      { pattern_id: 'p1', resource_id: 'r1', quantity: 1 }
+    ])
+  })
+
+  it('throws on delete error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: { message: 'd' } })
+      })
+    })
+    await expect(replacePatternResourceCosts('p1', [])).rejects.toThrow(
+      'Error Clearing Pattern Resource Costs: d'
+    )
+  })
+
+  it('throws on insert error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValueOnce({
+      insert: vi.fn().mockResolvedValue({ error: { message: 'i' } })
+    })
+    await expect(
+      replacePatternResourceCosts('p1', [{ resource_id: 'r1', quantity: 1 }])
+    ).rejects.toThrow('Error Saving Pattern Resource Costs: i')
+  })
+})
+
+describe('replacePatternResourceTypeCosts', () => {
+  it('inserts deduped/filtered rows', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    mockSupabase.from.mockReturnValueOnce({ insert })
+
+    await replacePatternResourceTypeCosts('p1', [
+      { resource_type: 'BONE', quantity: 1 },
+      { resource_type: 'BONE', quantity: 5 },
+      { resource_type: 'CLOTH', quantity: 0 }
+    ])
+
+    expect(insert).toHaveBeenCalledWith([
+      { pattern_id: 'p1', resource_type: 'BONE', quantity: 1 }
+    ])
+  })
+
+  it('throws on delete error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: { message: 'd' } })
+      })
+    })
+    await expect(replacePatternResourceTypeCosts('p1', [])).rejects.toThrow(
+      'Error Clearing Pattern Resource Type Costs: d'
+    )
+  })
+
+  it('throws on insert error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValueOnce({
+      insert: vi.fn().mockResolvedValue({ error: { message: 'i' } })
+    })
+    await expect(
+      replacePatternResourceTypeCosts('p1', [
+        { resource_type: 'BONE', quantity: 1 }
+      ])
+    ).rejects.toThrow('Error Saving Pattern Resource Type Costs: i')
+  })
+})
+
+describe('replacePatternInnovationRequirements', () => {
+  it('inserts deduped innovation IDs', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    mockSupabase.from.mockReturnValueOnce({ insert })
+
+    await replacePatternInnovationRequirements('p1', ['i1', 'i1', '', 'i2'])
+
+    expect(insert).toHaveBeenCalledWith([
+      { pattern_id: 'p1', innovation_id: 'i1' },
+      { pattern_id: 'p1', innovation_id: 'i2' }
+    ])
+  })
+
+  it('skips insert when no IDs remain', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    await replacePatternInnovationRequirements('p1', [])
+    expect(mockSupabase.from).toHaveBeenCalledTimes(1)
+  })
+
+  it('throws on delete error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: { message: 'd' } })
+      })
+    })
+    await expect(
+      replacePatternInnovationRequirements('p1', [])
+    ).rejects.toThrow('Error Clearing Pattern Innovation Requirements: d')
+  })
+
+  it('throws on insert error', async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValueOnce({
+      insert: vi.fn().mockResolvedValue({ error: { message: 'i' } })
+    })
+    await expect(
+      replacePatternInnovationRequirements('p1', ['i1'])
+    ).rejects.toThrow('Error Saving Pattern Innovation Requirements: i')
   })
 })
