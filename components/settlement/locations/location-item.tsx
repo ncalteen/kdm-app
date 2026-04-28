@@ -1,8 +1,11 @@
 'use client'
 
+import {
+  CustomItemDisplay,
+  CustomRulesText
+} from '@/components/custom/custom-rules-sheet'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
 import { SettlementDetail } from '@/lib/types'
 import { TrashIcon } from 'lucide-react'
 import { memo, ReactElement } from 'react'
@@ -11,6 +14,8 @@ import { memo, ReactElement } from 'react'
  * Location Item Component Properties
  */
 export interface LocationItemProps {
+  /** Custom Rules Sheet Display */
+  customDetail?: CustomItemDisplay | null
   /** Index */
   index: number
   /** Location Row */
@@ -31,6 +36,7 @@ export interface LocationItemProps {
  * @returns Location Item Component
  */
 export const LocationItem = memo(function LocationItem({
+  customDetail,
   index,
   location,
   onRemove,
@@ -47,11 +53,15 @@ export const LocationItem = memo(function LocationItem({
       />
 
       {/* Location Name */}
-      <Label
-        className="text-sm truncate ml-1"
-        htmlFor={`location-unlocked-${index}`}>
-        {location.location_name}
-      </Label>
+      <CustomRulesText
+        className="truncate ml-1"
+        custom={customDetail?.custom ?? false}
+        description={customDetail?.description}
+        label={location.location_name}
+        sections={customDetail?.sections ?? []}
+        title={customDetail?.title ?? location.location_name}
+        showCustomBadge
+      />
 
       {/* Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">

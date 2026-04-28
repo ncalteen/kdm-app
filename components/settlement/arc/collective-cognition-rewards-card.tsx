@@ -466,6 +466,9 @@ export function CollectiveCognitionRewardsCard({
                               existing.collective_cognition_reward_id === r.id
                           )
                       )
+                      .sort((a, b) =>
+                        a.reward_name.localeCompare(b.reward_name)
+                      )
                       .map((reward) => (
                         <CommandItem
                           key={reward.id}
@@ -516,20 +519,39 @@ export function CollectiveCognitionRewardsCard({
             )}
 
             {hasFetched &&
-              sortedRewards.map(({ reward, originalIndex }) => (
-                <RewardItem
-                  key={reward.id}
-                  index={originalIndex}
-                  shouldHighlight={
-                    !reward.unlocked &&
-                    collectiveCognitionTotal >=
-                      Number(reward.collective_cognition)
-                  }
-                  reward={reward}
-                  onRemove={handleRemove}
-                  onToggleUnlocked={handleToggleUnlocked}
-                />
-              ))}
+              sortedRewards.map(({ reward, originalIndex }) => {
+                const detail =
+                  availableRewards[reward.collective_cognition_reward_id]
+
+                return (
+                  <RewardItem
+                    key={reward.id}
+                    customDetail={
+                      detail
+                        ? {
+                            custom: detail.custom,
+                            sections: [
+                              { label: 'Rules', content: detail.rules },
+                              {
+                                label: 'Collective Cognition',
+                                content: `${detail.collective_cognition} CC`
+                              }
+                            ]
+                          }
+                        : null
+                    }
+                    index={originalIndex}
+                    shouldHighlight={
+                      !reward.unlocked &&
+                      collectiveCognitionTotal >=
+                        Number(reward.collective_cognition)
+                    }
+                    reward={reward}
+                    onRemove={handleRemove}
+                    onToggleUnlocked={handleToggleUnlocked}
+                  />
+                )
+              })}
           </div>
         </div>
       </CardContent>

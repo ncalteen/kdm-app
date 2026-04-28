@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
 import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -167,17 +168,19 @@ export function FightingArtsCard({
   /** Regular fighting arts available for selection */
   const selectableRegularArts = useMemo(() => {
     const assignedIds = new Set(fightingArts.map((f) => f.id))
-    return Object.values(availableFightingArts ?? {}).filter(
-      (f) => !assignedIds.has(f.id)
-    )
+    return Object.values(availableFightingArts ?? {})
+      .filter((f) => !assignedIds.has(f.id))
+      .sort((a, b) => a.fighting_art_name.localeCompare(b.fighting_art_name))
   }, [availableFightingArts, fightingArts])
 
   /** Secret fighting arts available for selection */
   const selectableSecretArts = useMemo(() => {
     const assignedIds = new Set(secretFightingArts.map((f) => f.id))
-    return Object.values(availableSecretFightingArts ?? {}).filter(
-      (f) => !assignedIds.has(f.id)
-    )
+    return Object.values(availableSecretFightingArts ?? {})
+      .filter((f) => !assignedIds.has(f.id))
+      .sort((a, b) =>
+        a.secret_fighting_art_name.localeCompare(b.secret_fighting_art_name)
+      )
   }, [availableSecretFightingArts, secretFightingArts])
 
   /**
@@ -784,7 +787,15 @@ export function FightingArtsCard({
               <Badge variant="default" className="w-[60px] text-center">
                 Fighting
               </Badge>
-              <span className="text-sm flex-grow">{art.fighting_art_name}</span>
+              <CustomRulesText
+                className="flex-grow"
+                custom={art.custom}
+                label={art.fighting_art_name}
+                title={art.fighting_art_name}
+                description="A fighting art mastered by this survivor."
+                sections={[{ label: 'Rules', content: art.rules }]}
+                showCustomBadge
+              />
               <Button
                 variant="ghost"
                 size="icon"
@@ -800,9 +811,15 @@ export function FightingArtsCard({
               <Badge variant="secondary" className="w-[60px] text-center">
                 Secret
               </Badge>
-              <span className="text-sm flex-grow">
-                {art.secret_fighting_art_name}
-              </span>
+              <CustomRulesText
+                className="flex-grow"
+                custom={art.custom}
+                label={art.secret_fighting_art_name}
+                title={art.secret_fighting_art_name}
+                description="A secret fighting art guarded by this survivor."
+                sections={[{ label: 'Rules', content: art.rules }]}
+                showCustomBadge
+              />
               <Button
                 variant="ghost"
                 size="icon"

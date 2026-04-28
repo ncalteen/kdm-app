@@ -315,15 +315,29 @@ export function GearCard({
             )}
 
             {hasFetched &&
-              sortedGear.map(({ item, originalIndex }) => (
-                <GearItem
-                  key={item.id}
-                  index={originalIndex}
-                  gear={item}
-                  onQuantityChange={handleQuantityChange}
-                  onRemove={handleRemove}
-                />
-              ))}
+              sortedGear.map(({ item, originalIndex }) => {
+                const detail = availableGear[item.gear_id]
+
+                return (
+                  <GearItem
+                    key={item.id}
+                    customDetail={
+                      detail
+                        ? {
+                            custom: detail.custom,
+                            sections: [
+                              { label: 'Rules', content: detail.rules }
+                            ]
+                          }
+                        : null
+                    }
+                    index={originalIndex}
+                    gear={item}
+                    onQuantityChange={handleQuantityChange}
+                    onRemove={handleRemove}
+                  />
+                )
+              })}
           </div>
         </div>
       </CardContent>

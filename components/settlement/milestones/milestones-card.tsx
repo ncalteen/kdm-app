@@ -462,15 +462,33 @@ export function MilestonesCard({
             )}
 
             {hasFetched &&
-              selectedSettlement?.milestones.map((milestone, index) => (
-                <MilestoneItem
-                  key={milestone.id}
-                  index={index}
-                  milestone={milestone}
-                  onRemove={handleRemove}
-                  onToggleComplete={handleToggleComplete}
-                />
-              ))}
+              selectedSettlement?.milestones.map((milestone, index) => {
+                const detail = availableMilestones[milestone.milestone_id]
+
+                return (
+                  <MilestoneItem
+                    key={milestone.id}
+                    customDetail={
+                      detail
+                        ? {
+                            custom: detail.custom,
+                            sections: [
+                              { label: 'Rules', content: detail.rules },
+                              {
+                                label: 'Requirements',
+                                content: detail.requirements
+                              }
+                            ]
+                          }
+                        : null
+                    }
+                    index={index}
+                    milestone={milestone}
+                    onRemove={handleRemove}
+                    onToggleComplete={handleToggleComplete}
+                  />
+                )
+              })}
           </div>
         </div>
       </CardContent>

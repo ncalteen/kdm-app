@@ -1,5 +1,9 @@
 'use client'
 
+import {
+  CustomItemDisplay,
+  CustomRulesText
+} from '@/components/custom/custom-rules-sheet'
 import { Button } from '@/components/ui/button'
 import { SettlementDetail } from '@/lib/types'
 import { TrashIcon } from 'lucide-react'
@@ -9,6 +13,8 @@ import { memo, ReactElement } from 'react'
  * Philosophy Item Component Properties
  */
 export interface PhilosophyItemProps {
+  /** Custom Rules Sheet Display */
+  customDetail?: CustomItemDisplay | null
   /** Index */
   index: number
   /** On Remove Handler */
@@ -27,6 +33,7 @@ export interface PhilosophyItemProps {
  * @returns Philosophy Item Component
  */
 export const PhilosophyItem = memo(function PhilosophyItem({
+  customDetail,
   index,
   onRemove,
   philosophy
@@ -34,9 +41,15 @@ export const PhilosophyItem = memo(function PhilosophyItem({
   return (
     <div className="flex items-center gap-2 pl-2">
       {/* Philosophy Name */}
-      <span className="text-sm ml-1 flex-grow">
-        {philosophy.philosophy_name}
-      </span>
+      <CustomRulesText
+        className="ml-1 flex-grow"
+        custom={customDetail?.custom ?? philosophy.custom}
+        description={customDetail?.description}
+        label={philosophy.philosophy_name}
+        sections={customDetail?.sections ?? []}
+        title={customDetail?.title ?? philosophy.philosophy_name}
+        showCustomBadge
+      />
 
       {/* Remove Button */}
       <Button

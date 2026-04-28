@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -12,6 +13,8 @@ import { memo, ReactElement } from 'react'
 export interface NemesisItemProps {
   /** Settlement Nemesis ID */
   id: string
+  /** Whether the underlying nemesis is user-defined */
+  custom?: boolean | null
   /** Monster Name */
   monsterName: string
   /** Whether the Nemesis is Unlocked */
@@ -73,6 +76,7 @@ const LEVEL_CONFIG: {
  */
 export const NemesisItem = memo(function NemesisItem({
   id,
+  custom,
   monsterName,
   unlocked,
   level1Defeated,
@@ -112,6 +116,12 @@ export const NemesisItem = memo(function NemesisItem({
         htmlFor={`nemesis-unlocked-${id}`}>
         {monsterName}
       </Label>
+
+      {custom && (
+        <Badge variant="outline" className="text-xs shrink-0">
+          Custom
+        </Badge>
+      )}
 
       {/* Level Checkboxes and Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">

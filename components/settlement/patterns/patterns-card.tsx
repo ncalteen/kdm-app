@@ -247,14 +247,39 @@ export function PatternsCard({
             )}
 
             {hasFetched &&
-              sortedPatterns.map(({ item, originalIndex }) => (
-                <PatternItem
-                  key={item.id}
-                  index={originalIndex}
-                  pattern={item}
-                  onRemove={handleRemove}
-                />
-              ))}
+              sortedPatterns.map(({ item, originalIndex }) => {
+                const detail = availablePatterns[item.pattern_id]
+                const overviewParts: string[] = []
+                if (detail?.endeavor_cost != null)
+                  overviewParts.push(`Endeavor Cost: ${detail.endeavor_cost}`)
+                if (detail?.crafting_limit != null)
+                  overviewParts.push(`Crafting Limit: ${detail.crafting_limit}`)
+
+                return (
+                  <PatternItem
+                    key={item.id}
+                    customDetail={
+                      detail
+                        ? {
+                            custom: detail.custom,
+                            sections: [
+                              {
+                                label: 'Overview',
+                                content:
+                                  overviewParts.length > 0
+                                    ? overviewParts.join('\n')
+                                    : null
+                              }
+                            ]
+                          }
+                        : null
+                    }
+                    index={originalIndex}
+                    pattern={item}
+                    onRemove={handleRemove}
+                  />
+                )
+              })}
           </div>
         </div>
       </CardContent>

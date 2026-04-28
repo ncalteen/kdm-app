@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
 import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -344,6 +345,11 @@ export function AbilitiesAndImpairmentsCard({
                       .filter(
                         (a) => !items.some((existing) => existing.id === a.id)
                       )
+                      .sort((a, b) =>
+                        a.ability_impairment_name.localeCompare(
+                          b.ability_impairment_name
+                        )
+                      )
                       .map((item) => (
                         <CommandItem
                           key={item.id}
@@ -383,9 +389,15 @@ export function AbilitiesAndImpairmentsCard({
               <div
                 key={`${item.id}-${index}`}
                 className="flex items-center gap-2">
-                <span className="text-sm ml-1 flex-grow">
-                  {item.ability_impairment_name}
-                </span>
+                <CustomRulesText
+                  className="ml-1 flex-grow"
+                  custom={item.custom}
+                  label={item.ability_impairment_name}
+                  title={item.ability_impairment_name}
+                  description="An ability or impairment carried by this survivor."
+                  sections={[{ label: 'Rules', content: item.rules }]}
+                  showCustomBadge
+                />
                 <Button
                   variant="ghost"
                   size="icon"

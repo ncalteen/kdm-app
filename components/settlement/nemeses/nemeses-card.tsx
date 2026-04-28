@@ -120,7 +120,9 @@ export function NemesesCard({
     const linkedIds = new Set(
       (selectedSettlement?.nemeses ?? []).map((n) => n.nemesis_id)
     )
-    return Object.values(availableNemeses).filter((n) => !linkedIds.has(n.id))
+    return Object.values(availableNemeses)
+      .filter((n) => !linkedIds.has(n.id))
+      .sort((a, b) => a.monster_name.localeCompare(b.monster_name))
   }, [availableNemeses, selectedSettlement?.nemeses])
 
   /**
@@ -551,6 +553,7 @@ export function NemesesCard({
                 <NemesisItem
                   key={nemesis.id}
                   id={nemesis.id}
+                  custom={availableNemeses[nemesis.nemesis_id]?.custom}
                   monsterName={nemesis.monster_name}
                   unlocked={nemesis.unlocked}
                   level1Defeated={nemesis.level_1_defeated}

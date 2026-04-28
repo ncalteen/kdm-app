@@ -191,25 +191,29 @@ export function SelectWeaponType({
               )}
             </CommandEmpty>
             <CommandGroup>
-              {Object.values(weaponTypes).map((type) => (
-                <CommandItem
-                  key={type.id}
-                  value={type.weapon_type_name}
-                  onSelect={() => handleTypeSelect(type.id)}>
-                  <Check
-                    className={cn(
-                      'h-4 w-4',
-                      value === type.id ? 'opacity-100' : 'opacity-0'
+              {Object.values(weaponTypes)
+                .sort((a, b) =>
+                  a.weapon_type_name.localeCompare(b.weapon_type_name)
+                )
+                .map((type) => (
+                  <CommandItem
+                    key={type.id}
+                    value={type.weapon_type_name}
+                    onSelect={() => handleTypeSelect(type.id)}>
+                    <Check
+                      className={cn(
+                        'h-4 w-4',
+                        value === type.id ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    {type.weapon_type_name}
+                    {type.custom && (
+                      <Badge variant="outline" className="ml-auto text-xs">
+                        Custom
+                      </Badge>
                     )}
-                  />
-                  {type.weapon_type_name}
-                  {type.custom && (
-                    <Badge variant="outline" className="ml-auto text-xs">
-                      Custom
-                    </Badge>
-                  )}
-                </CommandItem>
-              ))}
+                  </CommandItem>
+                ))}
               {search.trim() && !exactMatchExists && (
                 <CommandItem
                   value={`__create__${search.trim()}`}

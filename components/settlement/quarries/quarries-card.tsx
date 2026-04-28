@@ -114,7 +114,9 @@ export function QuarriesCard({
     const linkedIds = new Set(
       (selectedSettlement?.quarries ?? []).map((q) => q.quarry_id)
     )
-    return Object.values(availableQuarries).filter((q) => !linkedIds.has(q.id))
+    return Object.values(availableQuarries)
+      .filter((q) => !linkedIds.has(q.id))
+      .sort((a, b) => a.monster_name.localeCompare(b.monster_name))
   }, [availableQuarries, selectedSettlement?.quarries])
 
   /**
@@ -534,6 +536,7 @@ export function QuarriesCard({
                 <QuarryItem
                   key={quarry.id}
                   id={quarry.id}
+                  custom={availableQuarries[quarry.quarry_id]?.custom}
                   monsterName={quarry.monster_name}
                   node={quarry.node}
                   onRemove={handleRemove}

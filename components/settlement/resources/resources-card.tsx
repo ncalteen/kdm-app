@@ -320,15 +320,29 @@ export function ResourcesCard({
             )}
 
             {hasFetched &&
-              sortedResources.map(({ item, originalIndex }) => (
-                <ResourceItem
-                  key={item.id}
-                  index={originalIndex}
-                  resource={item}
-                  onQuantityChange={handleQuantityChange}
-                  onRemove={handleRemove}
-                />
-              ))}
+              sortedResources.map(({ item, originalIndex }) => {
+                const detail = availableResources[item.resource_id]
+
+                return (
+                  <ResourceItem
+                    key={item.id}
+                    customDetail={
+                      detail
+                        ? {
+                            custom: detail.custom,
+                            sections: [
+                              { label: 'Rules', content: detail.rules }
+                            ]
+                          }
+                        : null
+                    }
+                    index={originalIndex}
+                    resource={item}
+                    onQuantityChange={handleQuantityChange}
+                    onRemove={handleRemove}
+                  />
+                )
+              })}
           </div>
         </div>
       </CardContent>

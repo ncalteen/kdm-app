@@ -1,5 +1,10 @@
 'use client'
 
+import {
+  CustomKnowledgeRulesIconButton,
+  CustomNeurosisRulesIconButton,
+  CustomPhilosophyRulesIconButton
+} from '@/components/custom/custom-rules-sheet'
 import { NumericInput } from '@/components/menu/numeric-input'
 import { SelectNeurosis } from '@/components/menu/select-neurosis'
 import { SelectPhilosophy } from '@/components/menu/select-philosophy'
@@ -104,7 +109,7 @@ function TenetKnowledgeSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="justify-between border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
+          className="w-full justify-between border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
           {selectedName ?? 'Select tenet knowledge...'}
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -773,11 +778,29 @@ export function PhilosophyCard({
             <CardTitle className="text-sm flex flex-row items-center gap-1">
               Philosophy
             </CardTitle>
-            <SelectPhilosophy
-              selectedSettlement={selectedSettlement}
-              value={philosophy?.id ?? ''}
-              onChange={handlePhilosophyChange}
-            />
+            <div className="flex flex-row items-center gap-1">
+              <SelectPhilosophy
+                selectedSettlement={selectedSettlement}
+                value={philosophy?.id ?? ''}
+                onChange={handlePhilosophyChange}
+              />
+              {(() => {
+                const settlementPhilosophy =
+                  selectedSettlement?.philosophies.find(
+                    (p) => p.philosophy_id === philosophy?.id
+                  )
+
+                return (
+                  <CustomPhilosophyRulesIconButton
+                    custom={settlementPhilosophy?.custom}
+                    philosophyId={philosophy?.id ?? null}
+                    philosophyName={philosophy?.philosophy_name ?? null}
+                    tier={philosophy?.tier ?? null}
+                    huntXpMilestones={philosophy?.hunt_xp_milestones ?? null}
+                  />
+                )
+              })()}
+            </div>
           </div>
 
           {/* Rank */}
@@ -803,22 +826,60 @@ export function PhilosophyCard({
       <CardContent className="p-0 flex flex-col">
         {/* Neurosis */}
         <div className="flex flex-col gap-1">
-          <SelectNeurosis
-            selectedSettlement={selectedSettlement}
-            value={neurosis?.id ?? ''}
-            onChange={handleNeurosisChange}
-          />
+          <div className="flex flex-row items-center gap-1">
+            <div className="flex-grow">
+              <SelectNeurosis
+                selectedSettlement={selectedSettlement}
+                value={neurosis?.id ?? ''}
+                onChange={handleNeurosisChange}
+              />
+            </div>
+            {(() => {
+              const settlementNeurosis = selectedSettlement?.neuroses.find(
+                (n) => n.id === neurosis?.id
+              )
+              return (
+                <CustomNeurosisRulesIconButton
+                  custom={settlementNeurosis?.custom}
+                  neurosisId={neurosis?.id ?? null}
+                  neurosisName={settlementNeurosis?.neurosis_name ?? null}
+                />
+              )
+            })()}
+          </div>
           <Label className="text-xs text-muted-foreground">Neurosis</Label>
         </div>
 
         {/* Tenet Knowledge and Ranks */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-2 mt-1">
           <div className="flex-grow flex flex-col gap-1">
-            <TenetKnowledgeSelect
-              knowledges={selectedSettlement?.knowledges ?? []}
-              value={tenetKnowledge?.id}
-              onChange={handleTenetKnowledgeChange}
-            />
+            <div className="flex flex-row items-center gap-1">
+              <div className="flex-grow">
+                <TenetKnowledgeSelect
+                  knowledges={selectedSettlement?.knowledges ?? []}
+                  value={tenetKnowledge?.id}
+                  onChange={handleTenetKnowledgeChange}
+                />
+              </div>
+              {(() => {
+                const settlementKnowledge = selectedSettlement?.knowledges.find(
+                  (k) => k.knowledge_id === tenetKnowledge?.id
+                )
+                return (
+                  <CustomKnowledgeRulesIconButton
+                    custom={settlementKnowledge?.custom}
+                    knowledgeName={settlementKnowledge?.knowledge_name}
+                    rules={settlementKnowledge?.rules}
+                    observationConditions={
+                      settlementKnowledge?.observation_conditions
+                    }
+                    observationRankUpMilestone={
+                      settlementKnowledge?.observation_rank_up_milestone
+                    }
+                  />
+                )
+              })()}
+            </div>
             <Label className="text-xs text-muted-foreground">
               Tenet Knowledge
             </Label>

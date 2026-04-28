@@ -1,9 +1,12 @@
 'use client'
 
+import {
+  CustomItemDisplay,
+  CustomRulesText
+} from '@/components/custom/custom-rules-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
 import { SettlementDetail } from '@/lib/types'
 import { BrainIcon, TrashIcon } from 'lucide-react'
 import { memo, ReactElement } from 'react'
@@ -12,6 +15,8 @@ import { memo, ReactElement } from 'react'
  * Reward Item Component Properties
  */
 export interface RewardItemProps {
+  /** Custom Rules Sheet Display */
+  customDetail?: CustomItemDisplay | null
   /** Index */
   index: number
   /** Reward Row */
@@ -35,6 +40,7 @@ export interface RewardItemProps {
  * @returns Reward Item Component
  */
 export const RewardItem = memo(function RewardItem({
+  customDetail,
   index,
   reward,
   shouldHighlight = false,
@@ -63,11 +69,23 @@ export const RewardItem = memo(function RewardItem({
       </Badge>
 
       {/* Reward Name */}
-      <Label
-        className="text-sm truncate ml-1"
-        htmlFor={`reward-unlocked-${index}`}>
-        {reward.reward_name}
-      </Label>
+      <CustomRulesText
+        className="truncate ml-1"
+        custom={customDetail?.custom ?? false}
+        description={customDetail?.description}
+        label={reward.reward_name}
+        sections={
+          customDetail?.sections ?? [
+            { label: 'Rules', content: reward.rules },
+            {
+              label: 'Collective Cognition',
+              content: `${reward.collective_cognition} CC`
+            }
+          ]
+        }
+        title={customDetail?.title ?? reward.reward_name}
+        showCustomBadge
+      />
 
       {/* Collective Cognition Badge and Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">

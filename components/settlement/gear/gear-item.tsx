@@ -1,8 +1,11 @@
 'use client'
 
+import {
+  CustomItemDisplay,
+  CustomRulesText
+} from '@/components/custom/custom-rules-sheet'
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { SettlementDetail } from '@/lib/types'
 import { TrashIcon } from 'lucide-react'
 import { memo, ReactElement } from 'react'
@@ -11,6 +14,8 @@ import { memo, ReactElement } from 'react'
  * Gear Item Component Properties
  */
 export interface GearItemProps {
+  /** Custom Rules Sheet Display */
+  customDetail?: CustomItemDisplay | null
   /** Index */
   index: number
   /** Gear Row */
@@ -31,6 +36,7 @@ export interface GearItemProps {
  * @returns Gear Item Component
  */
 export const GearItem = memo(function GearItem({
+  customDetail,
   index,
   gear,
   onQuantityChange,
@@ -39,7 +45,15 @@ export const GearItem = memo(function GearItem({
   return (
     <div className="flex items-center gap-2 pl-2 pb-1">
       {/* Gear Name */}
-      <Label className="text-sm truncate ml-1">{gear.gear_name}</Label>
+      <CustomRulesText
+        className="truncate ml-1"
+        custom={customDetail?.custom ?? false}
+        description={customDetail?.description}
+        label={gear.gear_name}
+        sections={customDetail?.sections ?? []}
+        title={customDetail?.title ?? gear.gear_name}
+        showCustomBadge
+      />
 
       {/* Quantity and Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">

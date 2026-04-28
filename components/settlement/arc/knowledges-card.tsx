@@ -401,6 +401,9 @@ export function KnowledgesCard({
                             (existing) => existing.knowledge_id === k.id
                           )
                       )
+                      .sort((a, b) =>
+                        a.knowledge_name.localeCompare(b.knowledge_name)
+                      )
                       .map((knowledge) => (
                         <CommandItem
                           key={knowledge.id}

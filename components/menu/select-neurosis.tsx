@@ -70,7 +70,7 @@ export function SelectNeurosis({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="justify-between border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
+          className="w-full justify-between border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
           {propValue
             ? neurosisOptions.find((n) => n.value === propValue)?.label
             : 'Select neurosis...'}
