@@ -1,4 +1,5 @@
 import { buildContentSecurityPolicy, generateNonce } from '@/lib/security/csp'
+import { applySecurityHeaders } from '@/lib/security/headers'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -74,6 +75,10 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     const redirectResponse = NextResponse.redirect(url)
+    // Responses built directly in middleware bypass `next.config.ts`'s
+    // `headers()` config, so the static security headers must be applied
+    // manually here in addition to the per-request CSP.
+    applySecurityHeaders(redirectResponse.headers)
     redirectResponse.headers.set('Content-Security-Policy', csp)
     return redirectResponse
   }
