@@ -1,5 +1,6 @@
 'use client'
 
+import { DiscordButton } from '@/components/auth/discord-button'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -127,7 +128,20 @@ export function SignUpForm({
           <CardDescription>Create a new account</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignUp}>
+          <div className="flex flex-col gap-6">
+            <DiscordButton onError={setError} label="Sign up with Discord" />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or sign up with email
+                </span>
+              </div>
+            </div>
+          </div>
+          <form onSubmit={handleSignUp} className="mt-6">
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
