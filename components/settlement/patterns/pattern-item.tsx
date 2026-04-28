@@ -1,7 +1,10 @@
 'use client'
 
+import {
+  CustomItemDisplay,
+  CustomRulesText
+} from '@/components/custom/custom-rules-sheet'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { SettlementDetail } from '@/lib/types'
 import { TrashIcon } from 'lucide-react'
 import { memo, ReactElement } from 'react'
@@ -10,6 +13,8 @@ import { memo, ReactElement } from 'react'
  * Pattern Item Component Properties
  */
 export interface PatternItemProps {
+  /** Custom Rules Sheet Display */
+  customDetail?: CustomItemDisplay | null
   /** Index */
   index: number
   /** Pattern Row */
@@ -28,6 +33,7 @@ export interface PatternItemProps {
  * @returns Pattern Item Component
  */
 export const PatternItem = memo(function PatternItem({
+  customDetail,
   index,
   pattern,
   onRemove
@@ -35,7 +41,14 @@ export const PatternItem = memo(function PatternItem({
   return (
     <div className="flex items-center gap-2 pl-2">
       {/* Pattern Name */}
-      <Label className="text-sm truncate ml-1">{pattern.pattern_name}</Label>
+      <CustomRulesText
+        className="truncate ml-1"
+        custom={customDetail?.custom ?? false}
+        description={customDetail?.description}
+        label={pattern.pattern_name}
+        sections={customDetail?.sections ?? []}
+        title={customDetail?.title ?? pattern.pattern_name}
+      />
 
       {/* Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">

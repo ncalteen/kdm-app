@@ -400,17 +400,17 @@ export function MonsterForm({
   /** Locations not yet selected */
   const selectableLocations = useMemo(() => {
     const selectedIds = new Set(locations.map((l) => l.id))
-    return Object.values(availableLocations).filter(
-      (l) => !selectedIds.has(l.id)
-    )
+    return Object.values(availableLocations)
+      .filter((l) => !selectedIds.has(l.id))
+      .sort((a, b) => a.location_name.localeCompare(b.location_name))
   }, [availableLocations, locations])
 
   /** CC rewards not yet selected */
   const selectableCCRewards = useMemo(() => {
     const selectedIds = new Set(ccRewards.map((c) => c.id))
-    return Object.values(availableCCRewards).filter(
-      (c) => !selectedIds.has(c.id)
-    )
+    return Object.values(availableCCRewards)
+      .filter((c) => !selectedIds.has(c.id))
+      .sort((a, b) => a.reward_name.localeCompare(b.reward_name))
   }, [availableCCRewards, ccRewards])
 
   /**

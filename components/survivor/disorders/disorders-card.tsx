@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
 import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -299,6 +300,9 @@ export function DisordersCard({
                         (d) =>
                           !disorders.some((existing) => existing.id === d.id)
                       )
+                      .sort((a, b) =>
+                        a.disorder_name.localeCompare(b.disorder_name)
+                      )
                       .map((disorder) => (
                         <CommandItem
                           key={disorder.id}
@@ -337,9 +341,14 @@ export function DisordersCard({
             <div
               key={`${item.id}-${index}`}
               className="flex items-center gap-2">
-              <span className="text-sm ml-1 flex-grow">
-                {item.disorder_name}
-              </span>
+              <CustomRulesText
+                className="ml-1 flex-grow"
+                custom={item.custom}
+                label={item.disorder_name}
+                title={item.disorder_name}
+                description="A disorder afflicting this survivor."
+                sections={[{ label: 'Rules', content: item.rules }]}
+              />
               <Button
                 variant="ghost"
                 size="icon"

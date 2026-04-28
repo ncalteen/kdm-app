@@ -277,13 +277,21 @@ export function CursedGearCard({
             </p>
           )}
 
-          {sortedCursedGear.map(({ item, originalIndex }) => (
-            <CursedGearItem
-              key={item.id}
-              gearName={item.gear_name}
-              onRemove={() => handleRemove(originalIndex)}
-            />
-          ))}
+          {sortedCursedGear.map(({ item, originalIndex }) => {
+            const settlementGear = selectedSettlement?.gear.find(
+              (g) => g.gear_id === item.id
+            )
+
+            return (
+              <CursedGearItem
+                key={item.id}
+                custom={settlementGear?.custom ?? false}
+                gearId={item.id}
+                gearName={item.gear_name}
+                onRemove={() => handleRemove(originalIndex)}
+              />
+            )
+          })}
         </div>
       </CardContent>
     </Card>

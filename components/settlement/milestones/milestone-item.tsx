@@ -1,9 +1,12 @@
 'use client'
 
+import {
+  CustomItemDisplay,
+  CustomRulesText
+} from '@/components/custom/custom-rules-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
 import { SettlementDetail } from '@/lib/types'
 import { BookOpenIcon, TrashIcon } from 'lucide-react'
 import { memo, ReactElement } from 'react'
@@ -12,6 +15,8 @@ import { memo, ReactElement } from 'react'
  * Milestone Item Component Properties
  */
 export interface MilestoneItemProps {
+  /** Custom Rules Sheet Display */
+  customDetail?: CustomItemDisplay | null
   /** Index */
   index: number
   /** Milestone Row */
@@ -32,6 +37,7 @@ export interface MilestoneItemProps {
  * @returns Milestone Item Component
  */
 export const MilestoneItem = memo(function MilestoneItem({
+  customDetail,
   index,
   milestone,
   onRemove,
@@ -48,11 +54,14 @@ export const MilestoneItem = memo(function MilestoneItem({
       />
 
       {/* Milestone Name */}
-      <Label
-        className="text-sm truncate ml-1"
-        htmlFor={`milestone-complete-${index}`}>
-        {milestone.milestone_name}
-      </Label>
+      <CustomRulesText
+        className="truncate ml-1"
+        custom={customDetail?.custom ?? false}
+        description={customDetail?.description}
+        label={milestone.milestone_name}
+        sections={customDetail?.sections ?? []}
+        title={customDetail?.title ?? milestone.milestone_name}
+      />
 
       {/* Event Badge and Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">

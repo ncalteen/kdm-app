@@ -20,6 +20,7 @@ import {
   WeaponTypeDetail
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import MDEditor from '@uiw/react-md-editor'
 import { Search } from 'lucide-react'
 import { ReactElement, ReactNode, useState } from 'react'
 
@@ -92,7 +93,13 @@ function CustomRulesSheetBody({
         <SheetTitle className="flex items-center gap-2 pr-6">
           <span className="truncate">{title}</span>
         </SheetTitle>
-        {description && <SheetDescription>{description}</SheetDescription>}
+        {description ? (
+          <SheetDescription>{description}</SheetDescription>
+        ) : (
+          <SheetDescription className="sr-only">
+            Custom rules for {title}.
+          </SheetDescription>
+        )}
       </SheetHeader>
 
       <div className="flex flex-col gap-4 px-4 pb-4 overflow-y-auto">
@@ -100,12 +107,17 @@ function CustomRulesSheetBody({
           <div
             key={`${section.label}-${index}`}
             className="flex flex-col gap-1">
-            <h4 className="text-sm font-semibold">{section.label}</h4>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {section.content && section.content.trim().length > 0
-                ? section.content
-                : 'No rules recorded.'}
-            </p>
+            {section.content && section.content.trim().length > 0 ? (
+              <MDEditor.Markdown
+                source={section.content}
+                className="!bg-transparent text-sm text-muted-foreground"
+                style={{ backgroundColor: 'transparent' }}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No rules recorded.
+              </p>
+            )}
           </div>
         ))}
       </div>

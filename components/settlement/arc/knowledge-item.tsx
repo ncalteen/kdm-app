@@ -1,5 +1,9 @@
 'use client'
 
+import {
+  CustomItemDisplay,
+  CustomRulesText
+} from '@/components/custom/custom-rules-sheet'
 import { Button } from '@/components/ui/button'
 import { SettlementDetail } from '@/lib/types'
 import { TrashIcon } from 'lucide-react'
@@ -9,6 +13,8 @@ import { memo, ReactElement } from 'react'
  * Knowledge Item Component Properties
  */
 export interface KnowledgeItemProps {
+  /** Custom Rules Sheet Display */
+  customDetail?: CustomItemDisplay | null
   /** Index */
   index: number
   /** Knowledge Row */
@@ -27,6 +33,7 @@ export interface KnowledgeItemProps {
  * @returns Knowledge Item Component
  */
 export const KnowledgeItem = memo(function KnowledgeItem({
+  customDetail,
   index,
   knowledge,
   onRemove
@@ -34,7 +41,22 @@ export const KnowledgeItem = memo(function KnowledgeItem({
   return (
     <div className="flex items-center gap-2 pl-2">
       {/* Knowledge Name */}
-      <span className="text-sm ml-1 flex-grow">{knowledge.knowledge_name}</span>
+      <CustomRulesText
+        className="ml-1 flex-grow"
+        custom={customDetail?.custom ?? knowledge.custom}
+        description={customDetail?.description}
+        label={knowledge.knowledge_name}
+        sections={
+          customDetail?.sections ?? [
+            { label: 'Rules', content: knowledge.rules },
+            {
+              label: 'Observation Conditions',
+              content: knowledge.observation_conditions
+            }
+          ]
+        }
+        title={customDetail?.title ?? knowledge.knowledge_name}
+      />
 
       {/* Remove Button */}
       <Button

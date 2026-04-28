@@ -263,14 +263,42 @@ export function SeedPatternsCard({
             )}
 
             {hasFetched &&
-              sortedSeedPatterns.map(({ item, originalIndex }) => (
-                <SeedPatternItem
-                  key={item.id}
-                  index={originalIndex}
-                  seedPattern={item}
-                  onRemove={handleRemove}
-                />
-              ))}
+              sortedSeedPatterns.map(({ item, originalIndex }) => {
+                const detail = availableSeedPatterns[item.seed_pattern_id]
+
+                return (
+                  <SeedPatternItem
+                    key={item.id}
+                    customDetail={
+                      detail
+                        ? {
+                            custom: detail.custom,
+                            sections: [
+                              {
+                                label: 'Requirements',
+                                content: detail.requirements
+                              },
+                              {
+                                label: 'Crafting Steps',
+                                content: detail.crafting_steps
+                              },
+                              {
+                                label: 'Keywords',
+                                content:
+                                  detail.keywords && detail.keywords.length > 0
+                                    ? detail.keywords.join(', ')
+                                    : null
+                              }
+                            ]
+                          }
+                        : null
+                    }
+                    index={originalIndex}
+                    seedPattern={item}
+                    onRemove={handleRemove}
+                  />
+                )
+              })}
           </div>
         </div>
       </CardContent>

@@ -508,17 +508,38 @@ export function PrinciplesCard({
             )}
 
             {hasFetched &&
-              sortedPrinciples.map(({ item, originalIndex }) => (
-                <div key={item.id}>
-                  <PrincipleItem
-                    index={originalIndex}
-                    onOptionSelect={handleOptionSelect}
-                    onRemove={handleRemove}
-                    principle={item}
-                  />
-                  <Separator className="my-1" />
-                </div>
-              ))}
+              sortedPrinciples.map(({ item, originalIndex }) => {
+                const detail = availablePrinciples[item.principle_id]
+
+                return (
+                  <div key={item.id}>
+                    <PrincipleItem
+                      customDetail={
+                        detail
+                          ? {
+                              custom: detail.custom,
+                              sections: [
+                                {
+                                  label: detail.option_1_name,
+                                  content: detail.option_1_rules
+                                },
+                                {
+                                  label: detail.option_2_name,
+                                  content: detail.option_2_rules
+                                }
+                              ]
+                            }
+                          : null
+                      }
+                      index={originalIndex}
+                      onOptionSelect={handleOptionSelect}
+                      onRemove={handleRemove}
+                      principle={item}
+                    />
+                    <Separator className="my-1" />
+                  </div>
+                )
+              })}
           </div>
         </div>
       </CardContent>

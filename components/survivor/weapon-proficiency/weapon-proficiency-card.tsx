@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomWeaponTypeRulesIconButton } from '@/components/custom/custom-rules-sheet'
 import { SelectWeaponType } from '@/components/menu/select-weapon-type'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -174,11 +175,14 @@ export function WeaponProficiencyCard({
             <CardTitle className="text-sm flex flex-row items-center gap-1">
               Weapon Proficiency
             </CardTitle>
-            <SelectWeaponType
-              local={local}
-              value={weaponTypeId}
-              onChange={handleWeaponTypeChange}
-            />
+            <div className="flex flex-row items-center gap-1">
+              <SelectWeaponType
+                local={local}
+                value={weaponTypeId}
+                onChange={handleWeaponTypeChange}
+              />
+              <CustomWeaponTypeRulesIconButton weaponTypeId={weaponTypeId} />
+            </div>
           </div>
           <div className="flex flex-col justify-between items-center lg:items-end gap-2">
             <div className="flex flex-row gap-2">

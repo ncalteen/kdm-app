@@ -484,15 +484,29 @@ export function LocationsCard({
             )}
 
             {hasFetched &&
-              sortedLocations.map(({ item, originalIndex }) => (
-                <LocationItem
-                  key={item.id}
-                  index={originalIndex}
-                  location={item}
-                  onRemove={handleRemove}
-                  onToggleUnlocked={handleToggleUnlocked}
-                />
-              ))}
+              sortedLocations.map(({ item, originalIndex }) => {
+                const detail = availableLocations[item.location_id]
+
+                return (
+                  <LocationItem
+                    key={item.id}
+                    customDetail={
+                      detail
+                        ? {
+                            custom: detail.custom,
+                            sections: [
+                              { label: 'Rules', content: detail.rules }
+                            ]
+                          }
+                        : null
+                    }
+                    index={originalIndex}
+                    location={item}
+                    onRemove={handleRemove}
+                    onToggleUnlocked={handleToggleUnlocked}
+                  />
+                )
+              })}
           </div>
         </div>
       </CardContent>

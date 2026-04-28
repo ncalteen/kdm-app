@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomRulesIconButton } from '@/components/custom/custom-rules-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -163,6 +164,11 @@ export function TraitsMoods({
         {monster.traits.map((trait) => (
           <div key={trait.id} className="flex items-center gap-1">
             <Input value={trait.trait_name} disabled />
+            <CustomRulesIconButton
+              custom={trait.custom}
+              title={trait.trait_name}
+              sections={[{ label: 'Rules', content: trait.rules }]}
+            />
             <Button
               type="button"
               variant="ghost"
@@ -231,6 +237,11 @@ export function TraitsMoods({
         {monster.moods.map((mood) => (
           <div key={mood.id} className="flex items-center gap-1">
             <Input value={mood.mood_name} disabled />
+            <CustomRulesIconButton
+              custom={mood.custom}
+              title={mood.mood_name}
+              sections={[{ label: 'Rules', content: mood.rules }]}
+            />
             <Button
               type="button"
               variant="ghost"
@@ -302,6 +313,11 @@ export function TraitsMoods({
         {monster.survivor_statuses.map((status) => (
           <div key={status.id} className="flex items-center gap-1">
             <Input value={status.survivor_status_name} disabled />
+            <CustomRulesIconButton
+              custom={status.custom}
+              title={status.survivor_status_name}
+              sections={[{ label: 'Rules', content: status.rules }]}
+            />
             <Button
               type="button"
               variant="ghost"

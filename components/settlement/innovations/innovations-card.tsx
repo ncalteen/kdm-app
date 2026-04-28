@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
 import { InnovationDialog } from '@/components/custom/dialogs/innovation-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -394,6 +395,9 @@ export function InnovationsCard({
                             (existing) => existing.innovation_id === i.id
                           )
                       )
+                      .sort((a, b) =>
+                        a.innovation_name.localeCompare(b.innovation_name)
+                      )
                       .map((innovation) => (
                         <CommandItem
                           key={innovation.id}
@@ -429,22 +433,41 @@ export function InnovationsCard({
       <CardContent className="p-1 pb-0">
         <div className="flex flex-col h-[400px]">
           <div className="flex-1 overflow-y-auto">
-            {sortedInnovations.map(({ item, originalIndex }) => (
-              <div
-                key={`${item.id}-${originalIndex}`}
-                className="flex items-center gap-2">
-                <span className="text-sm ml-1 flex-grow pl-2">
-                  {item.innovation_name}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  type="button"
-                  onClick={() => handleRemove(originalIndex)}>
-                  <TrashIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+            {sortedInnovations.map(({ item, originalIndex }) => {
+              const detail = availableInnovations[item.innovation_id]
+
+              return (
+                <div
+                  key={`${item.id}-${originalIndex}`}
+                  className="flex items-center gap-2">
+                  <CustomRulesText
+                    className="ml-1 flex-grow pl-2"
+                    custom={detail?.custom ?? false}
+                    label={item.innovation_name}
+                    sections={
+                      detail
+                        ? [
+                            { label: 'Rules', content: detail.rules },
+                            {
+                              label: 'Consequences',
+                              content: detail.consequences
+                            },
+                            { label: 'Benefits', content: detail.benefits }
+                          ]
+                        : []
+                    }
+                    title={item.innovation_name}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    onClick={() => handleRemove(originalIndex)}>
+                    <TrashIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              )
+            })}
           </div>
         </div>
       </CardContent>

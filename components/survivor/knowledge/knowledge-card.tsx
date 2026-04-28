@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomKnowledgeRulesIconButton } from '@/components/custom/custom-rules-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -102,7 +103,7 @@ function KnowledgeSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="justify-between border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
+          className="w-full justify-between border-0 border-b rounded-none focus:ring-0 px-2 text-sm">
           {selectedName ?? placeholder}
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -862,12 +863,35 @@ export function KnowledgeCard({
         <div className="flex flex-col lg:flex-row lg:items-start gap-2">
           <div className="flex-grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
-              <KnowledgeSelect
-                knowledges={selectedSettlement?.knowledges ?? []}
-                value={knowledge1?.id}
-                onChange={updateKnowledge1}
-                placeholder="Select knowledge..."
-              />
+              <div className="flex flex-row items-center gap-1">
+                <div className="flex-grow">
+                  <KnowledgeSelect
+                    knowledges={selectedSettlement?.knowledges ?? []}
+                    value={knowledge1?.id}
+                    onChange={updateKnowledge1}
+                    placeholder="Select knowledge..."
+                  />
+                </div>
+                {(() => {
+                  const settlementKnowledge =
+                    selectedSettlement?.knowledges.find(
+                      (k) => k.knowledge_id === knowledge1?.id
+                    )
+                  return (
+                    <CustomKnowledgeRulesIconButton
+                      custom={settlementKnowledge?.custom}
+                      knowledgeName={settlementKnowledge?.knowledge_name}
+                      rules={settlementKnowledge?.rules}
+                      observationConditions={
+                        settlementKnowledge?.observation_conditions
+                      }
+                      observationRankUpMilestone={
+                        settlementKnowledge?.observation_rank_up_milestone
+                      }
+                    />
+                  )
+                })()}
+              </div>
               <Label className="text-xs text-muted-foreground">
                 Knowledge Name
               </Label>
@@ -960,12 +984,35 @@ export function KnowledgeCard({
         <div className="flex flex-col lg:flex-row lg:items-start gap-2">
           <div className="flex-grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
-              <KnowledgeSelect
-                knowledges={selectedSettlement?.knowledges ?? []}
-                value={knowledge2?.id}
-                onChange={updateKnowledge2}
-                placeholder="Select knowledge..."
-              />
+              <div className="flex flex-row items-center gap-1">
+                <div className="flex-grow">
+                  <KnowledgeSelect
+                    knowledges={selectedSettlement?.knowledges ?? []}
+                    value={knowledge2?.id}
+                    onChange={updateKnowledge2}
+                    placeholder="Select knowledge..."
+                  />
+                </div>
+                {(() => {
+                  const settlementKnowledge =
+                    selectedSettlement?.knowledges.find(
+                      (k) => k.knowledge_id === knowledge2?.id
+                    )
+                  return (
+                    <CustomKnowledgeRulesIconButton
+                      custom={settlementKnowledge?.custom}
+                      knowledgeName={settlementKnowledge?.knowledge_name}
+                      rules={settlementKnowledge?.rules}
+                      observationConditions={
+                        settlementKnowledge?.observation_conditions
+                      }
+                      observationRankUpMilestone={
+                        settlementKnowledge?.observation_rank_up_milestone
+                      }
+                    />
+                  )
+                })()}
+              </div>
               <Label className="text-xs text-muted-foreground">
                 Knowledge Name
               </Label>

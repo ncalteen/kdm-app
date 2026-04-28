@@ -1,5 +1,9 @@
 'use client'
 
+import {
+  CustomItemDisplay,
+  CustomRulesText
+} from '@/components/custom/custom-rules-sheet'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -11,6 +15,8 @@ import { memo, ReactElement } from 'react'
  * Principle Item Component Properties
  */
 export interface PrincipleItemProps {
+  /** Custom Rules Sheet Display */
+  customDetail?: CustomItemDisplay | null
   /** Index */
   index: number
   /** On Option Select Handler */
@@ -31,6 +37,7 @@ export interface PrincipleItemProps {
  * @returns Principle Item Component
  */
 export const PrincipleItem = memo(function PrincipleItem({
+  customDetail,
   index,
   onOptionSelect,
   onRemove,
@@ -39,9 +46,14 @@ export const PrincipleItem = memo(function PrincipleItem({
   return (
     <div className="grid grid-cols-3 items-center gap-2 pl-2">
       {/* Principle Name */}
-      <span className="text-sm font-bold truncate">
-        {principle.principle_name}
-      </span>
+      <CustomRulesText
+        className="font-bold truncate"
+        custom={customDetail?.custom ?? false}
+        description={customDetail?.description}
+        label={principle.principle_name}
+        sections={customDetail?.sections ?? []}
+        title={customDetail?.title ?? principle.principle_name}
+      />
 
       {/* Option Checkboxes */}
       <div className="flex flex-col gap-1">
