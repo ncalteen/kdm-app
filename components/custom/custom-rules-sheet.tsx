@@ -23,7 +23,7 @@ import {
 import { cn } from '@/lib/utils'
 import MDEditor from '@uiw/react-md-editor'
 import { Search } from 'lucide-react'
-import { ReactElement, ReactNode, useState } from 'react'
+import { ReactElement, ReactNode, useEffect, useState } from 'react'
 
 /**
  * Custom Rules Section
@@ -437,27 +437,46 @@ export function CustomWeaponTypeRulesIconButton({
   weaponTypeId
 }: CustomWeaponTypeRulesIconButtonProps): ReactElement | null {
   const [open, setOpen] = useState(false)
+  const [loadedFor, setLoadedFor] = useState<string | null | undefined>(
+    undefined
+  )
   const [detail, setDetail] = useState<WeaponTypeDetail | null>(null)
-  const [loaded, setLoaded] = useState(false)
-  const [prevId, setPrevId] = useState<string | null | undefined>(undefined)
 
-  // Fetch weapon type detail when weaponTypeId changes.
-  if (prevId !== weaponTypeId) {
-    setPrevId(weaponTypeId)
-    setDetail(null)
-    setLoaded(false)
+  // Fetch weapon type detail when weaponTypeId changes. All state writes are
+  // performed asynchronously inside Promise callbacks to avoid render-time
+  // setState (which can cause render loops and behave poorly under Strict
+  // Mode).
+  useEffect(() => {
+    let cancelled = false
 
-    if (weaponTypeId)
-      getWeaponTypes()
-        .then((map) => setDetail(map[weaponTypeId] ?? null))
-        .catch((error) =>
-          console.error('Custom Weapon Type Rules Fetch Error:', error)
-        )
-        .finally(() => setLoaded(true))
-    else setLoaded(true)
-  }
+    const fetchDetail: Promise<WeaponTypeDetail | null> = weaponTypeId
+      ? getWeaponTypes().then((map) => map[weaponTypeId] ?? null)
+      : Promise.resolve(null)
 
-  if (!loaded || !detail?.custom) return null
+    fetchDetail
+      .then((next) => {
+        if (cancelled) return
+        setDetail(next)
+        setLoadedFor(weaponTypeId ?? null)
+      })
+      .catch((error) => {
+        if (cancelled) return
+        console.error('Custom Weapon Type Rules Fetch Error:', error)
+        setDetail(null)
+        setLoadedFor(weaponTypeId ?? null)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [weaponTypeId])
+
+  // Only render once the loaded detail matches the current weaponTypeId. This
+  // avoids briefly showing stale data when the prop changes, and implicitly
+  // closes the sheet while a new id is loading.
+  const isLoadedForCurrentId = loadedFor === weaponTypeId
+
+  if (!isLoadedForCurrentId || !detail?.custom) return null
 
   const title = detail.weapon_type_name
 
