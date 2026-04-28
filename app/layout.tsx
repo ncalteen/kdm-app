@@ -5,6 +5,7 @@ import { LocalProvider } from '@/contexts/local-context'
 import { Analytics } from '@vercel/analytics/next'
 import { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { headers } from 'next/headers'
 import { ReactElement, ReactNode } from 'react'
 
 const geistSans = Geist({
@@ -24,14 +25,22 @@ export const metadata: Metadata = {
 /**
  * Root Layout Component
  *
+ * Reading `x-nonce` from the request headers opts every route into dynamic
+ * rendering, which is required for Next.js to attach the per-request CSP nonce
+ * (set in `lib/supabase/proxy.ts`) to its inline bootstrap scripts. Without
+ * this, production routes are statically generated and the inline scripts have
+ * no nonce — causing CSP to block them.
+ *
  * @param props Component Properties
  * @returns Root Layout Component
  */
-export default function RootLayout({
+export default async function RootLayout({
   children
 }: Readonly<{
   children: ReactNode
-}>): ReactElement {
+}>): Promise<ReactElement> {
+  const nonce = (await headers()).get('x-nonce') ?? undefined
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -41,7 +50,8 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange>
+          disableTransitionOnChange
+          nonce={nonce}>
           <LocalProvider>{children}</LocalProvider>
           <Toaster />
         </ThemeProvider>
