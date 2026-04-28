@@ -60,10 +60,11 @@ export function DiscordButton({
       <Image
         src="/discord.svg"
         alt=""
-        width={20}
+        width={21}
         height={16}
         aria-hidden="true"
         className="mr-2"
+        style={{ height: 'auto' }}
       />
       {isLoading ? 'Redirecting…' : label}
     </Button>
