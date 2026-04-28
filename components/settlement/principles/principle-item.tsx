@@ -53,6 +53,7 @@ export const PrincipleItem = memo(function PrincipleItem({
         label={principle.principle_name}
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? principle.principle_name}
+        showCustomBadge
       />
 
       {/* Option Checkboxes */}

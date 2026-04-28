@@ -52,6 +52,7 @@ export const GearItem = memo(function GearItem({
         label={gear.gear_name}
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? gear.gear_name}
+        showCustomBadge
       />
 
       {/* Quantity and Remove Button */}

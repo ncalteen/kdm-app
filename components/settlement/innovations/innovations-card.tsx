@@ -457,6 +457,7 @@ export function InnovationsCard({
                         : []
                     }
                     title={item.innovation_name}
+                    showCustomBadge
                   />
                   <Button
                     variant="ghost"

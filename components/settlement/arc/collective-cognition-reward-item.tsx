@@ -84,6 +84,7 @@ export const RewardItem = memo(function RewardItem({
           ]
         }
         title={customDetail?.title ?? reward.reward_name}
+        showCustomBadge
       />
 
       {/* Collective Cognition Badge and Remove Button */}

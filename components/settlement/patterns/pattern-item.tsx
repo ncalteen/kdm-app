@@ -48,6 +48,7 @@ export const PatternItem = memo(function PatternItem({
         label={pattern.pattern_name}
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? pattern.pattern_name}
+        showCustomBadge
       />
 
       {/* Remove Button */}

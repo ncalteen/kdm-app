@@ -13,6 +13,8 @@ import { memo, ReactElement } from 'react'
 export interface QuarryItemProps {
   /** Settlement Quarry ID */
   id: string
+  /** Whether the underlying quarry is user-defined */
+  custom?: boolean | null
   /** Monster Name */
   monsterName: string
   /** Monster Node */
@@ -36,6 +38,7 @@ export interface QuarryItemProps {
  */
 export const QuarryItem = memo(function QuarryItem({
   id,
+  custom,
   monsterName,
   node,
   onRemove,
@@ -58,6 +61,12 @@ export const QuarryItem = memo(function QuarryItem({
         htmlFor={`quarry-unlocked-${id}`}>
         {monsterName}
       </Label>
+
+      {custom && (
+        <Badge variant="outline" className="text-xs shrink-0">
+          Custom
+        </Badge>
+      )}
 
       {/* Node Badge and Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">

@@ -48,6 +48,7 @@ export const PhilosophyItem = memo(function PhilosophyItem({
         label={philosophy.philosophy_name}
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? philosophy.philosophy_name}
+        showCustomBadge
       />
 
       {/* Remove Button */}

@@ -48,6 +48,7 @@ export const SeedPatternItem = memo(function SeedPatternItem({
         label={seedPattern.seed_pattern_name}
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? seedPattern.seed_pattern_name}
+        showCustomBadge
       />
 
       {/* Remove Button */}

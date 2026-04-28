@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -107,6 +108,7 @@ function CustomRulesSheetBody({
           <div
             key={`${section.label}-${index}`}
             className="flex flex-col gap-1">
+            <h4 className="text-sm font-semibold">{section.label}</h4>
             {section.content && section.content.trim().length > 0 ? (
               <MDEditor.Markdown
                 source={section.content}
@@ -139,6 +141,13 @@ interface CustomRulesTextProps extends BaseCustomRulesSheetProps {
   label: ReactNode
   /** Class Name (Optional) */
   className?: string
+  /**
+   * Show Custom Badge
+   *
+   * When true and the item is custom, a small "Custom" badge is rendered as
+   * a sibling next to the label.
+   */
+  showCustomBadge?: boolean
 }
 
 /**
@@ -158,18 +167,30 @@ export function CustomRulesText({
   description,
   label,
   sections,
+  showCustomBadge,
   title
 }: CustomRulesTextProps): ReactElement {
-  if (!custom) return <span className={cn('text-sm', className)}>{label}</span>
+  const showBadge = !!(showCustomBadge && custom)
 
-  return (
+  if (!custom) {
+    if (showBadge)
+      return (
+        <span className={cn('inline-flex items-center gap-2', className)}>
+          <span className="text-sm">{label}</span>
+        </span>
+      )
+
+    return <span className={cn('text-sm', className)}>{label}</span>
+  }
+
+  const trigger = (
     <Sheet>
       <SheetTrigger asChild>
         <button
           type="button"
           className={cn(
             'text-sm text-left hover:underline focus:outline-none focus-visible:underline cursor-pointer',
-            className
+            !showBadge && className
           )}>
           {label}
         </button>
@@ -181,6 +202,18 @@ export function CustomRulesText({
       />
     </Sheet>
   )
+
+  if (showBadge)
+    return (
+      <span className={cn('inline-flex items-center gap-2', className)}>
+        {trigger}
+        <Badge variant="outline" className="text-xs shrink-0">
+          Custom
+        </Badge>
+      </span>
+    )
+
+  return trigger
 }
 
 /**
@@ -193,6 +226,13 @@ interface CustomRulesIconButtonProps extends BaseCustomRulesSheetProps {
   ariaLabel?: string
   /** Class Name (Optional) */
   className?: string
+  /**
+   * Show Custom Badge
+   *
+   * When true and the item is custom, a small "Custom" badge is rendered as
+   * a sibling next to the icon button.
+   */
+  showCustomBadge?: boolean
 }
 
 /**
@@ -211,29 +251,37 @@ export function CustomRulesIconButton({
   custom,
   description,
   sections,
+  showCustomBadge,
   title
 }: CustomRulesIconButtonProps): ReactElement | null {
   if (!custom) return null
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          aria-label={ariaLabel ?? `View custom rules for ${title}`}
-          title={ariaLabel ?? `View custom rules for ${title}`}
-          className={cn('h-8 w-8 shrink-0', className)}>
-          <Search className="h-4 w-4" />
-        </Button>
-      </SheetTrigger>
-      <CustomRulesSheetBody
-        description={description}
-        sections={sections}
-        title={title}
-      />
-    </Sheet>
+    <>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label={ariaLabel ?? `View custom rules for ${title}`}
+            title={ariaLabel ?? `View custom rules for ${title}`}
+            className={cn('h-8 w-8 shrink-0', className)}>
+            <Search className="h-4 w-4" />
+          </Button>
+        </SheetTrigger>
+        <CustomRulesSheetBody
+          description={description}
+          sections={sections}
+          title={title}
+        />
+      </Sheet>
+      {showCustomBadge && (
+        <Badge variant="outline" className="text-xs shrink-0">
+          Custom
+        </Badge>
+      )}
+    </>
   )
 }
 
@@ -253,6 +301,13 @@ interface CustomGearRulesTriggerProps {
   variant?: 'text' | 'icon'
   /** Aria Label (Optional) */
   ariaLabel?: string
+  /**
+   * Show Custom Badge
+   *
+   * When true and the gear is custom, a small "Custom" badge is rendered as
+   * a sibling next to the trigger.
+   */
+  showCustomBadge?: boolean
 }
 
 /**
@@ -271,6 +326,7 @@ export function CustomGearRulesTrigger({
   custom,
   gearId,
   gearName,
+  showCustomBadge,
   variant = 'text'
 }: CustomGearRulesTriggerProps): ReactElement | null {
   const [open, setOpen] = useState(false)
@@ -303,7 +359,9 @@ export function CustomGearRulesTrigger({
     return <span className={cn('text-sm', className)}>{gearName}</span>
   }
 
-  return (
+  const showBadge = !!showCustomBadge
+
+  const sheet = (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         {variant === 'icon' ? (
@@ -313,15 +371,15 @@ export function CustomGearRulesTrigger({
             variant="ghost"
             aria-label={ariaLabel ?? `View custom rules for ${gearName}`}
             title={ariaLabel ?? `View custom rules for ${gearName}`}
-            className={cn('h-8 w-8 shrink-0', className)}>
+            className={cn('h-8 w-8 shrink-0', !showBadge && className)}>
             <Search className="h-4 w-4" />
           </Button>
         ) : (
           <button
             type="button"
             className={cn(
-              'text-sm text-left hover:underline focus:outline-none focus-visible:underline cursor-pointer',
-              className
+              'text-sm text-left hover:underline focus:outline-none focus-visible:underline cursor-pointer truncate',
+              !showBadge && className
             )}>
             {gearName}
           </button>
@@ -338,6 +396,18 @@ export function CustomGearRulesTrigger({
       />
     </Sheet>
   )
+
+  if (showBadge)
+    return (
+      <span className={cn('inline-flex items-center gap-2 min-w-0', className)}>
+        {sheet}
+        <Badge variant="outline" className="text-xs shrink-0">
+          Custom
+        </Badge>
+      </span>
+    )
+
+  return sheet
 }
 
 /**

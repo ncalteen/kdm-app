@@ -1,6 +1,6 @@
 'use client'
 
-import { CustomRulesIconButton } from '@/components/custom/custom-rules-sheet'
+import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,7 +11,6 @@ import {
   CommandItem,
   CommandList
 } from '@/components/ui/command'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Popover,
@@ -162,12 +161,14 @@ export function TraitsMoods({
 
       <div className="flex flex-col gap-1">
         {monster.traits.map((trait) => (
-          <div key={trait.id} className="flex items-center gap-1">
-            <Input value={trait.trait_name} disabled />
-            <CustomRulesIconButton
+          <div key={trait.id} className="flex items-center gap-2">
+            <CustomRulesText
+              className="flex-grow"
               custom={trait.custom}
+              label={trait.trait_name}
               title={trait.trait_name}
               sections={[{ label: 'Rules', content: trait.rules }]}
+              showCustomBadge
             />
             <Button
               type="button"
@@ -235,12 +236,14 @@ export function TraitsMoods({
 
       <div className="flex flex-col gap-1">
         {monster.moods.map((mood) => (
-          <div key={mood.id} className="flex items-center gap-1">
-            <Input value={mood.mood_name} disabled />
-            <CustomRulesIconButton
+          <div key={mood.id} className="flex items-center gap-2">
+            <CustomRulesText
+              className="flex-grow"
               custom={mood.custom}
+              label={mood.mood_name}
               title={mood.mood_name}
               sections={[{ label: 'Rules', content: mood.rules }]}
+              showCustomBadge
             />
             <Button
               type="button"
@@ -311,12 +314,14 @@ export function TraitsMoods({
 
       <div className="flex flex-col gap-1 pb-2">
         {monster.survivor_statuses.map((status) => (
-          <div key={status.id} className="flex items-center gap-1">
-            <Input value={status.survivor_status_name} disabled />
-            <CustomRulesIconButton
+          <div key={status.id} className="flex items-center gap-2">
+            <CustomRulesText
+              className="flex-grow"
               custom={status.custom}
+              label={status.survivor_status_name}
               title={status.survivor_status_name}
               sections={[{ label: 'Rules', content: status.rules }]}
+              showCustomBadge
             />
             <Button
               type="button"

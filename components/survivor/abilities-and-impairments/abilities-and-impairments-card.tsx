@@ -396,6 +396,7 @@ export function AbilitiesAndImpairmentsCard({
                   title={item.ability_impairment_name}
                   description="An ability or impairment carried by this survivor."
                   sections={[{ label: 'Rules', content: item.rules }]}
+                  showCustomBadge
                 />
                 <Button
                   variant="ghost"

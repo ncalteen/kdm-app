@@ -348,6 +348,7 @@ export function DisordersCard({
                 title={item.disorder_name}
                 description="A disorder afflicting this survivor."
                 sections={[{ label: 'Rules', content: item.rules }]}
+                showCustomBadge
               />
               <Button
                 variant="ghost"

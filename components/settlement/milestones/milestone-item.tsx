@@ -61,6 +61,7 @@ export const MilestoneItem = memo(function MilestoneItem({
         label={milestone.milestone_name}
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? milestone.milestone_name}
+        showCustomBadge
       />
 
       {/* Event Badge and Remove Button */}

@@ -54,6 +54,7 @@ export const ResourceItem = memo(function ResourceItem({
           label={resource.resource_name}
           sections={customDetail?.sections ?? []}
           title={customDetail?.title ?? resource.resource_name}
+          showCustomBadge
         />
         {resource.category.toUpperCase() === 'MONSTER' &&
           resource.quarry_monster_name && (

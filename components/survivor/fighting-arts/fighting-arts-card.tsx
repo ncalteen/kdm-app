@@ -794,6 +794,7 @@ export function FightingArtsCard({
                 title={art.fighting_art_name}
                 description="A fighting art mastered by this survivor."
                 sections={[{ label: 'Rules', content: art.rules }]}
+                showCustomBadge
               />
               <Button
                 variant="ghost"
@@ -817,6 +818,7 @@ export function FightingArtsCard({
                 title={art.secret_fighting_art_name}
                 description="A secret fighting art guarded by this survivor."
                 sections={[{ label: 'Rules', content: art.rules }]}
+                showCustomBadge
               />
               <Button
                 variant="ghost"

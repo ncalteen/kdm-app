@@ -536,6 +536,7 @@ export function QuarriesCard({
                 <QuarryItem
                   key={quarry.id}
                   id={quarry.id}
+                  custom={availableQuarries[quarry.quarry_id]?.custom}
                   monsterName={quarry.monster_name}
                   node={quarry.node}
                   onRemove={handleRemove}

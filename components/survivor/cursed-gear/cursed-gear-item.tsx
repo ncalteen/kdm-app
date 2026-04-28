@@ -42,6 +42,7 @@ export const CursedGearItem = memo(function CursedGearItem({
         custom={custom}
         gearId={gearId}
         gearName={gearName}
+        showCustomBadge
       />
       <Button
         variant="ghost"

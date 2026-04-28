@@ -56,6 +56,7 @@ export const KnowledgeItem = memo(function KnowledgeItem({
           ]
         }
         title={customDetail?.title ?? knowledge.knowledge_name}
+        showCustomBadge
       />
 
       {/* Remove Button */}

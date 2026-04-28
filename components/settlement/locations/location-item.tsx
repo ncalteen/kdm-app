@@ -60,6 +60,7 @@ export const LocationItem = memo(function LocationItem({
         label={location.location_name}
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? location.location_name}
+        showCustomBadge
       />
 
       {/* Remove Button */}

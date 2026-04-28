@@ -553,6 +553,7 @@ export function NemesesCard({
                 <NemesisItem
                   key={nemesis.id}
                   id={nemesis.id}
+                  custom={availableNemeses[nemesis.nemesis_id]?.custom}
                   monsterName={nemesis.monster_name}
                   unlocked={nemesis.unlocked}
                   level1Defeated={nemesis.level_1_defeated}
