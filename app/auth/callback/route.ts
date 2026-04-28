@@ -21,8 +21,10 @@ export async function GET(request: NextRequest) {
 
   const code = searchParams.get('code')
   const rawNext = searchParams.get('next') ?? '/'
-  // Only allow relative redirects to prevent open-redirect vulnerabilities.
-  const next = rawNext.startsWith('/') ? rawNext : '/'
+  // Only allow same-site relative redirects; reject protocol-relative URLs
+  // such as `//evil.com` to prevent open-redirect vulnerabilities.
+  const next =
+    rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/'
 
   if (!code)
     redirect(
