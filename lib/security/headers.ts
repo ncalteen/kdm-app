@@ -65,7 +65,8 @@ export const securityHeaders: SecurityHeader[] = [
   // intentionally omitted as it would break third-party images/iframes that
   // don't send Cross-Origin-Resource-Policy.
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' }
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+  { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' }
 ]
 
 /**
