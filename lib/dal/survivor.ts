@@ -326,6 +326,8 @@ export async function createSurvivor(
     insanity: options.insanity,
     luck: options.luck,
     movement: options.movement,
+    parent_1_id: options.parent1Id ?? null,
+    parent_2_id: options.parent2Id ?? null,
     settlement_id: options.settlementId,
     speed: options.speed,
     aenas_state: options.aenasState ?? null,

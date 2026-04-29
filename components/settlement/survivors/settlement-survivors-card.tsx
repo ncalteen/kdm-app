@@ -3,6 +3,7 @@
 import { LanternMark } from '@/components/generic/lantern-mark'
 import { createColumns } from '@/components/settlement/survivors/columns'
 import { SurvivorDataTable } from '@/components/settlement/survivors/data-table'
+import { FamilyTreeView } from '@/components/settlement/survivors/family-tree/family-tree-view'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -13,6 +14,12 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/components/ui/empty'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/components/ui/tooltip'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { deleteSurvivor } from '@/lib/dal/survivor'
@@ -24,7 +31,7 @@ import {
   SurvivorStateSetter,
   SurvivorsStateSetter
 } from '@/lib/types'
-import { PlusIcon } from 'lucide-react'
+import { GitBranchIcon, PlusIcon, TableIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
@@ -71,6 +78,20 @@ export function SettlementSurvivorsCard({
 
   const [deleteId, setDeleteId] = useState<string | undefined>(undefined)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
+  const [viewMode, setViewMode] = useState<'table' | 'tree'>('table')
+
+  /**
+   * Handle View Mode Change
+   *
+   * The shadcn `ToggleGroup` may emit `''` if the user attempts to deselect the
+   * active item. We ignore those values so the survivors view always has a
+   * concrete mode rendered.
+   *
+   * @param next Next View Mode
+   */
+  const handleViewModeChange = useCallback((next: string) => {
+    if (next === 'table' || next === 'tree') setViewMode(next)
+  }, [])
 
   /**
    * Handle New Survivor Creation
@@ -153,6 +174,49 @@ export function SettlementSurvivorsCard({
     [selectedSettlement?.survivor_type]
   )
 
+  const settlementSurvivors = useMemo(
+    () =>
+      survivors.filter(
+        (survivor) => survivor.settlement_id === selectedSettlement?.id
+      ),
+    [survivors, selectedSettlement?.id]
+  )
+
+  const viewModeToggle = (
+    <ToggleGroup
+      type="single"
+      size="sm"
+      variant="outline"
+      value={viewMode}
+      onValueChange={handleViewModeChange}
+      aria-label="Survivor view mode">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <ToggleGroupItem
+            value="table"
+            aria-label="Show survivors as a table"
+            className="h-8 px-3">
+            <TableIcon className="h-4 w-4" />
+            <span className="ml-1 hidden sm:inline">Roster</span>
+          </ToggleGroupItem>
+        </TooltipTrigger>
+        <TooltipContent>Roster table</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <ToggleGroupItem
+            value="tree"
+            aria-label="Show survivors as a family tree"
+            className="h-8 px-3">
+            <GitBranchIcon className="h-4 w-4" />
+            <span className="ml-1 hidden sm:inline">Lineage</span>
+          </ToggleGroupItem>
+        </TooltipTrigger>
+        <TooltipContent>Family tree</TooltipContent>
+      </Tooltip>
+    </ToggleGroup>
+  )
+
   return (
     <Card className="p-0 pb-2 mt-2 border-0">
       <CardContent className="p-0">
@@ -183,14 +247,25 @@ export function SettlementSurvivorsCard({
             </EmptyContent>
           </Empty>
         ) : (
-          <SurvivorDataTable
-            columns={columns}
-            data={survivors.filter(
-              (survivor) => survivor.settlement_id === selectedSettlement?.id
+          <>
+            {viewMode === 'table' ? (
+              <SurvivorDataTable
+                columns={columns}
+                data={settlementSurvivors}
+                headerActions={viewModeToggle}
+                initialColumnVisibility={columnVisibility}
+                onNewSurvivor={handleNewSurvivor}
+              />
+            ) : (
+              <FamilyTreeView
+                survivors={settlementSurvivors}
+                selectedSurvivor={selectedSurvivor}
+                onSelectSurvivor={setSelectedSurvivor}
+                onNewSurvivor={handleNewSurvivor}
+                headerActions={viewModeToggle}
+              />
             )}
-            initialColumnVisibility={columnVisibility}
-            onNewSurvivor={handleNewSurvivor}
-          />
+          </>
         )}
       </CardContent>
     </Card>

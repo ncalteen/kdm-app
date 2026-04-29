@@ -14,7 +14,7 @@ import {
   VisibilityState
 } from '@tanstack/react-table'
 import { PlusIcon } from 'lucide-react'
-import { ChangeEvent, useCallback, useMemo, useState } from 'react'
+import { ChangeEvent, ReactNode, useCallback, useMemo, useState } from 'react'
 
 /**
  * Survivor Data Table Properties
@@ -24,6 +24,8 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   /** Data */
   data: TData[]
+  /** Optional Content Rendered (Right of Filter Row) */
+  headerActions?: ReactNode
   /** Initial Column Visibility */
   initialColumnVisibility?: VisibilityState
   /** On New Survivor Callback */
@@ -39,6 +41,7 @@ interface DataTableProps<TData, TValue> {
 export function SurvivorDataTable<TData, TValue>({
   columns,
   data,
+  headerActions,
   initialColumnVisibility = {},
   onNewSurvivor
 }: DataTableProps<TData, TValue>) {
@@ -113,6 +116,10 @@ export function SurvivorDataTable<TData, TValue>({
           <PlusIcon className="h-4 w-4" />
           New Survivor
         </Button>
+
+        {headerActions && (
+          <div className="ml-auto flex items-center gap-2">{headerActions}</div>
+        )}
       </div>
 
       <div className="overflow-auto h-[300px] w-full rounded-md border">

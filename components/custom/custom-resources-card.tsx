@@ -146,6 +146,7 @@ export function CustomResourcesCard({
         custom: true,
         resource_name: data.resource_name,
         category,
+        nemesis_id: null,
         resource_types: data.resource_types,
         quarry_id: effectiveQuarryId,
         quarry_monster_name: effectiveQuarryId

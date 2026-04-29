@@ -120,36 +120,6 @@ export type Database = {
         }
         Relationships: []
       }
-      armor_set_gear: {
-        Row: {
-          armor_set_id: string
-          gear_id: string
-        }
-        Insert: {
-          armor_set_id: string
-          gear_id: string
-        }
-        Update: {
-          armor_set_id?: string
-          gear_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "armor_set_gear_armor_set_id_fkey"
-            columns: ["armor_set_id"]
-            isOneToOne: false
-            referencedRelation: "armor_set"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "armor_set_gear_gear_id_fkey"
-            columns: ["gear_id"]
-            isOneToOne: false
-            referencedRelation: "gear"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       armor_set_shared_user: {
         Row: {
           armor_set_id: string
@@ -172,6 +142,74 @@ export type Database = {
             columns: ["armor_set_id"]
             isOneToOne: false
             referencedRelation: "armor_set"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      armor_set_slot: {
+        Row: {
+          armor_set_id: string
+          created_at: string
+          id: string
+          required: boolean
+          slot_name: string
+          slot_order: number
+          updated_at: string
+        }
+        Insert: {
+          armor_set_id: string
+          created_at?: string
+          id?: string
+          required?: boolean
+          slot_name: string
+          slot_order?: number
+          updated_at?: string
+        }
+        Update: {
+          armor_set_id?: string
+          created_at?: string
+          id?: string
+          required?: boolean
+          slot_name?: string
+          slot_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "armor_set_slot_armor_set_id_fkey"
+            columns: ["armor_set_id"]
+            isOneToOne: false
+            referencedRelation: "armor_set"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      armor_set_slot_gear: {
+        Row: {
+          armor_set_slot_id: string
+          gear_id: string
+        }
+        Insert: {
+          armor_set_slot_id: string
+          gear_id: string
+        }
+        Update: {
+          armor_set_slot_id?: string
+          gear_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "armor_set_slot_gear_armor_set_slot_id_fkey"
+            columns: ["armor_set_slot_id"]
+            isOneToOne: false
+            referencedRelation: "armor_set_slot"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "armor_set_slot_gear_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
             referencedColumns: ["id"]
           },
         ]
@@ -624,6 +662,7 @@ export type Database = {
           pos_top_center: string | null
           pos_top_left: string | null
           pos_top_right: string | null
+          survivor_id: string
           updated_at: string
           user_id: string | null
         }
@@ -640,6 +679,7 @@ export type Database = {
           pos_top_center?: string | null
           pos_top_left?: string | null
           pos_top_right?: string | null
+          survivor_id: string
           updated_at?: string
           user_id?: string | null
         }
@@ -656,6 +696,7 @@ export type Database = {
           pos_top_center?: string | null
           pos_top_left?: string | null
           pos_top_right?: string | null
+          survivor_id?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -721,6 +762,13 @@ export type Database = {
             columns: ["pos_top_right"]
             isOneToOne: false
             referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_survivor_id_fkey"
+            columns: ["survivor_id"]
+            isOneToOne: false
+            referencedRelation: "survivor"
             referencedColumns: ["id"]
           },
         ]
@@ -3076,6 +3124,7 @@ export type Database = {
           created_at: string
           custom: boolean
           id: string
+          nemesis_id: string | null
           pattern_id: string | null
           quarry_id: string | null
           resource_name: string
@@ -3089,6 +3138,7 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          nemesis_id?: string | null
           pattern_id?: string | null
           quarry_id?: string | null
           resource_name: string
@@ -3102,6 +3152,7 @@ export type Database = {
           created_at?: string
           custom?: boolean
           id?: string
+          nemesis_id?: string | null
           pattern_id?: string | null
           quarry_id?: string | null
           resource_name?: string
@@ -3111,6 +3162,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "resource_nemesis_id_fkey"
+            columns: ["nemesis_id"]
+            isOneToOne: false
+            referencedRelation: "nemesis"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "resource_pattern_id_fkey"
             columns: ["pattern_id"]
@@ -4783,6 +4841,8 @@ export type Database = {
           next_departure: string[]
           notes: string
           once_per_lifetime: string[]
+          parent_1_id: string | null
+          parent_2_id: string | null
           philosophy_id: string | null
           philosophy_rank: number | null
           reroll_used: boolean
@@ -4905,6 +4965,8 @@ export type Database = {
           next_departure?: string[]
           notes?: string
           once_per_lifetime?: string[]
+          parent_1_id?: string | null
+          parent_2_id?: string | null
           philosophy_id?: string | null
           philosophy_rank?: number | null
           reroll_used?: boolean
@@ -5027,6 +5089,8 @@ export type Database = {
           next_departure?: string[]
           notes?: string
           once_per_lifetime?: string[]
+          parent_1_id?: string | null
+          parent_2_id?: string | null
           philosophy_id?: string | null
           philosophy_rank?: number | null
           reroll_used?: boolean
@@ -5085,6 +5149,20 @@ export type Database = {
             columns: ["neurosis_id"]
             isOneToOne: false
             referencedRelation: "neurosis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_parent_1_id_fkey"
+            columns: ["parent_1_id"]
+            isOneToOne: false
+            referencedRelation: "survivor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_parent_2_id_fkey"
+            columns: ["parent_2_id"]
+            isOneToOne: false
+            referencedRelation: "survivor"
             referencedColumns: ["id"]
           },
           {
@@ -5725,6 +5803,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      armor_set_qualifies: {
+        Args: { p_armor_set_id: string; p_equipped_gear_ids: string[] }
+        Returns: boolean
+      }
       check_username_available: {
         Args: { desired_username: string }
         Returns: boolean
@@ -5778,6 +5860,11 @@ export type Database = {
       is_trait_owner: { Args: { record_id: string }; Returns: boolean }
       is_wanderer_owner: { Args: { record_id: string }; Returns: boolean }
       is_weapon_type_owner: { Args: { record_id: string }; Returns: boolean }
+      sanitize_username_candidate: { Args: { raw: string }; Returns: string }
+      survivor_qualifies_for_armor_set: {
+        Args: { p_armor_set_id: string; p_survivor_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       aenas_state: "Content" | "Hungry"
@@ -5918,6 +6005,7 @@ export type Database = {
         | "VEGETABLE"
         | "VERMIN"
         | "VIRID"
+        | "PARASITE"
       settlement_phase_step:
         | "SET_UP_SETTLEMENT"
         | "SURVIVORS_RETURN"
@@ -6205,6 +6293,7 @@ export const Constants = {
         "VEGETABLE",
         "VERMIN",
         "VIRID",
+        "PARASITE",
       ],
       settlement_phase_step: [
         "SET_UP_SETTLEMENT",
