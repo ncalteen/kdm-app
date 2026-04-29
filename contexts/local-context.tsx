@@ -490,16 +490,24 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Fetch Hunt Data
    *
-   * Triggered whenever the settlement or hunt selection changes. Uses a
-   * cancellation flag to prevent state updates on unmounted components or when
-   * selections change rapidly.
+   * Triggered whenever the active settlement changes. The hunt is a per-
+   * settlement singleton, so this effect is the single source of truth: it
+   * resolves the current hunt for the settlement and reconciles
+   * `selectedHuntId` accordingly. Setters that change the hunt selection are
+   * pure ID/state mutations and never re-trigger this effect on their own.
    */
   useEffect(() => {
     console.debug('Fetching Hunt Data')
 
     let isCancelled = false
 
-    if (!isAuthenticated || !selectedHuntId || !selectedSettlementId)
+    if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    // Skip-if-fresh: the active hunt for this settlement is already loaded.
+    if (selectedHunt && selectedHunt.settlement_id === selectedSettlementId)
       return () => {
         isCancelled = true
       }
@@ -510,23 +518,18 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
         console.debug('Hunt Data:', hunt)
         setSelectedHuntState(hunt)
-
-        if (!hunt) {
-          setSelectedHuntIdState(null)
-          setSelectedHuntMonsterIndexState(0)
-
-          setLocalState((prev) => {
-            const updated = {
-              ...prev,
-              selectedHuntId: null,
+        setSelectedHuntIdState((prev) => {
+          const next = hunt?.id ?? null
+          if (prev !== next) {
+            setLocalState((local) => ({
+              ...local,
+              selectedHuntId: next,
               selectedHuntMonsterIndex: 0
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
-        }
+            }))
+            setSelectedHuntMonsterIndexState(0)
+          }
+          return next
+        })
       })
       .catch((err: unknown) => {
         if (isCancelled) return
@@ -536,23 +539,17 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSelectedHuntIdState(null)
         setSelectedHuntMonsterIndexState(0)
 
-        setLocalState((prev) => {
-          const updated = {
-            ...prev,
-            selectedHuntId: null,
-            selectedHuntMonsterIndex: 0
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
+        setLocalState((prev) => ({
+          ...prev,
+          selectedHuntId: null,
+          selectedHuntMonsterIndex: 0
+        }))
       })
 
     return () => {
       isCancelled = true
     }
-  }, [isAuthenticated, selectedHuntId, selectedSettlementId])
+  }, [isAuthenticated, selectedSettlementId, selectedHunt])
 
   /**
    * Fetch Settlement Data
@@ -567,6 +564,12 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     let isCancelled = false
 
     if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    // Skip-if-fresh: the settlement is already loaded.
+    if (selectedSettlement?.id === selectedSettlementId)
       return () => {
         isCancelled = true
       }
@@ -594,22 +597,16 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           setSelectedSurvivorIdState(null)
           setSurvivors([])
 
-          setLocalState((prev) => {
-            const updated = {
-              ...prev,
-              selectedSettlementId: null,
-              selectedHuntId: null,
-              selectedHuntMonsterIndex: 0,
-              selectedSettlementPhaseId: null,
-              selectedShowdownId: null,
-              selectedShowdownMonsterIndex: 0,
-              selectedSurvivorId: null
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
+          setLocalState((prev) => ({
+            ...prev,
+            selectedSettlementId: null,
+            selectedHuntId: null,
+            selectedHuntMonsterIndex: 0,
+            selectedSettlementPhaseId: null,
+            selectedShowdownId: null,
+            selectedShowdownMonsterIndex: 0,
+            selectedSurvivorId: null
+          }))
         }
       })
       .catch((err: unknown) => {
@@ -631,28 +628,22 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSelectedSurvivorIdState(null)
         setSurvivors([])
 
-        setLocalState((prev) => {
-          const updated = {
-            ...prev,
-            selectedSettlementId: null,
-            selectedHuntId: null,
-            selectedHuntMonsterIndex: 0,
-            selectedSettlementPhaseId: null,
-            selectedShowdownId: null,
-            selectedShowdownMonsterIndex: 0,
-            selectedSurvivorId: null
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
+        setLocalState((prev) => ({
+          ...prev,
+          selectedSettlementId: null,
+          selectedHuntId: null,
+          selectedHuntMonsterIndex: 0,
+          selectedSettlementPhaseId: null,
+          selectedShowdownId: null,
+          selectedShowdownMonsterIndex: 0,
+          selectedSurvivorId: null
+        }))
       })
 
     return () => {
       isCancelled = true
     }
-  }, [isAuthenticated, selectedSettlementId])
+  }, [isAuthenticated, selectedSettlementId, selectedSettlement?.id])
 
   /**
    * Fetch Survivors Data
@@ -693,16 +684,26 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Fetch Settlement Phase Data
    *
-   * Triggered whenever the settlement selection changes. Uses a cancellation
-   * flag to prevent state updates on unmounted components or when selections
-   * change rapidly.
+   * Triggered whenever the active settlement changes. The settlement phase
+   * is a per-settlement singleton, so this effect is the single source of
+   * truth: it resolves the current phase for the settlement and reconciles
+   * `selectedSettlementPhaseId` accordingly.
    */
   useEffect(() => {
     console.debug('Fetching Settlement Phase Data')
 
     let isCancelled = false
 
-    if (!isAuthenticated || !selectedSettlementId || !selectedSettlementPhaseId)
+    if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    // Skip-if-fresh: the active phase for this settlement is already loaded.
+    if (
+      selectedSettlementPhase &&
+      selectedSettlementPhase.settlement_id === selectedSettlementId
+    )
       return () => {
         isCancelled = true
       }
@@ -713,21 +714,15 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
         console.debug('Settlement Phase Data:', settlementPhase)
         setSelectedSettlementPhaseState(settlementPhase)
-
-        if (!settlementPhase) {
-          setSelectedSettlementPhaseIdState(null)
-
-          setLocalState((prev) => {
-            const updated = {
-              ...prev,
-              selectedSettlementPhaseId: null
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
-        }
+        setSelectedSettlementPhaseIdState((prev) => {
+          const next = settlementPhase?.id ?? null
+          if (prev !== next)
+            setLocalState((local) => ({
+              ...local,
+              selectedSettlementPhaseId: next
+            }))
+          return next
+        })
       })
       .catch((err: unknown) => {
         if (isCancelled) return
@@ -737,36 +732,40 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSelectedSettlementPhaseState(null)
         setSelectedSettlementPhaseIdState(null)
 
-        setLocalState((prev) => {
-          const updated = {
-            ...prev,
-            selectedSettlementPhaseId: null
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
+        setLocalState((prev) => ({
+          ...prev,
+          selectedSettlementPhaseId: null
+        }))
       })
 
     return () => {
       isCancelled = true
     }
-  }, [isAuthenticated, selectedSettlementId, selectedSettlementPhaseId])
+  }, [isAuthenticated, selectedSettlementId, selectedSettlementPhase])
 
   /**
    * Fetch Showdown Data
    *
-   * Triggered whenever the settlement selection changes. Uses a cancellation
-   * flag to prevent state updates on unmounted components or when selections
-   * change rapidly.
+   * Triggered whenever the active settlement changes. The showdown is a per-
+   * settlement singleton, so this effect is the single source of truth: it
+   * resolves the current showdown for the settlement and reconciles
+   * `selectedShowdownId` accordingly.
    */
   useEffect(() => {
     console.debug('Fetching Showdown Data')
 
     let isCancelled = false
 
-    if (!isAuthenticated || !selectedSettlementId || !selectedShowdownId)
+    if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    // Skip-if-fresh: the active showdown for this settlement is already loaded.
+    if (
+      selectedShowdown &&
+      selectedShowdown.settlement_id === selectedSettlementId
+    )
       return () => {
         isCancelled = true
       }
@@ -778,23 +777,18 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         console.debug('Showdown Data:', showdown)
 
         setSelectedShowdownState(showdown)
-
-        if (!showdown) {
-          setSelectedShowdownIdState(null)
-          setSelectedShowdownMonsterIndexState(0)
-
-          setLocalState((prev) => {
-            const updated = {
-              ...prev,
-              selectedShowdownId: null,
+        setSelectedShowdownIdState((prev) => {
+          const next = showdown?.id ?? null
+          if (prev !== next) {
+            setLocalState((local) => ({
+              ...local,
+              selectedShowdownId: next,
               selectedShowdownMonsterIndex: 0
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
-        }
+            }))
+            setSelectedShowdownMonsterIndexState(0)
+          }
+          return next
+        })
       })
       .catch((err: unknown) => {
         if (isCancelled) return
@@ -805,23 +799,17 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSelectedShowdownIdState(null)
         setSelectedShowdownMonsterIndexState(0)
 
-        setLocalState((prev) => {
-          const updated = {
-            ...prev,
-            selectedShowdownId: null,
-            selectedShowdownMonsterIndex: 0
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
+        setLocalState((prev) => ({
+          ...prev,
+          selectedShowdownId: null,
+          selectedShowdownMonsterIndex: 0
+        }))
       })
 
     return () => {
       isCancelled = true
     }
-  }, [isAuthenticated, selectedSettlementId, selectedShowdownId])
+  }, [isAuthenticated, selectedSettlementId, selectedShowdown])
 
   /**
    * Fetch Survivor Data
@@ -840,6 +828,12 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         isCancelled = true
       }
 
+    // Skip-if-fresh: the selected survivor is already loaded.
+    if (selectedSurvivor?.id === selectedSurvivorId)
+      return () => {
+        isCancelled = true
+      }
+
     getSurvivor(selectedSurvivorId)
       .then((survivor) => {
         if (isCancelled) return
@@ -851,16 +845,10 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         if (!survivor) {
           setSelectedSurvivorIdState(null)
 
-          setLocalState((prev) => {
-            const updated = {
-              ...prev,
-              selectedSurvivorId: null
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
+          setLocalState((prev) => ({
+            ...prev,
+            selectedSurvivorId: null
+          }))
         }
       })
       .catch((err: unknown) => {
@@ -871,22 +859,21 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSelectedSurvivorState(null)
         setSelectedSurvivorIdState(null)
 
-        setLocalState((prev) => {
-          const updated = {
-            ...prev,
-            selectedSurvivorId: null
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
+        setLocalState((prev) => ({
+          ...prev,
+          selectedSurvivorId: null
+        }))
       })
 
     return () => {
       isCancelled = true
     }
-  }, [isAuthenticated, selectedSettlementId, selectedSurvivorId])
+  }, [
+    isAuthenticated,
+    selectedSettlementId,
+    selectedSurvivorId,
+    selectedSurvivor?.id
+  ])
 
   /**
    * Fetch User Settings Data
