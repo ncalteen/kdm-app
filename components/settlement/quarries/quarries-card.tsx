@@ -521,13 +521,13 @@ export function QuarriesCard({
               selectedSettlement.quarries.length === 0) &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No quarries yet
+                  No quarries stalk the settlement.
                 </p>
               )}
 
             {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Loading quarries...
+                Tracking quarries...
               </p>
             )}
 

@@ -671,7 +671,7 @@ export function CreateHuntCard({
             </Select>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No available/unlocked quarries
+              No quarry stalks within reach.
             </p>
           )}
         </div>
@@ -924,8 +924,8 @@ export function CreateHuntCard({
           <p className="text-sm text-muted-foreground text-center">
             {survivors.filter((s) => s.settlement_id === selectedSettlement?.id)
               .length === 0
-              ? 'No survivors available. Create survivors first.'
-              : 'All survivors are dead or retired.'}
+              ? 'Your settlement is void of survivors.'
+              : 'No survivors stand ready to depart.'}
           </p>
         )}
 
@@ -940,7 +940,7 @@ export function CreateHuntCard({
             isCreating
           }
           className="w-full mt-2">
-          {isCreating ? 'Creating...' : 'Begin Hunt'}
+          {isCreating ? 'The hunt begins...' : 'Begin Hunt'}
         </Button>
       </CardContent>
     </Card>

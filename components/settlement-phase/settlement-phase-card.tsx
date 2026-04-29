@@ -170,8 +170,8 @@ export function SettlementPhaseCard({
           </EmptyMedia>
           <EmptyTitle>No Settlement Phase in Progress</EmptyTitle>
           <EmptyDescription>
-            The settlement phase can only be started by returning from a
-            showdown.
+            A settlement phase begins when survivors return — alive or dead —
+            from a showdown.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

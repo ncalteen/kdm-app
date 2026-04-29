@@ -722,7 +722,7 @@ describe('HUNT_NOTES_SAVED_MESSAGE', () => {
 describe('HUNT_XP_RANK_UP_MILESTONE_ADDED_MESSAGE', () => {
   it('returns correct message', () => {
     expect(HUNT_XP_RANK_UP_MILESTONE_ADDED_MESSAGE()).toBe(
-      'Rank up milestone added.'
+      "A rank up milestone is etched into the survivor's memory."
     )
   })
 })
@@ -730,7 +730,7 @@ describe('HUNT_XP_RANK_UP_MILESTONE_ADDED_MESSAGE', () => {
 describe('HUNT_XP_RANK_UP_MILESTONE_REMOVED_MESSAGE', () => {
   it('returns correct message', () => {
     expect(HUNT_XP_RANK_UP_MILESTONE_REMOVED_MESSAGE()).toBe(
-      'Rank up milestone removed.'
+      'A rank up milestone fades from memory.'
     )
   })
 })
@@ -1115,7 +1115,7 @@ describe('MONSTER_LUCK_TOKENS_UPDATED_MESSAGE', () => {
 
 describe('MONSTER_MOVED_MESSAGE', () => {
   it('returns correct message', () => {
-    expect(MONSTER_MOVED_MESSAGE()).toBe('Monster moved.')
+    expect(MONSTER_MOVED_MESSAGE()).toBe('The monster shifts in the dark.')
   })
 })
 
@@ -2725,13 +2725,15 @@ describe('WANDERER_UPDATED_MESSAGE', () => {
 
 describe('SURVIVORS_HEALED_MESSAGE', () => {
   it('returns correct message', () => {
-    expect(SURVIVORS_HEALED_MESSAGE()).toBe('Survivors healed.')
+    expect(SURVIVORS_HEALED_MESSAGE()).toBe('The survivors mend their wounds.')
   })
 })
 
 describe('SURVIVORS_MOVED_MESSAGE', () => {
   it('returns correct message', () => {
-    expect(SURVIVORS_MOVED_MESSAGE()).toBe('Survivors moved.')
+    expect(SURVIVORS_MOVED_MESSAGE()).toBe(
+      'Survivors press deeper into the dark.'
+    )
   })
 })
 
