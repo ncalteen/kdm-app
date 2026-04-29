@@ -70,7 +70,7 @@ export default function Page({
           <Suspense
             fallback={
               <p className="text-sm text-muted-foreground">
-                Reading the omens…
+                Reading the omens...
               </p>
             }>
             <ErrorContent searchParams={searchParams} />

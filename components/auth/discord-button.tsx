@@ -66,7 +66,7 @@ export function DiscordButton({
         className="mr-2"
         style={{ height: 'auto' }}
       />
-      {isLoading ? 'Redirecting…' : label}
+      {isLoading ? 'Redirecting...' : label}
     </Button>
   )
 }

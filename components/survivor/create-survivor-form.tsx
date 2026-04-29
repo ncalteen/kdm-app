@@ -3,7 +3,6 @@
 import { SelectWanderer } from '@/components/menu/select-wanderer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
   FormControl,
@@ -14,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useToast } from '@/hooks/use-toast'
@@ -364,32 +364,27 @@ export function CreateSurvivorForm({
                           <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
                             Gender
                           </FormLabel>
-                          <div className="flex w-[75%] items-center gap-2">
-                            <Checkbox
-                              id="male-checkbox"
-                              checked={field.value === Gender.MALE}
-                              onCheckedChange={(checked) => {
-                                if (checked)
-                                  form.setValue('gender', Gender.MALE)
-                              }}
-                            />
-                            <Label htmlFor="male-checkbox" className="text-sm">
-                              M
-                            </Label>
-                            <Checkbox
-                              id="female-checkbox"
-                              checked={field.value === Gender.FEMALE}
-                              onCheckedChange={(checked) => {
-                                if (checked)
-                                  form.setValue('gender', Gender.FEMALE)
-                              }}
-                            />
-                            <Label
-                              htmlFor="female-checkbox"
-                              className="text-sm">
-                              F
-                            </Label>
-                          </div>
+                          <ToggleGroup
+                            type="single"
+                            variant="outline"
+                            value={field.value ?? ''}
+                            onValueChange={(value) => {
+                              if (value)
+                                form.setValue('gender', value as Gender)
+                            }}
+                            className="w-[75%]"
+                            aria-label="Survivor gender">
+                            <ToggleGroupItem
+                              value={Gender.MALE}
+                              aria-label="Male">
+                              Male
+                            </ToggleGroupItem>
+                            <ToggleGroupItem
+                              value={Gender.FEMALE}
+                              aria-label="Female">
+                              Female
+                            </ToggleGroupItem>
+                          </ToggleGroup>
                         </div>
                       </FormItem>
                     )}
@@ -465,33 +460,26 @@ export function CreateSurvivorForm({
                         <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
                           Gender
                         </FormLabel>
-                        <div className="flex w-[75%] items-center gap-2">
-                          <Checkbox
-                            id="male-checkbox-no-wanderer"
-                            checked={field.value === Gender.MALE}
-                            onCheckedChange={(checked) => {
-                              if (checked) form.setValue('gender', Gender.MALE)
-                            }}
-                          />
-                          <Label
-                            htmlFor="male-checkbox-no-wanderer"
-                            className="text-sm">
-                            M
-                          </Label>
-                          <Checkbox
-                            id="female-checkbox-no-wanderer"
-                            checked={field.value === Gender.FEMALE}
-                            onCheckedChange={(checked) => {
-                              if (checked)
-                                form.setValue('gender', Gender.FEMALE)
-                            }}
-                          />
-                          <Label
-                            htmlFor="female-checkbox-no-wanderer"
-                            className="text-sm">
-                            F
-                          </Label>
-                        </div>
+                        <ToggleGroup
+                          type="single"
+                          variant="outline"
+                          value={field.value ?? ''}
+                          onValueChange={(value) => {
+                            if (value) form.setValue('gender', value as Gender)
+                          }}
+                          className="w-[75%]"
+                          aria-label="Survivor gender">
+                          <ToggleGroupItem
+                            value={Gender.MALE}
+                            aria-label="Male">
+                            Male
+                          </ToggleGroupItem>
+                          <ToggleGroupItem
+                            value={Gender.FEMALE}
+                            aria-label="Female">
+                            Female
+                          </ToggleGroupItem>
+                        </ToggleGroup>
                       </div>
                     </FormItem>
                   )}
@@ -513,10 +501,15 @@ export function CreateSurvivorForm({
         <Button
           type="button"
           variant="outline"
-          onClick={() => setIsCreatingNewSurvivor(false)}>
+          onClick={() => setIsCreatingNewSurvivor(false)}
+          disabled={form.formState.isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit">Create Survivor</Button>
+        <Button type="submit" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting
+            ? 'Naming the unnamed...'
+            : 'Raise your lantern'}
+        </Button>
       </div>
     </form>
   )

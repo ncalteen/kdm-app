@@ -64,7 +64,7 @@ export function LogoutButton(): ReactElement {
             <AlertDialogFooter>
               <AlertDialogCancel>Stay</AlertDialogCancel>
               <AlertDialogAction onClick={logout} disabled={isLoggingOut}>
-                {isLoggingOut ? 'Signing out…' : 'Sign out'}
+                {isLoggingOut ? 'Signing out...' : 'Sign out'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -21,7 +21,7 @@ interface LanternLoaderProps {
   caption?: string
   /** Additional class names applied to the outer wrapper. */
   className?: string
-  /** Headline text shown next to the lantern. Defaults to `Kindling the lantern…` */
+  /** Headline text shown next to the lantern. Defaults to `Kindling the lantern...` */
   title?: string
   /** Visual size/density. Defaults to `page`. */
   variant?: LanternLoaderVariant
@@ -79,7 +79,7 @@ const VARIANT_STYLES: Record<
 export function LanternLoader({
   caption = 'Faces in the sky peer down on your settlements.',
   className,
-  title = 'Kindling the lantern…',
+  title = 'Kindling the lantern...',
   variant = 'page'
 }: LanternLoaderProps): ReactElement {
   const styles = VARIANT_STYLES[variant]

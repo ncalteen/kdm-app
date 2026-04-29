@@ -532,7 +532,7 @@ export function CreateSettlementCard({
         </Button>
         <Button type="submit" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting
-            ? 'Striking the spark…'
+            ? 'Striking the spark...'
             : 'Light the lantern'}
         </Button>
       </div>

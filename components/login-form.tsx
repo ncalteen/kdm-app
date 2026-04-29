@@ -131,7 +131,7 @@ export function LoginForm({
                 </Alert>
               )}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Lighting the lantern…' : 'Login'}
+                {isLoading ? 'Lighting the lantern...' : 'Login'}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">

@@ -1,5 +1,6 @@
 'use client'
 
+import { LanternMark } from '@/components/generic/lantern-mark'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,13 +14,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { LocalStateType } from '@/contexts/local-context'
 import { removeHunt } from '@/lib/dal/hunt'
 import { removeSettlement, updateSettlement } from '@/lib/dal/settlement'
@@ -41,7 +37,13 @@ import {
   ShowdownDetail,
   ShowdownStateSetter
 } from '@/lib/types'
-import { DatabaseIcon, Loader2, Trash2Icon, XIcon } from 'lucide-react'
+import {
+  DatabaseIcon,
+  Loader2,
+  SkullIcon,
+  Trash2Icon,
+  XIcon
+} from 'lucide-react'
 import { ReactElement, useCallback, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
@@ -108,11 +110,9 @@ export function SettingsCard({
   /**
    * Handle Disable Toasts Setting
    *
-   * @param value New Value
+   * @param newDisableToasts New Value
    */
-  const handleDisableToastsChange = (value: string) => {
-    const newDisableToasts = value === 'true'
-
+  const handleDisableToastsChange = (newDisableToasts: boolean) => {
     try {
       updateLocal({
         ...local,
@@ -134,13 +134,12 @@ export function SettingsCard({
    * Optimistically updates the settlement's uses_scouts flag, then persists to
    * the DB. Rolls back on failure.
    *
-   * @param value New Value
+   * @param usesScouts New Value
    */
   const handleUsesScoutsChange = useCallback(
-    (value: string) => {
+    (usesScouts: boolean) => {
       if (!selectedSettlement) return
 
-      const usesScouts = value === 'true'
       const previousValue = selectedSettlement.uses_scouts
 
       // Optimistic update.
@@ -273,29 +272,27 @@ export function SettingsCard({
       {/* Global Settings */}
       <Card className="p-0">
         <CardHeader className="px-4 pt-3 pb-0">
-          <CardTitle className="text-lg">Global Settings</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <LanternMark className="h-5 w-5 text-amber-400/90" />
+            Global Settings
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-sm">Disable Notifications</div>
+              <Label htmlFor="disable-toasts" className="font-medium text-sm">
+                Disable Notifications
+              </Label>
               <div className="text-sm text-muted-foreground">
-                Silences success messages. Error messages will always be shown.
+                Silences success messages. Errors will always be shown.
               </div>
             </div>
-            <Select
-              value={disableToasts.toString()}
-              onValueChange={handleDisableToastsChange}
-              name="disable-toasts"
-              aria-label="Disable Notifications">
-              <SelectTrigger className="w-24" id="disable-toasts">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="false">No</SelectItem>
-                <SelectItem value="true">Yes</SelectItem>
-              </SelectContent>
-            </Select>
+            <Switch
+              id="disable-toasts"
+              checked={disableToasts}
+              onCheckedChange={handleDisableToastsChange}
+              aria-label="Disable Notifications"
+            />
           </div>
         </CardContent>
       </Card>
@@ -361,28 +358,19 @@ export function SettingsCard({
           <CardContent className="p-4 pt-0">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-sm">Uses Scouts</div>
+                <Label htmlFor="uses-scouts" className="font-medium text-sm">
+                  Uses Scouts
+                </Label>
                 <div className="text-sm text-muted-foreground">
-                  Determines if scouts are required for hunts and showdowns.
+                  Require a scout for hunts and showdowns.
                 </div>
               </div>
-              <Select
-                value={
-                  selectedSettlement.uses_scouts !== undefined
-                    ? selectedSettlement.uses_scouts.toString()
-                    : 'false'
-                }
-                onValueChange={handleUsesScoutsChange}
-                name="uses-scouts"
-                aria-label="Uses Scouts">
-                <SelectTrigger className="w-24" id="uses-scouts">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="false">No</SelectItem>
-                  <SelectItem value="true">Yes</SelectItem>
-                </SelectContent>
-              </Select>
+              <Switch
+                id="uses-scouts"
+                checked={selectedSettlement.uses_scouts ?? false}
+                onCheckedChange={handleUsesScoutsChange}
+                aria-label="Uses Scouts"
+              />
             </div>
           </CardContent>
         </Card>
@@ -447,7 +435,8 @@ export function SettingsCard({
       {selectedSettlement && (
         <Card className="p-0 border-destructive">
           <CardHeader className="px-4 pt-3 pb-0">
-            <CardTitle className="text-lg text-destructive">
+            <CardTitle className="text-lg text-destructive flex items-center gap-2">
+              <SkullIcon className="h-5 w-5" aria-hidden="true" />
               Danger Zone
             </CardTitle>
           </CardHeader>

@@ -121,7 +121,7 @@ export function ForgotPasswordForm({
                   </Alert>
                 )}
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Sending…' : 'Send reset email'}
+                  {isLoading ? 'Sending...' : 'Send reset email'}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">

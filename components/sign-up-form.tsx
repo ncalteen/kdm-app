@@ -200,7 +200,7 @@ export function SignUpForm({
                 </Alert>
               )}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Forging your name…' : 'Sign up'}
+                {isLoading ? 'Forging your name...' : 'Sign up'}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">

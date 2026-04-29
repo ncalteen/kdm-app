@@ -91,7 +91,7 @@ export function UpdatePasswordForm({
                 </Alert>
               )}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Saving…' : 'Save new password'}
+                {isLoading ? 'Saving...' : 'Save new password'}
               </Button>
             </div>
           </form>
