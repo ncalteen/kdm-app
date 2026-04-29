@@ -94,6 +94,7 @@ export const RewardItem = memo(function RewardItem({
           size="icon"
           type="button"
           onClick={() => onRemove(index)}
+          aria-label="Remove collective cognition reward"
           title="Remove reward">
           <TrashIcon className="h-4 w-4" />
         </Button>

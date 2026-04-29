@@ -231,7 +231,7 @@ export function CollectiveCognitionVictoriesCard({
                     <TableCell
                       colSpan={8}
                       className="text-center text-sm text-muted-foreground py-4">
-                      No quarries yet
+                      No quarries stalk outside the settlement.
                     </TableCell>
                   </TableRow>
                 )}
@@ -368,7 +368,7 @@ export function CollectiveCognitionVictoriesCard({
                     <TableCell
                       colSpan={4}
                       className="text-center text-sm text-muted-foreground py-4">
-                      No nemeses yet
+                      No nemeses stalk the settlement.
                     </TableCell>
                   </TableRow>
                 )}

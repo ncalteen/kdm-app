@@ -473,13 +473,13 @@ export function LocationsCard({
               selectedSettlement.locations.length === 0) &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No locations yet
+                  No locations have been raised yet.
                 </p>
               )}
 
             {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Loading locations...
+                Surveying the settlement...
               </p>
             )}
 

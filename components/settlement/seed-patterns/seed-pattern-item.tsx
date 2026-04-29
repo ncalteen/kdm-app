@@ -58,6 +58,7 @@ export const SeedPatternItem = memo(function SeedPatternItem({
           size="icon"
           type="button"
           onClick={() => onRemove(index)}
+          aria-label="Remove seed pattern"
           title="Remove seed pattern">
           <TrashIcon className="h-4 w-4" />
         </Button>

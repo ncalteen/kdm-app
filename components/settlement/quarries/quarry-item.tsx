@@ -80,6 +80,7 @@ export const QuarryItem = memo(function QuarryItem({
           size="icon"
           type="button"
           onClick={() => onRemove(id)}
+          aria-label="Remove quarry"
           title="Remove quarry">
           <TrashIcon className="h-4 w-4" />
         </Button>

@@ -438,7 +438,7 @@ export const HUNT_NOTES_SAVED_MESSAGE = () =>
  * @returns Hunt XP Rank Up Milestone Added Message
  */
 export const HUNT_XP_RANK_UP_MILESTONE_ADDED_MESSAGE = () =>
-  'Rank up milestone added.'
+  "A rank up milestone is etched into the survivor's memory."
 
 /**
  * Hunt XP Rank Up Milestone Removed
@@ -446,7 +446,7 @@ export const HUNT_XP_RANK_UP_MILESTONE_ADDED_MESSAGE = () =>
  * @returns Hunt XP Rank Up Milestone Removed Message
  */
 export const HUNT_XP_RANK_UP_MILESTONE_REMOVED_MESSAGE = () =>
-  'Rank up milestone removed.'
+  'A rank up milestone fades from memory.'
 
 /**
  * Hunt XP Rank Up Achieved
@@ -802,7 +802,7 @@ export const MONSTER_LUCK_TOKENS_UPDATED_MESSAGE = (
  *
  * @returns Monster Moved Message
  */
-export const MONSTER_MOVED_MESSAGE = () => 'Monster moved.'
+export const MONSTER_MOVED_MESSAGE = () => 'The monster shifts in the dark.'
 
 /**
  * Monster Movement Updated
@@ -2266,14 +2266,15 @@ export const WANDERER_UPDATED_MESSAGE = () =>
  *
  * @returns Survivors Healed Message
  */
-export const SURVIVORS_HEALED_MESSAGE = () => 'Survivors healed.'
+export const SURVIVORS_HEALED_MESSAGE = () => 'The survivors mend their wounds.'
 
 /**
  * Survivors Moved on the Hunt Board
  *
  * @returns Survivors Moved Message
  */
-export const SURVIVORS_MOVED_MESSAGE = () => 'Survivors moved.'
+export const SURVIVORS_MOVED_MESSAGE = () =>
+  'Survivors press deeper into the dark.'
 
 /**
  * Systemic Pressure Minimum Error

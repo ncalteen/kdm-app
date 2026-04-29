@@ -732,7 +732,9 @@ export function CreateShowdownCard({
               </SelectContent>
             </Select>
           ) : (
-            <p className="text-sm text-muted-foreground">No monsters</p>
+            <p className="text-sm text-muted-foreground">
+              No monsters loom in the distance.
+            </p>
           )}
         </div>
 
@@ -1004,8 +1006,8 @@ export function CreateShowdownCard({
           <p className="text-sm text-muted-foreground text-center">
             {survivors.filter((s) => s.settlement_id === selectedSettlement?.id)
               .length === 0
-              ? 'No survivors available. Create survivors first.'
-              : 'All survivors are dead or retired.'}
+              ? 'Your settlement is void of survivors.'
+              : 'No survivors stand ready to fight.'}
           </p>
         )}
 
@@ -1021,7 +1023,7 @@ export function CreateShowdownCard({
             isCreating
           }
           className="w-full mt-2">
-          {isCreating ? 'Creating...' : 'Begin Showdown'}
+          {isCreating ? 'The showdown begins...' : 'Begin Showdown'}
         </Button>
       </CardContent>
     </Card>

@@ -99,6 +99,7 @@ export const ResourceItem = memo(function ResourceItem({
           type="button"
           className="h-8 w-8 shrink-0"
           onClick={() => onRemove(index)}
+          aria-label="Remove resource"
           title="Remove resource">
           <TrashIcon className="h-4 w-4" />
         </Button>

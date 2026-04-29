@@ -1,6 +1,8 @@
 'use client'
 
 import { AppSidebar } from '@/components/app-sidebar'
+import { LanternLoader } from '@/components/generic/lantern-loader'
+import { ThematicShell } from '@/components/generic/thematic-shell'
 import { SettlementCard } from '@/components/settlement/settlement-card'
 import { SiteHeader } from '@/components/side-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
@@ -26,18 +28,17 @@ export default function Page(): ReactElement {
 /**
  * Loading Component
  *
+ * Pre-shell splash shown while authentication and bootstrap data are still in
+ * flight. Uses the shared `<ThematicShell>` so the bootstrap surface matches
+ * the visual language of the auth and not-found surfaces.
+ *
  * @returns Loading Component
  */
 function MainPageLoading(): ReactElement {
   return (
-    <div className="grid grid-rows-[1fr] items-center justify-items-center sm:p-8 pb-20 gap-8 sm:gap-16 font-[family-name:var(--font-geist-sans)]">
-      <h1 className="text-3xl sm:text-4xl font-bold pt-[20px] text-center">
-        Loading...
-      </h1>
-      <p className="text-md text-center">
-        Faces in the sky peer down on your settlements.
-      </p>
-    </div>
+    <ThematicShell>
+      <LanternLoader variant="splash" />
+    </ThematicShell>
   )
 }
 

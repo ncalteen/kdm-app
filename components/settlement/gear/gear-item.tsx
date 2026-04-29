@@ -69,6 +69,7 @@ export const GearItem = memo(function GearItem({
           size="icon"
           type="button"
           onClick={() => onRemove(index)}
+          aria-label="Remove gear"
           title="Remove gear">
           <TrashIcon className="h-4 w-4" />
         </Button>

@@ -65,6 +65,7 @@ export const KnowledgeItem = memo(function KnowledgeItem({
         size="icon"
         type="button"
         onClick={() => onRemove(index)}
+        aria-label="Remove knowledge"
         title="Remove knowledge">
         <TrashIcon className="h-4 w-4" />
       </Button>

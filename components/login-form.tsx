@@ -1,6 +1,7 @@
 'use client'
 
 import { DiscordButton } from '@/components/auth/discord-button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -13,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { TriangleAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useState } from 'react'
@@ -73,9 +75,9 @@ export function LoginForm({
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Welcome back, survivor.</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Archivist waits to chronicle your deeds.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -122,9 +124,14 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && (
+                <Alert variant="destructive">
+                  <TriangleAlertIcon className="h-4 w-4" aria-hidden="true" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Logging in...' : 'Login'}
+                {isLoading ? 'Lighting the lantern...' : 'Login'}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">

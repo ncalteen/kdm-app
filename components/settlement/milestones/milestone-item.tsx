@@ -77,6 +77,7 @@ export const MilestoneItem = memo(function MilestoneItem({
           size="icon"
           type="button"
           onClick={() => onRemove(index)}
+          aria-label="Remove milestone"
           title="Remove milestone">
           <TrashIcon className="h-4 w-4" />
         </Button>

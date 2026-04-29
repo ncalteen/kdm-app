@@ -1,38 +1,53 @@
 import { AuthHero } from '@/components/auth/auth-hero'
+import { ThematicShell } from '@/components/generic/thematic-shell'
 import { ReactElement, ReactNode } from 'react'
+
+/**
+ * Auth Layout Properties
+ */
+interface AuthLayoutProps {
+  /** Auth form (or terminal-flow card) rendered in the right column. */
+  children: ReactNode
+  /**
+   * When `true`, renders the form centered in a single column without the
+   * marketing hero. Useful for transient confirmation/error states where
+   * the hero would feel redundant. Defaults to `false`.
+   */
+  hideHero?: boolean
+}
 
 /**
  * Auth Layout
  *
- * Two-column layout used by authentication pages. On desktop, the marketing
- * hero sits on the left and the auth form sits on the right. On mobile, the
- * hero stacks above the form.
+ * Shared layout used by every authentication-adjacent page (login, sign-up,
+ * forgot-password, update-password, sign-up-success, error). On desktop, the
+ * marketing hero sits on the left and the form/card sits on the right; on
+ * mobile, the hero stacks above the form. All variants share the same
+ * `<ThematicShell>` atmospherics so the visual language stays consistent.
  *
- * A subtle radial "lantern glow" gradient sits behind the form to evoke the
- * thematic light-in-the-dark of Kingdom Death.
+ * Pass `hideHero` for transient terminal-flow surfaces (confirmation /
+ * error) where the marketing pitch would feel out of place.
  *
  * @param props Auth Layout Properties
  * @returns Auth Layout Component
  */
 export function AuthLayout({
-  children
-}: {
-  children: ReactNode
-}): ReactElement {
-  return (
-    <div className="relative min-h-svh w-full overflow-hidden">
-      {/* Lantern glow — anchors to the form column on desktop, recedes on mobile. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_75%_50%,rgba(251,191,36,0.08),transparent_60%)]"
-      />
-      {/* Faint vignette to deepen the edges. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.4)_100%)]"
-      />
+  children,
+  hideHero = false
+}: AuthLayoutProps): ReactElement {
+  if (hideHero) {
+    return (
+      <ThematicShell>
+        <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+          <div className="w-full max-w-sm">{children}</div>
+        </div>
+      </ThematicShell>
+    )
+  }
 
-      <div className="relative grid min-h-svh w-full grid-cols-1 lg:grid-cols-2">
+  return (
+    <ThematicShell>
+      <div className="grid min-h-svh w-full grid-cols-1 lg:grid-cols-2">
         <div className="hidden lg:flex items-center justify-center p-10 xl:p-16">
           <AuthHero />
         </div>
@@ -44,6 +59,6 @@ export function AuthLayout({
           <div className="w-full max-w-sm">{children}</div>
         </div>
       </div>
-    </div>
+    </ThematicShell>
   )
 }

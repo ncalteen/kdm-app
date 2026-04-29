@@ -44,7 +44,9 @@ export function SurvivorDetailsPanel({
           </>
         ) : (
           <>
-            <p className="text-lg font-medium">No survivors available</p>
+            <p className="text-lg font-medium">
+              Your settlement is void of survivors.
+            </p>
           </>
         )}
       </div>

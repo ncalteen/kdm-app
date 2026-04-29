@@ -538,13 +538,13 @@ export function NemesesCard({
               selectedSettlement.nemeses.length === 0) &&
               hasFetched && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No nemeses yet
+                  No nemeses stalk the settlement.
                 </p>
               )}
 
             {!hasFetched && selectedSettlement?.id && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Loading nemeses...
+                Watching the shadows...
               </p>
             )}
 

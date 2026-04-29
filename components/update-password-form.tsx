@@ -1,5 +1,6 @@
 'use client'
 
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -12,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { TriangleAlertIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { ComponentPropsWithoutRef, FormEvent, useState } from 'react'
 
@@ -62,9 +64,9 @@ export function UpdatePasswordForm({
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className="p-0 pb-4 h-full">
         <CardHeader className="px-4 pt-3 pb-0">
-          <CardTitle className="text-lg">Reset Your Password</CardTitle>
+          <CardTitle className="text-lg">Reset your password</CardTitle>
           <CardDescription className="text-sm">
-            Please enter your new password below.
+            Choose a new password to keep your settlements safe.
           </CardDescription>
         </CardHeader>
 
@@ -82,7 +84,12 @@ export function UpdatePasswordForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && (
+                <Alert variant="destructive">
+                  <TriangleAlertIcon className="h-4 w-4" aria-hidden="true" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Saving...' : 'Save new password'}
               </Button>

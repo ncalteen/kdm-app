@@ -93,6 +93,7 @@ export const PrincipleItem = memo(function PrincipleItem({
           size="icon"
           type="button"
           onClick={() => onRemove(index)}
+          aria-label="Remove principle"
           title="Remove principle">
           <TrashIcon className="h-4 w-4" />
         </Button>

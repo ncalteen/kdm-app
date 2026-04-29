@@ -194,6 +194,7 @@ export const TimelineYearRow = ({
                 size="icon"
                 className="h-6 w-6"
                 onClick={() => handleSaveEvent(index, entryIndex)}
+                aria-label="Save event"
                 title="Save event">
                 <CheckIcon className="h-3 w-3" />
               </Button>
@@ -203,6 +204,7 @@ export const TimelineYearRow = ({
                 size="icon"
                 className="h-6 w-6"
                 onClick={() => handleRemoveEvent(index, entryIndex)}
+                aria-label="Remove event"
                 title="Remove event">
                 <TrashIcon className="h-3 w-3" />
               </Button>
