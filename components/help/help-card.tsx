@@ -1,9 +1,10 @@
 'use client'
 
+import { LanternMark } from '@/components/generic/lantern-mark'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { GITHUB_ISSUES_URL, SUPPORT_EMAIL } from '@/lib/common'
-import { CircleQuestionMarkIcon, GithubIcon, MailIcon } from 'lucide-react'
+import { GithubIcon, MailIcon } from 'lucide-react'
 import { ReactElement } from 'react'
 
 /**
@@ -21,7 +22,7 @@ export function HelpCard(): ReactElement {
       <Card className="p-0">
         <CardHeader className="px-4 pt-3 pb-0">
           <CardTitle className="text-lg flex items-center gap-2">
-            <CircleQuestionMarkIcon className="h-5 w-5" />
+            <LanternMark className="h-5 w-5 text-amber-400/90" />
             Need Help?
           </CardTitle>
         </CardHeader>
@@ -29,7 +30,7 @@ export function HelpCard(): ReactElement {
           <p className="text-sm text-muted-foreground">
             In the plain of stone faces, only survivors who band together
             persist. If the darkness has swallowed your progress or you wish to
-            share a discovery, raise your lantern and call for aid below.
+            share a discovery, call for aid below.
           </p>
         </CardContent>
       </Card>

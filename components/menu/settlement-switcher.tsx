@@ -181,16 +181,16 @@ export function SettlementSwitcher({
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="text-sm">
                   {isCreatingNewSettlement
-                    ? 'Create a Settlement'
+                    ? 'Found a settlement'
                     : (selectedSettlement?.settlement_name ??
-                      'Unknown Settlement')}
+                      'Choose a settlement')}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {selectedSettlementId
                     ? (selectedSettlement?.campaign_type &&
                         CampaignType[selectedSettlement?.campaign_type]) ||
                       'Unknown Campaign Type'
-                    : 'Choose your destiny'}
+                    : 'Find on the lantern hoard'}
                 </span>
               </div>
 
@@ -213,7 +213,7 @@ export function SettlementSwitcher({
               }}>
               <div className="flex items-center">
                 <Plus className="mr-2 h-4 w-4" />
-                <span>Create a Settlement</span>
+                <span>Found a settlement</span>
               </div>
             </DropdownMenuItem>
 
@@ -221,8 +221,8 @@ export function SettlementSwitcher({
 
             {settlementList.length === 0 && (
               <DropdownMenuItem disabled>
-                <span className="text-sm text-muted-foreground">
-                  No settlements yet
+                <span className="text-xs text-muted-foreground">
+                  No settlements yet — light your first lantern.
                 </span>
               </DropdownMenuItem>
             )}

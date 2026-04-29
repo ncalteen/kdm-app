@@ -390,7 +390,9 @@ export function CustomGearRulesTrigger({
         sections={[
           {
             label: 'Rules',
-            content: loading ? 'Loading...' : (detail?.rules ?? null)
+            content: loading
+              ? '_Staring at the stars..._'
+              : (detail?.rules ?? null)
           }
         ]}
       />
@@ -591,7 +593,7 @@ export function CustomPhilosophyRulesIconButton({
   ]
 
   if (loading) {
-    sections.push({ label: 'Ranks', content: 'Loading...' })
+    sections.push({ label: 'Ranks', content: '_Staring at the stars..._' })
   } else if (ranks && ranks.length > 0) {
     for (const rank of ranks)
       sections.push({
@@ -777,7 +779,9 @@ export function CustomNeurosisRulesIconButton({
         sections={[
           {
             label: 'Rules',
-            content: loading ? 'Loading...' : (detail?.rules ?? null)
+            content: loading
+              ? '_Staring at the stars..._'
+              : (detail?.rules ?? null)
           }
         ]}
       />

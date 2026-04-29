@@ -1,11 +1,12 @@
 'use client'
 
+import { LanternMark } from '@/components/generic/lantern-mark'
 import { SelectCampaignType } from '@/components/menu/select-campaign-type'
 import { SelectMonsterNode } from '@/components/menu/select-monster-node'
 import { SelectSurvivorType } from '@/components/menu/select-survivor-type'
 import { SelectWanderers } from '@/components/menu/select-wanderers'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -194,6 +195,15 @@ export function CreateSettlementCard({
       className="space-y-6">
       <Form {...form}>
         <Card className="max-w-[500px] mt-10 mx-auto">
+          <CardHeader className="px-6 pt-2 pb-0">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <LanternMark className="h-5 w-5 text-amber-400/90" />
+              Found a settlement
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Choose the campaign and the horrors you will face.
+            </p>
+          </CardHeader>
           <CardContent className="flex flex-col gap-2 w-full">
             {/* Settlement Name */}
             <FormField
@@ -512,9 +522,20 @@ export function CreateSettlementCard({
         </Card>
       </Form>
 
-      <Button type="submit" className="mx-auto block">
-        Create Settlement
-      </Button>
+      <div className="flex items-center justify-center gap-2 max-w-[500px] mx-auto">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setIsCreatingNewSettlement(false)}
+          disabled={form.formState.isSubmitting}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting
+            ? 'Striking the spark…'
+            : 'Light the lantern'}
+        </Button>
+      </div>
     </form>
   )
 }
