@@ -317,6 +317,15 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     }
   }, [])
 
+  // Persist `local` to localStorage on every commit. Centralizing this in a
+  // single effect lets every setter mutate state with a plain functional
+  // updater (no inline `saveToLocalStorage` calls), which keeps setter
+  // identities stable and collapses redundant writes when multiple setters fire
+  // in the same React batch.
+  useEffect(() => {
+    saveToLocalStorage(local)
+  }, [local])
+
   // Subscribe to Supabase Realtime changes on gameplay tables. When another
   // tab or player modifies data, the affected domain is re-fetched.
   useRealtimeSubscriptions({
@@ -343,22 +352,16 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
             setSelectedSurvivorIdState(null)
             setSurvivors([])
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedSettlementId: null,
-                selectedHuntId: null,
-                selectedHuntMonsterIndex: 0,
-                selectedSettlementPhaseId: null,
-                selectedShowdownId: null,
-                selectedShowdownMonsterIndex: 0,
-                selectedSurvivorId: null
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedSettlementId: null,
+              selectedHuntId: null,
+              selectedHuntMonsterIndex: 0,
+              selectedSettlementPhaseId: null,
+              selectedShowdownId: null,
+              selectedShowdownMonsterIndex: 0,
+              selectedSurvivorId: null
+            }))
           }
         })
         .catch((err: unknown) => {
@@ -376,31 +379,19 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
             setSelectedHuntIdState(null)
             setSelectedHuntMonsterIndexState(0)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedHuntId: null,
-                selectedHuntMonsterIndex: 0
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedHuntId: null,
+              selectedHuntMonsterIndex: 0
+            }))
           } else if (hunt && !selectedHuntId) {
             setSelectedHuntIdState(hunt.id)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedHuntId: hunt.id,
-                selectedHuntMonsterIndex: 0
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedHuntId: hunt.id,
+              selectedHuntMonsterIndex: 0
+            }))
           }
         })
         .catch((err: unknown) => {
@@ -418,31 +409,19 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
             setSelectedShowdownIdState(null)
             setSelectedShowdownMonsterIndexState(0)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedShowdownId: null,
-                selectedShowdownMonsterIndex: 0
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedShowdownId: null,
+              selectedShowdownMonsterIndex: 0
+            }))
           } else if (showdown && !selectedShowdownId) {
             setSelectedShowdownIdState(showdown.id)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedShowdownId: showdown.id,
-                selectedShowdownMonsterIndex: 0
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedShowdownId: showdown.id,
+              selectedShowdownMonsterIndex: 0
+            }))
           }
         })
         .catch((err: unknown) => {
@@ -459,29 +438,17 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           if (!settlementPhase && selectedSettlementPhaseId) {
             setSelectedSettlementPhaseIdState(null)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedSettlementPhaseId: null
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedSettlementPhaseId: null
+            }))
           } else if (settlementPhase && !selectedSettlementPhaseId) {
             setSelectedSettlementPhaseIdState(settlementPhase.id)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedSettlementPhaseId: settlementPhase.id
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedSettlementPhaseId: settlementPhase.id
+            }))
           }
         })
         .catch((err: unknown) => {
@@ -507,16 +474,10 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
             if (!survivor) {
               setSelectedSurvivorIdState(null)
 
-              setLocalState((prev) => {
-                const updated = {
-                  ...prev,
-                  selectedSurvivorId: null
-                }
-
-                saveToLocalStorage(updated)
-
-                return updated
-              })
+              setLocalState((prev) => ({
+                ...prev,
+                selectedSurvivorId: null
+              }))
             }
           })
           .catch((err: unknown) => {
