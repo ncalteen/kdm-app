@@ -28,8 +28,10 @@ import {
   createContext,
   ReactElement,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState
 } from 'react'
 
@@ -317,6 +319,15 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     }
   }, [])
 
+  // Persist `local` to localStorage on every commit. Centralizing this in a
+  // single effect lets every setter mutate state with a plain functional
+  // updater (no inline `saveToLocalStorage` calls), which keeps setter
+  // identities stable and collapses redundant writes when multiple setters fire
+  // in the same React batch.
+  useEffect(() => {
+    saveToLocalStorage(local)
+  }, [local])
+
   // Subscribe to Supabase Realtime changes on gameplay tables. When another
   // tab or player modifies data, the affected domain is re-fetched.
   useRealtimeSubscriptions({
@@ -343,22 +354,16 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
             setSelectedSurvivorIdState(null)
             setSurvivors([])
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedSettlementId: null,
-                selectedHuntId: null,
-                selectedHuntMonsterIndex: 0,
-                selectedSettlementPhaseId: null,
-                selectedShowdownId: null,
-                selectedShowdownMonsterIndex: 0,
-                selectedSurvivorId: null
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedSettlementId: null,
+              selectedHuntId: null,
+              selectedHuntMonsterIndex: 0,
+              selectedSettlementPhaseId: null,
+              selectedShowdownId: null,
+              selectedShowdownMonsterIndex: 0,
+              selectedSurvivorId: null
+            }))
           }
         })
         .catch((err: unknown) => {
@@ -376,31 +381,19 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
             setSelectedHuntIdState(null)
             setSelectedHuntMonsterIndexState(0)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedHuntId: null,
-                selectedHuntMonsterIndex: 0
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedHuntId: null,
+              selectedHuntMonsterIndex: 0
+            }))
           } else if (hunt && !selectedHuntId) {
             setSelectedHuntIdState(hunt.id)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedHuntId: hunt.id,
-                selectedHuntMonsterIndex: 0
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedHuntId: hunt.id,
+              selectedHuntMonsterIndex: 0
+            }))
           }
         })
         .catch((err: unknown) => {
@@ -418,31 +411,19 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
             setSelectedShowdownIdState(null)
             setSelectedShowdownMonsterIndexState(0)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedShowdownId: null,
-                selectedShowdownMonsterIndex: 0
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedShowdownId: null,
+              selectedShowdownMonsterIndex: 0
+            }))
           } else if (showdown && !selectedShowdownId) {
             setSelectedShowdownIdState(showdown.id)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedShowdownId: showdown.id,
-                selectedShowdownMonsterIndex: 0
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedShowdownId: showdown.id,
+              selectedShowdownMonsterIndex: 0
+            }))
           }
         })
         .catch((err: unknown) => {
@@ -459,29 +440,17 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           if (!settlementPhase && selectedSettlementPhaseId) {
             setSelectedSettlementPhaseIdState(null)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedSettlementPhaseId: null
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedSettlementPhaseId: null
+            }))
           } else if (settlementPhase && !selectedSettlementPhaseId) {
             setSelectedSettlementPhaseIdState(settlementPhase.id)
 
-            setLocalState((prev) => {
-              const updated = {
-                ...prev,
-                selectedSettlementPhaseId: settlementPhase.id
-              }
-
-              saveToLocalStorage(updated)
-
-              return updated
-            })
+            setLocalState((prev) => ({
+              ...prev,
+              selectedSettlementPhaseId: settlementPhase.id
+            }))
           }
         })
         .catch((err: unknown) => {
@@ -507,16 +476,10 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
             if (!survivor) {
               setSelectedSurvivorIdState(null)
 
-              setLocalState((prev) => {
-                const updated = {
-                  ...prev,
-                  selectedSurvivorId: null
-                }
-
-                saveToLocalStorage(updated)
-
-                return updated
-              })
+              setLocalState((prev) => ({
+                ...prev,
+                selectedSurvivorId: null
+              }))
             }
           })
           .catch((err: unknown) => {
@@ -529,16 +492,24 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Fetch Hunt Data
    *
-   * Triggered whenever the settlement or hunt selection changes. Uses a
-   * cancellation flag to prevent state updates on unmounted components or when
-   * selections change rapidly.
+   * Triggered whenever the active settlement changes. The hunt is a per-
+   * settlement singleton, so this effect is the single source of truth: it
+   * resolves the current hunt for the settlement and reconciles
+   * `selectedHuntId` accordingly. Setters that change the hunt selection are
+   * pure ID/state mutations and never re-trigger this effect on their own.
    */
   useEffect(() => {
     console.debug('Fetching Hunt Data')
 
     let isCancelled = false
 
-    if (!isAuthenticated || !selectedHuntId || !selectedSettlementId)
+    if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    // Skip-if-fresh: the active hunt for this settlement is already loaded.
+    if (selectedHunt && selectedHunt.settlement_id === selectedSettlementId)
       return () => {
         isCancelled = true
       }
@@ -549,23 +520,18 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
         console.debug('Hunt Data:', hunt)
         setSelectedHuntState(hunt)
-
-        if (!hunt) {
-          setSelectedHuntIdState(null)
-          setSelectedHuntMonsterIndexState(0)
-
-          setLocalState((prev) => {
-            const updated = {
-              ...prev,
-              selectedHuntId: null,
+        setSelectedHuntIdState((prev) => {
+          const next = hunt?.id ?? null
+          if (prev !== next) {
+            setLocalState((local) => ({
+              ...local,
+              selectedHuntId: next,
               selectedHuntMonsterIndex: 0
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
-        }
+            }))
+            setSelectedHuntMonsterIndexState(0)
+          }
+          return next
+        })
       })
       .catch((err: unknown) => {
         if (isCancelled) return
@@ -575,23 +541,17 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSelectedHuntIdState(null)
         setSelectedHuntMonsterIndexState(0)
 
-        setLocalState((prev) => {
-          const updated = {
-            ...prev,
-            selectedHuntId: null,
-            selectedHuntMonsterIndex: 0
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
+        setLocalState((prev) => ({
+          ...prev,
+          selectedHuntId: null,
+          selectedHuntMonsterIndex: 0
+        }))
       })
 
     return () => {
       isCancelled = true
     }
-  }, [isAuthenticated, selectedHuntId, selectedSettlementId])
+  }, [isAuthenticated, selectedSettlementId, selectedHunt])
 
   /**
    * Fetch Settlement Data
@@ -606,6 +566,12 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     let isCancelled = false
 
     if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    // Skip-if-fresh: the settlement is already loaded.
+    if (selectedSettlement?.id === selectedSettlementId)
       return () => {
         isCancelled = true
       }
@@ -633,22 +599,16 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           setSelectedSurvivorIdState(null)
           setSurvivors([])
 
-          setLocalState((prev) => {
-            const updated = {
-              ...prev,
-              selectedSettlementId: null,
-              selectedHuntId: null,
-              selectedHuntMonsterIndex: 0,
-              selectedSettlementPhaseId: null,
-              selectedShowdownId: null,
-              selectedShowdownMonsterIndex: 0,
-              selectedSurvivorId: null
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
+          setLocalState((prev) => ({
+            ...prev,
+            selectedSettlementId: null,
+            selectedHuntId: null,
+            selectedHuntMonsterIndex: 0,
+            selectedSettlementPhaseId: null,
+            selectedShowdownId: null,
+            selectedShowdownMonsterIndex: 0,
+            selectedSurvivorId: null
+          }))
         }
       })
       .catch((err: unknown) => {
@@ -670,28 +630,22 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSelectedSurvivorIdState(null)
         setSurvivors([])
 
-        setLocalState((prev) => {
-          const updated = {
-            ...prev,
-            selectedSettlementId: null,
-            selectedHuntId: null,
-            selectedHuntMonsterIndex: 0,
-            selectedSettlementPhaseId: null,
-            selectedShowdownId: null,
-            selectedShowdownMonsterIndex: 0,
-            selectedSurvivorId: null
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
+        setLocalState((prev) => ({
+          ...prev,
+          selectedSettlementId: null,
+          selectedHuntId: null,
+          selectedHuntMonsterIndex: 0,
+          selectedSettlementPhaseId: null,
+          selectedShowdownId: null,
+          selectedShowdownMonsterIndex: 0,
+          selectedSurvivorId: null
+        }))
       })
 
     return () => {
       isCancelled = true
     }
-  }, [isAuthenticated, selectedSettlementId])
+  }, [isAuthenticated, selectedSettlementId, selectedSettlement?.id])
 
   /**
    * Fetch Survivors Data
@@ -732,16 +686,26 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Fetch Settlement Phase Data
    *
-   * Triggered whenever the settlement selection changes. Uses a cancellation
-   * flag to prevent state updates on unmounted components or when selections
-   * change rapidly.
+   * Triggered whenever the active settlement changes. The settlement phase
+   * is a per-settlement singleton, so this effect is the single source of
+   * truth: it resolves the current phase for the settlement and reconciles
+   * `selectedSettlementPhaseId` accordingly.
    */
   useEffect(() => {
     console.debug('Fetching Settlement Phase Data')
 
     let isCancelled = false
 
-    if (!isAuthenticated || !selectedSettlementId || !selectedSettlementPhaseId)
+    if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    // Skip-if-fresh: the active phase for this settlement is already loaded.
+    if (
+      selectedSettlementPhase &&
+      selectedSettlementPhase.settlement_id === selectedSettlementId
+    )
       return () => {
         isCancelled = true
       }
@@ -752,21 +716,15 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
         console.debug('Settlement Phase Data:', settlementPhase)
         setSelectedSettlementPhaseState(settlementPhase)
-
-        if (!settlementPhase) {
-          setSelectedSettlementPhaseIdState(null)
-
-          setLocalState((prev) => {
-            const updated = {
-              ...prev,
-              selectedSettlementPhaseId: null
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
-        }
+        setSelectedSettlementPhaseIdState((prev) => {
+          const next = settlementPhase?.id ?? null
+          if (prev !== next)
+            setLocalState((local) => ({
+              ...local,
+              selectedSettlementPhaseId: next
+            }))
+          return next
+        })
       })
       .catch((err: unknown) => {
         if (isCancelled) return
@@ -776,36 +734,40 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSelectedSettlementPhaseState(null)
         setSelectedSettlementPhaseIdState(null)
 
-        setLocalState((prev) => {
-          const updated = {
-            ...prev,
-            selectedSettlementPhaseId: null
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
+        setLocalState((prev) => ({
+          ...prev,
+          selectedSettlementPhaseId: null
+        }))
       })
 
     return () => {
       isCancelled = true
     }
-  }, [isAuthenticated, selectedSettlementId, selectedSettlementPhaseId])
+  }, [isAuthenticated, selectedSettlementId, selectedSettlementPhase])
 
   /**
    * Fetch Showdown Data
    *
-   * Triggered whenever the settlement selection changes. Uses a cancellation
-   * flag to prevent state updates on unmounted components or when selections
-   * change rapidly.
+   * Triggered whenever the active settlement changes. The showdown is a per-
+   * settlement singleton, so this effect is the single source of truth: it
+   * resolves the current showdown for the settlement and reconciles
+   * `selectedShowdownId` accordingly.
    */
   useEffect(() => {
     console.debug('Fetching Showdown Data')
 
     let isCancelled = false
 
-    if (!isAuthenticated || !selectedSettlementId || !selectedShowdownId)
+    if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    // Skip-if-fresh: the active showdown for this settlement is already loaded.
+    if (
+      selectedShowdown &&
+      selectedShowdown.settlement_id === selectedSettlementId
+    )
       return () => {
         isCancelled = true
       }
@@ -817,23 +779,18 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         console.debug('Showdown Data:', showdown)
 
         setSelectedShowdownState(showdown)
-
-        if (!showdown) {
-          setSelectedShowdownIdState(null)
-          setSelectedShowdownMonsterIndexState(0)
-
-          setLocalState((prev) => {
-            const updated = {
-              ...prev,
-              selectedShowdownId: null,
+        setSelectedShowdownIdState((prev) => {
+          const next = showdown?.id ?? null
+          if (prev !== next) {
+            setLocalState((local) => ({
+              ...local,
+              selectedShowdownId: next,
               selectedShowdownMonsterIndex: 0
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
-        }
+            }))
+            setSelectedShowdownMonsterIndexState(0)
+          }
+          return next
+        })
       })
       .catch((err: unknown) => {
         if (isCancelled) return
@@ -844,23 +801,17 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSelectedShowdownIdState(null)
         setSelectedShowdownMonsterIndexState(0)
 
-        setLocalState((prev) => {
-          const updated = {
-            ...prev,
-            selectedShowdownId: null,
-            selectedShowdownMonsterIndex: 0
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
+        setLocalState((prev) => ({
+          ...prev,
+          selectedShowdownId: null,
+          selectedShowdownMonsterIndex: 0
+        }))
       })
 
     return () => {
       isCancelled = true
     }
-  }, [isAuthenticated, selectedSettlementId, selectedShowdownId])
+  }, [isAuthenticated, selectedSettlementId, selectedShowdown])
 
   /**
    * Fetch Survivor Data
@@ -879,6 +830,12 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         isCancelled = true
       }
 
+    // Skip-if-fresh: the selected survivor is already loaded.
+    if (selectedSurvivor?.id === selectedSurvivorId)
+      return () => {
+        isCancelled = true
+      }
+
     getSurvivor(selectedSurvivorId)
       .then((survivor) => {
         if (isCancelled) return
@@ -890,16 +847,10 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         if (!survivor) {
           setSelectedSurvivorIdState(null)
 
-          setLocalState((prev) => {
-            const updated = {
-              ...prev,
-              selectedSurvivorId: null
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
+          setLocalState((prev) => ({
+            ...prev,
+            selectedSurvivorId: null
+          }))
         }
       })
       .catch((err: unknown) => {
@@ -910,22 +861,21 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
         setSelectedSurvivorState(null)
         setSelectedSurvivorIdState(null)
 
-        setLocalState((prev) => {
-          const updated = {
-            ...prev,
-            selectedSurvivorId: null
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
+        setLocalState((prev) => ({
+          ...prev,
+          selectedSurvivorId: null
+        }))
       })
 
     return () => {
       isCancelled = true
     }
-  }, [isAuthenticated, selectedSettlementId, selectedSurvivorId])
+  }, [
+    isAuthenticated,
+    selectedSettlementId,
+    selectedSurvivorId,
+    selectedSurvivor?.id
+  ])
 
   /**
    * Fetch User Settings Data
@@ -967,7 +917,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    * @param huntOrUpdater Selected Hunt or functional updater receiving the
    * previous hunt state
    */
-  const setSelectedHunt: HuntStateSetter = (huntOrUpdater) => {
+  const setSelectedHunt = useCallback<HuntStateSetter>((huntOrUpdater) => {
     // Functional updater form — used for safe optimistic async callbacks
     // that must operate on the latest state instead of a stale closure.
     if (typeof huntOrUpdater === 'function') {
@@ -977,319 +927,162 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
     const hunt = huntOrUpdater
 
-    // When selecting a hunt, stop creation mode
+    // When selecting a hunt, stop creation mode.
     if (hunt) setIsCreatingNewHunt(false)
 
-    // Update the state to reflect the changes.
     setSelectedHuntState(hunt)
     setSelectedHuntIdState(hunt ? hunt.id : null)
     setSelectedHuntMonsterIndexState(0)
 
-    // Save the change to local storage.
-    setLocalState((local) => {
-      const updated = {
-        ...local,
-        selectedHuntId: hunt ? hunt.id : null,
-        selectedHuntMonsterIndex: 0
-      }
-
-      saveToLocalStorage(updated)
-
-      return updated
-    })
-  }
+    setLocalState((local) => ({
+      ...local,
+      selectedHuntId: hunt ? hunt.id : null,
+      selectedHuntMonsterIndex: 0
+    }))
+  }, [])
 
   /**
    * Set Selected Hunt ID
    *
+   * Pure ID/state mutation. The hunt is a per-settlement singleton, so the
+   * fetch effect (keyed on `selectedSettlementId`) is the source of truth for
+   * resolving hunt detail. Callers passing a non-null id should already have
+   * the matching `HuntDetail` and prefer `setSelectedHunt(detail)`.
+   *
    * @param huntId Selected Hunt ID
    */
-  const setSelectedHuntId = (huntId: string | null) => {
-    // When selecting a hunt, stop creation mode
+  const setSelectedHuntId = useCallback((huntId: string | null) => {
+    // When selecting a hunt, stop creation mode.
     if (huntId) setIsCreatingNewHunt(false)
 
-    // The hunt monster index will always reset.
+    setSelectedHuntIdState(huntId)
     setSelectedHuntMonsterIndexState(0)
+    if (!huntId) setSelectedHuntState(null)
 
-    // Try to get a hunt with this ID and the current settlement ID. If found,
-    // set the selected hunt details. Otherwise, clear the hunt and hunt ID.
-    getHunt(selectedSettlementId)
-      .then((hunt) => {
-        // If no hunt is found, clear the selected hunt ID as well to prevent
-        // stale data.
-        if (!hunt) setSelectedHuntIdState(null)
-
-        setSelectedHuntState(hunt)
-
-        setLocalState((local) => {
-          const updated = {
-            ...local,
-            selectedHuntId: hunt ? hunt.id : null,
-            selectedHuntMonsterIndex: 0
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
-      })
-      .catch(() => {
-        setSelectedHuntState(null)
-        setSelectedHuntIdState(null)
-
-        // Clear the local state as well to prevent stale data.
-        setLocalState((local) => {
-          const updated = {
-            ...local,
-            selectedHuntId: null,
-            selectedHuntMonsterIndex: 0
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
-      })
-  }
+    setLocalState((local) => ({
+      ...local,
+      selectedHuntId: huntId,
+      selectedHuntMonsterIndex: 0
+    }))
+  }, [])
 
   /**
    * Set Selected Hunt Monster Index
    *
    * @param index Selected Hunt Monster Index
    */
-  const setSelectedHuntMonsterIndex = (index: number) => {
+  const setSelectedHuntMonsterIndex = useCallback((index: number) => {
     setSelectedHuntMonsterIndexState(index)
-
-    setLocalState((local) => {
-      const updated = {
-        ...local,
-        selectedHuntMonsterIndex: index
-      }
-
-      saveToLocalStorage(updated)
-
-      return updated
-    })
-  }
+    setLocalState((local) => ({ ...local, selectedHuntMonsterIndex: index }))
+  }, [])
 
   /**
    * Set Selected Settlement
    *
+   * Switching to a different settlement clears survivor selection and lets
+   * the hunt / phase / showdown discovery effects (keyed on
+   * `selectedSettlementId`) re-populate state on the next render. Same-ID
+   * updates are optimistic UI mutations and intentionally do NOT trigger
+   * any side-effects.
+   *
    * @param settlementOrUpdater Selected Settlement or functional updater
    * receiving the previous settlement state
    */
-  const setSelectedSettlement: SettlementStateSetter = (
-    settlementOrUpdater
-  ) => {
-    // Functional updater form — used for safe optimistic async callbacks
-    // that must operate on the latest state instead of a stale closure.
-    if (typeof settlementOrUpdater === 'function') {
-      setSelectedSettlementState(settlementOrUpdater)
-      return
-    }
+  const setSelectedSettlement = useCallback<SettlementStateSetter>(
+    (settlementOrUpdater) => {
+      // Functional updater form — used for safe optimistic async callbacks
+      // that must operate on the latest state instead of a stale closure.
+      if (typeof settlementOrUpdater === 'function') {
+        setSelectedSettlementState(settlementOrUpdater)
+        return
+      }
 
-    const settlement = settlementOrUpdater
+      const settlement = settlementOrUpdater
 
-    // When selecting a settlement, stop creation mode
-    if (settlement) setIsCreatingNewSettlement(false)
+      if (settlement) setIsCreatingNewSettlement(false)
 
-    // Update the state to reflect the changes.
-    setSelectedSettlementState(settlement)
-    setSelectedSettlementIdState(settlement ? settlement.id : null)
+      setSelectedSettlementState(settlement)
+      setSelectedSettlementIdState((prevId) => {
+        const nextId = settlement?.id ?? null
+        if (prevId !== nextId) {
+          // Settlement actually changed — drop survivor selection so the
+          // detail effect doesn't strand a survivor from the previous
+          // settlement. Hunt / phase / showdown effects re-discover their
+          // values from `selectedSettlementId` automatically.
+          setSelectedSurvivorState(null)
+          setSelectedSurvivorIdState(null)
 
-    // Only discover related data when switching to a DIFFERENT settlement.
-    // Same-ID updates are optimistic UI mutations and must not trigger
-    // side-effects such as re-fetching or resetting the active tab.
-    //
-    // Note: getSettlement and getSurvivors are intentionally NOT called here
-    // because their effects (keyed on `selectedSettlementId`) will fire
-    // automatically when the ID flips above. Hunt / phase / showdown effects
-    // are gated on their own IDs being set, so we still need to discover them
-    // imperatively the first time a settlement is selected.
-    if (settlement && settlement.id !== selectedSettlementId)
-      Promise.all([
-        getHunt(settlement.id),
-        getSettlementPhase(settlement.id),
-        getShowdown(settlement.id)
-      ])
-        .then(([hunt, settlementPhase, showdown]) => {
-          setSelectedHuntState(hunt)
-          setSelectedHuntIdState(hunt ? hunt.id : null)
-          setSelectedHuntMonsterIndexState(0)
-          setSelectedSettlementPhaseState(settlementPhase)
-          setSelectedSettlementPhaseIdState(
-            settlementPhase ? settlementPhase.id : null
-          )
-          setSelectedShowdownState(showdown)
-          setSelectedShowdownIdState(showdown ? showdown.id : null)
-          setSelectedShowdownMonsterIndexState(0)
-
-          // Save the change to local storage.
-          setLocalState((local) => {
-            const updated = {
-              ...local,
-              selectedHuntId: hunt?.id ?? null,
-              selectedHuntMonsterIndex: 0,
-              selectedSettlementId: settlement?.id ?? null,
-              selectedSettlementPhaseId: settlementPhase?.id ?? null,
-              selectedShowdownId: showdown?.id ?? null,
-              selectedShowdownMonsterIndex: 0,
-              selectedSurvivorId: null
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
-        })
-        .catch(() => {
-          setSelectedHuntState(null)
-          setSelectedHuntIdState(null)
-          setSelectedHuntMonsterIndexState(0)
-          setSelectedSettlementPhaseState(null)
-          setSelectedSettlementPhaseIdState(null)
-          setSelectedShowdownState(null)
-          setSelectedShowdownIdState(null)
-          setSelectedShowdownMonsterIndexState(0)
-
-          // Save the change to local storage.
-          setLocalState((local) => {
-            const updated = {
-              ...local,
-              selectedHuntId: null,
-              selectedHuntMonsterIndex: 0,
-              selectedSettlementId: null,
-              selectedSettlementPhaseId: null,
-              selectedShowdownId: null,
-              selectedShowdownMonsterIndex: 0,
-              selectedSurvivorId: null
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
-        })
-  }
+          setLocalState((local) => ({
+            ...local,
+            selectedSettlementId: nextId,
+            selectedSurvivorId: null
+          }))
+        }
+        return nextId
+      })
+    },
+    []
+  )
 
   /**
    * Set Selected Settlement ID
    *
    * @param settlementId Selected Settlement ID
    */
-  const setSelectedSettlementId = (settlementId: string | null) => {
-    // When selecting a settlement, stop creation mode
+  const setSelectedSettlementId = useCallback((settlementId: string | null) => {
     if (settlementId) setIsCreatingNewSettlement(false)
 
-    // Update the state to reflect the changes.
-    setSelectedSettlementIdState(settlementId)
+    setSelectedSettlementIdState((prevId) => {
+      if (prevId === settlementId) return prevId
 
-    // Discover the active hunt / settlement phase / showdown for the new
-    // settlement. The settlement and survivors are NOT fetched here because
-    // their effects (keyed on `selectedSettlementId`) fire automatically when
-    // the ID flips above. Hunt / phase / showdown effects are gated on their
-    // own IDs being non-null, so without this imperative discovery they would
-    // not refresh on a settlement switch.
-    if (settlementId)
-      Promise.all([
-        getHunt(settlementId),
-        getSettlementPhase(settlementId),
-        getShowdown(settlementId)
-      ]).then(([hunt, settlementPhase, showdown]) => {
-        setSelectedHuntState(hunt)
-        setSelectedHuntIdState(hunt?.id ?? null)
-        setSelectedHuntMonsterIndexState(0)
-        setSelectedSettlementPhaseState(settlementPhase)
-        setSelectedSettlementPhaseIdState(settlementPhase?.id ?? null)
-        setSelectedShowdownState(showdown)
-        setSelectedShowdownIdState(showdown?.id ?? null)
-        setSelectedShowdownMonsterIndexState(0)
+      setSelectedSurvivorState(null)
+      setSelectedSurvivorIdState(null)
+      if (!settlementId) setSelectedSettlementState(null)
 
-        // Save the change to local storage.
-        setLocalState((local) => {
-          const updated = {
-            ...local,
-            selectedHuntId: hunt?.id ?? null,
-            selectedHuntMonsterIndex: 0,
-            selectedSettlementId: settlementId,
-            selectedSettlementPhaseId: settlementPhase?.id ?? null,
-            selectedShowdownId: showdown?.id ?? null,
-            selectedShowdownMonsterIndex: 0,
-            selectedSurvivorId: null
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
-      })
-  }
+      setLocalState((local) => ({
+        ...local,
+        selectedSettlementId: settlementId,
+        selectedSurvivorId: null
+      }))
+      return settlementId
+    })
+  }, [])
 
   /**
    * Set Selected Settlement Phase
    *
    * @param settlementPhase Selected Settlement Phase
    */
-  const setSelectedSettlementPhase = (
-    settlementPhase: SettlementPhaseDetail | null
-  ) => {
-    setSelectedSettlementPhaseState(settlementPhase)
-    setSelectedSettlementPhaseIdState(
-      settlementPhase ? settlementPhase.id : null
-    )
-
-    setLocalState((local) => {
-      const updated = {
+  const setSelectedSettlementPhase = useCallback(
+    (settlementPhase: SettlementPhaseDetail | null) => {
+      setSelectedSettlementPhaseState(settlementPhase)
+      setSelectedSettlementPhaseIdState(
+        settlementPhase ? settlementPhase.id : null
+      )
+      setLocalState((local) => ({
         ...local,
         selectedSettlementPhaseId: settlementPhase ? settlementPhase.id : null
-      }
-
-      saveToLocalStorage(updated)
-
-      return updated
-    })
-  }
+      }))
+    },
+    []
+  )
 
   /**
    * Set Selected Settlement Phase ID
    *
    * @param settlementPhaseId Selected Settlement Phase ID
    */
-  const setSelectedSettlementPhaseId = (settlementPhaseId: string | null) => {
-    setSelectedSettlementPhaseIdState(settlementPhaseId)
-
-    if (settlementPhaseId)
-      getSettlementPhase(settlementPhaseId)
-        .then((settlementPhase) => {
-          setSelectedSettlementPhaseState(settlementPhase)
-
-          setLocalState((local) => {
-            const updated = {
-              ...local,
-              selectedSettlementPhaseId: settlementPhaseId
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
-        })
-        .catch(() => {
-          setSelectedSettlementPhaseState(null)
-          setSelectedSettlementPhaseIdState(null)
-
-          setLocalState((local) => {
-            const updated = {
-              ...local,
-              selectedSettlementPhaseId: null
-            }
-
-            saveToLocalStorage(updated)
-
-            return updated
-          })
-        })
-  }
+  const setSelectedSettlementPhaseId = useCallback(
+    (settlementPhaseId: string | null) => {
+      setSelectedSettlementPhaseIdState(settlementPhaseId)
+      if (!settlementPhaseId) setSelectedSettlementPhaseState(null)
+      setLocalState((local) => ({
+        ...local,
+        selectedSettlementPhaseId: settlementPhaseId
+      }))
+    },
+    []
+  )
 
   /**
    * Set Selected Showdown
@@ -1297,108 +1090,67 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    * @param showdownOrUpdater Selected Showdown or functional updater receiving
    * the previous showdown state
    */
-  const setSelectedShowdown: ShowdownStateSetter = (showdownOrUpdater) => {
-    // Functional updater form — used for safe optimistic async callbacks
-    // that must operate on the latest state instead of a stale closure.
-    if (typeof showdownOrUpdater === 'function') {
-      setSelectedShowdownState(showdownOrUpdater)
-      return
-    }
+  const setSelectedShowdown = useCallback<ShowdownStateSetter>(
+    (showdownOrUpdater) => {
+      // Functional updater form — used for safe optimistic async callbacks
+      // that must operate on the latest state instead of a stale closure.
+      if (typeof showdownOrUpdater === 'function') {
+        setSelectedShowdownState(showdownOrUpdater)
+        return
+      }
 
-    const showdown = showdownOrUpdater
+      const showdown = showdownOrUpdater
 
-    // When selecting a showdown, stop creation mode
-    if (showdown) setIsCreatingNewShowdown(false)
+      if (showdown) setIsCreatingNewShowdown(false)
 
-    // Update the state to reflect the changes.
-    setSelectedShowdownState(showdown)
-    setSelectedShowdownIdState(showdown ? showdown.id : null)
-    setSelectedShowdownMonsterIndexState(0)
+      setSelectedShowdownState(showdown)
+      setSelectedShowdownIdState(showdown ? showdown.id : null)
+      setSelectedShowdownMonsterIndexState(0)
 
-    // Save the change to local storage.
-    setLocalState((local) => {
-      const updated = {
+      setLocalState((local) => ({
         ...local,
         selectedShowdownId: showdown ? showdown.id : null,
         selectedShowdownMonsterIndex: 0
-      }
-
-      saveToLocalStorage(updated)
-
-      return updated
-    })
-  }
+      }))
+    },
+    []
+  )
 
   /**
    * Set Selected Showdown ID
    *
+   * Pure ID/state mutation. The showdown is a per-settlement singleton, so
+   * the fetch effect (keyed on `selectedSettlementId`) is the source of
+   * truth for resolving showdown detail.
+   *
    * @param showdownId Selected Showdown ID
    */
-  const setSelectedShowdownId = (showdownId: string | null) => {
-    // When selecting a showdown, stop creation mode
+  const setSelectedShowdownId = useCallback((showdownId: string | null) => {
     if (showdownId) setIsCreatingNewShowdown(false)
 
-    // Try to get a showdown with this ID. If found, set the selected showdown
-    // details. Otherwise, clear the showdown and showdown ID.
-    getShowdown(showdownId)
-      .then((showdown) => {
-        // If no showdown is found, clear the selected showdown ID as well to
-        // prevent stale data.
-        if (!showdown) setSelectedShowdownIdState(null)
-        setSelectedShowdownState(showdown)
-        setSelectedShowdownMonsterIndexState(0)
+    setSelectedShowdownIdState(showdownId)
+    setSelectedShowdownMonsterIndexState(0)
+    if (!showdownId) setSelectedShowdownState(null)
 
-        setLocalState((local) => {
-          const updated = {
-            ...local,
-            selectedShowdownId: showdown ? showdown.id : null,
-            selectedShowdownMonsterIndex: 0
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
-      })
-      .catch(() => {
-        setSelectedShowdownState(null)
-        setSelectedShowdownIdState(null)
-        setSelectedShowdownMonsterIndexState(0)
-
-        // Clear the local state as well to prevent stale data.
-        setLocalState((local) => {
-          const updated = {
-            ...local,
-            selectedShowdownId: null,
-            selectedShowdownMonsterIndex: 0
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
-      })
-  }
+    setLocalState((local) => ({
+      ...local,
+      selectedShowdownId: showdownId,
+      selectedShowdownMonsterIndex: 0
+    }))
+  }, [])
 
   /**
    * Set Selected Showdown Monster Index
    *
    * @param index Selected Showdown Monster Index
    */
-  const setSelectedShowdownMonsterIndex = (index: number) => {
+  const setSelectedShowdownMonsterIndex = useCallback((index: number) => {
     setSelectedShowdownMonsterIndexState(index)
-
-    setLocalState((local) => {
-      const updated = {
-        ...local,
-        selectedShowdownMonsterIndex: index
-      }
-
-      saveToLocalStorage(updated)
-
-      return updated
-    })
-  }
+    setLocalState((local) => ({
+      ...local,
+      selectedShowdownMonsterIndex: index
+    }))
+  }, [])
 
   /**
    * Set Selected Survivor
@@ -1406,173 +1158,174 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
    * @param survivorOrUpdater Selected Survivor or functional updater receiving
    * the previous survivor state
    */
-  const setSelectedSurvivor: SurvivorStateSetter = (survivorOrUpdater) => {
-    // Functional updater form — used for safe optimistic async callbacks
-    // that must operate on the latest state instead of a stale closure.
-    if (typeof survivorOrUpdater === 'function') {
-      setSelectedSurvivorState(survivorOrUpdater)
-      return
-    }
-
-    const survivor = survivorOrUpdater
-
-    // When selecting a survivor, stop creation mode
-    if (survivor) setIsCreatingNewSurvivor(false)
-
-    setSelectedSurvivorState(survivor)
-    setSelectedSurvivorIdState(survivor ? survivor.id : null)
-
-    setLocalState((local) => {
-      const updated = {
-        ...local,
-        selectedSurvivorId: survivor ? survivor.id : null
+  const setSelectedSurvivor = useCallback<SurvivorStateSetter>(
+    (survivorOrUpdater) => {
+      // Functional updater form — used for safe optimistic async callbacks
+      // that must operate on the latest state instead of a stale closure.
+      if (typeof survivorOrUpdater === 'function') {
+        setSelectedSurvivorState(survivorOrUpdater)
+        return
       }
 
-      saveToLocalStorage(updated)
+      const survivor = survivorOrUpdater
 
-      return updated
-    })
-  }
+      if (survivor) setIsCreatingNewSurvivor(false)
+
+      setSelectedSurvivorState(survivor)
+      setSelectedSurvivorIdState(survivor ? survivor.id : null)
+      setLocalState((local) => ({
+        ...local,
+        selectedSurvivorId: survivor ? survivor.id : null
+      }))
+    },
+    []
+  )
 
   /**
    * Set Selected Survivor ID
    *
+   * Pure ID mutation. The survivor fetch effect (keyed on the id) is the
+   * source of truth for resolving survivor detail.
+   *
    * @param survivorId Selected Survivor ID
    */
-  const setSelectedSurvivorId = (survivorId: string | null) => {
-    // When selecting a survivor, stop creation mode
+  const setSelectedSurvivorId = useCallback((survivorId: string | null) => {
     if (survivorId) setIsCreatingNewSurvivor(false)
 
-    getSurvivor(survivorId)
-      .then((survivor) => {
-        setSelectedSurvivorState(survivor)
-        setSelectedSurvivorIdState(survivorId)
+    setSelectedSurvivorIdState(survivorId)
+    if (!survivorId) setSelectedSurvivorState(null)
 
-        setLocalState((local) => {
-          const updated = {
-            ...local,
-            selectedSurvivorId: survivorId
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
-      })
-      .catch(() => {
-        setSelectedSurvivorState(null)
-        setSelectedSurvivorIdState(null)
-
-        setLocalState((local) => {
-          const updated = {
-            ...local,
-            selectedSurvivorId: null
-          }
-
-          saveToLocalStorage(updated)
-
-          return updated
-        })
-      })
-  }
+    setLocalState((local) => ({ ...local, selectedSurvivorId: survivorId }))
+  }, [])
 
   /**
    * Set Selected Tab
    *
    * @param tab Selected Tab
    */
-  const setSelectedTab = (tab: TabType) => {
+  const setSelectedTab = useCallback((tab: TabType) => {
     setSelectedTabState(tab)
-
-    setLocalState((local) => {
-      const updated = {
-        ...local,
-        selectedTab: tab
-      }
-
-      saveToLocalStorage(updated)
-
-      return updated
-    })
-  }
+    setLocalState((local) => ({ ...local, selectedTab: tab }))
+  }, [])
 
   /**
    * Set User Settings
    *
    * @param settings User Settings
    */
-  const setUserSettings = (settings: UserSettingsDetail | null) => {
+  const setUserSettings = useCallback((settings: UserSettingsDetail | null) => {
     setUserSettingsState(settings)
-  }
+  }, [])
 
   /**
    * Update Local State
    *
-   * @param local Updated Local Data
+   * @param next Updated Local Data
    */
-  const updateLocal = (local: LocalStateType) => {
-    saveToLocalStorage(local)
-    setLocalState(local)
-  }
+  const updateLocal = useCallback((next: LocalStateType) => {
+    setLocalState(next)
+  }, [])
 
-  return (
-    <LocalContext.Provider
-      value={{
-        isAuthenticated,
-        isCreatingNewHunt,
-        isCreatingNewSettlement,
-        isCreatingNewShowdown,
-        isCreatingNewSurvivor,
+  // Memoize the context value so consumers only re-render when a state piece
+  // they actually depend on has changed. All custom setters are stable refs
+  // (wrapped in `useCallback` with empty deps), so they never invalidate the
+  // memo on their own.
+  const value = useMemo<LocalContextType>(
+    () => ({
+      isAuthenticated,
+      isCreatingNewHunt,
+      isCreatingNewSettlement,
+      isCreatingNewShowdown,
+      isCreatingNewSurvivor,
 
-        pendingSpecialShowdown,
+      pendingSpecialShowdown,
 
-        selectedHunt,
-        selectedHuntId,
-        selectedHuntMonsterIndex,
-        selectedSettlement,
-        selectedSettlementId,
-        selectedSettlementPhase,
-        selectedSettlementPhaseId,
-        selectedShowdown,
-        selectedShowdownId,
-        selectedShowdownMonsterIndex,
-        selectedSurvivor,
-        selectedSurvivorId,
-        selectedTab,
+      selectedHunt,
+      selectedHuntId,
+      selectedHuntMonsterIndex,
+      selectedSettlement,
+      selectedSettlementId,
+      selectedSettlementPhase,
+      selectedSettlementPhaseId,
+      selectedShowdown,
+      selectedShowdownId,
+      selectedShowdownMonsterIndex,
+      selectedSurvivor,
+      selectedSurvivorId,
+      selectedTab,
 
-        setIsCreatingNewHunt,
-        setIsCreatingNewSettlement,
-        setIsCreatingNewShowdown,
-        setIsCreatingNewSurvivor,
+      setIsCreatingNewHunt,
+      setIsCreatingNewSettlement,
+      setIsCreatingNewShowdown,
+      setIsCreatingNewSurvivor,
 
-        setPendingSpecialShowdown,
+      setPendingSpecialShowdown,
 
-        setSelectedHunt,
-        setSelectedHuntId,
-        setSelectedHuntMonsterIndex,
-        setSelectedSettlement,
-        setSelectedSettlementId,
-        setSelectedSettlementPhase,
-        setSelectedSettlementPhaseId,
-        setSelectedShowdown,
-        setSelectedShowdownId,
-        setSelectedShowdownMonsterIndex,
-        setSelectedSurvivor,
-        setSelectedSurvivorId,
-        setSelectedTab,
+      setSelectedHunt,
+      setSelectedHuntId,
+      setSelectedHuntMonsterIndex,
+      setSelectedSettlement,
+      setSelectedSettlementId,
+      setSelectedSettlementPhase,
+      setSelectedSettlementPhaseId,
+      setSelectedShowdown,
+      setSelectedShowdownId,
+      setSelectedShowdownMonsterIndex,
+      setSelectedSurvivor,
+      setSelectedSurvivorId,
+      setSelectedTab,
 
-        setSurvivors,
-        survivors,
+      setSurvivors,
+      survivors,
 
-        local,
-        updateLocal,
+      local,
+      updateLocal,
 
-        userSettings,
-        setUserSettings
-      }}>
-      {children}
-    </LocalContext.Provider>
+      userSettings,
+      setUserSettings
+    }),
+    [
+      isAuthenticated,
+      isCreatingNewHunt,
+      isCreatingNewSettlement,
+      isCreatingNewShowdown,
+      isCreatingNewSurvivor,
+      pendingSpecialShowdown,
+      selectedHunt,
+      selectedHuntId,
+      selectedHuntMonsterIndex,
+      selectedSettlement,
+      selectedSettlementId,
+      selectedSettlementPhase,
+      selectedSettlementPhaseId,
+      selectedShowdown,
+      selectedShowdownId,
+      selectedShowdownMonsterIndex,
+      selectedSurvivor,
+      selectedSurvivorId,
+      selectedTab,
+      survivors,
+      local,
+      userSettings,
+      setSelectedHunt,
+      setSelectedHuntId,
+      setSelectedHuntMonsterIndex,
+      setSelectedSettlement,
+      setSelectedSettlementId,
+      setSelectedSettlementPhase,
+      setSelectedSettlementPhaseId,
+      setSelectedShowdown,
+      setSelectedShowdownId,
+      setSelectedShowdownMonsterIndex,
+      setSelectedSurvivor,
+      setSelectedSurvivorId,
+      setSelectedTab,
+      setUserSettings,
+      updateLocal
+    ]
   )
+
+  return <LocalContext.Provider value={value}>{children}</LocalContext.Provider>
 }
 
 /**
