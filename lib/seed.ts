@@ -98,6 +98,58 @@ async function linkLevelSurvivorStatuses(
 }
 
 /**
+ * Link Catalog Mood and Trait to a Nemesis Level or Quarry Level
+ *
+ * Inserts at most one mood and one trait into the appropriate
+ * `*_level_mood` / `*_level_trait` junction tables for the given level id. Used
+ * to exercise these junctions when seeding custom nemeses/quarries. Missing
+ * catalog entries are skipped silently.
+ *
+ * @param supabase Supabase Client
+ * @param kind Parent level kind: `'nemesis'` or `'quarry'`
+ * @param levelId Parent level row ID
+ */
+async function linkLevelMoodAndTrait(
+  supabase: SupabaseClient,
+  kind: 'nemesis' | 'quarry',
+  levelId: string
+): Promise<void> {
+  const levelColumn =
+    kind === 'nemesis' ? 'nemesis_level_id' : 'quarry_level_id'
+  const moodTable = `${kind}_level_mood`
+  const traitTable = `${kind}_level_trait`
+
+  const [moodRes, traitRes] = await Promise.all([
+    supabase
+      .from('mood')
+      .select('id')
+      .eq('custom', false)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('trait')
+      .select('id')
+      .eq('custom', false)
+      .limit(1)
+      .maybeSingle()
+  ])
+
+  if (moodRes.data?.id) {
+    const { error } = await supabase
+      .from(moodTable)
+      .insert({ [levelColumn]: levelId, mood_id: moodRes.data.id })
+    if (error) throw error
+  }
+
+  if (traitRes.data?.id) {
+    const { error } = await supabase
+      .from(traitTable)
+      .insert({ [levelColumn]: levelId, trait_id: traitRes.data.id })
+    if (error) throw error
+  }
+}
+
+/**
  * Link Catalog Mood / Trait / Survivor Status to a Hunt or Showdown Monster
  *
  * Inserts at most one mood, one trait, and one survivor status into the
@@ -252,6 +304,7 @@ export async function generateSeedData() {
     // Add survivors to the settlement
     await createSurvivorsForSettlement(
       supabase,
+      data.user.id,
       settlement.id,
       settlement.survivor_type,
       settlement.philosophies
@@ -272,6 +325,9 @@ export async function generateSeedData() {
   // Create the custom quarries and nemeses
   await createCustomNemeses(supabase, data.user.id)
   await createCustomQuarries(supabase, data.user.id)
+
+  // Seed a custom armor set so the slot/junction tables are exercised.
+  await createCustomArmorSets(supabase, data.user.id)
 
   // Create local object
   const local = {
@@ -962,6 +1018,7 @@ async function createSettlement(
  * Create Survivors for Settlement
  *
  * @param supabase Supabase Client
+ * @param userId User ID (owner of the settlement)
  * @param settlementId Settlement ID
  * @param survivorType Survivor Type
  * @param philosophies Settlement Philosophies
@@ -969,6 +1026,7 @@ async function createSettlement(
  */
 async function createSurvivorsForSettlement(
   supabase: SupabaseClient,
+  userId: string,
   settlementId: string,
   survivorType: SurvivorType,
   philosophies: { id: string; philosophy_name: string }[]
@@ -1009,6 +1067,10 @@ async function createSurvivorsForSettlement(
     .select('id, weapon_type_name')
 
   if (getWeaponTypesError) throw getWeaponTypesError
+
+  // Track every survivor we create so we can wire up family lineage and a
+  // sample gear grid after the full roster exists.
+  const createdSurvivors: { id: string; isExperienced: boolean }[] = []
 
   for (let i = 0; i < 20; i++) {
     const isExperienced = i % 3 === 0
@@ -1116,7 +1178,7 @@ async function createSurvivorsForSettlement(
           waist_intestinal_prolapse: false,
           waist_warped_pelvis: hasInjuries ? 3 : 0,
           can_endure: isExperienced,
-          knowledge_1:
+          knowledge_1_id:
             isExperienced && survivorType === SurvivorType.ARC
               ? await supabase
                   .from('knowledge')
@@ -1138,7 +1200,7 @@ async function createSurvivorsForSettlement(
             isExperienced && survivorType === SurvivorType.ARC
               ? 'Understanding of anatomy'
               : undefined,
-          knowledge_2:
+          knowledge_2_id:
             isExperienced && survivorType === SurvivorType.ARC
               ? await supabase
                   .from('knowledge')
@@ -1223,9 +1285,11 @@ async function createSurvivorsForSettlement(
 
     if (createSurvivorError) throw createSurvivorError
 
+    createdSurvivors.push({ id: createSurvivorData.id, isExperienced })
+
     if (isExperienced) {
-      // Add disorders, fighting arts, cursed gear, and secret fighting arts for
-      // experienced survivors
+      // Add disorders, fighting arts, cursed gear, secret fighting arts, and an
+      // ability/impairment for experienced survivors.
       await supabase.from('survivor_disorder').insert({
         survivor_id: createSurvivorData.id,
         disorder_id: (
@@ -1256,7 +1320,89 @@ async function createSurvivorsForSettlement(
         gear_id: (await supabase.from('gear').select('id').limit(1).single())
           .data?.id
       })
+
+      // Link a representative ability/impairment so the
+      // survivor_ability_impairment junction is exercised.
+      const { data: abilityImpairment } = await supabase
+        .from('ability_impairment')
+        .select('id')
+        .eq('custom', false)
+        .limit(1)
+        .maybeSingle()
+
+      if (abilityImpairment?.id) {
+        const { error: linkAbilityImpairmentError } = await supabase
+          .from('survivor_ability_impairment')
+          .insert({
+            survivor_id: createSurvivorData.id,
+            ability_impairment_id: abilityImpairment.id
+          })
+
+        if (linkAbilityImpairmentError) throw linkAbilityImpairmentError
+      }
     }
+  }
+
+  // Establish lineage on a portion of the roster. Skip the first two survivors
+  // so we always have parent candidates available, and keep assignments
+  // deterministic so re-runs are reproducible.
+  for (let i = 2; i < createdSurvivors.length; i++) {
+    if (i % 4 !== 0) continue
+
+    const child = createdSurvivors[i]
+    // Pick two distinct earlier survivors as parents.
+    const parent1 = createdSurvivors[i - 1]
+    const parent2 = createdSurvivors[i - 2]
+    if (!parent1 || !parent2 || parent1.id === parent2.id) continue
+
+    const { error: linkParentsError } = await supabase
+      .from('survivor')
+      .update({
+        parent_1_id: parent1.id,
+        parent_2_id: parent2.id
+      })
+      .eq('id', child.id)
+
+    if (linkParentsError) throw linkParentsError
+  }
+
+  // Build a sample gear_grid for the first experienced survivor using gear
+  // already in the settlement's storage. Equipping items the settlement doesn't
+  // own would fail the validate_gear_grid_positions trigger.
+  const gridSurvivor = createdSurvivors.find((s) => s.isExperienced)
+
+  if (gridSurvivor) {
+    const { data: settlementGear, error: settlementGearError } = await supabase
+      .from('settlement_gear')
+      .select('gear_id, quantity')
+      .eq('settlement_id', settlementId)
+      .gt('quantity', 0)
+      .limit(9)
+
+    if (settlementGearError) throw settlementGearError
+
+    const gearIds = (settlementGear ?? []).map((g) => g.gear_id)
+
+    const slot = (idx: number): string | null => gearIds[idx] ?? null
+
+    const { error: createGearGridError } = await supabase
+      .from('gear_grid')
+      .insert({
+        custom: true,
+        user_id: userId,
+        survivor_id: gridSurvivor.id,
+        pos_top_left: slot(0),
+        pos_top_center: slot(1),
+        pos_top_right: slot(2),
+        pos_mid_left: slot(3),
+        pos_mid_center: slot(4),
+        pos_mid_right: slot(5),
+        pos_bottom_left: slot(6),
+        pos_bottom_center: slot(7),
+        pos_bottom_right: slot(8)
+      })
+
+    if (createGearGridError) throw createGearGridError
   }
 }
 
@@ -1633,6 +1779,8 @@ async function createCustomNemeses(
     ['Darkness']
   )
 
+  await linkLevelMoodAndTrait(supabase, 'nemesis', shadowWeaverLevel1.id)
+
   const { data: shadowWeaverLevel2, error: createShadowWeaverLevel2Error } =
     await supabase
       .from('nemesis_level')
@@ -1676,6 +1824,8 @@ async function createCustomNemeses(
     ['Darkness', 'Nightmare']
   )
 
+  await linkLevelMoodAndTrait(supabase, 'nemesis', shadowWeaverLevel2.id)
+
   const { data: shadowWeaverLevel3, error: createShadowWeaverLevel3Error } =
     await supabase
       .from('nemesis_level')
@@ -1718,6 +1868,8 @@ async function createCustomNemeses(
     shadowWeaverLevel3.id,
     ['Darkness', 'Nightmare', 'Doomed']
   )
+
+  await linkLevelMoodAndTrait(supabase, 'nemesis', shadowWeaverLevel3.id)
 
   const { error: createShadowWeaverTimelineError } = await supabase
     .from('nemesis_timeline_year')
@@ -1879,6 +2031,8 @@ async function createCustomNemeses(
     voidCallerLevel2.id,
     ['Void Touched']
   )
+
+  await linkLevelMoodAndTrait(supabase, 'nemesis', voidCallerLevel2.id)
 
   const { error: createVoidCallerTimelineError } = await supabase
     .from('nemesis_timeline_year')
@@ -2060,6 +2214,8 @@ async function createCustomQuarries(
     ironWyrmLevel2.id,
     ['Bleeding']
   )
+
+  await linkLevelMoodAndTrait(supabase, 'quarry', ironWyrmLevel2.id)
 
   const { error: createIronWyrmLevelPositionsError } = await supabase
     .from('quarry_hunt_board_position')
@@ -2479,6 +2635,92 @@ async function createCustomQuarries(
 
   if (createDarkHorsesQuarryCollectiveCognitionRewardError)
     throw createDarkHorsesQuarryCollectiveCognitionRewardError
+}
+
+/**
+ * Create Custom Armor Sets
+ *
+ * Creates a sample custom armor set with two slots and gear candidates so the
+ * `armor_set`, `armor_set_slot`, and `armor_set_slot_gear` tables are exercised
+ * in seeded data.
+ *
+ * @param supabase Supabase Client
+ * @param userId User ID
+ * @returns void
+ */
+async function createCustomArmorSets(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<void> {
+  console.log(`Creating Custom Armor Sets for User ${userId}...`)
+
+  // Pick a small handful of catalog gear pieces to act as slot candidates. The
+  // set seeds even when the catalog only returns a single piece — we simply
+  // skip the second slot in that case.
+  const { data: candidateGear, error: gearLookupError } = await supabase
+    .from('gear')
+    .select('id, gear_name')
+    .eq('custom', false)
+    .limit(4)
+
+  if (gearLookupError) throw gearLookupError
+  if (!candidateGear || candidateGear.length === 0)
+    return console.warn(
+      'No catalog gear available — skipping custom armor set seeding.'
+    )
+
+  const { data: armorSet, error: createArmorSetError } = await supabase
+    .from('armor_set')
+    .insert({
+      armor_set_name: 'Lantern Vigil',
+      bonuses:
+        'Each survivor wearing a complete Lantern Vigil set gains +1 light radius.',
+      custom: true,
+      user_id: userId
+    })
+    .select('id')
+    .single()
+
+  if (createArmorSetError) throw createArmorSetError
+
+  // Build up to two slots (Head, Chest) using the available gear pool.
+  const slotDefinitions = [
+    { slot_name: 'Head', slot_order: 1, required: true },
+    { slot_name: 'Chest', slot_order: 2, required: true }
+  ].slice(0, Math.max(1, Math.min(2, candidateGear.length)))
+
+  for (const [index, slot] of slotDefinitions.entries()) {
+    const { data: slotRow, error: createSlotError } = await supabase
+      .from('armor_set_slot')
+      .insert({
+        armor_set_id: armorSet.id,
+        ...slot
+      })
+      .select('id')
+      .single()
+
+    if (createSlotError) throw createSlotError
+
+    // Each slot gets up to two gear candidates so the alternates path is
+    // covered. Slots cycle through the candidate pool to avoid duplicates.
+    const slotCandidates = [
+      candidateGear[index],
+      candidateGear[(index + slotDefinitions.length) % candidateGear.length]
+    ].filter((g, i, arr) => g && arr.findIndex((x) => x?.id === g.id) === i)
+
+    if (slotCandidates.length === 0) continue
+
+    const { error: linkSlotGearError } = await supabase
+      .from('armor_set_slot_gear')
+      .insert(
+        slotCandidates.map((gear) => ({
+          armor_set_slot_id: slotRow.id,
+          gear_id: gear!.id
+        }))
+      )
+
+    if (linkSlotGearError) throw linkSlotGearError
+  }
 }
 
 /**

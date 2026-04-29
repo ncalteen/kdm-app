@@ -1,6 +1,7 @@
 'use client'
 
 import { SelectWanderer } from '@/components/menu/select-wanderer'
+import { ParentSelectionDrawer } from '@/components/survivor/parent-selection/parent-selection-drawer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -47,7 +48,7 @@ import {
 } from '@/schemas/new-survivor-input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ReactElement, useEffect, useMemo, useState } from 'react'
-import { Resolver, useForm } from 'react-hook-form'
+import { Resolver, useForm, useWatch } from 'react-hook-form'
 
 /**
  * Create Survivor Form Properties
@@ -205,6 +206,12 @@ export function CreateSurvivorForm({
       }),
       ...survivorCapabilities,
 
+      // Wanderers join the settlement on their own; they have no lineage in the
+      // player's settlement, so any parent selection is discarded when
+      // switching to the wanderer flow.
+      parent1Id: undefined,
+      parent2Id: undefined,
+
       // Wanderer-specific data
       abilityImpairmentIds: wanderer.abilities_impairments.map((ai) => ai.id),
       accuracy: wanderer.accuracy,
@@ -304,6 +311,91 @@ export function CreateSurvivorForm({
       })
   }
 
+  // Watch the current parent selections so each parent slot can exclude the
+  // survivor already chosen for the other slot.
+  const parent1Id = useWatch({ control: form.control, name: 'parent1Id' })
+  const parent2Id = useWatch({ control: form.control, name: 'parent2Id' })
+
+  /**
+   * Render Parent Selection Fields
+   *
+   * Renders two single-select drawers that let the user optionally pick the new
+   * survivor's parents from the existing settlement roster. The fields are
+   * intentionally rendered only on the manual creation flows — wanderers arrive
+   * without parents, so the wanderer tab omits this UI entirely.
+   *
+   * @returns Parent selection fields
+   */
+  function renderParentFields(): ReactElement {
+    return (
+      <>
+        {/* Parent 1 */}
+        <FormField
+          control={form.control}
+          name="parent1Id"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center justify-between gap-2">
+                <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                  Parent 1
+                </FormLabel>
+                <div className="w-[75%]">
+                  <ParentSelectionDrawer
+                    local={local}
+                    title="Select Parent 1"
+                    description="Choose a survivor from your settlement to record as a parent."
+                    emptyLabel="No parent selected"
+                    survivors={survivors}
+                    selectedSurvivorId={field.value ?? null}
+                    disabledSurvivorIds={parent2Id ? [parent2Id] : []}
+                    onSelectionChange={(value) =>
+                      form.setValue('parent1Id', value ?? undefined, {
+                        shouldDirty: true,
+                        shouldValidate: true
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </FormItem>
+          )}
+        />
+
+        {/* Parent 2 */}
+        <FormField
+          control={form.control}
+          name="parent2Id"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center justify-between gap-2">
+                <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                  Parent 2
+                </FormLabel>
+                <div className="w-[75%]">
+                  <ParentSelectionDrawer
+                    local={local}
+                    title="Select Parent 2"
+                    description="Choose a second survivor from your settlement to record as a parent."
+                    emptyLabel="No parent selected"
+                    survivors={survivors}
+                    selectedSurvivorId={field.value ?? null}
+                    disabledSurvivorIds={parent1Id ? [parent1Id] : []}
+                    onSelectionChange={(value) =>
+                      form.setValue('parent2Id', value ?? undefined, {
+                        shouldDirty: true,
+                        shouldValidate: true
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </FormItem>
+          )}
+        />
+      </>
+    )
+  }
+
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit, (errors) => {
@@ -389,6 +481,8 @@ export function CreateSurvivorForm({
                       </FormItem>
                     )}
                   />
+
+                  {renderParentFields()}
 
                   <hr className="my-2" />
 
@@ -484,6 +578,8 @@ export function CreateSurvivorForm({
                     </FormItem>
                   )}
                 />
+
+                {renderParentFields()}
 
                 <hr className="my-2" />
 
