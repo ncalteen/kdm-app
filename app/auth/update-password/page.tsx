@@ -1,19 +1,19 @@
+import { AuthLayout } from '@/components/auth/auth-layout'
 import { UpdatePasswordForm } from '@/components/update-password-form'
 
 /**
  * Update Password Page
  *
- * Renders the UpdatePasswordForm component, allowing users to update their
- * password.
+ * Renders the update-password form wrapped in the shared `AuthLayout` so the
+ * marketing hero and thematic atmospherics stay consistent with the rest of the
+ * auth flow.
  *
  * @returns Update Password Page Component
  */
 export default function Page() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <UpdatePasswordForm />
-      </div>
-    </div>
+    <AuthLayout>
+      <UpdatePasswordForm />
+    </AuthLayout>
   )
 }

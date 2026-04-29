@@ -1,5 +1,6 @@
 'use client'
 
+import { LanternMark } from '@/components/generic/lantern-mark'
 import { ListCard } from '@/components/generic/list-card'
 import { HelpCard } from '@/components/help/help-card'
 import { HuntCard } from '@/components/hunt/hunt-card'
@@ -30,6 +31,14 @@ import { TimelineCard } from '@/components/settlement/timeline/timeline-card'
 import { ShowdownCard } from '@/components/showdown/showdown-card'
 import { CreateSurvivorForm } from '@/components/survivor/create-survivor-form'
 import { SurvivorCard } from '@/components/survivor/survivor-card'
+import { Button } from '@/components/ui/button'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle
+} from '@/components/ui/empty'
 import { UserCard } from '@/components/user/user-card'
 import { LocalStateType } from '@/contexts/local-context'
 import { updateSettlement } from '@/lib/dal/settlement'
@@ -54,7 +63,12 @@ import {
   SurvivorStateSetter,
   UserSettingsDetail
 } from '@/lib/types'
-import { BookOpenIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
+import {
+  BookOpenIcon,
+  HousePlusIcon,
+  MapPinPlusIcon,
+  PlusIcon
+} from 'lucide-react'
 import { ReactElement } from 'react'
 
 /**
@@ -221,9 +235,26 @@ export function SettlementCard({
 
   if (!selectedSettlement)
     return (
-      <div className="flex flex-col items-center justify-center h-full pt-8">
-        <p className="text-sm text-gray-500">No settlement selected</p>
-      </div>
+      <Empty className="mx-auto mt-8 max-w-xl border bg-card/40">
+        <EmptyHeader>
+          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-md border border-amber-400/40 bg-amber-500/10 text-amber-400">
+            <LanternMark className="h-6 w-6" />
+          </div>
+          <EmptyTitle>The lantern is unlit.</EmptyTitle>
+          <EmptyDescription>
+            Pick an existing settlement from the switcher above, or found one of
+            your own.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button
+            onClick={() => setIsCreatingNewSettlement(true)}
+            className="w-full">
+            <PlusIcon className="h-4 w-4" />
+            Found a settlement
+          </Button>
+        </EmptyContent>
+      </Empty>
     )
 
   return (

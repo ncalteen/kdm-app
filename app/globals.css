@@ -318,3 +318,60 @@
   justify-content: center;
   border-radius: 50%;
 }
+
+/*
+ * Thematic Atmospherics
+ *
+ * Reusable helpers that paint the lantern-in-the-dark mood onto any surface.
+ * Intentionally subtle — they should layer underneath content without fighting
+ it for attention.
+ *
+ * - `lantern-glow`    : warm radial focus toward the right side of an element.
+ * - `lantern-vignette`: faint vignette that deepens the edges.
+ *
+ * Apply them as overlays on a `position: relative` parent (typically via the
+ * `<ThematicShell />` component).
+ */
+.lantern-glow {
+  background-image: radial-gradient(
+    ellipse at 75% 50%,
+    rgba(251, 191, 36, 0.08),
+    transparent 60%
+  );
+}
+
+.lantern-vignette {
+  background-image: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+}
+
+/*
+ * Lantern Fade-In
+ *
+ * Gentle entrance animation used by thematic surfaces (auth hero, splash
+ * loaders, empty states). Skipped automatically for users with reduced motion
+ preferences.
+ */
+@keyframes lantern-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lantern-fade-in {
+  animation: lantern-fade-in 320ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lantern-fade-in {
+    animation: none;
+  }
+}

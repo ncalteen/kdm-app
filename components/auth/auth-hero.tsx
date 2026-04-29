@@ -1,3 +1,4 @@
+import { LanternMark } from '@/components/generic/lantern-mark'
 import { Castle, Skull, Swords } from 'lucide-react'
 import { ReactElement } from 'react'
 
@@ -36,11 +37,14 @@ export function AuthHero(): ReactElement {
   ]
 
   return (
-    <div className="flex flex-col justify-center gap-10 max-w-xl">
+    <div className="lantern-fade-in flex flex-col justify-center gap-10 max-w-xl">
       <div className="flex flex-col gap-4">
-        <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-          KD:M Archivist
-        </span>
+        <div className="flex items-center gap-2 text-amber-400/90">
+          <LanternMark className="h-5 w-5" />
+          <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+            KD:M Archivist
+          </span>
+        </div>
         <h1 className="text-4xl md:text-5xl font-bold leading-tight">
           Carry the lantern.
           <br />

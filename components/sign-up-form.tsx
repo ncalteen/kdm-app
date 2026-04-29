@@ -1,6 +1,7 @@
 'use client'
 
 import { DiscordButton } from '@/components/auth/discord-button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -13,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { TriangleAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ComponentPropsWithoutRef, FormEvent, useState } from 'react'
@@ -124,8 +126,10 @@ export function SignUpForm({
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardTitle className="text-2xl">Begin your chronicle.</CardTitle>
+          <CardDescription>
+            Create an account to found your first settlement.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-6">
@@ -189,9 +193,14 @@ export function SignUpForm({
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && (
+                <Alert variant="destructive">
+                  <TriangleAlertIcon className="h-4 w-4" aria-hidden="true" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating an account...' : 'Sign up'}
+                {isLoading ? 'Forging your name…' : 'Sign up'}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">

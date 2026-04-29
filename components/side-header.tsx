@@ -1,3 +1,4 @@
+import { LanternMark } from '@/components/generic/lantern-mark'
 import { ModeToggle } from '@/components/menu/mode-toggle'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -29,9 +30,19 @@ export function SiteHeader(): ReactElement {
 
         <ModeToggle />
 
-        <h1 className="text-xs sm:text-sm whitespace-nowrap">
-          Kingdom Death: Monster - Archivist
-        </h1>
+        <div className="flex items-center gap-2 pl-1">
+          <LanternMark
+            className="h-4 w-4 text-amber-400/90"
+            aria-hidden="true"
+          />
+          <h1 className="text-xs sm:text-sm whitespace-nowrap leading-none">
+            <span className="text-muted-foreground">
+              Kingdom Death: Monster
+            </span>
+            <span className="mx-1 text-muted-foreground/60">/</span>
+            <span className="ml-1 font-semibold">Archivist</span>
+          </h1>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
