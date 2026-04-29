@@ -12,7 +12,10 @@ set null,
   add column if not exists parent_2_id uuid references survivor(id) on delete
 set null;
 --------------------------------------------------------------------------------
--- Prevent a survivor from being their own parent.
+-- Prevent a survivor from being their own parent and prevent the same
+-- survivor from being recorded as both parents. The Zod schema rejects
+-- duplicate parent ids on the application side; this CHECK guarantees the
+-- same invariant for any direct database update path.
 --------------------------------------------------------------------------------
 alter table survivor drop constraint if exists survivor_parent_not_self;
 alter table survivor
@@ -24,6 +27,11 @@ add constraint survivor_parent_not_self check (
     and (
       parent_2_id is null
       or parent_2_id <> id
+    )
+    and (
+      parent_1_id is null
+      or parent_2_id is null
+      or parent_1_id <> parent_2_id
     )
   );
 --------------------------------------------------------------------------------

@@ -35,6 +35,8 @@ describe('NewSurvivorInputSchema', () => {
       expect(result.survivorName).toBeUndefined()
       expect(result.understanding).toBe(0)
       expect(result.wanderer).toBe(false)
+      expect(result.parent1Id).toBeUndefined()
+      expect(result.parent2Id).toBeUndefined()
       expect(result.armBroken).toBe(0)
       expect(result.armContracture).toBe(0)
       expect(result.armDismembered).toBe(0)
@@ -334,6 +336,82 @@ describe('NewSurvivorInputSchema', () => {
       })
 
       expect(result.survivorName).toBe('Aenas')
+    })
+  })
+
+  describe('parents', () => {
+    it('treats parent1Id and parent2Id as optional', () => {
+      const result = NewSurvivorInputSchema.parse(minimalValidInput)
+
+      expect(result.parent1Id).toBeUndefined()
+      expect(result.parent2Id).toBeUndefined()
+    })
+
+    it('accepts only parent1Id without parent2Id', () => {
+      const result = NewSurvivorInputSchema.parse({
+        ...minimalValidInput,
+        parent1Id: 'survivor-parent-1'
+      })
+
+      expect(result.parent1Id).toBe('survivor-parent-1')
+      expect(result.parent2Id).toBeUndefined()
+    })
+
+    it('accepts only parent2Id without parent1Id', () => {
+      const result = NewSurvivorInputSchema.parse({
+        ...minimalValidInput,
+        parent2Id: 'survivor-parent-2'
+      })
+
+      expect(result.parent1Id).toBeUndefined()
+      expect(result.parent2Id).toBe('survivor-parent-2')
+    })
+
+    it('accepts two distinct parent ids', () => {
+      const result = NewSurvivorInputSchema.parse({
+        ...minimalValidInput,
+        parent1Id: 'survivor-parent-1',
+        parent2Id: 'survivor-parent-2'
+      })
+
+      expect(result.parent1Id).toBe('survivor-parent-1')
+      expect(result.parent2Id).toBe('survivor-parent-2')
+    })
+
+    it('rejects empty parent1Id', () => {
+      expect(() =>
+        NewSurvivorInputSchema.parse({
+          ...minimalValidInput,
+          parent1Id: ''
+        })
+      ).toThrow('A nameless parent cannot be recorded.')
+    })
+
+    it('rejects empty parent2Id', () => {
+      expect(() =>
+        NewSurvivorInputSchema.parse({
+          ...minimalValidInput,
+          parent2Id: ''
+        })
+      ).toThrow('A nameless parent cannot be recorded.')
+    })
+
+    it('rejects providing the same id for both parents', () => {
+      const result = NewSurvivorInputSchema.safeParse({
+        ...minimalValidInput,
+        parent1Id: 'survivor-shared',
+        parent2Id: 'survivor-shared'
+      })
+
+      expect(result.success).toBe(false)
+      if (result.success) return
+
+      const issue = result.error.issues.find(
+        (i) => i.message === 'A survivor cannot have the same parent twice.'
+      )
+
+      expect(issue).toBeDefined()
+      expect(issue?.path).toEqual(['parent2Id'])
     })
   })
 

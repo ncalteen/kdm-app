@@ -17,7 +17,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { SurvivorDetail } from '@/lib/types'
 import { UserIcon, UserXIcon } from 'lucide-react'
-import { ReactElement, useState } from 'react'
+import { ReactElement, useCallback, useState } from 'react'
 
 /**
  * Parent Selection Drawer Props
@@ -71,6 +71,7 @@ export function ParentSelectionDrawer({
 }: ParentSelectionDrawerProps): ReactElement {
   const isMobile = useIsMobile()
 
+  const [open, setOpen] = useState(false)
   const [tempSelection, setTempSelection] = useState<string | null>(
     selectedSurvivorId
   )
@@ -82,6 +83,26 @@ export function ParentSelectionDrawer({
 
   const selectedSurvivor =
     survivors.find((s) => s.id === selectedSurvivorId) ?? null
+
+  /**
+   * Handle Open Change
+   *
+   * Drives the drawer's controlled open state. Whenever the drawer transitions
+   * to open, the temporary selection is rehydrated from the latest
+   * `selectedSurvivorId` prop so external resets (e.g. form reset, the other
+   * parent slot clearing this one, switching settlements) cannot leave a stale
+   * highlight in the picker.
+   *
+   * @param next Next open state
+   * @returns Void
+   */
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (next) setTempSelection(selectedSurvivorId)
+      setOpen(next)
+    },
+    [selectedSurvivorId]
+  )
 
   /**
    * Handle Survivor Toggle
@@ -134,7 +155,7 @@ export function ParentSelectionDrawer({
   const handleClear = () => setTempSelection(null)
 
   return (
-    <Drawer>
+    <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
         <Button variant="outline" className="justify-start w-full">
           <UserIcon className="h-4 w-4" />
