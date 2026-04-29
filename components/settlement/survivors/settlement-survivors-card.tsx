@@ -1,9 +1,18 @@
 'use client'
 
+import { LanternMark } from '@/components/generic/lantern-mark'
 import { createColumns } from '@/components/settlement/survivors/columns'
 import { SurvivorDataTable } from '@/components/settlement/survivors/data-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from '@/components/ui/empty'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { deleteSurvivor } from '@/lib/dal/survivor'
@@ -148,20 +157,31 @@ export function SettlementSurvivorsCard({
     <Card className="p-0 pb-2 mt-2 border-0">
       <CardContent className="p-0">
         {survivors.length === 0 ? (
-          <div className="flex flex-col gap-2 justify-center items-center p-4">
-            <div className="text-center text-muted-foreground py-4">
-              Lanterns illuminate a silent settlement. No survivors found.
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              title="Create new survivor"
-              className="h-9 w-50"
-              onClick={handleNewSurvivor}>
-              <PlusIcon className="h-4 w-4" />
-              New Survivor
-            </Button>
-          </div>
+          <Empty className="border bg-card/40">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <LanternMark
+                  className="h-6 w-6 text-amber-400/90"
+                  aria-hidden="true"
+                />
+              </EmptyMedia>
+              <EmptyTitle>The settlement is silent.</EmptyTitle>
+              <EmptyDescription>
+                Lanterns burn over empty stones. Name a survivor to begin the
+                chronicle.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={handleNewSurvivor}>
+                <PlusIcon className="h-4 w-4" />
+                New Survivor
+              </Button>
+            </EmptyContent>
+          </Empty>
         ) : (
           <SurvivorDataTable
             columns={columns}

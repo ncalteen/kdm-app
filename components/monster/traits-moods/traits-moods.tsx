@@ -125,6 +125,7 @@ export function TraitsMoods({
                 size="sm"
                 className="border-0 h-6 w-6"
                 disabled={selectableTraits.length === 0}
+                aria-label="Add a trait"
                 title="Add a trait">
                 <PlusIcon className="h-4 w-4" />
               </Button>
@@ -177,6 +178,7 @@ export function TraitsMoods({
               onClick={() =>
                 onTraitsChange(monster.traits.filter((t) => t.id !== trait.id))
               }
+              aria-label="Remove trait"
               title="Remove trait">
               <Trash2Icon className="h-4 w-4" />
             </Button>
@@ -200,6 +202,7 @@ export function TraitsMoods({
                 size="sm"
                 className="border-0 h-6 w-6"
                 disabled={selectableMoods.length === 0}
+                aria-label="Add a mood"
                 title="Add a mood">
                 <PlusIcon className="h-4 w-4" />
               </Button>
@@ -252,6 +255,7 @@ export function TraitsMoods({
               onClick={() =>
                 onMoodsChange(monster.moods.filter((m) => m.id !== mood.id))
               }
+              aria-label="Remove mood"
               title="Remove mood">
               <Trash2Icon className="h-4 w-4" />
             </Button>
@@ -275,6 +279,7 @@ export function TraitsMoods({
                 size="sm"
                 className="border-0 h-6 w-6"
                 disabled={selectableStatuses.length === 0}
+                aria-label="Add a survivor status"
                 title="Add a survivor status">
                 <PlusIcon className="h-4 w-4" />
               </Button>
@@ -332,6 +337,7 @@ export function TraitsMoods({
                   monster.survivor_statuses.filter((s) => s.id !== status.id)
                 )
               }
+              aria-label="Remove survivor status"
               title="Remove survivor status">
               <Trash2Icon className="h-4 w-4" />
             </Button>

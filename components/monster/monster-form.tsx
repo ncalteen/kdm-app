@@ -618,7 +618,13 @@ export function MonsterForm({
             <SkullIcon className="h-5 w-5" />
             {title}
           </span>
-          <Button variant="ghost" size="icon" onClick={onCancel}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            aria-label="Close monster form"
+            title="Close">
             <XIcon className="h-4 w-4" />
           </Button>
         </CardTitle>
@@ -834,7 +840,9 @@ export function MonsterForm({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  disabled={selectableLocations.length === 0}>
+                  disabled={selectableLocations.length === 0}
+                  aria-label="Add location"
+                  title="Add location">
                   <PlusIcon className="h-3 w-3" />
                 </Button>
               </PopoverTrigger>
@@ -875,7 +883,9 @@ export function MonsterForm({
                 size="icon"
                 onClick={() =>
                   setLocations(locations.filter((l) => l.id !== loc.id))
-                }>
+                }
+                aria-label="Remove location"
+                title="Remove location">
                 <Trash2Icon className="h-3 w-3" />
               </Button>
             </div>
@@ -948,7 +958,8 @@ export function MonsterForm({
                             timelineEvents.filter((_, i) => i !== teIdx)
                           )
                         }}
-                        title="Remove year">
+                        title="Remove year"
+                        aria-label="Remove timeline year">
                         <Trash2Icon className="h-3 w-3" />
                       </Button>
                     </div>
@@ -985,7 +996,8 @@ export function MonsterForm({
                               }
                               setTimelineEvents(next)
                             }}
-                            title="Remove entry">
+                            title="Remove entry"
+                            aria-label="Remove timeline entry">
                             <XIcon className="h-3 w-3" />
                           </Button>
                         </div>
@@ -1032,7 +1044,9 @@ export function MonsterForm({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      disabled={selectableCCRewards.length === 0}>
+                      disabled={selectableCCRewards.length === 0}
+                      aria-label="Add collective cognition reward"
+                      title="Add reward">
                       <PlusIcon className="h-3 w-3" />
                     </Button>
                   </PopoverTrigger>
@@ -1076,7 +1090,9 @@ export function MonsterForm({
                     size="icon"
                     onClick={() =>
                       setCCRewards(ccRewards.filter((c) => c.id !== ccr.id))
-                    }>
+                    }
+                    aria-label="Remove collective cognition reward"
+                    title="Remove reward">
                     <Trash2Icon className="h-3 w-3" />
                   </Button>
                 </div>

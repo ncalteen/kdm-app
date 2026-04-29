@@ -476,7 +476,13 @@ export function WandererForm({
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onCancel}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCancel}
+            disabled={isSaving}
+            aria-label="Cancel"
+            title="Cancel">
             <ArrowLeftIcon className="h-4 w-4" />
           </Button>
           <span>{mode === 'create' ? 'Create Wanderer' : 'Edit Wanderer'}</span>
@@ -774,6 +780,7 @@ export function WandererForm({
                         size="icon"
                         className="h-6 w-6"
                         onClick={() => removeTimelineYear(teIdx)}
+                        aria-label="Remove timeline year"
                         title="Remove year">
                         <Trash2Icon className="h-3 w-3" />
                       </Button>
@@ -797,6 +804,7 @@ export function WandererForm({
                             size="icon"
                             className="h-6 w-6 shrink-0"
                             onClick={() => removeTimelineEntry(teIdx, eIdx)}
+                            aria-label="Remove timeline entry"
                             title="Remove entry">
                             <XIcon className="h-3 w-3" />
                           </Button>

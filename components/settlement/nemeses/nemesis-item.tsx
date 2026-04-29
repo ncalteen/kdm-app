@@ -155,6 +155,7 @@ export const NemesisItem = memo(function NemesisItem({
           size="icon"
           type="button"
           onClick={() => onRemove(id)}
+          aria-label="Remove nemesis"
           title="Remove nemesis">
           <TrashIcon className="h-4 w-4" />
         </Button>

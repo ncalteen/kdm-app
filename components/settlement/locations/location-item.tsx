@@ -70,6 +70,7 @@ export const LocationItem = memo(function LocationItem({
           size="icon"
           type="button"
           onClick={() => onRemove(index)}
+          aria-label="Remove location"
           title="Remove location">
           <TrashIcon className="h-4 w-4" />
         </Button>
