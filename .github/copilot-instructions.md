@@ -54,6 +54,53 @@ npm install
     }
     ```
 
+- When adding JSDoc comments, ensure each function, class, enum value, etc.
+  always follow **Capital Case** for the description title. Additional
+  description can be added below the title in normal sentence case to provide
+  further context or explanation about the function, class, or enum value. For
+  example:
+
+  ```ts
+  /**
+   * Calculates Rectangle Area
+   *
+   * Calculates area of a rectangle and returns the result.
+   *
+   * @param width Rectangle Width
+   * @param height Rectangle Height
+   * @returns Rectangle Area
+   */
+  function calculateArea(width: number, height: number): number {
+    return width * height
+  }
+
+  /**
+   * Survivor Type
+   *
+   * Represents the types of survivors in the game
+   */
+  enum SurvivorType {
+    /** Arc Survivor */
+    ARC = 'arc',
+    /** Core Survivor */
+    CORE = 'core'
+  }
+
+  /**
+   * Family Tree Edge
+   *
+   * Represents one parent → child relationship. The renderer draws a curve from
+   * the bottom of the parent's node to the top of the child's node. Edges are
+   * deduplicated, so a child with two parents produces two edges.
+   */
+  export interface FamilyTreeEdge {
+    /** Parent Survivor ID */
+    parentId: string
+    /** Child Survivor ID */
+    childId: string
+  }
+  ```
+
 ## Object Schemas
 
 - All object schemas should be created using the `zod` library.
