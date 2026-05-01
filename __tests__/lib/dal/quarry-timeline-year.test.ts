@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CampaignType } from '@/lib/enums'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
   auth: { getUser: vi.fn() },
@@ -56,8 +56,8 @@ describe('getQuarryTimelineYears', () => {
     const mockOrder = vi
       .fn()
       .mockResolvedValue({ data: [mockTimelineYear], error: null })
-    const mockContains = vi.fn().mockReturnValue({ order: mockOrder })
-    const mockEq = vi.fn().mockReturnValue({ contains: mockContains })
+    const mockOr = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockEq = vi.fn().mockReturnValue({ or: mockOr })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -67,9 +67,9 @@ describe('getQuarryTimelineYears', () => {
     )
 
     expect(result).toEqual([mockTimelineYear])
-    expect(mockContains).toHaveBeenCalledWith('campaign_types', [
-      'PEOPLE_OF_THE_LANTERN'
-    ])
+    expect(mockOr).toHaveBeenCalledWith(
+      'campaign_types.eq.{},campaign_types.cs.{PEOPLE_OF_THE_LANTERN}'
+    )
   })
 
   it('throws when query fails', async () => {
