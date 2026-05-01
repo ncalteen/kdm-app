@@ -26,7 +26,12 @@ describe('getCustomCampaignTemplate', () => {
     expect(template.nemesisIds).toEqual([])
     expect(template.principleIds).toEqual([])
     expect(template.quarryIds).toEqual([])
-    expect(template.timeline).toEqual([])
+    expect(template.timeline).toEqual(
+      Array.from({ length: 41 }, (_, year_number) => ({
+        year_number,
+        entries: []
+      }))
+    )
     expect(template.wandererIds).toEqual([])
   })
 

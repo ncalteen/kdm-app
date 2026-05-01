@@ -26,7 +26,9 @@ export async function getQuarryTimelineYears(
         .from('quarry_timeline_year')
         .select('id, entries, year_number')
         .eq('quarry_id', quarryId)
-        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .or(
+          `campaign_types.eq.{},campaign_types.cs.{${DatabaseCampaignType[campaignType]}}`
+        )
         .order('year_number', { ascending: true })
     : await supabase
         .from('quarry_timeline_year')

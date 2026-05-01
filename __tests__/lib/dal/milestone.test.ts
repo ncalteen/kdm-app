@@ -241,8 +241,8 @@ describe('getMilestoneIds', () => {
     const mockEq = vi
       .fn()
       .mockResolvedValue({ data: [{ id: 'm1' }, { id: 'm2' }], error: null })
-    const mockContains = vi.fn().mockReturnValue({ eq: mockEq })
-    const mockIn = vi.fn().mockReturnValue({ contains: mockContains })
+    const mockOr = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockIn = vi.fn().mockReturnValue({ or: mockOr })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -261,8 +261,8 @@ describe('getMilestoneIds', () => {
       .fn()
       .mockResolvedValue({ data: [{ id: 'm3' }], error: null })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
-    const mockContains = vi.fn().mockReturnValue({ eq: mockEq1 })
-    const mockIn = vi.fn().mockReturnValue({ contains: mockContains })
+    const mockOr = vi.fn().mockReturnValue({ eq: mockEq1 })
+    const mockIn = vi.fn().mockReturnValue({ or: mockOr })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -281,8 +281,8 @@ describe('getMilestoneIds', () => {
     const mockEq = vi
       .fn()
       .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-    const mockContains = vi.fn().mockReturnValue({ eq: mockEq })
-    const mockIn = vi.fn().mockReturnValue({ contains: mockContains })
+    const mockOr = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockIn = vi.fn().mockReturnValue({ or: mockOr })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
@@ -297,8 +297,8 @@ describe('getMilestoneIds', () => {
 
   it('throws when data is null', async () => {
     const mockEq = vi.fn().mockResolvedValue({ data: null, error: null })
-    const mockContains = vi.fn().mockReturnValue({ eq: mockEq })
-    const mockIn = vi.fn().mockReturnValue({ contains: mockContains })
+    const mockOr = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockIn = vi.fn().mockReturnValue({ or: mockOr })
     const mockSelect = vi.fn().mockReturnValue({ in: mockIn })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
