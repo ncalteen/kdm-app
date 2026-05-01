@@ -63,7 +63,7 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@supabase/ssr": "^0.10.2",
-    "@supabase/supabase-js": "^2.104.0",
+    "@supabase/supabase-js": "^2.105.1",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.23",
     "@uiw/react-md-editor": "^4.1.0",
