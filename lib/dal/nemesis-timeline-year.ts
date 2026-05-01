@@ -26,7 +26,9 @@ export async function getNemesisTimelineYears(
         .from('nemesis_timeline_year')
         .select('id, entries, year_number')
         .eq('nemesis_id', nemesisId)
-        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .or(
+          `campaign_types.eq.{},campaign_types.cs.{${DatabaseCampaignType[campaignType]}}`
+        )
         .order('year_number', { ascending: true })
     : await supabase
         .from('nemesis_timeline_year')

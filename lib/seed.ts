@@ -671,11 +671,12 @@ async function addSettlementMilestones(
 ) {
   console.log(`Adding Milestones for Settlement ${settlementId}...`)
 
-  // Add all milestones where campaign_types includes this campaign type
+  // Add all milestones where campaign_types is empty (universal) or includes
+  // this campaign type.
   const { data: milestones, error: getMilestonesError } = await supabase
     .from('milestone')
     .select('id')
-    .contains('campaign_types', [campaignType])
+    .or(`campaign_types.eq.{},campaign_types.cs.{${campaignType}}`)
 
   if (getMilestonesError) throw getMilestonesError
 
@@ -711,11 +712,12 @@ async function addSettlementPrinciples(
 ) {
   console.log(`Adding Principles for Settlement ${settlementId}...`)
 
-  // Add all principles where campaign_types includes this campaign type
+  // Add all principles where campaign_types is empty (universal) or includes
+  // this campaign type.
   const { data: principles, error: getPrinciplesError } = await supabase
     .from('principle')
     .select('id')
-    .contains('campaign_types', [campaignType])
+    .or(`campaign_types.eq.{},campaign_types.cs.{${campaignType}}`)
 
   if (getPrinciplesError) throw getPrinciplesError
 

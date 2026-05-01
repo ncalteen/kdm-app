@@ -81,14 +81,18 @@ export async function getMilestoneIds(
         .from('milestone')
         .select('id')
         .in('milestone_name', milestoneNames)
-        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .or(
+          `campaign_types.eq.{},campaign_types.cs.{${DatabaseCampaignType[campaignType]}}`
+        )
         .eq('custom', custom)
         .eq('user_id', userId)
     : await supabase
         .from('milestone')
         .select('id')
         .in('milestone_name', milestoneNames)
-        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .or(
+          `campaign_types.eq.{},campaign_types.cs.{${DatabaseCampaignType[campaignType]}}`
+        )
         .eq('custom', custom)
 
   if (error) throw new Error(`Error Fetching Milestone ID(s): ${error.message}`)

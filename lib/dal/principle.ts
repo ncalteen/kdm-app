@@ -81,14 +81,18 @@ export async function getPrincipleIds(
         .from('principle')
         .select('id')
         .in('principle_name', principleNames)
-        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .or(
+          `campaign_types.eq.{},campaign_types.cs.{${DatabaseCampaignType[campaignType]}}`
+        )
         .eq('custom', custom)
         .eq('user_id', userId)
     : await supabase
         .from('principle')
         .select('id')
         .in('principle_name', principleNames)
-        .contains('campaign_types', [DatabaseCampaignType[campaignType]])
+        .or(
+          `campaign_types.eq.{},campaign_types.cs.{${DatabaseCampaignType[campaignType]}}`
+        )
         .eq('custom', custom)
 
   if (error) throw new Error(`Error Fetching Principle ID(s): ${error.message}`)
