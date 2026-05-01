@@ -3,7 +3,8 @@ import { ModeToggle } from '@/components/menu/mode-toggle'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useSidebar } from '@/components/ui/sidebar'
-import { GithubIcon, SidebarIcon } from 'lucide-react'
+import { SidebarIcon } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { ReactElement } from 'react'
 
@@ -49,7 +50,14 @@ export function SiteHeader(): ReactElement {
         <Link
           href="https://github.com/ncalteen/kdm-app"
           className="flex items-center gap-2 text-xs sm:text-sm hover:underline">
-          <GithubIcon size={16} />
+          <Image
+            src="/github.svg"
+            alt=""
+            width={16}
+            height={16}
+            aria-hidden="true"
+            className="dark:invert"
+          />
           <span className="hidden sm:inline">ncalteen/kdm-app</span>
         </Link>
       </div>

@@ -4,7 +4,8 @@ import { LanternMark } from '@/components/generic/lantern-mark'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { GITHUB_ISSUES_URL, SUPPORT_EMAIL } from '@/lib/common'
-import { GithubIcon, MailIcon } from 'lucide-react'
+import { MailIcon } from 'lucide-react'
+import Image from 'next/image'
 import { ReactElement } from 'react'
 
 /**
@@ -39,7 +40,14 @@ export function HelpCard(): ReactElement {
       <Card className="p-0">
         <CardHeader className="px-4 pt-3 pb-0">
           <CardTitle className="text-lg flex items-center gap-2">
-            <GithubIcon className="h-5 w-5" />
+            <Image
+              src="/github.svg"
+              alt=""
+              width={20}
+              height={20}
+              aria-hidden="true"
+              className="h-5 w-5 dark:invert"
+            />
             Report an Issue on GitHub
           </CardTitle>
         </CardHeader>
@@ -55,7 +63,14 @@ export function HelpCard(): ReactElement {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Open GitHub Issues page in a new tab">
-              <GithubIcon className="h-4 w-4" />
+              <Image
+                src="/github.svg"
+                alt=""
+                width={16}
+                height={16}
+                aria-hidden="true"
+                className="h-4 w-4 dark:invert"
+              />
               Open GitHub Issues
             </a>
           </Button>
