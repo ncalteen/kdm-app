@@ -400,6 +400,16 @@ export const GEAR_UPDATED_MESSAGE = (index?: number) =>
     : 'New gear added to settlement storage.'
 
 /**
+ * Gear Crafted
+ *
+ * Used when gear is added and its crafting costs have been deducted.
+ *
+ * @returns Gear Crafted Message
+ */
+export const GEAR_CRAFTED_MESSAGE = () =>
+  'The forge cools. New gear is crafted at great cost.'
+
+/**
  * Hunt Already Active Error
  *
  * @returns Hunt Already Active Error Message

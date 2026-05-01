@@ -1,5 +1,6 @@
 'use client'
 
+import { CraftGearDialog } from '@/components/settlement/gear/craft-gear-dialog'
 import { GearItem } from '@/components/settlement/gear/gear-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,19 +22,31 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
+import {
+  applyCraftingAllocationToSettlementState,
+  CraftingAllocation,
+  CraftingCostsSpec,
+  emptyCraftingCosts,
+  gearToCraftingCostsSpec,
+  hasCraftingCosts
+} from '@/lib/crafting'
 import { getGear } from '@/lib/dal/gear'
+import { getResources } from '@/lib/dal/resource'
 import {
   addSettlementGear,
   removeSettlementGear,
   updateSettlementGear
 } from '@/lib/dal/settlement-gear'
+import { updateSettlementResource } from '@/lib/dal/settlement-resource'
 import {
   ERROR_MESSAGE,
+  GEAR_CRAFTED_MESSAGE,
   GEAR_REMOVED_MESSAGE,
   GEAR_UPDATED_MESSAGE
 } from '@/lib/messages'
 import {
   GearDetail,
+  ResourceDetail,
   SettlementDetail,
   SettlementStateSetter
 } from '@/lib/types'
@@ -73,12 +86,27 @@ export function GearCard({
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
 
+  const [craftDialogOpen, setCraftDialogOpen] = useState<boolean>(false)
+  const [pendingCraftGear, setPendingCraftGear] = useState<GearDetail | null>(
+    null
+  )
+  const [pendingCraftCosts, setPendingCraftCosts] =
+    useState<CraftingCostsSpec>(emptyCraftingCosts())
+
   const { data: availableGear, isLoaded: hasFetched } = useCatalogFetch<{
     [key: string]: GearDetail
   }>(selectedSettlement?.id, () => getGear(), {
     initial: {},
     errorContext: 'Settlement Gear Fetch Error',
     onReset: () => setAddOpen(false),
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
+
+  const { data: availableResources } = useCatalogFetch<{
+    [key: string]: ResourceDetail
+  }>(selectedSettlement?.id, () => getResources(), {
+    initial: {},
+    errorContext: 'Settlement Resource Fetch Error',
     onError: () => toast.error(ERROR_MESSAGE())
   })
 
@@ -100,46 +128,88 @@ export function GearCard({
   )
 
   /**
-   * Handle Add Gear
+   * Persist Gear Addition
    *
-   * Optimistically adds a gear item to the settlement, then persists to the
-   * DB.
+   * Performs the optimistic insert of a settlement_gear row plus any
+   * concurrent settlement gear/resource quantity deductions corresponding to
+   * the supplied crafting allocation. State is rolled back on failure.
    *
-   * @param gearId Gear ID
+   * @param gearInfo Gear to Add
+   * @param allocation Crafting Allocation (may be empty)
+   * @param successMessage Toast Message on Success
    */
-  const handleAdd = useCallback(
-    (gearId: string | undefined) => {
-      if (!gearId || !selectedSettlement) return
-
-      const gearInfo = availableGear[gearId]
-      if (!gearInfo) return
-
-      setAddOpen(false)
+  const persistGearAddition = useCallback(
+    (
+      gearInfo: GearDetail,
+      allocation: CraftingAllocation,
+      successMessage: string
+    ) => {
+      if (!selectedSettlement) return
 
       const tempId = `temp-${crypto.randomUUID()}`
       const optimisticRow: SettlementDetail['gear'][0] = {
-        gear_id: gearId,
+        gear_id: gearInfo.id,
         gear_name: gearInfo.gear_name,
         id: tempId,
         quantity: 1,
         custom: gearInfo.custom ?? false
       }
 
-      const updatedGear = [...selectedSettlement.gear, optimisticRow]
+      // Pre-deduction snapshot for rollback.
+      const previousGear = selectedSettlement.gear
+      const previousResources = selectedSettlement.resources
+
+      const { gear: deductedGear, resources: deductedResources } =
+        applyCraftingAllocationToSettlementState(
+          allocation,
+          previousGear,
+          previousResources
+        )
+
+      const nextGear = [...deductedGear, optimisticRow]
 
       setSelectedSettlement({
         ...selectedSettlement,
-        gear: updatedGear
+        gear: nextGear,
+        resources: deductedResources
       })
 
       void mutate({
         context: 'Gear Add',
-        persist: () =>
-          addSettlementGear({
-            gear_id: gearId,
+        persist: async () => {
+          // Persist the gear deductions first so any failure rolls back the
+          // local settlement before we create the new row.
+          for (const d of allocation.gearDeductions) {
+            const row = previousGear.find((g) => g.id === d.settlementGearId)
+            if (!row) continue
+            await updateSettlementGear(d.settlementGearId, {
+              quantity: Math.max(0, row.quantity - d.quantity)
+            })
+          }
+
+          // Aggregate per-resource deductions in case multiple type-cost
+          // allocations target the same settlement_resource row.
+          const aggregatedResource = new Map<string, number>()
+          for (const d of allocation.resourceDeductions) {
+            aggregatedResource.set(
+              d.settlementResourceId,
+              (aggregatedResource.get(d.settlementResourceId) ?? 0) + d.quantity
+            )
+          }
+          for (const [id, qty] of aggregatedResource) {
+            const row = previousResources.find((r) => r.id === id)
+            if (!row) continue
+            await updateSettlementResource(id, {
+              quantity: Math.max(0, row.quantity - qty)
+            })
+          }
+
+          return addSettlementGear({
+            gear_id: gearInfo.id,
             quantity: 1,
             settlement_id: selectedSettlement.id
-          }),
+          })
+        },
         onSuccess: (id) => {
           setSelectedSettlement((prev) =>
             prev
@@ -157,15 +227,78 @@ export function GearCard({
             prev
               ? {
                   ...prev,
-                  gear: prev.gear.filter((g) => g.id !== tempId)
+                  gear: previousGear,
+                  resources: previousResources
                 }
               : null
           )
         },
-        successMessage: GEAR_UPDATED_MESSAGE()
+        successMessage
       })
     },
-    [selectedSettlement, availableGear, setSelectedSettlement, mutate]
+    [selectedSettlement, setSelectedSettlement, mutate]
+  )
+
+  /**
+   * Handle Add Gear
+   *
+   * Picks the gear from the popover. When the gear has crafting costs, the
+   * craft dialog is opened so the user can choose whether (and how) to spend
+   * settlement gear/resources. Gear with no costs is added immediately.
+   *
+   * @param gearId Gear ID
+   */
+  const handleAdd = useCallback(
+    (gearId: string | undefined) => {
+      if (!gearId || !selectedSettlement) return
+
+      const gearInfo = availableGear[gearId]
+      if (!gearInfo) return
+
+      setAddOpen(false)
+
+      const costs = gearToCraftingCostsSpec(gearInfo)
+
+      if (hasCraftingCosts(costs)) {
+        setPendingCraftGear(gearInfo)
+        setPendingCraftCosts(costs)
+        setCraftDialogOpen(true)
+        return
+      }
+
+      persistGearAddition(
+        gearInfo,
+        { gearDeductions: [], resourceDeductions: [] },
+        GEAR_UPDATED_MESSAGE()
+      )
+    },
+    [selectedSettlement, availableGear, persistGearAddition]
+  )
+
+  /**
+   * Handle Craft Confirm
+   *
+   * Invoked when the user confirms the crafting dialog. Closes the dialog
+   * and completes the gear addition (with or without deductions).
+   */
+  const handleCraftConfirm = useCallback(
+    ({
+      deductCosts,
+      allocation
+    }: {
+      deductCosts: boolean
+      allocation: CraftingAllocation
+    }) => {
+      if (!pendingCraftGear) return
+      setCraftDialogOpen(false)
+      const successMessage = deductCosts
+        ? GEAR_CRAFTED_MESSAGE()
+        : GEAR_UPDATED_MESSAGE()
+      persistGearAddition(pendingCraftGear, allocation, successMessage)
+      setPendingCraftGear(null)
+      setPendingCraftCosts(emptyCraftingCosts())
+    },
+    [pendingCraftGear, persistGearAddition]
   )
 
   /**
@@ -341,6 +474,25 @@ export function GearCard({
           </div>
         </div>
       </CardContent>
+
+      <CraftGearDialog
+        key={pendingCraftGear?.id ?? 'craft-dialog-empty'}
+        open={craftDialogOpen}
+        onOpenChange={(next) => {
+          setCraftDialogOpen(next)
+          if (!next) {
+            setPendingCraftGear(null)
+            setPendingCraftCosts(emptyCraftingCosts())
+          }
+        }}
+        gear={pendingCraftGear}
+        costs={pendingCraftCosts}
+        gearCatalog={availableGear}
+        resourceCatalog={availableResources}
+        settlementGear={selectedSettlement?.gear ?? []}
+        settlementResources={selectedSettlement?.resources ?? []}
+        onConfirm={handleCraftConfirm}
+      />
     </Card>
   )
 }
