@@ -37,7 +37,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { BrainCogIcon, PlusIcon } from 'lucide-react'
-import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /**
  * Philosophies Card Properties
@@ -304,47 +304,14 @@ export function PhilosophiesCard({
             )}
 
             {hasFetched &&
-              sortedPhilosophies.map(({ item, originalIndex }) => {
-                const overviewEntries: {
-                  label: string
-                  value: ReactNode
-                }[] = []
-                if (item.tier != null)
-                  overviewEntries.push({ label: 'Tier', value: item.tier })
-                if (
-                  item.hunt_xp_milestones &&
-                  item.hunt_xp_milestones.length > 0
-                )
-                  overviewEntries.push({
-                    label: 'Hunt XP Milestones',
-                    value: item.hunt_xp_milestones.join(', ')
-                  })
-
-                return (
-                  <PhilosophyItem
-                    key={item.id}
-                    customDetail={
-                      item.custom
-                        ? {
-                            custom: true,
-                            sections: [
-                              {
-                                label: 'Overview',
-                                entries:
-                                  overviewEntries.length > 0
-                                    ? overviewEntries
-                                    : undefined
-                              }
-                            ]
-                          }
-                        : null
-                    }
-                    index={originalIndex}
-                    onRemove={handleRemove}
-                    philosophy={item}
-                  />
-                )
-              })}
+              sortedPhilosophies.map(({ item, originalIndex }) => (
+                <PhilosophyItem
+                  key={item.id}
+                  index={originalIndex}
+                  onRemove={handleRemove}
+                  philosophy={item}
+                />
+              ))}
           </div>
         </div>
       </CardContent>

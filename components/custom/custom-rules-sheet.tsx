@@ -13,11 +13,13 @@ import {
 } from '@/components/ui/sheet'
 import { getGear } from '@/lib/dal/gear'
 import { getNeuroses } from '@/lib/dal/neurosis'
+import { getPhilosophies } from '@/lib/dal/philosophy'
 import { getPhilosophyRanks } from '@/lib/dal/philosophy-rank'
 import { getWeaponTypes } from '@/lib/dal/weapon-type'
 import {
   GearDetail,
   NeurosisDetail,
+  PhilosophyDetail,
   PhilosophyRankDetail,
   WeaponTypeDetail
 } from '@/lib/types'
@@ -235,6 +237,22 @@ function CustomRulesSheetBody({
   sections,
   title
 }: BaseCustomRulesSheetProps): ReactElement {
+  // Stable-sort sections so any stat-tile (entries) blocks float to the top of
+  // the sheet. The philosophy sheet's `Tier` / `Hunt XP Milestones` overview
+  // sets the visual standard for numeric data, so we apply that treatment
+  // uniformly: integers (and other structured key/value facts) read first,
+  // followed by free-form rule text. Within each group the original ordering
+  // from the caller is preserved.
+  const orderedSections = sections
+    .map((section, index) => ({ section, index }))
+    .sort((a, b) => {
+      const aHasEntries = !!a.section.entries && a.section.entries.length > 0
+      const bHasEntries = !!b.section.entries && b.section.entries.length > 0
+      if (aHasEntries === bHasEntries) return a.index - b.index
+      return aHasEntries ? -1 : 1
+    })
+    .map(({ section }) => section)
+
   return (
     <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-md">
       <SheetHeader className="gap-2 border-b border-border/60 px-6 pt-6 pb-4">
@@ -256,7 +274,7 @@ function CustomRulesSheetBody({
       </SheetHeader>
 
       <div className="flex flex-col divide-y divide-border/40 overflow-y-auto pb-2">
-        {sections.map((section, index) => (
+        {orderedSections.map((section, index) => (
           <CustomRulesSectionBlock
             key={`${section.label}-${index}`}
             section={section}
@@ -783,6 +801,14 @@ interface CustomKnowledgeRulesIconButtonProps {
   observationConditions?: string | null
   /** Observation Rank-Up Milestone */
   observationRankUpMilestone?: number | null
+  /**
+   * Philosophy ID
+   *
+   * When provided, the philosophy detail is lazily fetched the first time the
+   * sheet opens and surfaced as an additional section. Pass `null`/`undefined`
+   * for knowledges that aren't tied to a philosophy.
+   */
+  philosophyId?: string | null
   /** Optional Class Name */
   className?: string
 }
@@ -792,8 +818,9 @@ interface CustomKnowledgeRulesIconButtonProps {
  *
  * Renders a magnifying glass icon button next to a knowledge select. When the
  * selected knowledge is user-defined, opens a sheet displaying the knowledge's
- * catalog rules, observation conditions, and rank-up milestone. Renders nothing
- * if the knowledge is missing or not custom.
+ * catalog rules, observation conditions, rank-up milestone, and (when linked)
+ * the parent philosophy. Renders nothing if the knowledge is missing or not
+ * custom.
  *
  * @param props Custom Knowledge Rules Icon Button Component Properties
  * @returns Custom Knowledge Rules Icon Button (or null)
@@ -804,11 +831,50 @@ export function CustomKnowledgeRulesIconButton({
   knowledgeName,
   observationConditions,
   observationRankUpMilestone,
+  philosophyId,
   rules
 }: CustomKnowledgeRulesIconButtonProps): ReactElement | null {
+  const [open, setOpen] = useState(false)
+  const [philosophy, setPhilosophy] = useState<PhilosophyDetail | null>(null)
+  const [philosophyLoading, setPhilosophyLoading] = useState(false)
+
+  /**
+   * Handle Open Change
+   *
+   * Lazily fetches the linked philosophy the first time the sheet is opened.
+   * Subsequent opens reuse the cached detail.
+   *
+   * @param next Next Open State
+   */
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next)
+
+    if (!next || philosophy || philosophyLoading || !philosophyId) return
+
+    setPhilosophyLoading(true)
+    getPhilosophies()
+      .then((map) => setPhilosophy(map[philosophyId] ?? null))
+      .catch((error) =>
+        console.error('Custom Knowledge Philosophy Fetch Error:', error)
+      )
+      .finally(() => setPhilosophyLoading(false))
+  }
+
   if (!custom || !knowledgeName) return null
 
-  const sections: CustomRulesSection[] = [
+  const sections: CustomRulesSection[] = []
+
+  if (philosophyId)
+    sections.push({
+      label: 'Philosophy',
+      entries: philosophyLoading
+        ? [{ label: 'Name', value: 'Staring at the stars...' }]
+        : philosophy
+          ? [{ label: 'Name', value: philosophy.philosophy_name }]
+          : undefined
+    })
+
+  sections.push(
     { label: 'Rules', content: rules },
     { label: 'Observation Conditions', content: observationConditions },
     {
@@ -818,10 +884,10 @@ export function CustomKnowledgeRulesIconButton({
           ? [{ label: 'Rank', value: observationRankUpMilestone }]
           : undefined
     }
-  ]
+  )
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button
           type="button"
@@ -840,6 +906,298 @@ export function CustomKnowledgeRulesIconButton({
       />
     </Sheet>
   )
+}
+
+/**
+ * Custom Philosophy Rules Text Component Properties
+ */
+interface CustomPhilosophyRulesTextProps {
+  /** User-Defined Flag */
+  custom: boolean | null | undefined
+  /** Philosophy ID */
+  philosophyId: string | null | undefined
+  /** Philosophy Name (also used as trigger label) */
+  philosophyName: string
+  /** Tier */
+  tier?: number | null
+  /** Hunt XP Milestones */
+  huntXpMilestones?: number[] | null
+  /** Class Name (Optional) */
+  className?: string
+  /**
+   * Show Custom Badge
+   *
+   * When true and the philosophy is custom, a small "Custom" badge is rendered
+   * as a sibling next to the trigger.
+   */
+  showCustomBadge?: boolean
+}
+
+/**
+ * Custom Philosophy Rules Text
+ *
+ * Renders the philosophy's name as a clickable trigger when the philosophy is
+ * user-defined; otherwise renders a plain inline label. The opened sheet
+ * surfaces an `Overview` stat tile (tier, hunt XP milestones) and lazily
+ * fetches the philosophy's ranks so each rank's rules render as its own
+ * markdown section using the same styling as every other rules section.
+ *
+ * @param props Custom Philosophy Rules Text Component Properties
+ * @returns Custom Philosophy Rules Text Component
+ */
+export function CustomPhilosophyRulesText({
+  className,
+  custom,
+  huntXpMilestones,
+  philosophyId,
+  philosophyName,
+  showCustomBadge,
+  tier
+}: CustomPhilosophyRulesTextProps): ReactElement {
+  const [open, setOpen] = useState(false)
+  const [ranks, setRanks] = useState<PhilosophyRankDetail[] | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  /**
+   * Handle Open Change
+   *
+   * Lazily fetches the philosophy's ranks the first time the sheet is opened.
+   * Subsequent opens reuse the cached ranks.
+   *
+   * @param next Next Open State
+   */
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next)
+
+    if (!next || ranks || loading || !custom || !philosophyId) return
+
+    setLoading(true)
+    getPhilosophyRanks(philosophyId)
+      .then((data) => setRanks(data))
+      .catch((error) =>
+        console.error('Custom Philosophy Ranks Fetch Error:', error)
+      )
+      .finally(() => setLoading(false))
+  }
+
+  if (!custom) {
+    if (showCustomBadge)
+      return (
+        <span className={cn('inline-flex items-center gap-2', className)}>
+          <span className="text-sm">{philosophyName}</span>
+        </span>
+      )
+
+    return <span className={cn('text-sm', className)}>{philosophyName}</span>
+  }
+
+  const overviewEntries: CustomRulesSectionEntry[] = []
+  if (tier != null) overviewEntries.push({ label: 'Tier', value: tier })
+  if (huntXpMilestones && huntXpMilestones.length > 0)
+    overviewEntries.push({
+      label: 'Hunt XP Milestones',
+      value: huntXpMilestones.join(', ')
+    })
+
+  const sections: CustomRulesSection[] = [
+    {
+      label: 'Overview',
+      entries: overviewEntries.length > 0 ? overviewEntries : undefined
+    }
+  ]
+
+  if (loading) {
+    sections.push({ label: 'Ranks', content: '_Staring at the stars..._' })
+  } else if (ranks && ranks.length > 0) {
+    for (const rank of ranks)
+      sections.push({
+        label: `Rank ${rank.rank_number}`,
+        content: rank.rules
+      })
+  } else if (ranks) {
+    sections.push({ label: 'Ranks', content: null })
+  }
+
+  const trigger = (
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            'text-sm text-left hover:underline focus:outline-none focus-visible:underline cursor-pointer',
+            !showCustomBadge && className
+          )}>
+          {philosophyName}
+        </button>
+      </SheetTrigger>
+      <CustomRulesSheetBody
+        title={philosophyName}
+        description="A custom philosophy defined by you."
+        sections={sections}
+      />
+    </Sheet>
+  )
+
+  if (showCustomBadge)
+    return (
+      <span className={cn('inline-flex items-center gap-2', className)}>
+        {trigger}
+        <Badge variant="outline" className="text-xs shrink-0">
+          Custom
+        </Badge>
+      </span>
+    )
+
+  return trigger
+}
+
+/**
+ * Custom Knowledge Rules Text Component Properties
+ */
+interface CustomKnowledgeRulesTextProps {
+  /** User-Defined Flag */
+  custom: boolean | null | undefined
+  /** Knowledge Name (also used as trigger label) */
+  knowledgeName: string
+  /** Catalog Rules */
+  rules?: string | null
+  /** Observation Conditions */
+  observationConditions?: string | null
+  /** Observation Rank-Up Milestone */
+  observationRankUpMilestone?: number | null
+  /**
+   * Philosophy ID
+   *
+   * When provided, the philosophy detail is lazily fetched the first time the
+   * sheet opens and surfaced as an additional section. Pass `null`/`undefined`
+   * for knowledges that aren't tied to a philosophy.
+   */
+  philosophyId?: string | null
+  /** Class Name (Optional) */
+  className?: string
+  /**
+   * Show Custom Badge
+   *
+   * When true and the knowledge is custom, a small "Custom" badge is rendered
+   * as a sibling next to the trigger.
+   */
+  showCustomBadge?: boolean
+}
+
+/**
+ * Custom Knowledge Rules Text
+ *
+ * Renders the knowledge's name as a clickable trigger when the knowledge is
+ * user-defined; otherwise renders a plain inline label. The opened sheet
+ * displays the knowledge's rules, observation conditions, observation rank-up
+ * milestone, and (when linked) the parent philosophy's name (lazily fetched).
+ *
+ * @param props Custom Knowledge Rules Text Component Properties
+ * @returns Custom Knowledge Rules Text Component
+ */
+export function CustomKnowledgeRulesText({
+  className,
+  custom,
+  knowledgeName,
+  observationConditions,
+  observationRankUpMilestone,
+  philosophyId,
+  rules,
+  showCustomBadge
+}: CustomKnowledgeRulesTextProps): ReactElement {
+  const [open, setOpen] = useState(false)
+  const [philosophy, setPhilosophy] = useState<PhilosophyDetail | null>(null)
+  const [philosophyLoading, setPhilosophyLoading] = useState(false)
+
+  /**
+   * Handle Open Change
+   *
+   * Lazily fetches the linked philosophy the first time the sheet is opened.
+   * Subsequent opens reuse the cached detail.
+   *
+   * @param next Next Open State
+   */
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next)
+
+    if (!next || philosophy || philosophyLoading || !custom || !philosophyId)
+      return
+
+    setPhilosophyLoading(true)
+    getPhilosophies()
+      .then((map) => setPhilosophy(map[philosophyId] ?? null))
+      .catch((error) =>
+        console.error('Custom Knowledge Philosophy Fetch Error:', error)
+      )
+      .finally(() => setPhilosophyLoading(false))
+  }
+
+  if (!custom) {
+    if (showCustomBadge)
+      return (
+        <span className={cn('inline-flex items-center gap-2', className)}>
+          <span className="text-sm">{knowledgeName}</span>
+        </span>
+      )
+
+    return <span className={cn('text-sm', className)}>{knowledgeName}</span>
+  }
+
+  const sections: CustomRulesSection[] = []
+
+  if (philosophyId)
+    sections.push({
+      label: 'Philosophy',
+      entries: philosophyLoading
+        ? [{ label: 'Name', value: 'Staring at the stars...' }]
+        : philosophy
+          ? [{ label: 'Name', value: philosophy.philosophy_name }]
+          : undefined
+    })
+
+  sections.push(
+    { label: 'Rules', content: rules },
+    { label: 'Observation Conditions', content: observationConditions },
+    {
+      label: 'Observation Rank-Up Milestone',
+      entries:
+        observationRankUpMilestone != null
+          ? [{ label: 'Rank', value: observationRankUpMilestone }]
+          : undefined
+    }
+  )
+
+  const trigger = (
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            'text-sm text-left hover:underline focus:outline-none focus-visible:underline cursor-pointer',
+            !showCustomBadge && className
+          )}>
+          {knowledgeName}
+        </button>
+      </SheetTrigger>
+      <CustomRulesSheetBody
+        title={knowledgeName}
+        description="A custom knowledge defined by you."
+        sections={sections}
+      />
+    </Sheet>
+  )
+
+  if (showCustomBadge)
+    return (
+      <span className={cn('inline-flex items-center gap-2', className)}>
+        {trigger}
+        <Badge variant="outline" className="text-xs shrink-0">
+          Custom
+        </Badge>
+      </span>
+    )
+
+  return trigger
 }
 
 /**

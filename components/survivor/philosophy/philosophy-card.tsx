@@ -876,6 +876,7 @@ export function PhilosophyCard({
                     observationRankUpMilestone={
                       settlementKnowledge?.observation_rank_up_milestone
                     }
+                    philosophyId={settlementKnowledge?.philosophy_id}
                   />
                 )
               })()}
