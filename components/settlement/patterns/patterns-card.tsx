@@ -24,7 +24,6 @@ import { useCraftGearPersistence } from '@/hooks/use-craft-gear-persistence'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import {
-  areCraftingCostsAffordable,
   CraftingAllocation,
   CraftingCostsSpec,
   emptyCraftingCosts,
@@ -54,7 +53,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
-import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react'
 
 /**
  * Patterns Card Properties
@@ -417,11 +416,20 @@ export function PatternsCard({
             {hasFetched &&
               sortedPatterns.map(({ item, originalIndex }) => {
                 const detail = availablePatterns[item.pattern_id]
-                const overviewParts: string[] = []
+                const overviewEntries: {
+                  label: string
+                  value: ReactNode
+                }[] = []
                 if (detail?.endeavor_cost != null)
-                  overviewParts.push(`Endeavor Cost: ${detail.endeavor_cost}`)
+                  overviewEntries.push({
+                    label: 'Endeavor Cost',
+                    value: detail.endeavor_cost
+                  })
                 if (detail?.crafting_limit != null)
-                  overviewParts.push(`Crafting Limit: ${detail.crafting_limit}`)
+                  overviewEntries.push({
+                    label: 'Crafting Limit',
+                    value: detail.crafting_limit
+                  })
 
                 // Resolve innovation requirements to display names so the sheet
                 // shows "Bone Smith" rather than the underlying UUID.
@@ -451,7 +459,11 @@ export function PatternsCard({
 
                 // The craft button is only meaningful when the pattern produces
                 // gear; surface a tooltip explaining why crafting is blocked
-                // when prerequisites are unmet.
+                // when prerequisites are unmet. Cost/endeavor/phase shortfalls
+                // do NOT disable the button — the craft dialog exposes a
+                // "deduct costs" toggle so survivors can record an off-book
+                // craft, and that escape hatch is unreachable while the button
+                // is disabled.
                 const canShowCraft = !!detail?.crafted_gear_id
 
                 let craftDisabled = false
@@ -469,40 +481,12 @@ export function PatternsCard({
                       detail.innovation_requirement_ids.every((id) =>
                         settlementInnovationIds.has(id)
                       )
-                    const costsAffordable = areCraftingCostsAffordable(
-                      patternToCraftingCostsSpec(detail),
-                      selectedSettlement?.gear ?? [],
-                      selectedSettlement?.resources ?? []
-                    )
-                    const phaseRequired =
-                      (detail.endeavor_cost ?? 0) > 0 &&
-                      !selectedSettlementPhase
-                    const endeavorsInsufficient =
-                      (detail.endeavor_cost ?? 0) > 0 &&
-                      !!selectedSettlementPhase &&
-                      selectedSettlementPhase.endeavors <
-                        (detail.endeavor_cost ?? 0)
 
                     if (!innovationsMet) {
                       craftDisabled = true
 
                       craftDisabledReason =
                         'The settlement is missing one or more required innovations.'
-                    } else if (!costsAffordable) {
-                      craftDisabled = true
-
-                      craftDisabledReason =
-                        'The settlement does not have enough gear or resources to craft this item.'
-                    } else if (phaseRequired) {
-                      craftDisabled = true
-
-                      craftDisabledReason =
-                        'Endeavors are only available during the settlement phase.'
-                    } else if (endeavorsInsufficient) {
-                      craftDisabled = true
-
-                      craftDisabledReason =
-                        'The settlement does not have enough endeavors to craft this item.'
                     }
                   }
                 }
@@ -517,10 +501,10 @@ export function PatternsCard({
                             sections: [
                               {
                                 label: 'Overview',
-                                content:
-                                  overviewParts.length > 0
-                                    ? overviewParts.join('\n')
-                                    : null
+                                entries:
+                                  overviewEntries.length > 0
+                                    ? overviewEntries
+                                    : undefined
                               },
                               {
                                 label: 'Innovation Requirements',

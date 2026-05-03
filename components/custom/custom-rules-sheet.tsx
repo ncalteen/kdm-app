@@ -1,8 +1,8 @@
 'use client'
 
+import { SafeMarkdownPreview } from '@/components/generic/safe-markdown-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import {
   Sheet,
   SheetContent,
@@ -22,24 +22,60 @@ import {
   WeaponTypeDetail
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { SafeMarkdownPreview } from '@/components/generic/safe-markdown-editor'
 import { Search } from 'lucide-react'
 import { ReactElement, ReactNode, useEffect, useState } from 'react'
 
 /**
+ * Custom Rules Section Entry
+ *
+ * Represents a single key/value stat rendered inside a section's stat grid.
+ */
+export interface CustomRulesSectionEntry {
+  /** Stat Label */
+  label: string
+  /** Stat Value */
+  value: ReactNode
+}
+
+/**
  * Custom Rules Section
  *
- * Represents a single labelled block of rules text rendered in the sheet.
+ * Represents a single labelled block rendered in the sheet. Sections may
+ * present their data as one of three mutually exclusive forms (checked in
+ * order):
+ *
+ * 1. **Stat Grid** — when `entries` is non-empty, the section renders a tidy
+ *    grid of key/value tiles. Use this for short structured facts such as
+ *    "Endeavor Cost: 1" or "Tier 3".
+ * 2. **Badge Row** — when `badges` is non-empty, the section renders the
+ *    values as small chips. Ideal for keyword-style lists.
+ * 3. **Markdown** — when `content` has non-empty text, it is rendered as a
+ *    sanitized markdown block tuned for compact reading.
+ *
+ * When all three are empty/null, the section renders a thematic empty state.
  */
 export interface CustomRulesSection {
   /** Section Label */
   label: string
   /**
-   * Section Content
+   * Markdown Section Content
    *
    * May be null/undefined to indicate "no rules recorded."
    */
   content?: string | null
+  /**
+   * Stat Entries
+   *
+   * When provided, renders as a grid of key/value tiles instead of markdown.
+   */
+  entries?: CustomRulesSectionEntry[]
+  /**
+   * Badge Values
+   *
+   * When provided, renders as a wrap of small chip badges (e.g. for keyword
+   * lists) instead of markdown.
+   */
+  badges?: string[]
 }
 
 /**
@@ -77,9 +113,119 @@ interface BaseCustomRulesSheetProps {
 }
 
 /**
+ * Markdown Body Class Names
+ *
+ * Tailwind class string applied to every {@link SafeMarkdownPreview} used
+ * inside the rules sheet. The overrides:
+ *
+ * - Pin the body to `text-sm` with relaxed leading so prose reads at the same
+ *   density as the surrounding chrome.
+ * - Re-scale every heading level so authored markdown headings sit between
+ *   `text-base` and `text-sm` rather than ballooning to display sizes.
+ * - Tighten paragraph, list, code, and blockquote spacing to keep sections
+ *   compact inside the constrained sheet width.
+ */
+const MARKDOWN_BODY_CLASS = cn(
+  'bg-transparent !text-sm !leading-relaxed',
+  '[&_h1]:!text-base [&_h1]:!font-semibold [&_h1]:!mt-0 [&_h1]:!mb-1.5 [&_h1]:!border-b-0 [&_h1]:!pb-0',
+  '[&_h2]:!text-sm [&_h2]:!font-semibold [&_h2]:!mt-2 [&_h2]:!mb-1 [&_h2]:!border-b-0 [&_h2]:!pb-0',
+  '[&_h3]:!text-sm [&_h3]:!font-semibold [&_h3]:!mt-2 [&_h3]:!mb-1',
+  '[&_h4]:!text-sm [&_h4]:!font-semibold [&_h4]:!mt-2 [&_h4]:!mb-1',
+  '[&_h5]:!text-sm [&_h5]:!font-semibold [&_h5]:!mt-2 [&_h5]:!mb-1',
+  '[&_h6]:!text-sm [&_h6]:!font-semibold [&_h6]:!mt-2 [&_h6]:!mb-1',
+  '[&_p]:!text-sm [&_p]:!leading-relaxed [&_p]:!my-1.5',
+  '[&_p:first-child]:!mt-0 [&_p:last-child]:!mb-0',
+  '[&_strong]:!font-semibold [&_strong]:!text-foreground',
+  '[&_em]:!italic',
+  '[&_ul]:!my-1 [&_ul]:!pl-5 [&_ul]:!list-disc',
+  '[&_ol]:!my-1 [&_ol]:!pl-5 [&_ol]:!list-decimal',
+  '[&_li]:!text-sm [&_li]:!leading-relaxed [&_li]:!my-0.5',
+  '[&_li>p]:!my-0',
+  '[&_code]:!text-xs [&_code]:!px-1 [&_code]:!py-0.5 [&_code]:!rounded',
+  '[&_pre]:!text-xs [&_pre]:!my-1.5',
+  '[&_table]:!text-xs [&_table]:!my-2',
+  '[&_blockquote]:!my-1.5 [&_blockquote]:!border-l-2 [&_blockquote]:!pl-3 [&_blockquote]:!italic'
+)
+
+/**
+ * Custom Rules Section Block
+ *
+ * Renders the heading and body for a single section of the rules sheet.
+ * Picks a presentation strategy based on which optional content the section
+ * provides; see {@link CustomRulesSection} for the precedence rules.
+ *
+ * @param props Section Block Properties
+ * @returns Section Block Component
+ */
+function CustomRulesSectionBlock({
+  section
+}: {
+  section: CustomRulesSection
+}): ReactElement {
+  const hasEntries = !!section.entries && section.entries.length > 0
+  const hasBadges = !!section.badges && section.badges.length > 0
+  const hasContent = !!section.content && section.content.trim().length > 0
+
+  return (
+    <section className="flex flex-col gap-2 px-6 py-4">
+      <div className="flex items-center gap-2">
+        <span
+          aria-hidden
+          className="h-px w-3 bg-muted-foreground/50 shrink-0"
+        />
+        <h4 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          {section.label}
+        </h4>
+      </div>
+
+      {hasEntries ? (
+        <dl className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-2">
+          {section.entries!.map((entry, idx) => (
+            <div
+              key={`${entry.label}-${idx}`}
+              className="flex flex-col gap-0.5 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+              <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                {entry.label}
+              </dt>
+              <dd className="text-sm font-semibold text-foreground tabular-nums">
+                {entry.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : hasBadges ? (
+        <div className="flex flex-wrap gap-1.5">
+          {section.badges!.map((badge, idx) => (
+            <Badge
+              key={`${badge}-${idx}`}
+              variant="secondary"
+              className="font-normal">
+              {badge}
+            </Badge>
+          ))}
+        </div>
+      ) : hasContent ? (
+        <SafeMarkdownPreview
+          source={section.content!}
+          className={MARKDOWN_BODY_CLASS}
+          style={{ backgroundColor: 'transparent' }}
+        />
+      ) : (
+        <p className="text-xs italic text-muted-foreground">
+          The lantern reveals nothing here.
+        </p>
+      )}
+    </section>
+  )
+}
+
+/**
  * Custom Rules Sheet Body
  *
- * Internal renderer that draws the sheet's title, description, and sections.
+ * Internal renderer that draws the sheet's header and section list. The header
+ * pairs the title with a subtle `Custom` pill, and the body uses hairline
+ * dividers between sections so each block of authored content reads as its
+ * own block without competing with the title.
  *
  * @param props Base Custom Rules Sheet Component Properties
  * @returns Sheet Body Component
@@ -90,38 +236,31 @@ function CustomRulesSheetBody({
   title
 }: BaseCustomRulesSheetProps): ReactElement {
   return (
-    <SheetContent className="flex flex-col gap-0 sm:max-w-md">
-      <SheetHeader className="gap-2">
-        <SheetTitle className="flex items-center gap-2 pr-6">
-          <span className="truncate text-2xl">{title}</span>
-        </SheetTitle>
+    <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-md">
+      <SheetHeader className="gap-2 border-b border-border/60 px-6 pt-6 pb-4">
+        <div className="flex items-start justify-between gap-3 pr-8">
+          <SheetTitle className="text-lg font-semibold leading-tight tracking-tight break-words">
+            {title}
+          </SheetTitle>
+          <Badge
+            variant="outline"
+            className="mt-0.5 shrink-0 text-[10px] uppercase tracking-[0.2em]">
+            Custom
+          </Badge>
+        </div>
         {description && (
-          <SheetDescription>
-            <i>{description}</i>
+          <SheetDescription className="text-xs italic text-muted-foreground">
+            {description}
           </SheetDescription>
         )}
       </SheetHeader>
 
-      <Separator className="mb-4 border-4 border-muted-foreground" />
-
-      <div className="flex flex-col gap-4 px-4 pb-4 overflow-y-auto">
+      <div className="flex flex-col divide-y divide-border/40 overflow-y-auto pb-2">
         {sections.map((section, index) => (
-          <div
+          <CustomRulesSectionBlock
             key={`${section.label}-${index}`}
-            className="flex flex-col gap-1">
-            <h4 className="text-2xl font-semibold">{section.label}</h4>
-            {section.content && section.content.trim().length > 0 ? (
-              <SafeMarkdownPreview
-                source={section.content}
-                className="bg-transparent"
-                style={{ backgroundColor: 'transparent' }}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No rules recorded.
-              </p>
-            )}
-          </div>
+            section={section}
+          />
         ))}
       </div>
     </SheetContent>
@@ -581,15 +720,18 @@ export function CustomPhilosophyRulesIconButton({
 
   const title = philosophyName ?? 'Philosophy'
 
-  const overviewParts: string[] = []
-  if (tier != null) overviewParts.push(`Tier ${tier}`)
+  const overviewEntries: CustomRulesSectionEntry[] = []
+  if (tier != null) overviewEntries.push({ label: 'Tier', value: tier })
   if (huntXpMilestones && huntXpMilestones.length > 0)
-    overviewParts.push(`Hunt XP Milestones: ${huntXpMilestones.join(', ')}`)
+    overviewEntries.push({
+      label: 'Hunt XP Milestones',
+      value: huntXpMilestones.join(', ')
+    })
 
   const sections: CustomRulesSection[] = [
     {
       label: 'Overview',
-      content: overviewParts.length > 0 ? overviewParts.join('\n') : null
+      entries: overviewEntries.length > 0 ? overviewEntries : undefined
     }
   ]
 
@@ -671,10 +813,10 @@ export function CustomKnowledgeRulesIconButton({
     { label: 'Observation Conditions', content: observationConditions },
     {
       label: 'Observation Rank-Up Milestone',
-      content:
+      entries:
         observationRankUpMilestone != null
-          ? `Rank ${observationRankUpMilestone}`
-          : null
+          ? [{ label: 'Rank', value: observationRankUpMilestone }]
+          : undefined
     }
   ]
 

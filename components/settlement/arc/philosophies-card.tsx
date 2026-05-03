@@ -37,7 +37,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { BrainCogIcon, PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react'
 
 /**
  * Philosophies Card Properties
@@ -305,15 +305,20 @@ export function PhilosophiesCard({
 
             {hasFetched &&
               sortedPhilosophies.map(({ item, originalIndex }) => {
-                const overviewParts: string[] = []
-                if (item.tier != null) overviewParts.push(`Tier ${item.tier}`)
+                const overviewEntries: {
+                  label: string
+                  value: ReactNode
+                }[] = []
+                if (item.tier != null)
+                  overviewEntries.push({ label: 'Tier', value: item.tier })
                 if (
                   item.hunt_xp_milestones &&
                   item.hunt_xp_milestones.length > 0
                 )
-                  overviewParts.push(
-                    `Hunt XP Milestones: ${item.hunt_xp_milestones.join(', ')}`
-                  )
+                  overviewEntries.push({
+                    label: 'Hunt XP Milestones',
+                    value: item.hunt_xp_milestones.join(', ')
+                  })
 
                 return (
                   <PhilosophyItem
@@ -325,10 +330,10 @@ export function PhilosophiesCard({
                             sections: [
                               {
                                 label: 'Overview',
-                                content:
-                                  overviewParts.length > 0
-                                    ? overviewParts.join('\n')
-                                    : null
+                                entries:
+                                  overviewEntries.length > 0
+                                    ? overviewEntries
+                                    : undefined
                               }
                             ]
                           }

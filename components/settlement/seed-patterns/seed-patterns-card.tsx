@@ -24,7 +24,6 @@ import { useCraftGearPersistence } from '@/hooks/use-craft-gear-persistence'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import {
-  areCraftingCostsAffordable,
   CraftingAllocation,
   CraftingCostsSpec,
   emptyCraftingCosts,
@@ -54,7 +53,7 @@ import {
   SettlementStateSetter
 } from '@/lib/types'
 import { BeanIcon, PlusIcon } from 'lucide-react'
-import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react'
 
 /**
  * Seed Patterns Card Properties
@@ -400,12 +399,21 @@ export function SeedPatternsCard({
                 // Build the same overview and crafting-cost sections used by
                 // the patterns card so the sheet surfaces every cost the
                 // settlement will pay when crafting.
-                const overviewParts: string[] = []
+                const overviewEntries: {
+                  label: string
+                  value: ReactNode
+                }[] = []
 
                 if (detail?.endeavor_cost != null)
-                  overviewParts.push(`Endeavor Cost: ${detail.endeavor_cost}`)
+                  overviewEntries.push({
+                    label: 'Endeavor Cost',
+                    value: detail.endeavor_cost
+                  })
                 if (detail?.crafting_limit != null)
-                  overviewParts.push(`Crafting Limit: ${detail.crafting_limit}`)
+                  overviewEntries.push({
+                    label: 'Crafting Limit',
+                    value: detail.crafting_limit
+                  })
 
                 const craftingCostsContent = detail
                   ? formatCraftingCostsForDisplay(
@@ -418,8 +426,10 @@ export function SeedPatternsCard({
                   : null
 
                 // The craft button is only meaningful when the seed pattern
-                // produces gear; surface a tooltip explaining why crafting is
-                // blocked when prerequisites are unmet.
+                // produces gear. Cost/endeavor/phase shortfalls do NOT disable
+                // the button — the craft dialog exposes a "deduct costs"
+                // toggle so survivors can record an off-book craft, and that
+                // escape hatch is unreachable while the button is disabled.
                 const canShowCraft = !!detail?.crafted_gear_id
 
                 let craftDisabled = false
@@ -433,37 +443,6 @@ export function SeedPatternsCard({
 
                     craftDisabledReason =
                       'The crafted gear is not available in the catalog.'
-                  } else {
-                    const costsAffordable = areCraftingCostsAffordable(
-                      seedPatternToCraftingCostsSpec(detail),
-                      selectedSettlement?.gear ?? [],
-                      selectedSettlement?.resources ?? []
-                    )
-                    const phaseRequired =
-                      (detail.endeavor_cost ?? 0) > 0 &&
-                      !selectedSettlementPhase
-                    const endeavorsInsufficient =
-                      (detail.endeavor_cost ?? 0) > 0 &&
-                      !!selectedSettlementPhase &&
-                      selectedSettlementPhase.endeavors <
-                        (detail.endeavor_cost ?? 0)
-
-                    if (!costsAffordable) {
-                      craftDisabled = true
-
-                      craftDisabledReason =
-                        'The settlement does not have enough gear to craft this item.'
-                    } else if (phaseRequired) {
-                      craftDisabled = true
-
-                      craftDisabledReason =
-                        'Endeavors are only available during the settlement phase.'
-                    } else if (endeavorsInsufficient) {
-                      craftDisabled = true
-
-                      craftDisabledReason =
-                        'The settlement does not have enough endeavors to craft this item.'
-                    }
                   }
                 }
 
@@ -477,10 +456,10 @@ export function SeedPatternsCard({
                             sections: [
                               {
                                 label: 'Overview',
-                                content:
-                                  overviewParts.length > 0
-                                    ? overviewParts.join('\n')
-                                    : null
+                                entries:
+                                  overviewEntries.length > 0
+                                    ? overviewEntries
+                                    : undefined
                               },
                               {
                                 label: 'Requirements',
@@ -496,10 +475,10 @@ export function SeedPatternsCard({
                               },
                               {
                                 label: 'Keywords',
-                                content:
+                                badges:
                                   detail.keywords && detail.keywords.length > 0
-                                    ? detail.keywords.join(', ')
-                                    : null
+                                    ? detail.keywords
+                                    : undefined
                               }
                             ]
                           }
