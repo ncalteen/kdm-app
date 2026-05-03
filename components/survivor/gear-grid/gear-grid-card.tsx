@@ -366,9 +366,31 @@ export function GearGridCard({
 
   return (
     <Card className="p-0 border-1 gap-0">
-      <CardHeader className="px-4 pt-4 pb-2">
-        <CardTitle className="text-md flex flex-row items-center justify-between">
+      <CardHeader className="px-4 pt-2 pb-0">
+        <CardTitle className="text-md flex flex-row items-center justify-between gap-2">
           <span>Gear Grid</span>
+
+          {/* Affinity totals share the header row with the title and clear
+              action so the card body can devote all its space to the grid. */}
+          <div className="flex items-center gap-3" aria-label="Affinity totals">
+            {AFFINITIES.map((color) => (
+              <div
+                key={color}
+                className="flex items-center gap-1"
+                aria-label={`${color.toLowerCase()} affinity total`}>
+                <span
+                  className={cn(
+                    'h-3 w-3 rounded-sm ring-1 ring-border',
+                    AFFINITY_BG[color]
+                  )}
+                />
+                <span className="text-sm font-bold tabular-nums">
+                  {affinityCounts[color]}
+                </span>
+              </div>
+            ))}
+          </div>
+
           <Button
             variant="ghost"
             size="sm"
@@ -384,28 +406,8 @@ export function GearGridCard({
       </CardHeader>
 
       <CardContent className="p-2">
-        {/* Affinity totals */}
-        <div className="mb-2 flex items-center justify-center gap-3">
-          {AFFINITIES.map((color) => (
-            <div
-              key={color}
-              className="flex items-center gap-1"
-              aria-label={`${color.toLowerCase()} affinity total`}>
-              <span
-                className={cn(
-                  'h-3 w-3 rounded-sm ring-1 ring-border',
-                  AFFINITY_BG[color]
-                )}
-              />
-              <span className="text-sm font-bold tabular-nums">
-                {affinityCounts[color]}
-              </span>
-            </div>
-          ))}
-        </div>
-
         {/* 3x3 grid */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-3 gap-2">
           {GRID_POSITIONS.map((position) => {
             const gear = gearAtSlot(position)
             return (
