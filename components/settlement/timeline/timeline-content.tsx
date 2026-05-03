@@ -72,26 +72,43 @@ export const TimelineContent = ({
         <div />
       </div>
       <div className="flex-1 overflow-y-auto">
-        {Object.entries(timeline).map(
-          ([yearString, { completed, entries }]) => (
-            <TimelineYearRow
-              key={yearString}
-              index={parseInt(yearString, 10)}
-              completed={completed}
-              entries={entries}
-              handleAddEventInput={handleAddEventInput}
-              handleEditEventInputToggle={handleEditEventInputToggle}
-              handleKeyDown={handleKeyDown}
-              handleRemoveEvent={handleRemoveEvent}
-              handleSaveEvent={handleSaveEvent}
-              handleSaveYearCompletion={handleSaveYearCompletion}
-              isEventBeingEdited={isEventBeingEdited}
-              setInputRef={setInputRef}
-              showStoryEventIcon={showStoryEventIcon}
-              usesNormalNumbering={usesNormalNumbering}
-            />
+        {(() => {
+          // Determine the highest completed year index so we can flag any
+          // earlier years that have not yet been checked off. Mirrors the
+          // highlighting used on the collective cognition rewards card to call
+          // out items the user has visibly skipped past.
+          const lastCompletedIndex = Object.entries(timeline).reduce<number>(
+            (last, [yearString, { completed }]) =>
+              completed ? Math.max(last, parseInt(yearString, 10)) : last,
+            -1
           )
-        )}
+
+          return Object.entries(timeline).map(
+            ([yearString, { completed, entries }]) => {
+              const yearIndex = parseInt(yearString, 10)
+
+              return (
+                <TimelineYearRow
+                  key={yearString}
+                  index={yearIndex}
+                  completed={completed}
+                  entries={entries}
+                  handleAddEventInput={handleAddEventInput}
+                  handleEditEventInputToggle={handleEditEventInputToggle}
+                  handleKeyDown={handleKeyDown}
+                  handleRemoveEvent={handleRemoveEvent}
+                  handleSaveEvent={handleSaveEvent}
+                  handleSaveYearCompletion={handleSaveYearCompletion}
+                  isEventBeingEdited={isEventBeingEdited}
+                  setInputRef={setInputRef}
+                  shouldHighlight={!completed && yearIndex < lastCompletedIndex}
+                  showStoryEventIcon={showStoryEventIcon}
+                  usesNormalNumbering={usesNormalNumbering}
+                />
+              )
+            }
+          )
+        })()}
       </div>
     </div>
   )

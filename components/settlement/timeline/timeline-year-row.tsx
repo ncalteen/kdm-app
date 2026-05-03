@@ -41,6 +41,14 @@ export interface TimelineRowProps {
     yearIndex: number,
     entryIndex: number
   ) => void
+  /**
+   * Highlight Year As Skipped
+   *
+   * When true, the row is rendered with the same amber accent used on the
+   * collective cognition rewards card to flag a year that has not yet been
+   * completed but precedes the most recently completed year.
+   */
+  shouldHighlight?: boolean
   /** Show Story Event Icon */
   showStoryEventIcon: boolean
   /** Use Normal Year Numbering */
@@ -65,6 +73,7 @@ export const TimelineYearRow = ({
   handleSaveYearCompletion,
   isEventBeingEdited,
   setInputRef,
+  shouldHighlight = false,
   showStoryEventIcon,
   usesNormalNumbering
 }: TimelineRowProps) => {
@@ -83,7 +92,11 @@ export const TimelineYearRow = ({
         showStoryEventIcon
           ? 'grid-cols-[60px_30px_1fr_auto]'
           : 'grid-cols-[60px_1fr_auto]'
-      } items-start border-t py-1 min-h-9`}>
+      } items-start border-t py-1 min-h-9 ${
+        shouldHighlight
+          ? 'border-amber-300/70 bg-amber-50/70 dark:border-amber-700/70 dark:bg-amber-950/30'
+          : ''
+      }`}>
       {/* Year Number and Completion Checkbox */}
       <div className="flex gap-1 items-center">
         <Checkbox
