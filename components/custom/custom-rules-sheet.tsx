@@ -12,19 +12,32 @@ import {
   SheetTrigger
 } from '@/components/ui/sheet'
 import { getGear } from '@/lib/dal/gear'
+import { getLocations } from '@/lib/dal/location'
 import { getNeuroses } from '@/lib/dal/neurosis'
 import { getPhilosophies } from '@/lib/dal/philosophy'
 import { getPhilosophyRanks } from '@/lib/dal/philosophy-rank'
+import { getResources } from '@/lib/dal/resource'
 import { getWeaponTypes } from '@/lib/dal/weapon-type'
+import { Database } from '@/lib/database.types'
 import {
   GearDetail,
+  LocationDetail,
   NeurosisDetail,
   PhilosophyDetail,
   PhilosophyRankDetail,
+  ResourceDetail,
   WeaponTypeDetail
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { Search } from 'lucide-react'
+import {
+  FootprintsIcon,
+  HandMetalIcon,
+  HardHatIcon,
+  PuzzleIcon,
+  RibbonIcon,
+  Search,
+  ShirtIcon
+} from 'lucide-react'
 import { ReactElement, ReactNode, useEffect, useState } from 'react'
 
 /**
@@ -443,6 +456,530 @@ export function CustomRulesIconButton({
   )
 }
 
+// ---------------------------------------------------------------------------
+// Custom Gear Sheet
+// ---------------------------------------------------------------------------
+//
+// Unlike the other custom data sheets — which list label/markdown sections
+// using {@link CustomRulesSheetBody} — the gear sheet renders a read-only
+// card that mirrors the layout of the custom gear creation dialog. Affinity
+// slots, the weapon/armor stat tower, name, keywords, rules, and affinity
+// bonus all sit inside a single decorated card so the player sees the gear
+// "as it would appear" rather than as a list of stat tiles.
+//
+// ---------------------------------------------------------------------------
+
+/** Affinity Enum */
+type GearAffinity = Database['public']['Enums']['affinity']
+/** Armor Location Enum */
+type GearArmorLocation = Database['public']['Enums']['armor_location']
+
+/**
+ * Format Gear Enum Label
+ *
+ * Format an enum key like RAW_HIDE into "Raw Hide". Mirrors the dialog's
+ * helper so authored copy reads consistently between the editor and the
+ * read-only sheet.
+ *
+ * @param value Enum Key
+ * @returns Formatted Enum Label
+ */
+function formatGearEnumLabel(value: string): string {
+  return value
+    .split('_')
+    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+    .join(' ')
+}
+
+/** Tailwind background classes for affinity values. */
+const GEAR_AFFINITY_BG: { [key in GearAffinity]: string } = {
+  BLUE: 'bg-blue-500',
+  GREEN: 'bg-green-500',
+  RED: 'bg-red-500'
+}
+
+/** Tailwind text-color classes for affinity values (used for puzzle icons). */
+const GEAR_AFFINITY_TEXT: { [key in GearAffinity]: string } = {
+  BLUE: 'text-blue-500',
+  GREEN: 'text-green-500',
+  RED: 'text-red-500'
+}
+
+/** Lucide icon component for each armor location. */
+const GEAR_ARMOR_LOCATION_ICONS: {
+  [key in GearArmorLocation]: typeof HandMetalIcon
+} = {
+  ARMS: HandMetalIcon,
+  CHEST: ShirtIcon,
+  FEET: FootprintsIcon,
+  HEAD: HardHatIcon,
+  WAIST: RibbonIcon
+}
+
+/**
+ * Inferred Gear Category
+ *
+ * Lightweight local copy of the dialog's `inferGearCategory` so the gear
+ * sheet can pick the right stat-tower layout without importing the dialog
+ * (which would pull its full editor surface into every consumer's bundle).
+ */
+type InferredGearCategory = 'OTHER' | 'WEAPON' | 'ARMOR'
+
+/**
+ * Infer Gear Category
+ *
+ * Picks WEAPON, ARMOR, or OTHER from the populated columns on a gear row.
+ * Weapon-specific fields take precedence over armor-specific fields.
+ *
+ * @param detail Gear Detail to Inspect
+ * @returns Inferred Gear Category
+ */
+function inferGearCategoryFromDetail(detail: GearDetail): InferredGearCategory {
+  if (
+    detail.weapon_type_id != null ||
+    detail.accuracy != null ||
+    detail.speed != null ||
+    detail.strength != null
+  )
+    return 'WEAPON'
+
+  if (
+    detail.armor_location != null ||
+    detail.armor_points != null ||
+    detail.accessory === true
+  )
+    return 'ARMOR'
+
+  return 'OTHER'
+}
+
+/**
+ * Gear Sheet Affinity Square
+ *
+ * Read-only sibling of the dialog's `renderAffinitySquare`. Renders a small
+ * colored square (or a puzzle-tinted variant) to represent a single affinity
+ * slot or affinity bonus requirement.
+ *
+ * @param props Affinity Square Props
+ * @returns Affinity Square Element
+ */
+function GearSheetAffinitySquare({
+  affinity,
+  puzzle,
+  className,
+  label
+}: {
+  affinity: GearAffinity | null
+  puzzle?: boolean | null
+  className?: string
+  label?: string
+}): ReactElement {
+  const isPuzzle = puzzle === true
+  return (
+    <span
+      role="img"
+      aria-label={
+        affinity
+          ? `${formatGearEnumLabel(affinity)}${isPuzzle ? ' puzzle' : ''} ${label ?? 'affinity'}`
+          : `Empty ${label ?? 'affinity'} slot`
+      }
+      className={cn(
+        'flex h-6 w-6 items-center justify-center rounded-sm border-2 border-background shadow ring-1 ring-border',
+        isPuzzle
+          ? 'bg-background'
+          : affinity
+            ? GEAR_AFFINITY_BG[affinity]
+            : 'bg-muted',
+        className
+      )}>
+      {isPuzzle && affinity && (
+        <PuzzleIcon
+          className={cn('h-4 w-4', GEAR_AFFINITY_TEXT[affinity])}
+          aria-hidden="true"
+        />
+      )}
+    </span>
+  )
+}
+
+/**
+ * Gear Sheet Stat Slot
+ *
+ * Read-only stat tile rendered inside the weapon/armor stat tower. Mirrors the
+ * compact rounded-input look the dialog uses, but renders a plain number so
+ * the card can be admired without inviting edits.
+ *
+ * @param props Stat Slot Props
+ * @returns Stat Slot Element
+ */
+function GearSheetStatSlot({
+  label,
+  value
+}: {
+  label: string
+  value: number | null | undefined
+}): ReactElement {
+  return (
+    <div
+      className="flex h-9 w-12 flex-col items-center justify-center rounded-md border border-input bg-background/60 text-sm font-semibold shadow-xs"
+      title={label}
+      aria-label={`${label}: ${value ?? 0}`}>
+      <span className="tabular-nums leading-none">{value ?? 0}</span>
+      <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground leading-none mt-0.5">
+        {label}
+      </span>
+    </div>
+  )
+}
+
+/**
+ * Custom Gear Sheet Body Properties
+ */
+interface CustomGearSheetBodyProps {
+  /** Gear Detail (null while loading or when not found) */
+  detail: GearDetail | null
+  /** Loaded Flag */
+  loaded: boolean
+  /** Loading Flag */
+  loading: boolean
+  /** Gear Map (used to resolve gear cost names) */
+  gearMap: { [id: string]: GearDetail }
+  /** Locations Map (used to resolve location FK) */
+  locations: { [id: string]: LocationDetail }
+  /** Resources Map (used to resolve resource cost names) */
+  resources: { [id: string]: ResourceDetail }
+  /** Weapon Types Map (used to resolve weapon type FK) */
+  weaponTypes: { [id: string]: WeaponTypeDetail }
+  /** Trigger Label */
+  gearName: string
+}
+
+/**
+ * Custom Gear Sheet Body
+ *
+ * Read-only card-shaped renderer for a custom gear item. Lays out the same
+ * sections the {@link GearDialog} editor renders — affinity slots, stat
+ * tower, name, keywords, rules, affinity bonus, and crafting costs — without
+ * any inputs or controls.
+ *
+ * @param props Custom Gear Sheet Body Properties
+ * @returns Custom Gear Sheet Body
+ */
+function CustomGearSheetBody({
+  detail,
+  gearMap,
+  gearName,
+  loaded,
+  loading,
+  locations,
+  resources,
+  weaponTypes
+}: CustomGearSheetBodyProps): ReactElement {
+  const showSkeleton = loading || !loaded
+  const category = detail ? inferGearCategoryFromDetail(detail) : 'OTHER'
+  const categoryLabel =
+    category === 'WEAPON' ? 'Weapon' : category === 'ARMOR' ? 'Armor' : 'Other'
+
+  const locationName = detail?.location_id
+    ? (locations[detail.location_id]?.location_name ?? null)
+    : null
+  const weaponTypeName = detail?.weapon_type_id
+    ? (weaponTypes[detail.weapon_type_id]?.weapon_type_name ?? null)
+    : null
+
+  return (
+    <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-md">
+      <SheetHeader className="gap-2 border-b border-border/60 px-6 pt-6 pb-4">
+        <div className="flex items-start justify-between gap-3 pr-8">
+          <SheetTitle className="text-lg font-semibold leading-tight tracking-tight break-words">
+            {detail?.gear_name ?? gearName}
+          </SheetTitle>
+          <Badge
+            variant="outline"
+            className="mt-0.5 shrink-0 text-[10px] uppercase tracking-[0.2em]">
+            Custom
+          </Badge>
+        </div>
+        <SheetDescription className="text-xs italic text-muted-foreground">
+          A custom gear item defined by you.
+        </SheetDescription>
+      </SheetHeader>
+
+      <div className="flex flex-col gap-4 overflow-y-auto px-6 py-4">
+        {showSkeleton ? (
+          <p className="text-xs italic text-muted-foreground">
+            Staring at the stars...
+          </p>
+        ) : !detail ? (
+          <p className="text-xs italic text-muted-foreground">
+            The lantern reveals nothing here.
+          </p>
+        ) : (
+          <>
+            {/* Meta Row: Type + Location */}
+            <dl className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-2">
+              <div className="flex flex-col gap-0.5 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+                <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  Type
+                </dt>
+                <dd className="text-sm font-semibold text-foreground">
+                  {categoryLabel}
+                </dd>
+              </div>
+              <div className="flex flex-col gap-0.5 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+                <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  Location
+                </dt>
+                <dd className="text-sm font-semibold text-foreground">
+                  {locationName ?? '—'}
+                </dd>
+              </div>
+            </dl>
+
+            {/* Card-Shaped Body (read-only mirror of the dialog) */}
+            <div className="relative mx-auto mt-2 w-full rounded-xl border-2 bg-muted/10 px-6 py-8 shadow-inner">
+              {/* Affinity Slots (edges) */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <GearSheetAffinitySquare
+                  affinity={detail.affinity_top}
+                  label="top affinity slot"
+                />
+              </div>
+              <div className="absolute top-1/2 -left-3 -translate-y-1/2">
+                <GearSheetAffinitySquare
+                  affinity={detail.affinity_left}
+                  label="left affinity slot"
+                />
+              </div>
+              <div className="absolute top-1/2 -right-3 -translate-y-1/2">
+                <GearSheetAffinitySquare
+                  affinity={detail.affinity_right}
+                  label="right affinity slot"
+                />
+              </div>
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
+                <GearSheetAffinitySquare
+                  affinity={detail.affinity_bottom}
+                  label="bottom affinity slot"
+                />
+              </div>
+
+              {/* Header Row: Stat Tower + Name/Keywords/Rules */}
+              <div className="flex items-start gap-3">
+                <div className="flex w-16 shrink-0 flex-col items-center gap-1">
+                  {category === 'WEAPON' && (
+                    <>
+                      <GearSheetStatSlot label="Speed" value={detail.speed} />
+                      <GearSheetStatSlot
+                        label="Accuracy"
+                        value={detail.accuracy}
+                      />
+                      <GearSheetStatSlot
+                        label="Strength"
+                        value={detail.strength}
+                      />
+                    </>
+                  )}
+                  {category === 'ARMOR' && (
+                    <>
+                      <GearSheetStatSlot
+                        label="Armor"
+                        value={detail.armor_points}
+                      />
+                      {(() => {
+                        const ArmorIcon = detail.armor_location
+                          ? GEAR_ARMOR_LOCATION_ICONS[detail.armor_location]
+                          : null
+                        const armorLabel = detail.armor_location
+                          ? `Armor location: ${formatGearEnumLabel(detail.armor_location)}`
+                          : 'Armor location (none)'
+                        return (
+                          <div
+                            className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background/60 shadow-xs"
+                            aria-label={armorLabel}
+                            title={armorLabel}>
+                            {ArmorIcon ? (
+                              <ArmorIcon
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                              />
+                            ) : (
+                              <span aria-hidden="true">—</span>
+                            )}
+                          </div>
+                        )
+                      })()}
+                    </>
+                  )}
+                </div>
+
+                {/* Center: Name + Keywords + Rules */}
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="flex flex-col items-center gap-1">
+                    <h5 className="text-center text-lg font-bold leading-tight">
+                      {detail.gear_name}
+                    </h5>
+                    {detail.keywords && detail.keywords.length > 0 && (
+                      <p className="text-center text-xs italic text-muted-foreground">
+                        {detail.keywords
+                          .map((k) => formatGearEnumLabel(k))
+                          .join(', ')}
+                      </p>
+                    )}
+                  </div>
+
+                  {detail.rules && detail.rules.trim().length > 0 ? (
+                    <SafeMarkdownPreview
+                      source={detail.rules}
+                      className={MARKDOWN_BODY_CLASS}
+                      style={{ backgroundColor: 'transparent' }}
+                    />
+                  ) : (
+                    <p className="text-center text-xs italic text-muted-foreground">
+                      No special rules.
+                    </p>
+                  )}
+                </div>
+
+                {/* Right Spacer (balance stat tower width) */}
+                <div className="w-16 shrink-0" />
+              </div>
+
+              {/* Affinity Bonus + Requirements */}
+              {((detail.affinity_bonus_requirements ?? []).length > 0 ||
+                (detail.affinity_bonus &&
+                  detail.affinity_bonus.trim().length > 0)) && (
+                <div className="mt-3 flex items-start gap-3 border-t border-muted pt-3">
+                  <div className="flex shrink-0 flex-col items-center gap-1">
+                    {(detail.affinity_bonus_requirements ?? []).length === 0 ? (
+                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        —
+                      </span>
+                    ) : (
+                      (detail.affinity_bonus_requirements ?? []).map(
+                        (req, index) => (
+                          <GearSheetAffinitySquare
+                            key={index}
+                            affinity={req.affinity}
+                            puzzle={req.puzzle}
+                            label={`requirement ${index + 1}`}
+                          />
+                        )
+                      )
+                    )}
+                  </div>
+                  {detail.affinity_bonus &&
+                  detail.affinity_bonus.trim().length > 0 ? (
+                    <p className="flex-1 text-sm italic">
+                      {detail.affinity_bonus}
+                    </p>
+                  ) : (
+                    <p className="flex-1 text-xs italic text-muted-foreground">
+                      Requirements without a bonus.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Below-Card Facts: Weapon Type / Accessory */}
+            {(category === 'WEAPON' || category === 'ARMOR') && (
+              <dl className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-2">
+                {category === 'WEAPON' && (
+                  <div className="flex flex-col gap-0.5 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+                    <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                      Weapon Type
+                    </dt>
+                    <dd className="text-sm font-semibold text-foreground">
+                      {weaponTypeName ?? '—'}
+                    </dd>
+                  </div>
+                )}
+                {category === 'ARMOR' && (
+                  <div className="flex flex-col gap-0.5 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+                    <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                      Accessory
+                    </dt>
+                    <dd className="text-sm font-semibold text-foreground">
+                      {detail.accessory === true ? 'Yes' : 'No'}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            )}
+
+            {/* Crafting Costs */}
+            {((detail.gear_costs ?? []).length > 0 ||
+              (detail.resource_costs ?? []).length > 0 ||
+              (detail.resource_type_costs ?? []).length > 0) && (
+              <section className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className="h-px w-3 bg-muted-foreground/50 shrink-0"
+                  />
+                  <h4 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Crafting Costs
+                  </h4>
+                </div>
+                <ul className="flex flex-col gap-1">
+                  {(detail.gear_costs ?? []).map((cost, idx) => {
+                    const costGear = cost.cost_gear_id
+                      ? gearMap[cost.cost_gear_id]
+                      : null
+                    const name = costGear?.gear_name ?? 'Unknown gear'
+                    return (
+                      <li
+                        key={`gear-${idx}`}
+                        className="flex items-center justify-between rounded-md border border-border/60 bg-muted/30 px-3 py-1.5 text-sm">
+                        <span className="truncate">{name}</span>
+                        <span className="ml-2 font-semibold tabular-nums">
+                          ×{cost.quantity}
+                        </span>
+                      </li>
+                    )
+                  })}
+                  {(detail.resource_costs ?? []).map((cost, idx) => {
+                    const resource = cost.resource_id
+                      ? resources[cost.resource_id]
+                      : null
+                    const name = resource?.resource_name ?? 'Unknown resource'
+                    return (
+                      <li
+                        key={`resource-${idx}`}
+                        className="flex items-center justify-between rounded-md border border-border/60 bg-muted/30 px-3 py-1.5 text-sm">
+                        <span className="truncate">{name}</span>
+                        <span className="ml-2 font-semibold tabular-nums">
+                          ×{cost.quantity}
+                        </span>
+                      </li>
+                    )
+                  })}
+                  {(detail.resource_type_costs ?? []).map((cost, idx) => (
+                    <li
+                      key={`resource-type-${idx}`}
+                      className="flex items-center justify-between rounded-md border border-border/60 bg-muted/30 px-3 py-1.5 text-sm">
+                      <span className="truncate">
+                        {formatGearEnumLabel(cost.resource_type)}
+                        <span className="ml-1 text-xs italic text-muted-foreground">
+                          (any)
+                        </span>
+                      </span>
+                      <span className="ml-2 font-semibold tabular-nums">
+                        ×{cost.quantity}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
+        )}
+      </div>
+    </SheetContent>
+  )
+}
+
 /**
  * Custom Gear Rules Trigger Component Properties
  */
@@ -489,24 +1026,43 @@ export function CustomGearRulesTrigger({
 }: CustomGearRulesTriggerProps): ReactElement | null {
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<GearDetail | null>(null)
+  const [gearMap, setGearMap] = useState<{ [id: string]: GearDetail }>({})
+  const [locations, setLocations] = useState<{
+    [id: string]: LocationDetail
+  }>({})
+  const [resources, setResources] = useState<{
+    [id: string]: ResourceDetail
+  }>({})
+  const [weaponTypes, setWeaponTypes] = useState<{
+    [id: string]: WeaponTypeDetail
+  }>({})
+  const [loaded, setLoaded] = useState(false)
   const [loading, setLoading] = useState(false)
 
   /**
    * Handle Open Change
    *
-   * Lazily fetches the gear's full detail the first time the sheet is opened.
-   * Subsequent opens reuse the cached detail.
+   * Lazily fetches the gear's full detail (and the supporting maps used to
+   * resolve location, weapon type, and crafting-cost foreign keys) the first
+   * time the sheet is opened. Subsequent opens reuse the cached data.
    *
    * @param next Next Open State
    */
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
 
-    if (!next || detail || loading || !custom) return
+    if (!next || loaded || loading || !custom) return
 
     setLoading(true)
-    getGear()
-      .then((map) => setDetail(map[gearId] ?? null))
+    Promise.all([getGear(), getLocations(), getResources(), getWeaponTypes()])
+      .then(([nextGearMap, nextLocations, nextResources, nextWeaponTypes]) => {
+        setGearMap(nextGearMap)
+        setDetail(nextGearMap[gearId] ?? null)
+        setLocations(nextLocations)
+        setResources(nextResources)
+        setWeaponTypes(nextWeaponTypes)
+        setLoaded(true)
+      })
       .catch((error) => console.error('Custom Gear Rules Fetch Error:', error))
       .finally(() => setLoading(false))
   }
@@ -543,16 +1099,15 @@ export function CustomGearRulesTrigger({
           </button>
         )}
       </SheetTrigger>
-      <CustomRulesSheetBody
-        title={gearName}
-        sections={[
-          {
-            label: 'Rules',
-            content: loading
-              ? '_Staring at the stars..._'
-              : (detail?.rules ?? null)
-          }
-        ]}
+      <CustomGearSheetBody
+        detail={detail}
+        gearMap={gearMap}
+        gearName={gearName}
+        loaded={loaded}
+        loading={loading}
+        locations={locations}
+        resources={resources}
+        weaponTypes={weaponTypes}
       />
     </Sheet>
   )

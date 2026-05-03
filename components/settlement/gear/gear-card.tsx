@@ -367,16 +367,7 @@ export function GearCard({
                 return (
                   <GearItem
                     key={item.id}
-                    customDetail={
-                      detail
-                        ? {
-                            custom: detail.custom,
-                            sections: [
-                              { label: 'Rules', content: detail.rules }
-                            ]
-                          }
-                        : null
-                    }
+                    custom={detail?.custom}
                     index={originalIndex}
                     gear={item}
                     onQuantityChange={handleQuantityChange}
