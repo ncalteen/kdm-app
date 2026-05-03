@@ -1,6 +1,7 @@
 'use client'
 
 import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { SafeMarkdownEditor } from '@/components/generic/safe-markdown-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,7 +23,6 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PhilosophyDetail } from '@/lib/types'
-import MDEditor from '@uiw/react-md-editor'
 import { Minus, Plus } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import {
@@ -259,7 +259,7 @@ export function KnowledgeDialog({
             </TabsList>
 
             <TabsContent value="rules">
-              <MDEditor
+              <SafeMarkdownEditor
                 value={rules}
                 onChange={(val) => setRules(val ?? '')}
                 height={300}
@@ -268,7 +268,7 @@ export function KnowledgeDialog({
             </TabsContent>
 
             <TabsContent value="observation">
-              <MDEditor
+              <SafeMarkdownEditor
                 value={observationConditions}
                 onChange={(val) => setObservationConditions(val ?? '')}
                 height={300}

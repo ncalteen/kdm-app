@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import {
   Sheet,
   SheetContent,
@@ -21,7 +22,7 @@ import {
   WeaponTypeDetail
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import MDEditor from '@uiw/react-md-editor'
+import { SafeMarkdownPreview } from '@/components/generic/safe-markdown-editor'
 import { Search } from 'lucide-react'
 import { ReactElement, ReactNode, useEffect, useState } from 'react'
 
@@ -92,27 +93,27 @@ function CustomRulesSheetBody({
     <SheetContent className="flex flex-col gap-0 sm:max-w-md">
       <SheetHeader className="gap-2">
         <SheetTitle className="flex items-center gap-2 pr-6">
-          <span className="truncate">{title}</span>
+          <span className="truncate text-2xl">{title}</span>
         </SheetTitle>
-        {description ? (
-          <SheetDescription>{description}</SheetDescription>
-        ) : (
-          <SheetDescription className="sr-only">
-            Custom rules for {title}.
+        {description && (
+          <SheetDescription>
+            <i>{description}</i>
           </SheetDescription>
         )}
       </SheetHeader>
+
+      <Separator className="mb-4 border-4 border-muted-foreground" />
 
       <div className="flex flex-col gap-4 px-4 pb-4 overflow-y-auto">
         {sections.map((section, index) => (
           <div
             key={`${section.label}-${index}`}
             className="flex flex-col gap-1">
-            <h4 className="text-sm font-semibold">{section.label}</h4>
+            <h4 className="text-2xl font-semibold">{section.label}</h4>
             {section.content && section.content.trim().length > 0 ? (
-              <MDEditor.Markdown
+              <SafeMarkdownPreview
                 source={section.content}
-                className="!bg-transparent text-sm text-muted-foreground"
+                className="bg-transparent"
                 style={{ backgroundColor: 'transparent' }}
               />
             ) : (
