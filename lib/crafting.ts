@@ -4,6 +4,12 @@ import {
   GearGearCostDetail,
   GearResourceCostDetail,
   GearResourceTypeCostDetail,
+  PatternDetail,
+  PatternGearCostDetail,
+  PatternResourceCostDetail,
+  PatternResourceTypeCostDetail,
+  SeedPatternDetail,
+  SeedPatternGearCostDetail,
   SettlementDetail
 } from '@/lib/types'
 
@@ -71,6 +77,17 @@ export interface CraftingAllocation {
   gearDeductions: CraftingGearAllocation[]
   /** Resource Deductions */
   resourceDeductions: CraftingResourceAllocation[]
+  /**
+   * Endeavor Deduction
+   *
+   * Total endeavors to deduct from the settlement phase. Always 0 when the
+   * caller chose to add the item without spending costs, when the item has no
+   * endeavor cost, or when the settlement is not currently in a settlement
+   * phase. Endeavors live on `settlement_phase`, so callers must persist this
+   * via the settlement phase DAL rather than
+   * {@link applyCraftingAllocationToSettlementState}.
+   */
+  endeavorDeduction: number
 }
 
 /**
@@ -200,4 +217,198 @@ export function applyCraftingAllocationToSettlementState(
       return { ...row, quantity: Math.max(0, row.quantity - dec) }
     })
   }
+}
+
+/**
+ * Pattern To Crafting Costs Spec
+ *
+ * Normalizes the cost junction arrays on a {@link PatternDetail} into the
+ * generic {@link CraftingCostsSpec} shape. Quantities below 1 are dropped.
+ *
+ * @param pattern Pattern Detail
+ * @returns Crafting Costs Spec
+ */
+export function patternToCraftingCostsSpec(
+  pattern: PatternDetail
+): CraftingCostsSpec {
+  return {
+    gearCosts: (pattern.gear_costs ?? [])
+      .filter(
+        (c: PatternGearCostDetail) => !!c.cost_gear_id && (c.quantity ?? 0) >= 1
+      )
+      .map((c: PatternGearCostDetail) => ({
+        gearId: c.cost_gear_id,
+        quantity: c.quantity
+      })),
+    resourceCosts: (pattern.resource_costs ?? [])
+      .filter(
+        (c: PatternResourceCostDetail) =>
+          !!c.resource_id && (c.quantity ?? 0) >= 1
+      )
+      .map((c: PatternResourceCostDetail) => ({
+        resourceId: c.resource_id,
+        quantity: c.quantity
+      })),
+    resourceTypeCosts: (pattern.resource_type_costs ?? [])
+      .filter(
+        (c: PatternResourceTypeCostDetail) =>
+          !!c.resource_type && (c.quantity ?? 0) >= 1
+      )
+      .map((c: PatternResourceTypeCostDetail) => ({
+        resourceType: c.resource_type,
+        quantity: c.quantity
+      }))
+  }
+}
+
+/**
+ * Seed Pattern To Crafting Costs Spec
+ *
+ * Normalizes the gear cost junction array on a {@link SeedPatternDetail} into
+ * the generic {@link CraftingCostsSpec} shape. Quantities below 1 are dropped.
+ * Resource and resource-type costs are not currently exposed on
+ * {@link SeedPatternDetail}; when added later, this helper will need to mirror
+ * {@link patternToCraftingCostsSpec}.
+ *
+ * @param seedPattern Seed Pattern Detail
+ * @returns Crafting Costs Spec
+ */
+export function seedPatternToCraftingCostsSpec(
+  seedPattern: SeedPatternDetail
+): CraftingCostsSpec {
+  return {
+    gearCosts: (seedPattern.gear_costs ?? [])
+      .filter(
+        (c: SeedPatternGearCostDetail) =>
+          !!c.cost_gear_id && (c.quantity ?? 0) >= 1
+      )
+      .map((c: SeedPatternGearCostDetail) => ({
+        gearId: c.cost_gear_id,
+        quantity: c.quantity
+      })),
+    resourceCosts: [],
+    resourceTypeCosts: []
+  }
+}
+
+/**
+ * Are Crafting Costs Affordable
+ *
+ * Best-effort check that a settlement currently has enough gear/resources to
+ * satisfy the spec. Returns false when any specific gear/resource is short, or
+ * when any resource-type total cannot be covered by the sum of matching
+ * settlement_resource quantities. Does *not* solve the bin-packing problem
+ * across overlapping types, so it errs toward optimistic when a single
+ * settlement_resource row's quantity is shared across multiple type costs.
+ *
+ * @param spec Crafting Costs Spec
+ * @param gear Settlement Gear Rows
+ * @param resources Settlement Resource Rows
+ * @returns True if every cost can be met from the settlement's stores
+ */
+export function areCraftingCostsAffordable(
+  spec: CraftingCostsSpec,
+  gear: SettlementDetail['gear'],
+  resources: SettlementDetail['resources']
+): boolean {
+  const gearByGearId = new Map<string, number>()
+  for (const row of gear)
+    gearByGearId.set(
+      row.gear_id,
+      (gearByGearId.get(row.gear_id) ?? 0) + row.quantity
+    )
+
+  for (const c of spec.gearCosts)
+    if ((gearByGearId.get(c.gearId) ?? 0) < c.quantity) return false
+
+  const resourceByResourceId = new Map<string, number>()
+  for (const row of resources)
+    resourceByResourceId.set(
+      row.resource_id,
+      (resourceByResourceId.get(row.resource_id) ?? 0) + row.quantity
+    )
+
+  for (const c of spec.resourceCosts)
+    if ((resourceByResourceId.get(c.resourceId) ?? 0) < c.quantity) return false
+
+  if (spec.resourceTypeCosts.length > 0) {
+    const totalsByType = new Map<ResourceType, number>()
+    for (const row of resources) {
+      for (const t of row.resource_types ?? []) {
+        const key = t as ResourceType
+        totalsByType.set(key, (totalsByType.get(key) ?? 0) + row.quantity)
+      }
+    }
+    for (const c of spec.resourceTypeCosts)
+      if ((totalsByType.get(c.resourceType) ?? 0) < c.quantity) return false
+  }
+
+  return true
+}
+
+/**
+ * Format Resource Type Label
+ *
+ * Converts a database resource type enum value (e.g. `'BONE'`, `'ORGAN'`) into
+ * a human-friendly title-cased label (e.g. `'Bone'`, `'Organ'`).
+ *
+ * @param resourceType Resource Type Enum Value
+ * @returns Display Label
+ */
+function formatResourceTypeLabel(resourceType: ResourceType): string {
+  const text = String(resourceType)
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()
+}
+
+/**
+ * Format Crafting Costs For Display
+ *
+ * Renders a {@link CraftingCostsSpec} as a markdown bullet list suitable for
+ * the custom rules sheet. Resolves gear and resource IDs to their display
+ * names when catalogs are provided. Returns `null` when the spec defines no
+ * costs.
+ *
+ * @param spec Crafting Costs Spec
+ * @param options Catalog Lookups
+ * @returns Markdown String, or `null` When No Costs Are Defined
+ */
+export function formatCraftingCostsForDisplay(
+  spec: CraftingCostsSpec,
+  options: {
+    /** Gear Catalog Keyed by Gear ID */
+    gearCatalog?: { [id: string]: { gear_name: string } | undefined }
+    /** Resource Catalog Keyed by Resource ID */
+    resourceCatalog?: { [id: string]: { resource_name: string } | undefined }
+  } = {}
+): string | null {
+  if (!hasCraftingCosts(spec)) return null
+
+  const lines: string[] = []
+
+  if (spec.gearCosts.length > 0) {
+    const parts = spec.gearCosts.map((c) => {
+      const name = options.gearCatalog?.[c.gearId]?.gear_name ?? 'Unknown Gear'
+      return `${c.quantity}× ${name}`
+    })
+    lines.push(`- **Required Gear:** ${parts.join(', ')}`)
+  }
+
+  if (spec.resourceCosts.length > 0) {
+    const parts = spec.resourceCosts.map((c) => {
+      const name =
+        options.resourceCatalog?.[c.resourceId]?.resource_name ??
+        'Unknown Resource'
+      return `${c.quantity}× ${name}`
+    })
+    lines.push(`- **Required Resources:** ${parts.join(', ')}`)
+  }
+
+  if (spec.resourceTypeCosts.length > 0) {
+    const parts = spec.resourceTypeCosts.map(
+      (c) => `${c.quantity}× ${formatResourceTypeLabel(c.resourceType)}`
+    )
+    lines.push(`- **Required Resource Types:** ${parts.join(', ')}`)
+  }
+
+  return lines.join('\n')
 }

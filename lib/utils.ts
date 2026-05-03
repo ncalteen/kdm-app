@@ -1,4 +1,5 @@
 import { LOCAL_STORAGE_KEY } from '@/lib/common'
+import { Database } from '@/lib/database.types'
 import { ColorChoice, MonsterNode, MonsterType } from '@/lib/enums'
 import { SettlementDetail } from '@/lib/types'
 import { clsx, type ClassValue } from 'clsx'
@@ -370,4 +371,22 @@ export function calculateSettlementCollectiveCognition(
   }
 
   return total
+}
+
+/**
+ * Normalize Resource Type Name
+ *
+ * Converts a resource type enum or identifier into a human-readable display
+ * name suitable for showing in the UI.
+ *
+ * @param resourceType Resource Type to Normalize
+ * @returns Human-readable Resource Type Name
+ */
+export function normalizeResourceTypeName(
+  resourceType: Database['public']['Enums']['resource_type']
+): string {
+  return resourceType
+    .split('_')
+    .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ')
 }

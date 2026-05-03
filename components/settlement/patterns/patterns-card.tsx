@@ -1,5 +1,6 @@
 'use client'
 
+import { CraftItemDialog } from '@/components/crafting/craft-item-dialog'
 import { PatternItem } from '@/components/settlement/patterns/pattern-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,21 +20,37 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
+import { useCraftGearPersistence } from '@/hooks/use-craft-gear-persistence'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
+import {
+  areCraftingCostsAffordable,
+  CraftingAllocation,
+  CraftingCostsSpec,
+  emptyCraftingCosts,
+  formatCraftingCostsForDisplay,
+  patternToCraftingCostsSpec
+} from '@/lib/crafting'
+import { getGear } from '@/lib/dal/gear'
 import { getPatterns } from '@/lib/dal/pattern'
+import { getResources } from '@/lib/dal/resource'
 import {
   addSettlementPatterns,
   removeSettlementPattern
 } from '@/lib/dal/settlement-pattern'
 import {
   ERROR_MESSAGE,
+  GEAR_UPDATED_MESSAGE,
+  PATTERN_CRAFTED_MESSAGE,
   PATTERN_REMOVED_MESSAGE,
   PATTERN_UPDATED_MESSAGE
 } from '@/lib/messages'
 import {
+  GearDetail,
   PatternDetail,
+  ResourceDetail,
   SettlementDetail,
+  SettlementPhaseDetail,
   SettlementStateSetter
 } from '@/lib/types'
 import { PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
@@ -49,14 +66,20 @@ interface PatternsCardProps {
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
   setSelectedSettlement: SettlementStateSetter
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: SettlementPhaseDetail | null
+  /** Set Selected Settlement Phase */
+  setSelectedSettlementPhase: (
+    settlementPhase: SettlementPhaseDetail | null
+  ) => void
 }
 
 /**
  * Patterns Card Component
  *
- * Displays the patterns linked to a settlement and allows users to add and
- * remove patterns. All mutations are applied optimistically so the UI updates
- * before the database transaction completes.
+ * Displays the patterns linked to a settlement and allows users to add, remove,
+ * and craft from patterns. All mutations are applied optimistically so the UI
+ * updates before the database transaction completes.
  *
  * @param props Patterns Card Properties
  * @returns Patterns Card Component
@@ -64,13 +87,24 @@ interface PatternsCardProps {
 export function PatternsCard({
   local,
   selectedSettlement,
-  setSelectedSettlement
+  setSelectedSettlement,
+  selectedSettlementPhase,
+  setSelectedSettlementPhase
 }: PatternsCardProps): ReactElement {
   const { toast } = useToast(local)
   const mutate = useOptimisticMutation(local)
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
+
+  const [craftDialogOpen, setCraftDialogOpen] = useState<boolean>(false)
+  const [pendingCraftPattern, setPendingCraftPattern] =
+    useState<PatternDetail | null>(null)
+  const [pendingCraftGear, setPendingCraftGear] = useState<GearDetail | null>(
+    null
+  )
+  const [pendingCraftCosts, setPendingCraftCosts] =
+    useState<CraftingCostsSpec>(emptyCraftingCosts())
 
   const { data: availablePatterns, isLoaded: hasFetched } = useCatalogFetch<{
     [key: string]: PatternDetail
@@ -79,6 +113,30 @@ export function PatternsCard({
     errorContext: 'Settlement Patterns Fetch Error',
     onReset: () => setAddOpen(false),
     onError: () => toast.error(ERROR_MESSAGE())
+  })
+
+  const { data: availableGear } = useCatalogFetch<{
+    [key: string]: GearDetail
+  }>(selectedSettlement?.id, () => getGear(), {
+    initial: {},
+    errorContext: 'Pattern Gear Catalog Fetch Error',
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
+
+  const { data: availableResources } = useCatalogFetch<{
+    [key: string]: ResourceDetail
+  }>(selectedSettlement?.id, () => getResources(), {
+    initial: {},
+    errorContext: 'Pattern Resource Catalog Fetch Error',
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
+
+  const { persistGearAddition } = useCraftGearPersistence({
+    local,
+    selectedSettlement,
+    setSelectedSettlement,
+    selectedSettlementPhase,
+    setSelectedSettlementPhase
   })
 
   const selectablePatterns = useMemo(() => {
@@ -98,6 +156,29 @@ export function PatternsCard({
     [selectedSettlement?.patterns]
   )
 
+  /**
+   * Settlement Innovation IDs
+   *
+   * Snapshot of innovation IDs the settlement currently has, used to validate
+   * pattern innovation requirements before crafting.
+   */
+  const settlementInnovationIds = useMemo(
+    () =>
+      new Set(
+        (selectedSettlement?.innovations ?? []).map((i) => i.innovation_id)
+      ),
+    [selectedSettlement?.innovations]
+  )
+
+  /**
+   * Handle Add Pattern
+   *
+   * Adds a pattern to the settlement optimistically, updating the UI before the
+   * database transaction completes. If the mutation fails, the addition is
+   * rolled back.
+   *
+   * @param patternId Pattern ID to Add
+   */
   const handleAdd = useCallback(
     (patternId: string | undefined) => {
       if (!patternId || !selectedSettlement) return
@@ -153,6 +234,15 @@ export function PatternsCard({
     [selectedSettlement, availablePatterns, setSelectedSettlement, mutate]
   )
 
+  /**
+   * Handle Remove Pattern
+   *
+   * Removes a pattern from the settlement optimistically, updating the UI
+   * before the database transaction completes. If the mutation fails, the
+   * removal is rolled back.
+   *
+   * @param index Settlement Pattern Index
+   */
   const handleRemove = useCallback(
     (index: number) => {
       if (!selectedSettlement) return
@@ -180,6 +270,84 @@ export function PatternsCard({
     },
     [selectedSettlement, setSelectedSettlement, mutate]
   )
+
+  /**
+   * Handle Craft From Pattern
+   *
+   * Resolves the pattern's catalog entry and the gear it produces, then opens
+   * the crafting dialog with the appropriate cost spec and innovation
+   * requirements.
+   *
+   * @param index Settlement Pattern Index
+   */
+  const handleCraft = useCallback(
+    (index: number) => {
+      if (!selectedSettlement) return
+
+      const settlementRow = selectedSettlement.patterns[index]
+      if (!settlementRow) return
+
+      const patternInfo = availablePatterns[settlementRow.pattern_id]
+      if (!patternInfo || !patternInfo.crafted_gear_id) return
+
+      const gearInfo = availableGear[patternInfo.crafted_gear_id]
+      if (!gearInfo) return
+
+      setPendingCraftPattern(patternInfo)
+      setPendingCraftGear(gearInfo)
+      setPendingCraftCosts(patternToCraftingCostsSpec(patternInfo))
+      setCraftDialogOpen(true)
+    },
+    [selectedSettlement, availablePatterns, availableGear]
+  )
+
+  /**
+   * Handle Craft Confirm
+   *
+   * Invoked when the user confirms the crafting dialog. Closes the dialog and
+   * adds the produced gear to the settlement (with or without the deductions).
+   */
+  const handleCraftConfirm = useCallback(
+    ({
+      deductCosts,
+      allocation
+    }: {
+      deductCosts: boolean
+      allocation: CraftingAllocation
+    }) => {
+      if (!pendingCraftGear) return
+
+      setCraftDialogOpen(false)
+
+      const successMessage = deductCosts
+        ? PATTERN_CRAFTED_MESSAGE()
+        : GEAR_UPDATED_MESSAGE()
+
+      persistGearAddition(pendingCraftGear, allocation, successMessage)
+      setPendingCraftPattern(null)
+      setPendingCraftGear(null)
+      setPendingCraftCosts(emptyCraftingCosts())
+    },
+    [pendingCraftGear, persistGearAddition]
+  )
+
+  /**
+   * Innovation Requirements For Pending Pattern
+   */
+  const pendingInnovationRequirements = useMemo(() => {
+    if (!pendingCraftPattern) return undefined
+
+    return pendingCraftPattern.innovation_requirement_ids.map((id) => {
+      const innovation = (selectedSettlement?.innovations ?? []).find(
+        (i) => i.innovation_id === id
+      )
+
+      return {
+        innovation_name: innovation?.innovation_name ?? 'Unknown Innovation',
+        met: !!innovation
+      }
+    })
+  }, [pendingCraftPattern, selectedSettlement?.innovations])
 
   return (
     <Card className="p-0 border-1 gap-0">
@@ -255,6 +423,90 @@ export function PatternsCard({
                 if (detail?.crafting_limit != null)
                   overviewParts.push(`Crafting Limit: ${detail.crafting_limit}`)
 
+                // Resolve innovation requirements to display names so the sheet
+                // shows "Bone Smith" rather than the underlying UUID.
+                const innovationRequirementLines: string[] = []
+
+                if (detail)
+                  for (const id of detail.innovation_requirement_ids) {
+                    const linkedInnovation = (
+                      selectedSettlement?.innovations ?? []
+                    ).find((i) => i.innovation_id === id)
+
+                    innovationRequirementLines.push(
+                      `- ${linkedInnovation?.innovation_name ?? 'Unknown Innovation'}`
+                    )
+                  }
+
+                // Resolved markdown for any gear/resource/type costs.
+                const craftingCostsContent = detail
+                  ? formatCraftingCostsForDisplay(
+                      patternToCraftingCostsSpec(detail),
+                      {
+                        gearCatalog: availableGear,
+                        resourceCatalog: availableResources
+                      }
+                    )
+                  : null
+
+                // The craft button is only meaningful when the pattern produces
+                // gear; surface a tooltip explaining why crafting is blocked
+                // when prerequisites are unmet.
+                const canShowCraft = !!detail?.crafted_gear_id
+
+                let craftDisabled = false
+                let craftDisabledReason: string | undefined
+
+                if (canShowCraft && detail) {
+                  const producedGear = availableGear[detail.crafted_gear_id!]
+
+                  if (!producedGear) {
+                    craftDisabled = true
+                    craftDisabledReason =
+                      'The crafted gear is not available in the catalog.'
+                  } else {
+                    const innovationsMet =
+                      detail.innovation_requirement_ids.every((id) =>
+                        settlementInnovationIds.has(id)
+                      )
+                    const costsAffordable = areCraftingCostsAffordable(
+                      patternToCraftingCostsSpec(detail),
+                      selectedSettlement?.gear ?? [],
+                      selectedSettlement?.resources ?? []
+                    )
+                    const phaseRequired =
+                      (detail.endeavor_cost ?? 0) > 0 &&
+                      !selectedSettlementPhase
+                    const endeavorsInsufficient =
+                      (detail.endeavor_cost ?? 0) > 0 &&
+                      !!selectedSettlementPhase &&
+                      selectedSettlementPhase.endeavors <
+                        (detail.endeavor_cost ?? 0)
+
+                    if (!innovationsMet) {
+                      craftDisabled = true
+
+                      craftDisabledReason =
+                        'The settlement is missing one or more required innovations.'
+                    } else if (!costsAffordable) {
+                      craftDisabled = true
+
+                      craftDisabledReason =
+                        'The settlement does not have enough gear or resources to craft this item.'
+                    } else if (phaseRequired) {
+                      craftDisabled = true
+
+                      craftDisabledReason =
+                        'Endeavors are only available during the settlement phase.'
+                    } else if (endeavorsInsufficient) {
+                      craftDisabled = true
+
+                      craftDisabledReason =
+                        'The settlement does not have enough endeavors to craft this item.'
+                    }
+                  }
+                }
+
                 return (
                   <PatternItem
                     key={item.id}
@@ -269,6 +521,17 @@ export function PatternsCard({
                                   overviewParts.length > 0
                                     ? overviewParts.join('\n')
                                     : null
+                              },
+                              {
+                                label: 'Innovation Requirements',
+                                content:
+                                  innovationRequirementLines.length > 0
+                                    ? innovationRequirementLines.join('\n')
+                                    : null
+                              },
+                              {
+                                label: 'Crafting Costs',
+                                content: craftingCostsContent
                               }
                             ]
                           }
@@ -277,12 +540,53 @@ export function PatternsCard({
                     index={originalIndex}
                     pattern={item}
                     onRemove={handleRemove}
+                    onCraft={canShowCraft ? handleCraft : undefined}
+                    craftDisabled={craftDisabled}
+                    craftDisabledReason={craftDisabledReason}
                   />
                 )
               })}
           </div>
         </div>
       </CardContent>
+
+      <CraftItemDialog
+        key={pendingCraftPattern?.id ?? 'craft-pattern-dialog-empty'}
+        open={craftDialogOpen}
+        onOpenChange={(next) => {
+          setCraftDialogOpen(next)
+          if (!next) {
+            setPendingCraftPattern(null)
+            setPendingCraftGear(null)
+            setPendingCraftCosts(emptyCraftingCosts())
+          }
+        }}
+        title={
+          pendingCraftGear
+            ? `Craft ${pendingCraftGear.gear_name}`
+            : 'Craft Gear'
+        }
+        sourceLabel={
+          pendingCraftPattern
+            ? `From: ${pendingCraftPattern.pattern_name}`
+            : null
+        }
+        targetGear={pendingCraftGear}
+        costs={pendingCraftCosts}
+        gearCatalog={availableGear}
+        resourceCatalog={availableResources}
+        settlementGear={selectedSettlement?.gear ?? []}
+        settlementResources={selectedSettlement?.resources ?? []}
+        innovationRequirements={pendingInnovationRequirements}
+        endeavorCost={pendingCraftPattern?.endeavor_cost ?? null}
+        settlementPhase={selectedSettlementPhase}
+        craftingLimit={
+          pendingCraftPattern?.crafting_limit != null
+            ? { total: pendingCraftPattern.crafting_limit, used: 0 }
+            : null
+        }
+        onConfirm={handleCraftConfirm}
+      />
     </Card>
   )
 }

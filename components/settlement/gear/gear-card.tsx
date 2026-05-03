@@ -1,6 +1,6 @@
 'use client'
 
-import { CraftGearDialog } from '@/components/settlement/gear/craft-gear-dialog'
+import { CraftItemDialog } from '@/components/crafting/craft-item-dialog'
 import { GearItem } from '@/components/settlement/gear/gear-item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,10 +20,10 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
+import { useCraftGearPersistence } from '@/hooks/use-craft-gear-persistence'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
 import {
-  applyCraftingAllocationToSettlementState,
   CraftingAllocation,
   CraftingCostsSpec,
   emptyCraftingCosts,
@@ -33,11 +33,9 @@ import {
 import { getGear } from '@/lib/dal/gear'
 import { getResources } from '@/lib/dal/resource'
 import {
-  addSettlementGear,
   removeSettlementGear,
   updateSettlementGear
 } from '@/lib/dal/settlement-gear'
-import { updateSettlementResource } from '@/lib/dal/settlement-resource'
 import {
   ERROR_MESSAGE,
   GEAR_CRAFTED_MESSAGE,
@@ -48,6 +46,7 @@ import {
   GearDetail,
   ResourceDetail,
   SettlementDetail,
+  SettlementPhaseDetail,
   SettlementStateSetter
 } from '@/lib/types'
 import { PlusIcon, WrenchIcon } from 'lucide-react'
@@ -63,6 +62,12 @@ interface GearCardProps {
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
   setSelectedSettlement: SettlementStateSetter
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: SettlementPhaseDetail | null
+  /** Set Selected Settlement Phase */
+  setSelectedSettlementPhase: (
+    settlementPhase: SettlementPhaseDetail | null
+  ) => void
 }
 
 /**
@@ -78,7 +83,9 @@ interface GearCardProps {
 export function GearCard({
   local,
   selectedSettlement,
-  setSelectedSettlement
+  setSelectedSettlement,
+  selectedSettlementPhase,
+  setSelectedSettlementPhase
 }: GearCardProps): ReactElement {
   const { toast } = useToast(local)
   const mutate = useOptimisticMutation(local)
@@ -110,14 +117,13 @@ export function GearCard({
     onError: () => toast.error(ERROR_MESSAGE())
   })
 
-  const selectableGear = useMemo(() => {
-    const linkedIds = new Set(
-      (selectedSettlement?.gear ?? []).map((g) => g.gear_id)
-    )
-    return Object.values(availableGear)
-      .filter((g) => !linkedIds.has(g.id))
-      .sort((a, b) => a.gear_name.localeCompare(b.gear_name))
-  }, [availableGear, selectedSettlement?.gear])
+  const selectableGear = useMemo(
+    () =>
+      Object.values(availableGear).sort((a, b) =>
+        a.gear_name.localeCompare(b.gear_name)
+      ),
+    [availableGear]
+  )
 
   const sortedGear = useMemo(
     () =>
@@ -133,111 +139,14 @@ export function GearCard({
    * Performs the optimistic insert of a settlement_gear row plus any
    * concurrent settlement gear/resource quantity deductions corresponding to
    * the supplied crafting allocation. State is rolled back on failure.
-   *
-   * @param gearInfo Gear to Add
-   * @param allocation Crafting Allocation (may be empty)
-   * @param successMessage Toast Message on Success
    */
-  const persistGearAddition = useCallback(
-    (
-      gearInfo: GearDetail,
-      allocation: CraftingAllocation,
-      successMessage: string
-    ) => {
-      if (!selectedSettlement) return
-
-      const tempId = `temp-${crypto.randomUUID()}`
-      const optimisticRow: SettlementDetail['gear'][0] = {
-        gear_id: gearInfo.id,
-        gear_name: gearInfo.gear_name,
-        id: tempId,
-        quantity: 1,
-        custom: gearInfo.custom ?? false
-      }
-
-      // Pre-deduction snapshot for rollback.
-      const previousGear = selectedSettlement.gear
-      const previousResources = selectedSettlement.resources
-
-      const { gear: deductedGear, resources: deductedResources } =
-        applyCraftingAllocationToSettlementState(
-          allocation,
-          previousGear,
-          previousResources
-        )
-
-      const nextGear = [...deductedGear, optimisticRow]
-
-      setSelectedSettlement({
-        ...selectedSettlement,
-        gear: nextGear,
-        resources: deductedResources
-      })
-
-      void mutate({
-        context: 'Gear Add',
-        persist: async () => {
-          // Persist the gear deductions first so any failure rolls back the
-          // local settlement before we create the new row.
-          for (const d of allocation.gearDeductions) {
-            const row = previousGear.find((g) => g.id === d.settlementGearId)
-            if (!row) continue
-            await updateSettlementGear(d.settlementGearId, {
-              quantity: Math.max(0, row.quantity - d.quantity)
-            })
-          }
-
-          // Aggregate per-resource deductions in case multiple type-cost
-          // allocations target the same settlement_resource row.
-          const aggregatedResource = new Map<string, number>()
-          for (const d of allocation.resourceDeductions) {
-            aggregatedResource.set(
-              d.settlementResourceId,
-              (aggregatedResource.get(d.settlementResourceId) ?? 0) + d.quantity
-            )
-          }
-          for (const [id, qty] of aggregatedResource) {
-            const row = previousResources.find((r) => r.id === id)
-            if (!row) continue
-            await updateSettlementResource(id, {
-              quantity: Math.max(0, row.quantity - qty)
-            })
-          }
-
-          return addSettlementGear({
-            gear_id: gearInfo.id,
-            quantity: 1,
-            settlement_id: selectedSettlement.id
-          })
-        },
-        onSuccess: (id) => {
-          setSelectedSettlement((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  gear: prev.gear.map((g) =>
-                    g.id === tempId ? { ...g, id } : g
-                  )
-                }
-              : null
-          )
-        },
-        rollback: () => {
-          setSelectedSettlement((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  gear: previousGear,
-                  resources: previousResources
-                }
-              : null
-          )
-        },
-        successMessage
-      })
-    },
-    [selectedSettlement, setSelectedSettlement, mutate]
-  )
+  const { persistGearAddition } = useCraftGearPersistence({
+    local,
+    selectedSettlement,
+    setSelectedSettlement,
+    selectedSettlementPhase,
+    setSelectedSettlementPhase
+  })
 
   /**
    * Handle Add Gear
@@ -268,7 +177,11 @@ export function GearCard({
 
       persistGearAddition(
         gearInfo,
-        { gearDeductions: [], resourceDeductions: [] },
+        {
+          gearDeductions: [],
+          resourceDeductions: [],
+          endeavorDeduction: 0
+        },
         GEAR_UPDATED_MESSAGE()
       )
     },
@@ -475,7 +388,7 @@ export function GearCard({
         </div>
       </CardContent>
 
-      <CraftGearDialog
+      <CraftItemDialog
         key={pendingCraftGear?.id ?? 'craft-dialog-empty'}
         open={craftDialogOpen}
         onOpenChange={(next) => {
@@ -485,12 +398,18 @@ export function GearCard({
             setPendingCraftCosts(emptyCraftingCosts())
           }
         }}
-        gear={pendingCraftGear}
+        title={
+          pendingCraftGear
+            ? `Craft ${pendingCraftGear.gear_name}`
+            : 'Craft Gear'
+        }
+        targetGear={pendingCraftGear}
         costs={pendingCraftCosts}
         gearCatalog={availableGear}
         resourceCatalog={availableResources}
         settlementGear={selectedSettlement?.gear ?? []}
         settlementResources={selectedSettlement?.resources ?? []}
+        settlementPhase={selectedSettlementPhase}
         onConfirm={handleCraftConfirm}
       />
     </Card>
