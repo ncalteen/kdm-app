@@ -32,7 +32,9 @@ import { getQuarry } from '@/lib/dal/quarry'
 import { getQuarryHuntBoard } from '@/lib/dal/quarry-hunt-board'
 import { getQuarryLevels } from '@/lib/dal/quarry-level'
 import { MonsterVersion } from '@/lib/enums'
+import { computeEmbarkGearShortages } from '@/lib/gear-grid'
 import {
+  EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE,
   ERROR_MESSAGE,
   HUNT_BEGINS_MESSAGE,
   SCOUT_CONFLICT_MESSAGE,
@@ -422,6 +424,22 @@ export function CreateHuntCard({
     )
       return toast.error(SCOUT_CONFLICT_MESSAGE())
 
+    // Validate that the embarking survivors don't collectively carry more gear
+    // than the settlement has in storage. Defends against settlement gear
+    // quantities being reduced after grids were configured.
+    const embarkingIds = selectedScout
+      ? [...selectedSurvivors, selectedScout]
+      : selectedSurvivors
+    const embarkingSurvivors = survivors.filter((s) =>
+      embarkingIds.includes(s.id)
+    )
+    const gearShortages = computeEmbarkGearShortages(
+      embarkingSurvivors,
+      selectedSettlement.gear
+    )
+    if (gearShortages.length > 0)
+      return toast.error(EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE(gearShortages))
+
     const quarry = availableQuarries.find(
       (q) => q.quarry_id === selectedQuarryId
     )
@@ -634,6 +652,7 @@ export function CreateHuntCard({
     selectedShowdown,
     selectedSurvivors,
     setSelectedHunt,
+    survivors,
     toast
   ])
 

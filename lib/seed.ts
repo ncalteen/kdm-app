@@ -1390,8 +1390,6 @@ async function createSurvivorsForSettlement(
     const { error: createGearGridError } = await supabase
       .from('gear_grid')
       .insert({
-        custom: true,
-        user_id: userId,
         survivor_id: gridSurvivor.id,
         pos_top_left: slot(0),
         pos_top_center: slot(1),

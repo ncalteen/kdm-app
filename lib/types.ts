@@ -226,6 +226,53 @@ export type GearDetail = Omit<
 }
 
 /**
+ * Gear Grid Position
+ *
+ * One of the nine slots on a survivor's 3x3 gear grid. Position keys map
+ * directly to columns on the `gear_grid` table (e.g. `top_left` →
+ * `pos_top_left`).
+ */
+export type GearGridPosition =
+  | 'top_left'
+  | 'top_center'
+  | 'top_right'
+  | 'mid_left'
+  | 'mid_center'
+  | 'mid_right'
+  | 'bottom_left'
+  | 'bottom_center'
+  | 'bottom_right'
+
+/**
+ * Gear Grid Detail
+ *
+ * Used throughout the app to represent a survivor's 3x3 gear grid. Each
+ * position holds an optional gear ID drawn from the settlement's storage.
+ */
+export type GearGridDetail = {
+  /** Gear Grid ID (null until the row has been persisted) */
+  id: string | null
+  /** Top-Left Position Gear ID */
+  pos_top_left: string | null
+  /** Top-Center Position Gear ID */
+  pos_top_center: string | null
+  /** Top-Right Position Gear ID */
+  pos_top_right: string | null
+  /** Middle-Left Position Gear ID */
+  pos_mid_left: string | null
+  /** Middle-Center Position Gear ID */
+  pos_mid_center: string | null
+  /** Middle-Right Position Gear ID */
+  pos_mid_right: string | null
+  /** Bottom-Left Position Gear ID */
+  pos_bottom_left: string | null
+  /** Bottom-Center Position Gear ID */
+  pos_bottom_center: string | null
+  /** Bottom-Right Position Gear ID */
+  pos_bottom_right: string | null
+}
+
+/**
  * Hunt AI Deck Detail
  *
  * Used throughout the app to represent a monster's AI deck in a hunt.
@@ -1095,6 +1142,8 @@ export type SurvivorDetail = Tables<'survivor'> & {
   embarked: boolean
   /** Fighting Arts */
   fighting_arts: FightingArtDetail[]
+  /** Gear Grid (3x3 of equipped gear; null until first edit) */
+  gear_grid: GearGridDetail | null
   /** Knowledge 1 */
   knowledge_1: {
     /** Knowledge ID */

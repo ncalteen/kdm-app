@@ -651,7 +651,6 @@ export type Database = {
       gear_grid: {
         Row: {
           created_at: string
-          custom: boolean
           id: string
           pos_bottom_center: string | null
           pos_bottom_left: string | null
@@ -664,11 +663,9 @@ export type Database = {
           pos_top_right: string | null
           survivor_id: string
           updated_at: string
-          user_id: string | null
         }
         Insert: {
           created_at?: string
-          custom?: boolean
           id?: string
           pos_bottom_center?: string | null
           pos_bottom_left?: string | null
@@ -681,11 +678,9 @@ export type Database = {
           pos_top_right?: string | null
           survivor_id: string
           updated_at?: string
-          user_id?: string | null
         }
         Update: {
           created_at?: string
-          custom?: boolean
           id?: string
           pos_bottom_center?: string | null
           pos_bottom_left?: string | null
@@ -698,7 +693,6 @@ export type Database = {
           pos_top_right?: string | null
           survivor_id?: string
           updated_at?: string
-          user_id?: string | null
         }
         Relationships: [
           {
@@ -769,32 +763,6 @@ export type Database = {
             columns: ["survivor_id"]
             isOneToOne: false
             referencedRelation: "survivor"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gear_grid_shared_user: {
-        Row: {
-          gear_grid_id: string
-          shared_user_id: string
-          user_id: string
-        }
-        Insert: {
-          gear_grid_id: string
-          shared_user_id: string
-          user_id: string
-        }
-        Update: {
-          gear_grid_id?: string
-          shared_user_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gear_grid_shared_user_gear_grid_id_fkey"
-            columns: ["gear_grid_id"]
-            isOneToOne: false
-            referencedRelation: "gear_grid"
             referencedColumns: ["id"]
           },
         ]
@@ -5829,7 +5797,6 @@ export type Database = {
       is_constellation_owner: { Args: { record_id: string }; Returns: boolean }
       is_disorder_owner: { Args: { record_id: string }; Returns: boolean }
       is_fighting_art_owner: { Args: { record_id: string }; Returns: boolean }
-      is_gear_grid_owner: { Args: { record_id: string }; Returns: boolean }
       is_gear_owner: { Args: { record_id: string }; Returns: boolean }
       is_innovation_owner: { Args: { record_id: string }; Returns: boolean }
       is_knowledge_owner: { Args: { record_id: string }; Returns: boolean }

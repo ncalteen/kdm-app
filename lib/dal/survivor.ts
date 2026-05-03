@@ -38,6 +38,7 @@ const SURVIVOR_SELECT = `
   secret_fighting_arts:survivor_secret_fighting_art(
     secret_fighting_art(id, custom, secret_fighting_art_name, rules)
   ),
+  gear_grid(id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right),
   hunt_survivor(survivor_id),
   showdown_survivor(survivor_id),
   knowledge_1:knowledge!survivor_knowledge_1_id_fkey(id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone),
@@ -66,6 +67,7 @@ type SurvivorRow = Tables<'survivor'> & {
   secret_fighting_arts: {
     secret_fighting_art: SurvivorDetail['secret_fighting_arts'][number] | null
   }[]
+  gear_grid: SurvivorDetail['gear_grid'] | SurvivorDetail['gear_grid'][] | null
   hunt_survivor: { survivor_id: string }[]
   showdown_survivor: { survivor_id: string }[]
   knowledge_1: SurvivorDetail['knowledge_1']
@@ -91,10 +93,18 @@ function mapSurvivorRow(row: SurvivorRow): SurvivorDetail {
     disorders,
     fighting_arts,
     secret_fighting_arts,
+    gear_grid,
     hunt_survivor,
     showdown_survivor,
     ...survivor
   } = row
+
+  // PostgREST returns embedded one-to-one relations as a single object when a
+  // matching row exists, but as an array (or null) when the relation is
+  // optional. Normalise both shapes to a single GearGridDetail (or null).
+  const gridRow = Array.isArray(gear_grid)
+    ? (gear_grid[0] ?? null)
+    : (gear_grid ?? null)
 
   return {
     ...survivor,
@@ -113,6 +123,7 @@ function mapSurvivorRow(row: SurvivorRow): SurvivorDetail {
     fighting_arts: fighting_arts
       .map((r) => r.fighting_art)
       .filter((x): x is SurvivorDetail['fighting_arts'][number] => Boolean(x)),
+    gear_grid: gridRow,
     secret_fighting_arts: secret_fighting_arts
       .map((r) => r.secret_fighting_art)
       .filter((x): x is SurvivorDetail['secret_fighting_arts'][number] =>

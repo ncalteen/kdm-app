@@ -114,7 +114,8 @@ const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   survivor_cursed_gear: { domain: 'survivor', filterColumn: null },
   survivor_disorder: { domain: 'survivor', filterColumn: null },
   survivor_fighting_art: { domain: 'survivor', filterColumn: null },
-  survivor_secret_fighting_art: { domain: 'survivor', filterColumn: null }
+  survivor_secret_fighting_art: { domain: 'survivor', filterColumn: null },
+  gear_grid: { domain: 'survivor', filterColumn: null }
 }
 
 /** Debounce delay in milliseconds for batching rapid changes. */

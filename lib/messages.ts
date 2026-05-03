@@ -410,6 +410,74 @@ export const GEAR_CRAFTED_MESSAGE = () =>
   'The forge cools. New gear is crafted at great cost.'
 
 /**
+ * Gear Grid Cleared
+ *
+ * @param survivorName Survivor Name
+ * @returns Gear Grid Cleared Message
+ */
+export const GEAR_GRID_CLEARED_MESSAGE = (survivorName?: string) =>
+  survivorName
+    ? `${survivorName}'s gear grid has been emptied.`
+    : 'The gear grid has been emptied.'
+
+/**
+ * Gear Grid Slot Equipped
+ *
+ * @param survivorName Survivor Name
+ * @returns Gear Grid Slot Equipped Message
+ */
+export const GEAR_GRID_SLOT_EQUIPPED_MESSAGE = (survivorName?: string) =>
+  survivorName
+    ? `${survivorName} equips new gear.`
+    : 'A survivor equips new gear.'
+
+/**
+ * Gear Grid Slot Cleared
+ *
+ * @param survivorName Survivor Name
+ * @returns Gear Grid Slot Cleared Message
+ */
+export const GEAR_GRID_SLOT_CLEARED_MESSAGE = (survivorName?: string) =>
+  survivorName
+    ? `${survivorName} sets aside their gear.`
+    : 'A survivor sets aside their gear.'
+
+/**
+ * Gear Grid Settlement Required
+ *
+ * Surfaced when the user tries to equip gear without an underlying settlement
+ * context (e.g. wanderer survivors).
+ *
+ * @returns Gear Grid Settlement Required Error Message
+ */
+export const GEAR_GRID_SETTLEMENT_REQUIRED_ERROR_MESSAGE = () =>
+  'No settlement gear is within reach.'
+
+/**
+ * Embark Gear Shortage
+ *
+ * Surfaced when the survivors embarking on a hunt or showdown collectively
+ * carry more of one or more gear items than the settlement has in storage.
+ * Lists each shortfall as `Gear Name (need N, have M)` so the player can
+ * adjust gear grids before retrying.
+ *
+ * @param shortages Per-Gear Shortage Details
+ * @returns Embark Gear Shortage Error Message
+ */
+export const EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE = (
+  shortages: {
+    gear_name: string
+    available: number
+    needed: number
+  }[]
+) => {
+  const detail = shortages
+    .map((s) => `${s.gear_name} (need ${s.needed}, have ${s.available})`)
+    .join('; ')
+  return `The settlement's stores cannot bear this burden — ${detail}.`
+}
+
+/**
  * Pattern Crafted
  *
  * Used when gear is crafted from a settlement pattern and its crafting costs

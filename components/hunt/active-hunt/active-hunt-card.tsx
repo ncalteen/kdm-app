@@ -36,7 +36,9 @@ import {
   SurvivorType,
   TabType
 } from '@/lib/enums'
+import { computeEmbarkGearShortages } from '@/lib/gear-grid'
 import {
+  EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE,
   ERROR_MESSAGE,
   HUNT_DELETED_MESSAGE,
   MONSTER_MOVED_MESSAGE,
@@ -307,6 +309,23 @@ export function ActiveHuntCard({
       return
     }
 
+    // Re-validate gear availability before transitioning to a showdown.
+    // Settlement gear may have changed during the hunt (e.g. dropped/lost
+    // gear), so check that the embarking survivors collectively still fit
+    // within the settlement's current stock.
+    const embarkingIds = new Set(
+      Object.values(huntSurvivors).map((hs) => hs.survivor_id)
+    )
+    const embarkingSurvivors = survivors.filter((s) => embarkingIds.has(s.id))
+    const gearShortages = computeEmbarkGearShortages(
+      embarkingSurvivors,
+      selectedSettlement.gear
+    )
+    if (gearShortages.length > 0) {
+      toast.error(EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE(gearShortages))
+      return
+    }
+
     setIsProceedingToShowdown(true)
 
     try {
@@ -524,6 +543,7 @@ export function ActiveHuntCard({
     setSelectedShowdown,
     setSelectedShowdownMonsterIndex,
     setSelectedTab,
+    survivors,
     toast
   ])
 
