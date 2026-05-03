@@ -320,6 +320,8 @@ export function SettlementPhaseCard({
                   local={local}
                   selectedSettlement={selectedSettlement}
                   setSelectedSettlement={setSelectedSettlement}
+                  selectedSettlementPhase={selectedSettlementPhase}
+                  setSelectedSettlementPhase={setSelectedSettlementPhase}
                 />
                 {selectedSettlement?.campaign_type !==
                   DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
@@ -328,11 +330,15 @@ export function SettlementPhaseCard({
                       local={local}
                       selectedSettlement={selectedSettlement}
                       setSelectedSettlement={setSelectedSettlement}
+                      selectedSettlementPhase={selectedSettlementPhase}
+                      setSelectedSettlementPhase={setSelectedSettlementPhase}
                     />
                     <SeedPatternsCard
                       local={local}
                       selectedSettlement={selectedSettlement}
                       setSelectedSettlement={setSelectedSettlement}
+                      selectedSettlementPhase={selectedSettlementPhase}
+                      setSelectedSettlementPhase={setSelectedSettlementPhase}
                     />
                   </div>
                 )}

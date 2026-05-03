@@ -1,6 +1,7 @@
 'use client'
 
 import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { SafeMarkdownEditor } from '@/components/generic/safe-markdown-editor'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,7 +14,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import MDEditor from '@uiw/react-md-editor'
 import { useTheme } from 'next-themes'
 import { KeyboardEvent, ReactElement, useCallback, useState } from 'react'
 
@@ -126,7 +126,7 @@ export function StrainMilestoneDialog({
             </TabsList>
 
             <TabsContent value="condition">
-              <MDEditor
+              <SafeMarkdownEditor
                 value={milestoneCondition}
                 onChange={(val) => setMilestoneCondition(val ?? '')}
                 height={300}
@@ -135,7 +135,7 @@ export function StrainMilestoneDialog({
             </TabsContent>
 
             <TabsContent value="effect">
-              <MDEditor
+              <SafeMarkdownEditor
                 value={permanentEffect}
                 onChange={(val) => setPermanentEffect(val ?? '')}
                 height={300}

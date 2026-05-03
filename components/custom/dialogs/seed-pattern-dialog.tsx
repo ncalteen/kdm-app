@@ -1,6 +1,7 @@
 'use client'
 
 import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { SafeMarkdownEditor } from '@/components/generic/safe-markdown-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,7 +34,6 @@ import {
   SeedPatternGearCostDetail
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import MDEditor from '@uiw/react-md-editor'
 import {
   Check,
   ChevronsUpDown,
@@ -622,7 +622,7 @@ export function SeedPatternDialog({
           {/* Crafting Steps */}
           <div className="flex flex-col gap-2" data-color-mode={resolvedTheme}>
             <Label>Crafting Steps (optional)</Label>
-            <MDEditor
+            <SafeMarkdownEditor
               value={craftingSteps}
               onChange={(val) => setCraftingSteps(val ?? '')}
               height={200}
@@ -634,7 +634,7 @@ export function SeedPatternDialog({
           {/* Requirements */}
           <div className="flex flex-col gap-2" data-color-mode={resolvedTheme}>
             <Label>Requirements (optional)</Label>
-            <MDEditor
+            <SafeMarkdownEditor
               value={requirements}
               onChange={(val) => setRequirements(val ?? '')}
               height={200}

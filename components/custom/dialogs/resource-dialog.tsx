@@ -1,6 +1,7 @@
 'use client'
 
 import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { SafeMarkdownEditor } from '@/components/generic/safe-markdown-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -37,7 +38,6 @@ import { Constants, Database } from '@/lib/database.types'
 import { ResourceCategory } from '@/lib/enums'
 import { PatternDetail, QuarryDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import MDEditor from '@uiw/react-md-editor'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import {
@@ -476,7 +476,7 @@ export function ResourceDialog({
           {/* Rules */}
           <div className="flex flex-col gap-2" data-color-mode={resolvedTheme}>
             <Label>Rules (optional)</Label>
-            <MDEditor
+            <SafeMarkdownEditor
               value={rules}
               onChange={(val) => setRules(val ?? '')}
               height={200}

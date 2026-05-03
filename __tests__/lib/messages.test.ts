@@ -46,6 +46,7 @@ import {
   FIGHTING_ART_REMOVED_MESSAGE,
   FIGHTING_ART_UPDATED_MESSAGE,
   FIGHTING_ARTS_MAX_EXCEEDED_ERROR_MESSAGE,
+  GEAR_CRAFTED_MESSAGE,
   GEAR_CREATED_MESSAGE,
   GEAR_REMOVED_MESSAGE,
   GEAR_UPDATED_MESSAGE,
@@ -683,6 +684,14 @@ describe('GEAR_UPDATED_MESSAGE', () => {
   it('returns new gear message when index is undefined', () => {
     expect(GEAR_UPDATED_MESSAGE(undefined)).toBe(
       'New gear added to settlement storage.'
+    )
+  })
+})
+
+describe('GEAR_CRAFTED_MESSAGE', () => {
+  it('returns correct message', () => {
+    expect(GEAR_CRAFTED_MESSAGE()).toBe(
+      'The forge cools. New gear is crafted at great cost.'
     )
   })
 })

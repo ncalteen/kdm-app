@@ -499,6 +499,8 @@ export function SettlementCard({
                 local={local}
                 selectedSettlement={selectedSettlement}
                 setSelectedSettlement={setSelectedSettlement}
+                selectedSettlementPhase={selectedSettlementPhase}
+                setSelectedSettlementPhase={setSelectedSettlementPhase}
               />
 
               {/* Patterns/Seed Patterns */}
@@ -510,6 +512,8 @@ export function SettlementCard({
                       local={local}
                       selectedSettlement={selectedSettlement}
                       setSelectedSettlement={setSelectedSettlement}
+                      selectedSettlementPhase={selectedSettlementPhase}
+                      setSelectedSettlementPhase={setSelectedSettlementPhase}
                     />
                   </div>
                   <div className="flex-1">
@@ -517,6 +521,8 @@ export function SettlementCard({
                       local={local}
                       selectedSettlement={selectedSettlement}
                       setSelectedSettlement={setSelectedSettlement}
+                      selectedSettlementPhase={selectedSettlementPhase}
+                      setSelectedSettlementPhase={setSelectedSettlementPhase}
                     />
                   </div>
                 </div>

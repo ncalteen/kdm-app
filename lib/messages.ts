@@ -400,6 +400,38 @@ export const GEAR_UPDATED_MESSAGE = (index?: number) =>
     : 'New gear added to settlement storage.'
 
 /**
+ * Gear Crafted
+ *
+ * Used when gear is added and its crafting costs have been deducted.
+ *
+ * @returns Gear Crafted Message
+ */
+export const GEAR_CRAFTED_MESSAGE = () =>
+  'The forge cools. New gear is crafted at great cost.'
+
+/**
+ * Pattern Crafted
+ *
+ * Used when gear is crafted from a settlement pattern and its crafting costs
+ * have been deducted.
+ *
+ * @returns Pattern Crafted Message
+ */
+export const PATTERN_CRAFTED_MESSAGE = () =>
+  'From the pattern, the forge yields new gear.'
+
+/**
+ * Seed Pattern Crafted
+ *
+ * Used when gear is crafted from a settlement seed pattern and its crafting
+ * costs have been deducted.
+ *
+ * @returns Seed Pattern Crafted Message
+ */
+export const SEED_PATTERN_CRAFTED_MESSAGE = () =>
+  'A seed of progress takes shape — new gear is crafted.'
+
+/**
  * Hunt Already Active Error
  *
  * @returns Hunt Already Active Error Message

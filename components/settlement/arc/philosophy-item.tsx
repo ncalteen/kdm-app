@@ -2,6 +2,7 @@
 
 import {
   CustomItemDisplay,
+  CustomPhilosophyRulesText,
   CustomRulesText
 } from '@/components/custom/custom-rules-sheet'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,13 @@ import { memo, ReactElement } from 'react'
  * Philosophy Item Component Properties
  */
 export interface PhilosophyItemProps {
-  /** Custom Rules Sheet Display */
+  /**
+   * Custom Rules Sheet Display
+   *
+   * Optional override used for non-custom philosophies (e.g. catalog detail
+   * surfaces). Custom philosophies render their own sheet via
+   * {@link CustomPhilosophyRulesText} and ignore this prop.
+   */
   customDetail?: CustomItemDisplay | null
   /** Index */
   index: number
@@ -27,7 +34,10 @@ export interface PhilosophyItemProps {
  * Philosophy Item Component
  *
  * Displays a single philosophy linked to a settlement with its name and a
- * remove button.
+ * remove button. When the philosophy is user-defined, the name becomes a
+ * clickable trigger that opens a sheet displaying its overview, rank rules,
+ * and any other custom data. Otherwise the name is rendered as plain text
+ * (or, when `customDetail` is provided, the supplied generic sheet content).
  *
  * @param props Philosophy Item Component Properties
  * @returns Philosophy Item Component
@@ -41,15 +51,27 @@ export const PhilosophyItem = memo(function PhilosophyItem({
   return (
     <div className="flex items-center gap-2 pl-2">
       {/* Philosophy Name */}
-      <CustomRulesText
-        className="ml-1 flex-grow"
-        custom={customDetail?.custom ?? philosophy.custom}
-        description={customDetail?.description}
-        label={philosophy.philosophy_name}
-        sections={customDetail?.sections ?? []}
-        title={customDetail?.title ?? philosophy.philosophy_name}
-        showCustomBadge
-      />
+      {philosophy.custom ? (
+        <CustomPhilosophyRulesText
+          className="ml-1 flex-grow"
+          custom={philosophy.custom}
+          philosophyId={philosophy.philosophy_id}
+          philosophyName={philosophy.philosophy_name}
+          tier={philosophy.tier}
+          huntXpMilestones={philosophy.hunt_xp_milestones}
+          showCustomBadge
+        />
+      ) : (
+        <CustomRulesText
+          className="ml-1 flex-grow"
+          custom={customDetail?.custom ?? philosophy.custom}
+          description={customDetail?.description}
+          label={philosophy.philosophy_name}
+          sections={customDetail?.sections ?? []}
+          title={customDetail?.title ?? philosophy.philosophy_name}
+          showCustomBadge
+        />
+      )}
 
       {/* Remove Button */}
       <Button

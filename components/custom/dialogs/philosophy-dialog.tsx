@@ -1,6 +1,7 @@
 'use client'
 
 import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { SafeMarkdownEditor } from '@/components/generic/safe-markdown-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,7 +27,6 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { KnowledgeDetail, NeurosisDetail } from '@/lib/types'
-import MDEditor from '@uiw/react-md-editor'
 import { ChevronDown, Minus, Plus, XIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import {
@@ -489,7 +489,7 @@ export function PhilosophyDialog({
                           data-color-mode={
                             resolvedTheme === 'dark' ? 'dark' : 'light'
                           }>
-                          <MDEditor
+                          <SafeMarkdownEditor
                             value={r.rules}
                             onChange={(val) =>
                               handleRankRulesChange(index, val ?? '')

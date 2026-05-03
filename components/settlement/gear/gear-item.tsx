@@ -1,9 +1,6 @@
 'use client'
 
-import {
-  CustomItemDisplay,
-  CustomRulesText
-} from '@/components/custom/custom-rules-sheet'
+import { CustomGearRulesTrigger } from '@/components/custom/custom-rules-sheet'
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Button } from '@/components/ui/button'
 import { SettlementDetail } from '@/lib/types'
@@ -14,8 +11,13 @@ import { memo, ReactElement } from 'react'
  * Gear Item Component Properties
  */
 export interface GearItemProps {
-  /** Custom Rules Sheet Display */
-  customDetail?: CustomItemDisplay | null
+  /**
+   * Custom Flag
+   *
+   * When true, the gear name renders as a clickable trigger that opens the
+   * custom gear sheet (a read-only mirror of the gear creation dialog).
+   */
+  custom?: boolean | null
   /** Index */
   index: number
   /** Gear Row */
@@ -30,13 +32,14 @@ export interface GearItemProps {
  * Gear Item Component
  *
  * Displays a single gear item linked to a settlement with its name, quantity
- * input, and a remove button.
+ * input, and a remove button. When the gear is user-defined, the name becomes
+ * a clickable trigger that opens the read-only gear card sheet.
  *
  * @param props Gear Item Component Properties
  * @returns Gear Item Component
  */
 export const GearItem = memo(function GearItem({
-  customDetail,
+  custom,
   index,
   gear,
   onQuantityChange,
@@ -45,13 +48,11 @@ export const GearItem = memo(function GearItem({
   return (
     <div className="flex items-center gap-2 pl-2 pb-1">
       {/* Gear Name */}
-      <CustomRulesText
+      <CustomGearRulesTrigger
         className="truncate ml-1"
-        custom={customDetail?.custom ?? false}
-        description={customDetail?.description}
-        label={gear.gear_name}
-        sections={customDetail?.sections ?? []}
-        title={customDetail?.title ?? gear.gear_name}
+        custom={custom ?? false}
+        gearId={gear.gear_id}
+        gearName={gear.gear_name}
         showCustomBadge
       />
 

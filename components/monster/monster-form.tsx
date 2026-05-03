@@ -1,6 +1,7 @@
 'use client'
 
 import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { SafeMarkdownEditor } from '@/components/generic/safe-markdown-editor'
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -53,7 +54,6 @@ import {
   TraitDetail
 } from '@/lib/types'
 import { getAvailableNodes } from '@/lib/utils'
-import MDEditor from '@uiw/react-md-editor'
 import {
   ChevronDownIcon,
   ChevronRightIcon,
@@ -716,7 +716,7 @@ export function MonsterForm({
             </TabsList>
 
             <TabsContent value="instinct">
-              <MDEditor
+              <SafeMarkdownEditor
                 value={instinct}
                 onChange={(val) => setInstinct(val ?? '')}
                 height={200}
@@ -724,7 +724,7 @@ export function MonsterForm({
               />
             </TabsContent>
             <TabsContent value="basicAction">
-              <MDEditor
+              <SafeMarkdownEditor
                 value={basicAction}
                 onChange={(val) => setBasicAction(val ?? '')}
                 height={200}
@@ -732,7 +732,7 @@ export function MonsterForm({
               />
             </TabsContent>
             <TabsContent value="blindSpot">
-              <MDEditor
+              <SafeMarkdownEditor
                 value={blindSpot}
                 onChange={(val) => setBlindSpot(val ?? '')}
                 height={200}
@@ -740,7 +740,7 @@ export function MonsterForm({
               />
             </TabsContent>
             <TabsContent value="defeatOutcome">
-              <MDEditor
+              <SafeMarkdownEditor
                 value={defeatOutcome}
                 onChange={(val) => setDefeatOutcome(val ?? '')}
                 height={200}
@@ -748,7 +748,7 @@ export function MonsterForm({
               />
             </TabsContent>
             <TabsContent value="deploymentRules">
-              <MDEditor
+              <SafeMarkdownEditor
                 value={deploymentRules}
                 onChange={(val) => setDeploymentRules(val ?? '')}
                 height={200}
@@ -756,7 +756,7 @@ export function MonsterForm({
               />
             </TabsContent>
             <TabsContent value="victoryOutcome">
-              <MDEditor
+              <SafeMarkdownEditor
                 value={victoryOutcome}
                 onChange={(val) => setVictoryOutcome(val ?? '')}
                 height={200}

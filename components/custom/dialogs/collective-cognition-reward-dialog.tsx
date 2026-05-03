@@ -1,6 +1,7 @@
 'use client'
 
 import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { SafeMarkdownEditor } from '@/components/generic/safe-markdown-editor'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,7 +13,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import MDEditor from '@uiw/react-md-editor'
 import { Minus, Plus } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { KeyboardEvent, ReactElement, useCallback, useState } from 'react'
@@ -154,7 +154,7 @@ export function CollectiveCognitionRewardDialog({
 
           <div className="flex flex-col gap-2" data-color-mode={resolvedTheme}>
             <Label htmlFor="ccr-rules">Rules</Label>
-            <MDEditor
+            <SafeMarkdownEditor
               id="ccr-rules"
               value={rules}
               onChange={(val) => setRules(val ?? '')}

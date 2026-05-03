@@ -1,6 +1,7 @@
 'use client'
 
 import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { SafeMarkdownEditor } from '@/components/generic/safe-markdown-editor'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,7 +13,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import MDEditor from '@uiw/react-md-editor'
 import { useTheme } from 'next-themes'
 import { KeyboardEvent, ReactElement, useCallback, useState } from 'react'
 
@@ -120,7 +120,7 @@ export function CustomItemDialog({
 
           <div className="flex flex-col gap-2" data-color-mode={resolvedTheme}>
             <Label htmlFor="item-rules">Rules</Label>
-            <MDEditor
+            <SafeMarkdownEditor
               id="item-rules"
               value={rules}
               onChange={(val) => setRules(val ?? '')}

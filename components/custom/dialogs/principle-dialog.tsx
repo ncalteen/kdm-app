@@ -1,6 +1,7 @@
 'use client'
 
 import { MarkdownSyntaxHelp } from '@/components/generic/markdown-syntax-help'
+import { SafeMarkdownEditor } from '@/components/generic/safe-markdown-editor'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,7 +14,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import MDEditor from '@uiw/react-md-editor'
 import { useTheme } from 'next-themes'
 import { KeyboardEvent, ReactElement, useCallback, useState } from 'react'
 
@@ -156,7 +156,7 @@ export function PrincipleDialog({
                     onKeyDown={handleKeyDown}
                   />
                 </div>
-                <MDEditor
+                <SafeMarkdownEditor
                   value={option1Rules}
                   onChange={(val) => setOption1Rules(val ?? '')}
                   height={250}
@@ -178,7 +178,7 @@ export function PrincipleDialog({
                     onKeyDown={handleKeyDown}
                   />
                 </div>
-                <MDEditor
+                <SafeMarkdownEditor
                   value={option2Rules}
                   onChange={(val) => setOption2Rules(val ?? '')}
                   height={250}

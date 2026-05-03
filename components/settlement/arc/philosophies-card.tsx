@@ -304,42 +304,14 @@ export function PhilosophiesCard({
             )}
 
             {hasFetched &&
-              sortedPhilosophies.map(({ item, originalIndex }) => {
-                const overviewParts: string[] = []
-                if (item.tier != null) overviewParts.push(`Tier ${item.tier}`)
-                if (
-                  item.hunt_xp_milestones &&
-                  item.hunt_xp_milestones.length > 0
-                )
-                  overviewParts.push(
-                    `Hunt XP Milestones: ${item.hunt_xp_milestones.join(', ')}`
-                  )
-
-                return (
-                  <PhilosophyItem
-                    key={item.id}
-                    customDetail={
-                      item.custom
-                        ? {
-                            custom: true,
-                            sections: [
-                              {
-                                label: 'Overview',
-                                content:
-                                  overviewParts.length > 0
-                                    ? overviewParts.join('\n')
-                                    : null
-                              }
-                            ]
-                          }
-                        : null
-                    }
-                    index={originalIndex}
-                    onRemove={handleRemove}
-                    philosophy={item}
-                  />
-                )
-              })}
+              sortedPhilosophies.map(({ item, originalIndex }) => (
+                <PhilosophyItem
+                  key={item.id}
+                  index={originalIndex}
+                  onRemove={handleRemove}
+                  philosophy={item}
+                />
+              ))}
           </div>
         </div>
       </CardContent>
