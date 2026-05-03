@@ -99,18 +99,7 @@ export function SurvivorCard({
       }}>
       <CardContent className="px-2">
         <div className="flex flex-col xl:flex-row xl:flex-wrap gap-2 w-full">
-          {/* First Column - Gear Grid */}
-          <div className="flex flex-col flex-1 gap-1 xl:min-w-[320px] xl:max-w-[420px]">
-            <GearGridCard
-              local={local}
-              selectedSettlement={selectedSettlement}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-              survivors={survivors}
-            />
-          </div>
-
-          {/* Second Column - Essential Stats */}
+          {/* First Column - Essential Stats */}
           <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px]">
             <StatusCard
               local={local}
@@ -169,7 +158,7 @@ export function SurvivorCard({
             />
           </div>
 
-          {/* Third Column - Combat */}
+          {/* Second Column - Combat */}
           <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px]">
             <AttributeCard
               local={local}
@@ -225,19 +214,6 @@ export function SurvivorCard({
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
-            <FightingArtsCard
-              local={local}
-              selectedSettlement={selectedSettlement}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-              survivors={survivors}
-            />
-            <CursedGearCard
-              local={local}
-              selectedSettlement={selectedSettlement}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-            />
             {mode === SurvivorCardMode.SURVIVOR_CARD && (
               <NextDepartureCard
                 local={local}
@@ -247,7 +223,7 @@ export function SurvivorCard({
             )}
           </div>
 
-          {/* Fourth Column - ARC */}
+          {/* Third Column - ARC */}
           {selectedSettlement?.survivor_type ===
             DatabaseSurvivorType[SurvivorType.ARC] && (
             <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px] order-3">
@@ -267,6 +243,30 @@ export function SurvivorCard({
               />
             </div>
           )}
+
+          {/* Fourth Column - Gear Grid */}
+          <div className="flex flex-col flex-1 gap-1 xl:min-w-[320px] xl:max-w-[420px]">
+            <GearGridCard
+              local={local}
+              selectedSettlement={selectedSettlement}
+              selectedSurvivor={selectedSurvivor}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+            />
+            <CursedGearCard
+              local={local}
+              selectedSettlement={selectedSettlement}
+              selectedSurvivor={selectedSurvivor}
+              setSurvivors={setSurvivors}
+            />
+            <FightingArtsCard
+              local={local}
+              selectedSettlement={selectedSettlement}
+              selectedSurvivor={selectedSurvivor}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
