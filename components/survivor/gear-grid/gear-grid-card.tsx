@@ -61,11 +61,15 @@ const POSITION_LABELS: { [key in GearGridPosition]: string } = {
   bottom_right: 'Bottom Right'
 }
 
-/** Map a position key to the matching `gear_grid` column. */
-const POSITION_TO_COLUMN: { [key in GearGridPosition]: keyof GearGridDetail } =
-  Object.fromEntries(
-    GRID_POSITIONS.map((position) => [position, `pos_${position}`])
-  ) as { [key in GearGridPosition]: keyof GearGridDetail }
+type GearGridPositionColumn = Extract<
+  keyof GearGridDetail,
+  `pos_${GearGridPosition}`
+>
+
+/** Derive the matching `gear_grid` column for a position key. */
+const getPositionColumn = (
+  position: GearGridPosition
+): GearGridPositionColumn => `pos_${position}`
 
 /** Tailwind background color classes for affinity totals. */
 const AFFINITY_BG: { [key in Affinity]: string } = {
