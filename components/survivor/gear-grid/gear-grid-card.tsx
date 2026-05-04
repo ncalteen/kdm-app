@@ -19,11 +19,7 @@ import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useToast } from '@/hooks/use-toast'
 import { getArmorSets } from '@/lib/dal/armor-set'
 import { getGear } from '@/lib/dal/gear'
-import {
-  applyGearGridSlot,
-  clearGearGrid,
-  setGearGridSlot
-} from '@/lib/dal/gear-grid'
+import { applyGearGridSlot, setGearGridSlot } from '@/lib/dal/gear-grid'
 import {
   AFFINITIES,
   Affinity,
@@ -35,7 +31,6 @@ import {
 } from '@/lib/gear-grid'
 import {
   ERROR_MESSAGE,
-  GEAR_GRID_CLEARED_MESSAGE,
   GEAR_GRID_SETTLEMENT_REQUIRED_ERROR_MESSAGE,
   GEAR_GRID_SLOT_CLEARED_MESSAGE,
   GEAR_GRID_SLOT_EQUIPPED_MESSAGE
@@ -210,14 +205,6 @@ export function GearGridCard({
     [grid, armorSets, gearMap]
   )
 
-  /** Whether any slot currently has gear equipped. */
-  const hasEquipped = useMemo(() => {
-    if (!grid) return false
-    return GRID_POSITIONS.some(
-      (p) => typeof grid[POSITION_TO_COLUMN[p]] === 'string'
-    )
-  }, [grid])
-
   /**
    * Apply Optimistic Grid
    *
@@ -298,61 +285,6 @@ export function GearGridCard({
       toast
     ]
   )
-
-  /**
-   * Handle Clear All
-   *
-   * Empties every slot on the grid in a single round-trip after confirming
-   * with the user. Optimistic with rollback on failure.
-   */
-  const handleClearAll = useCallback(async () => {
-    if (!selectedSurvivor || saving || !hasEquipped) return
-
-    setSaving(true)
-
-    const cleared: GearGridDetail = {
-      id: grid?.id ?? null,
-      pos_top_left: null,
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: null,
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null
-    }
-
-    const previous = applyOptimisticGrid(cleared)
-
-    try {
-      const persisted = await clearGearGrid(selectedSurvivor.id)
-
-      setSurvivors((prev) =>
-        prev.map((s) =>
-          s.id === selectedSurvivor.id ? { ...s, gear_grid: persisted } : s
-        )
-      )
-
-      toast.success(
-        GEAR_GRID_CLEARED_MESSAGE(selectedSurvivor.survivor_name ?? undefined)
-      )
-    } catch (error) {
-      applyOptimisticGrid(previous)
-      console.error('Gear Grid Clear Error:', error)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setSaving(false)
-    }
-  }, [
-    applyOptimisticGrid,
-    grid,
-    hasEquipped,
-    saving,
-    selectedSurvivor,
-    setSurvivors,
-    toast
-  ])
 
   /**
    * Open Picker for the Given Slot
