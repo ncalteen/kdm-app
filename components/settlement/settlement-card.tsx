@@ -258,7 +258,7 @@ export function SettlementCard({
     )
 
   return (
-    <>
+    <div className="pt-(--header-height)">
       {/* Overview Card */}
       <OverviewCard
         local={local}
@@ -639,6 +639,6 @@ export function SettlementCard({
           )}
         </div>
       </div>
-    </>
+    </div>
   )
 }

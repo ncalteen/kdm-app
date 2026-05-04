@@ -264,7 +264,7 @@ export function OverviewCard({
   )
 
   return (
-    <Card className="border-0 p-0 py-2">
+    <Card className="border-0 p-2 py-2">
       <CardContent className="p-0">
         {/* Desktop Layout */}
         <div className="hidden lg:flex flex-row items-start gap-4">
