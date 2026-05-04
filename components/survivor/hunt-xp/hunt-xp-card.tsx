@@ -201,7 +201,7 @@ export function HuntXPCard({
                 <Label className="font-bold text-left text-sm self-start lg:self-center">
                   Hunt XP
                 </Label>
-                <div className="flex items-center gap-1">
+                <div className="grid grid-cols-[repeat(16,minmax(0,1fr))] place-items-center gap-0.5 w-full lg:flex lg:w-auto lg:items-center lg:gap-1">
                   {Array.from({ length: 16 }, (_, i) => {
                     const checked = (huntXP ?? 0) > i
 
