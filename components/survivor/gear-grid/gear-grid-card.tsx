@@ -5,11 +5,20 @@ import {
   GearCandidate,
   GearGridPickerDialog
 } from '@/components/survivor/gear-grid/gear-grid-picker-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle
+} from '@/components/ui/sheet'
 import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useToast } from '@/hooks/use-toast'
+import { getArmorSets } from '@/lib/dal/armor-set'
 import { getGear } from '@/lib/dal/gear'
 import {
   applyGearGridSlot,
@@ -20,6 +29,9 @@ import {
   AFFINITIES,
   Affinity,
   computeAffinityCounts,
+  EffectiveArmorSetBonus,
+  getEffectiveArmorSetBonuses,
+  getEquippedGearIds,
   GRID_POSITIONS
 } from '@/lib/gear-grid'
 import {
@@ -30,6 +42,7 @@ import {
   GEAR_GRID_SLOT_EQUIPPED_MESSAGE
 } from '@/lib/messages'
 import {
+  ArmorSetDetail,
   GearDetail,
   GearGridDetail,
   GearGridPosition,
@@ -38,7 +51,7 @@ import {
   SurvivorsStateSetter
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { Trash2Icon } from 'lucide-react'
+import { ShieldCheckIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /** Display label for each grid position. */
@@ -109,6 +122,9 @@ export function GearGridCard({
 
   const [pickerSlot, setPickerSlot] = useState<GearGridPosition | null>(null)
   const [saving, setSaving] = useState(false)
+  const [activeBonus, setActiveBonus] = useState<EffectiveArmorSetBonus | null>(
+    null
+  )
 
   // Lazily fetch the gear catalog so we can render full GearDetail content in
   // each cell. The settlement's gear list only carries id+name+quantity, but
@@ -119,6 +135,19 @@ export function GearGridCard({
     {
       initial: {},
       errorContext: 'Gear Grid Catalog Fetch Error',
+      onError: () => toast.error(ERROR_MESSAGE())
+    }
+  )
+
+  // Lazily fetch the armor set catalog so qualifying bonuses can be displayed
+  // alongside the grid. Built-in sets, owned custom sets, and shared custom
+  // sets are all covered by `getArmorSets`.
+  const { data: armorSets } = useCatalogFetch<ArmorSetDetail[]>(
+    selectedSettlement?.id,
+    () => getArmorSets(),
+    {
+      initial: [],
+      errorContext: 'Armor Set Catalog Fetch Error',
       onError: () => toast.error(ERROR_MESSAGE())
     }
   )
@@ -167,6 +196,19 @@ export function GearGridCard({
   const affinityCounts = useMemo(
     () => computeAffinityCounts(grid, gearMap),
     [grid, gearMap]
+  )
+
+  /**
+   * Effective Armor Set Bonuses
+   *
+   * Catalog armor sets the survivor's grid currently qualifies for. When no
+   * catalog set qualifies but the grid still has three pieces of armor in
+   * different locations, the synthetic Clothed & Satiated fallback is surfaced
+   * as the sole entry.
+   */
+  const effectiveBonuses = useMemo(
+    () => getEffectiveArmorSetBonuses(grid, armorSets, gearMap),
+    [grid, armorSets, gearMap]
   )
 
   /** Whether any slot currently has gear equipped. */
@@ -362,25 +404,58 @@ export function GearGridCard({
         <CardTitle className="text-md flex flex-row items-center justify-between gap-2">
           <span>Gear Grid</span>
 
-          {/* Affinity totals share the header row with the title and clear
-              action so the card body can devote all its space to the grid. */}
-          <div className="flex items-center gap-3" aria-label="Affinity totals">
-            {AFFINITIES.map((color) => (
+          {/*
+            Affinity totals and qualifying armor set badges share the header row
+            with the title and clear action so the card body can devote all its
+            space to the grid. 
+          */}
+          <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3"
+              aria-label="Affinity totals">
+              {AFFINITIES.map((color) => (
+                <div
+                  key={color}
+                  className="flex items-center gap-1"
+                  aria-label={`${color.toLowerCase()} affinity total`}>
+                  <span
+                    className={cn(
+                      'h-3 w-3 rounded-sm ring-1 ring-border',
+                      AFFINITY_BG[color]
+                    )}
+                  />
+                  <span className="text-sm font-bold tabular-nums">
+                    {affinityCounts[color]}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {selectedSurvivor && effectiveBonuses.length > 0 && (
               <div
-                key={color}
-                className="flex items-center gap-1"
-                aria-label={`${color.toLowerCase()} affinity total`}>
-                <span
-                  className={cn(
-                    'h-3 w-3 rounded-sm ring-1 ring-border',
-                    AFFINITY_BG[color]
-                  )}
-                />
-                <span className="text-sm font-bold tabular-nums">
-                  {affinityCounts[color]}
-                </span>
+                className="flex flex-wrap items-center gap-1.5"
+                aria-label="Qualifying armor set bonuses">
+                {effectiveBonuses.map((bonus) => (
+                  <Badge
+                    key={bonus.armorSet?.id ?? bonus.name}
+                    variant={bonus.isFallback ? 'outline' : 'default'}
+                    className="cursor-pointer gap-1"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setActiveBonus(bonus)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        setActiveBonus(bonus)
+                      }
+                    }}
+                    aria-label={`Show rules for ${bonus.name}`}>
+                    <ShieldCheckIcon className="h-3 w-3" />
+                    {bonus.name}
+                  </Badge>
+                ))}
               </div>
-            ))}
+            )}
           </div>
 
           <Button
@@ -431,6 +506,97 @@ export function GearGridCard({
           onSelect={handlePickerSelect}
         />
       )}
+
+      <Sheet
+        open={activeBonus !== null}
+        onOpenChange={(open) => !open && setActiveBonus(null)}>
+        <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-md">
+          <SheetHeader className="gap-2 border-b border-border/60 px-6 pt-6 pb-4">
+            <div className="flex items-start justify-between gap-3 pr-8">
+              <SheetTitle className="text-lg font-semibold leading-tight tracking-tight break-words">
+                {activeBonus?.name ?? ''}
+              </SheetTitle>
+              {activeBonus?.isFallback && (
+                <Badge
+                  variant="outline"
+                  className="mt-0.5 shrink-0 text-[10px] uppercase tracking-[0.2em]">
+                  Fallback
+                </Badge>
+              )}
+            </div>
+            <SheetDescription className="text-xs italic text-muted-foreground">
+              Armor Set Bonus
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex flex-col gap-4 overflow-y-auto px-6 py-4">
+            {activeBonus?.bonuses ? (
+              <p className="whitespace-pre-line text-sm leading-relaxed">
+                {activeBonus.bonuses}
+              </p>
+            ) : (
+              <p className="text-sm italic text-muted-foreground">
+                No bonus rules recorded for this set.
+              </p>
+            )}
+
+            {activeBonus?.armorSet && activeBonus.armorSet.slots.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Required Slots
+                </div>
+                <ul className="flex flex-col gap-2">
+                  {activeBonus.armorSet.slots.map((slot) => {
+                    const equipped = getEquippedGearIds(grid)
+                    const satisfiedBy = slot.gear_ids.find((id) =>
+                      equipped.has(id)
+                    )
+
+                    return (
+                      <li
+                        key={slot.id}
+                        className="flex flex-col gap-1 rounded-md border border-border/60 px-3 py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium">
+                            {slot.slot_name}
+                          </span>
+                          {!slot.required && (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] uppercase tracking-[0.2em]">
+                              Optional
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {slot.gear_ids.length === 0 ? (
+                            <span className="text-xs italic text-muted-foreground">
+                              No candidate gear listed.
+                            </span>
+                          ) : (
+                            slot.gear_ids.map((gearId) => {
+                              const gear = gearMap[gearId]
+                              const isEquipped = gearId === satisfiedBy
+                              return (
+                                <Badge
+                                  key={gearId}
+                                  variant={isEquipped ? 'default' : 'outline'}
+                                  className="text-xs">
+                                  {gear?.gear_name ?? 'Unknown Gear'}
+                                </Badge>
+                              )
+                            })
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </Card>
   )
 }

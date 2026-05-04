@@ -1,5 +1,6 @@
 import { Database } from '@/lib/database.types'
 import {
+  ArmorSetDetail,
   GearDetail,
   GearGridDetail,
   GearGridPosition,
@@ -346,4 +347,191 @@ export function computeEmbarkGearShortages(
   shortages.sort((a, b) => a.gear_name.localeCompare(b.gear_name))
 
   return shortages
+}
+
+/**
+ * Get Equipped Gear IDs
+ *
+ * Returns the set of unique gear IDs currently equipped on the supplied gear
+ * grid. Empty slots are ignored. Used by armor-set qualification helpers.
+ *
+ * @param grid Gear Grid (or null)
+ * @returns Set of Equipped Gear IDs
+ */
+export function getEquippedGearIds(grid: GearGridDetail | null): Set<string> {
+  const ids = new Set<string>()
+
+  if (!grid) return ids
+
+  for (const position of GRID_POSITIONS) {
+    const gearId = getGearIdAtPosition(grid, position)
+
+    if (gearId) ids.add(gearId)
+  }
+
+  return ids
+}
+
+/**
+ * Armor Set Qualifies
+ *
+ * Mirrors the database `armor_set_qualifies` helper introduced in the armor
+ * set slot migration. Returns true when every required slot of the supplied
+ * `armorSet` has at least one of its candidate gear pieces present in
+ * `equippedGearIds`. Optional (non-required) slots are ignored. Sets without
+ * any required slots trivially qualify.
+ *
+ * Keeping the rule in sync with the database lets the UI surface qualifying
+ * sets without an additional round-trip per set.
+ *
+ * @param armorSet Armor Set Detail
+ * @param equippedGearIds Currently Equipped Gear IDs
+ * @returns Whether the Survivor Qualifies for the Set's Bonus
+ */
+export function armorSetQualifies(
+  armorSet: ArmorSetDetail,
+  equippedGearIds: ReadonlySet<string>
+): boolean {
+  for (const slot of armorSet.slots) {
+    if (!slot.required) continue
+
+    const satisfied = slot.gear_ids.some((id) => equippedGearIds.has(id))
+    if (!satisfied) return false
+  }
+
+  return true
+}
+
+/**
+ * Get Qualifying Armor Sets
+ *
+ * Returns every armor set whose required slots are satisfied by the supplied
+ * gear grid. The list is sorted alphabetically by name for stable display.
+ *
+ * @param grid Gear Grid (or null when the survivor has no grid yet)
+ * @param armorSets Armor Sets to Evaluate
+ * @returns Qualifying Armor Sets
+ */
+export function getQualifyingArmorSets(
+  grid: GearGridDetail | null,
+  armorSets: ArmorSetDetail[]
+): ArmorSetDetail[] {
+  if (!grid || armorSets.length === 0) return []
+
+  const equipped = getEquippedGearIds(grid)
+  if (equipped.size === 0) return []
+
+  const qualifying = armorSets.filter((set) => armorSetQualifies(set, equipped))
+
+  qualifying.sort((a, b) => a.armor_set_name.localeCompare(b.armor_set_name))
+
+  return qualifying
+}
+
+/** Display Name for the Fallback Armor Set Bonus */
+export const CLOTHED_AND_SATIATED_NAME = 'Clothed & Satiated' as const
+
+/**
+ * Clothed & Satiated Bonus Description
+ *
+ * Mirrors the canonical Kingdom Death rules text so the card can render the
+ * same description used for catalog armor sets.
+ */
+export const CLOTHED_AND_SATIATED_BONUS =
+  'A survivor wearing 3 or more pieces of armor (each in a different armor ' +
+  'location) qualifies for the Clothed & Satiated bonus when they do not ' +
+  'qualify for any other armor set bonus.'
+
+/**
+ * Clothed & Satiated Qualifies
+ *
+ * Returns true when the gear grid has at least three pieces of equipped gear
+ * occupying three different armor locations (HEAD/CHEST/ARMS/WAIST/FEET).
+ * The fallback bonus only applies when no other armor set qualifies — that
+ * exclusivity is the caller's responsibility (see
+ * {@link getEffectiveArmorSetBonuses}).
+ *
+ * @param grid Gear Grid (or null)
+ * @param gearMap Lookup of GearDetail by Gear ID
+ * @returns Whether the Survivor Qualifies for the Fallback Bonus
+ */
+export function clothedAndSatiatedQualifies(
+  grid: GearGridDetail | null,
+  gearMap: { [key: string]: GearDetail }
+): boolean {
+  if (!grid) return false
+
+  const locations = new Set<Database['public']['Enums']['armor_location']>()
+
+  for (const position of GRID_POSITIONS) {
+    const gearId = getGearIdAtPosition(grid, position)
+    if (!gearId) continue
+
+    const gear = gearMap[gearId]
+    if (!gear?.armor_location) continue
+
+    locations.add(gear.armor_location)
+  }
+
+  return locations.size >= 3
+}
+
+/**
+ * Effective Armor Set Bonus
+ *
+ * One entry returned by {@link getEffectiveArmorSetBonuses}. Either points to
+ * a catalog armor set (`armorSet` populated) or describes the synthetic
+ * Clothed & Satiated fallback (`armorSet` null with `name` set).
+ */
+export interface EffectiveArmorSetBonus {
+  /** Catalog Armor Set (null for the Clothed & Satiated fallback) */
+  armorSet: ArmorSetDetail | null
+  /** Display Name (catalog name or `CLOTHED_AND_SATIATED_NAME`) */
+  name: string
+  /** Bonus Description Shown to the User */
+  bonuses: string | null
+  /** Whether This Entry Is the Clothed & Satiated Fallback */
+  isFallback: boolean
+}
+
+/**
+ * Get Effective Armor Set Bonuses
+ *
+ * Returns the armor set bonuses the survivor currently qualifies for. When
+ * the survivor qualifies for one or more catalog sets, those entries are
+ * returned and the Clothed & Satiated fallback is suppressed. When no
+ * catalog set qualifies, the fallback is included if the survivor meets the
+ * three-different-armor-locations rule.
+ *
+ * @param grid Gear Grid (or null)
+ * @param armorSets Catalog Armor Sets
+ * @param gearMap Lookup of GearDetail by Gear ID
+ * @returns Effective Bonuses (alphabetical for catalog sets)
+ */
+export function getEffectiveArmorSetBonuses(
+  grid: GearGridDetail | null,
+  armorSets: ArmorSetDetail[],
+  gearMap: { [key: string]: GearDetail }
+): EffectiveArmorSetBonus[] {
+  const qualifying = getQualifyingArmorSets(grid, armorSets)
+
+  if (qualifying.length > 0)
+    return qualifying.map((set) => ({
+      armorSet: set,
+      name: set.armor_set_name,
+      bonuses: set.bonuses,
+      isFallback: false
+    }))
+
+  if (clothedAndSatiatedQualifies(grid, gearMap))
+    return [
+      {
+        armorSet: null,
+        name: CLOTHED_AND_SATIATED_NAME,
+        bonuses: CLOTHED_AND_SATIATED_BONUS,
+        isFallback: true
+      }
+    ]
+
+  return []
 }

@@ -226,6 +226,40 @@ export type GearDetail = Omit<
 }
 
 /**
+ * Armor Set Slot Detail
+ *
+ * Represents a single slot in an armor set together with the list of gear
+ * pieces that satisfy it. A survivor qualifies for a slot when their gear
+ * grid contains at least one of the listed `gear_ids`.
+ */
+export type ArmorSetSlotDetail = {
+  /** Slot ID */
+  id: string
+  /** Slot Name (e.g. "Head", "Chest") */
+  slot_name: string
+  /** Slot Display Order */
+  slot_order: number
+  /** Whether the Slot Must Be Satisfied for the Set to Qualify */
+  required: boolean
+  /** Gear IDs That Satisfy This Slot */
+  gear_ids: string[]
+}
+
+/**
+ * Armor Set Detail
+ *
+ * Used throughout the app to represent an armor set together with its slots
+ * and slot gear candidates.
+ */
+export type ArmorSetDetail = Omit<
+  Tables<'armor_set'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {
+  /** Slots Composing the Set */
+  slots: ArmorSetSlotDetail[]
+}
+
+/**
  * Gear Grid Position
  *
  * One of the nine slots on a survivor's 3x3 gear grid. Position keys map

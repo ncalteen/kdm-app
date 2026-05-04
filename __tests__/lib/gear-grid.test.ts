@@ -1,12 +1,19 @@
 import {
   AFFINITIES,
+  armorSetQualifies,
+  CLOTHED_AND_SATIATED_NAME,
+  clothedAndSatiatedQualifies,
   computeAffinityCounts,
   computeEmbarkGearShortages,
   emptyAffinityCounts,
+  getEffectiveArmorSetBonuses,
+  getEquippedGearIds,
   getGearIdAtPosition,
+  getQualifyingArmorSets,
   GRID_POSITIONS
 } from '@/lib/gear-grid'
 import {
+  ArmorSetDetail,
   GearDetail,
   GearGridDetail,
   SettlementDetail,
@@ -456,5 +463,235 @@ describe('computeEmbarkGearShortages', () => {
         makeSettlementGearRow('bone-axe', 'Bone Axe', 0)
       ])
     ).toEqual([])
+  })
+})
+
+/**
+ * Build a minimal {@link ArmorSetDetail} stub with the given slot definitions.
+ */
+function makeArmorSet(
+  id: string,
+  name: string,
+  slots: { id: string; required?: boolean; gear_ids: string[] }[],
+  bonuses: string | null = null
+): ArmorSetDetail {
+  return {
+    id,
+    custom: false,
+    armor_set_name: name,
+    bonuses,
+    slots: slots.map((slot, index) => ({
+      id: slot.id,
+      slot_name: slot.id,
+      slot_order: index,
+      required: slot.required ?? true,
+      gear_ids: slot.gear_ids
+    }))
+  }
+}
+
+describe('getEquippedGearIds', () => {
+  it('returns empty set for null grid', () => {
+    expect(getEquippedGearIds(null).size).toBe(0)
+  })
+
+  it('deduplicates gear ids across slots', () => {
+    const grid: GearGridDetail = {
+      ...emptyGrid(),
+      pos_top_left: 'a',
+      pos_top_center: 'a',
+      pos_mid_center: 'b'
+    }
+
+    expect([...getEquippedGearIds(grid)].sort()).toEqual(['a', 'b'])
+  })
+})
+
+describe('armorSetQualifies', () => {
+  it('returns true when every required slot has a candidate equipped', () => {
+    const set = makeArmorSet('set-1', 'Set 1', [
+      { id: 'head', gear_ids: ['helm'] },
+      { id: 'chest', gear_ids: ['plate', 'tunic'] }
+    ])
+
+    expect(armorSetQualifies(set, new Set(['helm', 'tunic']))).toBe(true)
+  })
+
+  it('returns false when a required slot has no matching gear', () => {
+    const set = makeArmorSet('set-1', 'Set 1', [
+      { id: 'head', gear_ids: ['helm'] },
+      { id: 'chest', gear_ids: ['plate'] }
+    ])
+
+    expect(armorSetQualifies(set, new Set(['helm']))).toBe(false)
+  })
+
+  it('ignores optional (non-required) slots', () => {
+    const set = makeArmorSet('set-1', 'Set 1', [
+      { id: 'head', gear_ids: ['helm'] },
+      { id: 'cape', required: false, gear_ids: ['cape'] }
+    ])
+
+    expect(armorSetQualifies(set, new Set(['helm']))).toBe(true)
+  })
+
+  it('trivially qualifies when the set has no slots', () => {
+    const set = makeArmorSet('set-empty', 'Empty', [])
+
+    expect(armorSetQualifies(set, new Set())).toBe(true)
+  })
+})
+
+describe('getQualifyingArmorSets', () => {
+  it('returns sets sorted alphabetically by name', () => {
+    const setA = makeArmorSet('a', 'Lantern Vigil', [
+      { id: 'head', gear_ids: ['helm'] }
+    ])
+    const setB = makeArmorSet('b', 'Bone Aegis', [
+      { id: 'chest', gear_ids: ['bone-chest'] }
+    ])
+    const setC = makeArmorSet('c', 'Phoenix Plate', [
+      { id: 'arms', gear_ids: ['phoenix-arms'] }
+    ])
+
+    const grid: GearGridDetail = {
+      ...emptyGrid(),
+      pos_top_left: 'helm',
+      pos_top_center: 'bone-chest'
+    }
+
+    const result = getQualifyingArmorSets(grid, [setA, setB, setC])
+
+    expect(result.map((s) => s.armor_set_name)).toEqual([
+      'Bone Aegis',
+      'Lantern Vigil'
+    ])
+  })
+
+  it('returns empty list when grid is null', () => {
+    const set = makeArmorSet('a', 'A', [{ id: 'head', gear_ids: ['helm'] }])
+
+    expect(getQualifyingArmorSets(null, [set])).toEqual([])
+  })
+})
+
+describe('clothedAndSatiatedQualifies', () => {
+  it('returns false when grid has fewer than 3 distinct armor locations', () => {
+    const grid: GearGridDetail = {
+      ...emptyGrid(),
+      pos_top_left: 'helm',
+      pos_top_center: 'plate'
+    }
+
+    const gearMap = {
+      helm: makeGear({ id: 'helm', armor_location: 'HEAD' }),
+      plate: makeGear({ id: 'plate', armor_location: 'CHEST' })
+    }
+
+    expect(clothedAndSatiatedQualifies(grid, gearMap)).toBe(false)
+  })
+
+  it('returns true when 3 distinct armor locations are equipped', () => {
+    const grid: GearGridDetail = {
+      ...emptyGrid(),
+      pos_top_left: 'helm',
+      pos_top_center: 'plate',
+      pos_top_right: 'gauntlet'
+    }
+
+    const gearMap = {
+      helm: makeGear({ id: 'helm', armor_location: 'HEAD' }),
+      plate: makeGear({ id: 'plate', armor_location: 'CHEST' }),
+      gauntlet: makeGear({ id: 'gauntlet', armor_location: 'ARMS' })
+    }
+
+    expect(clothedAndSatiatedQualifies(grid, gearMap)).toBe(true)
+  })
+
+  it('only counts unique armor locations', () => {
+    const grid: GearGridDetail = {
+      ...emptyGrid(),
+      pos_top_left: 'helm-a',
+      pos_top_center: 'helm-b',
+      pos_top_right: 'helm-c'
+    }
+
+    const gearMap = {
+      'helm-a': makeGear({ id: 'helm-a', armor_location: 'HEAD' }),
+      'helm-b': makeGear({ id: 'helm-b', armor_location: 'HEAD' }),
+      'helm-c': makeGear({ id: 'helm-c', armor_location: 'HEAD' })
+    }
+
+    expect(clothedAndSatiatedQualifies(grid, gearMap)).toBe(false)
+  })
+})
+
+describe('getEffectiveArmorSetBonuses', () => {
+  it('returns qualifying catalog sets and suppresses the fallback', () => {
+    const set = makeArmorSet('set', 'Lantern Vigil', [
+      { id: 'head', gear_ids: ['helm'] }
+    ])
+
+    const grid: GearGridDetail = {
+      ...emptyGrid(),
+      pos_top_left: 'helm',
+      pos_top_center: 'plate',
+      pos_top_right: 'gauntlet'
+    }
+
+    const gearMap = {
+      helm: makeGear({ id: 'helm', armor_location: 'HEAD' }),
+      plate: makeGear({ id: 'plate', armor_location: 'CHEST' }),
+      gauntlet: makeGear({ id: 'gauntlet', armor_location: 'ARMS' })
+    }
+
+    const result = getEffectiveArmorSetBonuses(grid, [set], gearMap)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].name).toBe('Lantern Vigil')
+    expect(result[0].isFallback).toBe(false)
+  })
+
+  it('returns the Clothed & Satiated fallback when no catalog set qualifies', () => {
+    const set = makeArmorSet('set', 'Lantern Vigil', [
+      { id: 'head', gear_ids: ['rare-helm'] }
+    ])
+
+    const grid: GearGridDetail = {
+      ...emptyGrid(),
+      pos_top_left: 'helm',
+      pos_top_center: 'plate',
+      pos_top_right: 'gauntlet'
+    }
+
+    const gearMap = {
+      helm: makeGear({ id: 'helm', armor_location: 'HEAD' }),
+      plate: makeGear({ id: 'plate', armor_location: 'CHEST' }),
+      gauntlet: makeGear({ id: 'gauntlet', armor_location: 'ARMS' })
+    }
+
+    const result = getEffectiveArmorSetBonuses(grid, [set], gearMap)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].name).toBe(CLOTHED_AND_SATIATED_NAME)
+    expect(result[0].isFallback).toBe(true)
+    expect(result[0].armorSet).toBeNull()
+  })
+
+  it('returns nothing when neither a catalog set nor the fallback qualifies', () => {
+    const set = makeArmorSet('set', 'Lantern Vigil', [
+      { id: 'head', gear_ids: ['rare-helm'] }
+    ])
+
+    const grid: GearGridDetail = {
+      ...emptyGrid(),
+      pos_top_left: 'helm'
+    }
+
+    const gearMap = {
+      helm: makeGear({ id: 'helm', armor_location: 'HEAD' })
+    }
+
+    expect(getEffectiveArmorSetBonuses(grid, [set], gearMap)).toEqual([])
   })
 })
