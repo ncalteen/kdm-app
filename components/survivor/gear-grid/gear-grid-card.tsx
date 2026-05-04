@@ -245,6 +245,7 @@ export function GearGridCard({
       try {
         const persisted = await setGearGridSlot(
           selectedSurvivor.id,
+          grid,
           position,
           gearId
         )
