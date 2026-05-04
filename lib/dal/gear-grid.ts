@@ -74,10 +74,14 @@ export async function getGearGrid(
 /**
  * Save Gear Grid
  *
- * Persists every slot of a survivor's gear grid in a single round-trip. Inserts
- * a new row when the survivor has no grid yet and updates the existing row
- * otherwise. The row is identified by `survivor_id` (which is unique per
- * survivor).
+ * Persists the provided slots of a survivor's gear grid in a single
+ * round-trip. Inserts a new row when the survivor has no grid yet and updates
+ * the existing row otherwise. The row is identified by `survivor_id` (which is
+ * unique per survivor).
+ *
+ * Passing all positions preserves the existing "save entire grid" behavior.
+ * Passing only a subset of positions allows single-slot edits without
+ * rewriting unrelated columns.
  *
  * @param survivorId Survivor ID
  * @param positions Position-Keyed Gear IDs (null clears the slot)
@@ -85,29 +89,35 @@ export async function getGearGrid(
  */
 export async function saveGearGrid(
   survivorId: string,
-  positions: { [key in GearGridPosition]: string | null }
+  positions: Partial<{ [key in GearGridPosition]: string | null }>
 ): Promise<GearGridDetail> {
   if (!survivorId) throw new Error('Required: Survivor ID')
+
+  const providedPositions = (
+    Object.keys(positions) as GearGridPosition[]
+  ).filter((position) =>
+    Object.prototype.hasOwnProperty.call(positions, position)
+  )
+
+  if (providedPositions.length === 0)
+    throw new Error('Required: At least one gear grid position')
+
+  const payload: { survivor_id: string } & Partial<
+    Record<keyof GearGridDetail, string | null>
+  > = {
+    survivor_id: survivorId
+  }
+
+  for (const position of providedPositions) {
+    const column = POSITION_TO_COLUMN[position]
+    payload[column] = positions[position] ?? null
+  }
 
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('gear_grid')
-    .upsert(
-      {
-        survivor_id: survivorId,
-        pos_top_left: positions.top_left,
-        pos_top_center: positions.top_center,
-        pos_top_right: positions.top_right,
-        pos_mid_left: positions.mid_left,
-        pos_mid_center: positions.mid_center,
-        pos_mid_right: positions.mid_right,
-        pos_bottom_left: positions.bottom_left,
-        pos_bottom_center: positions.bottom_center,
-        pos_bottom_right: positions.bottom_right
-      },
-      { onConflict: 'survivor_id' }
-    )
+    .upsert(payload, { onConflict: 'survivor_id' })
     .select(
       'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right'
     )
