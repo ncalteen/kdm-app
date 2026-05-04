@@ -6,7 +6,6 @@ import {
   GearGridPickerDialog
 } from '@/components/survivor/gear-grid/gear-grid-picker-dialog'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Sheet,
@@ -51,7 +50,7 @@ import {
   SurvivorsStateSetter
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { ShieldCheckIcon, Trash2Icon } from 'lucide-react'
+import { ShieldCheckIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /** Display label for each grid position. */
@@ -402,73 +401,55 @@ export function GearGridCard({
     <Card className="p-0 border-1 gap-0">
       <CardHeader className="px-4 pt-2 pb-0">
         <CardTitle className="text-md flex flex-row items-center justify-between gap-2">
-          <span>Gear Grid</span>
-
           {/*
             Affinity totals and qualifying armor set badges share the header row
             with the title and clear action so the card body can devote all its
             space to the grid. 
           */}
-          <div className="flex items-center gap-3">
-            <div
-              className="flex items-center gap-3"
-              aria-label="Affinity totals">
-              {AFFINITIES.map((color) => (
-                <div
-                  key={color}
-                  className="flex items-center gap-1"
-                  aria-label={`${color.toLowerCase()} affinity total`}>
-                  <span
-                    className={cn(
-                      'h-3 w-3 rounded-sm ring-1 ring-border',
-                      AFFINITY_BG[color]
-                    )}
-                  />
-                  <span className="text-sm font-bold tabular-nums">
-                    {affinityCounts[color]}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {selectedSurvivor && effectiveBonuses.length > 0 && (
+          <div className="flex items-center gap-3" aria-label="Affinity totals">
+            {AFFINITIES.map((color) => (
               <div
-                className="flex flex-wrap items-center gap-1.5"
-                aria-label="Qualifying armor set bonuses">
-                {effectiveBonuses.map((bonus) => (
-                  <Badge
-                    key={bonus.armorSet?.id ?? bonus.name}
-                    variant={bonus.isFallback ? 'outline' : 'default'}
-                    className="cursor-pointer gap-1"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setActiveBonus(bonus)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        setActiveBonus(bonus)
-                      }
-                    }}
-                    aria-label={`Show rules for ${bonus.name}`}>
-                    <ShieldCheckIcon className="h-3 w-3" />
-                    {bonus.name}
-                  </Badge>
-                ))}
+                key={color}
+                className="flex items-center gap-1"
+                aria-label={`${color.toLowerCase()} affinity total`}>
+                <span
+                  className={cn(
+                    'h-3 w-3 rounded-sm ring-1 ring-border',
+                    AFFINITY_BG[color]
+                  )}
+                />
+                <span className="text-sm font-bold tabular-nums">
+                  {affinityCounts[color]}
+                </span>
               </div>
-            )}
+            ))}
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            type="button"
-            onClick={handleClearAll}
-            disabled={!hasEquipped || saving}
-            aria-label="Clear all gear from grid"
-            title="Clear all gear from grid">
-            <Trash2Icon className="h-4 w-4" />
-            Clear
-          </Button>
+          {selectedSurvivor && effectiveBonuses.length > 0 && (
+            <div
+              className="flex flex-wrap items-center gap-1.5"
+              aria-label="Qualifying armor set bonuses">
+              {effectiveBonuses.map((bonus) => (
+                <Badge
+                  key={bonus.armorSet?.id ?? bonus.name}
+                  variant={bonus.isFallback ? 'outline' : 'default'}
+                  className="cursor-pointer gap-1"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setActiveBonus(bonus)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setActiveBonus(bonus)
+                    }
+                  }}
+                  aria-label={`Show rules for ${bonus.name}`}>
+                  <ShieldCheckIcon className="h-3 w-3" />
+                  {bonus.name}
+                </Badge>
+              ))}
+            </div>
+          )}
         </CardTitle>
       </CardHeader>
 
