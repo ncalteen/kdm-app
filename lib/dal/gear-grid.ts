@@ -7,18 +7,19 @@ import { GearGridDetail, GearGridPosition } from '@/lib/types'
  * Maps a logical {@link GearGridPosition} to the physical `gear_grid` column
  * name that stores the gear ID for that slot.
  */
-const POSITION_TO_COLUMN: { [key in GearGridPosition]: keyof GearGridDetail } =
-  {
-    top_left: 'pos_top_left',
-    top_center: 'pos_top_center',
-    top_right: 'pos_top_right',
-    mid_left: 'pos_mid_left',
-    mid_center: 'pos_mid_center',
-    mid_right: 'pos_mid_right',
-    bottom_left: 'pos_bottom_left',
-    bottom_center: 'pos_bottom_center',
-    bottom_right: 'pos_bottom_right'
-  }
+export const POSITION_TO_COLUMN: {
+  [key in GearGridPosition]: keyof GearGridDetail
+} = {
+  top_left: 'pos_top_left',
+  top_center: 'pos_top_center',
+  top_right: 'pos_top_right',
+  mid_left: 'pos_mid_left',
+  mid_center: 'pos_mid_center',
+  mid_right: 'pos_mid_right',
+  bottom_left: 'pos_bottom_left',
+  bottom_center: 'pos_bottom_center',
+  bottom_right: 'pos_bottom_right'
+}
 
 /**
  * Empty Gear Grid

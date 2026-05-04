@@ -110,7 +110,7 @@ export function HeadCard({
 
   return (
     <Card className="p-2 border-0">
-      <CardContent className="p-0 h-19">
+      <CardContent className="p-0 min-h-19">
         <div className="flex flex-row">
           {/* Head Armor */}
           <div className="relative flex items-center">
@@ -129,7 +129,7 @@ export function HeadCard({
             />
           </div>
 
-          <div className="mx-2 w-px bg-border h-19" />
+          <div className="mx-2 w-px bg-border self-stretch" />
 
           <div className="flex flex-row items-start w-full">
             <div className="text-sm font-bold flex flex-row gap-1 w-18">

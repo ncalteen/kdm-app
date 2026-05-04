@@ -19,7 +19,11 @@ import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useToast } from '@/hooks/use-toast'
 import { getArmorSets } from '@/lib/dal/armor-set'
 import { getGear } from '@/lib/dal/gear'
-import { applyGearGridSlot, setGearGridSlot } from '@/lib/dal/gear-grid'
+import {
+  applyGearGridSlot,
+  POSITION_TO_COLUMN,
+  setGearGridSlot
+} from '@/lib/dal/gear-grid'
 import {
   AFFINITIES,
   Affinity,
@@ -60,16 +64,6 @@ const POSITION_LABELS: { [key in GearGridPosition]: string } = {
   bottom_center: 'Bottom Center',
   bottom_right: 'Bottom Right'
 }
-
-type GearGridPositionColumn = Extract<
-  keyof GearGridDetail,
-  `pos_${GearGridPosition}`
->
-
-/** Derive the matching `gear_grid` column for a position key. */
-const getPositionColumn = (
-  position: GearGridPosition
-): GearGridPositionColumn => `pos_${position}`
 
 /** Tailwind background color classes for affinity totals. */
 const AFFINITY_BG: { [key in Affinity]: string } = {
@@ -251,7 +245,6 @@ export function GearGridCard({
       try {
         const persisted = await setGearGridSlot(
           selectedSurvivor.id,
-          grid,
           position,
           gearId
         )
