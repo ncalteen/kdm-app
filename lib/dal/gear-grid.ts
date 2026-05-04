@@ -132,35 +132,22 @@ export async function saveGearGrid(
  * Set Gear Grid Slot
  *
  * Convenience wrapper around {@link saveGearGrid} that mutates a single slot on
- * the grid. Existing slots are preserved as-is. The current grid (when one
- * exists) is supplied by the caller to avoid an extra round-trip.
+ * the grid. Existing slots are preserved by the database update/upsert logic,
+ * so only the changed position is persisted here.
  *
  * @param survivorId Survivor ID
- * @param current Current Gear Grid (or null if the survivor has no grid yet)
  * @param position Slot to Mutate
  * @param gearId Gear ID to Place (null clears the slot)
  * @returns Persisted Gear Grid
  */
 export async function setGearGridSlot(
   survivorId: string,
-  current: GearGridDetail | null,
   position: GearGridPosition,
   gearId: string | null
 ): Promise<GearGridDetail> {
-  const baseline = current ?? emptyGearGrid()
-
   return saveGearGrid(survivorId, {
-    top_left: baseline.pos_top_left,
-    top_center: baseline.pos_top_center,
-    top_right: baseline.pos_top_right,
-    mid_left: baseline.pos_mid_left,
-    mid_center: baseline.pos_mid_center,
-    mid_right: baseline.pos_mid_right,
-    bottom_left: baseline.pos_bottom_left,
-    bottom_center: baseline.pos_bottom_center,
-    bottom_right: baseline.pos_bottom_right,
     [position]: gearId
-  } as { [key in GearGridPosition]: string | null })
+  })
 }
 
 /**
