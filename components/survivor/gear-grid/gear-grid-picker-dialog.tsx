@@ -33,7 +33,11 @@ interface GearGridPickerDialogProps {
   onOpenChange: (open: boolean) => void
   /** Slot Label (e.g. "Top Left") */
   slotLabel: string
-  /** Settlement Gear (filtered to items still available to equip) */
+  /**
+   * Settlement Gear
+   *
+   * Filtered within this component to items still available to equip.
+   */
   candidates: GearCandidate[]
   /** Catalog of GearDetail keyed by gear ID */
   gearMap: { [key: string]: GearDetail }
