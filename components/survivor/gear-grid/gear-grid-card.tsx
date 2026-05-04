@@ -56,17 +56,9 @@ const POSITION_LABELS: { [key in GearGridPosition]: string } = {
 
 /** Map a position key to the matching `gear_grid` column. */
 const POSITION_TO_COLUMN: { [key in GearGridPosition]: keyof GearGridDetail } =
-  {
-    top_left: 'pos_top_left',
-    top_center: 'pos_top_center',
-    top_right: 'pos_top_right',
-    mid_left: 'pos_mid_left',
-    mid_center: 'pos_mid_center',
-    mid_right: 'pos_mid_right',
-    bottom_left: 'pos_bottom_left',
-    bottom_center: 'pos_bottom_center',
-    bottom_right: 'pos_bottom_right'
-  }
+  Object.fromEntries(
+    GRID_POSITIONS.map((position) => [position, `pos_${position}`])
+  ) as { [key in GearGridPosition]: keyof GearGridDetail }
 
 /** Tailwind background color classes for affinity totals. */
 const AFFINITY_BG: { [key in Affinity]: string } = {
