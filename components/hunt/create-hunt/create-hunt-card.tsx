@@ -657,7 +657,7 @@ export function CreateHuntCard({
   ])
 
   return (
-    <Card className="w-[400px]">
+    <Card className="w-full max-w-[400px]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PawPrintIcon className="h-5 w-5" />
@@ -818,47 +818,45 @@ export function CreateHuntCard({
           AI Deck
         </h3>
 
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2 w-full">
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-center block">A Cards</Label>
-              <NumericInput
-                label="A Cards"
-                value={displayedLevel?.advanced_cards ?? 0}
-                min={0}
-                disabled={true}
-              />
-            </div>
+        <div className="flex gap-2 w-full">
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs text-center block">A Cards</Label>
+            <NumericInput
+              label="A Cards"
+              value={displayedLevel?.advanced_cards ?? 0}
+              min={0}
+              disabled={true}
+            />
+          </div>
 
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-center block">B Cards</Label>
-              <NumericInput
-                label="B Cards"
-                value={displayedLevel?.basic_cards ?? 0}
-                min={0}
-                disabled={true}
-              />
-            </div>
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs text-center block">B Cards</Label>
+            <NumericInput
+              label="B Cards"
+              value={displayedLevel?.basic_cards ?? 0}
+              min={0}
+              disabled={true}
+            />
+          </div>
 
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-center block">L Cards</Label>
-              <NumericInput
-                label="L Cards"
-                value={displayedLevel?.legendary_cards ?? 0}
-                min={0}
-                disabled={true}
-              />
-            </div>
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs text-center block">L Cards</Label>
+            <NumericInput
+              label="L Cards"
+              value={displayedLevel?.legendary_cards ?? 0}
+              min={0}
+              disabled={true}
+            />
+          </div>
 
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-center block">O Cards</Label>
-              <NumericInput
-                label="O Cards"
-                value={displayedLevel?.overtone_cards ?? 0}
-                min={0}
-                disabled={true}
-              />
-            </div>
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs text-center block">O Cards</Label>
+            <NumericInput
+              label="O Cards"
+              value={displayedLevel?.overtone_cards ?? 0}
+              min={0}
+              disabled={true}
+            />
           </div>
         </div>
 

@@ -105,7 +105,7 @@ export function ShowdownCard({
       survivors={survivors}
     />
   ) : (
-    <div className="mt-10 flex flex-wrap items-start justify-center gap-4">
+    <div className="lg:mt-10 flex flex-wrap items-start justify-center gap-4">
       <CreateShowdownCard
         local={local}
         pendingSpecialShowdown={pendingSpecialShowdown}
