@@ -10,9 +10,9 @@ Kingdom Death: Monster's core loop has three major phases:
 
 1. **Hunt Phase**: Survivors track and hunt a monster, facing events and
    challenges along the way.
-2. **Showdown Phase**: Survivors confront the monster in battle using their
+1. **Showdown Phase**: Survivors confront the monster in battle using their
    skills and equipment.
-3. **Settlement Phase**: Survivors return home to craft items, build structures,
+1. **Settlement Phase**: Survivors return home to craft items, build structures,
    and manage resources.
 
 User-facing copy should fit the game's tone: lanterns as hope, darkness as
