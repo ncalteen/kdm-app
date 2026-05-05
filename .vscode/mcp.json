@@ -1,9 +1,13 @@
 {
   "servers": {
-    "github": {
-      "url": "https://api.githubcopilot.com/mcp/",
-      "type": "http"
+    "kdm-postgres": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:postgres@127.0.0.1:54322/postgres?sslmode=disable"
+      ]
     }
-  },
-  "inputs": []
+  }
 }

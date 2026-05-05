@@ -414,6 +414,55 @@ describe('areCraftingCostsAffordable', () => {
       )
     ).toBe(false)
   })
+
+  it('does not count the same resource quantity toward multiple type costs', () => {
+    const resources = makeSettlementResources([
+      {
+        id: 'sr-1',
+        resource_id: 'r1',
+        quantity: 2,
+        resource_types: ['BONE', 'STONE']
+      }
+    ])
+
+    expect(
+      areCraftingCostsAffordable(
+        {
+          gearCosts: [],
+          resourceCosts: [],
+          resourceTypeCosts: [
+            { resourceType: 'BONE', quantity: 2 },
+            { resourceType: 'STONE', quantity: 2 }
+          ]
+        },
+        [],
+        resources
+      )
+    ).toBe(false)
+  })
+
+  it('does not count a specifically required resource again as a type cost', () => {
+    const resources = makeSettlementResources([
+      {
+        id: 'sr-1',
+        resource_id: 'r1',
+        quantity: 1,
+        resource_types: ['BONE']
+      }
+    ])
+
+    expect(
+      areCraftingCostsAffordable(
+        {
+          gearCosts: [],
+          resourceCosts: [{ resourceId: 'r1', quantity: 1 }],
+          resourceTypeCosts: [{ resourceType: 'BONE', quantity: 1 }]
+        },
+        [],
+        resources
+      )
+    ).toBe(false)
+  })
 })
 
 describe('formatCraftingCostsForDisplay', () => {

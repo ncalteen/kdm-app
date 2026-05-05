@@ -292,14 +292,72 @@ export function seedPatternToCraftingCostsSpec(
 }
 
 /**
+ * Can Allocate Resource Type Costs
+ *
+ * Checks whether finite settlement resource quantities can cover resource-type
+ * costs without spending the same unit twice.
+ *
+ * @param resourceTypeCosts Resource Type Costs
+ * @param resourcePools Remaining Resource Pools
+ * @returns True if Costs Can Be Allocated
+ */
+function canAllocateResourceTypeCosts(
+  resourceTypeCosts: CraftingCostsSpec['resourceTypeCosts'],
+  resourcePools: { quantity: number; resourceTypes: ResourceType[] }[]
+): boolean {
+  const remainingCosts = new Map<ResourceType, number>()
+
+  for (const cost of resourceTypeCosts)
+    remainingCosts.set(
+      cost.resourceType,
+      (remainingCosts.get(cost.resourceType) ?? 0) + cost.quantity
+    )
+
+  const allocate = (): boolean => {
+    const nextCost = [...remainingCosts.entries()]
+      .filter(([, quantity]) => quantity > 0)
+      .sort(
+        ([a], [b]) =>
+          resourcePools.filter(
+            (pool) => pool.quantity > 0 && pool.resourceTypes.includes(a)
+          ).length -
+          resourcePools.filter(
+            (pool) => pool.quantity > 0 && pool.resourceTypes.includes(b)
+          ).length
+      )[0]
+
+    if (!nextCost) return true
+
+    const [resourceType, needed] = nextCost
+
+    for (const pool of resourcePools) {
+      if (pool.quantity <= 0 || !pool.resourceTypes.includes(resourceType))
+        continue
+
+      const quantity = Math.min(pool.quantity, needed)
+
+      pool.quantity -= quantity
+      remainingCosts.set(resourceType, needed - quantity)
+
+      if (allocate()) return true
+
+      pool.quantity += quantity
+      remainingCosts.set(resourceType, needed)
+    }
+
+    return false
+  }
+
+  return allocate()
+}
+
+/**
  * Are Crafting Costs Affordable
  *
  * Best-effort check that a settlement currently has enough gear/resources to
- * satisfy the spec. Returns false when any specific gear/resource is short, or
- * when any resource-type total cannot be covered by the sum of matching
- * settlement_resource quantities. Does *not* solve the bin-packing problem
- * across overlapping types, so it errs toward optimistic when a single
- * settlement_resource row's quantity is shared across multiple type costs.
+ * satisfy the spec. Returns false when any specific gear/resource is short or
+ * when resource-type costs cannot be allocated without spending the same
+ * settlement_resource quantity twice.
  *
  * @param spec Crafting Costs Spec
  * @param gear Settlement Gear Rows
@@ -332,8 +390,33 @@ export function areCraftingCostsAffordable(
     if ((resourceByResourceId.get(c.resourceId) ?? 0) < c.quantity) return false
 
   if (spec.resourceTypeCosts.length > 0) {
+    const remainingResources = resources.map((row) => ({ ...row }))
+
+    for (const cost of spec.resourceCosts) {
+      let remainingCost = cost.quantity
+
+      for (const row of remainingResources) {
+        if (remainingCost <= 0) break
+        if (row.resource_id !== cost.resourceId || row.quantity <= 0) continue
+
+        const spent = Math.min(row.quantity, remainingCost)
+
+        row.quantity -= spent
+        remainingCost -= spent
+      }
+    }
+
+    const resourcePools = remainingResources
+      .filter(
+        (row) => row.quantity > 0 && (row.resource_types ?? []).length > 0
+      )
+      .map((row) => ({
+        quantity: row.quantity,
+        resourceTypes: (row.resource_types ?? []) as ResourceType[]
+      }))
+
     const totalsByType = new Map<ResourceType, number>()
-    for (const row of resources) {
+    for (const row of remainingResources) {
       for (const t of row.resource_types ?? []) {
         const key = t as ResourceType
         totalsByType.set(key, (totalsByType.get(key) ?? 0) + row.quantity)
@@ -341,6 +424,9 @@ export function areCraftingCostsAffordable(
     }
     for (const c of spec.resourceTypeCosts)
       if ((totalsByType.get(c.resourceType) ?? 0) < c.quantity) return false
+
+    if (!canAllocateResourceTypeCosts(spec.resourceTypeCosts, resourcePools))
+      return false
   }
 
   return true
