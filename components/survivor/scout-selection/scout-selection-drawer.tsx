@@ -120,6 +120,19 @@ export function ScoutSelectionDrawer({
         <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
+
+          {isMobile && (
+            <div className="flex gap-2">
+              <DrawerClose asChild>
+                <Button variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
+              </DrawerClose>
+              <DrawerClose asChild>
+                <Button onClick={handleConfirm}>Confirm Selection</Button>
+              </DrawerClose>
+            </div>
+          )}
         </DrawerHeader>
 
         <div className="px-4 pb-4 h-[60vh] flex gap-4">
@@ -147,18 +160,20 @@ export function ScoutSelectionDrawer({
           )}
         </div>
 
-        <DrawerFooter>
-          <div className="flex gap-2">
-            <DrawerClose asChild>
-              <Button variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-            </DrawerClose>
-            <DrawerClose asChild>
-              <Button onClick={handleConfirm}>Confirm Selection</Button>
-            </DrawerClose>
-          </div>
-        </DrawerFooter>
+        {!isMobile && (
+          <DrawerFooter>
+            <div className="flex gap-2">
+              <DrawerClose asChild>
+                <Button variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
+              </DrawerClose>
+              <DrawerClose asChild>
+                <Button onClick={handleConfirm}>Confirm Selection</Button>
+              </DrawerClose>
+            </div>
+          </DrawerFooter>
+        )}
       </DrawerContent>
     </Drawer>
   )
