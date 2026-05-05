@@ -515,10 +515,10 @@ export interface EffectiveArmorSetBonus {
  * three-different-armor-locations rule.
  *
  * Exactly one entry is marked `selected: true` when the result is non-empty:
- *   * The catalog set whose ID matches `grid.selected_armor_set_id` (when
+ *   - The catalog set whose ID matches `grid.selected_armor_set_id` (when
  *     that set still qualifies).
- *   * Otherwise the first qualifying catalog set (alphabetical order).
- *   * Otherwise the Clothed & Satiated fallback when it is the sole entry.
+ *   - Otherwise the first qualifying catalog set (alphabetical order).
+ *   - Otherwise the Clothed & Satiated fallback when it is the sole entry.
  *
  * @param grid Gear Grid (or null)
  * @param armorSets Catalog Armor Sets
