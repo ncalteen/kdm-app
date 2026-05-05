@@ -21,7 +21,9 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { useToast } from '@/hooks/use-toast'
+import { getPatterns } from '@/lib/dal/pattern'
 import { getResources } from '@/lib/dal/resource'
+import { addSettlementPatterns } from '@/lib/dal/settlement-pattern'
 import {
   addSettlementResources,
   removeSettlementResource,
@@ -29,10 +31,12 @@ import {
 } from '@/lib/dal/settlement-resource'
 import {
   ERROR_MESSAGE,
+  PATTERN_UNLOCKED_FROM_RESOURCE_MESSAGE,
   RESOURCE_REMOVED_MESSAGE,
   RESOURCE_UPDATED_MESSAGE
 } from '@/lib/messages'
 import {
+  PatternDetail,
   ResourceDetail,
   SettlementDetail,
   SettlementStateSetter
@@ -82,6 +86,17 @@ export function ResourcesCard({
     onError: () => toast.error(ERROR_MESSAGE())
   })
 
+  // Patterns are loaded alongside resources so that when a freshly-added
+  // resource carries a `pattern_id`, the auto-unlock flow can resolve the
+  // pattern's display name for the optimistic settlement row and the toast.
+  const { data: availablePatterns } = useCatalogFetch<{
+    [key: string]: PatternDetail
+  }>(selectedSettlement?.id, () => getPatterns(), {
+    initial: {},
+    errorContext: 'Settlement Resources Patterns Fetch Error',
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
+
   const selectableResources = useMemo(() => {
     const linkedIds = new Set(
       (selectedSettlement?.resources ?? []).map((r) => r.resource_id)
@@ -105,6 +120,10 @@ export function ResourcesCard({
    * Handle Add Resource
    *
    * Optimistically adds a resource to the settlement, then persists to the DB.
+   * If the resource carries a `pattern_id` and the settlement has not yet
+   * learned that pattern, the pattern is also added optimistically and
+   * persisted as a separate mutation so the resource and pattern can each roll
+   * back independently on failure.
    *
    * @param resourceId Resource ID
    */
@@ -131,11 +150,38 @@ export function ResourcesCard({
         resource_types: resourceInfo.resource_types
       }
 
+      // Determine whether the resource should also unlock a pattern. Only
+      // unlock when the pattern is known in the catalog (so we can show its
+      // name) and is not already linked to this settlement.
+      const linkedPatternIds = new Set(
+        selectedSettlement.patterns.map((p) => p.pattern_id)
+      )
+      const unlockPatternId = resourceInfo.pattern_id
+      const unlockPatternInfo =
+        unlockPatternId && !linkedPatternIds.has(unlockPatternId)
+          ? (availablePatterns[unlockPatternId] ?? null)
+          : null
+
+      const tempPatternId = unlockPatternInfo
+        ? `temp-${crypto.randomUUID()}`
+        : null
+      const optimisticPatternRow: SettlementDetail['patterns'][0] | null =
+        unlockPatternInfo && tempPatternId
+          ? {
+              id: tempPatternId,
+              pattern_id: unlockPatternInfo.id,
+              pattern_name: unlockPatternInfo.pattern_name
+            }
+          : null
+
       const updatedResources = [...selectedSettlement.resources, optimisticRow]
 
       setSelectedSettlement({
         ...selectedSettlement,
-        resources: updatedResources
+        resources: updatedResources,
+        patterns: optimisticPatternRow
+          ? [...selectedSettlement.patterns, optimisticPatternRow]
+          : selectedSettlement.patterns
       })
 
       void mutate({
@@ -166,8 +212,55 @@ export function ResourcesCard({
         },
         successMessage: RESOURCE_UPDATED_MESSAGE()
       })
+
+      // Persist the auto-unlocked pattern in a sibling mutation so a failure
+      // in the resource insert (e.g. a stock-only constraint) does not block
+      // the pattern from being added, and vice versa.
+      if (unlockPatternInfo && tempPatternId) {
+        void mutate({
+          context: 'Resource Pattern Unlock',
+          persist: () =>
+            addSettlementPatterns(
+              [unlockPatternInfo.id],
+              selectedSettlement.id
+            ),
+          onSuccess: (row) => {
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    patterns: prev.patterns.map((p) =>
+                      p.id === tempPatternId ? { ...p, id: row[0].id } : p
+                    )
+                  }
+                : null
+            )
+          },
+          rollback: () => {
+            setSelectedSettlement((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    patterns: prev.patterns.filter(
+                      (p) => p.id !== tempPatternId
+                    )
+                  }
+                : null
+            )
+          },
+          successMessage: PATTERN_UNLOCKED_FROM_RESOURCE_MESSAGE(
+            unlockPatternInfo.pattern_name
+          )
+        })
+      }
     },
-    [selectedSettlement, availableResources, setSelectedSettlement, mutate]
+    [
+      selectedSettlement,
+      availableResources,
+      availablePatterns,
+      setSelectedSettlement,
+      mutate
+    ]
   )
 
   /**
