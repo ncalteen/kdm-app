@@ -164,8 +164,11 @@ describe('getSettlementForUser', () => {
 
     const result = await getSettlementForUser()
     expect(result).toHaveLength(2)
-    expect(result[0]).toMatchObject({ ...ownedSettlement, shared: false })
-    expect(result[1]).toMatchObject({ ...sharedSettlement, shared: true })
+    expect(result[0]).toMatchObject({ ...ownedSettlement, role: 'owner' })
+    expect(result[1]).toMatchObject({
+      ...sharedSettlement,
+      role: 'collaborator'
+    })
   })
 
   it('throws when owned settlements query fails', async () => {

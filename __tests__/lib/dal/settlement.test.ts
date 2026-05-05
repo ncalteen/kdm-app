@@ -86,7 +86,7 @@ describe('getSettlement', () => {
     await expect(getSettlement(null)).rejects.toThrow('Required: Settlement ID')
   })
 
-  it('returns owned settlement details with shared:false', async () => {
+  it('returns owned settlement details with role:owner', async () => {
     vi.mocked(getUserId).mockResolvedValue('user-1')
 
     // Owned lookup
@@ -103,10 +103,10 @@ describe('getSettlement', () => {
     })
 
     const result = await getSettlement('s1')
-    expect(result).toMatchObject({ id: 's1', shared: false })
+    expect(result).toMatchObject({ id: 's1', role: 'owner' })
   })
 
-  it('returns shared settlement details with shared:true', async () => {
+  it('returns shared settlement details with role:collaborator', async () => {
     vi.mocked(getUserId).mockResolvedValue('user-1')
 
     // Owned lookup → no row
@@ -134,7 +134,7 @@ describe('getSettlement', () => {
     })
 
     const result = await getSettlement('s1')
-    expect(result).toMatchObject({ id: 's1', shared: true })
+    expect(result).toMatchObject({ id: 's1', role: 'collaborator' })
   })
 
   it('returns null when neither owned nor shared row exists', async () => {
@@ -235,7 +235,7 @@ describe('getSettlement', () => {
     })
 
     const result = await getSettlement('s1')
-    expect(result).toMatchObject({ id: 's1', shared: true })
+    expect(result).toMatchObject({ id: 's1', role: 'collaborator' })
   })
 })
 

@@ -1,7 +1,7 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
-import { UserSettingsDetail } from '@/lib/types'
+import { SettlementRole, UserSettingsDetail } from '@/lib/types'
 import { SupabaseClient } from '@supabase/supabase-js'
 
 /**
@@ -173,7 +173,8 @@ export async function getUserSettings(): Promise<UserSettingsDetail | null> {
  *
  * Includes settlements owned by the user and settlements shared with the user
  * via the `settlement_shared_user` table. Returns minimal data for the
- * settlement switcher sidebar.
+ * settlement switcher sidebar. Each row is tagged with the caller's `role` so
+ * downstream UI can gate owner-only affordances.
  *
  * @returns List of Settlement(s)
  */
@@ -182,7 +183,7 @@ export async function getSettlementForUser(): Promise<
     campaign_type: DatabaseCampaignType
     id: string
     settlement_name: string
-    shared: boolean
+    role: SettlementRole
   }[]
 > {
   const userId = await getUserId()
@@ -213,15 +214,15 @@ export async function getSettlementForUser(): Promise<
     campaign_type: DatabaseCampaignType
     id: string
     settlement_name: string
-    shared: boolean
+    role: SettlementRole
   }[] = []
 
-  for (const s of ownedResult.data ?? []) results.push({ ...s, shared: false })
+  for (const s of ownedResult.data ?? []) results.push({ ...s, role: 'owner' })
 
   for (const row of sharedResult.data ?? []) {
     const s = Array.isArray(row.settlement) ? row.settlement[0] : row.settlement
 
-    if (s) results.push({ ...s, shared: true })
+    if (s) results.push({ ...s, role: 'collaborator' })
   }
 
   return results

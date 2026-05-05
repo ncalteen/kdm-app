@@ -290,7 +290,7 @@ export async function getSettlement(
   if (ownedError)
     throw new Error(`Error Fetching Settlement: ${ownedError.message}`)
 
-  if (ownedSettlement) settlement = { ...ownedSettlement, shared: false }
+  if (ownedSettlement) settlement = { ...ownedSettlement, role: 'owner' }
 
   // Check if it is a shared settlement.
   if (!settlement) {
@@ -310,7 +310,8 @@ export async function getSettlement(
       ? sharedSettlementRow.settlement[0]
       : sharedSettlementRow?.settlement
 
-    if (sharedSettlement) settlement = { ...sharedSettlement, shared: true }
+    if (sharedSettlement)
+      settlement = { ...sharedSettlement, role: 'collaborator' }
   }
 
   if (!settlement) return null
