@@ -182,7 +182,11 @@ export function GearGridPickerDialog({
     </div>
   )
 
-  /** Footer actions (shared between desktop dialog and mobile drawer). */
+  /**
+   * Footer actions (shared between desktop dialog and mobile drawer).
+   *
+   * @returns Footer action buttons for the picker dialog/drawer
+   */
   const actions = (
     <>
       <Button
