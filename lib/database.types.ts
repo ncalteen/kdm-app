@@ -661,6 +661,7 @@ export type Database = {
           pos_top_center: string | null
           pos_top_left: string | null
           pos_top_right: string | null
+          selected_armor_set_id: string | null
           survivor_id: string
           updated_at: string
         }
@@ -676,6 +677,7 @@ export type Database = {
           pos_top_center?: string | null
           pos_top_left?: string | null
           pos_top_right?: string | null
+          selected_armor_set_id?: string | null
           survivor_id: string
           updated_at?: string
         }
@@ -691,6 +693,7 @@ export type Database = {
           pos_top_center?: string | null
           pos_top_left?: string | null
           pos_top_right?: string | null
+          selected_armor_set_id?: string | null
           survivor_id?: string
           updated_at?: string
         }
@@ -756,6 +759,13 @@ export type Database = {
             columns: ["pos_top_right"]
             isOneToOne: false
             referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_selected_armor_set_id_fkey"
+            columns: ["selected_armor_set_id"]
+            isOneToOne: false
+            referencedRelation: "armor_set"
             referencedColumns: ["id"]
           },
           {
