@@ -5789,6 +5789,13 @@ export type Database = {
         Args: { desired_username: string }
         Returns: boolean
       }
+      get_shared_settlement_owners: {
+        Args: never
+        Returns: {
+          settlement_id: string
+          username: string
+        }[]
+      }
       initialize_user_settings: {
         Args: { p_user_id: string; p_username: string }
         Returns: undefined

@@ -14,6 +14,12 @@ import {
   SidebarMenuItem
 } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/components/ui/tooltip'
+import { LanternMark } from '@/components/generic/lantern-mark'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { getSettlementForUser } from '@/lib/dal/user'
@@ -95,6 +101,7 @@ export function SettlementSwitcher({
       id: string
       settlement_name: string
       role: SettlementRole
+      owner_username: string | null
     }[]
   >([])
   const [isLoading, setIsLoading] = useState(true)
@@ -238,8 +245,32 @@ export function SettlementSwitcher({
                     {CampaignType[settlement.campaign_type]}
                   </span>
                 </div>
+                {settlement.role === 'collaborator' && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="ml-auto inline-flex items-center"
+                        aria-label={
+                          settlement.owner_username
+                            ? `Shared by @${settlement.owner_username}`
+                            : 'Shared with you'
+                        }>
+                        <LanternMark className="h-3.5 w-3.5 text-amber-400/90" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {settlement.owner_username
+                        ? `Shared by @${settlement.owner_username}`
+                        : 'Shared with you'}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 {settlement.id === selectedSettlementId && (
-                  <Check className="ml-auto" />
+                  <Check
+                    className={
+                      settlement.role === 'collaborator' ? 'ml-1' : 'ml-auto'
+                    }
+                  />
                 )}
               </DropdownMenuItem>
             ))}
