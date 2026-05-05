@@ -550,12 +550,12 @@ export function ActiveHuntCard({
   return (
     <div className="flex flex-col gap-2 h-full relative">
       {/* Action Buttons */}
-      <div className="flex justify-between pointer-events-none">
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-0 pointer-events-none">
         <Button
           variant="outline"
           size="sm"
           onClick={handleCancelHunt}
-          className="pointer-events-auto"
+          className="pointer-events-auto w-full sm:w-auto"
           title="End Hunt">
           <XIcon className="size-4" />
           End Hunt
@@ -571,7 +571,7 @@ export function ActiveHuntCard({
               <Button
                 variant="outline"
                 size="sm"
-                className="pointer-events-auto"
+                className="pointer-events-auto w-full sm:w-auto"
                 title="Roll Hunt Event">
                 Roll Hunt Event <DicesIcon className="size-4" />
               </Button>
@@ -612,7 +612,7 @@ export function ActiveHuntCard({
             variant="outline"
             size="sm"
             onClick={() => rollHuntEvent(HuntEventType.BASIC)}
-            className="pointer-events-auto"
+            className="pointer-events-auto w-full sm:w-auto"
             title="Roll Hunt Event">
             Roll Hunt Event <DicesIcon className="size-4" />
           </Button>
@@ -622,7 +622,7 @@ export function ActiveHuntCard({
           variant="destructive"
           size="sm"
           onClick={handleShowdown}
-          className="pointer-events-auto"
+          className="pointer-events-auto w-full sm:w-auto"
           title="Begin Showdown">
           Begin Showdown <ChevronRightIcon className="size-4" />
         </Button>
