@@ -221,12 +221,12 @@ export async function getSettlementForUser(): Promise<
     )
 
   const ownerUsernames = new Map<string, string>(
-    (
-      (ownersResult.data ?? []) as {
-        settlement_id: string
-        username: string
-      }[]
-    ).map((row) => [row.settlement_id, row.username])
+    (ownersResult.data ?? []).map(
+      (row: { settlement_id: string; username: string }) => [
+        row.settlement_id,
+        row.username
+      ]
+    )
   )
 
   const results: {
