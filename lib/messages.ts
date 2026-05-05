@@ -1176,6 +1176,19 @@ export const NEMESIS_UPDATED_MESSAGE = () =>
 export const PATTERN_REMOVED_MESSAGE = () => 'The pattern has been lost.'
 
 /**
+ * Pattern Unlocked From Resource
+ *
+ * Used when a resource added to settlement storage carries a `pattern_id`
+ * that the settlement has not yet learned. The resource itself is gathered
+ * separately; this message announces the bonus pattern.
+ *
+ * @param patternName Pattern Name
+ * @returns Pattern Unlocked Message
+ */
+export const PATTERN_UNLOCKED_FROM_RESOURCE_MESSAGE = (patternName: string) =>
+  `A new pattern emerges from the gathered resource: ${patternName}.`
+
+/**
  * Pattern Created
  *
  * @returns Pattern Created Message
