@@ -165,6 +165,9 @@ When preparing PRs:
 - Formatting checks pass
 - Linting checks pass
 - Unit tests pass and coverage requirements are met
+- **Always** ensure that PRs include a version update in `package.json` and
+  `package-lock.json`. These should follow semantic versioning principles so
+  that changes are properly reflected in the version numbers.
 
 The body of the PR should include:
 
