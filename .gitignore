@@ -50,3 +50,4 @@ yarn-error.log*
 next-env.d.ts
 
 reports
+.codex*

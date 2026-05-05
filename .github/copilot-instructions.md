@@ -1,142 +1,42 @@
 # Copilot Instructions
 
-## Development
+## Project Context
 
-- Do not run `npm run build`, `npm run dev`, `npm run format` , `npm run lint`,
-  or `npm run start` commands unless you are specifically asked to do so. These
-  commands are used to check and format the code, but they can be time-consuming
-  and may not be necessary for your task.
+This is **Archivist**, a Next.js companion app for tracking Kingdom Death:
+Monster campaigns. The app helps players manage settlements, survivors, hunts,
+showdowns, crafting, resources, timelines, and custom game content.
 
-## Environment Setup
+Kingdom Death: Monster's core loop has three major phases:
 
-Install dependencies by running:
+1. **Hunt Phase**: Survivors track and hunt a monster, facing events and
+   challenges along the way.
+2. **Showdown Phase**: Survivors confront the monster in battle using their
+   skills and equipment.
+3. **Settlement Phase**: Survivors return home to craft items, build structures,
+   and manage resources.
 
-```bash
-npm install
-```
+User-facing copy should fit the game's tone: lanterns as hope, darkness as
+danger, overwhelming odds, survival at great cost, and hard-earned victories.
 
-## General Coding Guidelines
+### Gameplay
 
-- Follow standard TypeScript and JavaScript coding conventions and best
-  practices
-- Changes should maintain consistency with existing patterns and style
-- Document changes clearly and thoroughly, including updates to existing
-  comments when appropriate
-- Do not include basic, unnecessary comments that simply restate what the code
-  is doing (focus on explaining _why_, not _what_)
-- Use consistent error handling patterns throughout the codebase
-- Use TypeScript's type system to ensure type safety and clarity
-- Keep functions focused and manageable
-- Use descriptive variable and function names that clearly convey their purpose
-- When suggesting code changes, always opt for the most maintainable approach.
-  Try your best to keep the code clean and follow "Don't Repeat Yourself" (DRY)
-  principles
-- Avoid unnecessary complexity and always consider the long-term maintainability
-  of the code
-- Use JSDoc comments to document functions, classes, and complex logic. This
-  helps other developers understand the purpose and usage of the code, and can
-  also improve the development experience by providing better autocomplete and
-  type information in IDEs.
-  - JSDoc comments should follow a standard format. For example:
+Kingdom Death: Monster, is a tabletop game focused around a group of survivors
+building and expanding a settlement. The core gameplay loop is broken down into
+three parts:
 
-    ```ts
-    /**
-     * Calculates Rectangle Area
-     *
-     * Calculates area of a rectangle and returns the result.
-     *
-     * @param width Rectangle Width
-     * @param height Rectangle Height
-     * @returns Rectangle Area
-     */
-    function calculateArea(width: number, height: number): number {
-      return width * height
-    }
-    ```
+1. **Hunt Phase**: Survivors track and hunt a monster, facing various challenges
+   and events along the way.
+1. **Showdown Phase**: Survivors confront the monster in a battle, using their
+   skills and equipment to defeat it.
+1. **Settlement Phase**: Survivors return to their settlement, where they can
+   craft items, build structures, and manage their resources.
 
-- When adding JSDoc comments, ensure each function, class, enum value, etc.
-  always follow **Capital Case** for the description title. Additional
-  description can be added below the title in normal sentence case to provide
-  further context or explanation about the function, class, or enum value. For
-  example:
+The purpose of this application is to act as a companion tool where players can
+keep track of their settlement and survivors. Additionally, they can switch
+between the various phases (above), which will surface relevant information and
+functionality.
 
-  ```ts
-  /**
-   * Calculates Rectangle Area
-   *
-   * Calculates area of a rectangle and returns the result.
-   *
-   * @param width Rectangle Width
-   * @param height Rectangle Height
-   * @returns Rectangle Area
-   */
-  function calculateArea(width: number, height: number): number {
-    return width * height
-  }
-
-  /**
-   * Survivor Type
-   *
-   * Represents the types of survivors in the game
-   */
-  enum SurvivorType {
-    /** Arc Survivor */
-    ARC = 'arc',
-    /** Core Survivor */
-    CORE = 'core'
-  }
-
-  /**
-   * Family Tree Edge
-   *
-   * Represents one parent → child relationship. The renderer draws a curve from
-   * the bottom of the parent's node to the top of the child's node. Edges are
-   * deduplicated, so a child with two parents produces two edges.
-   */
-  export interface FamilyTreeEdge {
-    /** Parent Survivor ID */
-    parentId: string
-    /** Child Survivor ID */
-    childId: string
-  }
-  ```
-
-## Object Schemas
-
-- All object schemas should be created using the `zod` library.
-- All object schemas should be created in the `src/schemas` directory.
-- All object schemas should be created in a file named after the object schema.
-  For example, the `Survivor` schema should be created in
-  `src/schemas/survivor.ts`.
-- All object schemas should be created using the `z.object` function.
-- Validation and parsing should be done using the `zod` library.
-- All refinements should include appropriate error messages.
-
-## User Messaging
-
-- All user messaging should be done using the `sonner` library's `toast`
-  function.
-- If an error occurs while parsing an input value against the Zod schema, the
-  error message from the raised `ZodError` should be used in the toast
-  notification. If no error message is provided, the following message should be
-  displayed using the `toast.error` function.
-
-  ```plain
-  The darkness swallows your words. Please try again.
-  ```
-
-- If an error occurs, the following message should be displayed using the
-  `toast.error` function.
-
-  ```plain
-  The darkness swallows your words. Please try again.
-  ```
-
-- If an error occurs, it should be logged to the console with appropriate
-  leading information to identify it. For example,
-  `console.error('Attribute Save Error:', error)`.
-
-## Theme
+### Theme
 
 Use the following text as thematic inspiration for any user-facing notifications
 and text.
@@ -157,37 +57,114 @@ Other terms and phrases that can be used to describe the game include:
 - Struggle for survival.
 - Victory rarely achieved, and at great cost.
 
-## Gameplay
+## Development Commands
 
-Kingdom Death: Monster, is a tabletop game focused around a group of survivors
-building and expanding a settlement. The core gameplay loop is broken down into
-three parts:
+- Install dependencies with `npm install`.
+- Do not run `npm run build`, `npm run dev`, `npm run format:write`,
+  `npm run lint`, or `npm run start` unless the user specifically asks, or
+  unless the task clearly requires that verification step.
+- Prefer targeted checks when possible, such as `npm run test` for unit tests or
+  a specific Vitest file.
+- Supabase-backed integration tests require the local Supabase stack; see
+  `docs/integration-tests.md`.
 
-1. **Hunt Phase**: Survivors track and hunt a monster, facing various challenges
-   and events along the way.
-1. **Showdown Phase**: Survivors confront the monster in a battle, using their
-   skills and equipment to defeat it.
-1. **Settlement Phase**: Survivors return to their settlement, where they can
-   craft items, build structures, and manage their resources.
+## General Coding Guidelines
 
-The purpose of this application is to act as a companion tool where players can
-keep track of their settlement and survivors. Additionally, they can switch
-between the various phases (above), which will surface relevant information and
-functionality.
+- Follow the existing TypeScript, React, Next.js, and Supabase patterns in the
+  codebase.
+- Keep changes focused and minimal. Avoid broad refactors unless they are
+  necessary for the task.
+- Prefer maintainable, readable code over cleverness.
+- Changes should maintain consistency with existing patterns and style
+- Document changes clearly and thoroughly, including updates to existing
+  comments when appropriate
+- Use TypeScript's type system for clarity and safety.
+- Keep functions focused and use descriptive names.
+- Match existing error-handling and data-access patterns.
+- Do not add comments that merely restate the code. Comments should explain
+  intent, constraints, or non-obvious behavior.
+- Update existing comments when behavior changes.
+- Use descriptive variable and function names that clearly convey their purpose
+- When suggesting code changes, always opt for the most maintainable approach.
+  Try your best to keep the code clean and follow "Don't Repeat Yourself" (DRY)
+  principles
 
-## Pull Request Guidelines
+## JSDoc Style
 
-When creating a pull request (PR), please ensure that:
+Use JSDoc for exported functions, components, types, classes, enums, and complex
+logic when consistent with the surrounding file.
 
-- Keep changes focused and minimal (avoid large changes, or consider breaking
-  them into separate, smaller PRs)
+JSDoc titles should use **Capital Case**.
+
+```ts
+/**
+ * Calculates Rectangle Area
+ *
+ * Calculates area of a rectangle and returns the result.
+ *
+ * @param width Rectangle Width
+ * @param height Rectangle Height
+ * @returns Rectangle Area
+ */
+function calculateArea(width: number, height: number): number {
+  return width * height
+}
+```
+
+For enum values and interface fields, use short Capital Case descriptions:
+
+```ts
+/**
+ * Survivor Type
+ *
+ * Represents the types of survivors in the game.
+ */
+enum SurvivorType {
+  /** Arc Survivor */
+  ARC = 'arc',
+  /** Core Survivor */
+  CORE = 'core'
+}
+```
+
+## Schemas And Validation
+
+- Use `zod` for object schemas, validation, and parsing.
+- Put schemas in the existing `schemas/` directory.
+- Name schema files after the object or input they validate, following current
+  repository conventions.
+- Use `z.object` for object schemas.
+- Include useful error messages on refinements.
+
+## User Messaging
+
+- Use `sonner`'s `toast` API for user-facing notifications.
+- When a Zod parse fails, prefer the `ZodError` message in the toast.
+- If no specific parse error is available, or for generic failures, show:
+
+```plain
+The darkness swallows your words. Please try again.
+```
+
+- Log errors to the console with a clear prefix that identifies the failed
+  operation, for example:
+
+```ts
+console.error('Attribute Save Error:', error)
+```
+
+## Pull Request Guidance
+
+When preparing PRs:
+
+- Keep changes focused and minimal.
+- Note dependency changes explicitly.
+- Update `README.md` or docs when behavior, setup, or usage changes.
+- Summaries should explain what changed and why.
+- Mention relevant issues, discussions, or follow-up risks when applicable.
 - Formatting checks pass
 - Linting checks pass
 - Unit tests pass and coverage requirements are met
-- The action has been transpiled to JavaScript and the `dist` directory is
-  up-to-date with the latest changes in the `src` directory
-- If necessary, the `README.md` file is updated to reflect any changes in
-  functionality or usage
 
 The body of the PR should include:
 
