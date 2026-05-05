@@ -719,11 +719,13 @@ export function GearSheetBody({
   // Mobile narrative-text override layered on top of MARKDOWN_BODY_CLASS so
   // the rules text in the gear card stays readable inside the constrained
   // sheet width without forcing aggressive line wrapping. Desktop preserves
-  // the existing 14px sizing.
+  // the existing 14px sizing. Paragraphs and list items are centered to match
+  // the centered name + keywords above; the affinity bonus row below uses its
+  // own paragraph and remains left-aligned.
   const gearMarkdownClass = cn(
     MARKDOWN_BODY_CLASS,
-    '!text-xs sm:!text-sm',
-    '[&_p]:!text-xs sm:[&_p]:!text-sm',
+    '!text-xs sm:!text-sm text-center',
+    '[&_p]:!text-xs sm:[&_p]:!text-sm [&_p]:!text-center',
     '[&_li]:!text-xs sm:[&_li]:!text-sm'
   )
 
