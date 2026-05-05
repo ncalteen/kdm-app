@@ -6,6 +6,7 @@ import {
   GearGridPickerDialog
 } from '@/components/survivor/gear-grid/gear-grid-picker-dialog'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Sheet,
@@ -21,8 +22,10 @@ import { getArmorSets } from '@/lib/dal/armor-set'
 import { getGear } from '@/lib/dal/gear'
 import {
   applyGearGridSlot,
+  applySelectedArmorSet,
   POSITION_TO_COLUMN,
-  setGearGridSlot
+  setGearGridSlot,
+  setSelectedArmorSet
 } from '@/lib/dal/gear-grid'
 import {
   AFFINITIES,
@@ -34,6 +37,7 @@ import {
   GRID_POSITIONS
 } from '@/lib/gear-grid'
 import {
+  ARMOR_SET_SELECTED_MESSAGE,
   ERROR_MESSAGE,
   GEAR_GRID_SETTLEMENT_REQUIRED_ERROR_MESSAGE,
   GEAR_GRID_SLOT_CLEARED_MESSAGE,
@@ -49,7 +53,7 @@ import {
   SurvivorsStateSetter
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { ShieldCheckIcon } from 'lucide-react'
+import { CheckIcon, ShieldCheckIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /** Display label for each grid position. */
@@ -285,6 +289,72 @@ export function GearGridCard({
   )
 
   /**
+   * Persist Selected Armor Set
+   *
+   * Optimistically updates the survivor's `selected_armor_set_id`, then
+   * writes the change via the gear-grid DAL. Rolls back on failure. The
+   * companion `clear_selected_armor_set_if_unqualified` database trigger
+   * additionally guards against persisting a selection that the equipped
+   * pieces no longer support.
+   */
+  const persistSelectedArmorSet = useCallback(
+    async (armorSet: ArmorSetDetail) => {
+      if (!selectedSurvivor) return
+      if (!selectedSettlement)
+        return toast.error(GEAR_GRID_SETTLEMENT_REQUIRED_ERROR_MESSAGE())
+      if (saving) return
+
+      setSaving(true)
+
+      const optimistic = applySelectedArmorSet(grid, armorSet.id)
+      const previous = applyOptimisticGrid(optimistic)
+
+      try {
+        const persisted = await setSelectedArmorSet(
+          selectedSurvivor.id,
+          armorSet.id
+        )
+
+        setSurvivors((prev) =>
+          prev.map((s) =>
+            s.id === selectedSurvivor.id ? { ...s, gear_grid: persisted } : s
+          )
+        )
+
+        // Reflect the persisted selection in the open sheet so the "Set as
+        // Active" state flips to "Active" without forcing the user to reopen.
+        setActiveBonus((current) =>
+          current && current.armorSet?.id === armorSet.id
+            ? { ...current, selected: true }
+            : current
+        )
+
+        toast.success(
+          ARMOR_SET_SELECTED_MESSAGE(
+            armorSet.armor_set_name,
+            selectedSurvivor.survivor_name ?? undefined
+          )
+        )
+      } catch (error) {
+        applyOptimisticGrid(previous)
+        console.error('Armor Set Selection Save Error:', error)
+        toast.error(ERROR_MESSAGE())
+      } finally {
+        setSaving(false)
+      }
+    },
+    [
+      applyOptimisticGrid,
+      grid,
+      saving,
+      selectedSettlement,
+      selectedSurvivor,
+      setSurvivors,
+      toast
+    ]
+  )
+
+  /**
    * Open Picker for the Given Slot
    */
   const openPicker = useCallback((position: GearGridPosition) => {
@@ -359,25 +429,51 @@ export function GearGridCard({
             <div
               className="flex flex-wrap items-center gap-1.5"
               aria-label="Qualifying armor set bonuses">
-              {effectiveBonuses.map((bonus) => (
-                <Badge
-                  key={bonus.armorSet?.id ?? bonus.name}
-                  variant={bonus.isFallback ? 'outline' : 'default'}
-                  className="cursor-pointer gap-1"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setActiveBonus(bonus)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      setActiveBonus(bonus)
-                    }
-                  }}
-                  aria-label={`Show rules for ${bonus.name}`}>
-                  <ShieldCheckIcon className="h-3 w-3" />
-                  {bonus.name}
-                </Badge>
-              ))}
+              {effectiveBonuses.map((bonus) => {
+                // Multiple sets can qualify simultaneously, so the badge needs
+                // to convey both qualification (filled vs. outline) and which
+                // one is currently active (ring + check icon).
+                const variant: 'default' | 'secondary' | 'outline' =
+                  bonus.isFallback
+                    ? 'outline'
+                    : bonus.selected
+                      ? 'default'
+                      : 'secondary'
+
+                return (
+                  <Badge
+                    key={bonus.armorSet?.id ?? bonus.name}
+                    variant={variant}
+                    className={cn(
+                      'cursor-pointer gap-1',
+                      bonus.selected &&
+                        !bonus.isFallback &&
+                        'ring-2 ring-primary/60 ring-offset-1 ring-offset-background'
+                    )}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setActiveBonus(bonus)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        setActiveBonus(bonus)
+                      }
+                    }}
+                    aria-pressed={bonus.selected}
+                    aria-label={
+                      bonus.selected
+                        ? `${bonus.name} (active)`
+                        : `Show rules for ${bonus.name}`
+                    }>
+                    {bonus.selected ? (
+                      <CheckIcon className="h-3 w-3" />
+                    ) : (
+                      <ShieldCheckIcon className="h-3 w-3" />
+                    )}
+                    {bonus.name}
+                  </Badge>
+                )
+              })}
             </div>
           )}
         </CardTitle>
@@ -438,6 +534,40 @@ export function GearGridCard({
             <SheetDescription className="text-xs italic text-muted-foreground">
               Armor Set Bonus
             </SheetDescription>
+            {/*
+              Catalog armor sets are selectable when more than one qualifies at
+              once. The button is hidden for the Clothed & Satiated fallback
+              (it only ever surfaces alone) and when read-only contexts apply
+              (no survivor or settlement in scope).
+            */}
+            {activeBonus?.armorSet &&
+              !activeBonus.isFallback &&
+              effectiveBonuses.length > 1 &&
+              selectedSurvivor &&
+              selectedSettlement && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={activeBonus.selected ? 'secondary' : 'default'}
+                  className="mt-1 self-start gap-1"
+                  disabled={activeBonus.selected || saving}
+                  onClick={() => {
+                    if (activeBonus.armorSet)
+                      void persistSelectedArmorSet(activeBonus.armorSet)
+                  }}>
+                  {activeBonus.selected ? (
+                    <>
+                      <CheckIcon className="h-3.5 w-3.5" />
+                      Active
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheckIcon className="h-3.5 w-3.5" />
+                      Set as Active
+                    </>
+                  )}
+                </Button>
+              )}
           </SheetHeader>
 
           <div className="flex flex-col gap-4 overflow-y-auto px-6 py-4">

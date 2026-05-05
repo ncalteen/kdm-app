@@ -492,6 +492,17 @@ export interface EffectiveArmorSetBonus {
   bonuses: string | null
   /** Whether This Entry Is the Clothed & Satiated Fallback */
   isFallback: boolean
+  /**
+   * Whether This Entry Is the Survivor's Active Armor Set
+   *
+   * The active armor set is the one whose bonus rules apply when more than
+   * one catalog set qualifies simultaneously. Selection is persisted on the
+   * gear grid via `selected_armor_set_id`. When the survivor has not made an
+   * explicit pick (or the pick no longer qualifies), the first qualifying
+   * catalog set is treated as active. The Clothed & Satiated fallback is
+   * always active when surfaced (it only appears when nothing else does).
+   */
+  selected: boolean
 }
 
 /**
@@ -502,6 +513,12 @@ export interface EffectiveArmorSetBonus {
  * returned and the Clothed & Satiated fallback is suppressed. When no
  * catalog set qualifies, the fallback is included if the survivor meets the
  * three-different-armor-locations rule.
+ *
+ * Exactly one entry is marked `selected: true` when the result is non-empty:
+ *   * The catalog set whose ID matches `grid.selected_armor_set_id` (when
+ *     that set still qualifies).
+ *   * Otherwise the first qualifying catalog set (alphabetical order).
+ *   * Otherwise the Clothed & Satiated fallback when it is the sole entry.
  *
  * @param grid Gear Grid (or null)
  * @param armorSets Catalog Armor Sets
@@ -515,13 +532,21 @@ export function getEffectiveArmorSetBonuses(
 ): EffectiveArmorSetBonus[] {
   const qualifying = getQualifyingArmorSets(grid, armorSets)
 
-  if (qualifying.length > 0)
+  if (qualifying.length > 0) {
+    const explicitId = grid?.selected_armor_set_id ?? null
+    const selectedId =
+      explicitId && qualifying.some((set) => set.id === explicitId)
+        ? explicitId
+        : qualifying[0].id
+
     return qualifying.map((set) => ({
       armorSet: set,
       name: set.armor_set_name,
       bonuses: set.bonuses,
-      isFallback: false
+      isFallback: false,
+      selected: set.id === selectedId
     }))
+  }
 
   if (clothedAndSatiatedQualifies(grid, gearMap))
     return [
@@ -529,7 +554,8 @@ export function getEffectiveArmorSetBonuses(
         armorSet: null,
         name: CLOTHED_AND_SATIATED_NAME,
         bonuses: CLOTHED_AND_SATIATED_BONUS,
-        isFallback: true
+        isFallback: true,
+        selected: true
       }
     ]
 

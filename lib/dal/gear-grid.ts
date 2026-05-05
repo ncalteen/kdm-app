@@ -40,7 +40,8 @@ export function emptyGearGrid(): GearGridDetail {
     pos_mid_right: null,
     pos_bottom_left: null,
     pos_bottom_center: null,
-    pos_bottom_right: null
+    pos_bottom_right: null,
+    selected_armor_set_id: null
   }
 }
 
@@ -62,7 +63,7 @@ export async function getGearGrid(
   const { data, error } = await supabase
     .from('gear_grid')
     .select(
-      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right'
+      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right, selected_armor_set_id'
     )
     .eq('survivor_id', survivorId)
     .maybeSingle()
@@ -86,11 +87,13 @@ export async function getGearGrid(
  *
  * @param survivorId Survivor ID
  * @param positions Position-Keyed Gear IDs (null clears the slot)
+ * @param fields Optional Non-Position Fields (e.g. `selected_armor_set_id`)
  * @returns Persisted Gear Grid
  */
 export async function saveGearGrid(
   survivorId: string,
-  positions: Partial<{ [key in GearGridPosition]: string | null }>
+  positions: Partial<{ [key in GearGridPosition]: string | null }>,
+  fields?: { selected_armor_set_id?: string | null }
 ): Promise<GearGridDetail> {
   if (!survivorId) throw new Error('Required: Survivor ID')
 
@@ -99,8 +102,11 @@ export async function saveGearGrid(
   ).filter((position) =>
     Object.prototype.hasOwnProperty.call(positions, position)
   )
+  const hasFieldUpdates =
+    fields !== undefined &&
+    Object.prototype.hasOwnProperty.call(fields, 'selected_armor_set_id')
 
-  if (providedPositions.length === 0)
+  if (providedPositions.length === 0 && !hasFieldUpdates)
     throw new Error('Required: At least one gear grid position')
 
   const payload: { survivor_id: string } & Partial<
@@ -114,13 +120,16 @@ export async function saveGearGrid(
     payload[column] = positions[position] ?? null
   }
 
+  if (hasFieldUpdates)
+    payload.selected_armor_set_id = fields?.selected_armor_set_id ?? null
+
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('gear_grid')
     .upsert(payload, { onConflict: 'survivor_id' })
     .select(
-      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right'
+      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right, selected_armor_set_id'
     )
     .single()
 
@@ -162,6 +171,26 @@ export async function setGearGridSlot(
     bottom_right: baseline.pos_bottom_right,
     [position]: gearId
   } as { [key in GearGridPosition]: string | null })
+}
+
+/**
+ * Set Selected Armor Set
+ *
+ * Persists the survivor's `selected_armor_set_id` choice on their gear grid.
+ * Pass `null` to clear the selection. The grid row is upserted so callers do
+ * not need to worry about whether a grid already exists. The companion
+ * database trigger (`clear_selected_armor_set_if_unqualified`) defends
+ * against persisting a selection the equipped pieces no longer support.
+ *
+ * @param survivorId Survivor ID
+ * @param armorSetId Armor Set ID (null clears the selection)
+ * @returns Persisted Gear Grid
+ */
+export async function setSelectedArmorSet(
+  survivorId: string,
+  armorSetId: string | null
+): Promise<GearGridDetail> {
+  return saveGearGrid(survivorId, {}, { selected_armor_set_id: armorSetId })
 }
 
 /**
@@ -212,5 +241,28 @@ export function applyGearGridSlot(
   return {
     ...baseline,
     [column]: gearId
+  }
+}
+
+/**
+ * Apply Selected Armor Set
+ *
+ * Pure helper that returns a copy of `current` with `selected_armor_set_id`
+ * updated. Mirrors what {@link setSelectedArmorSet} writes to the database
+ * and is used for optimistic local-state updates.
+ *
+ * @param current Current Gear Grid (or null if the survivor has no grid yet)
+ * @param armorSetId Armor Set ID (null clears the selection)
+ * @returns New Gear Grid Detail
+ */
+export function applySelectedArmorSet(
+  current: GearGridDetail | null,
+  armorSetId: string | null
+): GearGridDetail {
+  const baseline = current ?? emptyGearGrid()
+
+  return {
+    ...baseline,
+    selected_armor_set_id: armorSetId
   }
 }
