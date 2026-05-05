@@ -474,7 +474,7 @@ export function TimelineCard({
 
   return (
     <Card className="border-0 w-full h-full pt-0">
-      <CardContent className="flex flex-col justify-between h-full">
+      <CardContent className="flex flex-col justify-between h-full px-0">
         {/* Timeline Content */}
         <TimelineContent
           handleAddEventInput={handleAddEventInput}

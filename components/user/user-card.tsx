@@ -191,7 +191,7 @@ export function UserCard({
   )
 
   return (
-    <div className="flex flex-col gap-4 pt-2">
+    <div className="flex flex-col gap-4 pt-2 px-2">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <UpdatePasswordForm className="h-full" />
         {/* Unlocked Vignette Monsters */}
