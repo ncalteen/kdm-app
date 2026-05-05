@@ -7,6 +7,7 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger
@@ -621,11 +622,11 @@ function GearSheetStatSlot({
 }): ReactElement {
   return (
     <div
-      className="flex h-9 w-12 flex-col items-center justify-center rounded-md border border-input bg-background/60 text-sm font-semibold shadow-xs"
+      className="flex h-8 w-10 sm:h-9 sm:w-12 flex-col items-center justify-center rounded-md border border-input bg-background/60 text-xs sm:text-sm font-semibold shadow-xs"
       title={label}
       aria-label={`${label}: ${value ?? 0}`}>
       <span className="tabular-nums leading-none">{value ?? 0}</span>
-      <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground leading-none mt-0.5">
+      <span className="text-[8px] sm:text-[9px] font-medium uppercase tracking-wider text-muted-foreground leading-none mt-0.5">
         {label}
       </span>
     </div>
@@ -633,9 +634,9 @@ function GearSheetStatSlot({
 }
 
 /**
- * Custom Gear Sheet Body Properties
+ * Gear Sheet Body Properties
  */
-interface CustomGearSheetBodyProps {
+export interface GearSheetBodyProps {
   /** Gear Detail (null while loading or when not found) */
   detail: GearDetail | null
   /** Loaded Flag */
@@ -652,21 +653,49 @@ interface CustomGearSheetBodyProps {
   weaponTypes: { [id: string]: WeaponTypeDetail }
   /** Trigger Label */
   gearName: string
+  /**
+   * Custom Gear Flag
+   *
+   * When true, the header renders the "Custom" badge and a description
+   * indicating the item is user-defined. Defaults to false so catalog gear
+   * renders without the badge.
+   */
+  custom?: boolean
+  /**
+   * Description Override
+   *
+   * Replaces the default sheet description ("A custom gear item defined by
+   * you." for custom gear, otherwise omitted). Useful for surfacing the slot
+   * label when the sheet is opened from a gear grid cell.
+   */
+  description?: ReactNode
+  /**
+   * Footer Slot
+   *
+   * Optional content rendered in a pinned footer below the scrollable body.
+   * The gear grid uses this to surface an "Unequip" action without forcing
+   * the user to scroll past the rules text.
+   */
+  footer?: ReactNode
 }
 
 /**
- * Custom Gear Sheet Body
+ * Gear Sheet Body
  *
- * Read-only card-shaped renderer for a custom gear item. Lays out the same
- * sections the {@link GearDialog} editor renders — affinity slots, stat
- * tower, name, keywords, rules, affinity bonus, and crafting costs — without
- * any inputs or controls.
+ * Read-only card-shaped renderer for a gear item. Lays out the same sections
+ * the {@link GearDialog} editor renders — affinity slots, stat tower, name,
+ * keywords, rules, affinity bonus, and crafting costs — without any inputs or
+ * controls. Used by both the custom-gear rules trigger (lazy-loads the detail)
+ * and the gear grid slot view (which already has the catalog maps in scope).
  *
- * @param props Custom Gear Sheet Body Properties
- * @returns Custom Gear Sheet Body
+ * @param props Gear Sheet Body Properties
+ * @returns Gear Sheet Body
  */
-function CustomGearSheetBody({
+export function GearSheetBody({
+  custom = false,
+  description,
   detail,
+  footer,
   gearMap,
   gearName,
   loaded,
@@ -674,7 +703,7 @@ function CustomGearSheetBody({
   locations,
   resources,
   weaponTypes
-}: CustomGearSheetBodyProps): ReactElement {
+}: GearSheetBodyProps): ReactElement {
   const showSkeleton = loading || !loaded
   const category = detail ? inferGearCategoryFromDetail(detail) : 'OTHER'
   const categoryLabel =
@@ -687,25 +716,47 @@ function CustomGearSheetBody({
     ? (weaponTypes[detail.weapon_type_id]?.weapon_type_name ?? null)
     : null
 
+  // Mobile narrative-text override layered on top of MARKDOWN_BODY_CLASS so
+  // the rules text in the gear card stays readable inside the constrained
+  // sheet width without forcing aggressive line wrapping. Desktop preserves
+  // the existing 14px sizing. Paragraphs and list items are centered to match
+  // the centered name + keywords above; the affinity bonus row below uses its
+  // own paragraph and remains left-aligned.
+  const gearMarkdownClass = cn(
+    MARKDOWN_BODY_CLASS,
+    '!text-xs sm:!text-sm text-center',
+    '[&_p]:!text-xs sm:[&_p]:!text-sm [&_p]:!text-center',
+    '[&_li]:!text-xs sm:[&_li]:!text-sm'
+  )
+
+  // Resolve the description text once so the header can omit the element
+  // entirely when no description should be shown for catalog gear.
+  const resolvedDescription: ReactNode =
+    description ?? (custom ? 'A custom gear item defined by you.' : null)
+
   return (
     <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-md">
-      <SheetHeader className="gap-2 border-b border-border/60 px-6 pt-6 pb-4">
+      <SheetHeader className="gap-2 border-b border-border/60 px-4 pt-4 pb-3 sm:px-6 sm:pt-6 sm:pb-4">
         <div className="flex items-start justify-between gap-3 pr-8">
-          <SheetTitle className="text-lg font-semibold leading-tight tracking-tight break-words">
+          <SheetTitle className="text-base sm:text-lg font-semibold leading-tight tracking-tight break-words">
             {detail?.gear_name ?? gearName}
           </SheetTitle>
-          <Badge
-            variant="outline"
-            className="mt-0.5 shrink-0 text-[10px] uppercase tracking-[0.2em]">
-            Custom
-          </Badge>
+          {custom && (
+            <Badge
+              variant="outline"
+              className="mt-0.5 shrink-0 text-[10px] uppercase tracking-[0.2em]">
+              Custom
+            </Badge>
+          )}
         </div>
-        <SheetDescription className="text-xs italic text-muted-foreground">
-          A custom gear item defined by you.
-        </SheetDescription>
+        {resolvedDescription !== null && (
+          <SheetDescription className="text-xs italic text-muted-foreground">
+            {resolvedDescription}
+          </SheetDescription>
+        )}
       </SheetHeader>
 
-      <div className="flex flex-col gap-4 overflow-y-auto px-6 py-4">
+      <div className="flex flex-1 flex-col gap-3 sm:gap-4 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4">
         {showSkeleton ? (
           <p className="text-xs italic text-muted-foreground">
             Staring at the stars...
@@ -737,7 +788,7 @@ function CustomGearSheetBody({
             </dl>
 
             {/* Card-Shaped Body (read-only mirror of the dialog) */}
-            <div className="relative mx-auto mt-2 w-full rounded-xl border-2 bg-muted/10 px-6 py-8 shadow-inner">
+            <div className="relative mx-auto mt-2 w-full rounded-xl border-2 bg-muted/10 px-3 py-6 sm:px-6 sm:py-8 shadow-inner">
               {/* Affinity Slots (edges) */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <GearSheetAffinitySquare
@@ -765,25 +816,19 @@ function CustomGearSheetBody({
               </div>
 
               {/* Header Row: Stat Tower + Name/Keywords/Rules */}
-              <div className="flex items-start gap-3">
-                <div className="flex w-16 shrink-0 flex-col items-center gap-1">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <div className="flex w-12 sm:w-16 shrink-0 flex-col items-center gap-1">
                   {category === 'WEAPON' && (
                     <>
-                      <GearSheetStatSlot label="Speed" value={detail.speed} />
-                      <GearSheetStatSlot
-                        label="Accuracy"
-                        value={detail.accuracy}
-                      />
-                      <GearSheetStatSlot
-                        label="Strength"
-                        value={detail.strength}
-                      />
+                      <GearSheetStatSlot label="Spd" value={detail.speed} />
+                      <GearSheetStatSlot label="Acc" value={detail.accuracy} />
+                      <GearSheetStatSlot label="Str" value={detail.strength} />
                     </>
                   )}
                   {category === 'ARMOR' && (
                     <>
                       <GearSheetStatSlot
-                        label="Armor"
+                        label="Arm"
                         value={detail.armor_points}
                       />
                       {(() => {
@@ -795,12 +840,12 @@ function CustomGearSheetBody({
                           : 'Armor location (none)'
                         return (
                           <div
-                            className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background/60 shadow-xs"
+                            className="flex h-8 w-10 sm:h-9 sm:w-12 items-center justify-center rounded-md border border-input bg-background/60 shadow-xs"
                             aria-label={armorLabel}
                             title={armorLabel}>
                             {ArmorIcon ? (
                               <ArmorIcon
-                                className="h-5 w-5"
+                                className="h-4 w-4 sm:h-5 sm:w-5"
                                 aria-hidden="true"
                               />
                             ) : (
@@ -814,13 +859,13 @@ function CustomGearSheetBody({
                 </div>
 
                 {/* Center: Name + Keywords + Rules */}
-                <div className="flex flex-1 flex-col gap-2">
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <div className="flex flex-col items-center gap-1">
-                    <h5 className="text-center text-lg font-bold leading-tight">
+                    <h5 className="text-center text-base sm:text-lg font-bold leading-tight">
                       {detail.gear_name}
                     </h5>
                     {detail.keywords && detail.keywords.length > 0 && (
-                      <p className="text-center text-xs italic text-muted-foreground">
+                      <p className="text-center text-[11px] sm:text-xs italic text-muted-foreground">
                         {detail.keywords
                           .map((k) => formatGearEnumLabel(k))
                           .join(', ')}
@@ -831,25 +876,25 @@ function CustomGearSheetBody({
                   {detail.rules && detail.rules.trim().length > 0 ? (
                     <SafeMarkdownPreview
                       source={detail.rules}
-                      className={MARKDOWN_BODY_CLASS}
+                      className={gearMarkdownClass}
                       style={{ backgroundColor: 'transparent' }}
                     />
                   ) : (
-                    <p className="text-center text-xs italic text-muted-foreground">
+                    <p className="text-center text-[11px] sm:text-xs italic text-muted-foreground">
                       No special rules.
                     </p>
                   )}
                 </div>
 
-                {/* Right Spacer (balance stat tower width) */}
-                <div className="w-16 shrink-0" />
+                {/* Right Spacer (balance stat tower width on desktop only) */}
+                <div className="hidden sm:block sm:w-16 shrink-0" />
               </div>
 
               {/* Affinity Bonus + Requirements */}
               {((detail.affinity_bonus_requirements ?? []).length > 0 ||
                 (detail.affinity_bonus &&
                   detail.affinity_bonus.trim().length > 0)) && (
-                <div className="mt-3 flex items-start gap-3 border-t border-muted pt-3">
+                <div className="mt-3 flex items-start gap-2 sm:gap-3 border-t border-muted pt-3">
                   <div className="flex shrink-0 flex-col items-center gap-1">
                     {(detail.affinity_bonus_requirements ?? []).length === 0 ? (
                       <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -870,11 +915,11 @@ function CustomGearSheetBody({
                   </div>
                   {detail.affinity_bonus &&
                   detail.affinity_bonus.trim().length > 0 ? (
-                    <p className="flex-1 text-sm italic">
+                    <p className="flex-1 text-xs sm:text-sm italic">
                       {detail.affinity_bonus}
                     </p>
                   ) : (
-                    <p className="flex-1 text-xs italic text-muted-foreground">
+                    <p className="flex-1 text-[11px] sm:text-xs italic text-muted-foreground">
                       Requirements without a bonus.
                     </p>
                   )}
@@ -976,6 +1021,12 @@ function CustomGearSheetBody({
           </>
         )}
       </div>
+
+      {footer && (
+        <SheetFooter className="border-t border-border/60 px-6 py-4">
+          {footer}
+        </SheetFooter>
+      )}
     </SheetContent>
   )
 }
@@ -1099,7 +1150,8 @@ export function CustomGearRulesTrigger({
           </button>
         )}
       </SheetTrigger>
-      <CustomGearSheetBody
+      <GearSheetBody
+        custom
         detail={detail}
         gearMap={gearMap}
         gearName={gearName}

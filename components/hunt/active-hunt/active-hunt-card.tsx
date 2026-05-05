@@ -36,7 +36,9 @@ import {
   SurvivorType,
   TabType
 } from '@/lib/enums'
+import { computeEmbarkGearShortages } from '@/lib/gear-grid'
 import {
+  EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE,
   ERROR_MESSAGE,
   HUNT_DELETED_MESSAGE,
   MONSTER_MOVED_MESSAGE,
@@ -307,6 +309,23 @@ export function ActiveHuntCard({
       return
     }
 
+    // Re-validate gear availability before transitioning to a showdown.
+    // Settlement gear may have changed during the hunt (e.g. dropped/lost
+    // gear), so check that the embarking survivors collectively still fit
+    // within the settlement's current stock.
+    const embarkingIds = new Set(
+      Object.values(huntSurvivors).map((hs) => hs.survivor_id)
+    )
+    const embarkingSurvivors = survivors.filter((s) => embarkingIds.has(s.id))
+    const gearShortages = computeEmbarkGearShortages(
+      embarkingSurvivors,
+      selectedSettlement.gear
+    )
+    if (gearShortages.length > 0) {
+      toast.error(EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE(gearShortages))
+      return
+    }
+
     setIsProceedingToShowdown(true)
 
     try {
@@ -524,18 +543,19 @@ export function ActiveHuntCard({
     setSelectedShowdown,
     setSelectedShowdownMonsterIndex,
     setSelectedTab,
+    survivors,
     toast
   ])
 
   return (
     <div className="flex flex-col gap-2 h-full relative">
       {/* Action Buttons */}
-      <div className="flex justify-between pointer-events-none">
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-0 pointer-events-none">
         <Button
           variant="outline"
           size="sm"
           onClick={handleCancelHunt}
-          className="pointer-events-auto"
+          className="pointer-events-auto w-full sm:w-auto"
           title="End Hunt">
           <XIcon className="size-4" />
           End Hunt
@@ -551,7 +571,7 @@ export function ActiveHuntCard({
               <Button
                 variant="outline"
                 size="sm"
-                className="pointer-events-auto"
+                className="pointer-events-auto w-full sm:w-auto"
                 title="Roll Hunt Event">
                 Roll Hunt Event <DicesIcon className="size-4" />
               </Button>
@@ -592,7 +612,7 @@ export function ActiveHuntCard({
             variant="outline"
             size="sm"
             onClick={() => rollHuntEvent(HuntEventType.BASIC)}
-            className="pointer-events-auto"
+            className="pointer-events-auto w-full sm:w-auto"
             title="Roll Hunt Event">
             Roll Hunt Event <DicesIcon className="size-4" />
           </Button>
@@ -602,7 +622,7 @@ export function ActiveHuntCard({
           variant="destructive"
           size="sm"
           onClick={handleShowdown}
-          className="pointer-events-auto"
+          className="pointer-events-auto w-full sm:w-auto"
           title="Begin Showdown">
           Begin Showdown <ChevronRightIcon className="size-4" />
         </Button>

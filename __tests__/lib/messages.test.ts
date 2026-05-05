@@ -39,6 +39,7 @@ import {
   DISORDER_CREATED_MESSAGE,
   DISORDER_REMOVED_MESSAGE,
   DISORDER_UPDATED_MESSAGE,
+  EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE,
   ENDEAVORS_MINIMUM_ERROR_MESSAGE,
   ENDEAVORS_UPDATED_MESSAGE,
   ERROR_MESSAGE,
@@ -48,6 +49,10 @@ import {
   FIGHTING_ARTS_MAX_EXCEEDED_ERROR_MESSAGE,
   GEAR_CRAFTED_MESSAGE,
   GEAR_CREATED_MESSAGE,
+  GEAR_GRID_CLEARED_MESSAGE,
+  GEAR_GRID_SETTLEMENT_REQUIRED_ERROR_MESSAGE,
+  GEAR_GRID_SLOT_CLEARED_MESSAGE,
+  GEAR_GRID_SLOT_EQUIPPED_MESSAGE,
   GEAR_REMOVED_MESSAGE,
   GEAR_UPDATED_MESSAGE,
   HUNT_ALREADY_ACTIVE_ERROR_MESSAGE,
@@ -692,6 +697,80 @@ describe('GEAR_CRAFTED_MESSAGE', () => {
   it('returns correct message', () => {
     expect(GEAR_CRAFTED_MESSAGE()).toBe(
       'The forge cools. New gear is crafted at great cost.'
+    )
+  })
+})
+
+describe('GEAR_GRID_CLEARED_MESSAGE', () => {
+  it('returns the survivor-specific message when a name is provided', () => {
+    expect(GEAR_GRID_CLEARED_MESSAGE('Lantern')).toBe(
+      "Lantern's gear grid has been emptied."
+    )
+  })
+
+  it('returns a generic message when no name is provided', () => {
+    expect(GEAR_GRID_CLEARED_MESSAGE()).toBe('The gear grid has been emptied.')
+    expect(GEAR_GRID_CLEARED_MESSAGE(undefined)).toBe(
+      'The gear grid has been emptied.'
+    )
+  })
+})
+
+describe('GEAR_GRID_SLOT_EQUIPPED_MESSAGE', () => {
+  it('returns the survivor-specific message when a name is provided', () => {
+    expect(GEAR_GRID_SLOT_EQUIPPED_MESSAGE('Lantern')).toBe(
+      'Lantern equips new gear.'
+    )
+  })
+
+  it('returns a generic message when no name is provided', () => {
+    expect(GEAR_GRID_SLOT_EQUIPPED_MESSAGE()).toBe(
+      'A survivor equips new gear.'
+    )
+  })
+})
+
+describe('GEAR_GRID_SLOT_CLEARED_MESSAGE', () => {
+  it('returns the survivor-specific message when a name is provided', () => {
+    expect(GEAR_GRID_SLOT_CLEARED_MESSAGE('Lantern')).toBe(
+      'Lantern sets aside their gear.'
+    )
+  })
+
+  it('returns a generic message when no name is provided', () => {
+    expect(GEAR_GRID_SLOT_CLEARED_MESSAGE()).toBe(
+      'A survivor sets aside their gear.'
+    )
+  })
+})
+
+describe('GEAR_GRID_SETTLEMENT_REQUIRED_ERROR_MESSAGE', () => {
+  it('returns correct message', () => {
+    expect(GEAR_GRID_SETTLEMENT_REQUIRED_ERROR_MESSAGE()).toBe(
+      'No settlement gear is within reach.'
+    )
+  })
+})
+
+describe('EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE', () => {
+  it('formats a single shortage with the gear name and counts', () => {
+    expect(
+      EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE([
+        { gear_name: 'Bone Axe', available: 1, needed: 2 }
+      ])
+    ).toBe(
+      "The settlement's stores cannot bear this burden — Bone Axe (need 2, have 1)."
+    )
+  })
+
+  it('joins multiple shortages with semicolons in the supplied order', () => {
+    expect(
+      EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE([
+        { gear_name: 'Bone Axe', available: 1, needed: 2 },
+        { gear_name: 'Rawhide Vest', available: 0, needed: 1 }
+      ])
+    ).toBe(
+      "The settlement's stores cannot bear this burden — Bone Axe (need 2, have 1); Rawhide Vest (need 1, have 0)."
     )
   })
 })

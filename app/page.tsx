@@ -148,43 +148,41 @@ function MainPage(): ReactElement {
           setSelectedTab={setSelectedTab}
         />
         <SidebarInset>
-          <div className="p-4 pt-(--header-height)">
-            <SettlementCard
-              isCreatingNewSettlement={isCreatingNewSettlement}
-              isCreatingNewSurvivor={isCreatingNewSurvivor}
-              local={local}
-              pendingSpecialShowdown={pendingSpecialShowdown}
-              selectedHunt={selectedHunt}
-              selectedHuntMonsterIndex={selectedHuntMonsterIndex}
-              selectedSettlement={selectedSettlement}
-              selectedSettlementPhase={selectedSettlementPhase}
-              selectedShowdown={selectedShowdown}
-              selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
-              selectedSurvivor={selectedSurvivor}
-              selectedTab={selectedTab}
-              setIsCreatingNewSettlement={setIsCreatingNewSettlement}
-              setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
-              setPendingSpecialShowdown={setPendingSpecialShowdown}
-              setSelectedHunt={setSelectedHunt}
-              setSelectedHuntId={setSelectedHuntId}
-              setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
-              setSelectedSettlement={setSelectedSettlement}
-              setSelectedSettlementId={setSelectedSettlementId}
-              setSelectedSettlementPhase={setSelectedSettlementPhase}
-              setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
-              setSelectedShowdown={setSelectedShowdown}
-              setSelectedShowdownId={setSelectedShowdownId}
-              setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
-              setSelectedSurvivor={setSelectedSurvivor}
-              setSelectedSurvivorId={setSelectedSurvivorId}
-              setSelectedTab={setSelectedTab}
-              setSurvivors={setSurvivors}
-              setUserSettings={setUserSettings}
-              survivors={survivors}
-              updateLocal={updateLocal}
-              userSettings={userSettings}
-            />
-          </div>
+          <SettlementCard
+            isCreatingNewSettlement={isCreatingNewSettlement}
+            isCreatingNewSurvivor={isCreatingNewSurvivor}
+            local={local}
+            pendingSpecialShowdown={pendingSpecialShowdown}
+            selectedHunt={selectedHunt}
+            selectedHuntMonsterIndex={selectedHuntMonsterIndex}
+            selectedSettlement={selectedSettlement}
+            selectedSettlementPhase={selectedSettlementPhase}
+            selectedShowdown={selectedShowdown}
+            selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
+            selectedSurvivor={selectedSurvivor}
+            selectedTab={selectedTab}
+            setIsCreatingNewSettlement={setIsCreatingNewSettlement}
+            setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
+            setPendingSpecialShowdown={setPendingSpecialShowdown}
+            setSelectedHunt={setSelectedHunt}
+            setSelectedHuntId={setSelectedHuntId}
+            setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
+            setSelectedSettlement={setSelectedSettlement}
+            setSelectedSettlementId={setSelectedSettlementId}
+            setSelectedSettlementPhase={setSelectedSettlementPhase}
+            setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
+            setSelectedShowdown={setSelectedShowdown}
+            setSelectedShowdownId={setSelectedShowdownId}
+            setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
+            setSelectedSurvivor={setSelectedSurvivor}
+            setSelectedSurvivorId={setSelectedSurvivorId}
+            setSelectedTab={setSelectedTab}
+            setSurvivors={setSurvivors}
+            setUserSettings={setUserSettings}
+            survivors={survivors}
+            updateLocal={updateLocal}
+            userSettings={userSettings}
+          />
         </SidebarInset>
       </SidebarProvider>
     </div>

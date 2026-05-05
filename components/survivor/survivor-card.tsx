@@ -11,6 +11,7 @@ import { CourageUnderstandingCard } from '@/components/survivor/courage-understa
 import { CursedGearCard } from '@/components/survivor/cursed-gear/cursed-gear-card'
 import { DisordersCard } from '@/components/survivor/disorders/disorders-card'
 import { FightingArtsCard } from '@/components/survivor/fighting-arts/fighting-arts-card'
+import { GearGridCard } from '@/components/survivor/gear-grid/gear-grid-card'
 import { HuntXPCard } from '@/components/survivor/hunt-xp/hunt-xp-card'
 import { KnowledgeCard } from '@/components/survivor/knowledge/knowledge-card'
 import { NextDepartureCard } from '@/components/survivor/next-departure/next-departure-card'
@@ -213,19 +214,6 @@ export function SurvivorCard({
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
-            <FightingArtsCard
-              local={local}
-              selectedSettlement={selectedSettlement}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-              survivors={survivors}
-            />
-            <CursedGearCard
-              local={local}
-              selectedSettlement={selectedSettlement}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-            />
             {mode === SurvivorCardMode.SURVIVOR_CARD && (
               <NextDepartureCard
                 local={local}
@@ -255,6 +243,30 @@ export function SurvivorCard({
               />
             </div>
           )}
+
+          {/* Fourth Column - Gear Grid */}
+          <div className="flex flex-col flex-1 gap-1 xl:min-w-[320px] xl:max-w-[420px]">
+            <GearGridCard
+              local={local}
+              selectedSettlement={selectedSettlement}
+              selectedSurvivor={selectedSurvivor}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+            />
+            <CursedGearCard
+              local={local}
+              selectedSettlement={selectedSettlement}
+              selectedSurvivor={selectedSurvivor}
+              setSurvivors={setSurvivors}
+            />
+            <FightingArtsCard
+              local={local}
+              selectedSettlement={selectedSettlement}
+              selectedSurvivor={selectedSurvivor}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>

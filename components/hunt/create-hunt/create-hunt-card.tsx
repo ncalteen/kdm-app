@@ -32,7 +32,9 @@ import { getQuarry } from '@/lib/dal/quarry'
 import { getQuarryHuntBoard } from '@/lib/dal/quarry-hunt-board'
 import { getQuarryLevels } from '@/lib/dal/quarry-level'
 import { MonsterVersion } from '@/lib/enums'
+import { computeEmbarkGearShortages } from '@/lib/gear-grid'
 import {
+  EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE,
   ERROR_MESSAGE,
   HUNT_BEGINS_MESSAGE,
   SCOUT_CONFLICT_MESSAGE,
@@ -422,6 +424,22 @@ export function CreateHuntCard({
     )
       return toast.error(SCOUT_CONFLICT_MESSAGE())
 
+    // Validate that the embarking survivors don't collectively carry more gear
+    // than the settlement has in storage. Defends against settlement gear
+    // quantities being reduced after grids were configured.
+    const embarkingIds = selectedScout
+      ? [...selectedSurvivors, selectedScout]
+      : selectedSurvivors
+    const embarkingSurvivors = survivors.filter((s) =>
+      embarkingIds.includes(s.id)
+    )
+    const gearShortages = computeEmbarkGearShortages(
+      embarkingSurvivors,
+      selectedSettlement.gear
+    )
+    if (gearShortages.length > 0)
+      return toast.error(EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE(gearShortages))
+
     const quarry = availableQuarries.find(
       (q) => q.quarry_id === selectedQuarryId
     )
@@ -634,11 +652,12 @@ export function CreateHuntCard({
     selectedShowdown,
     selectedSurvivors,
     setSelectedHunt,
+    survivors,
     toast
   ])
 
   return (
-    <Card className="w-[400px]">
+    <Card className="w-full max-w-[400px]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PawPrintIcon className="h-5 w-5" />
@@ -799,47 +818,45 @@ export function CreateHuntCard({
           AI Deck
         </h3>
 
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2 w-full">
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-center block">A Cards</Label>
-              <NumericInput
-                label="A Cards"
-                value={displayedLevel?.advanced_cards ?? 0}
-                min={0}
-                disabled={true}
-              />
-            </div>
+        <div className="flex gap-2 w-full">
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs text-center block">A Cards</Label>
+            <NumericInput
+              label="A Cards"
+              value={displayedLevel?.advanced_cards ?? 0}
+              min={0}
+              disabled={true}
+            />
+          </div>
 
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-center block">B Cards</Label>
-              <NumericInput
-                label="B Cards"
-                value={displayedLevel?.basic_cards ?? 0}
-                min={0}
-                disabled={true}
-              />
-            </div>
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs text-center block">B Cards</Label>
+            <NumericInput
+              label="B Cards"
+              value={displayedLevel?.basic_cards ?? 0}
+              min={0}
+              disabled={true}
+            />
+          </div>
 
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-center block">L Cards</Label>
-              <NumericInput
-                label="L Cards"
-                value={displayedLevel?.legendary_cards ?? 0}
-                min={0}
-                disabled={true}
-              />
-            </div>
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs text-center block">L Cards</Label>
+            <NumericInput
+              label="L Cards"
+              value={displayedLevel?.legendary_cards ?? 0}
+              min={0}
+              disabled={true}
+            />
+          </div>
 
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-center block">O Cards</Label>
-              <NumericInput
-                label="O Cards"
-                value={displayedLevel?.overtone_cards ?? 0}
-                min={0}
-                disabled={true}
-              />
-            </div>
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs text-center block">O Cards</Label>
+            <NumericInput
+              label="O Cards"
+              value={displayedLevel?.overtone_cards ?? 0}
+              min={0}
+              disabled={true}
+            />
           </div>
         </div>
 

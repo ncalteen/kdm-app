@@ -1,0 +1,268 @@
+import { createClient } from '@/lib/supabase/client'
+import { GearGridDetail, GearGridPosition } from '@/lib/types'
+
+/**
+ * Position to Column
+ *
+ * Maps a logical {@link GearGridPosition} to the physical `gear_grid` column
+ * name that stores the gear ID for that slot.
+ */
+export const POSITION_TO_COLUMN: {
+  [key in GearGridPosition]: keyof GearGridDetail
+} = {
+  top_left: 'pos_top_left',
+  top_center: 'pos_top_center',
+  top_right: 'pos_top_right',
+  mid_left: 'pos_mid_left',
+  mid_center: 'pos_mid_center',
+  mid_right: 'pos_mid_right',
+  bottom_left: 'pos_bottom_left',
+  bottom_center: 'pos_bottom_center',
+  bottom_right: 'pos_bottom_right'
+}
+
+/**
+ * Empty Gear Grid
+ *
+ * Returns an unsaved gear grid with every slot empty. Used as the default
+ * representation for a survivor that has never been edited.
+ *
+ * @returns Empty Gear Grid
+ */
+export function emptyGearGrid(): GearGridDetail {
+  return {
+    id: null,
+    pos_top_left: null,
+    pos_top_center: null,
+    pos_top_right: null,
+    pos_mid_left: null,
+    pos_mid_center: null,
+    pos_mid_right: null,
+    pos_bottom_left: null,
+    pos_bottom_center: null,
+    pos_bottom_right: null,
+    selected_armor_set_id: null
+  }
+}
+
+/**
+ * Get Gear Grid
+ *
+ * Retrieves a survivor's persisted gear grid.
+ *
+ * @param survivorId Survivor ID
+ * @returns Gear Grid (or null when no grid row exists)
+ */
+export async function getGearGrid(
+  survivorId: string | null | undefined
+): Promise<GearGridDetail | null> {
+  if (!survivorId) throw new Error('Required: Survivor ID')
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('gear_grid')
+    .select(
+      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right, selected_armor_set_id'
+    )
+    .eq('survivor_id', survivorId)
+    .maybeSingle()
+
+  if (error) throw new Error(`Error Fetching Gear Grid: ${error.message}`)
+
+  return data ?? null
+}
+
+/**
+ * Save Gear Grid
+ *
+ * Persists the provided slots of a survivor's gear grid in a single
+ * round-trip. Inserts a new row when the survivor has no grid yet and updates
+ * the existing row otherwise. The row is identified by `survivor_id` (which is
+ * unique per survivor).
+ *
+ * Passing all positions preserves the existing "save entire grid" behavior.
+ * Passing only a subset of positions allows single-slot edits without
+ * rewriting unrelated columns.
+ *
+ * @param survivorId Survivor ID
+ * @param positions Position-Keyed Gear IDs (null clears the slot)
+ * @param fields Optional Non-Position Fields (e.g. `selected_armor_set_id`)
+ * @returns Persisted Gear Grid
+ */
+export async function saveGearGrid(
+  survivorId: string,
+  positions: Partial<{ [key in GearGridPosition]: string | null }>,
+  fields?: { selected_armor_set_id?: string | null }
+): Promise<GearGridDetail> {
+  if (!survivorId) throw new Error('Required: Survivor ID')
+
+  const providedPositions = (
+    Object.keys(positions) as GearGridPosition[]
+  ).filter((position) =>
+    Object.prototype.hasOwnProperty.call(positions, position)
+  )
+  const hasFieldUpdates =
+    fields !== undefined &&
+    Object.prototype.hasOwnProperty.call(fields, 'selected_armor_set_id')
+
+  if (providedPositions.length === 0 && !hasFieldUpdates)
+    throw new Error('Required: At least one gear grid position')
+
+  const payload: { survivor_id: string } & Partial<
+    Record<keyof GearGridDetail, string | null>
+  > = {
+    survivor_id: survivorId
+  }
+
+  for (const position of providedPositions) {
+    const column = POSITION_TO_COLUMN[position]
+    payload[column] = positions[position] ?? null
+  }
+
+  if (hasFieldUpdates)
+    payload.selected_armor_set_id = fields?.selected_armor_set_id ?? null
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('gear_grid')
+    .upsert(payload, { onConflict: 'survivor_id' })
+    .select(
+      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right, selected_armor_set_id'
+    )
+    .single()
+
+  if (error) throw new Error(`Error Saving Gear Grid: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Set Gear Grid Slot
+ *
+ * Convenience wrapper around {@link saveGearGrid} that mutates a single slot on
+ * the grid. Existing slots are preserved as-is. The current grid (when one
+ * exists) is supplied by the caller to avoid an extra round-trip.
+ *
+ * @param survivorId Survivor ID
+ * @param current Current Gear Grid (or null if the survivor has no grid yet)
+ * @param position Slot to Mutate
+ * @param gearId Gear ID to Place (null clears the slot)
+ * @returns Persisted Gear Grid
+ */
+export async function setGearGridSlot(
+  survivorId: string,
+  current: GearGridDetail | null,
+  position: GearGridPosition,
+  gearId: string | null
+): Promise<GearGridDetail> {
+  const baseline = current ?? emptyGearGrid()
+
+  return saveGearGrid(survivorId, {
+    top_left: baseline.pos_top_left,
+    top_center: baseline.pos_top_center,
+    top_right: baseline.pos_top_right,
+    mid_left: baseline.pos_mid_left,
+    mid_center: baseline.pos_mid_center,
+    mid_right: baseline.pos_mid_right,
+    bottom_left: baseline.pos_bottom_left,
+    bottom_center: baseline.pos_bottom_center,
+    bottom_right: baseline.pos_bottom_right,
+    [position]: gearId
+  } as { [key in GearGridPosition]: string | null })
+}
+
+/**
+ * Set Selected Armor Set
+ *
+ * Persists the survivor's `selected_armor_set_id` choice on their gear grid.
+ * Pass `null` to clear the selection. The grid row is upserted so callers do
+ * not need to worry about whether a grid already exists. The companion
+ * database trigger (`clear_selected_armor_set_if_unqualified`) defends
+ * against persisting a selection the equipped pieces no longer support.
+ *
+ * @param survivorId Survivor ID
+ * @param armorSetId Armor Set ID (null clears the selection)
+ * @returns Persisted Gear Grid
+ */
+export async function setSelectedArmorSet(
+  survivorId: string,
+  armorSetId: string | null
+): Promise<GearGridDetail> {
+  return saveGearGrid(survivorId, {}, { selected_armor_set_id: armorSetId })
+}
+
+/**
+ * Clear Gear Grid
+ *
+ * Empties every slot on the survivor's gear grid. The row is preserved so
+ * downstream consumers can keep relying on a stable grid ID.
+ *
+ * @param survivorId Survivor ID
+ * @returns Persisted Gear Grid
+ */
+export async function clearGearGrid(
+  survivorId: string
+): Promise<GearGridDetail> {
+  return saveGearGrid(survivorId, {
+    top_left: null,
+    top_center: null,
+    top_right: null,
+    mid_left: null,
+    mid_center: null,
+    mid_right: null,
+    bottom_left: null,
+    bottom_center: null,
+    bottom_right: null
+  })
+}
+
+/**
+ * Apply Gear Grid Slot
+ *
+ * Pure helper that returns a copy of `current` with the given slot updated.
+ * Intended for optimistic local-state updates that mirror what
+ * {@link setGearGridSlot} writes to the database.
+ *
+ * @param current Current Gear Grid (or null if the survivor has no grid yet)
+ * @param position Slot to Mutate
+ * @param gearId Gear ID to Place (null clears the slot)
+ * @returns New Gear Grid Detail
+ */
+export function applyGearGridSlot(
+  current: GearGridDetail | null,
+  position: GearGridPosition,
+  gearId: string | null
+): GearGridDetail {
+  const baseline = current ?? emptyGearGrid()
+  const column = POSITION_TO_COLUMN[position]
+
+  return {
+    ...baseline,
+    [column]: gearId
+  }
+}
+
+/**
+ * Apply Selected Armor Set
+ *
+ * Pure helper that returns a copy of `current` with `selected_armor_set_id`
+ * updated. Mirrors what {@link setSelectedArmorSet} writes to the database
+ * and is used for optimistic local-state updates.
+ *
+ * @param current Current Gear Grid (or null if the survivor has no grid yet)
+ * @param armorSetId Armor Set ID (null clears the selection)
+ * @returns New Gear Grid Detail
+ */
+export function applySelectedArmorSet(
+  current: GearGridDetail | null,
+  armorSetId: string | null
+): GearGridDetail {
+  const baseline = current ?? emptyGearGrid()
+
+  return {
+    ...baseline,
+    selected_armor_set_id: armorSetId
+  }
+}

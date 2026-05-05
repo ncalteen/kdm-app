@@ -253,12 +253,16 @@ export function AttributeCard({
     selectedSettlement?.survivor_type === DatabaseSurvivorType[SurvivorType.ARC]
       ? mode === SurvivorCardMode.SHOWDOWN_CARD ||
         mode === SurvivorCardMode.HUNT_CARD
-        ? 'grid-cols-8'
-        : 'grid-cols-7'
+        ? 'lg:grid-cols-8'
+        : 'lg:grid-cols-7'
       : mode === SurvivorCardMode.SHOWDOWN_CARD ||
           mode === SurvivorCardMode.HUNT_CARD
-        ? 'grid-cols-7'
-        : 'grid-cols-6'
+        ? 'lg:grid-cols-7'
+        : 'lg:grid-cols-6'
+
+  const showTokens =
+    mode === SurvivorCardMode.HUNT_CARD ||
+    mode === SurvivorCardMode.SHOWDOWN_CARD
 
   /** Current token values derived from hunt/showdown survivor record */
   const tokenValues = {
@@ -330,59 +334,44 @@ export function AttributeCard({
 
   return (
     <Card className="p-2 border-0">
-      <CardContent className={`grid ${columnCount} gap-2 p-0`}>
-        {/* Label Row */}
-        {(mode === SurvivorCardMode.SHOWDOWN_CARD ||
-          mode === SurvivorCardMode.HUNT_CARD) && <div className="max-w-12" />}
-        <div className="flex items-center justify-center">
-          <Label className="text-xs">
-            <span className="lg:hidden">Mvmt</span>
-            <span className="hidden lg:inline">Movement</span>
-          </Label>
+      <CardContent
+        className={`flex flex-wrap justify-center gap-x-2 gap-y-3 p-0 lg:grid ${columnCount} lg:gap-2`}>
+        {/* Label Row (lg only) */}
+        {showTokens && <div className="hidden lg:block max-w-12" />}
+        <div className="hidden lg:flex items-center justify-center">
+          <Label className="text-xs">Movement</Label>
         </div>
-        <div className="flex items-center justify-center">
-          <Label className="text-xs">
-            <span className="lg:hidden">Acc</span>
-            <span className="hidden lg:inline">Accuracy</span>
-          </Label>
+        <div className="hidden lg:flex items-center justify-center">
+          <Label className="text-xs">Accuracy</Label>
         </div>
-        <div className="flex items-center justify-center">
-          <Label className="text-xs">
-            <span className="lg:hidden">Str</span>
-            <span className="hidden lg:inline">Strength</span>
-          </Label>
+        <div className="hidden lg:flex items-center justify-center">
+          <Label className="text-xs">Strength</Label>
         </div>
-        <div className="flex items-center justify-center">
-          <Label className="text-xs">
-            <span className="lg:hidden">Eva</span>
-            <span className="hidden lg:inline">Evasion</span>
-          </Label>
+        <div className="hidden lg:flex items-center justify-center">
+          <Label className="text-xs">Evasion</Label>
         </div>
-        <div className="flex items-center justify-center">
+        <div className="hidden lg:flex items-center justify-center">
           <Label className="text-xs">Luck</Label>
         </div>
-        <div className="flex items-center justify-center">
-          <Label className="text-xs">
-            <span className="lg:hidden">Spd</span>
-            <span className="hidden lg:inline">Speed</span>
-          </Label>
+        <div className="hidden lg:flex items-center justify-center">
+          <Label className="text-xs">Speed</Label>
         </div>
         {selectedSettlement?.survivor_type ===
           DatabaseSurvivorType[SurvivorType.ARC] && (
-          <div className="flex items-center justify-center">
+          <div className="hidden lg:flex items-center justify-center">
             <Label className="text-xs">Lumi</Label>
           </div>
         )}
 
-        {(mode === SurvivorCardMode.SHOWDOWN_CARD ||
-          mode === SurvivorCardMode.HUNT_CARD) && (
-          <Label className="text-xs flex items-center justify-center max-w-12">
+        {showTokens && (
+          <Label className="hidden lg:flex text-xs items-center justify-center max-w-12">
             Base
           </Label>
         )}
 
         {/* Movement */}
         <div className="flex flex-col items-center gap-1">
+          <Label className="text-xs lg:hidden">Mvmt</Label>
           <NumericInput
             label="Movement"
             value={movement}
@@ -399,10 +388,20 @@ export function AttributeCard({
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
           />
+          {showTokens && (
+            <NumericInput
+              label="Movement Tokens"
+              value={tokenValues.movementTokens}
+              onChange={(value) => saveTokens('movementTokens', value)}
+              className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted! lg:hidden"
+              disabled={disabled}
+            />
+          )}
         </div>
 
         {/* Accuracy */}
         <div className="flex flex-col items-center gap-1">
+          <Label className="text-xs lg:hidden">Acc</Label>
           <NumericInput
             label="Accuracy"
             value={accuracy}
@@ -418,10 +417,20 @@ export function AttributeCard({
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
           />
+          {showTokens && (
+            <NumericInput
+              label="Accuracy Tokens"
+              value={tokenValues.accuracyTokens}
+              onChange={(value) => saveTokens('accuracyTokens', value)}
+              className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted! lg:hidden"
+              disabled={disabled}
+            />
+          )}
         </div>
 
         {/* Strength */}
         <div className="flex flex-col items-center gap-1">
+          <Label className="text-xs lg:hidden">Str</Label>
           <NumericInput
             label="Strength"
             value={strength}
@@ -437,10 +446,20 @@ export function AttributeCard({
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
           />
+          {showTokens && (
+            <NumericInput
+              label="Strength Tokens"
+              value={tokenValues.strengthTokens}
+              onChange={(value) => saveTokens('strengthTokens', value)}
+              className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted! lg:hidden"
+              disabled={disabled}
+            />
+          )}
         </div>
 
         {/* Evasion */}
         <div className="flex flex-col items-center gap-1">
+          <Label className="text-xs lg:hidden">Eva</Label>
           <NumericInput
             label="Evasion"
             value={evasion}
@@ -456,10 +475,20 @@ export function AttributeCard({
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
           />
+          {showTokens && (
+            <NumericInput
+              label="Evasion Tokens"
+              value={tokenValues.evasionTokens}
+              onChange={(value) => saveTokens('evasionTokens', value)}
+              className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted! lg:hidden"
+              disabled={disabled}
+            />
+          )}
         </div>
 
         {/* Luck */}
         <div className="flex flex-col items-center gap-1">
+          <Label className="text-xs lg:hidden">Luck</Label>
           <NumericInput
             label="Luck"
             value={luck}
@@ -475,10 +504,20 @@ export function AttributeCard({
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
           />
+          {showTokens && (
+            <NumericInput
+              label="Luck Tokens"
+              value={tokenValues.luckTokens}
+              onChange={(value) => saveTokens('luckTokens', value)}
+              className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted! lg:hidden"
+              disabled={disabled}
+            />
+          )}
         </div>
 
         {/* Speed */}
         <div className="flex flex-col items-center gap-1">
+          <Label className="text-xs lg:hidden">Spd</Label>
           <NumericInput
             label="Speed"
             value={speed}
@@ -494,12 +533,22 @@ export function AttributeCard({
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
           />
+          {showTokens && (
+            <NumericInput
+              label="Speed Tokens"
+              value={tokenValues.speedTokens}
+              onChange={(value) => saveTokens('speedTokens', value)}
+              className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted! lg:hidden"
+              disabled={disabled}
+            />
+          )}
         </div>
 
         {/* Lumi (Arc) */}
         {selectedSettlement?.survivor_type ===
           DatabaseSurvivorType[SurvivorType.ARC] && (
           <div className="flex flex-col items-center gap-1">
+            <Label className="text-xs lg:hidden">Lumi</Label>
             <NumericInput
               label="Lumi"
               value={lumi}
@@ -519,15 +568,14 @@ export function AttributeCard({
           </div>
         )}
 
-        {(mode === SurvivorCardMode.SHOWDOWN_CARD ||
-          mode === SurvivorCardMode.HUNT_CARD) && (
+        {showTokens && (
           <>
-            <Label className="text-xs text-center flex items-center justify-center max-w-12">
+            <Label className="hidden lg:flex text-xs text-center items-center justify-center max-w-12">
               Tokens
             </Label>
 
-            {/* Movement Tokens */}
-            <div className="flex flex-col items-center gap-1">
+            {/* Movement Tokens (lg only — small screens render inline above) */}
+            <div className="hidden lg:flex flex-col items-center gap-1">
               <NumericInput
                 label="Movement Tokens"
                 value={tokenValues.movementTokens}
@@ -538,7 +586,7 @@ export function AttributeCard({
             </div>
 
             {/* Accuracy Tokens */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="hidden lg:flex flex-col items-center gap-1">
               <NumericInput
                 label="Accuracy Tokens"
                 value={tokenValues.accuracyTokens}
@@ -549,7 +597,7 @@ export function AttributeCard({
             </div>
 
             {/* Strength Tokens */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="hidden lg:flex flex-col items-center gap-1">
               <NumericInput
                 label="Strength Tokens"
                 value={tokenValues.strengthTokens}
@@ -560,7 +608,7 @@ export function AttributeCard({
             </div>
 
             {/* Evasion Tokens */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="hidden lg:flex flex-col items-center gap-1">
               <NumericInput
                 label="Evasion Tokens"
                 value={tokenValues.evasionTokens}
@@ -571,7 +619,7 @@ export function AttributeCard({
             </div>
 
             {/* Luck Tokens */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="hidden lg:flex flex-col items-center gap-1">
               <NumericInput
                 label="Luck Tokens"
                 value={tokenValues.luckTokens}
@@ -582,7 +630,7 @@ export function AttributeCard({
             </div>
 
             {/* Speed Tokens */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="hidden lg:flex flex-col items-center gap-1">
               <NumericInput
                 label="Speed Tokens"
                 value={tokenValues.speedTokens}
@@ -594,7 +642,9 @@ export function AttributeCard({
 
             {/* Lumi (Arc) - No Tokens */}
             {selectedSettlement?.survivor_type ===
-              DatabaseSurvivorType[SurvivorType.ARC] && <div />}
+              DatabaseSurvivorType[SurvivorType.ARC] && (
+              <div className="hidden lg:block" />
+            )}
           </>
         )}
       </CardContent>

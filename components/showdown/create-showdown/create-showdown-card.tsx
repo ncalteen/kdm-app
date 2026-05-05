@@ -32,7 +32,9 @@ import { addShowdownAIDeck } from '@/lib/dal/showdown-ai-deck'
 import { addShowdownMonster } from '@/lib/dal/showdown-monster'
 import { addShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { AmbushType, MonsterType, TurnType } from '@/lib/enums'
+import { computeEmbarkGearShortages } from '@/lib/gear-grid'
 import {
+  EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE,
   ERROR_MESSAGE,
   HUNT_ALREADY_ACTIVE_ERROR_MESSAGE,
   SCOUT_CONFLICT_MESSAGE,
@@ -427,6 +429,21 @@ export function CreateShowdownCard({
     )
       return toast.error(SCOUT_CONFLICT_MESSAGE())
 
+    // Validate that the embarking survivors don't collectively carry more gear
+    // than the settlement has in storage.
+    const embarkingIds = selectedScout
+      ? [...selectedSurvivors, selectedScout]
+      : selectedSurvivors
+    const embarkingSurvivors = survivors.filter((s) =>
+      embarkingIds.includes(s.id)
+    )
+    const gearShortages = computeEmbarkGearShortages(
+      embarkingSurvivors,
+      selectedSettlement.gear
+    )
+    if (gearShortages.length > 0)
+      return toast.error(EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE(gearShortages))
+
     // Find monster name from settlement data
     const quarryMatch = availableQuarries.find(
       (q) => q.quarry_id === selectedMonsterId
@@ -695,11 +712,12 @@ export function CreateShowdownCard({
     selectedSettlement,
     selectedSurvivors,
     setSelectedShowdown,
+    survivors,
     toast
   ])
 
   return (
-    <Card className="w-[400px]">
+    <Card className="w-full max-w-[400px]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <SkullIcon className="h-5 w-5" />

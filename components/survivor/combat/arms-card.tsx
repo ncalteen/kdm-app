@@ -114,7 +114,7 @@ export function ArmsCard({
 
   return (
     <Card className="p-2 border-0">
-      <CardContent className="p-0 h-19">
+      <CardContent className="p-0 min-h-19">
         <div className="flex flex-row">
           {/* Arm Armor */}
           <div className="relative flex items-center">
@@ -133,7 +133,7 @@ export function ArmsCard({
             />
           </div>
 
-          <div className="mx-2 w-px bg-border h-19" />
+          <div className="mx-2 w-px bg-border self-stretch" />
 
           <div className="flex flex-row items-start w-full">
             <div className="text-sm font-bold flex flex-row gap-1 w-18">
@@ -208,7 +208,7 @@ export function ArmsCard({
               </div>
 
               {/* Severe Injuries - Contracture */}
-              <div className="space-y-0 flex flex-row items-center gap-2">
+              <div className="flex flex-col-reverse items-start gap-0.5 lg:flex-row lg:items-center lg:gap-2">
                 <div className="flex flex-row gap-1">
                   {[1, 2, 3, 4, 5].map((value) => (
                     <Checkbox
@@ -229,10 +229,7 @@ export function ArmsCard({
                     />
                   ))}
                 </div>
-                <Label className="text-xs">
-                  <span className="lg:hidden">Cont</span>
-                  <span className="hidden lg:inline">Contracture</span>
-                </Label>
+                <Label className="text-xs">Contracture</Label>
               </div>
             </div>
 

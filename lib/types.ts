@@ -226,6 +226,96 @@ export type GearDetail = Omit<
 }
 
 /**
+ * Armor Set Slot Detail
+ *
+ * Represents a single slot in an armor set together with the list of gear
+ * pieces that satisfy it. A survivor qualifies for a slot when their gear
+ * grid contains at least one of the listed `gear_ids`.
+ */
+export type ArmorSetSlotDetail = {
+  /** Slot ID */
+  id: string
+  /** Slot Name (e.g. "Head", "Chest") */
+  slot_name: string
+  /** Slot Display Order */
+  slot_order: number
+  /** Whether the Slot Must Be Satisfied for the Set to Qualify */
+  required: boolean
+  /** Gear IDs That Satisfy This Slot */
+  gear_ids: string[]
+}
+
+/**
+ * Armor Set Detail
+ *
+ * Used throughout the app to represent an armor set together with its slots
+ * and slot gear candidates.
+ */
+export type ArmorSetDetail = Omit<
+  Tables<'armor_set'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {
+  /** Slots Composing the Set */
+  slots: ArmorSetSlotDetail[]
+}
+
+/**
+ * Gear Grid Position
+ *
+ * One of the nine slots on a survivor's 3x3 gear grid. Position keys map
+ * directly to columns on the `gear_grid` table (e.g. `top_left` →
+ * `pos_top_left`).
+ */
+export type GearGridPosition =
+  | 'top_left'
+  | 'top_center'
+  | 'top_right'
+  | 'mid_left'
+  | 'mid_center'
+  | 'mid_right'
+  | 'bottom_left'
+  | 'bottom_center'
+  | 'bottom_right'
+
+/**
+ * Gear Grid Detail
+ *
+ * Used throughout the app to represent a survivor's 3x3 gear grid. Each
+ * position holds an optional gear ID drawn from the settlement's storage.
+ */
+export type GearGridDetail = {
+  /** Gear Grid ID (null until the row has been persisted) */
+  id: string | null
+  /** Top-Left Position Gear ID */
+  pos_top_left: string | null
+  /** Top-Center Position Gear ID */
+  pos_top_center: string | null
+  /** Top-Right Position Gear ID */
+  pos_top_right: string | null
+  /** Middle-Left Position Gear ID */
+  pos_mid_left: string | null
+  /** Middle-Center Position Gear ID */
+  pos_mid_center: string | null
+  /** Middle-Right Position Gear ID */
+  pos_mid_right: string | null
+  /** Bottom-Left Position Gear ID */
+  pos_bottom_left: string | null
+  /** Bottom-Center Position Gear ID */
+  pos_bottom_center: string | null
+  /** Bottom-Right Position Gear ID */
+  pos_bottom_right: string | null
+  /**
+   * Selected Armor Set ID
+   *
+   * The armor set the survivor has chosen to apply when their loadout qualifies
+   * for more than one. A `clear_selected_armor_set_if_unqualified` database
+   * trigger automatically resets this column to null when the persisted
+   * positions no longer satisfy the selected set.
+   */
+  selected_armor_set_id: string | null
+}
+
+/**
  * Hunt AI Deck Detail
  *
  * Used throughout the app to represent a monster's AI deck in a hunt.
@@ -1095,6 +1185,8 @@ export type SurvivorDetail = Tables<'survivor'> & {
   embarked: boolean
   /** Fighting Arts */
   fighting_arts: FightingArtDetail[]
+  /** Gear Grid (3x3 of equipped gear; null until first edit) */
+  gear_grid: GearGridDetail | null
   /** Knowledge 1 */
   knowledge_1: {
     /** Knowledge ID */
