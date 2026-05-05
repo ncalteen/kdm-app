@@ -454,6 +454,24 @@ export const GEAR_GRID_SETTLEMENT_REQUIRED_ERROR_MESSAGE = () =>
   'No settlement gear is within reach.'
 
 /**
+ * Armor Set Selected
+ *
+ * Surfaced when a survivor commits to a particular armor set bonus from the
+ * list of qualifying sets.
+ *
+ * @param armorSetName Armor Set Name
+ * @param survivorName Survivor Name
+ * @returns Armor Set Selected Message
+ */
+export const ARMOR_SET_SELECTED_MESSAGE = (
+  armorSetName: string,
+  survivorName?: string
+) =>
+  survivorName
+    ? `${survivorName} dons ${armorSetName}.`
+    : `The survivor dons ${armorSetName}.`
+
+/**
  * Embark Gear Shortage
  *
  * Surfaced when the survivors embarking on a hunt or showdown collectively

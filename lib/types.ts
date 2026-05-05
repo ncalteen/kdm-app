@@ -304,6 +304,15 @@ export type GearGridDetail = {
   pos_bottom_center: string | null
   /** Bottom-Right Position Gear ID */
   pos_bottom_right: string | null
+  /**
+   * Selected Armor Set ID
+   *
+   * The armor set the survivor has chosen to apply when their loadout qualifies
+   * for more than one. A `clear_selected_armor_set_if_unqualified` database
+   * trigger automatically resets this column to null when the persisted
+   * positions no longer satisfy the selected set.
+   */
+  selected_armor_set_id: string | null
 }
 
 /**

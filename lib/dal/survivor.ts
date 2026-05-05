@@ -38,7 +38,7 @@ const SURVIVOR_SELECT = `
   secret_fighting_arts:survivor_secret_fighting_art(
     secret_fighting_art(id, custom, secret_fighting_art_name, rules)
   ),
-  gear_grid(id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right),
+  gear_grid(id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right, selected_armor_set_id),
   hunt_survivor(survivor_id),
   showdown_survivor(survivor_id),
   knowledge_1:knowledge!survivor_knowledge_1_id_fkey(id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone),
