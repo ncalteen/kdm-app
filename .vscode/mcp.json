@@ -1,5 +1,12 @@
 {
   "servers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${input:github_pat}"
+      }
+    },
     "kdm-postgres": {
       "type": "stdio",
       "command": "npx",
@@ -9,5 +16,13 @@
         "postgresql://postgres:postgres@127.0.0.1:54322/postgres?sslmode=disable"
       ]
     }
-  }
+  },
+  "inputs": [
+    {
+      "id": "github_pat",
+      "type": "promptString",
+      "description": "GitHub PAT with `repo` scope for ncalteen/kdm-app",
+      "password": true
+    }
+  ]
 }
