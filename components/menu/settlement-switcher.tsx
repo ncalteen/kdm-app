@@ -1,5 +1,6 @@
 'use client'
 
+import { LanternMark } from '@/components/generic/lantern-mark'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +20,6 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
-import { LanternMark } from '@/components/generic/lantern-mark'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { getSettlementForUser } from '@/lib/dal/user'

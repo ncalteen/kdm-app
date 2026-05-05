@@ -268,7 +268,7 @@ export function SettingsCard({
   const isDevelopment = process.env.NODE_ENV === 'development'
 
   return (
-    <div className="flex flex-col gap-4 pt-2 px-2">
+    <div className="flex flex-col gap-4 pt-12 px-2">
       {/* Global Settings */}
       <Card className="p-0">
         <CardHeader className="px-4 pt-3 pb-0">
