@@ -10,9 +10,9 @@ Kingdom Death: Monster's core loop has three major phases:
 
 1. **Hunt Phase**: Survivors track and hunt a monster, facing events and
    challenges along the way.
-2. **Showdown Phase**: Survivors confront the monster in battle using their
+1. **Showdown Phase**: Survivors confront the monster in battle using their
    skills and equipment.
-3. **Settlement Phase**: Survivors return home to craft items, build structures,
+1. **Settlement Phase**: Survivors return home to craft items, build structures,
    and manage resources.
 
 User-facing copy should fit the game's tone: lanterns as hope, darkness as
@@ -165,6 +165,9 @@ When preparing PRs:
 - Formatting checks pass
 - Linting checks pass
 - Unit tests pass and coverage requirements are met
+- **Always** ensure that PRs include a version update in `package.json` and
+  `package-lock.json`. These should follow semantic versioning principles so
+  that changes are properly reflected in the version numbers.
 
 The body of the PR should include:
 

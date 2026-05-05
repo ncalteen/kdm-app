@@ -743,6 +743,15 @@ export type SettlementStateSetter = (
 ) => void
 
 /**
+ * Settlement Role
+ *
+ * The caller's relationship to a settlement. `owner` rows are loaded directly
+ * from `settlement.user_id = auth.uid()`. `collaborator` rows are reached via
+ * `settlement_shared_user` and are subject to the shared-user permission set.
+ */
+export type SettlementRole = 'owner' | 'collaborator'
+
+/**
  * Settlement Detail
  *
  * Used throughout the app to represent the currently selected settlement.
@@ -1008,8 +1017,8 @@ export type SettlementDetail = Omit<
     /** Seed Pattern Name */
     seed_pattern_name: string
   }[]
-  /** Shared Settlement */
-  shared: boolean
+  /** Caller's Role on This Settlement */
+  role: SettlementRole
   /** Settlement Timeline */
   timeline: {
     /** Year Number */

@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast'
 import { getSettlementForUser } from '@/lib/dal/user'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
-import { SettlementDetail } from '@/lib/types'
+import { SettlementDetail, SettlementRole } from '@/lib/types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
 import {
   ComponentProps,
@@ -94,7 +94,7 @@ export function SettlementSwitcher({
       campaign_type: DatabaseCampaignType
       id: string
       settlement_name: string
-      shared: boolean
+      role: SettlementRole
     }[]
   >([])
   const [isLoading, setIsLoading] = useState(true)
