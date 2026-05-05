@@ -6,7 +6,8 @@ const mockSupabase = {
     getUser: vi.fn(),
     signOut: vi.fn()
   },
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -129,7 +130,7 @@ describe('getUserId', () => {
 describe('getSettlementForUser', () => {
   const mockUser = { id: 'user-1' }
 
-  it('returns owned and shared settlements', async () => {
+  it('returns owned and shared settlements with owner usernames', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
@@ -162,12 +163,61 @@ describe('getSettlementForUser', () => {
       .mockReturnValueOnce({ select: mockOwnedSelect })
       .mockReturnValueOnce({ select: mockSharedSelect })
 
+    mockSupabase.rpc.mockResolvedValue({
+      data: [{ settlement_id: 'set-2', username: 'lanternbearer' }],
+      error: null
+    })
+
     const result = await getSettlementForUser()
+    expect(mockSupabase.rpc).toHaveBeenCalledWith(
+      'get_shared_settlement_owners'
+    )
     expect(result).toHaveLength(2)
-    expect(result[0]).toMatchObject({ ...ownedSettlement, role: 'owner' })
+    expect(result[0]).toMatchObject({
+      ...ownedSettlement,
+      role: 'owner',
+      owner_username: null
+    })
     expect(result[1]).toMatchObject({
       ...sharedSettlement,
-      role: 'collaborator'
+      role: 'collaborator',
+      owner_username: 'lanternbearer'
+    })
+  })
+
+  it('falls back to null owner_username when the RPC returns no row for a shared settlement', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
+
+    const sharedSettlement = {
+      campaign_type: 'PEOPLE_OF_THE_LANTERN',
+      id: 'set-2',
+      settlement_name: 'Shared Settlement'
+    }
+
+    const mockOwnedEq = vi.fn().mockResolvedValue({ data: [], error: null })
+    const mockOwnedSelect = vi.fn().mockReturnValue({ eq: mockOwnedEq })
+
+    const mockSharedEq = vi.fn().mockResolvedValue({
+      data: [{ settlement: sharedSettlement }],
+      error: null
+    })
+    const mockSharedSelect = vi.fn().mockReturnValue({ eq: mockSharedEq })
+
+    mockSupabase.from
+      .mockReturnValueOnce({ select: mockOwnedSelect })
+      .mockReturnValueOnce({ select: mockSharedSelect })
+
+    mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
+
+    const result = await getSettlementForUser()
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({
+      ...sharedSettlement,
+      role: 'collaborator',
+      owner_username: null
     })
   })
 
@@ -189,8 +239,36 @@ describe('getSettlementForUser', () => {
       .mockReturnValueOnce({ select: mockOwnedSelect })
       .mockReturnValueOnce({ select: mockSharedSelect })
 
+    mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
+
     await expect(getSettlementForUser()).rejects.toThrow(
       'Error Fetching Owned Settlements: owned error'
+    )
+  })
+
+  it('throws when the owner usernames RPC fails', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
+
+    const mockOwnedEq = vi.fn().mockResolvedValue({ data: [], error: null })
+    const mockOwnedSelect = vi.fn().mockReturnValue({ eq: mockOwnedEq })
+
+    const mockSharedEq = vi.fn().mockResolvedValue({ data: [], error: null })
+    const mockSharedSelect = vi.fn().mockReturnValue({ eq: mockSharedEq })
+
+    mockSupabase.from
+      .mockReturnValueOnce({ select: mockOwnedSelect })
+      .mockReturnValueOnce({ select: mockSharedSelect })
+
+    mockSupabase.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'rpc error' }
+    })
+
+    await expect(getSettlementForUser()).rejects.toThrow(
+      'Error Fetching Settlement Owner Usernames: rpc error'
     )
   })
 })

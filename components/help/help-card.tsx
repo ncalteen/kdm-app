@@ -18,7 +18,7 @@ import { ReactElement } from 'react'
  */
 export function HelpCard(): ReactElement {
   return (
-    <div className="flex flex-col gap-4 pt-2">
+    <div className="flex flex-col gap-4 pt-12">
       {/* Support Overview */}
       <Card className="p-0">
         <CardHeader className="px-4 pt-3 pb-0">

@@ -174,7 +174,9 @@ export async function getUserSettings(): Promise<UserSettingsDetail | null> {
  * Includes settlements owned by the user and settlements shared with the user
  * via the `settlement_shared_user` table. Returns minimal data for the
  * settlement switcher sidebar. Each row is tagged with the caller's `role` so
- * downstream UI can gate owner-only affordances.
+ * downstream UI can gate owner-only affordances. For collaborator rows, the
+ * owner's `username` is resolved via the `get_shared_settlement_owners` RPC
+ * (RLS on `user_settings` blocks direct cross-user reads).
  *
  * @returns List of Settlement(s)
  */
@@ -184,13 +186,16 @@ export async function getSettlementForUser(): Promise<
     id: string
     settlement_name: string
     role: SettlementRole
+    owner_username: string | null
   }[]
 > {
   const userId = await getUserId()
   const supabase = createClient()
 
-  // Fetch owned and shared settlements in parallel.
-  const [ownedResult, sharedResult] = await Promise.all([
+  // Fetch owned settlements, shared settlements, and the owner usernames for
+  // shared settlements in parallel. The RPC is used for owner usernames
+  // because RLS on `user_settings` restricts SELECT to the owning user.
+  const [ownedResult, sharedResult, ownersResult] = await Promise.all([
     supabase
       .from('settlement')
       .select('campaign_type, id, settlement_name')
@@ -198,7 +203,8 @@ export async function getSettlementForUser(): Promise<
     supabase
       .from('settlement_shared_user')
       .select('settlement(campaign_type, id, settlement_name)')
-      .eq('shared_user_id', userId)
+      .eq('shared_user_id', userId),
+    supabase.rpc('get_shared_settlement_owners')
   ])
 
   if (ownedResult.error)
@@ -209,20 +215,40 @@ export async function getSettlementForUser(): Promise<
     throw new Error(
       `Error Fetching Shared Settlements: ${sharedResult.error.message}`
     )
+  if (ownersResult.error)
+    throw new Error(
+      `Error Fetching Settlement Owner Usernames: ${ownersResult.error.message}`
+    )
+
+  const ownerUsernames = new Map<string, string>(
+    (ownersResult.data ?? []).map(
+      (row: { settlement_id: string; username: string }) => [
+        row.settlement_id,
+        row.username
+      ]
+    )
+  )
 
   const results: {
     campaign_type: DatabaseCampaignType
     id: string
     settlement_name: string
     role: SettlementRole
+    owner_username: string | null
   }[] = []
 
-  for (const s of ownedResult.data ?? []) results.push({ ...s, role: 'owner' })
+  for (const s of ownedResult.data ?? [])
+    results.push({ ...s, role: 'owner', owner_username: null })
 
   for (const row of sharedResult.data ?? []) {
     const s = Array.isArray(row.settlement) ? row.settlement[0] : row.settlement
 
-    if (s) results.push({ ...s, role: 'collaborator' })
+    if (s)
+      results.push({
+        ...s,
+        role: 'collaborator',
+        owner_username: ownerUsernames.get(s.id) ?? null
+      })
   }
 
   return results
