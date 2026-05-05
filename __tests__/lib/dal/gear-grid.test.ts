@@ -10,11 +10,13 @@ vi.mock('@/lib/supabase/client', () => ({
 
 const {
   applyGearGridSlot,
+  applySelectedArmorSet,
   clearGearGrid,
   emptyGearGrid,
   getGearGrid,
   saveGearGrid,
-  setGearGridSlot
+  setGearGridSlot,
+  setSelectedArmorSet
 } = await import('@/lib/dal/gear-grid')
 
 beforeEach(() => {
@@ -35,7 +37,8 @@ describe('emptyGearGrid', () => {
       pos_mid_right: null,
       pos_bottom_left: null,
       pos_bottom_center: null,
-      pos_bottom_right: null
+      pos_bottom_right: null,
+      selected_armor_set_id: null
     })
   })
 })
@@ -63,7 +66,8 @@ describe('getGearGrid', () => {
       pos_mid_right: null,
       pos_bottom_left: null,
       pos_bottom_center: null,
-      pos_bottom_right: null
+      pos_bottom_right: null,
+      selected_armor_set_id: null
     }
     const mockMaybeSingle = vi
       .fn()
@@ -76,7 +80,7 @@ describe('getGearGrid', () => {
 
     expect(mockSupabase.from).toHaveBeenCalledWith('gear_grid')
     expect(mockSelect).toHaveBeenCalledWith(
-      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right'
+      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right, selected_armor_set_id'
     )
     expect(mockEq).toHaveBeenCalledWith('survivor_id', 'survivor-1')
     expect(result).toEqual(mockData)
@@ -176,7 +180,7 @@ describe('saveGearGrid', () => {
       { onConflict: 'survivor_id' }
     )
     expect(mockSelect).toHaveBeenCalledWith(
-      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right'
+      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right, selected_armor_set_id'
     )
     expect(result).toEqual(persisted)
   })
@@ -236,7 +240,8 @@ describe('setGearGridSlot', () => {
       pos_mid_right: null,
       pos_bottom_left: null,
       pos_bottom_center: null,
-      pos_bottom_right: null
+      pos_bottom_right: null,
+      selected_armor_set_id: null
     }
 
     const result = await setGearGridSlot(
@@ -333,7 +338,8 @@ describe('setGearGridSlot', () => {
       pos_mid_right: null,
       pos_bottom_left: null,
       pos_bottom_center: null,
-      pos_bottom_right: null
+      pos_bottom_right: null,
+      selected_armor_set_id: null
     }
 
     await setGearGridSlot('survivor-1', current, 'top_left', null)
@@ -399,7 +405,8 @@ describe('applyGearGridSlot', () => {
       pos_mid_right: null,
       pos_bottom_left: null,
       pos_bottom_center: null,
-      pos_bottom_right: null
+      pos_bottom_right: null,
+      selected_armor_set_id: null
     }
 
     const result = applyGearGridSlot(current, 'top_center', 'gear-new')
@@ -432,12 +439,137 @@ describe('applyGearGridSlot', () => {
       pos_mid_right: null,
       pos_bottom_left: null,
       pos_bottom_center: null,
-      pos_bottom_right: null
+      pos_bottom_right: null,
+      selected_armor_set_id: null
     }
 
     const result = applyGearGridSlot(current, 'top_left', null)
 
     expect(result.pos_top_left).toBeNull()
     expect(result.pos_mid_center).toBe('gear-b')
+  })
+})
+
+describe('setSelectedArmorSet', () => {
+  it('upserts only the selected_armor_set_id field', async () => {
+    const persisted = {
+      id: 'grid-1',
+      pos_top_left: null,
+      pos_top_center: null,
+      pos_top_right: null,
+      pos_mid_left: null,
+      pos_mid_center: null,
+      pos_mid_right: null,
+      pos_bottom_left: null,
+      pos_bottom_center: null,
+      pos_bottom_right: null,
+      selected_armor_set_id: 'armor-set-1'
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: persisted, error: null })
+    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
+    const mockUpsert = vi.fn().mockReturnValue({ select: mockSelect })
+    mockSupabase.from.mockReturnValue({ upsert: mockUpsert })
+
+    const result = await setSelectedArmorSet('survivor-1', 'armor-set-1')
+
+    expect(mockUpsert).toHaveBeenCalledWith(
+      {
+        survivor_id: 'survivor-1',
+        selected_armor_set_id: 'armor-set-1'
+      },
+      { onConflict: 'survivor_id' }
+    )
+    expect(result).toEqual(persisted)
+  })
+
+  it('clears the selection when armorSetId is null', async () => {
+    const persisted = {
+      id: 'grid-1',
+      pos_top_left: null,
+      pos_top_center: null,
+      pos_top_right: null,
+      pos_mid_left: null,
+      pos_mid_center: null,
+      pos_mid_right: null,
+      pos_bottom_left: null,
+      pos_bottom_center: null,
+      pos_bottom_right: null,
+      selected_armor_set_id: null
+    }
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: persisted, error: null })
+    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
+    const mockUpsert = vi.fn().mockReturnValue({ select: mockSelect })
+    mockSupabase.from.mockReturnValue({ upsert: mockUpsert })
+
+    await setSelectedArmorSet('survivor-1', null)
+
+    expect(mockUpsert).toHaveBeenCalledWith(
+      {
+        survivor_id: 'survivor-1',
+        selected_armor_set_id: null
+      },
+      { onConflict: 'survivor_id' }
+    )
+  })
+})
+
+describe('applySelectedArmorSet', () => {
+  it('returns a copy with selected_armor_set_id updated', () => {
+    const current = {
+      id: 'grid-1',
+      pos_top_left: 'gear-a',
+      pos_top_center: null,
+      pos_top_right: null,
+      pos_mid_left: null,
+      pos_mid_center: 'gear-b',
+      pos_mid_right: null,
+      pos_bottom_left: null,
+      pos_bottom_center: null,
+      pos_bottom_right: null,
+      selected_armor_set_id: null
+    }
+
+    const result = applySelectedArmorSet(current, 'armor-set-1')
+
+    expect(result).toEqual({
+      ...current,
+      selected_armor_set_id: 'armor-set-1'
+    })
+    // Caller should not mutate the original.
+    expect(current.selected_armor_set_id).toBeNull()
+  })
+
+  it('uses an empty grid baseline when current is null', () => {
+    const result = applySelectedArmorSet(null, 'armor-set-1')
+
+    expect(result).toEqual({
+      ...emptyGearGrid(),
+      selected_armor_set_id: 'armor-set-1'
+    })
+  })
+
+  it('clears the selection when armorSetId is null', () => {
+    const current = {
+      id: 'grid-1',
+      pos_top_left: 'gear-a',
+      pos_top_center: null,
+      pos_top_right: null,
+      pos_mid_left: null,
+      pos_mid_center: 'gear-b',
+      pos_mid_right: null,
+      pos_bottom_left: null,
+      pos_bottom_center: null,
+      pos_bottom_right: null,
+      selected_armor_set_id: 'armor-set-1'
+    }
+
+    const result = applySelectedArmorSet(current, null)
+
+    expect(result.selected_armor_set_id).toBeNull()
+    expect(result.pos_top_left).toBe('gear-a')
   })
 })

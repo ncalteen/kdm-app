@@ -50,7 +50,8 @@ function emptyGrid(): GearGridDetail {
     pos_mid_right: null,
     pos_bottom_left: null,
     pos_bottom_center: null,
-    pos_bottom_right: null
+    pos_bottom_right: null,
+    selected_armor_set_id: null
   }
 }
 
@@ -239,7 +240,8 @@ describe('computeAffinityCounts', () => {
       pos_mid_right: 'mr',
       pos_bottom_left: 'bl',
       pos_bottom_center: 'bc',
-      pos_bottom_right: 'br'
+      pos_bottom_right: 'br',
+      selected_armor_set_id: null
     }
     const gearMap = {
       tl: makeGear({ affinity_right: 'BLUE' }),
@@ -341,6 +343,7 @@ describe('computeEmbarkGearShortages', () => {
       pos_bottom_left: null,
       pos_bottom_center: null,
       pos_bottom_right: null,
+      selected_armor_set_id: null,
       ...overrides
     }
   }
@@ -650,6 +653,8 @@ describe('getEffectiveArmorSetBonuses', () => {
     expect(result).toHaveLength(1)
     expect(result[0].name).toBe('Lantern Vigil')
     expect(result[0].isFallback).toBe(false)
+    // Sole qualifying set is implicitly selected.
+    expect(result[0].selected).toBe(true)
   })
 
   it('returns the Clothed & Satiated fallback when no catalog set qualifies', () => {
@@ -676,6 +681,7 @@ describe('getEffectiveArmorSetBonuses', () => {
     expect(result[0].name).toBe(CLOTHED_AND_SATIATED_NAME)
     expect(result[0].isFallback).toBe(true)
     expect(result[0].armorSet).toBeNull()
+    expect(result[0].selected).toBe(true)
   })
 
   it('returns nothing when neither a catalog set nor the fallback qualifies', () => {
@@ -693,5 +699,60 @@ describe('getEffectiveArmorSetBonuses', () => {
     }
 
     expect(getEffectiveArmorSetBonuses(grid, [set], gearMap)).toEqual([])
+  })
+
+  it('marks the survivor-selected catalog set as active', () => {
+    const setA = makeArmorSet('set-a', 'Aaa Set', [
+      { id: 'head-a', gear_ids: ['helm'] }
+    ])
+    const setB = makeArmorSet('set-b', 'Bbb Set', [
+      { id: 'head-b', gear_ids: ['helm'] }
+    ])
+
+    const grid: GearGridDetail = {
+      ...emptyGrid(),
+      pos_top_left: 'helm',
+      selected_armor_set_id: 'set-b'
+    }
+
+    const gearMap = {
+      helm: makeGear({ id: 'helm', armor_location: 'HEAD' })
+    }
+
+    const result = getEffectiveArmorSetBonuses(grid, [setA, setB], gearMap)
+
+    expect(result).toHaveLength(2)
+    const byId = Object.fromEntries(
+      result.map((b) => [b.armorSet?.id ?? b.name, b.selected])
+    )
+    expect(byId['set-b']).toBe(true)
+    expect(byId['set-a']).toBe(false)
+  })
+
+  it('falls back to the first qualifying set when the explicit selection no longer qualifies', () => {
+    const setA = makeArmorSet('set-a', 'Aaa Set', [
+      { id: 'head-a', gear_ids: ['helm'] }
+    ])
+    const setB = makeArmorSet('set-b', 'Bbb Set', [
+      { id: 'head-b', gear_ids: ['helm'] }
+    ])
+
+    const grid: GearGridDetail = {
+      ...emptyGrid(),
+      pos_top_left: 'helm',
+      // Stale id that points at a set the survivor no longer qualifies for.
+      selected_armor_set_id: 'set-stale'
+    }
+
+    const gearMap = {
+      helm: makeGear({ id: 'helm', armor_location: 'HEAD' })
+    }
+
+    const result = getEffectiveArmorSetBonuses(grid, [setA, setB], gearMap)
+
+    expect(result).toHaveLength(2)
+    expect(result[0].armorSet?.id).toBe('set-a')
+    expect(result[0].selected).toBe(true)
+    expect(result[1].selected).toBe(false)
   })
 })
