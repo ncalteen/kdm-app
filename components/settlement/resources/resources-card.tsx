@@ -121,9 +121,21 @@ export function ResourcesCard({
    *
    * Optimistically adds a resource to the settlement, then persists to the DB.
    * If the resource carries a `pattern_id` and the settlement has not yet
-   * learned that pattern, the pattern is also added optimistically and
-   * persisted as a separate mutation so the resource and pattern can each roll
-   * back independently on failure.
+   * learned that pattern, the pattern is added optimistically alongside the
+   * resource and persisted only after the resource insert resolves
+   * successfully. This keeps pattern unlock conditional on resource success:
+   *
+   * - Resource insert fails -> rollback removes BOTH optimistic rows; the
+   *   pattern is never persisted.
+   * - Resource insert succeeds, pattern insert fails -> only the optimistic
+   *   pattern row is rolled back; the persisted resource is left in place
+   *   and the user sees an error toast for the pattern unlock specifically.
+   * - Both succeed -> both temp ids are reconciled and the pattern unlock
+   *   toast fires alongside the resource success toast.
+   *
+   * Truly atomic both-succeed-or-both-fail behavior would require an RPC; the
+   * remaining divergence (resource added, pattern not) is the smallest
+   * possible failure mode given the two-step persistence path.
    *
    * @param resourceId Resource ID
    */
@@ -188,7 +200,9 @@ export function ResourcesCard({
         context: 'Resource Add',
         persist: () =>
           addSettlementResources([resourceId], selectedSettlement.id),
-        onSuccess: (row) => {
+        onSuccess: async (row) => {
+          // Reconcile the resource's temp id with the persisted id first so
+          // the row stays in sync even if the pattern unlock step fails.
           setSelectedSettlement((prev) =>
             prev
               ? {
@@ -199,44 +213,37 @@ export function ResourcesCard({
                 }
               : null
           )
-        },
-        rollback: () => {
-          setSelectedSettlement((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  resources: prev.resources.filter((r) => r.id !== tempId)
-                }
-              : null
-          )
-        },
-        successMessage: RESOURCE_UPDATED_MESSAGE()
-      })
 
-      // Persist the auto-unlocked pattern in a sibling mutation so a failure
-      // in the resource insert (e.g. a stock-only constraint) does not block
-      // the pattern from being added, and vice versa.
-      if (unlockPatternInfo && tempPatternId) {
-        void mutate({
-          context: 'Resource Pattern Unlock',
-          persist: () =>
-            addSettlementPatterns(
+          if (!unlockPatternInfo || !tempPatternId) return
+
+          // Persist the pattern unlock now that the resource is known to be
+          // saved. A failure here is logged and rolled back locally without
+          // touching the resource so the two stores cannot diverge in the
+          // direction of "pattern saved, resource missing".
+          try {
+            const patternRow = await addSettlementPatterns(
               [unlockPatternInfo.id],
               selectedSettlement.id
-            ),
-          onSuccess: (row) => {
+            )
             setSelectedSettlement((prev) =>
               prev
                 ? {
                     ...prev,
                     patterns: prev.patterns.map((p) =>
-                      p.id === tempPatternId ? { ...p, id: row[0].id } : p
+                      p.id === tempPatternId
+                        ? { ...p, id: patternRow[0].id }
+                        : p
                     )
                   }
                 : null
             )
-          },
-          rollback: () => {
+            toast.success(
+              PATTERN_UNLOCKED_FROM_RESOURCE_MESSAGE(
+                unlockPatternInfo.pattern_name
+              )
+            )
+          } catch (error) {
+            console.error('Resource Pattern Unlock Error:', error)
             setSelectedSettlement((prev) =>
               prev
                 ? {
@@ -247,19 +254,34 @@ export function ResourcesCard({
                   }
                 : null
             )
-          },
-          successMessage: PATTERN_UNLOCKED_FROM_RESOURCE_MESSAGE(
-            unlockPatternInfo.pattern_name
+            toast.error(ERROR_MESSAGE())
+          }
+        },
+        rollback: () => {
+          // Resource insert failed; the pattern was never persisted, so both
+          // optimistic rows must be removed in a single update.
+          setSelectedSettlement((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  resources: prev.resources.filter((r) => r.id !== tempId),
+                  patterns: tempPatternId
+                    ? prev.patterns.filter((p) => p.id !== tempPatternId)
+                    : prev.patterns
+                }
+              : null
           )
-        })
-      }
+        },
+        successMessage: RESOURCE_UPDATED_MESSAGE()
+      })
     },
     [
       selectedSettlement,
       availableResources,
       availablePatterns,
       setSelectedSettlement,
-      mutate
+      mutate,
+      toast
     ]
   )
 
