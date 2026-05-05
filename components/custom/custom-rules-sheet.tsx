@@ -7,6 +7,7 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger
@@ -633,9 +634,9 @@ function GearSheetStatSlot({
 }
 
 /**
- * Custom Gear Sheet Body Properties
+ * Gear Sheet Body Properties
  */
-interface CustomGearSheetBodyProps {
+export interface GearSheetBodyProps {
   /** Gear Detail (null while loading or when not found) */
   detail: GearDetail | null
   /** Loaded Flag */
@@ -652,21 +653,49 @@ interface CustomGearSheetBodyProps {
   weaponTypes: { [id: string]: WeaponTypeDetail }
   /** Trigger Label */
   gearName: string
+  /**
+   * Custom Gear Flag
+   *
+   * When true, the header renders the "Custom" badge and a description
+   * indicating the item is user-defined. Defaults to false so catalog gear
+   * renders without the badge.
+   */
+  custom?: boolean
+  /**
+   * Description Override
+   *
+   * Replaces the default sheet description ("A custom gear item defined by
+   * you." for custom gear, otherwise omitted). Useful for surfacing the slot
+   * label when the sheet is opened from a gear grid cell.
+   */
+  description?: ReactNode
+  /**
+   * Footer Slot
+   *
+   * Optional content rendered in a pinned footer below the scrollable body.
+   * The gear grid uses this to surface an "Unequip" action without forcing
+   * the user to scroll past the rules text.
+   */
+  footer?: ReactNode
 }
 
 /**
- * Custom Gear Sheet Body
+ * Gear Sheet Body
  *
- * Read-only card-shaped renderer for a custom gear item. Lays out the same
- * sections the {@link GearDialog} editor renders — affinity slots, stat
- * tower, name, keywords, rules, affinity bonus, and crafting costs — without
- * any inputs or controls.
+ * Read-only card-shaped renderer for a gear item. Lays out the same sections
+ * the {@link GearDialog} editor renders — affinity slots, stat tower, name,
+ * keywords, rules, affinity bonus, and crafting costs — without any inputs or
+ * controls. Used by both the custom-gear rules trigger (lazy-loads the detail)
+ * and the gear grid slot view (which already has the catalog maps in scope).
  *
- * @param props Custom Gear Sheet Body Properties
- * @returns Custom Gear Sheet Body
+ * @param props Gear Sheet Body Properties
+ * @returns Gear Sheet Body
  */
-function CustomGearSheetBody({
+export function GearSheetBody({
+  custom = false,
+  description,
   detail,
+  footer,
   gearMap,
   gearName,
   loaded,
@@ -674,7 +703,7 @@ function CustomGearSheetBody({
   locations,
   resources,
   weaponTypes
-}: CustomGearSheetBodyProps): ReactElement {
+}: GearSheetBodyProps): ReactElement {
   const showSkeleton = loading || !loaded
   const category = detail ? inferGearCategoryFromDetail(detail) : 'OTHER'
   const categoryLabel =
@@ -687,6 +716,11 @@ function CustomGearSheetBody({
     ? (weaponTypes[detail.weapon_type_id]?.weapon_type_name ?? null)
     : null
 
+  // Resolve the description text once so the header can omit the element
+  // entirely when no description should be shown for catalog gear.
+  const resolvedDescription: ReactNode =
+    description ?? (custom ? 'A custom gear item defined by you.' : null)
+
   return (
     <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-md">
       <SheetHeader className="gap-2 border-b border-border/60 px-6 pt-6 pb-4">
@@ -694,18 +728,22 @@ function CustomGearSheetBody({
           <SheetTitle className="text-lg font-semibold leading-tight tracking-tight break-words">
             {detail?.gear_name ?? gearName}
           </SheetTitle>
-          <Badge
-            variant="outline"
-            className="mt-0.5 shrink-0 text-[10px] uppercase tracking-[0.2em]">
-            Custom
-          </Badge>
+          {custom && (
+            <Badge
+              variant="outline"
+              className="mt-0.5 shrink-0 text-[10px] uppercase tracking-[0.2em]">
+              Custom
+            </Badge>
+          )}
         </div>
-        <SheetDescription className="text-xs italic text-muted-foreground">
-          A custom gear item defined by you.
-        </SheetDescription>
+        {resolvedDescription !== null && (
+          <SheetDescription className="text-xs italic text-muted-foreground">
+            {resolvedDescription}
+          </SheetDescription>
+        )}
       </SheetHeader>
 
-      <div className="flex flex-col gap-4 overflow-y-auto px-6 py-4">
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
         {showSkeleton ? (
           <p className="text-xs italic text-muted-foreground">
             Staring at the stars...
@@ -976,6 +1014,12 @@ function CustomGearSheetBody({
           </>
         )}
       </div>
+
+      {footer && (
+        <SheetFooter className="border-t border-border/60 px-6 py-4">
+          {footer}
+        </SheetFooter>
+      )}
     </SheetContent>
   )
 }
@@ -1099,7 +1143,8 @@ export function CustomGearRulesTrigger({
           </button>
         )}
       </SheetTrigger>
-      <CustomGearSheetBody
+      <GearSheetBody
+        custom
         detail={detail}
         gearMap={gearMap}
         gearName={gearName}

@@ -1,5 +1,6 @@
 'use client'
 
+import { GearSheetBody } from '@/components/custom/custom-rules-sheet'
 import { GearGridCell } from '@/components/survivor/gear-grid/gear-grid-cell'
 import {
   GearCandidate,
@@ -27,6 +28,9 @@ import {
   setGearGridSlot,
   setSelectedArmorSet
 } from '@/lib/dal/gear-grid'
+import { getLocations } from '@/lib/dal/location'
+import { getResources } from '@/lib/dal/resource'
+import { getWeaponTypes } from '@/lib/dal/weapon-type'
 import {
   AFFINITIES,
   Affinity,
@@ -48,12 +52,15 @@ import {
   GearDetail,
   GearGridDetail,
   GearGridPosition,
+  LocationDetail,
+  ResourceDetail,
   SettlementDetail,
   SurvivorDetail,
-  SurvivorsStateSetter
+  SurvivorsStateSetter,
+  WeaponTypeDetail
 } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { CheckIcon, ShieldCheckIcon } from 'lucide-react'
+import { CheckIcon, ShieldCheckIcon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /** Display label for each grid position. */
@@ -117,6 +124,7 @@ export function GearGridCard({
   const { toast } = useToast(local)
 
   const [pickerSlot, setPickerSlot] = useState<GearGridPosition | null>(null)
+  const [viewingSlot, setViewingSlot] = useState<GearGridPosition | null>(null)
   const [saving, setSaving] = useState(false)
   const [activeBonus, setActiveBonus] = useState<EffectiveArmorSetBonus | null>(
     null
@@ -147,6 +155,34 @@ export function GearGridCard({
       onError: () => toast.error(ERROR_MESSAGE())
     }
   )
+
+  // The slot view sheet renders gear info using the same body the custom
+  // rules trigger uses, which resolves location, weapon type, and crafting
+  // cost foreign keys via these maps. Fetching them once at the card level
+  // keeps the sheet open instantly when a cell is clicked.
+  const { data: locationMap } = useCatalogFetch<{
+    [key: string]: LocationDetail
+  }>(selectedSettlement?.id, () => getLocations(), {
+    initial: {},
+    errorContext: 'Location Catalog Fetch Error',
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
+
+  const { data: resourceMap } = useCatalogFetch<{
+    [key: string]: ResourceDetail
+  }>(selectedSettlement?.id, () => getResources(), {
+    initial: {},
+    errorContext: 'Resource Catalog Fetch Error',
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
+
+  const { data: weaponTypeMap } = useCatalogFetch<{
+    [key: string]: WeaponTypeDetail
+  }>(selectedSettlement?.id, () => getWeaponTypes(), {
+    initial: {},
+    errorContext: 'Weapon Type Catalog Fetch Error',
+    onError: () => toast.error(ERROR_MESSAGE())
+  })
 
   const grid = selectedSurvivor?.gear_grid ?? null
 
@@ -362,6 +398,17 @@ export function GearGridCard({
   }, [])
 
   /**
+   * Open View Sheet for the Given Slot
+   *
+   * Filled cells route their click to the read-only view sheet so the survivor
+   * can inspect the gear's full rules before deciding to swap it. Empty cells
+   * still fall straight through to the picker.
+   */
+  const openViewer = useCallback((position: GearGridPosition) => {
+    setViewingSlot(position)
+  }, [])
+
+  /**
    * Handle Picker Selection
    */
   const handlePickerSelect = useCallback(
@@ -396,6 +443,29 @@ export function GearGridCard({
   const currentSlotGearId = pickerSlot
     ? ((grid?.[POSITION_TO_COLUMN[pickerSlot]] as string | null) ?? null)
     : null
+
+  // The viewing sheet is mounted once at the card level and toggled by
+  // `viewingSlot`. We resolve the gear off `gearMap` so the sheet always
+  // reflects whatever the survivor has equipped at the moment they opened it.
+  const viewingGear: GearDetail | null = viewingSlot
+    ? gearAtSlot(viewingSlot)
+    : null
+  const viewingSlotLabel: string | null = viewingSlot
+    ? POSITION_LABELS[viewingSlot]
+    : null
+
+  /**
+   * Handle Unequip from View Sheet
+   *
+   * Closes the sheet and clears the equipped gear in the active slot,
+   * reusing the same optimistic-with-rollback flow the picker triggers.
+   */
+  const handleUnequipFromViewer = useCallback(() => {
+    if (!viewingSlot) return
+    const slot = viewingSlot
+    setViewingSlot(null)
+    void persistSlotChange(slot, null)
+  }, [persistSlotChange, viewingSlot])
 
   return (
     <Card className="p-0 border-1 gap-0">
@@ -490,12 +560,8 @@ export function GearGridCard({
                 gear={gear}
                 slotLabel={POSITION_LABELS[position]}
                 readOnly={!selectedSurvivor || !selectedSettlement}
-                onEquip={() => openPicker(position)}
-                onClear={
-                  gear
-                    ? () => void persistSlotChange(position, null)
-                    : undefined
-                }
+                onEquip={gear ? undefined : () => openPicker(position)}
+                onView={gear ? () => openViewer(position) : undefined}
               />
             )
           })}
@@ -513,6 +579,42 @@ export function GearGridCard({
           onSelect={handlePickerSelect}
         />
       )}
+
+      <Sheet
+        open={viewingSlot !== null}
+        onOpenChange={(open) => !open && setViewingSlot(null)}>
+        {/*
+          Slot view sheet. Surfaces the full rules of the equipped gear and an
+          Unequip action so a swap requires two intentional steps (unequip,
+          then pick a new piece) rather than a single accidental tap.
+        */}
+        <GearSheetBody
+          custom={viewingGear?.custom === true}
+          description={viewingSlotLabel ?? undefined}
+          detail={viewingGear}
+          gearMap={gearMap}
+          gearName={viewingGear?.gear_name ?? ''}
+          loaded
+          loading={false}
+          locations={locationMap}
+          resources={resourceMap}
+          weaponTypes={weaponTypeMap}
+          footer={
+            selectedSurvivor && selectedSettlement && viewingGear ? (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={saving}
+                onClick={handleUnequipFromViewer}
+                className="gap-1">
+                <XIcon className="h-3.5 w-3.5" />
+                Unequip
+              </Button>
+            ) : undefined
+          }
+        />
+      </Sheet>
 
       <Sheet
         open={activeBonus !== null}

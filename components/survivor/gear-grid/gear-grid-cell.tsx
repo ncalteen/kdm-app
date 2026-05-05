@@ -1,7 +1,5 @@
 'use client'
 
-import { CustomGearRulesTrigger } from '@/components/custom/custom-rules-sheet'
-import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
@@ -12,14 +10,12 @@ import { Database } from '@/lib/database.types'
 import { GearDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import {
-  EyeIcon,
   FootprintsIcon,
   HandMetalIcon,
   HardHatIcon,
   PuzzleIcon,
   RibbonIcon,
-  ShirtIcon,
-  XIcon
+  ShirtIcon
 } from 'lucide-react'
 import { ReactElement } from 'react'
 
@@ -79,10 +75,16 @@ interface GearGridCellProps {
   slotLabel: string
   /** Read-Only (disables edit controls) */
   readOnly?: boolean
-  /** Open Equip Picker for this Slot */
+  /** Open Equip Picker for this Slot (empty cells only) */
   onEquip?: () => void
-  /** Clear this Slot */
-  onClear?: () => void
+  /**
+   * Open the Slot's Read-Only View Sheet
+   *
+   * Filled cells route their click here so the survivor can review the gear's
+   * full rules and unequip from the sheet, rather than jumping straight into
+   * the replacement picker.
+   */
+  onView?: () => void
 }
 
 /**
@@ -101,7 +103,7 @@ export function GearGridCell({
   slotLabel,
   readOnly = false,
   onEquip,
-  onClear
+  onView
 }: GearGridCellProps): ReactElement {
   if (!gear)
     return (
@@ -138,10 +140,29 @@ export function GearGridCell({
     ? ARMOR_LOCATION_ICONS[gear.armor_location]
     : null
 
+  // The whole filled cell is a single click target so survivors can review
+  // the equipped gear's full rules before deciding to swap it. When read-only
+  // (no settlement/survivor in scope, or no view handler wired), fall back to
+  // a plain div so the visualization still renders.
+  const interactive = !readOnly && typeof onView === 'function'
+  const Wrapper = interactive ? 'button' : 'div'
+  const wrapperProps = interactive
+    ? {
+        type: 'button' as const,
+        onClick: onView,
+        'aria-label': `View ${slotLabel}: ${gear.gear_name}`,
+        title: `View ${slotLabel}: ${gear.gear_name}`
+      }
+    : { 'aria-label': `${slotLabel}: ${gear.gear_name}` }
+
   return (
-    <div
-      className="relative flex aspect-square w-full flex-col rounded-md border-2 bg-background p-1 shadow-sm"
-      aria-label={`${slotLabel}: ${gear.gear_name}`}>
+    <Wrapper
+      {...wrapperProps}
+      className={cn(
+        'relative flex aspect-square w-full flex-col rounded-md border-2 bg-background p-1 text-left shadow-sm',
+        interactive &&
+          'cursor-pointer transition-colors hover:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1'
+      )}>
       {/* Affinity slots */}
       <AffinitySquare
         affinity={gear.affinity_top}
@@ -166,12 +187,7 @@ export function GearGridCell({
 
       {/* Top row: name + keywords centered across the full cell width. */}
       <div className="flex min-w-0 flex-col items-center text-center">
-        <CustomGearRulesTrigger
-          className="text-xs font-bold"
-          custom={gear.custom}
-          gearId={gear.id}
-          gearName={gear.gear_name}
-        />
+        <span className="truncate text-xs font-bold">{gear.gear_name}</span>
         {gear.keywords && gear.keywords.length > 0 && (
           <span className="truncate text-[9px] italic text-muted-foreground">
             {gear.keywords.map((k) => formatEnumLabel(k)).join(', ')}
@@ -279,37 +295,7 @@ export function GearGridCell({
           )}
         </div>
       )}
-
-      {/* Hover/focus actions */}
-      {!readOnly && (
-        <div className="absolute inset-x-1 top-1 z-10 flex justify-end gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 hover:opacity-100">
-          {onEquip && (
-            <Button
-              variant="secondary"
-              size="icon"
-              type="button"
-              className="h-5 w-5"
-              onClick={onEquip}
-              aria-label={`Replace ${slotLabel}`}
-              title={`Replace ${slotLabel}`}>
-              <EyeIcon className="h-3 w-3" />
-            </Button>
-          )}
-          {onClear && (
-            <Button
-              variant="destructive"
-              size="icon"
-              type="button"
-              className="h-5 w-5"
-              onClick={onClear}
-              aria-label={`Clear ${slotLabel}`}
-              title={`Clear ${slotLabel}`}>
-              <XIcon className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
-      )}
-    </div>
+    </Wrapper>
   )
 }
 
