@@ -134,7 +134,7 @@ const navEmbark = [
  */
 const navSettings = [
   {
-    title: 'User',
+    title: 'User Content',
     tab: TabType.USER,
     icon: UserIcon
   },

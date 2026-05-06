@@ -5490,6 +5490,7 @@ export type Database = {
           updated_at: string
           user_id: string
           username: string
+          username_renamed_at: string | null
         }
         Insert: {
           created_at?: string
@@ -5500,6 +5501,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           username: string
+          username_renamed_at?: string | null
         }
         Update: {
           created_at?: string
@@ -5510,6 +5512,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string
+          username_renamed_at?: string | null
         }
         Relationships: []
       }
@@ -5850,6 +5853,7 @@ export type Database = {
           tablename: string
         }[]
       }
+      rename_username: { Args: { new_username: string }; Returns: boolean }
       sanitize_username_candidate: { Args: { raw: string }; Returns: string }
       survivor_qualifies_for_armor_set: {
         Args: { p_armor_set_id: string; p_survivor_id: string }

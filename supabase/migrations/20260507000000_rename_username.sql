@@ -1,0 +1,86 @@
+--------------------------------------------------------------------------------
+-- Rename Username
+--
+-- SECURITY DEFINER function that lets an authenticated user rename their own
+-- handle. Required so OAuth-derived placeholders (e.g. `u_abc12345`) can be
+-- replaced with something a friend can actually invite by name.
+--
+-- Behaviour:
+--   - Returns true when the rename succeeds.
+--   - Returns false when `new_username` collides with another user's handle.
+--   - Raises `rate-limited` when the caller renamed within the last 10 minutes.
+--   - Raises `invalid-format` when `new_username` violates the sign-up regex.
+--   - Raises `not-authenticated` when called without a session.
+--
+-- The 10-minute throttle is persisted on `user_settings.username_renamed_at`
+-- so it spans connections; `pg_advisory_xact_lock` is used to serialise
+-- concurrent rename attempts for the same user within the same window.
+--
+-- The function uses `INSERT ... ON CONFLICT (user_id) DO UPDATE` so callers
+-- whose `user_settings` row was never provisioned (e.g. unusual auth flows
+-- where `getUserSettings` legitimately returns null) still get a row created
+-- with their chosen handle rather than silently returning success against a
+-- no-op `UPDATE`. A `unique_violation` handler converts the TOCTOU race on
+-- the `username` partial unique index (two users both passing the existence
+-- check before either commits) into a normal `false` return.
+--------------------------------------------------------------------------------
+alter table user_settings
+add column if not exists username_renamed_at timestamptz;
+create or replace function rename_username(new_username varchar) returns boolean language plpgsql security definer
+set search_path = public as $$
+declare uid uuid := auth.uid();
+current_renamed_at timestamptz;
+rate_limit_window constant interval := interval '10 minutes';
+begin if uid is null then raise exception 'not-authenticated' using errcode = '42501';
+end if;
+if new_username !~ '^[a-zA-Z0-9_]{3,20}$' then raise exception 'invalid-format' using errcode = '22023';
+end if;
+-- Serialise concurrent rename attempts for this user. The lock key is
+-- derived from the user UUID so different users do not contend.
+perform pg_advisory_xact_lock(
+  hashtext('rename_username'),
+  hashtext(uid::text)
+);
+-- Read (and lock, if present) the caller's existing settings row. The row
+-- may legitimately be missing for users whose settings were never seeded;
+-- in that case `current_renamed_at` stays null and the throttle check is
+-- a no-op for the first rename.
+select username_renamed_at into current_renamed_at
+from user_settings
+where user_id = uid for
+update;
+if current_renamed_at is not null
+and current_renamed_at > now() - rate_limit_window then raise exception 'rate-limited' using errcode = 'P0001';
+end if;
+-- Collision check. Excludes the caller's own row so renaming to the same
+-- value is treated as success rather than collision. This is best-effort:
+-- the partial unique index on `username` is the source of truth, so the
+-- upsert below is wrapped in an exception handler that converts a TOCTOU
+-- race (two callers both passing this check) into a normal `false` return.
+if exists (
+  select 1
+  from user_settings
+  where username = new_username
+    and user_id <> uid
+) then return false;
+end if;
+-- Upsert so a missing settings row is created on the spot rather than
+-- letting an `UPDATE` affect zero rows and silently report success. The
+-- `unique_violation` handler catches the unlikely case where another
+-- caller claimed the same username between the existence check above and
+-- this write, returning `false` to mirror the pre-check collision path.
+begin
+insert into user_settings (user_id, username, username_renamed_at)
+values (uid, new_username, now()) on conflict (user_id) do
+update
+set username = excluded.username,
+  username_renamed_at = excluded.username_renamed_at;
+return true;
+exception
+when unique_violation then return false;
+end;
+end;
+$$;
+revoke all on function public.rename_username(varchar)
+from public;
+grant execute on function public.rename_username(varchar) to authenticated;

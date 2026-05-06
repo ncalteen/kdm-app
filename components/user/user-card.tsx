@@ -36,7 +36,6 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { UpdatePasswordForm } from '@/components/update-password-form'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import { updateUserSettings } from '@/lib/dal/user'
@@ -64,8 +63,10 @@ interface UserCardProps {
 /**
  * User Card Component
  *
- * Displays user-specific management functionality including custom monsters,
- * user settings, and other user-scoped items.
+ * Displays the player's library of user-scoped custom content (custom
+ * monsters, gear, philosophies, etc.) along with vignette monster unlocks.
+ * Account-level settings such as the username and password live on the
+ * settings tab.
  *
  * @param props User Card Properties
  * @returns User Card Component
@@ -192,79 +193,74 @@ export function UserCard({
 
   return (
     <div className="flex flex-col gap-4 pt-12 px-2">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UpdatePasswordForm className="h-full" />
-        {/* Unlocked Vignette Monsters */}
-        <Card className="p-0">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-3 pb-0">
-            <CardTitle className="text-lg">
-              Unlocked Vignette Monsters
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label
-                  htmlFor="unlock-killenium-butcher"
-                  className="font-medium text-sm">
-                  Killenium Butcher
-                </Label>
-                <div className="text-sm text-muted-foreground">
-                  Allows the Killenium Butcher nemesis to appear in showdowns.
-                </div>
+      {/* Unlocked Vignette Monsters */}
+      <Card className="p-0">
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-3 pb-0">
+          <CardTitle className="text-lg">Unlocked Vignette Monsters</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label
+                htmlFor="unlock-killenium-butcher"
+                className="font-medium text-sm">
+                Killenium Butcher
+              </Label>
+              <div className="text-sm text-muted-foreground">
+                Allows the Killenium Butcher nemesis to appear in showdowns.
               </div>
-              <Switch
-                id="unlock-killenium-butcher"
-                checked={userSettings?.unlocked_killenium_butcher ?? false}
-                onCheckedChange={handleKilleniumButcherUnlockedChange}
-                aria-label="Killenium Butcher"
-              />
             </div>
+            <Switch
+              id="unlock-killenium-butcher"
+              checked={userSettings?.unlocked_killenium_butcher ?? false}
+              onCheckedChange={handleKilleniumButcherUnlockedChange}
+              aria-label="Killenium Butcher"
+            />
+          </div>
 
-            <Separator className="my-2" />
+          <Separator className="my-2" />
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label
-                  htmlFor="unlock-screaming-nukalope"
-                  className="font-medium text-sm">
-                  Screaming Nukalope
-                </Label>
-                <div className="text-sm text-muted-foreground">
-                  Allows the Screaming Nukalope quarry to be hunted.
-                </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label
+                htmlFor="unlock-screaming-nukalope"
+                className="font-medium text-sm">
+                Screaming Nukalope
+              </Label>
+              <div className="text-sm text-muted-foreground">
+                Allows the Screaming Nukalope quarry to be hunted.
               </div>
-              <Switch
-                id="unlock-screaming-nukalope"
-                checked={userSettings?.unlocked_screaming_nukalope ?? false}
-                onCheckedChange={handleScreamingNukalopeUnlockedChange}
-                aria-label="Screaming Nukalope"
-              />
             </div>
+            <Switch
+              id="unlock-screaming-nukalope"
+              checked={userSettings?.unlocked_screaming_nukalope ?? false}
+              onCheckedChange={handleScreamingNukalopeUnlockedChange}
+              aria-label="Screaming Nukalope"
+            />
+          </div>
 
-            <Separator className="my-2" />
+          <Separator className="my-2" />
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label
-                  htmlFor="unlock-white-gigalion"
-                  className="font-medium text-sm">
-                  White Gigalion
-                </Label>
-                <div className="text-sm text-muted-foreground">
-                  Allows the White Gigalion quarry to be hunted.
-                </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label
+                htmlFor="unlock-white-gigalion"
+                className="font-medium text-sm">
+                White Gigalion
+              </Label>
+              <div className="text-sm text-muted-foreground">
+                Allows the White Gigalion quarry to be hunted.
               </div>
-              <Switch
-                id="unlock-white-gigalion"
-                checked={userSettings?.unlocked_white_gigalion ?? false}
-                onCheckedChange={handleWhiteGigalionUnlockedChange}
-                aria-label="White Gigalion"
-              />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Switch
+              id="unlock-white-gigalion"
+              checked={userSettings?.unlocked_white_gigalion ?? false}
+              onCheckedChange={handleWhiteGigalionUnlockedChange}
+              aria-label="White Gigalion"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Custom Content */}
       <h4 className="text-lg font-semibold">Custom Content</h4>
