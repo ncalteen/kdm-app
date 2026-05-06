@@ -50,7 +50,7 @@ export function UserAvatar({
   const initials = useMemo(
     () =>
       initialsOverride && initialsOverride.trim().length > 0
-        ? initialsOverride.toUpperCase().slice(0, 2)
+        ? initialsOverride.trim().toUpperCase().slice(0, 2)
         : getInitialsFromName(username),
     [initialsOverride, username]
   )
