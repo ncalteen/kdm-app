@@ -124,4 +124,34 @@ describe('RPC: rename_username', () => {
     expect(data).toBeNull()
     expect(error?.message).toBe('not-authenticated')
   })
+
+  it('creates a settings row when none exists for the caller', async () => {
+    // Simulate an unusual auth flow where `user_settings` was never seeded
+    // (the schema-level `getUserSettings` helper explicitly tolerates this).
+    // The RPC should provision the row instead of silently no-opping.
+    const orphan = await createTestUser()
+    try {
+      // Cascade-cleanup of any rows referencing user_settings, then drop
+      // the seeded settings row itself so the RPC must INSERT.
+      await admin.from('user_settings').delete().eq('user_id', orphan.id)
+
+      const newName = `orphan_${Date.now().toString(36)}`
+      const { data, error } = await orphan.client.rpc('rename_username', {
+        new_username: newName
+      })
+
+      expect(error).toBeNull()
+      expect(data).toBe(true)
+
+      const { data: row } = await admin
+        .from('user_settings')
+        .select('username, username_renamed_at, user_id')
+        .eq('user_id', orphan.id)
+        .single()
+      expect(row?.username).toBe(newName)
+      expect(row?.username_renamed_at).not.toBeNull()
+    } finally {
+      await deleteTestUser(orphan.id)
+    }
+  })
 })
