@@ -141,7 +141,7 @@ transitive SELECT policy that walks
 `settlement_<thing> → settlement_shared_user`:
 
 > _"You can read this custom row if you can read any `settlement_<thing>` row
-> that references it OR if you authored it yourself."\_
+> that references it OR if you authored it yourself."_
 
 INSERT remains author-only. UPDATE on rules text becomes author-only (removing
 the existing `Allow update for shared and custom` policy). DELETE remains
