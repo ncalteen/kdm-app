@@ -175,3 +175,8 @@ The body of the PR should include:
 - A special note of any changes to dependencies
 - A link to any relevant issues or discussions
 - Any additional context that may be helpful for reviewers
+
+## Database Considerations
+
+- When resetting the database, never reset without seeding data (e.g. including
+  the `--no-seed` option to `npx supabase db reset`).
