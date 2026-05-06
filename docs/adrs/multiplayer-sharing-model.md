@@ -23,7 +23,7 @@ problems **P1–P12**):
    invitee read access to a settlement and its child rows, but **denies**
    collaborator INSERT/UPDATE/DELETE on every settlement-child table — exactly
    the operations a co-player needs to perform turn-by-turn.
-2. **Per-catalog sharing** via ~27 `*_shared_user` junction tables (one per
+1. **Per-catalog sharing** via ~27 `*_shared_user` junction tables (one per
    custom catalog table: `knowledge_shared_user`, `disorder_shared_user`,
    `gear_shared_user`, …). Each grant is per-row, and — perversely — the
    existing `Allow update for shared and custom` policy lets the
@@ -83,14 +83,14 @@ P4–P12):
 
 1. **Single sharing dimension** the user reasons about: settlement membership.
    Custom-content visibility flows from membership automatically.
-2. **Author-owned definitions, settlement-shared instances.** Rules text belongs
+1. **Author-owned definitions, settlement-shared instances.** Rules text belongs
    to the author forever; the _placement_ of that rule on a shared settlement is
    what is shared.
-3. **Polarity flip:** owner controls metadata; collaborators perform gameplay;
+1. **Polarity flip:** owner controls metadata; collaborators perform gameplay;
    authors keep their rules text.
-4. **Paid sharing** without paywalling collaboration: only the share _creator_
+1. **Paid sharing** without paywalling collaboration: only the share _creator_
    needs an entitlement.
-5. **Every change must be RLS-enforced**, not UI-enforced.
+1. **Every change must be RLS-enforced**, not UI-enforced.
 
 Success looks like:
 
@@ -141,7 +141,7 @@ transitive SELECT policy that walks
 `settlement_<thing> → settlement_shared_user`:
 
 > _"You can read this custom row if you can read any `settlement_<thing>` row
-> that references it OR if you authored it yourself."_
+> that references it OR if you authored it yourself."\_
 
 INSERT remains author-only. UPDATE on rules text becomes author-only (removing
 the existing `Allow update for shared and custom` policy). DELETE remains
