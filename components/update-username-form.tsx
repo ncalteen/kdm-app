@@ -180,7 +180,9 @@ export function UpdateUsernameForm({
     }
   }
 
+  const isLoadingSettings = userSettings === null
   const submitDisabled =
+    isLoadingSettings ||
     isSaving ||
     username === currentUsername ||
     availability === 'checking' ||
@@ -212,12 +214,14 @@ export function UpdateUsernameForm({
                   minLength={3}
                   maxLength={20}
                   required
+                  disabled={isLoadingSettings || isSaving}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
                 <UsernameAvailabilityHint
                   state={availability}
                   isUnchanged={username === currentUsername}
+                  isLoading={isLoadingSettings}
                 />
               </div>
               {error && (
@@ -248,6 +252,8 @@ interface UsernameAvailabilityHintProps {
   state: AvailabilityState
   /** Username Matches the Current Handle */
   isUnchanged: boolean
+  /** User Settings Are Still Loading */
+  isLoading: boolean
 }
 
 /**
@@ -261,8 +267,16 @@ interface UsernameAvailabilityHintProps {
  */
 function UsernameAvailabilityHint({
   state,
-  isUnchanged
+  isUnchanged,
+  isLoading
 }: UsernameAvailabilityHintProps): ReactElement {
+  if (isLoading)
+    return (
+      <p className="text-xs text-muted-foreground">
+        The lantern hoard is recalling your name...
+      </p>
+    )
+
   if (isUnchanged)
     return (
       <p className="text-xs text-muted-foreground">
