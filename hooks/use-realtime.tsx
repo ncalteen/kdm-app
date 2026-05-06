@@ -255,7 +255,7 @@ export function useRealtimeSubscriptions(
         // unrelated events collapse into a single refetch. Refining this
         // to be strictly per-active-settlement requires either denormalising
         // `settlement_id` onto each junction or threading parent-id
-        // lookups into this hook, both of which are tracked separately.
+        // lookups into this hook; tracked in #189.
         channel = channel.on(
           'postgres_changes',
           {
