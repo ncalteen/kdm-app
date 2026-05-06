@@ -50,11 +50,16 @@ if exists (
     and user_id <> uid
 ) then return false;
 end if;
-update user_settings
-set username = new_username,
-  username_renamed_at = now()
-where user_id = uid;
-return true;
+begin
+  update user_settings
+  set username = new_username,
+    username_renamed_at = now()
+  where user_id = uid;
+  return true;
+exception
+  when unique_violation then
+    return false;
+end;
 end;
 $$;
 revoke all on function public.rename_username(varchar)
