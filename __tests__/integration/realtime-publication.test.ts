@@ -82,7 +82,9 @@ describe('Realtime publication membership', () => {
     expect(error).toBeNull()
     expect(data).toBeTruthy()
 
-    const actual = new Set((data ?? []).map((r) => String(r.tablename)))
+    const actual = new Set(
+      (data ?? []).map((r: { tablename: string }) => String(r.tablename))
+    )
     const missing = EXPECTED_TABLES.filter((t) => !actual.has(t))
 
     expect(missing).toEqual([])
