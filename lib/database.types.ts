@@ -5847,7 +5847,7 @@ export type Database = {
       realtime_publication_tables: {
         Args: never
         Returns: {
-          tablename: unknown
+          tablename: string
         }[]
       }
       sanitize_username_candidate: { Args: { raw: string }; Returns: string }

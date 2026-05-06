@@ -96,10 +96,15 @@ end $$;
 -- need a direct Postgres connection. Returning only table names is safe — it
 -- exposes nothing that an authenticated client couldn't already infer by
 -- attempting a subscription.
+--
+-- `pg_publication_tables.tablename` is typed as `name` in `pg_catalog`, which
+-- is opaque enough that PostgREST surfaces it as `unknown` in the generated
+-- TypeScript types. Cast to `text` here so callers get a proper `string`
+-- payload without per-call casts.
 --------------------------------------------------------------------------------
-create or replace function realtime_publication_tables() returns table (tablename name) language sql security definer
+create or replace function realtime_publication_tables() returns table (tablename text) language sql security definer
 set search_path = public stable as $$
-select tablename
+select tablename::text
 from pg_publication_tables
 where pubname = 'supabase_realtime';
 $$;
