@@ -158,7 +158,7 @@ export async function getUserSettings(): Promise<UserSettingsDetail | null> {
   const { data, error } = await supabase
     .from('user_settings')
     .select(
-      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username'
+      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
     )
     .eq('user_id', userId)
     .maybeSingle()
@@ -274,7 +274,7 @@ export async function addUserSettings(
     .from('user_settings')
     .insert(userSettings)
     .select(
-      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username'
+      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
     )
     .single()
 
@@ -330,4 +330,56 @@ export async function removeUserSettings(id: string): Promise<void> {
     .eq('user_id', userId)
 
   if (error) throw new Error(`Error Removing User Settings: ${error.message}`)
+}
+
+/**
+ * Username Rename Pattern
+ *
+ * Mirrors the server-side regex enforced by `rename_username`. Allows 3-20
+ * letters, digits, and underscores. Exposed so callers can pre-validate
+ * before issuing the RPC.
+ */
+export const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,20}$/
+
+/**
+ * Rename Username Result
+ *
+ * Discriminated outcome of {@link renameUsername}. Lets callers branch on
+ * the specific failure mode (collision vs rate-limit vs invalid format)
+ * without parsing error messages.
+ */
+export type RenameUsernameResult =
+  | 'success'
+  | 'collision'
+  | 'rate-limited'
+  | 'invalid-format'
+
+/**
+ * Rename Username
+ *
+ * Calls the `rename_username` RPC to change the authenticated user's
+ * handle. Performs a client-side format check first to fail fast on
+ * obvious typos; the server-side regex remains the source of truth.
+ *
+ * @param newUsername Desired Username
+ * @returns Rename Outcome
+ * @throws For unexpected DB errors (network, missing session, etc.)
+ */
+export async function renameUsername(
+  newUsername: string
+): Promise<RenameUsernameResult> {
+  if (!USERNAME_PATTERN.test(newUsername)) return 'invalid-format'
+
+  const supabase = createClient()
+  const { data, error } = await supabase.rpc('rename_username', {
+    new_username: newUsername
+  })
+
+  if (error) {
+    if (error.message === 'rate-limited') return 'rate-limited'
+    if (error.message === 'invalid-format') return 'invalid-format'
+    throw new Error(`Error Renaming Username: ${error.message}`)
+  }
+
+  return data ? 'success' : 'collision'
 }

@@ -2539,3 +2539,35 @@ export const SURVIVOR_STATUS_REMOVED_MESSAGE = () =>
  */
 export const SURVIVOR_STATUS_UPDATED_MESSAGE = () =>
   'The affliction has been updated.'
+
+/**
+ * Username Rename Succeeded
+ *
+ * @returns Username Rename Succeeded Message
+ */
+export const USERNAME_RENAME_SUCCESS_MESSAGE = () =>
+  'A new name spoken in the dark.'
+
+/**
+ * Username Rename Collision
+ *
+ * @returns Username Rename Collision Message
+ */
+export const USERNAME_RENAME_COLLISION_MESSAGE = () =>
+  'That name is already woven into the lantern hoard.'
+
+/**
+ * Username Rename Rate Limited
+ *
+ * @returns Username Rename Rate Limited Message
+ */
+export const USERNAME_RENAME_RATE_LIMITED_MESSAGE = () =>
+  'Names cannot be reshaped so soon. Wait, then try again.'
+
+/**
+ * Username Invalid Format
+ *
+ * @returns Username Invalid Format Message
+ */
+export const USERNAME_INVALID_FORMAT_MESSAGE = () =>
+  'A name must be 3 to 20 letters, numbers, or underscores.'

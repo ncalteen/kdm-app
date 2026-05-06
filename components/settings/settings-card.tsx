@@ -16,6 +16,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { UpdatePasswordForm } from '@/components/update-password-form'
+import { UpdateUsernameForm } from '@/components/update-username-form'
 import { LocalStateType } from '@/contexts/local-context'
 import { removeHunt } from '@/lib/dal/hunt'
 import { removeSettlement, updateSettlement } from '@/lib/dal/settlement'
@@ -35,7 +37,8 @@ import {
   SettlementDetail,
   SettlementStateSetter,
   ShowdownDetail,
-  ShowdownStateSetter
+  ShowdownStateSetter,
+  UserSettingsDetail
 } from '@/lib/types'
 import {
   DatabaseIcon,
@@ -73,8 +76,12 @@ interface SettingsCardProps {
   setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
+  /** Set User Settings */
+  setUserSettings: (settings: UserSettingsDetail | null) => void
   /** Update Local State */
   updateLocal: (local: LocalStateType) => void
+  /** User Settings */
+  userSettings: UserSettingsDetail | null
 }
 
 /**
@@ -99,7 +106,9 @@ export function SettingsCard({
   setSelectedShowdown,
   setSelectedShowdownId,
   setSelectedSurvivorId,
-  updateLocal
+  setUserSettings,
+  updateLocal,
+  userSettings
 }: SettingsCardProps): ReactElement {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [isSeeding, startSeedTransition] = useTransition()
@@ -269,6 +278,17 @@ export function SettingsCard({
 
   return (
     <div className="flex flex-col gap-4 pt-12 px-2">
+      {/* Account: Username + Password */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <UpdateUsernameForm
+          local={local}
+          setUserSettings={setUserSettings}
+          userSettings={userSettings}
+          className="h-full"
+        />
+        <UpdatePasswordForm className="h-full" />
+      </div>
+
       {/* Global Settings */}
       <Card className="p-0">
         <CardHeader className="px-4 pt-3 pb-0">

@@ -21,7 +21,8 @@ const {
   getSettlementForUser,
   addUserSettings,
   updateUserSettings,
-  removeUserSettings
+  removeUserSettings,
+  renameUsername
 } = await import('@/lib/dal/user')
 
 beforeEach(() => {
@@ -56,7 +57,7 @@ describe('getUserSettings', () => {
 
     expect(mockSupabase.from).toHaveBeenCalledWith('user_settings')
     expect(mockSelect).toHaveBeenCalledWith(
-      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username'
+      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
     )
     expect(mockEq).toHaveBeenCalledWith('user_id', mockUser.id)
     expect(mockMaybeSingle).toHaveBeenCalledOnce()
@@ -369,6 +370,81 @@ describe('removeUserSettings', () => {
 
     await expect(removeUserSettings('us-1')).rejects.toThrow(
       'Error Removing User Settings: delete error'
+    )
+  })
+})
+
+describe('renameUsername', () => {
+  it('returns invalid-format for too-short usernames without calling RPC', async () => {
+    const result = await renameUsername('ab')
+
+    expect(result).toBe('invalid-format')
+    expect(mockSupabase.rpc).not.toHaveBeenCalled()
+  })
+
+  it('returns invalid-format for usernames with disallowed characters', async () => {
+    const result = await renameUsername('has space')
+
+    expect(result).toBe('invalid-format')
+    expect(mockSupabase.rpc).not.toHaveBeenCalled()
+  })
+
+  it('returns invalid-format for too-long usernames', async () => {
+    const result = await renameUsername('a'.repeat(21))
+
+    expect(result).toBe('invalid-format')
+    expect(mockSupabase.rpc).not.toHaveBeenCalled()
+  })
+
+  it('returns success when the RPC reports the rename was applied', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: true, error: null })
+
+    const result = await renameUsername('new_handle')
+
+    expect(result).toBe('success')
+    expect(mockSupabase.rpc).toHaveBeenCalledWith('rename_username', {
+      new_username: 'new_handle'
+    })
+  })
+
+  it('returns collision when the RPC reports a name conflict', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: false, error: null })
+
+    const result = await renameUsername('taken_name')
+
+    expect(result).toBe('collision')
+  })
+
+  it('returns rate-limited when the RPC raises rate-limited', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'rate-limited' }
+    })
+
+    const result = await renameUsername('hurry_hurry')
+
+    expect(result).toBe('rate-limited')
+  })
+
+  it('returns invalid-format when the RPC raises invalid-format', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'invalid-format' }
+    })
+
+    const result = await renameUsername('serverside_check_only')
+
+    expect(result).toBe('invalid-format')
+  })
+
+  it('throws on unexpected RPC errors', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'connection lost' }
+    })
+
+    await expect(renameUsername('valid_name')).rejects.toThrow(
+      'Error Renaming Username: connection lost'
     )
   })
 })
