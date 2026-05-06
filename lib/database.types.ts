@@ -5844,6 +5844,12 @@ export type Database = {
       is_trait_owner: { Args: { record_id: string }; Returns: boolean }
       is_wanderer_owner: { Args: { record_id: string }; Returns: boolean }
       is_weapon_type_owner: { Args: { record_id: string }; Returns: boolean }
+      realtime_publication_tables: {
+        Args: never
+        Returns: {
+          tablename: string
+        }[]
+      }
       sanitize_username_candidate: { Args: { raw: string }; Returns: string }
       survivor_qualifies_for_armor_set: {
         Args: { p_armor_set_id: string; p_survivor_id: string }
