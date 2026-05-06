@@ -29,6 +29,10 @@ select to authenticated using (
         )
     )
   );
+-- CONTRADICTION (architecture §4 P1): only the settlement owner can
+-- currently INSERT/UPDATE/DELETE on this junction. Collaborators on a
+-- shared settlement should be able to add and remove these resources.
+-- Loosened in Phase 1 — see [E1.2.a] (issue #135).
 create policy "Allow insert for owner" on settlement_location for
 insert to authenticated with check (
     exists (

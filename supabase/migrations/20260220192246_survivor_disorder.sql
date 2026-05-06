@@ -29,6 +29,10 @@ select to authenticated using (
         )
     )
   );
+-- CONTRADICTION (architecture §4 P1): only the settlement owner can
+-- currently INSERT/UPDATE/DELETE on this survivor-scoped junction.
+-- Collaborators on the parent settlement should be able to mutate it.
+-- Loosened in Phase 1 — see [E1.2.c] (issue #145).
 create policy "Allow insert for owner" on survivor_disorder for
 insert to authenticated with check (
     exists (

@@ -9,9 +9,15 @@ create table hunt (
   updated_at timestamptz not null default now(),
   -- Data
   monster_level int not null,
-  monster_position int not null default 12 check (monster_position >= 0 and monster_position <= 12),
+  monster_position int not null default 12 check (
+    monster_position >= 0
+    and monster_position <= 12
+  ),
   settlement_id uuid not null unique references settlement(id) on delete cascade,
-  survivor_position int not null default 0 check (survivor_position >= 0 and survivor_position <= 12)
+  survivor_position int not null default 0 check (
+    survivor_position >= 0
+    and survivor_position <= 12
+  )
 );
 --------------------------------------------------------------------------------
 -- Row Level Security Policies
@@ -28,6 +34,10 @@ select to authenticated using (
         )
     )
   );
+-- CONTRADICTION (architecture §4 P1): only the settlement owner can
+-- currently INSERT/UPDATE/DELETE on this hunt-phase table. Collaborators
+-- should be able to play through the hunt phase on a shared settlement.
+-- Loosened in Phase 1 — see [E1.2.d] (issue #140).
 create policy "Allow insert for owner" on hunt for
 insert to authenticated with check (
     exists (

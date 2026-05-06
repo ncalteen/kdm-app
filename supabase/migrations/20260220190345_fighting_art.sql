@@ -72,6 +72,10 @@ select to authenticated using (
         )
     )
   );
+-- CONTRADICTION (architecture §4 P1): collaborators with whom this catalog
+-- row was shared can currently UPDATE rules text. Custom catalog rules
+-- text should only be editable by the author (owner).
+-- Removed in Phase 2 — see [E2.2] (issue #149).
 create policy "Allow update for shared and custom" on fighting_art for
 update to authenticated using (
     custom
