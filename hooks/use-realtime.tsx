@@ -241,7 +241,21 @@ export function useRealtimeSubscriptions(
           () => handleChange(domain)
         )
       } else {
-        // Survivor junction tables without settlement_id — RLS handles scoping.
+        // Junction tables that don't carry `settlement_id` directly. The
+        // realtime filter syntax doesn't support joins, so we subscribe
+        // unfiltered and rely on RLS to scope events to rows the user can
+        // read. This is the "coarse subscription" pattern from the sharing
+        // architecture doc §8.2.2 (option B).
+        //
+        // Trade-off: a user with multiple accessible settlements (owned or
+        // shared) will receive events for ALL of them, not just the active
+        // one. The hook fires the domain refetch for any such event,
+        // causing one extra refetch per unrelated mutation. The 300ms
+        // per-domain debounce bounds the blast radius — bursts of
+        // unrelated events collapse into a single refetch. Refining this
+        // to be strictly per-active-settlement requires either denormalising
+        // `settlement_id` onto each junction or threading parent-id
+        // lookups into this hook, both of which are tracked separately.
         channel = channel.on(
           'postgres_changes',
           {
