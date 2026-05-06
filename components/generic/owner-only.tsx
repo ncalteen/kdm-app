@@ -39,9 +39,16 @@ export function OwnerOnly({
   children,
   fallback = null
 }: OwnerOnlyProps): ReactNode {
-  const { selectedSettlement } = useLocal()
+  const { selectedSettlement, selectedSettlementId } = useLocal()
 
-  if (selectedSettlement?.role === 'owner') return children
+  const isSelectedSettlementSynchronized =
+    selectedSettlementId != null &&
+    selectedSettlement != null &&
+    selectedSettlement.id === selectedSettlementId
+
+  if (isSelectedSettlementSynchronized && selectedSettlement.role === 'owner') {
+    return children
+  }
 
   return fallback
 }
