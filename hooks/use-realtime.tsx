@@ -91,12 +91,21 @@ const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   hunt_ai_deck: { domain: 'hunt', filterColumn: 'settlement_id' },
   hunt_hunt_board: { domain: 'hunt', filterColumn: 'settlement_id' },
   hunt_monster: { domain: 'hunt', filterColumn: 'settlement_id' },
+  hunt_monster_mood: { domain: 'hunt', filterColumn: null },
+  hunt_monster_survivor_status: { domain: 'hunt', filterColumn: null },
+  hunt_monster_trait: { domain: 'hunt', filterColumn: null },
   hunt_survivor: { domain: 'hunt', filterColumn: 'settlement_id' },
 
   // Showdown domain
   showdown: { domain: 'showdown', filterColumn: 'settlement_id' },
   showdown_ai_deck: { domain: 'showdown', filterColumn: 'settlement_id' },
   showdown_monster: { domain: 'showdown', filterColumn: 'settlement_id' },
+  showdown_monster_mood: { domain: 'showdown', filterColumn: null },
+  showdown_monster_survivor_status: {
+    domain: 'showdown',
+    filterColumn: null
+  },
+  showdown_monster_trait: { domain: 'showdown', filterColumn: null },
   showdown_survivor: { domain: 'showdown', filterColumn: 'settlement_id' },
 
   // Settlement Phase domain
@@ -111,6 +120,7 @@ const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
 
   // Survivor domain
   survivor: { domain: 'survivor', filterColumn: 'settlement_id' },
+  survivor_ability_impairment: { domain: 'survivor', filterColumn: null },
   survivor_cursed_gear: { domain: 'survivor', filterColumn: null },
   survivor_disorder: { domain: 'survivor', filterColumn: null },
   survivor_fighting_art: { domain: 'survivor', filterColumn: null },
