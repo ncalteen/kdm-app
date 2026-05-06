@@ -75,6 +75,10 @@ select to authenticated using (
         )
     )
   );
+-- CONTRADICTION (architecture §4 P1): collaborators can currently UPDATE
+-- the settlement row even though only the owner should be able to edit
+-- settlement metadata (name, campaign_type, survivor_type, uses_scouts).
+-- Tightened to a hybrid model in Phase 1 — see [E1.3] (issue #133).
 create policy "Allow update for shared" on settlement for
 update to authenticated using (
     exists (

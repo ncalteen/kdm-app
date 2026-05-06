@@ -65,6 +65,10 @@ select to authenticated using (
         )
     )
   );
+-- CONTRADICTION (architecture §4 P1): only the settlement owner can
+-- currently INSERT/UPDATE/DELETE on gear_grid. Collaborators on the
+-- parent settlement should be able to mutate their survivor's grid.
+-- Loosened in Phase 1 — see [E1.2.c] (issue #145).
 create policy "Allow insert for owner" on gear_grid for
 insert to authenticated with check (
     exists (

@@ -37,6 +37,10 @@ select to authenticated using (
         )
     )
   );
+-- CONTRADICTION (architecture §4 P1): only the settlement owner can
+-- currently INSERT/UPDATE/DELETE on settlement_phase. Collaborators
+-- should be able to advance phases on a shared settlement.
+-- Loosened in Phase 1 — see [E1.2.b] (issue #138).
 create policy "Allow insert for owner" on settlement_phase for
 insert to authenticated with check (
     exists (

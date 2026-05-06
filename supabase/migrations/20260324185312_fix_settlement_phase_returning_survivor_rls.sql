@@ -15,6 +15,10 @@ drop policy if exists "Allow all for admin" on settlement_phase_returning_surviv
 -- Ensure RLS is enabled
 alter table settlement_phase_returning_survivor enable row level security;
 -- Recreate policies with explicit column qualification
+-- CONTRADICTION (architecture §4 P1): only the settlement owner can
+-- currently INSERT/UPDATE/DELETE on settlement_phase_returning_survivor.
+-- Collaborators should be able to advance phases on a shared settlement.
+-- Loosened in Phase 1 — see [E1.2.b] (issue #138).
 create policy "Allow insert for owner" on settlement_phase_returning_survivor for
 insert to authenticated with check (
     exists (

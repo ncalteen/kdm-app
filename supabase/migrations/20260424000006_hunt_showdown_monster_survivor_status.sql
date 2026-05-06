@@ -33,6 +33,10 @@ select to authenticated using (
         )
     )
   );
+-- CONTRADICTION (architecture §4 P1): only the settlement owner can
+-- currently INSERT/UPDATE/DELETE on this hunt-phase table. Collaborators
+-- should be able to play through the hunt phase on a shared settlement.
+-- Loosened in Phase 1 — see [E1.2.d] (issue #140).
 create policy "Allow insert for owner" on hunt_monster_survivor_status for
 insert to authenticated with check (
     exists (
@@ -133,6 +137,10 @@ select to authenticated using (
         )
     )
   );
+-- CONTRADICTION (architecture §4 P1): only the settlement owner can
+-- currently INSERT/UPDATE/DELETE on this showdown-phase table. Collaborators
+-- should be able to play through the showdown phase on a shared settlement.
+-- Loosened in Phase 1 — see [E1.2.d] (issue #140).
 create policy "Allow insert for owner" on showdown_monster_survivor_status for
 insert to authenticated with check (
     exists (
