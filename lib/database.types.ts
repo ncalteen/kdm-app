@@ -5482,6 +5482,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          avatar_url: string | null
           created_at: string
           id: string
           unlocked_killenium_butcher: boolean
@@ -5493,6 +5494,7 @@ export type Database = {
           username_renamed_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           id?: string
           unlocked_killenium_butcher?: boolean
@@ -5504,6 +5506,7 @@ export type Database = {
           username_renamed_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           id?: string
           unlocked_killenium_butcher?: boolean

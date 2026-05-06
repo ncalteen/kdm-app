@@ -158,7 +158,7 @@ export async function getUserSettings(): Promise<UserSettingsDetail | null> {
   const { data, error } = await supabase
     .from('user_settings')
     .select(
-      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
+      'avatar_url, id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
     )
     .eq('user_id', userId)
     .maybeSingle()
@@ -274,7 +274,7 @@ export async function addUserSettings(
     .from('user_settings')
     .insert(userSettings)
     .select(
-      'id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
+      'avatar_url, id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
     )
     .single()
 

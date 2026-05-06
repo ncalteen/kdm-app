@@ -83,6 +83,9 @@ export function UpdatePasswordForm({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground">
+                  A new ward against the dark.
+                </p>
               </div>
               {error && (
                 <Alert variant="destructive">
