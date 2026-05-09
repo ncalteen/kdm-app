@@ -103,7 +103,7 @@ export function BleedingCard({
     <Card className="p-2 border-0 gap-0">
       <CardContent className="flex flex-col gap-2 p-0">
         <div className="flex flex-row items-center gap-2 justify-between">
-          <Label className="text-xs">Bleeding</Label>
+          <Label className="text-xs">Bleeding Tokens</Label>
           <NumericInput
             label="Bleeding Tokens"
             value={bleedingTokens}
