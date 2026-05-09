@@ -100,8 +100,7 @@ describe('RPC: is_settlement_collaborator', () => {
     // PostgREST surfaces PostgreSQL's 42501 either as a top-level `code` or
     // inside `message` ("permission denied for function ..."); accept either.
     expect(
-      error?.code === '42501' ||
-        /permission denied/i.test(error?.message ?? '')
+      error?.code === '42501' || /permission denied/i.test(error?.message ?? '')
     ).toBe(true)
   })
 })
