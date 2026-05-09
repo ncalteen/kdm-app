@@ -70,7 +70,7 @@ const baseProps = {
 } as unknown as SanityCardProps
 
 describe('SanityCard', () => {
-  it('renders bleeding token controls in showdown mode', () => {
+  it('renders insanity token controls in showdown mode without bleeding controls', () => {
     const html = renderToStaticMarkup(
       <SanityCard
         {...baseProps}
@@ -80,11 +80,11 @@ describe('SanityCard', () => {
     )
 
     expect(html).toContain('Insanity Tokens:1')
-    expect(html).toContain('Bleeding Tokens:2')
-    expect(html).toContain('Bleeding')
+    expect(html).not.toContain('Bleeding Tokens')
+    expect(html).not.toContain('Bleeding')
   })
 
-  it('does not render bleeding token controls outside showdown mode', () => {
+  it('does not render showdown token controls outside showdown mode', () => {
     const html = renderToStaticMarkup(
       <SanityCard {...baseProps} mode={SurvivorCardMode.SURVIVOR_CARD} />
     )
