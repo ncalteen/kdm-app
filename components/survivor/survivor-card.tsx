@@ -2,6 +2,7 @@
 
 import { AbilitiesAndImpairmentsCard } from '@/components/survivor/abilities-and-impairments/abilities-and-impairments-card'
 import { AttributeCard } from '@/components/survivor/attributes/attribute-card'
+import { BleedingCard } from '@/components/survivor/bleeding/bleeding-card'
 import { ArmsCard } from '@/components/survivor/combat/arms-card'
 import { BodyCard } from '@/components/survivor/combat/body-card'
 import { HeadCard } from '@/components/survivor/combat/head-card'
@@ -122,6 +123,14 @@ export function SurvivorCard({
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
+            {mode === SurvivorCardMode.SHOWDOWN_CARD && (
+              <BleedingCard
+                local={local}
+                selectedShowdown={selectedShowdown}
+                selectedSurvivor={selectedSurvivor}
+                setSelectedShowdown={setSelectedShowdown}
+              />
+            )}
             <SurvivalCard
               local={local}
               mode={mode}
