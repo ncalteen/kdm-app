@@ -376,7 +376,13 @@ export function SanityCard({
             <div className="flex flex-col items-center gap-2 pt-1">
               <NumericInput
                 label="Insanity Tokens"
-                value={insanityTokens}
+                value={
+                  mode === SurvivorCardMode.SHOWDOWN_CARD
+                    ? insanityTokens
+                    : mode === SurvivorCardMode.HUNT_CARD
+                      ? insanityTokens
+                      : 0
+                }
                 min={0}
                 onChange={(value) => saveInsanityTokens(value)}
                 className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted!"
