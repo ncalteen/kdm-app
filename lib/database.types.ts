@@ -5838,6 +5838,10 @@ export type Database = {
         Returns: boolean
       }
       is_seed_pattern_owner: { Args: { record_id: string }; Returns: boolean }
+      is_settlement_collaborator: {
+        Args: { target_settlement: string }
+        Returns: boolean
+      }
       is_settlement_owner: { Args: { record_id: string }; Returns: boolean }
       is_strain_milestone_owner: {
         Args: { record_id: string }
@@ -5850,6 +5854,10 @@ export type Database = {
       is_trait_owner: { Args: { record_id: string }; Returns: boolean }
       is_wanderer_owner: { Args: { record_id: string }; Returns: boolean }
       is_weapon_type_owner: { Args: { record_id: string }; Returns: boolean }
+      provision_user_settings_for_oauth: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       realtime_publication_tables: {
         Args: never
         Returns: {
