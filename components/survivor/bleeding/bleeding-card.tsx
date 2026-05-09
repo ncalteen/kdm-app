@@ -61,17 +61,7 @@ export function BleedingCard({
   const bleedingTokens = showdownSurvivorRecord.bleeding_tokens
 
   const saveBleedingTokens = (value: number) => {
-    if (
-      !selectedShowdown?.showdown_survivors
-    ) {
-      return
-    }
-
-    if (
-      showdownSurvivorRecord &&
-      selectedShowdown?.showdown_survivors &&
-      setSelectedShowdown
-    ) {
+    if (selectedShowdown?.showdown_survivors && setSelectedShowdown) {
       const previousValue = showdownSurvivorRecord.bleeding_tokens
       const ssKey = Object.entries(selectedShowdown.showdown_survivors).find(
         ([, ss]) => ss.id === showdownSurvivorRecord.id
