@@ -34,6 +34,17 @@ describe('RLS: collaborator CRUD on settlement_phase + returning_survivor', () =
   let stranger: TestUser
   let catalog: SettlementFixture['catalogIds']
   let fixture: SettlementFixture
+  /** A second survivor in the shared settlement, used by the stranger denial
+   * test to insert a row whose composite PK is not already taken (so the
+   * test cannot pass via a 23505 unique violation if RLS were misconfigured
+   * to allow the INSERT). */
+  let extraSurvivorId: string
+  /** A separate settlement owned by `stranger`, used to exercise the
+   * cross-settlement consistency predicate added in 20260508000003: a
+   * collaborator should not be able to write a join row whose `survivor_id`
+   * lives in a different settlement than the join row's `settlement_id`. */
+  let strangerSettlementId: string
+  let strangerSurvivorId: string
 
   beforeAll(async () => {
     owner = await createTestUser()
@@ -42,9 +53,62 @@ describe('RLS: collaborator CRUD on settlement_phase + returning_survivor', () =
     catalog = await seedCatalog()
     fixture = await seedSettlementFixture(owner, catalog)
     await shareSettlement(fixture.settlementId, collaborator.id, owner.id)
+
+    // Extra survivor in the *shared* settlement — same settlement_id as
+    // the seeded join row, but a distinct survivor_id so a stranger INSERT
+    // attempt does not collide with the existing composite PK.
+    const { data: extraSurvivor, error: extraSurvivorError } = await admin
+      .from('survivor')
+      .insert({
+        settlement_id: fixture.settlementId,
+        gender: 'MALE',
+        survivor_name: 'RLS Phase Extra Survivor'
+      })
+      .select('id')
+      .single<{ id: string }>()
+    if (extraSurvivorError || !extraSurvivor)
+      throw new Error(
+        `seed extraSurvivor: ${extraSurvivorError?.message ?? 'unknown'}`
+      )
+    extraSurvivorId = extraSurvivor.id
+
+    // Separate settlement + survivor owned by `stranger`. Used to verify
+    // that a collaborator on `fixture.settlementId` cannot insert a join
+    // row pointing at a survivor in a settlement they have no claim on.
+    const { data: strangerSettlement, error: strangerSettlementError } =
+      await admin
+        .from('settlement')
+        .insert({
+          user_id: stranger.id,
+          settlement_name: 'Lone Lantern'
+        })
+        .select('id')
+        .single<{ id: string }>()
+    if (strangerSettlementError || !strangerSettlement)
+      throw new Error(
+        `seed strangerSettlement: ${strangerSettlementError?.message ?? 'unknown'}`
+      )
+    strangerSettlementId = strangerSettlement.id
+    const { data: strangerSurvivor, error: strangerSurvivorError } = await admin
+      .from('survivor')
+      .insert({
+        settlement_id: strangerSettlementId,
+        gender: 'FEMALE',
+        survivor_name: 'RLS Phase Stranger Survivor'
+      })
+      .select('id')
+      .single<{ id: string }>()
+    if (strangerSurvivorError || !strangerSurvivor)
+      throw new Error(
+        `seed strangerSurvivor: ${strangerSurvivorError?.message ?? 'unknown'}`
+      )
+    strangerSurvivorId = strangerSurvivor.id
   })
 
   afterAll(async () => {
+    // Cascades through survivor + settlement_phase + join rows.
+    if (strangerSettlementId)
+      await admin.from('settlement').delete().eq('id', strangerSettlementId)
     await deleteTestUser(owner.id)
     await deleteTestUser(collaborator.id)
     await deleteTestUser(stranger.id)
@@ -224,18 +288,48 @@ describe('RLS: collaborator CRUD on settlement_phase + returning_survivor', () =
     })
 
     it('stranger CANNOT INSERT a join row into another user settlement', async () => {
+      // Use the fresh `extraSurvivorId` so the composite PK
+      // (settlement_phase_id, survivor_id) is not already taken — this
+      // ensures the failure must come from RLS, not from a 23505 unique
+      // violation that would mask a misconfigured policy.
       const { data, error } = await stranger.client
         .from('settlement_phase_returning_survivor')
         .insert({
           settlement_id: fixture.settlementId,
           settlement_phase_id: fixture.settlementPhaseId,
-          survivor_id: fixture.survivorId
+          survivor_id: extraSurvivorId
         })
         .select('settlement_phase_id')
       expect(data ?? []).toEqual([])
-      // Composite-PK unique violation (23505) is also acceptable since the
-      // join row already exists; either way the stranger learned nothing.
-      if (error) expect(error.code).toMatch(/PGRST|42501|23505/)
+      if (error) expect(error.code).toMatch(/PGRST|42501/)
+
+      // Confirm via the owner that no row was actually written.
+      const { data: check } = await owner.client
+        .from('settlement_phase_returning_survivor')
+        .select('settlement_phase_id')
+        .eq('settlement_phase_id', fixture.settlementPhaseId)
+        .eq('survivor_id', extraSurvivorId)
+      expect(check ?? []).toEqual([])
+    })
+
+    it('collaborator CANNOT INSERT a join row referencing a survivor in another settlement', async () => {
+      // Cross-settlement consistency check (added in 20260508000003): the
+      // collaborator passes the basic membership predicate on
+      // `settlement_id = fixture.settlementId`, but the WITH CHECK clause
+      // also requires the referenced survivor to live in that same
+      // settlement. `strangerSurvivorId` belongs to a different
+      // settlement, so the EXISTS subquery returns empty and the row is
+      // rejected.
+      const { data, error } = await collaborator.client
+        .from('settlement_phase_returning_survivor')
+        .insert({
+          settlement_id: fixture.settlementId,
+          settlement_phase_id: fixture.settlementPhaseId,
+          survivor_id: strangerSurvivorId
+        })
+        .select('settlement_phase_id')
+      expect(data ?? []).toEqual([])
+      if (error) expect(error.code).toMatch(/PGRST|42501/)
     })
 
     it('stranger CANNOT DELETE the seeded join row', async () => {
