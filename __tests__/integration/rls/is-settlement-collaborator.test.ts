@@ -79,8 +79,10 @@ describe('RPC: is_settlement_collaborator', () => {
   })
 
   it('rejects an unauthenticated caller', async () => {
-    // EXECUTE was revoked from PUBLIC and granted only to `authenticated`,
-    // so the anon role cannot invoke the helper.
+    // EXECUTE was revoked from PUBLIC and from anon explicitly, so the
+    // anon role cannot invoke the helper. (service_role still holds EXECUTE
+    // via Supabase's default privileges — that's intentional and not what
+    // this test exercises.)
     const anon = createClient(
       process.env.SUPABASE_URL ?? '',
       process.env.SUPABASE_ANON_KEY ?? '',
@@ -93,5 +95,13 @@ describe('RPC: is_settlement_collaborator', () => {
 
     expect(data).toBeNull()
     expect(error).not.toBeNull()
+    // Pin the failure to a permission-denied signal so the test can't
+    // accidentally pass on an unrelated error (e.g. a malformed argument).
+    // PostgREST surfaces PostgreSQL's 42501 either as a top-level `code` or
+    // inside `message` ("permission denied for function ..."); accept either.
+    expect(
+      error?.code === '42501' ||
+        /permission denied/i.test(error?.message ?? '')
+    ).toBe(true)
   })
 })
