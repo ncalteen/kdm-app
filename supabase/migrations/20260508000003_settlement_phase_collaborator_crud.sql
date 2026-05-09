@@ -28,6 +28,23 @@
 --     was already correctly qualified (see 20260324185312), but it is
 --     consolidated here for symmetry with the rest of the suite.
 --
+-- Cross-settlement consistency on the join table:
+--   `settlement_phase_returning_survivor` carries three independent
+--   foreign keys (`settlement_id`, `settlement_phase_id`, `survivor_id`)
+--   with no schema-level constraint forcing them to point at the same
+--   settlement. Without an extra RLS predicate, a member of settlement
+--   A could write `{settlement_id: A, settlement_phase_id: <A's phase>,
+--   survivor_id: <a survivor from settlement B>}`, creating a join row
+--   whose three references straddle settlements. The INSERT and
+--   UPDATE WITH CHECK predicates below add EXISTS subqueries that
+--   require the referenced phase row and the referenced survivor row
+--   to live in the same settlement as the join row's `settlement_id`.
+--   Both subqueries run under the caller's RLS, which is sufficient
+--   here because the caller already has SELECT access to phase /
+--   survivor rows of settlements they own or collaborate on (see
+--   `Allow select for member` on `settlement_phase` and the existing
+--   `Allow select for shared` on `survivor`).
+--
 -- Admin bypass policies are untouched.
 --
 -- Reference:
@@ -41,17 +58,17 @@
 --
 -- Closes [E1.2.b] (issue #138).
 --------------------------------------------------------------------------------
+--
+-- Drop the existing owner-only / shared SELECT policies on both tables.
+-- Admin-bypass policies are intentionally left in place.
+--
 do $$
 declare t text;
 phase_tables text [] := array [
     'settlement_phase',
     'settlement_phase_returning_survivor'
   ];
-begin foreach t in array phase_tables loop -- Drop existing SELECT and write policies. SELECT-for-shared is also
--- dropped so the latent cross-settlement leak (described in the
--- header) is closed by the new helper-based policy on
--- `settlement_phase`. Admin-bypass is left in place.
-execute format(
+begin foreach t in array phase_tables loop execute format(
   'drop policy if exists "Allow select for owner" on %I',
   t
 );
@@ -71,50 +88,90 @@ execute format(
   'drop policy if exists "Allow delete for owner" on %I',
   t
 );
--- Member SELECT: caller must own OR collaborate on the parent
--- settlement. Both helpers are SECURITY DEFINER, which sidesteps
--- the recursion that bit the original inline EXISTS subquery and
--- removes the latent correlation bug noted in the header.
-execute format(
-  $f$create policy "Allow select for member" on %I for
-  select to authenticated using (
-      is_settlement_owner(settlement_id)
-      or is_settlement_collaborator(settlement_id)
-    ) $f$,
-    t
-);
--- Member INSERT: same disjunction.
-execute format(
-  $f$create policy "Allow insert for member" on %I for
-  insert to authenticated with check (
-      is_settlement_owner(settlement_id)
-      or is_settlement_collaborator(settlement_id)
-    ) $f$,
-    t
-);
--- Member UPDATE: same disjunction on both USING (current row) and
--- WITH CHECK (post-update row). Phase rows are pinned to a single
--- settlement, so re-checking after the update is effectively a
--- no-op but keeps the policy symmetric and defensive against
--- malicious `settlement_id` rewrites.
-execute format(
-  $f$create policy "Allow update for member" on %I for
-  update to authenticated using (
-      is_settlement_owner(settlement_id)
-      or is_settlement_collaborator(settlement_id)
-    ) with check (
-      is_settlement_owner(settlement_id)
-      or is_settlement_collaborator(settlement_id)
-    ) $f$,
-    t
-);
--- Member DELETE: same disjunction.
-execute format(
-  $f$create policy "Allow delete for member" on %I for delete to authenticated using (
-    is_settlement_owner(settlement_id)
-    or is_settlement_collaborator(settlement_id)
-  ) $f$,
-  t
-);
 end loop;
 end $$;
+--
+-- settlement_phase — standard member policies. The phase row is pinned to
+-- a single settlement, so the helper-based disjunction is sufficient.
+--
+create policy "Allow select for member" on settlement_phase
+for
+select to authenticated using (
+    is_settlement_owner(settlement_id)
+    or is_settlement_collaborator(settlement_id)
+  );
+create policy "Allow insert for member" on settlement_phase for
+insert to authenticated with check (
+    is_settlement_owner(settlement_id)
+    or is_settlement_collaborator(settlement_id)
+  );
+create policy "Allow update for member" on settlement_phase for
+update to authenticated using (
+    is_settlement_owner(settlement_id)
+    or is_settlement_collaborator(settlement_id)
+  ) with check (
+    is_settlement_owner(settlement_id)
+    or is_settlement_collaborator(settlement_id)
+  );
+create policy "Allow delete for member" on settlement_phase for delete to authenticated using (
+  is_settlement_owner(settlement_id)
+  or is_settlement_collaborator(settlement_id)
+);
+--
+-- settlement_phase_returning_survivor — member policies plus a
+-- cross-settlement consistency check on writes. The join table carries
+-- three independent foreign keys; the EXISTS subqueries below ensure
+-- the referenced phase and survivor live in the same settlement as the
+-- join row. SELECT and DELETE only require the basic membership check.
+--
+create policy "Allow select for member" on settlement_phase_returning_survivor
+for
+select to authenticated using (
+    is_settlement_owner(settlement_id)
+    or is_settlement_collaborator(settlement_id)
+  );
+create policy "Allow insert for member" on settlement_phase_returning_survivor for
+insert to authenticated with check (
+    (
+      is_settlement_owner(settlement_id)
+      or is_settlement_collaborator(settlement_id)
+    )
+    and exists (
+      select 1
+      from settlement_phase sp
+      where sp.id = settlement_phase_returning_survivor.settlement_phase_id
+        and sp.settlement_id = settlement_phase_returning_survivor.settlement_id
+    )
+    and exists (
+      select 1
+      from survivor sv
+      where sv.id = settlement_phase_returning_survivor.survivor_id
+        and sv.settlement_id = settlement_phase_returning_survivor.settlement_id
+    )
+  );
+create policy "Allow update for member" on settlement_phase_returning_survivor for
+update to authenticated using (
+    is_settlement_owner(settlement_id)
+    or is_settlement_collaborator(settlement_id)
+  ) with check (
+    (
+      is_settlement_owner(settlement_id)
+      or is_settlement_collaborator(settlement_id)
+    )
+    and exists (
+      select 1
+      from settlement_phase sp
+      where sp.id = settlement_phase_returning_survivor.settlement_phase_id
+        and sp.settlement_id = settlement_phase_returning_survivor.settlement_id
+    )
+    and exists (
+      select 1
+      from survivor sv
+      where sv.id = settlement_phase_returning_survivor.survivor_id
+        and sv.settlement_id = settlement_phase_returning_survivor.settlement_id
+    )
+  );
+create policy "Allow delete for member" on settlement_phase_returning_survivor for delete to authenticated using (
+  is_settlement_owner(settlement_id)
+  or is_settlement_collaborator(settlement_id)
+);
