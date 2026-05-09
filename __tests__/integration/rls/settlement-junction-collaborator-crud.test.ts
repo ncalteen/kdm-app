@@ -166,9 +166,9 @@ describe('RLS: collaborator CRUD on settlement_* junction tables', () => {
   )
 
   /**
-   * Tracks IDs inserted by the collaborator so the matching DELETE test
-   * has a fresh row to operate against (UPDATE happens to the original
-   * fixture row to avoid clobbering the seeded data).
+   * Tracks IDs inserted by the collaborator so the matching UPDATE and
+   * DELETE tests can operate against fresh collaborator-created rows
+   * rather than the original seeded fixture rows.
    */
   const collaboratorInsertedIds: Record<string, string> = {}
 
@@ -183,8 +183,8 @@ describe('RLS: collaborator CRUD on settlement_* junction tables', () => {
       // settlement_timeline_year is the only table with a unique
       // (settlement_id, year_number) constraint that conflicts with the
       // seeded fixture row at year_number=0; the buildInsertRow helper
-      // already uses 99. For tables with a (settlement_id, x_id) unique
-      // index, the seeded fixture used the catalog row, so a second
+      // already uses year_number=7. For tables with a (settlement_id, x_id)
+      // unique index, the seeded fixture used the catalog row, so a second
       // insert with the same (settlement_id, x_id) would 23505. Resolve
       // by deleting the seeded row first so the collaborator's INSERT
       // has a clean slot.
@@ -194,12 +194,7 @@ describe('RLS: collaborator CRUD on settlement_* junction tables', () => {
           .from(table)
           .delete()
           .eq('id', seededId)
-        // Don't fail the test on a missing seeded row — a previous test
-        // may have already deleted it.
-        if (cleanupErr) {
-          // surface unexpected errors
-          expect(cleanupErr.code).toMatch(/PGRST|42501/)
-        }
+        expect(cleanupErr).toBeNull()
       }
 
       const { data, error } = await collaborator.client
