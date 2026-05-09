@@ -130,6 +130,12 @@ export function SanityCard({
     showdownSurvivorRecord?.insanity_tokens ??
     0
 
+  /** Current bleeding tokens derived from the showdown survivor record */
+  const bleedingTokens =
+    mode === SurvivorCardMode.SHOWDOWN_CARD
+      ? showdownSurvivorRecord?.bleeding_tokens ?? 0
+      : 0
+
   /**
    * Save Insanity Tokens
    *
@@ -233,6 +239,68 @@ export function SanityCard({
       huntSurvivorRecord,
       showdownSurvivorRecord,
       setSelectedHunt,
+      setSelectedShowdown,
+      mutate
+    ]
+  )
+
+  /**
+   * Save Bleeding Tokens
+   *
+   * Persists bleeding token changes to the showdown survivor table.
+   *
+   * @param value New Bleeding Tokens Value
+   */
+  const saveBleedingTokens = useCallback(
+    (value: number) => {
+      if (
+        mode !== SurvivorCardMode.SHOWDOWN_CARD ||
+        !showdownSurvivorRecord ||
+        !selectedShowdown?.showdown_survivors ||
+        !setSelectedShowdown
+      )
+        return
+
+      const previousValue = showdownSurvivorRecord.bleeding_tokens
+      const ssKey = Object.entries(selectedShowdown.showdown_survivors).find(
+        ([, ss]) => ss.id === showdownSurvivorRecord.id
+      )?.[0]
+      if (!ssKey) return
+
+      // Optimistic update
+      setSelectedShowdown({
+        ...selectedShowdown,
+        showdown_survivors: {
+          ...selectedShowdown.showdown_survivors,
+          [ssKey]: { ...showdownSurvivorRecord, bleeding_tokens: value }
+        }
+      })
+
+      void mutate({
+        context: 'Bleeding Tokens Update',
+        persist: () =>
+          updateShowdownSurvivor(showdownSurvivorRecord.id, {
+            bleeding_tokens: value
+          }),
+        rollback: () => {
+          setSelectedShowdown({
+            ...selectedShowdown,
+            showdown_survivors: {
+              ...selectedShowdown.showdown_survivors,
+              [ssKey]: {
+                ...showdownSurvivorRecord,
+                bleeding_tokens: previousValue
+              }
+            }
+          })
+        },
+        successMessage: SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('bleeding')
+      })
+    },
+    [
+      mode,
+      selectedShowdown,
+      showdownSurvivorRecord,
       setSelectedShowdown,
       mutate
     ]
@@ -373,23 +441,31 @@ export function SanityCard({
 
           {/* Insanity Tokens (Showdown) */}
           {mode === SurvivorCardMode.SHOWDOWN_CARD && (
-            <div className="flex flex-col items-center gap-2 pt-1">
-              <NumericInput
-                label="Insanity Tokens"
-                value={
-                  mode === SurvivorCardMode.SHOWDOWN_CARD
-                    ? insanityTokens
-                    : mode === SurvivorCardMode.HUNT_CARD
-                      ? insanityTokens
-                      : 0
-                }
-                min={0}
-                onChange={(value) => saveInsanityTokens(value)}
-                className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted!"
-              />
-              <Label className="text-xs text-muted-foreground uppercase tracking-wide">
-                Tokens
-              </Label>
+            <div className="flex items-start gap-2 pt-1">
+              <div className="flex flex-col items-center gap-2">
+                <NumericInput
+                  label="Insanity Tokens"
+                  value={insanityTokens}
+                  min={0}
+                  onChange={(value) => saveInsanityTokens(value)}
+                  className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted!"
+                />
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                  Insanity
+                </Label>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <NumericInput
+                  label="Bleeding Tokens"
+                  value={bleedingTokens}
+                  min={0}
+                  onChange={(value) => saveBleedingTokens(value)}
+                  className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted!"
+                />
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                  Bleeding
+                </Label>
+              </div>
             </div>
           )}
 
