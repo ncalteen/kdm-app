@@ -53,7 +53,9 @@ describe('BleedingCard', () => {
     const html = renderToStaticMarkup(
       <BleedingCard
         {...baseProps}
-        selectedShowdown={{ showdown_survivors: {} } as BleedingCardProps['selectedShowdown']}
+        selectedShowdown={
+          { showdown_survivors: {} } as BleedingCardProps['selectedShowdown']
+        }
       />
     )
 

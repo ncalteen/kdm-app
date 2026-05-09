@@ -8,9 +8,12 @@ function mockCard(name: string) {
   return MockCard
 }
 
-vi.mock('@/components/survivor/abilities-and-impairments/abilities-and-impairments-card', () => ({
-  AbilitiesAndImpairmentsCard: mockCard('AbilitiesAndImpairmentsCard')
-}))
+vi.mock(
+  '@/components/survivor/abilities-and-impairments/abilities-and-impairments-card',
+  () => ({
+    AbilitiesAndImpairmentsCard: mockCard('AbilitiesAndImpairmentsCard')
+  })
+)
 vi.mock('@/components/survivor/attributes/attribute-card', () => ({
   AttributeCard: mockCard('AttributeCard')
 }))
@@ -32,9 +35,12 @@ vi.mock('@/components/survivor/combat/legs-card', () => ({
 vi.mock('@/components/survivor/combat/waist-card', () => ({
   WaistCard: mockCard('WaistCard')
 }))
-vi.mock('@/components/survivor/courage-understanding/courage-understanding-card', () => ({
-  CourageUnderstandingCard: mockCard('CourageUnderstandingCard')
-}))
+vi.mock(
+  '@/components/survivor/courage-understanding/courage-understanding-card',
+  () => ({
+    CourageUnderstandingCard: mockCard('CourageUnderstandingCard')
+  })
+)
 vi.mock('@/components/survivor/cursed-gear/cursed-gear-card', () => ({
   CursedGearCard: mockCard('CursedGearCard')
 }))
@@ -56,9 +62,12 @@ vi.mock('@/components/survivor/knowledge/knowledge-card', () => ({
 vi.mock('@/components/survivor/next-departure/next-departure-card', () => ({
   NextDepartureCard: mockCard('NextDepartureCard')
 }))
-vi.mock('@/components/survivor/once-per-lifetime/once-per-lifetime-card', () => ({
-  OncePerLifetimeCard: mockCard('OncePerLifetimeCard')
-}))
+vi.mock(
+  '@/components/survivor/once-per-lifetime/once-per-lifetime-card',
+  () => ({
+    OncePerLifetimeCard: mockCard('OncePerLifetimeCard')
+  })
+)
 vi.mock('@/components/survivor/philosophy/philosophy-card', () => ({
   PhilosophyCard: mockCard('PhilosophyCard')
 }))
@@ -74,11 +83,15 @@ vi.mock('@/components/survivor/survival/survival-card', () => ({
 vi.mock('@/components/survivor/wanderer/wanderer-card', () => ({
   WandererCard: mockCard('WandererCard')
 }))
-vi.mock('@/components/survivor/weapon-proficiency/weapon-proficiency-card', () => ({
-  WeaponProficiencyCard: mockCard('WeaponProficiencyCard')
-}))
+vi.mock(
+  '@/components/survivor/weapon-proficiency/weapon-proficiency-card',
+  () => ({
+    WeaponProficiencyCard: mockCard('WeaponProficiencyCard')
+  })
+)
 vi.mock('@/lib/utils', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/utils')>('@/lib/utils')
+  const actual =
+    await vi.importActual<typeof import('@/lib/utils')>('@/lib/utils')
   return {
     ...actual,
     getCardColorStyles: () => ({})
@@ -109,8 +122,12 @@ describe('SurvivorCard', () => {
 
     expect(html).toContain('HuntXPCard')
     expect(html).toContain('BleedingCard')
-    expect(html.indexOf('HuntXPCard')).toBeLessThan(html.indexOf('BleedingCard'))
-    expect(html.indexOf('BleedingCard')).toBeLessThan(html.indexOf('SurvivalCard'))
+    expect(html.indexOf('HuntXPCard')).toBeLessThan(
+      html.indexOf('BleedingCard')
+    )
+    expect(html.indexOf('BleedingCard')).toBeLessThan(
+      html.indexOf('SurvivalCard')
+    )
   })
 
   it('does not render the bleeding card outside showdown mode', () => {
