@@ -181,8 +181,8 @@ export function CreateSurvivorForm({
         huntXPRankUp:
           selectedSettlement.survivor_type !==
           DatabaseSurvivorType[SurvivorType.ARC]
-            ? [2, 6, 10, 15]
-            : [2],
+            ? [1, 5, 9, 14]
+            : [1],
         understanding: bornWithUnderstanding ? 1 : 0
       })
     }
