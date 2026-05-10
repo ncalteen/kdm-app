@@ -69,7 +69,16 @@ const baseNavPrimary = [
     title: 'Notes',
     tab: TabType.NOTES,
     icon: NotebookPenIcon
-  }
+  },
+  ...(process.env.NODE_ENV === 'development'
+    ? [
+        {
+          title: 'Sharing',
+          tab: TabType.SHARING,
+          icon: Share2Icon
+        }
+      ]
+    : [])
 ]
 
 /**
