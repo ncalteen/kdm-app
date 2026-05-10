@@ -337,11 +337,12 @@ describe('RLS: collaborator CRUD on survivor + survivor junctions + gear_grid', 
       // 20260424000009) refuses to equip a gear that isn't in storage.
       // Bump the storage row to 1 so the RLS policy is what we are
       // actually exercising rather than the quantity trigger.
-      await admin
+      const { error: settlementGearError } = await admin
         .from('settlement_gear')
         .update({ quantity: 1 })
         .eq('settlement_id', fixture.settlementId)
         .eq('gear_id', catalog.gearId)
+      expect(settlementGearError).toBeNull()
 
       const { data, error } = await collaborator.client
         .from('gear_grid')
