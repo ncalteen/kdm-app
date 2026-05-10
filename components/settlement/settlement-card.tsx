@@ -24,6 +24,7 @@ import { QuarriesCard } from '@/components/settlement/quarries/quarries-card'
 import { ResourceOverviewCard } from '@/components/settlement/resources/resource-overview-card'
 import { ResourcesCard } from '@/components/settlement/resources/resources-card'
 import { SeedPatternsCard } from '@/components/settlement/seed-patterns/seed-patterns-card'
+import { SharingCard } from '@/components/settlement/sharing/sharing-card'
 import { SquireProgressionCards } from '@/components/settlement/squires/squire-progression-cards'
 import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
 import { SettlementSurvivorsCard } from '@/components/settlement/survivors/settlement-survivors-card'
@@ -216,6 +217,13 @@ export function SettlementCard({
         userSettings={userSettings}
       />
     )
+
+  // Sharing tab is always accessible, regardless of settlement state. The
+  // tab itself is gated upstream (sidebar entry) to development builds only
+  // until the §9 entitlement plumbing exists; rendering here is intentionally
+  // unconditional so a deep link still works in dev.
+  if (selectedTab === TabType.SHARING)
+    return <SharingCard local={local} selectedSettlement={selectedSettlement} />
 
   // Help tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.HELP) return <HelpCard />

@@ -27,6 +27,7 @@ import {
   School2Icon,
   SchoolIcon,
   SettingsIcon,
+  Share2Icon,
   SkullIcon,
   SwordsIcon,
   UserIcon,
@@ -130,6 +131,13 @@ const navEmbark = [
 
 /**
  * Settings Navigation Items
+ *
+ * The Sharing entry is gated to development builds only because the
+ * `local/sharing-architecture.md` §9 entitlement plumbing (Stripe + the
+ * `user_subscription` / `subscription_plan` tables and the
+ * `user_can_share()` predicate) does not exist yet. Once paid gating
+ * lands, replace the `NODE_ENV` check with the entitlement check so the
+ * tab appears for all eligible subscribers in production.
  */
 const navSettings = [
   {
@@ -137,6 +145,15 @@ const navSettings = [
     tab: TabType.USER,
     icon: UserIcon
   },
+  ...(process.env.NODE_ENV === 'development'
+    ? [
+        {
+          title: 'Sharing',
+          tab: TabType.SHARING,
+          icon: Share2Icon
+        }
+      ]
+    : []),
   {
     title: 'Settings',
     tab: TabType.SETTINGS,
