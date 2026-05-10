@@ -77,31 +77,31 @@ describe('RLS: shared-user access on settlement', () => {
     expect(data).toHaveLength(1)
   })
 
-  // The `Allow update for shared` RLS policy on `settlement` permits any user
-  // listed in `settlement_shared_user` to mutate the settlement, even though
-  // the DAL historically treated them as read-only. This test pins that
-  // decision so any future tightening is deliberate.
-  it('guest CAN update settlement_name (documents shared write-access)', async () => {
+  // Phase 1.3 (issue #133): the `Allow update for member` policy lets
+  // collaborators pass RLS, but the `enforce_settlement_owner_only_columns`
+  // BEFORE UPDATE trigger raises `feature_not_supported` (SQLSTATE 0A000)
+  // when a non-owner mutates settlement metadata. The previous version of
+  // this test pinned the looser behaviour; it is now an explicit denial
+  // assertion.
+  it('guest CANNOT update settlement_name (owner-only column)', async () => {
     const { data, error } = await guest.client
       .from('settlement')
       .update({ settlement_name: 'GUEST WAS HERE' })
       .eq('id', settlementId)
       .select('id')
-    expect(error).toBeNull()
-    expect(data ?? []).toHaveLength(1)
 
+    expect(error).not.toBeNull()
+    // PGRST204 / 0A000 (feature_not_supported) — Postgres surfaces the
+    // raise in the trigger via PostgREST as the SQLSTATE code.
+    expect(error?.code).toMatch(/0A000|PGRST/)
+    expect(data ?? []).toHaveLength(0)
+
+    // Confirm the row was not modified.
     const { data: check } = await owner.client
       .from('settlement')
       .select('settlement_name')
       .eq('id', settlementId)
       .single()
-    expect(check?.settlement_name).toBe('GUEST WAS HERE')
-
-    // Restore the original name so later assertions in this suite still
-    // observe the owner-provided value.
-    await owner.client
-      .from('settlement')
-      .update({ settlement_name: 'Shared Test Settlement' })
-      .eq('id', settlementId)
+    expect(check?.settlement_name).toBe('Shared Test Settlement')
   })
 })
