@@ -1,5 +1,5 @@
 import { Database, Tables } from '@/lib/database.types'
-import { HuntEventType } from '@/lib/enums'
+import { DatabaseCampaignType, HuntEventType } from '@/lib/enums'
 
 /**
  * Campaign Template
@@ -750,6 +750,26 @@ export type SettlementStateSetter = (
  * `settlement_shared_user` and are subject to the shared-user permission set.
  */
 export type SettlementRole = 'owner' | 'collaborator'
+
+/**
+ * Settlement List Entry
+ *
+ * Lightweight row shape returned by `getSettlementForUser` and used by the
+ * settlement switcher. Each entry is tagged with the caller's `role`; for
+ * collaborator rows, `owner_username` resolves the owner's display handle.
+ */
+export interface SettlementListEntry {
+  /** Campaign Type */
+  campaign_type: DatabaseCampaignType
+  /** Settlement ID */
+  id: string
+  /** Settlement Name */
+  settlement_name: string
+  /** Caller's Role on This Settlement */
+  role: SettlementRole
+  /** Owner Username (Collaborator Rows Only) */
+  owner_username: string | null
+}
 
 /**
  * Settlement Detail

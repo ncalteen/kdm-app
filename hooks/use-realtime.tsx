@@ -279,3 +279,108 @@ export function useRealtimeSubscriptions(
     }
   }, [options.enabled, options.settlementId])
 }
+
+/**
+ * Share Change Event
+ *
+ * Payload delivered to `onShareChange` when a row in
+ * `settlement_shared_user` involving the current user is inserted or
+ * deleted. `settlementId` is the affected settlement on either side of
+ * the event so the caller can refresh the settlement list and (on
+ * `DELETE`) decide whether to clear the active selection.
+ */
+export interface ShareChangeEvent {
+  /** Realtime Event Type */
+  event: 'INSERT' | 'DELETE'
+  /** Affected Settlement ID */
+  settlementId: string
+}
+
+/**
+ * User Realtime Subscriptions Options
+ */
+interface UseUserRealtimeSubscriptionsOptions {
+  /** Whether the subscription should be active */
+  enabled: boolean
+  /** Authenticated user ID; subscription is skipped while `null` */
+  userId: string | null
+  /** Called when a share is granted to or revoked from the current user */
+  onShareChange: (event: ShareChangeEvent) => void
+}
+
+/**
+ * User Realtime Subscriptions Hook
+ *
+ * Subscribes a per-user channel to INSERT / DELETE events on
+ * `settlement_shared_user` filtered to rows where
+ * `shared_user_id = userId`. Pairs with the per-settlement channel from
+ * `useRealtimeSubscriptions` to deliver share-grant / share-revoke
+ * notifications to the recipient without a manual reload (Phase 1.5 of
+ * the sharing architecture rollout — see issue #144).
+ *
+ * Events are delivered one-for-one to `onShareChange`; the caller is
+ * responsible for any debouncing or state cascades (e.g. clearing the
+ * active settlement selection on revoke).
+ *
+ * @param options Subscription configuration
+ */
+export function useUserRealtimeSubscriptions(
+  options: UseUserRealtimeSubscriptionsOptions
+) {
+  const callbackRef = useRef(options.onShareChange)
+
+  useEffect(() => {
+    callbackRef.current = options.onShareChange
+  })
+
+  useEffect(() => {
+    if (!options.enabled || !options.userId) return
+
+    const supabase = createClient()
+    const userId = options.userId
+
+    const channel = supabase
+      .channel(`user-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'settlement_shared_user',
+          filter: `shared_user_id=eq.${userId}`
+        },
+        (payload) => {
+          const row = payload.new as { settlement_id?: string } | undefined
+          if (!row?.settlement_id) return
+          callbackRef.current({
+            event: 'INSERT',
+            settlementId: row.settlement_id
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'settlement_shared_user',
+          filter: `shared_user_id=eq.${userId}`
+        },
+        (payload) => {
+          const row = payload.old as { settlement_id?: string } | undefined
+          if (!row?.settlement_id) return
+          callbackRef.current({
+            event: 'DELETE',
+            settlementId: row.settlement_id
+          })
+        }
+      )
+      .subscribe((status) => {
+        console.debug('User realtime subscription status:', status)
+      })
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [options.enabled, options.userId])
+}
