@@ -1573,6 +1573,21 @@ export type Database = {
           },
         ]
       }
+      lookup_user_audit: {
+        Row: {
+          attempted_at: string
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       milestone: {
         Row: {
           campaign_types: Database["public"]["Enums"]["campaign_type"][]
@@ -5854,6 +5869,7 @@ export type Database = {
       is_trait_owner: { Args: { record_id: string }; Returns: boolean }
       is_wanderer_owner: { Args: { record_id: string }; Returns: boolean }
       is_weapon_type_owner: { Args: { record_id: string }; Returns: boolean }
+      lookup_user_by_username: { Args: { p_username: string }; Returns: string }
       provision_user_settings_for_oauth: {
         Args: { p_user_id: string }
         Returns: undefined
