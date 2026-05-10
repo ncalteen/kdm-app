@@ -284,7 +284,10 @@ describe('RLS: collaborator CRUD on survivor + survivor junctions + gear_grid', 
       // Make this test self-contained: remove the conflicting seeded row so
       // the assertion exercises RLS denial instead of depending on execution
       // order to avoid a 23505 unique-constraint error.
-      const { error: deleteError } = await admin.from(table).delete().eq('id', rowId)
+      const { error: deleteError } = await admin
+        .from(table)
+        .delete()
+        .eq('id', rowId)
       expect(deleteError).toBeNull()
 
       try {
