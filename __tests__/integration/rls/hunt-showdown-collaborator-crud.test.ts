@@ -41,6 +41,11 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
   let catalog: SettlementFixture['catalogIds']
   let fixture: SettlementFixture
   let showdownSettlementId: string
+  // Fresh catalog rows reserved for the stranger INSERT denial assertions.
+  // Using these guarantees the (monster_id, catalog_id) pair has never
+  // existed, so a 23505 unique-violation cannot mask an RLS hole. Each id is
+  // cleaned up in afterAll via the admin client.
+  const strangerCatalog: { trait?: string; mood?: string; status?: string } = {}
 
   beforeAll(async () => {
     owner = await createTestUser()
@@ -62,12 +67,49 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
 
     await shareSettlement(fixture.settlementId, collaborator.id, owner.id)
     await shareSettlement(showdownSettlementId, collaborator.id, owner.id)
+
+    // Seed dedicated catalog rows for the stranger INSERT denial cases —
+    // see comment on `strangerCatalog` above.
+    const seedExtra = async (
+      table: string,
+      row: Record<string, unknown>
+    ): Promise<string> => {
+      const { data: extra, error: extraErr } = await admin
+        .from(table)
+        .insert(row)
+        .select('id')
+        .single<{ id: string }>()
+      if (extraErr || !extra)
+        throw new Error(`seed extra ${table}: ${extraErr?.message}`)
+      return extra.id
+    }
+    strangerCatalog.trait = await seedExtra('trait', {
+      custom: false,
+      trait_name: 'RLS Stranger Trait'
+    })
+    strangerCatalog.mood = await seedExtra('mood', {
+      custom: false,
+      mood_name: 'RLS Stranger Mood'
+    })
+    strangerCatalog.status = await seedExtra('survivor_status', {
+      custom: false,
+      survivor_status_name: 'RLS Stranger Status'
+    })
   })
 
   afterAll(async () => {
     await deleteTestUser(owner.id)
     await deleteTestUser(collaborator.id)
     await deleteTestUser(stranger.id)
+    if (strangerCatalog.trait)
+      await admin.from('trait').delete().eq('id', strangerCatalog.trait)
+    if (strangerCatalog.mood)
+      await admin.from('mood').delete().eq('id', strangerCatalog.mood)
+    if (strangerCatalog.status)
+      await admin
+        .from('survivor_status')
+        .delete()
+        .eq('id', strangerCatalog.status)
     await deleteCatalog(catalog)
   })
 
@@ -226,6 +268,11 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
     parentColumn: string
     catalogColumn: string
     catalogId: () => string
+    // A separate catalog id reserved for the stranger INSERT denial test.
+    // Pairing this with `parentMonsterId` produces a composite that has
+    // never existed in the table, so a 23505 unique violation is impossible
+    // and any insert failure must come from RLS.
+    strangerCatalogId: () => string
     seededRowId: () => string
   }
 
@@ -236,6 +283,7 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
       parentColumn: 'hunt_monster_id',
       catalogColumn: 'trait_id',
       catalogId: () => catalog.traitId,
+      strangerCatalogId: () => strangerCatalog.trait!,
       seededRowId: () => fixture.monsterJunctionIds.hunt_monster_trait
     },
     {
@@ -244,6 +292,7 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
       parentColumn: 'hunt_monster_id',
       catalogColumn: 'mood_id',
       catalogId: () => catalog.moodId,
+      strangerCatalogId: () => strangerCatalog.mood!,
       seededRowId: () => fixture.monsterJunctionIds.hunt_monster_mood
     },
     {
@@ -252,6 +301,7 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
       parentColumn: 'hunt_monster_id',
       catalogColumn: 'survivor_status_id',
       catalogId: () => catalog.survivorStatusId,
+      strangerCatalogId: () => strangerCatalog.status!,
       seededRowId: () => fixture.monsterJunctionIds.hunt_monster_survivor_status
     },
     {
@@ -260,6 +310,7 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
       parentColumn: 'showdown_monster_id',
       catalogColumn: 'trait_id',
       catalogId: () => catalog.traitId,
+      strangerCatalogId: () => strangerCatalog.trait!,
       seededRowId: () => fixture.monsterJunctionIds.showdown_monster_trait
     },
     {
@@ -268,6 +319,7 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
       parentColumn: 'showdown_monster_id',
       catalogColumn: 'mood_id',
       catalogId: () => catalog.moodId,
+      strangerCatalogId: () => strangerCatalog.mood!,
       seededRowId: () => fixture.monsterJunctionIds.showdown_monster_mood
     },
     {
@@ -276,6 +328,7 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
       parentColumn: 'showdown_monster_id',
       catalogColumn: 'survivor_status_id',
       catalogId: () => catalog.survivorStatusId,
+      strangerCatalogId: () => strangerCatalog.status!,
       seededRowId: () =>
         fixture.monsterJunctionIds.showdown_monster_survivor_status
     }
@@ -314,18 +367,19 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
   it.each(monsterJunctions)(
     'stranger CANNOT INSERT into $table for another user monster',
     async (row) => {
+      // Pair the foreign monster with a catalog id reserved for the
+      // stranger denial cases (seeded in beforeAll). The composite has
+      // never existed in this table, so a 23505 unique-violation is
+      // impossible — only an RLS denial can produce a failure.
       const insertRow: Record<string, unknown> = {
         [row.parentColumn]: row.parentMonsterId(),
-        [row.catalogColumn]: row.catalogId()
+        [row.catalogColumn]: row.strangerCatalogId()
       }
       const { data, error } = await stranger.client
         .from(row.table)
         .insert(insertRow)
         .select('id')
       expect(data ?? []).toEqual([])
-      // The collaborator DELETE test above clears the fixture row, so a
-      // stale 23505 unique violation can no longer mask an RLS hole — only
-      // the API / RLS denial codes are accepted.
       if (error) expect(error.code).toMatch(/PGRST|42501/)
     }
   )
