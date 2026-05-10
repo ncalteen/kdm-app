@@ -27,8 +27,14 @@ export async function getSettlementKnowledges(
   if (error)
     throw new Error(`Error Fetching Settlement Knowledges: ${error.message}`)
 
+  // PostgREST returns the embedded catalog row as `null` when the caller can't
+  // read it under RLS (e.g., a settlement owner viewing a collaborator's
+  // custom knowledge before transitive visibility lands; see EC-7 in the
+  // sharing architecture doc). Skip those junction rows so the page renders
+  // instead of crashing on a null deref. The unshare-blockers dialog (E1.8)
+  // surfaces the hidden attachments when the owner tries to revoke access.
   return (
-    data?.map((item) => {
+    data?.flatMap((item) => {
       const knowledge = item.knowledge as unknown as {
         custom: boolean
         knowledge_name: string
@@ -36,18 +42,23 @@ export async function getSettlementKnowledges(
         rules: string | null
         observation_conditions: string | null
         observation_rank_up_milestone: number | null
-      }
+      } | null
 
-      return {
-        id: item.id,
-        knowledge_id: item.knowledge_id,
-        knowledge_name: knowledge.knowledge_name,
-        philosophy_id: knowledge.philosophy_id,
-        rules: knowledge.rules,
-        observation_conditions: knowledge.observation_conditions,
-        observation_rank_up_milestone: knowledge.observation_rank_up_milestone,
-        custom: knowledge.custom
-      }
+      if (!knowledge) return []
+
+      return [
+        {
+          id: item.id,
+          knowledge_id: item.knowledge_id,
+          knowledge_name: knowledge.knowledge_name,
+          philosophy_id: knowledge.philosophy_id,
+          rules: knowledge.rules,
+          observation_conditions: knowledge.observation_conditions,
+          observation_rank_up_milestone:
+            knowledge.observation_rank_up_milestone,
+          custom: knowledge.custom
+        }
+      ]
     }) ?? []
   )
 }

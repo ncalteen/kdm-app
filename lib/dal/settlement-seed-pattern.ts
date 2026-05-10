@@ -24,14 +24,23 @@ export async function getSettlementSeedPatterns(
   if (error)
     throw new Error(`Error Fetching Settlement Seed Patterns: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-7).
   return (
-    data?.map((item) => ({
-      id: item.id,
-      seed_pattern_id: item.seed_pattern_id,
-      seed_pattern_name: (
-        item.seed_pattern as unknown as { seed_pattern_name: string }
-      ).seed_pattern_name
-    })) ?? []
+    data?.flatMap((item) => {
+      const seedPattern = item.seed_pattern as unknown as {
+        seed_pattern_name: string
+      } | null
+
+      if (!seedPattern) return []
+
+      return [
+        {
+          id: item.id,
+          seed_pattern_id: item.seed_pattern_id,
+          seed_pattern_name: seedPattern.seed_pattern_name
+        }
+      ]
+    }) ?? []
   )
 }
 

@@ -2,6 +2,7 @@
 
 import { OwnerOnly } from '@/components/generic/owner-only'
 import { UserAvatar } from '@/components/generic/user-avatar'
+import { UnshareBlockersDialog } from '@/components/settlement/sharing/unshare-blockers-dialog'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -17,8 +18,10 @@ import { useToast } from '@/hooks/use-toast'
 import {
   addSettlementSharedUsers,
   getSettlementSharedUsers,
+  getUnshareBlockers,
   removeSettlementSharedUsers,
-  SettlementCollaboratorDetail
+  SettlementCollaboratorDetail,
+  UnshareBlockerDetail
 } from '@/lib/dal/settlement-shared-user'
 import {
   getUserId,
@@ -29,6 +32,7 @@ import {
   ERROR_MESSAGE,
   SETTLEMENT_SHARE_ALREADY_SHARED_MESSAGE,
   SETTLEMENT_SHARE_INVITE_SUCCESS_MESSAGE,
+  SETTLEMENT_SHARE_REVOKE_BLOCKED_MESSAGE,
   SETTLEMENT_SHARE_REVOKE_SUCCESS_MESSAGE,
   SETTLEMENT_SHARE_SELF_INVITE_MESSAGE,
   SETTLEMENT_SHARE_USERNAME_NOT_FOUND_MESSAGE,
@@ -142,6 +146,17 @@ function CollaboratorsPanelContent({
     () => new Set()
   )
 
+  // Unshare-blockers dialog state. The dialog is opened by `handleRevoke`
+  // when the pre-flight `get_unshare_blockers` RPC returns a non-empty
+  // list; closing it returns to the panel without revoking. The username
+  // is captured at click-time so the dialog header still reads correctly
+  // if the collaborators list is concurrently mutated by realtime.
+  const [blockersDialog, setBlockersDialog] = useState<{
+    open: boolean
+    username: string
+    blockers: UnshareBlockerDetail[]
+  }>({ open: false, username: '', blockers: [] })
+
   const settlementId = selectedSettlement.id
 
   /**
@@ -253,17 +268,25 @@ function CollaboratorsPanelContent({
   /**
    * Handle Revoke Click
    *
-   * Optimistically removes the collaborator from the list, then persists
-   * the revoke. The unshare-blockers dialog (E1.8) is intentionally not
-   * wired up yet — when that issue lands, the call to
-   * `getUnshareBlockers` should be inserted before the optimistic update
-   * here and the blockers modal opened when the result is non-empty.
+   * Calls `get_unshare_blockers` first; if the soon-to-be-revoked
+   * collaborator authored custom catalog rows still attached to the
+   * settlement, opens the blockers dialog and aborts the revoke (per
+   * plan decision **D8** — hard-error, not auto-cascade). Otherwise
+   * optimistically removes the collaborator from the list and persists
+   * the revoke.
    *
-   * On failure we re-fetch via `refresh()` rather than restoring a
-   * snapshot of the prior list. A snapshot rollback would clobber any
-   * concurrent invite/revoke (or realtime update) that landed while the
-   * request was in flight; re-fetching gets the canonical state from
-   * the server and is safe to interleave with other pending mutations.
+   * On failure of the underlying delete we re-fetch via `refresh()`
+   * rather than restoring a snapshot of the prior list. A snapshot
+   * rollback would clobber any concurrent invite/revoke (or realtime
+   * update) that landed while the request was in flight; re-fetching
+   * gets the canonical state from the server and is safe to interleave
+   * with other pending mutations.
+   *
+   * The blockers fetch itself is treated as a hard error — surfacing
+   * a generic toast and skipping the revoke — because letting the
+   * revoke proceed without verifying blockers would silently produce
+   * dead attachments and is exactly the failure mode this RPC exists
+   * to prevent.
    *
    * @param sharedUserId Shared User ID
    */
@@ -279,21 +302,49 @@ function CollaboratorsPanelContent({
         return next
       })
 
-      // Optimistic remove via functional update so the change composes
-      // cleanly with any other in-flight optimistic updates.
-      setCollaborators((prev) =>
-        prev.filter((c) => c.shared_user_id !== sharedUserId)
-      )
-
       try {
-        await removeSettlementSharedUsers(settlementId, [sharedUserId])
-        toast.success(SETTLEMENT_SHARE_REVOKE_SUCCESS_MESSAGE())
+        // Pre-flight check: any custom catalog rows authored by this
+        // collaborator still attached to the settlement?
+        const blockers = await getUnshareBlockers(settlementId, sharedUserId)
+
+        if (blockers.length > 0) {
+          // Snapshot the username at click-time. If the collaborators
+          // list mutates while the dialog is open, the header still
+          // reads correctly.
+          const target = collaborators.find(
+            (c) => c.shared_user_id === sharedUserId
+          )
+          setBlockersDialog({
+            open: true,
+            username: target?.username ?? '',
+            blockers
+          })
+          // Hard-block per D8: surface a coherent toast alongside the
+          // dialog so users with reduced motion / off-screen dialogs
+          // still get the why.
+          toast.error(SETTLEMENT_SHARE_REVOKE_BLOCKED_MESSAGE())
+          return
+        }
+
+        // Optimistic remove via functional update so the change composes
+        // cleanly with any other in-flight optimistic updates.
+        setCollaborators((prev) =>
+          prev.filter((c) => c.shared_user_id !== sharedUserId)
+        )
+
+        try {
+          await removeSettlementSharedUsers(settlementId, [sharedUserId])
+          toast.success(SETTLEMENT_SHARE_REVOKE_SUCCESS_MESSAGE())
+        } catch (err) {
+          console.error('Settlement Share Revoke Error:', err)
+          toast.error(ERROR_MESSAGE())
+          // Re-sync from the server instead of restoring a snapshot —
+          // see function-level comment.
+          await refresh()
+        }
       } catch (err) {
-        console.error('Settlement Share Revoke Error:', err)
+        console.error('Settlement Share Unshare Blockers Error:', err)
         toast.error(ERROR_MESSAGE())
-        // Re-sync from the server instead of restoring a snapshot —
-        // see function-level comment.
-        await refresh()
       } finally {
         setRevokingUserIds((prev) => {
           const next = new Set(prev)
@@ -302,7 +353,7 @@ function CollaboratorsPanelContent({
         })
       }
     },
-    [refresh, revokingUserIds, settlementId, toast]
+    [collaborators, refresh, revokingUserIds, settlementId, toast]
   )
 
   const trimmedUsername = username.trim()
@@ -404,6 +455,14 @@ function CollaboratorsPanelContent({
           )}
         </div>
       </CardContent>
+      <UnshareBlockersDialog
+        open={blockersDialog.open}
+        onOpenChange={(open) =>
+          setBlockersDialog((prev) => ({ ...prev, open }))
+        }
+        username={blockersDialog.username}
+        blockers={blockersDialog.blockers}
+      />
     </Card>
   )
 }

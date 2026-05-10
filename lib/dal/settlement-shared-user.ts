@@ -126,3 +126,71 @@ export async function removeSettlementSharedUsers(
   if (error)
     throw new Error(`Error Removing Settlement Shared Users: ${error.message}`)
 }
+
+/**
+ * Unshare Blocker Detail
+ *
+ * One catalog row that prevents the owner from revoking a settlement
+ * collaborator: the row is `custom`, was authored by the collaborator,
+ * and is still attached to the settlement. Surfaced to the share-management
+ * panel so the owner can be told what to detach before retrying.
+ *
+ * `kind` mirrors the catalog table name (e.g. `'knowledge'`, `'gear'`,
+ * `'quarry'`); the dialog groups blockers by it. `itemName` is the
+ * canonical display string of the row (`knowledge_name`, `gear_name`,
+ * `monster_name`, …). `itemId` is provided so future iterations can deep
+ * link to the attachment, but the dialog does not need to render it
+ * today.
+ */
+export interface UnshareBlockerDetail {
+  /** Catalog Kind (e.g. `knowledge`, `gear`, `quarry`) */
+  kind: string
+  /** Catalog Display Name */
+  itemName: string
+  /** Catalog Row ID */
+  itemId: string
+}
+
+/**
+ * Get Unshare Blockers
+ *
+ * Calls the `get_unshare_blockers` SECURITY DEFINER RPC to enumerate
+ * custom catalog rows authored by `sharedUserId` that are still attached
+ * to `settlementId`. The owner of the settlement must detach every
+ * returned row before {@link removeSettlementSharedUsers} can produce a
+ * clean revoke (the catalog rows would otherwise become unreadable to
+ * the remaining members of the settlement once the share is dropped).
+ *
+ * The RPC enforces ownership server-side: collaborators and unrelated
+ * callers receive an empty list. Anonymous callers are blocked at the
+ * GRANT layer, which surfaces here as a thrown error rather than an
+ * empty list.
+ *
+ * @param settlementId Settlement ID
+ * @param sharedUserId Shared User ID (the collaborator about to be revoked)
+ * @returns Blocker List (empty when the revoke is safe to proceed)
+ */
+export async function getUnshareBlockers(
+  settlementId: string,
+  sharedUserId: string
+): Promise<UnshareBlockerDetail[]> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase.rpc('get_unshare_blockers', {
+    p_settlement_id: settlementId,
+    p_shared_user_id: sharedUserId
+  })
+
+  if (error)
+    throw new Error(`Error Fetching Unshare Blockers: ${error.message}`)
+
+  if (!data || data.length === 0) return []
+
+  return data.map(
+    (row: { kind: string; item_name: string; item_id: string }) => ({
+      kind: row.kind,
+      itemName: row.item_name,
+      itemId: row.item_id
+    })
+  )
+}

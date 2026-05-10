@@ -2616,3 +2616,19 @@ export const SETTLEMENT_SHARE_SELF_INVITE_MESSAGE = () =>
  */
 export const SETTLEMENT_SHARE_REVOKE_SUCCESS_MESSAGE = () =>
   'The lantern dims. They walk in darkness once more.'
+
+/**
+ * Settlement Share Revoke Blocked
+ *
+ * Shown to the owner when `get_unshare_blockers` returns a non-empty list:
+ * the soon-to-be-revoked collaborator authored custom catalog rows that are
+ * still attached to the settlement, so the revoke must be deferred until the
+ * owner removes those rows.
+ *
+ * Used as the title / lead of the {@link UnshareBlockersDialog}; the dialog
+ * lists the specific blocking items below it.
+ *
+ * @returns Settlement Share Revoke Blocked Message
+ */
+export const SETTLEMENT_SHARE_REVOKE_BLOCKED_MESSAGE = () =>
+  'They have left their light here. Gather it before they walk in darkness.'

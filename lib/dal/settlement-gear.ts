@@ -24,14 +24,26 @@ export async function getSettlementGear(
 
   if (error) throw new Error(`Error Fetching Settlement Gear: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-7).
   return (
-    data?.map((item) => ({
-      gear_id: item.gear_id,
-      gear_name: (item.gear as unknown as { gear_name: string }).gear_name,
-      id: item.id,
-      quantity: item.quantity,
-      custom: !!(item.gear as unknown as { custom: boolean }).custom
-    })) ?? []
+    data?.flatMap((item) => {
+      const gear = item.gear as unknown as {
+        gear_name: string
+        custom: boolean
+      } | null
+
+      if (!gear) return []
+
+      return [
+        {
+          gear_id: item.gear_id,
+          gear_name: gear.gear_name,
+          id: item.id,
+          quantity: item.quantity,
+          custom: !!gear.custom
+        }
+      ]
+    }) ?? []
   )
 }
 

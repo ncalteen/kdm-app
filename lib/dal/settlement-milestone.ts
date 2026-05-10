@@ -27,24 +27,29 @@ export async function getSettlementMilestones(
   if (error)
     throw new Error(`Error Fetching Settlement Milestones: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-7).
   return (
-    data?.map((item) => {
+    data?.flatMap((item) => {
       const milestone = item.milestone as unknown as {
         event_name: string
         milestone_name: string
         requirements: string | null
         rules: string | null
-      }
+      } | null
 
-      return {
-        complete: item.complete,
-        event_name: milestone.event_name,
-        id: item.id,
-        milestone_id: item.milestone_id,
-        milestone_name: milestone.milestone_name,
-        requirements: milestone.requirements,
-        rules: milestone.rules
-      }
+      if (!milestone) return []
+
+      return [
+        {
+          complete: item.complete,
+          event_name: milestone.event_name,
+          id: item.id,
+          milestone_id: item.milestone_id,
+          milestone_name: milestone.milestone_name,
+          requirements: milestone.requirements,
+          rules: milestone.rules
+        }
+      ]
     }) ?? []
   )
 }

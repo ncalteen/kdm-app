@@ -26,8 +26,9 @@ export async function getSettlementQuarries(
   if (error)
     throw new Error(`Error Fetching Settlement Quarries: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-7).
   return (
-    data?.map((item) => {
+    data?.flatMap((item) => {
       const quarry = item.quarry as unknown as {
         monster_name: string
         node: string
@@ -38,26 +39,30 @@ export async function getSettlementQuarries(
         defeat_outcome: string | null
         deployment_rules: string | null
         victory_outcome: string | null
-      }
+      } | null
 
-      return {
-        collective_cognition_level_1: item.collective_cognition_level_1,
-        collective_cognition_level_2: item.collective_cognition_level_2,
-        collective_cognition_level_3: item.collective_cognition_level_3,
-        collective_cognition_prologue: item.collective_cognition_prologue,
-        id: item.id,
-        monster_name: quarry.monster_name,
-        node: quarry.node,
-        prologue: quarry.prologue,
-        quarry_id: item.quarry_id,
-        unlocked: item.unlocked,
-        instinct: quarry.instinct,
-        basic_action: quarry.basic_action,
-        blind_spot: quarry.blind_spot,
-        defeat_outcome: quarry.defeat_outcome,
-        deployment_rules: quarry.deployment_rules,
-        victory_outcome: quarry.victory_outcome
-      }
+      if (!quarry) return []
+
+      return [
+        {
+          collective_cognition_level_1: item.collective_cognition_level_1,
+          collective_cognition_level_2: item.collective_cognition_level_2,
+          collective_cognition_level_3: item.collective_cognition_level_3,
+          collective_cognition_prologue: item.collective_cognition_prologue,
+          id: item.id,
+          monster_name: quarry.monster_name,
+          node: quarry.node,
+          prologue: quarry.prologue,
+          quarry_id: item.quarry_id,
+          unlocked: item.unlocked,
+          instinct: quarry.instinct,
+          basic_action: quarry.basic_action,
+          blind_spot: quarry.blind_spot,
+          defeat_outcome: quarry.defeat_outcome,
+          deployment_rules: quarry.deployment_rules,
+          victory_outcome: quarry.victory_outcome
+        }
+      ]
     }) ?? []
   )
 }

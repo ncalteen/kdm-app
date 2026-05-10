@@ -25,20 +25,25 @@ export async function getSettlementLocations(
   if (error)
     throw new Error(`Error Fetching Settlement Locations: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-7).
   return (
-    data?.map((item) => {
+    data?.flatMap((item) => {
       const location = item.location as unknown as {
         location_name: string
         rules: string | null
-      }
+      } | null
 
-      return {
-        id: item.id,
-        location_id: item.location_id,
-        location_name: location.location_name,
-        rules: location.rules,
-        unlocked: item.unlocked
-      }
+      if (!location) return []
+
+      return [
+        {
+          id: item.id,
+          location_id: item.location_id,
+          location_name: location.location_name,
+          rules: location.rules,
+          unlocked: item.unlocked
+        }
+      ]
     }) ?? []
   )
 }

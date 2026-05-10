@@ -16,7 +16,8 @@ vi.mock('@/lib/dal/user', () => ({
 const {
   getSettlementSharedUsers,
   addSettlementSharedUsers,
-  removeSettlementSharedUsers
+  removeSettlementSharedUsers,
+  getUnshareBlockers
 } = await import('@/lib/dal/settlement-shared-user')
 const { getUserId } = await import('@/lib/dal/user')
 
@@ -183,5 +184,63 @@ describe('removeSettlementSharedUsers', () => {
     await expect(
       removeSettlementSharedUsers('settlement-1', ['u-1'])
     ).rejects.toThrow('Error Removing Settlement Shared Users: Delete failed')
+  })
+})
+
+describe('getUnshareBlockers', () => {
+  it('calls the get_unshare_blockers RPC and maps snake_case rows to camelCase', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: [
+        {
+          kind: 'knowledge',
+          item_name: 'Custom Knowledge',
+          item_id: 'k-1'
+        },
+        {
+          kind: 'gear',
+          item_name: 'Custom Gear',
+          item_id: 'g-1'
+        }
+      ],
+      error: null
+    })
+
+    const result = await getUnshareBlockers('settlement-1', 'user-2')
+
+    expect(mockSupabase.rpc).toHaveBeenCalledWith('get_unshare_blockers', {
+      p_settlement_id: 'settlement-1',
+      p_shared_user_id: 'user-2'
+    })
+    expect(result).toEqual([
+      { kind: 'knowledge', itemName: 'Custom Knowledge', itemId: 'k-1' },
+      { kind: 'gear', itemName: 'Custom Gear', itemId: 'g-1' }
+    ])
+  })
+
+  it('returns empty array when the RPC returns null data', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: null })
+
+    const result = await getUnshareBlockers('settlement-1', 'user-2')
+
+    expect(result).toEqual([])
+  })
+
+  it('returns empty array when the RPC returns an empty list', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
+
+    const result = await getUnshareBlockers('settlement-1', 'user-2')
+
+    expect(result).toEqual([])
+  })
+
+  it('throws on RPC error', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'permission denied' }
+    })
+
+    await expect(getUnshareBlockers('settlement-1', 'user-2')).rejects.toThrow(
+      'Error Fetching Unshare Blockers: permission denied'
+    )
   })
 })

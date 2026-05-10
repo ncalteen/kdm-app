@@ -25,13 +25,23 @@ export async function getSettlementPatterns(
   if (error)
     throw new Error(`Error Fetching Settlement Patterns: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-7).
   return (
-    data?.map((item) => ({
-      id: item.id,
-      pattern_id: item.pattern_id,
-      pattern_name: (item.pattern as unknown as { pattern_name: string })
-        .pattern_name
-    })) ?? []
+    data?.flatMap((item) => {
+      const pattern = item.pattern as unknown as {
+        pattern_name: string
+      } | null
+
+      if (!pattern) return []
+
+      return [
+        {
+          id: item.id,
+          pattern_id: item.pattern_id,
+          pattern_name: pattern.pattern_name
+        }
+      ]
+    }) ?? []
   )
 }
 

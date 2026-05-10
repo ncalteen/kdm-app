@@ -29,22 +29,27 @@ export async function getSettlementCollectiveCognitionRewards(
       `Error Fetching Settlement Collective Cognition Rewards: ${error.message}`
     )
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-7).
   return (
-    data?.map((item) => {
+    data?.flatMap((item) => {
       const reward = item.collective_cognition_reward as unknown as {
         reward_name: string
         collective_cognition: number
         rules: string | null
-      }
+      } | null
 
-      return {
-        collective_cognition_reward_id: item.collective_cognition_reward_id,
-        id: item.id,
-        unlocked: item.unlocked,
-        reward_name: reward.reward_name,
-        collective_cognition: reward.collective_cognition,
-        rules: reward.rules
-      }
+      if (!reward) return []
+
+      return [
+        {
+          collective_cognition_reward_id: item.collective_cognition_reward_id,
+          id: item.id,
+          unlocked: item.unlocked,
+          reward_name: reward.reward_name,
+          collective_cognition: reward.collective_cognition,
+          rules: reward.rules
+        }
+      ]
     }) ?? []
   )
 }

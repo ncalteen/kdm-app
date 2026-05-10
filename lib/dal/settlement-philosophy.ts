@@ -27,8 +27,9 @@ export async function getSettlementPhilosophies(
   if (error)
     throw new Error(`Error Fetching Settlement Philosophies: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-7).
   return (
-    data?.map((item) => {
+    data?.flatMap((item) => {
       const philosophy = item.philosophy as unknown as {
         custom: boolean
         philosophy_name: string
@@ -36,18 +37,22 @@ export async function getSettlementPhilosophies(
         tenet_knowledge_id: string | null
         tier: number | null
         neurosis_id: string | null
-      }
+      } | null
 
-      return {
-        id: item.id,
-        philosophy_id: item.philosophy_id,
-        philosophy_name: philosophy.philosophy_name,
-        hunt_xp_milestones: philosophy.hunt_xp_milestones,
-        tenet_knowledge_id: philosophy.tenet_knowledge_id,
-        tier: philosophy.tier,
-        neurosis_id: philosophy.neurosis_id,
-        custom: philosophy.custom
-      }
+      if (!philosophy) return []
+
+      return [
+        {
+          id: item.id,
+          philosophy_id: item.philosophy_id,
+          philosophy_name: philosophy.philosophy_name,
+          hunt_xp_milestones: philosophy.hunt_xp_milestones,
+          tenet_knowledge_id: philosophy.tenet_knowledge_id,
+          tier: philosophy.tier,
+          neurosis_id: philosophy.neurosis_id,
+          custom: philosophy.custom
+        }
+      ]
     }) ?? []
   )
 }
