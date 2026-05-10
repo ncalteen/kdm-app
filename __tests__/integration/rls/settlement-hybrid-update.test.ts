@@ -112,7 +112,11 @@ describe('RLS: hybrid settlement UPDATE policy', () => {
         .select('id')
 
       expect(error).not.toBeNull()
-      expect(error?.code).toMatch(/0A000|PGRST/)
+      // Strict check on the exact SQLSTATE raised by
+      // `enforce_settlement_owner_only_columns` — a generic PGRST* error
+      // would mean the request was denied earlier (e.g. by RLS) and the
+      // trigger never fired.
+      expect(error?.code).toBe('0A000')
       expect(data ?? []).toHaveLength(0)
 
       const { data: after } = await admin
@@ -133,7 +137,7 @@ describe('RLS: hybrid settlement UPDATE policy', () => {
       .eq('id', settlementId)
       .select('id')
     expect(error).not.toBeNull()
-    expect(error?.code).toMatch(/0A000|PGRST/)
+    expect(error?.code).toBe('0A000')
     expect(data ?? []).toHaveLength(0)
 
     const { data: after } = await admin
@@ -175,6 +179,33 @@ describe('RLS: hybrid settlement UPDATE policy', () => {
         uses_scouts: false
       })
       .eq('id', settlementId)
+  })
+
+  // ---------------------------------------------------------------------------
+  // Immutable columns — both owner and collaborator are blocked from
+  // changing `id` / `created_at`. The trigger raises before the
+  // owner-only-column branch is consulted, so the error code is the same.
+  // ---------------------------------------------------------------------------
+  it('owner CANNOT UPDATE created_at (immutable)', async () => {
+    const { data, error } = await owner.client
+      .from('settlement')
+      .update({ created_at: '2000-01-01T00:00:00Z' })
+      .eq('id', settlementId)
+      .select('id')
+    expect(error).not.toBeNull()
+    expect(error?.code).toBe('0A000')
+    expect(data ?? []).toHaveLength(0)
+  })
+
+  it('collaborator CANNOT UPDATE created_at (immutable)', async () => {
+    const { data, error } = await collaborator.client
+      .from('settlement')
+      .update({ created_at: '2000-01-01T00:00:00Z' })
+      .eq('id', settlementId)
+      .select('id')
+    expect(error).not.toBeNull()
+    expect(error?.code).toBe('0A000')
+    expect(data ?? []).toHaveLength(0)
   })
 
   // ---------------------------------------------------------------------------

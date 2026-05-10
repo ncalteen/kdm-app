@@ -18,17 +18,29 @@
 -- -------
 --   * `enforce_settlement_owner_only_columns()` — BEFORE UPDATE row trigger,
 --     SECURITY INVOKER (default) so `auth.uid()` resolves to the calling
---     user. If the caller is the row's owner (or the trigger is running
---     outside an authenticated session, e.g. service role / direct DB
---     access), it returns NEW unchanged. Otherwise it raises SQLSTATE
---     `feature_not_supported` (0A000) when any of the owner-only columns
---     would change between OLD and NEW.
---   * `is_admin()` callers are also bypassed so the existing
---     "Allow all for admin" policy continues to govern admin behaviour.
+--     user. Decision flow:
+--       1. Service role / direct-DB callers (`auth.uid() is null`) and
+--          admins return NEW unchanged. They may need to fix data via
+--          migrations.
+--       2. All other authenticated callers — owner included — are blocked
+--          from changing the immutable `id` / `created_at` columns.
+--       3. The owner returns NEW unchanged for everything else.
+--       4. Collaborators are blocked from mutating any of the owner-only
+--          columns.
+--     All blocking branches raise SQLSTATE `feature_not_supported`
+--     (`0A000`).
 --
 -- Owner-only columns (collaborators denied):
 --   `settlement_name`, `campaign_type`, `survivor_type`, `uses_scouts`,
 --   `user_id`.
+--
+-- Immutable columns (every non-owner caller denied; owner is also blocked
+-- because mutating the row's primary key or audit timestamp is never the
+-- intended UI flow):
+--   `id`, `created_at`.
+--
+-- `updated_at` is intentionally left unguarded; it is rewritten in place by
+-- the `set_updated_at` trigger that runs immediately after this one.
 --
 -- Collaborator-editable columns (allowed by RLS, no trigger guard):
 --   `arrival_bonuses`, `current_year`, `departing_bonuses`, `notes`,
@@ -61,13 +73,24 @@ create or replace function enforce_settlement_owner_only_columns()
 returns trigger language plpgsql security invoker
 set search_path = '' as $$
 declare caller uuid := auth.uid();
-begin -- Bypass for service role / direct DB connections (no auth context),
--- the row owner, or admins.
+begin -- Bypass for service role / direct DB connections (no auth context) and
+-- admins. They may need to fix or backfill data via migrations.
 if caller is null
-or caller = old.user_id
 or public.is_admin() then return new;
 end if;
--- Non-owner caller: every owner-only column must remain unchanged.
+-- Authenticated callers (owner OR collaborator) must not change the
+-- immutable identity / audit columns. There is no UI flow that mutates
+-- these.
+if new.id is distinct
+from old.id
+  or new.created_at is distinct
+from old.created_at then raise exception 'settlement.id and settlement.created_at are immutable' using errcode = 'feature_not_supported';
+end if;
+-- Owner has full authority over the remaining columns.
+if caller = old.user_id then return new;
+end if;
+-- Non-owner caller (collaborator): every owner-only column must remain
+-- unchanged.
 if new.settlement_name is distinct
 from old.settlement_name
   or new.campaign_type is distinct

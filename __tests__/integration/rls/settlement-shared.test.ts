@@ -91,9 +91,11 @@ describe('RLS: shared-user access on settlement', () => {
       .select('id')
 
     expect(error).not.toBeNull()
-    // PGRST204 / 0A000 (feature_not_supported) — Postgres surfaces the
-    // raise in the trigger via PostgREST as the SQLSTATE code.
-    expect(error?.code).toMatch(/0A000|PGRST/)
+    // Strict check on the exact SQLSTATE raised by
+    // `enforce_settlement_owner_only_columns`. A generic PGRST* code would
+    // mean the request was denied earlier (e.g. by RLS), which is not what
+    // this test pins.
+    expect(error?.code).toBe('0A000')
     expect(data ?? []).toHaveLength(0)
 
     // Confirm the row was not modified.
