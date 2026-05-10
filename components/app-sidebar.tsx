@@ -105,7 +105,16 @@ const navSquires = [
     title: 'Notes',
     tab: TabType.NOTES,
     icon: NotebookPenIcon
-  }
+  },
+  ...(process.env.NODE_ENV === 'development'
+    ? [
+        {
+          title: 'Sharing',
+          tab: TabType.SHARING,
+          icon: Share2Icon
+        }
+      ]
+    : [])
 ]
 
 /**
@@ -145,15 +154,6 @@ const navSettings = [
     tab: TabType.USER,
     icon: UserIcon
   },
-  ...(process.env.NODE_ENV === 'development'
-    ? [
-        {
-          title: 'Sharing',
-          tab: TabType.SHARING,
-          icon: Share2Icon
-        }
-      ]
-    : []),
   {
     title: 'Settings',
     tab: TabType.SETTINGS,
