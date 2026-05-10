@@ -1,6 +1,20 @@
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementNemesisDetail } from '@/lib/types'
 
+type EmbeddedNemesis = {
+  custom: boolean
+  monster_name: string
+  node: string
+  instinct: string | null
+  basic_action: string | null
+  blind_spot: string | null
+  defeat_outcome: string | null
+  deployment_rules: string | null
+  victory_outcome: string | null
+}
+
+type RawEmbeddedNemesis = EmbeddedNemesis | EmbeddedNemesis[] | null
+
 /**
  * Get Settlement Nemeses
  *
@@ -50,30 +64,7 @@ export async function getSettlementNemeses(
   // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
   // local/sharing-architecture.md — transitive visibility gap).
   return data.flatMap((item) => {
-    const rawNemesis = item.nemesis as unknown as
-      | {
-          custom: boolean
-          monster_name: string
-          node: string
-          instinct: string | null
-          basic_action: string | null
-          blind_spot: string | null
-          defeat_outcome: string | null
-          deployment_rules: string | null
-          victory_outcome: string | null
-        }
-      | {
-          custom: boolean
-          monster_name: string
-          node: string
-          instinct: string | null
-          basic_action: string | null
-          blind_spot: string | null
-          defeat_outcome: string | null
-          deployment_rules: string | null
-          victory_outcome: string | null
-        }[]
-      | null
+    const rawNemesis = item.nemesis as unknown as RawEmbeddedNemesis
 
     const nemesis = Array.isArray(rawNemesis)
       ? (rawNemesis[0] ?? null)
@@ -171,30 +162,7 @@ export async function addSettlementNemeses(
   }
 
   return data.flatMap((item) => {
-    const rawNemesis = item.nemesis as unknown as
-      | {
-          custom: boolean
-          monster_name: string
-          node: string
-          instinct: string | null
-          basic_action: string | null
-          blind_spot: string | null
-          defeat_outcome: string | null
-          deployment_rules: string | null
-          victory_outcome: string | null
-        }
-      | {
-          custom: boolean
-          monster_name: string
-          node: string
-          instinct: string | null
-          basic_action: string | null
-          blind_spot: string | null
-          defeat_outcome: string | null
-          deployment_rules: string | null
-          victory_outcome: string | null
-        }[]
-      | null
+    const rawNemesis = item.nemesis as unknown as RawEmbeddedNemesis
 
     const nemesis = Array.isArray(rawNemesis)
       ? (rawNemesis[0] ?? null)
