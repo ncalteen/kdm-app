@@ -29,10 +29,15 @@ export async function getSettlementLocations(
   // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
-      const location = item.location as unknown as {
-        location_name: string
-        rules: string | null
-      } | null
+      const rawLocation = item.location as unknown
+      const location = (
+        Array.isArray(rawLocation) ? rawLocation[0] ?? null : rawLocation
+      ) as
+        | {
+            location_name: string
+            rules: string | null
+          }
+        | null
 
       if (!location) return []
 

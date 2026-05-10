@@ -33,11 +33,22 @@ export async function getSettlementCollectiveCognitionRewards(
   // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
-      const reward = item.collective_cognition_reward as unknown as {
-        reward_name: string
-        collective_cognition: number
-        rules: string | null
-      } | null
+      const embeddedReward = item.collective_cognition_reward as unknown as
+        | {
+            reward_name: string
+            collective_cognition: number
+            rules: string | null
+          }
+        | {
+            reward_name: string
+            collective_cognition: number
+            rules: string | null
+          }[]
+        | null
+
+      const reward = Array.isArray(embeddedReward)
+        ? embeddedReward[0] ?? null
+        : embeddedReward
 
       if (!reward) return []
 

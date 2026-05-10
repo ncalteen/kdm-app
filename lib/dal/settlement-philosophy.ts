@@ -31,14 +31,28 @@ export async function getSettlementPhilosophies(
   // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
-      const philosophy = item.philosophy as unknown as {
-        custom: boolean
-        philosophy_name: string
-        hunt_xp_milestones: number[] | null
-        tenet_knowledge_id: string | null
-        tier: number | null
-        neurosis_id: string | null
-      } | null
+      const rawPhilosophy = item.philosophy as unknown as
+        | {
+            custom: boolean
+            philosophy_name: string
+            hunt_xp_milestones: number[] | null
+            tenet_knowledge_id: string | null
+            tier: number | null
+            neurosis_id: string | null
+          }
+        | {
+            custom: boolean
+            philosophy_name: string
+            hunt_xp_milestones: number[] | null
+            tenet_knowledge_id: string | null
+            tier: number | null
+            neurosis_id: string | null
+          }[]
+        | null
+
+      const philosophy = Array.isArray(rawPhilosophy)
+        ? (rawPhilosophy[0] ?? null)
+        : rawPhilosophy
 
       if (!philosophy) return []
 

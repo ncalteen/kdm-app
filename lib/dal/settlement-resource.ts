@@ -31,13 +31,23 @@ export async function getSettlementResources(
   // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
-      const res = item.resource as unknown as {
-        category: string
-        quarry_id: string | null
-        resource_name: string
-        resource_types: string[]
-        quarry: { monster_name: string; node: string } | null
-      } | null
+      const resource = item.resource as unknown as
+        | {
+            category: string
+            quarry_id: string | null
+            resource_name: string
+            resource_types: string[]
+            quarry: { monster_name: string; node: string } | null
+          }
+        | {
+            category: string
+            quarry_id: string | null
+            resource_name: string
+            resource_types: string[]
+            quarry: { monster_name: string; node: string } | null
+          }[]
+        | null
+      const res = Array.isArray(resource) ? resource[0] ?? null : resource
 
       if (!res) return []
 

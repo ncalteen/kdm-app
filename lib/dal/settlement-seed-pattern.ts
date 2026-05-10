@@ -28,9 +28,18 @@ export async function getSettlementSeedPatterns(
   // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
-      const seedPattern = item.seed_pattern as unknown as {
-        seed_pattern_name: string
-      } | null
+      const seedPatternRelation = item.seed_pattern as unknown as
+        | {
+            seed_pattern_name: string
+          }
+        | {
+            seed_pattern_name: string
+          }[]
+        | null
+
+      const seedPattern = Array.isArray(seedPatternRelation)
+        ? (seedPatternRelation[0] ?? null)
+        : seedPatternRelation
 
       if (!seedPattern) return []
 

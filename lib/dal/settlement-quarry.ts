@@ -30,17 +30,32 @@ export async function getSettlementQuarries(
   // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
-      const quarry = item.quarry as unknown as {
-        monster_name: string
-        node: string
-        prologue: boolean
-        instinct: string | null
-        basic_action: string | null
-        blind_spot: string | null
-        defeat_outcome: string | null
-        deployment_rules: string | null
-        victory_outcome: string | null
-      } | null
+      const rawQuarry = item.quarry as unknown as
+        | {
+            monster_name: string
+            node: string
+            prologue: boolean
+            instinct: string | null
+            basic_action: string | null
+            blind_spot: string | null
+            defeat_outcome: string | null
+            deployment_rules: string | null
+            victory_outcome: string | null
+          }
+        | {
+            monster_name: string
+            node: string
+            prologue: boolean
+            instinct: string | null
+            basic_action: string | null
+            blind_spot: string | null
+            defeat_outcome: string | null
+            deployment_rules: string | null
+            victory_outcome: string | null
+          }[]
+        | null
+
+      const quarry = Array.isArray(rawQuarry) ? rawQuarry[0] ?? null : rawQuarry
 
       if (!quarry) return []
 

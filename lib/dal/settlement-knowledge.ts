@@ -35,14 +35,28 @@ export async function getSettlementKnowledges(
   // surfaces the hidden attachments when the owner tries to revoke access.
   return (
     data?.flatMap((item) => {
-      const knowledge = item.knowledge as unknown as {
-        custom: boolean
-        knowledge_name: string
-        philosophy_id: string | null
-        rules: string | null
-        observation_conditions: string | null
-        observation_rank_up_milestone: number | null
-      } | null
+      const rawKnowledge = item.knowledge as unknown as
+        | {
+            custom: boolean
+            knowledge_name: string
+            philosophy_id: string | null
+            rules: string | null
+            observation_conditions: string | null
+            observation_rank_up_milestone: number | null
+          }
+        | {
+            custom: boolean
+            knowledge_name: string
+            philosophy_id: string | null
+            rules: string | null
+            observation_conditions: string | null
+            observation_rank_up_milestone: number | null
+          }[]
+        | null
+
+      const knowledge = Array.isArray(rawKnowledge)
+        ? (rawKnowledge[0] ?? null)
+        : rawKnowledge
 
       if (!knowledge) return []
 

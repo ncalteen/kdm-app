@@ -31,12 +31,24 @@ export async function getSettlementMilestones(
   // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
-      const milestone = item.milestone as unknown as {
-        event_name: string
-        milestone_name: string
-        requirements: string | null
-        rules: string | null
-      } | null
+      const rawMilestone = item.milestone as unknown as
+        | {
+            event_name: string
+            milestone_name: string
+            requirements: string | null
+            rules: string | null
+          }
+        | {
+            event_name: string
+            milestone_name: string
+            requirements: string | null
+            rules: string | null
+          }[]
+        | null
+
+      const milestone = Array.isArray(rawMilestone)
+        ? rawMilestone[0] ?? null
+        : rawMilestone
 
       if (!milestone) return []
 

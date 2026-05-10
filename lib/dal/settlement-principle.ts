@@ -31,13 +31,26 @@ export async function getSettlementPrinciples(
   // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
-      const principle = item.principle as unknown as {
-        principle_name: string
-        option_1_name: string
-        option_2_name: string
-        option_1_rules: string | null
-        option_2_rules: string | null
-      } | null
+      const embeddedPrinciple = item.principle as unknown as
+        | {
+            principle_name: string
+            option_1_name: string
+            option_2_name: string
+            option_1_rules: string | null
+            option_2_rules: string | null
+          }
+        | {
+            principle_name: string
+            option_1_name: string
+            option_2_name: string
+            option_1_rules: string | null
+            option_2_rules: string | null
+          }[]
+        | null
+
+      const principle = Array.isArray(embeddedPrinciple)
+        ? (embeddedPrinciple[0] ?? null)
+        : embeddedPrinciple
 
       if (!principle) return []
 
