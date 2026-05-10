@@ -164,7 +164,8 @@ export function NemesesCard({
         nemesis_id: nemesisId,
         node: nemesisInfo.node,
         unlocked: false,
-        victory_outcome: nemesisInfo.victory_outcome
+        victory_outcome: nemesisInfo.victory_outcome,
+        custom: nemesisInfo.custom
       }
 
       // Capture the updated nemeses list so async callbacks reference it
@@ -237,7 +238,8 @@ export function NemesesCard({
                   location_id: newLocIds[i],
                   location_name: ins.location_name,
                   rules: ins.rules,
-                  unlocked: false
+                  unlocked: false,
+                  custom: ins.custom
                 }))
               }
             }
@@ -553,7 +555,7 @@ export function NemesesCard({
                 <NemesisItem
                   key={nemesis.id}
                   id={nemesis.id}
-                  custom={availableNemeses[nemesis.nemesis_id]?.custom}
+                  custom={nemesis.custom}
                   monsterName={nemesis.monster_name}
                   unlocked={nemesis.unlocked}
                   level1Defeated={nemesis.level_1_defeated}

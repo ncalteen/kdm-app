@@ -151,7 +151,8 @@ export function LocationsCard({
         location_id: locationId,
         location_name: locationInfo.location_name,
         rules: locationInfo.rules ?? null,
-        unlocked: false
+        unlocked: false,
+        custom: locationInfo.custom
       }
 
       // Capture the updated locations list so async callbacks reference it
@@ -338,7 +339,8 @@ export function LocationsCard({
           location_id: newLocation.id,
           location_name: newLocation.location_name,
           rules: newLocation.rules ?? null,
-          unlocked: false
+          unlocked: false,
+          custom: true
         }
         const updatedLocations = [
           ...selectedSettlement.locations,

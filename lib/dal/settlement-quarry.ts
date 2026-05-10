@@ -19,7 +19,7 @@ export async function getSettlementQuarries(
   const { data, error } = await supabase
     .from('settlement_quarry')
     .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(monster_name, node, prologue, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
+      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(custom, monster_name, node, prologue, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
     )
     .eq('settlement_id', settlementId)
 
@@ -32,6 +32,7 @@ export async function getSettlementQuarries(
     data?.flatMap((item) => {
       const rawQuarry = item.quarry as unknown as
         | {
+            custom: boolean
             monster_name: string
             node: string
             prologue: boolean
@@ -43,6 +44,7 @@ export async function getSettlementQuarries(
             victory_outcome: string | null
           }
         | {
+            custom: boolean
             monster_name: string
             node: string
             prologue: boolean
@@ -78,7 +80,8 @@ export async function getSettlementQuarries(
           blind_spot: quarry.blind_spot,
           defeat_outcome: quarry.defeat_outcome,
           deployment_rules: quarry.deployment_rules,
-          victory_outcome: quarry.victory_outcome
+          victory_outcome: quarry.victory_outcome,
+          custom: quarry.custom
         }
       ]
     }) ?? []

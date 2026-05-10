@@ -59,7 +59,7 @@ export const ResourceItem = memo(function ResourceItem({
       <div className="row-start-1 col-start-1 sm:col-end-2 sm:row-start-1 flex flex-col min-w-0 ml-1">
         <CustomRulesText
           className="truncate"
-          custom={customDetail?.custom ?? false}
+          custom={resource.custom}
           description={customDetail?.description}
           label={resource.resource_name}
           sections={customDetail?.sections ?? []}

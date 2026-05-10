@@ -191,7 +191,8 @@ export function PatternsCard({
       const optimisticRow: SettlementDetail['patterns'][0] = {
         id: tempId,
         pattern_id: patternId,
-        pattern_name: patternInfo.pattern_name
+        pattern_name: patternInfo.pattern_name,
+        custom: patternInfo.custom
       }
 
       const updatedPatterns = [...selectedSettlement.patterns, optimisticRow]

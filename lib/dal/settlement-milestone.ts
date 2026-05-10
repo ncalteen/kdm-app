@@ -20,7 +20,7 @@ export async function getSettlementMilestones(
   const { data, error } = await supabase
     .from('settlement_milestone')
     .select(
-      'complete, id, milestone_id, milestone(event_name, milestone_name, requirements, rules)'
+      'complete, id, milestone_id, milestone(custom, event_name, milestone_name, requirements, rules)'
     )
     .eq('settlement_id', settlementId)
 
@@ -33,12 +33,14 @@ export async function getSettlementMilestones(
     data?.flatMap((item) => {
       const rawMilestone = item.milestone as unknown as
         | {
+            custom: boolean
             event_name: string
             milestone_name: string
             requirements: string | null
             rules: string | null
           }
         | {
+            custom: boolean
             event_name: string
             milestone_name: string
             requirements: string | null
@@ -60,7 +62,8 @@ export async function getSettlementMilestones(
           milestone_id: item.milestone_id,
           milestone_name: milestone.milestone_name,
           requirements: milestone.requirements,
-          rules: milestone.rules
+          rules: milestone.rules,
+          custom: milestone.custom
         }
       ]
     }) ?? []

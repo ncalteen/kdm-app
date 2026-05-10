@@ -71,7 +71,7 @@ export const RewardItem = memo(function RewardItem({
       {/* Reward Name */}
       <CustomRulesText
         className="truncate ml-1"
-        custom={customDetail?.custom ?? false}
+        custom={reward.custom}
         description={customDetail?.description}
         label={reward.reward_name}
         sections={

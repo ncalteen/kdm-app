@@ -159,7 +159,8 @@ export function ResourcesCard({
         quantity: 0,
         resource_id: resourceId,
         resource_name: resourceInfo.resource_name,
-        resource_types: resourceInfo.resource_types
+        resource_types: resourceInfo.resource_types,
+        custom: resourceInfo.custom
       }
 
       // Determine whether the resource should also unlock a pattern. Only
@@ -182,7 +183,8 @@ export function ResourcesCard({
           ? {
               id: tempPatternId,
               pattern_id: unlockPatternInfo.id,
-              pattern_name: unlockPatternInfo.pattern_name
+              pattern_name: unlockPatternInfo.pattern_name,
+              custom: unlockPatternInfo.custom
             }
           : null
 

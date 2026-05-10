@@ -56,10 +56,15 @@ export const MilestoneItem = memo(function MilestoneItem({
       {/* Milestone Name */}
       <CustomRulesText
         className="truncate ml-1"
-        custom={customDetail?.custom ?? false}
+        custom={milestone.custom}
         description={customDetail?.description}
         label={milestone.milestone_name}
-        sections={customDetail?.sections ?? []}
+        sections={
+          customDetail?.sections ?? [
+            { label: 'Requirements', content: milestone.requirements },
+            { label: 'Rules', content: milestone.rules }
+          ]
+        }
         title={customDetail?.title ?? milestone.milestone_name}
         showCustomBadge
       />

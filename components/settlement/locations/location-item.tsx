@@ -55,10 +55,14 @@ export const LocationItem = memo(function LocationItem({
       {/* Location Name */}
       <CustomRulesText
         className="truncate ml-1"
-        custom={customDetail?.custom ?? false}
+        custom={location.custom}
         description={customDetail?.description}
         label={location.location_name}
-        sections={customDetail?.sections ?? []}
+        sections={
+          customDetail?.sections ?? [
+            { label: 'Rules', content: location.rules }
+          ]
+        }
         title={customDetail?.title ?? location.location_name}
         showCustomBadge
       />

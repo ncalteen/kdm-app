@@ -80,7 +80,7 @@ export const SeedPatternItem = memo(function SeedPatternItem({
       {/* Seed Pattern Name */}
       <CustomRulesText
         className="truncate ml-1"
-        custom={customDetail?.custom ?? false}
+        custom={seedPattern.custom}
         description={customDetail?.description}
         label={seedPattern.seed_pattern_name}
         sections={customDetail?.sections ?? []}

@@ -19,7 +19,7 @@ export async function getSettlementNemeses(
   const { data, error } = await supabase
     .from('settlement_nemesis')
     .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
+      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(custom, monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
     )
     .eq('settlement_id', settlementId)
 
@@ -77,7 +77,8 @@ export async function getSettlementNemeses(
     ).deployment_rules,
     victory_outcome: (
       item.nemesis as unknown as { victory_outcome: string | null }
-    ).victory_outcome
+    ).victory_outcome,
+    custom: !!(item.nemesis as unknown as { custom: boolean }).custom
   }))
 }
 
@@ -117,7 +118,7 @@ export async function addSettlementNemeses(
       }))
     )
     .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
+      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(custom, monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
     )
 
   if (error)
@@ -171,7 +172,8 @@ export async function addSettlementNemeses(
     ).deployment_rules,
     victory_outcome: (
       item.nemesis as unknown as { victory_outcome: string | null }
-    ).victory_outcome
+    ).victory_outcome,
+    custom: !!(item.nemesis as unknown as { custom: boolean }).custom
   }))
 }
 

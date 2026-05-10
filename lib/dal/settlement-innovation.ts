@@ -21,7 +21,7 @@ export async function getSettlementInnovations(
   const { data, error } = await supabase
     .from('settlement_innovation')
     .select(
-      'id, innovation_id, innovation(innovation_name, rules, consequences, benefits)'
+      'id, innovation_id, innovation(custom, innovation_name, rules, consequences, benefits)'
     )
     .eq('settlement_id', settlementId)
 
@@ -42,7 +42,14 @@ export async function getSettlementInnovations(
         innovation_name: innovation?.innovation_name ?? '',
         rules: innovation?.rules ?? null,
         consequences: innovation?.consequences ?? null,
-        benefits: innovation?.benefits ?? null
+        benefits: innovation?.benefits ?? null,
+        // Pulled directly from the junction so the UI can show the Custom
+        // badge / open the rules sheet for custom rows authored by
+        // collaborators that the owner can only see transitively via
+        // settlement membership (EC-6 in local/sharing-architecture.md).
+        // The catalog `availableInnovations` lookup filters by user_id and
+        // would otherwise return undefined for those rows.
+        custom: !!innovation?.custom
       }
     }) ?? []
   )
@@ -75,7 +82,7 @@ export async function addSettlementInnovations(
       }))
     )
     .select(
-      'id, innovation_id, innovation(innovation_name, rules, consequences, benefits)'
+      'id, innovation_id, innovation(custom, innovation_name, rules, consequences, benefits)'
     )
 
   if (error)
@@ -93,7 +100,8 @@ export async function addSettlementInnovations(
         innovation_name: innovation?.innovation_name ?? '',
         rules: innovation?.rules ?? null,
         consequences: innovation?.consequences ?? null,
-        benefits: innovation?.benefits ?? null
+        benefits: innovation?.benefits ?? null,
+        custom: !!innovation?.custom
       }
     }) ?? []
   )

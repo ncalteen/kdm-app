@@ -41,11 +41,7 @@ import { LightbulbIcon, Plus, PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 
 /** Settlement innovation item with junction table and innovation details */
-type InnovationItem = {
-  id: string
-  innovation_id: string
-  innovation_name: string
-}
+type InnovationItem = SettlementDetail['innovations'][0]
 
 /**
  * Innovations Card Properties
@@ -143,7 +139,11 @@ export function InnovationsCard({
       const optimisticItem: InnovationItem = {
         id: `temp-${crypto.randomUUID()}`,
         innovation_id: innovationId,
-        innovation_name: detail.innovation_name
+        innovation_name: detail.innovation_name,
+        rules: detail.rules ?? null,
+        consequences: detail.consequences ?? null,
+        benefits: detail.benefits ?? null,
+        custom: detail.custom
       }
       const oldInnovations = [...innovations]
 
@@ -293,7 +293,11 @@ export function InnovationsCard({
         const optimisticItem: InnovationItem = {
           id: `temp-${crypto.randomUUID()}`,
           innovation_id: newInnovation.id,
-          innovation_name: newInnovation.innovation_name
+          innovation_name: newInnovation.innovation_name,
+          rules: newInnovation.rules ?? null,
+          consequences: newInnovation.consequences ?? null,
+          benefits: newInnovation.benefits ?? null,
+          custom: true
         }
         const oldInnovations = [...innovations]
 
@@ -435,6 +439,23 @@ export function InnovationsCard({
           <div className="flex-1 overflow-y-auto">
             {sortedInnovations.map(({ item, originalIndex }) => {
               const detail = availableInnovations[item.innovation_id]
+              const sections = detail
+                ? [
+                    { label: 'Rules', content: detail.rules },
+                    {
+                      label: 'Consequences',
+                      content: detail.consequences
+                    },
+                    { label: 'Benefits', content: detail.benefits }
+                  ]
+                : [
+                    { label: 'Rules', content: item.rules },
+                    {
+                      label: 'Consequences',
+                      content: item.consequences
+                    },
+                    { label: 'Benefits', content: item.benefits }
+                  ]
 
               return (
                 <div
@@ -442,20 +463,9 @@ export function InnovationsCard({
                   className="flex items-center gap-2">
                   <CustomRulesText
                     className="ml-1 flex-grow pl-2"
-                    custom={detail?.custom ?? false}
+                    custom={item.custom}
                     label={item.innovation_name}
-                    sections={
-                      detail
-                        ? [
-                            { label: 'Rules', content: detail.rules },
-                            {
-                              label: 'Consequences',
-                              content: detail.consequences
-                            },
-                            { label: 'Benefits', content: detail.benefits }
-                          ]
-                        : []
-                    }
+                    sections={sections}
                     title={item.innovation_name}
                     showCustomBadge
                   />

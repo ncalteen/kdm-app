@@ -20,7 +20,7 @@ export async function getSettlementResources(
   const { data, error } = await supabase
     .from('settlement_resource')
     .select(
-      'id, resource_id, quantity, resource(category, quarry_id, resource_name, resource_types, quarry(monster_name, node))'
+      'id, resource_id, quantity, resource(custom, category, quarry_id, resource_name, resource_types, quarry(monster_name, node))'
     )
     .eq('settlement_id', settlementId)
 
@@ -33,6 +33,7 @@ export async function getSettlementResources(
     data?.flatMap((item) => {
       const resource = item.resource as unknown as
         | {
+            custom: boolean
             category: string
             quarry_id: string | null
             resource_name: string
@@ -40,6 +41,7 @@ export async function getSettlementResources(
             quarry: { monster_name: string; node: string } | null
           }
         | {
+            custom: boolean
             category: string
             quarry_id: string | null
             resource_name: string
@@ -61,7 +63,8 @@ export async function getSettlementResources(
           quarry_node: res.quarry?.node ?? null,
           resource_id: item.resource_id,
           resource_name: res.resource_name,
-          resource_types: res.resource_types
+          resource_types: res.resource_types,
+          custom: res.custom
         }
       ]
     }) ?? []

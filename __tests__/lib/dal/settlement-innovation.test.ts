@@ -37,7 +37,7 @@ describe('getSettlementInnovations', () => {
     const rawItem = {
       id: 'si-1',
       innovation_id: 'i-1',
-      innovation: { innovation_name: 'Cooking' }
+      innovation: { custom: false, innovation_name: 'Cooking' }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -54,7 +54,8 @@ describe('getSettlementInnovations', () => {
         innovation_name: 'Cooking',
         rules: null,
         consequences: null,
-        benefits: null
+        benefits: null,
+        custom: false
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_innovation')
@@ -64,7 +65,7 @@ describe('getSettlementInnovations', () => {
     const rawItem = {
       id: 'si-1',
       innovation_id: 'i-1',
-      innovation: [{ innovation_name: 'Cooking' }]
+      innovation: [{ custom: true, innovation_name: 'Cooking' }]
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -81,7 +82,8 @@ describe('getSettlementInnovations', () => {
         innovation_name: 'Cooking',
         rules: null,
         consequences: null,
-        benefits: null
+        benefits: null,
+        custom: true
       }
     ])
   })
@@ -132,7 +134,7 @@ describe('addSettlementInnovations', () => {
     const rawItem = {
       id: 'si-1',
       innovation_id: 'i-1',
-      innovation: { innovation_name: 'Cooking' }
+      innovation: { custom: false, innovation_name: 'Cooking' }
     }
     const mockSelect = vi
       .fn()
@@ -149,7 +151,8 @@ describe('addSettlementInnovations', () => {
         innovation_name: 'Cooking',
         rules: null,
         consequences: null,
-        benefits: null
+        benefits: null,
+        custom: false
       }
     ])
     expect(mockInsert).toHaveBeenCalledWith([

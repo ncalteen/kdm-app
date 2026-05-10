@@ -134,7 +134,8 @@ export function MilestonesCard({
         milestone_id: milestoneId,
         milestone_name: milestoneInfo.milestone_name,
         requirements: milestoneInfo.requirements ?? null,
-        rules: milestoneInfo.rules ?? null
+        rules: milestoneInfo.rules ?? null,
+        custom: milestoneInfo.custom
       }
 
       // Capture the updated milestones list so async callbacks reference it
@@ -313,7 +314,8 @@ export function MilestonesCard({
           milestone_id: newMilestone.id,
           milestone_name: newMilestone.milestone_name,
           requirements: newMilestone.requirements ?? null,
-          rules: newMilestone.rules ?? null
+          rules: newMilestone.rules ?? null,
+          custom: true
         }
 
         const updatedMilestones = [
