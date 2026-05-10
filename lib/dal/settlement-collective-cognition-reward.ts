@@ -29,7 +29,8 @@ export async function getSettlementCollectiveCognitionRewards(
       `Error Fetching Settlement Collective Cognition Rewards: ${error.message}`
     )
 
-  // Skip rows whose embedded catalog row is invisible under RLS (see EC-7).
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
+  // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
       const reward = item.collective_cognition_reward as unknown as {

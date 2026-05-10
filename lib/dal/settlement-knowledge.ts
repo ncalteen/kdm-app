@@ -29,7 +29,7 @@ export async function getSettlementKnowledges(
 
   // PostgREST returns the embedded catalog row as `null` when the caller can't
   // read it under RLS (e.g., a settlement owner viewing a collaborator's
-  // custom knowledge before transitive visibility lands; see EC-7 in the
+  // custom knowledge before transitive visibility lands; see EC-6 in the
   // sharing architecture doc). Skip those junction rows so the page renders
   // instead of crashing on a null deref. The unshare-blockers dialog (E1.8)
   // surfaces the hidden attachments when the owner tries to revoke access.

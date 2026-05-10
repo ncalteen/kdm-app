@@ -270,25 +270,47 @@ describe('RPC: get_unshare_blockers', () => {
     expect(nemesisRow?.item_name).toBe(blockers.nemesis.name)
   })
 
-  it('returns an empty list when the collaborator has no attached custom rows', async () => {
-    // Use `stranger.id` as the target — they authored no custom rows
-    // attached to this settlement.
+  it('returns an empty list when the target authored no attached custom rows', async () => {
+    // Use a freshly-minted user as the target so the assertion can be a
+    // strict equality with `[]`. Reusing `stranger` is wrong — they
+    // authored the `Stranger Knowledge` negative fixture which IS attached
+    // to this settlement, so the RPC would correctly return that row
+    // when called against `stranger.id`.
+    const noAttachmentsUser = await createTestUser()
+    try {
+      const { data, error } = await owner.client.rpc('get_unshare_blockers', {
+        p_settlement_id: settlementId,
+        p_shared_user_id: noAttachmentsUser.id
+      })
+
+      expect(error).toBeNull()
+      expect(data).toEqual([])
+    } finally {
+      await deleteTestUser(noAttachmentsUser.id)
+    }
+  })
+
+  it('returns the stranger-authored attached row when the stranger is the target', async () => {
+    // Counterpart to the test above: when the target IS the author of an
+    // attached custom row, the RPC returns that row regardless of whether
+    // the target is the settlement's collaborator. This guards against a
+    // future regression that scopes the function to
+    // `settlement_shared_user.shared_user_id` instead of pure authorship.
     const { data, error } = await owner.client.rpc('get_unshare_blockers', {
       p_settlement_id: settlementId,
       p_shared_user_id: stranger.id
     })
 
     expect(error).toBeNull()
-    // The single `Stranger Knowledge` row is attached but the *target* of
-    // the unshare check here is the stranger themselves; the fact that
-    // they happen to author it would normally still be a blocker, so
-    // weed it out by asserting the count without it. The negative
-    // fixture serves a different test (above), so simply assert the
-    // list does not include collaborator-authored rows.
+    expect(Array.isArray(data)).toBe(true)
+    expect((data ?? []).length).toBeGreaterThanOrEqual(1)
+    // The stranger-authored knowledge is the only attached row authored
+    // by `stranger.id` in the fixtures, so it must be the (only) hit.
     expect(
       (data ?? []).every(
         (row: { kind: string; item_name: string; item_id: string }) =>
-          row.item_id !== blockers.knowledge.id
+          row.kind === 'knowledge' &&
+          row.item_name.startsWith('Stranger Knowledge')
       )
     ).toBe(true)
   })
