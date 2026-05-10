@@ -1,6 +1,7 @@
 'use client'
 
 import { LanternMark } from '@/components/generic/lantern-mark'
+import { CollaboratorsPanel } from '@/components/settlement/sharing/collaborators-panel'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -395,6 +396,12 @@ export function SettingsCard({
           </CardContent>
         </Card>
       )}
+
+      {/* Collaborators (owner-only; the panel hides itself for non-owners). */}
+      <CollaboratorsPanel
+        local={local}
+        selectedSettlement={selectedSettlement}
+      />
 
       {/* Delete Selected Hunt */}
       {selectedHunt && (

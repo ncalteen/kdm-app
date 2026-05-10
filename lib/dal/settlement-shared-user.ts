@@ -2,33 +2,70 @@ import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
+ * Settlement Collaborator Detail
+ *
+ * Row shape returned by {@link getSettlementSharedUsers}. Includes the
+ * fields the share-management panel needs to render each collaborator
+ * row: identifier, display name, optional avatar, and the timestamp of
+ * when the share was created (used for "Joined: 14 days ago").
+ */
+export interface SettlementCollaboratorDetail {
+  /** Shared User ID */
+  shared_user_id: string
+  /** Username */
+  username: string
+  /** Avatar URL (OAuth-supplied; nullable) */
+  avatar_url: string | null
+  /** Share Created At (ISO 8601) */
+  created_at: string
+}
+
+/**
  * Get Settlement Shared Users
  *
- * Retrieves all users a settlement is shared with, including their usernames
- * from the user_settings table.
+ * Retrieves all users a settlement is shared with, including their
+ * username and avatar from `user_settings` and the share's `created_at`
+ * timestamp from the junction row. The full shape is what the
+ * collaborators panel renders, so consumers do not need a second round
+ * trip to look up display data.
+ *
+ * Goes through the `get_settlement_collaborators` SECURITY DEFINER RPC
+ * because RLS on `user_settings` blocks the settlement owner from
+ * reading collaborators' usernames and avatars directly. The RPC scopes
+ * results to settlements the caller owns; collaborators on the same
+ * settlement get an empty list (matching the SELECT-only contract on
+ * `settlement_shared_user`).
  *
  * @param settlementId Settlement ID
- * @returns Shared User IDs and Usernames
+ * @returns Collaborator List (sorted oldest-share-first for stable order)
  */
 export async function getSettlementSharedUsers(
   settlementId: string
-): Promise<{ shared_user_id: string; username: string }[]> {
+): Promise<SettlementCollaboratorDetail[]> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_shared_user')
-    .select('shared_user_id, user_settings!shared_user_id(username)')
-    .eq('settlement_id', settlementId)
+  const { data, error } = await supabase.rpc('get_settlement_collaborators', {
+    target_settlement: settlementId
+  })
 
   if (error)
     throw new Error(`Error Fetching Settlement Shared Users: ${error.message}`)
 
   if (!data || data.length === 0) return []
 
-  return data.map((row) => ({
-    shared_user_id: row.shared_user_id,
-    username: (row.user_settings as unknown as { username: string })?.username
-  }))
+  return data.map(
+    (row: {
+      shared_user_id: string
+      username: string | null
+      avatar_url: string | null
+      created_at: string
+    }) => ({
+      shared_user_id: row.shared_user_id,
+      username: row.username ?? '',
+      avatar_url: row.avatar_url ?? null,
+      created_at: row.created_at
+    })
+  )
 }
 
 /**

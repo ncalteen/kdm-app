@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -24,30 +25,62 @@ beforeEach(() => {
 })
 
 describe('getSettlementSharedUsers', () => {
-  it('returns mapped shared users on success', async () => {
-    const mockEq = vi.fn().mockResolvedValue({
+  it('calls the get_settlement_collaborators RPC and maps the rows', async () => {
+    mockSupabase.rpc.mockResolvedValue({
       data: [
-        { shared_user_id: 'u-1', user_settings: { username: 'testuser' } }
+        {
+          shared_user_id: 'u-1',
+          username: 'testuser',
+          avatar_url: 'https://example.test/avatar.png',
+          created_at: '2026-04-25T00:00:00.000Z'
+        }
       ],
       error: null
     })
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
-    mockSupabase.from.mockReturnValue({ select: mockSelect })
 
     const result = await getSettlementSharedUsers('settlement-1')
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('settlement_shared_user')
-    expect(mockSelect).toHaveBeenCalledWith(
-      'shared_user_id, user_settings!shared_user_id(username)'
+    expect(mockSupabase.rpc).toHaveBeenCalledWith(
+      'get_settlement_collaborators',
+      { target_settlement: 'settlement-1' }
     )
-    expect(mockEq).toHaveBeenCalledWith('settlement_id', 'settlement-1')
-    expect(result).toEqual([{ shared_user_id: 'u-1', username: 'testuser' }])
+    expect(result).toEqual([
+      {
+        shared_user_id: 'u-1',
+        username: 'testuser',
+        avatar_url: 'https://example.test/avatar.png',
+        created_at: '2026-04-25T00:00:00.000Z'
+      }
+    ])
+  })
+
+  it('coerces null username/avatar to safe defaults', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: [
+        {
+          shared_user_id: 'u-2',
+          username: null,
+          avatar_url: null,
+          created_at: '2026-04-26T00:00:00.000Z'
+        }
+      ],
+      error: null
+    })
+
+    const result = await getSettlementSharedUsers('settlement-1')
+
+    expect(result).toEqual([
+      {
+        shared_user_id: 'u-2',
+        username: '',
+        avatar_url: null,
+        created_at: '2026-04-26T00:00:00.000Z'
+      }
+    ])
   })
 
   it('returns empty array when data is empty', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: [], error: null })
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
-    mockSupabase.from.mockReturnValue({ select: mockSelect })
+    mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
 
     const result = await getSettlementSharedUsers('settlement-1')
 
@@ -55,9 +88,7 @@ describe('getSettlementSharedUsers', () => {
   })
 
   it('returns empty array when data is null', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: null })
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
-    mockSupabase.from.mockReturnValue({ select: mockSelect })
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: null })
 
     const result = await getSettlementSharedUsers('settlement-1')
 
@@ -65,11 +96,10 @@ describe('getSettlementSharedUsers', () => {
   })
 
   it('throws on error', async () => {
-    const mockEq = vi
-      .fn()
-      .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
-    mockSupabase.from.mockReturnValue({ select: mockSelect })
+    mockSupabase.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'DB error' }
+    })
 
     await expect(getSettlementSharedUsers('settlement-1')).rejects.toThrow(
       'Error Fetching Settlement Shared Users: DB error'

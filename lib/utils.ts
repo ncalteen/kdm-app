@@ -390,3 +390,48 @@ export function normalizeResourceTypeName(
     .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1).toLowerCase())
     .join(' ')
 }
+
+/**
+ * Format Joined Time Ago
+ *
+ * Renders a settlement-share `created_at` timestamp as a coarse "Joined: X ago"
+ * label for the collaborators panel. Intentionally uses whole-unit buckets
+ * (seconds → minutes → hours → days → months → years) since invitations are
+ * a low-precision concept and sub-second jitter would create noise.
+ *
+ * @param createdAt ISO 8601 Timestamp
+ * @param now Reference Time (defaults to `Date.now()`; injectable for tests)
+ * @returns Human Readable Relative Time
+ */
+export function formatJoinedTimeAgo(
+  createdAt: string,
+  now: number = Date.now()
+): string {
+  const then = new Date(createdAt).getTime()
+
+  if (!Number.isFinite(then)) return 'recently'
+
+  const diffSeconds = Math.max(0, Math.floor((now - then) / 1000))
+
+  if (diffSeconds < 60)
+    return diffSeconds <= 1 ? 'just now' : `${diffSeconds} seconds ago`
+
+  const diffMinutes = Math.floor(diffSeconds / 60)
+  if (diffMinutes < 60)
+    return diffMinutes === 1 ? '1 minute ago' : `${diffMinutes} minutes ago`
+
+  const diffHours = Math.floor(diffMinutes / 60)
+  if (diffHours < 24)
+    return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`
+
+  const diffDays = Math.floor(diffHours / 24)
+  if (diffDays < 30)
+    return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`
+
+  const diffMonths = Math.floor(diffDays / 30)
+  if (diffMonths < 12)
+    return diffMonths === 1 ? '1 month ago' : `${diffMonths} months ago`
+
+  const diffYears = Math.floor(diffMonths / 12)
+  return diffYears === 1 ? '1 year ago' : `${diffYears} years ago`
+}

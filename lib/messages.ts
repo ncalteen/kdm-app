@@ -2571,3 +2571,48 @@ export const USERNAME_RENAME_RATE_LIMITED_MESSAGE = () =>
  */
 export const USERNAME_INVALID_FORMAT_MESSAGE = () =>
   'A name must be 3 to 20 letters, numbers, or underscores.'
+
+/**
+ * Settlement Share Invite Succeeded
+ *
+ * @returns Settlement Share Invite Succeeded Message
+ */
+export const SETTLEMENT_SHARE_INVITE_SUCCESS_MESSAGE = () =>
+  'A new lantern joins the watch.'
+
+/**
+ * Settlement Share Already Shared
+ *
+ * @returns Settlement Share Already Shared Message
+ */
+export const SETTLEMENT_SHARE_ALREADY_SHARED_MESSAGE = () =>
+  'That survivor already keeps watch with you.'
+
+/**
+ * Settlement Share Username Not Found
+ *
+ * Used for both the "no such handle" and "rate-limited" outcomes — the
+ * `lookup_user_by_username` RPC deliberately returns null for both so callers
+ * cannot distinguish them. The toast must therefore not promise anything
+ * about which case occurred.
+ *
+ * @returns Settlement Share Username Not Found Message
+ */
+export const SETTLEMENT_SHARE_USERNAME_NOT_FOUND_MESSAGE = () =>
+  'No survivor by that name walks this world.'
+
+/**
+ * Settlement Share Self Invite Rejected
+ *
+ * @returns Settlement Share Self Invite Rejected Message
+ */
+export const SETTLEMENT_SHARE_SELF_INVITE_MESSAGE = () =>
+  'You already keep watch over this lantern.'
+
+/**
+ * Settlement Share Revoke Succeeded
+ *
+ * @returns Settlement Share Revoke Succeeded Message
+ */
+export const SETTLEMENT_SHARE_REVOKE_SUCCESS_MESSAGE = () =>
+  'The lantern dims. They walk in darkness once more.'
