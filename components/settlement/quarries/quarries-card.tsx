@@ -155,7 +155,8 @@ export function QuarriesCard({
         prologue: quarryInfo.prologue,
         quarry_id: quarryId,
         unlocked: false,
-        victory_outcome: quarryInfo.victory_outcome
+        victory_outcome: quarryInfo.victory_outcome,
+        custom: quarryInfo.custom
       }
 
       // Capture the updated quarries list so async callbacks reference it
@@ -229,7 +230,8 @@ export function QuarriesCard({
                   location_id: ins.location_id,
                   location_name: ins.location_name,
                   rules: ins.rules,
-                  unlocked: false
+                  unlocked: false,
+                  custom: ins.custom
                 }))
               }
             }
@@ -307,7 +309,8 @@ export function QuarriesCard({
                   reward_name: inserted[i].reward_name,
                   collective_cognition: inserted[i].collective_cognition,
                   rules: inserted[i].rules,
-                  unlocked: false
+                  unlocked: false,
+                  custom: inserted[i].custom
                 }))
               }
             }
@@ -536,7 +539,7 @@ export function QuarriesCard({
                 <QuarryItem
                   key={quarry.id}
                   id={quarry.id}
-                  custom={availableQuarries[quarry.quarry_id]?.custom}
+                  custom={quarry.custom}
                   monsterName={quarry.monster_name}
                   node={quarry.node}
                   onRemove={handleRemove}

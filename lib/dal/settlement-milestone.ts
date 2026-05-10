@@ -20,31 +20,52 @@ export async function getSettlementMilestones(
   const { data, error } = await supabase
     .from('settlement_milestone')
     .select(
-      'complete, id, milestone_id, milestone(event_name, milestone_name, requirements, rules)'
+      'complete, id, milestone_id, milestone(custom, event_name, milestone_name, requirements, rules)'
     )
     .eq('settlement_id', settlementId)
 
   if (error)
     throw new Error(`Error Fetching Settlement Milestones: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
+  // local/sharing-architecture.md — transitive visibility gap).
   return (
-    data?.map((item) => {
-      const milestone = item.milestone as unknown as {
-        event_name: string
-        milestone_name: string
-        requirements: string | null
-        rules: string | null
-      }
+    data?.flatMap((item) => {
+      const rawMilestone = item.milestone as unknown as
+        | {
+            custom: boolean
+            event_name: string
+            milestone_name: string
+            requirements: string | null
+            rules: string | null
+          }
+        | {
+            custom: boolean
+            event_name: string
+            milestone_name: string
+            requirements: string | null
+            rules: string | null
+          }[]
+        | null
 
-      return {
-        complete: item.complete,
-        event_name: milestone.event_name,
-        id: item.id,
-        milestone_id: item.milestone_id,
-        milestone_name: milestone.milestone_name,
-        requirements: milestone.requirements,
-        rules: milestone.rules
-      }
+      const milestone = Array.isArray(rawMilestone)
+        ? (rawMilestone[0] ?? null)
+        : rawMilestone
+
+      if (!milestone) return []
+
+      return [
+        {
+          complete: item.complete,
+          event_name: milestone.event_name,
+          id: item.id,
+          milestone_id: item.milestone_id,
+          milestone_name: milestone.milestone_name,
+          requirements: milestone.requirements,
+          rules: milestone.rules,
+          custom: milestone.custom
+        }
+      ]
     }) ?? []
   )
 }

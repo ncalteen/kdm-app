@@ -24,14 +24,34 @@ export async function getSettlementGear(
 
   if (error) throw new Error(`Error Fetching Settlement Gear: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
+  // local/sharing-architecture.md — transitive visibility gap).
   return (
-    data?.map((item) => ({
-      gear_id: item.gear_id,
-      gear_name: (item.gear as unknown as { gear_name: string }).gear_name,
-      id: item.id,
-      quantity: item.quantity,
-      custom: !!(item.gear as unknown as { custom: boolean }).custom
-    })) ?? []
+    data?.flatMap((item) => {
+      const rawGear = item.gear as unknown as
+        | {
+            gear_name: string
+            custom: boolean
+          }
+        | {
+            gear_name: string
+            custom: boolean
+          }[]
+        | null
+      const gear = Array.isArray(rawGear) ? (rawGear[0] ?? null) : rawGear
+
+      if (!gear) return []
+
+      return [
+        {
+          gear_id: item.gear_id,
+          gear_name: gear.gear_name,
+          id: item.id,
+          quantity: item.quantity,
+          custom: !!gear.custom
+        }
+      ]
+    }) ?? []
   )
 }
 

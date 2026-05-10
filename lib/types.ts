@@ -795,6 +795,8 @@ export type SettlementDetail = Omit<
     rules: string | null
     /** Unlocked */
     unlocked: boolean
+    /** Whether the underlying reward is user-defined */
+    custom: boolean
   }[]
   /** Gear */
   gear: {
@@ -820,9 +822,11 @@ export type SettlementDetail = Omit<
     /** Innovation Rules */
     rules: string | null
     /** Innovation Consequences */
-    consequences: string[] | null
+    consequences: string | null
     /** Innovation Benefits */
-    benefits: string[] | null
+    benefits: string | null
+    /** Whether the underlying innovation is user-defined */
+    custom: boolean
   }[]
   /** Knowledges */
   knowledges: {
@@ -855,6 +859,8 @@ export type SettlementDetail = Omit<
     rules: string | null
     /** Unlocked */
     unlocked: boolean
+    /** Whether the underlying location is user-defined */
+    custom: boolean
   }[]
   /** Neuroses */
   neuroses: {
@@ -881,6 +887,8 @@ export type SettlementDetail = Omit<
     requirements: string | null
     /** Milestone Rules */
     rules: string | null
+    /** Whether the underlying milestone is user-defined */
+    custom: boolean
   }[]
   /** Nemeses */
   nemeses: {
@@ -922,6 +930,8 @@ export type SettlementDetail = Omit<
     deployment_rules: string | null
     /** Victory Outcome */
     victory_outcome: string | null
+    /** Whether the underlying nemesis is user-defined */
+    custom: boolean
   }[]
   /** Patterns */
   patterns: {
@@ -931,6 +941,8 @@ export type SettlementDetail = Omit<
     pattern_id: string
     /** Pattern Name */
     pattern_name: string
+    /** Whether the underlying pattern is user-defined */
+    custom: boolean
   }[]
   /** Philosophies */
   philosophies: {
@@ -971,6 +983,8 @@ export type SettlementDetail = Omit<
     principle_id: string
     /** Principle Name */
     principle_name: string
+    /** Whether the underlying principle is user-defined */
+    custom: boolean
   }[]
   /** Quarries */
   quarries: {
@@ -1006,6 +1020,8 @@ export type SettlementDetail = Omit<
     deployment_rules: string | null
     /** Victory Outcome */
     victory_outcome: string | null
+    /** Whether the underlying quarry is user-defined */
+    custom: boolean
   }[]
   /** Resources */
   resources: {
@@ -1027,6 +1043,8 @@ export type SettlementDetail = Omit<
     resource_name: string
     /** Resource Types */
     resource_types: string[]
+    /** Whether the underlying resource is user-defined */
+    custom: boolean
   }[]
   /** Seed Patterns */
   seed_patterns: {
@@ -1036,6 +1054,8 @@ export type SettlementDetail = Omit<
     seed_pattern_id: string
     /** Seed Pattern Name */
     seed_pattern_name: string
+    /** Whether the underlying seed pattern is user-defined */
+    custom: boolean
   }[]
   /** Caller's Role on This Settlement */
   role: SettlementRole

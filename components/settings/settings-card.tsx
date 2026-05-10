@@ -369,8 +369,9 @@ export function SettingsCard({
         </Card>
       )}
 
-      {/* Settlement Settings */}
-      {selectedSettlement && (
+      {/* Settlement Settings — owner only; collaborators are read-only on
+          settlement.uses_scouts at the RLS layer. */}
+      {selectedSettlement && selectedSettlement.role === 'owner' && (
         <Card className="p-0">
           <CardHeader className="px-4 pt-3 pb-0">
             <CardTitle className="text-lg">Settlement Settings</CardTitle>
@@ -451,8 +452,9 @@ export function SettingsCard({
         </Card>
       )}
 
-      {/* Danger Zone */}
-      {selectedSettlement && (
+      {/* Danger Zone — owner only; only the settlement owner may delete the
+          settlement. RLS rejects DELETE for collaborators. */}
+      {selectedSettlement && selectedSettlement.role === 'owner' && (
         <Card className="p-0 border-destructive">
           <CardHeader className="px-4 pt-3 pb-0">
             <CardTitle className="text-lg text-destructive flex items-center gap-2">

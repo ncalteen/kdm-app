@@ -48,10 +48,21 @@ export const PrincipleItem = memo(function PrincipleItem({
       {/* Principle Name */}
       <CustomRulesText
         className="font-bold truncate"
-        custom={customDetail?.custom ?? false}
+        custom={principle.custom}
         description={customDetail?.description}
         label={principle.principle_name}
-        sections={customDetail?.sections ?? []}
+        sections={
+          customDetail?.sections ?? [
+            {
+              label: principle.option_1_name,
+              content: principle.option_1_rules
+            },
+            {
+              label: principle.option_2_name,
+              content: principle.option_2_rules
+            }
+          ]
+        }
         title={customDetail?.title ?? principle.principle_name}
         showCustomBadge
       />

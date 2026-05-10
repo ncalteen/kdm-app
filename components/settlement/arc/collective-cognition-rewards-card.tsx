@@ -152,7 +152,8 @@ export function CollectiveCognitionRewardsCard({
           id: tempId,
           reward_name: rewardInfo.reward_name,
           rules: rewardInfo.rules ?? null,
-          unlocked: false
+          unlocked: false,
+          custom: rewardInfo.custom
         }
 
       const updatedRewards = [
@@ -347,7 +348,8 @@ export function CollectiveCognitionRewardsCard({
             id: tempId,
             reward_name: newReward.reward_name,
             rules: newReward.rules ?? null,
-            unlocked: false
+            unlocked: false,
+            custom: true
           }
 
         const updatedRewards = [

@@ -19,19 +19,36 @@ export async function getSettlementPatterns(
 
   const { data, error } = await supabase
     .from('settlement_pattern')
-    .select('id, pattern_id, pattern(pattern_name)')
+    .select('id, pattern_id, pattern(custom, pattern_name)')
     .eq('settlement_id', settlementId)
 
   if (error)
     throw new Error(`Error Fetching Settlement Patterns: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
+  // local/sharing-architecture.md — transitive visibility gap).
   return (
-    data?.map((item) => ({
-      id: item.id,
-      pattern_id: item.pattern_id,
-      pattern_name: (item.pattern as unknown as { pattern_name: string })
-        .pattern_name
-    })) ?? []
+    data?.flatMap((item) => {
+      const rawPattern = item.pattern as unknown as
+        | { custom: boolean; pattern_name: string }
+        | { custom: boolean; pattern_name: string }[]
+        | null
+
+      const pattern = Array.isArray(rawPattern)
+        ? (rawPattern[0] ?? null)
+        : rawPattern
+
+      if (!pattern) return []
+
+      return [
+        {
+          id: item.id,
+          pattern_id: item.pattern_id,
+          pattern_name: pattern.pattern_name,
+          custom: pattern.custom
+        }
+      ]
+    }) ?? []
   )
 }
 

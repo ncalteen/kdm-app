@@ -19,45 +19,71 @@ export async function getSettlementQuarries(
   const { data, error } = await supabase
     .from('settlement_quarry')
     .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(monster_name, node, prologue, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
+      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(custom, monster_name, node, prologue, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
     )
     .eq('settlement_id', settlementId)
 
   if (error)
     throw new Error(`Error Fetching Settlement Quarries: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
+  // local/sharing-architecture.md — transitive visibility gap).
   return (
-    data?.map((item) => {
-      const quarry = item.quarry as unknown as {
-        monster_name: string
-        node: string
-        prologue: boolean
-        instinct: string | null
-        basic_action: string | null
-        blind_spot: string | null
-        defeat_outcome: string | null
-        deployment_rules: string | null
-        victory_outcome: string | null
-      }
+    data?.flatMap((item) => {
+      const rawQuarry = item.quarry as unknown as
+        | {
+            custom: boolean
+            monster_name: string
+            node: string
+            prologue: boolean
+            instinct: string | null
+            basic_action: string | null
+            blind_spot: string | null
+            defeat_outcome: string | null
+            deployment_rules: string | null
+            victory_outcome: string | null
+          }
+        | {
+            custom: boolean
+            monster_name: string
+            node: string
+            prologue: boolean
+            instinct: string | null
+            basic_action: string | null
+            blind_spot: string | null
+            defeat_outcome: string | null
+            deployment_rules: string | null
+            victory_outcome: string | null
+          }[]
+        | null
 
-      return {
-        collective_cognition_level_1: item.collective_cognition_level_1,
-        collective_cognition_level_2: item.collective_cognition_level_2,
-        collective_cognition_level_3: item.collective_cognition_level_3,
-        collective_cognition_prologue: item.collective_cognition_prologue,
-        id: item.id,
-        monster_name: quarry.monster_name,
-        node: quarry.node,
-        prologue: quarry.prologue,
-        quarry_id: item.quarry_id,
-        unlocked: item.unlocked,
-        instinct: quarry.instinct,
-        basic_action: quarry.basic_action,
-        blind_spot: quarry.blind_spot,
-        defeat_outcome: quarry.defeat_outcome,
-        deployment_rules: quarry.deployment_rules,
-        victory_outcome: quarry.victory_outcome
-      }
+      const quarry = Array.isArray(rawQuarry)
+        ? (rawQuarry[0] ?? null)
+        : rawQuarry
+
+      if (!quarry) return []
+
+      return [
+        {
+          collective_cognition_level_1: item.collective_cognition_level_1,
+          collective_cognition_level_2: item.collective_cognition_level_2,
+          collective_cognition_level_3: item.collective_cognition_level_3,
+          collective_cognition_prologue: item.collective_cognition_prologue,
+          id: item.id,
+          monster_name: quarry.monster_name,
+          node: quarry.node,
+          prologue: quarry.prologue,
+          quarry_id: item.quarry_id,
+          unlocked: item.unlocked,
+          instinct: quarry.instinct,
+          basic_action: quarry.basic_action,
+          blind_spot: quarry.blind_spot,
+          defeat_outcome: quarry.defeat_outcome,
+          deployment_rules: quarry.deployment_rules,
+          victory_outcome: quarry.victory_outcome,
+          custom: quarry.custom
+        }
+      ]
     }) ?? []
   )
 }

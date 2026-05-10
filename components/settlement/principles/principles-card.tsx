@@ -156,7 +156,8 @@ export function PrinciplesCard({
         option_2_rules: principleInfo.option_2_rules ?? null,
         option_2_selected: false,
         principle_id: principleId,
-        principle_name: principleInfo.principle_name
+        principle_name: principleInfo.principle_name,
+        custom: principleInfo.custom
       }
 
       // Capture the updated principles list so async callbacks reference it
@@ -359,7 +360,8 @@ export function PrinciplesCard({
           option_2_rules: newPrinciple.option_2_rules ?? null,
           option_2_selected: false,
           principle_id: newPrinciple.id,
-          principle_name: newPrinciple.principle_name
+          principle_name: newPrinciple.principle_name,
+          custom: true
         }
         const updatedPrinciples = [
           ...(selectedSettlement.principles ?? []),

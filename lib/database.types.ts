@@ -5829,6 +5829,14 @@ export type Database = {
           username: string
         }[]
       }
+      get_unshare_blockers: {
+        Args: { p_settlement_id: string; p_shared_user_id: string }
+        Returns: {
+          item_id: string
+          item_name: string
+          kind: string
+        }[]
+      }
       initialize_user_settings: {
         Args: { p_user_id: string; p_username: string }
         Returns: undefined

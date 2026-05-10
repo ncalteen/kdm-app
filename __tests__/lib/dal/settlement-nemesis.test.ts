@@ -31,7 +31,17 @@ describe('getSettlementNemeses', () => {
     level_4_defeated: false,
     nemesis_id: 'n-1',
     unlocked: false,
-    nemesis: { monster_name: 'The Hand', node: 'hand' }
+    nemesis: {
+      custom: false,
+      monster_name: 'The Hand',
+      node: 'hand',
+      instinct: null,
+      basic_action: null,
+      blind_spot: null,
+      defeat_outcome: null,
+      deployment_rules: null,
+      victory_outcome: null
+    }
   }
 
   it('throws when settlementId is null', async () => {
@@ -94,7 +104,14 @@ describe('getSettlementNemeses', () => {
         nemesis_id: 'n-1',
         unlocked: false,
         monster_name: 'The Hand',
-        node: 'hand'
+        node: 'hand',
+        instinct: null,
+        basic_action: null,
+        blind_spot: null,
+        defeat_outcome: null,
+        deployment_rules: null,
+        victory_outcome: null,
+        custom: false
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_nemesis')
@@ -149,7 +166,17 @@ describe('addSettlementNemeses', () => {
     level_4_defeated: false,
     nemesis_id: 'n-1',
     unlocked: false,
-    nemesis: { monster_name: 'The Hand', node: 'hand' }
+    nemesis: {
+      custom: false,
+      monster_name: 'The Hand',
+      node: 'hand',
+      instinct: null,
+      basic_action: null,
+      blind_spot: null,
+      defeat_outcome: null,
+      deployment_rules: null,
+      victory_outcome: null
+    }
   }
 
   it('throws when settlementId is null', async () => {
@@ -198,7 +225,14 @@ describe('addSettlementNemeses', () => {
         nemesis_id: 'n-1',
         unlocked: false,
         monster_name: 'The Hand',
-        node: 'hand'
+        node: 'hand',
+        instinct: null,
+        basic_action: null,
+        blind_spot: null,
+        defeat_outcome: null,
+        deployment_rules: null,
+        victory_outcome: null,
+        custom: false
       }
     ])
   })

@@ -85,7 +85,7 @@ export const PatternItem = memo(function PatternItem({
       {/* Pattern Name */}
       <CustomRulesText
         className="truncate ml-1"
-        custom={customDetail?.custom ?? false}
+        custom={pattern.custom}
         description={customDetail?.description}
         label={pattern.pattern_name}
         sections={customDetail?.sections ?? []}

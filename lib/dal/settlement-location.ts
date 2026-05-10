@@ -19,26 +19,37 @@ export async function getSettlementLocations(
 
   const { data, error } = await supabase
     .from('settlement_location')
-    .select('id, location_id, unlocked, location(location_name, rules)')
+    .select('id, location_id, unlocked, location(custom, location_name, rules)')
     .eq('settlement_id', settlementId)
 
   if (error)
     throw new Error(`Error Fetching Settlement Locations: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
+  // local/sharing-architecture.md — transitive visibility gap).
   return (
-    data?.map((item) => {
-      const location = item.location as unknown as {
+    data?.flatMap((item) => {
+      const rawLocation = item.location as unknown
+      const location = (
+        Array.isArray(rawLocation) ? (rawLocation[0] ?? null) : rawLocation
+      ) as {
+        custom: boolean
         location_name: string
         rules: string | null
-      }
+      } | null
 
-      return {
-        id: item.id,
-        location_id: item.location_id,
-        location_name: location.location_name,
-        rules: location.rules,
-        unlocked: item.unlocked
-      }
+      if (!location) return []
+
+      return [
+        {
+          id: item.id,
+          location_id: item.location_id,
+          location_name: location.location_name,
+          rules: location.rules,
+          unlocked: item.unlocked,
+          custom: location.custom
+        }
+      ]
     }) ?? []
   )
 }
@@ -62,6 +73,7 @@ export async function addSettlementLocations(
     location_id: string
     location_name: string
     rules: string | null
+    custom: boolean
   }[]
 > {
   if (!settlementId) throw new Error('Required: Settlement ID')
@@ -78,7 +90,7 @@ export async function addSettlementLocations(
         unlocked: false
       }))
     )
-    .select('id, location(id, location_name, rules)')
+    .select('id, location(id, custom, location_name, rules)')
 
   if (error)
     throw new Error(`Error Adding Settlement Locations: ${error.message}`)
@@ -86,13 +98,19 @@ export async function addSettlementLocations(
   return (
     data as unknown as {
       id: string
-      location: { id: string; location_name: string; rules: string | null }
+      location: {
+        id: string
+        custom: boolean
+        location_name: string
+        rules: string | null
+      }
     }[]
   ).map((item) => ({
     id: item.id,
     location_id: item.location.id,
     location_name: item.location.location_name,
-    rules: item.location.rules
+    rules: item.location.rules,
+    custom: item.location.custom
   }))
 }
 

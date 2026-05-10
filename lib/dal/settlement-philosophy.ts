@@ -27,27 +27,47 @@ export async function getSettlementPhilosophies(
   if (error)
     throw new Error(`Error Fetching Settlement Philosophies: ${error.message}`)
 
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
+  // local/sharing-architecture.md — transitive visibility gap).
   return (
-    data?.map((item) => {
-      const philosophy = item.philosophy as unknown as {
-        custom: boolean
-        philosophy_name: string
-        hunt_xp_milestones: number[] | null
-        tenet_knowledge_id: string | null
-        tier: number | null
-        neurosis_id: string | null
-      }
+    data?.flatMap((item) => {
+      const rawPhilosophy = item.philosophy as unknown as
+        | {
+            custom: boolean
+            philosophy_name: string
+            hunt_xp_milestones: number[] | null
+            tenet_knowledge_id: string | null
+            tier: number | null
+            neurosis_id: string | null
+          }
+        | {
+            custom: boolean
+            philosophy_name: string
+            hunt_xp_milestones: number[] | null
+            tenet_knowledge_id: string | null
+            tier: number | null
+            neurosis_id: string | null
+          }[]
+        | null
 
-      return {
-        id: item.id,
-        philosophy_id: item.philosophy_id,
-        philosophy_name: philosophy.philosophy_name,
-        hunt_xp_milestones: philosophy.hunt_xp_milestones,
-        tenet_knowledge_id: philosophy.tenet_knowledge_id,
-        tier: philosophy.tier,
-        neurosis_id: philosophy.neurosis_id,
-        custom: philosophy.custom
-      }
+      const philosophy = Array.isArray(rawPhilosophy)
+        ? (rawPhilosophy[0] ?? null)
+        : rawPhilosophy
+
+      if (!philosophy) return []
+
+      return [
+        {
+          id: item.id,
+          philosophy_id: item.philosophy_id,
+          philosophy_name: philosophy.philosophy_name,
+          hunt_xp_milestones: philosophy.hunt_xp_milestones,
+          tenet_knowledge_id: philosophy.tenet_knowledge_id,
+          tier: philosophy.tier,
+          neurosis_id: philosophy.neurosis_id,
+          custom: philosophy.custom
+        }
+      ]
     }) ?? []
   )
 }

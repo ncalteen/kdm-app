@@ -21,7 +21,7 @@ export async function getSettlementInnovations(
   const { data, error } = await supabase
     .from('settlement_innovation')
     .select(
-      'id, innovation_id, innovation(innovation_name, rules, consequences, benefits)'
+      'id, innovation_id, innovation(custom, innovation_name, rules, consequences, benefits)'
     )
     .eq('settlement_id', settlementId)
 
@@ -29,21 +29,34 @@ export async function getSettlementInnovations(
     throw new Error(`Error Fetching Settlement Innovations: ${error.message}`)
 
   return (
-    data?.map((item) => {
+    data?.flatMap((item) => {
       // Supabase returns joined tables as objects or arrays depending on
       // the relationship. Safely handle both cases.
       const innovation = Array.isArray(item.innovation)
         ? item.innovation[0]
         : item.innovation
 
-      return {
-        id: item.id,
-        innovation_id: item.innovation_id,
-        innovation_name: innovation?.innovation_name ?? '',
-        rules: innovation?.rules ?? null,
-        consequences: innovation?.consequences ?? null,
-        benefits: innovation?.benefits ?? null
-      }
+      // Skip rows whose embedded catalog row is invisible under RLS (see
+      // EC-6 in local/sharing-architecture.md — transitive visibility gap).
+      if (!innovation) return []
+
+      return [
+        {
+          id: item.id,
+          innovation_id: item.innovation_id,
+          innovation_name: innovation.innovation_name ?? '',
+          rules: innovation.rules ?? null,
+          consequences: innovation.consequences ?? null,
+          benefits: innovation.benefits ?? null,
+          // Pulled directly from the junction so the UI can show the Custom
+          // badge / open the rules sheet for custom rows authored by
+          // collaborators that the owner can only see transitively via
+          // settlement membership (EC-6 in local/sharing-architecture.md).
+          // The catalog `availableInnovations` lookup filters by user_id and
+          // would otherwise return undefined for those rows.
+          custom: !!innovation.custom
+        }
+      ]
     }) ?? []
   )
 }
@@ -75,26 +88,31 @@ export async function addSettlementInnovations(
       }))
     )
     .select(
-      'id, innovation_id, innovation(innovation_name, rules, consequences, benefits)'
+      'id, innovation_id, innovation(custom, innovation_name, rules, consequences, benefits)'
     )
 
   if (error)
     throw new Error(`Error Adding Settlement Innovations: ${error.message}`)
 
   return (
-    data?.map((item) => {
+    data?.flatMap((item) => {
       const innovation = Array.isArray(item.innovation)
         ? item.innovation[0]
         : item.innovation
 
-      return {
-        id: item.id,
-        innovation_id: item.innovation_id,
-        innovation_name: innovation?.innovation_name ?? '',
-        rules: innovation?.rules ?? null,
-        consequences: innovation?.consequences ?? null,
-        benefits: innovation?.benefits ?? null
-      }
+      if (!innovation) return []
+
+      return [
+        {
+          id: item.id,
+          innovation_id: item.innovation_id,
+          innovation_name: innovation.innovation_name ?? '',
+          rules: innovation.rules ?? null,
+          consequences: innovation.consequences ?? null,
+          benefits: innovation.benefits ?? null,
+          custom: !!innovation.custom
+        }
+      ]
     }) ?? []
   )
 }

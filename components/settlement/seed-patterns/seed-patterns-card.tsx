@@ -179,7 +179,8 @@ export function SeedPatternsCard({
       const optimisticRow: SettlementDetail['seed_patterns'][0] = {
         id: tempId,
         seed_pattern_id: seedPatternId,
-        seed_pattern_name: seedPatternInfo.seed_pattern_name
+        seed_pattern_name: seedPatternInfo.seed_pattern_name,
+        custom: seedPatternInfo.custom
       }
 
       const updatedSeedPatterns = [
