@@ -120,7 +120,8 @@ describe('RPC: get_settlement_collaborators', () => {
       )
 
       expect(error).toBeNull()
-      const ids = (data ?? []).map((r) => r.shared_user_id)
+      const rows = (data ?? []) as Array<{ shared_user_id: string }>
+      const ids = rows.map((r) => r.shared_user_id)
       expect(ids).toContain(collaborator.id)
       expect(ids).toContain(second.id)
     } finally {
