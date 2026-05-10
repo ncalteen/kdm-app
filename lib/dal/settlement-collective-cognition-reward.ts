@@ -47,7 +47,7 @@ export async function getSettlementCollectiveCognitionRewards(
         | null
 
       const reward = Array.isArray(embeddedReward)
-        ? embeddedReward[0] ?? null
+        ? (embeddedReward[0] ?? null)
         : embeddedReward
 
       if (!reward) return []

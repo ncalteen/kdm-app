@@ -38,7 +38,7 @@ export async function getSettlementGear(
             custom: boolean
           }[]
         | null
-      const gear = Array.isArray(rawGear) ? rawGear[0] ?? null : rawGear
+      const gear = Array.isArray(rawGear) ? (rawGear[0] ?? null) : rawGear
 
       if (!gear) return []
 

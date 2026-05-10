@@ -55,7 +55,9 @@ export async function getSettlementQuarries(
           }[]
         | null
 
-      const quarry = Array.isArray(rawQuarry) ? rawQuarry[0] ?? null : rawQuarry
+      const quarry = Array.isArray(rawQuarry)
+        ? (rawQuarry[0] ?? null)
+        : rawQuarry
 
       if (!quarry) return []
 

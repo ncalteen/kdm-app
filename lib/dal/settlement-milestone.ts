@@ -47,7 +47,7 @@ export async function getSettlementMilestones(
         | null
 
       const milestone = Array.isArray(rawMilestone)
-        ? rawMilestone[0] ?? null
+        ? (rawMilestone[0] ?? null)
         : rawMilestone
 
       if (!milestone) return []

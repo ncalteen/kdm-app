@@ -31,13 +31,11 @@ export async function getSettlementLocations(
     data?.flatMap((item) => {
       const rawLocation = item.location as unknown
       const location = (
-        Array.isArray(rawLocation) ? rawLocation[0] ?? null : rawLocation
-      ) as
-        | {
-            location_name: string
-            rules: string | null
-          }
-        | null
+        Array.isArray(rawLocation) ? (rawLocation[0] ?? null) : rawLocation
+      ) as {
+        location_name: string
+        rules: string | null
+      } | null
 
       if (!location) return []
 

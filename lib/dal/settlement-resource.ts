@@ -47,7 +47,7 @@ export async function getSettlementResources(
             quarry: { monster_name: string; node: string } | null
           }[]
         | null
-      const res = Array.isArray(resource) ? resource[0] ?? null : resource
+      const res = Array.isArray(resource) ? (resource[0] ?? null) : resource
 
       if (!res) return []
 
