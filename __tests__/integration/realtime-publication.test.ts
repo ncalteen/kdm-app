@@ -14,10 +14,11 @@ import { describe, expect, it } from 'vitest'
  * a much more actionable signal than discovering the gap in production when
  * a collaborator's UI silently goes stale.
  *
- * Catalog tables (`survivor_status`, `armor_set`, `wanderer*`, etc.) and
- * `settlement_shared_user` are intentionally out of scope: the former are
- * tracked under E2.4 and rely on a different subscription model, the latter
- * is tracked under E1.4 alongside its user-level subscription.
+ * Catalog tables (`survivor_status`, `armor_set`, `wanderer*`, etc.) are
+ * intentionally out of scope: they are tracked under E2.4 and rely on a
+ * different subscription model. `settlement_shared_user` is included here
+ * (added to the publication in E1.4) so user-level subscriptions receive
+ * invite / revoke events.
  */
 describe('Realtime publication membership', () => {
   /**
@@ -43,6 +44,7 @@ describe('Realtime publication membership', () => {
     'settlement_quarry',
     'settlement_resource',
     'settlement_seed_pattern',
+    'settlement_shared_user',
     'settlement_timeline_year',
 
     // Hunt
@@ -87,5 +89,16 @@ describe('Realtime publication membership', () => {
     const missing = EXPECTED_TABLES.filter((t) => !actual.has(t))
 
     expect(missing).toEqual([])
+  })
+
+  // E1.4 acceptance: the pg_publication_tables row exists for
+  // `settlement_shared_user`, mirroring the SQL predicate from issue #136.
+  it('includes `settlement_shared_user` in `supabase_realtime` (E1.4)', async () => {
+    const { data, error } = await admin.rpc('realtime_publication_tables')
+
+    expect(error).toBeNull()
+    const rows = (data ?? []) as { tablename: string }[]
+    const matches = rows.filter((r) => r.tablename === 'settlement_shared_user')
+    expect(matches).toHaveLength(1)
   })
 })
