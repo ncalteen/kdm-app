@@ -331,8 +331,14 @@ enabled = true
 client_id = "env(SUPABASE_AUTH_DISCORD_CLIENT_ID)"
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_DISCORD_CLIENT_SECRET)"
-# Overrides the default auth redirectUrl.
-redirect_uri = ""
+# The Supabase CLI does NOT auto-derive this for local dev (see
+# https://github.com/supabase/cli/blob/main/internal/start/start.go —
+# `appendGotrueExternalProviderEnv` only emits GOTRUE_EXTERNAL_*_REDIRECT_URI
+# when this field is non-empty). Without it, GoTrue's ValidateOAuth rejects
+# any sign-in attempt with "Unsupported provider: missing redirect URI". The
+# value below points at the local GoTrue callback that Discord must also
+# have whitelisted in its developer-portal "OAuth2 → Redirects" config.
+redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
 # If enabled, the nonce check will be skipped during OAuth sign-in.
 skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
