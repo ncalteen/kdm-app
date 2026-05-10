@@ -28,10 +28,17 @@ export async function getSettlementGear(
   // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
-      const gear = item.gear as unknown as {
-        gear_name: string
-        custom: boolean
-      } | null
+      const rawGear = item.gear as unknown as
+        | {
+            gear_name: string
+            custom: boolean
+          }
+        | {
+            gear_name: string
+            custom: boolean
+          }[]
+        | null
+      const gear = Array.isArray(rawGear) ? rawGear[0] ?? null : rawGear
 
       if (!gear) return []
 
