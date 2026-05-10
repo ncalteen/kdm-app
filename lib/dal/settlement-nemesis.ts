@@ -47,39 +47,67 @@ export async function getSettlementNemeses(
     levelsByNemesisId.set(row.nemesis_id, levels)
   }
 
-  return data.map((item) => ({
-    available_levels: (levelsByNemesisId.get(item.nemesis_id) ?? []).sort(
-      (a, b) => a - b
-    ),
-    collective_cognition_level_1: item.collective_cognition_level_1,
-    collective_cognition_level_2: item.collective_cognition_level_2,
-    collective_cognition_level_3: item.collective_cognition_level_3,
-    id: item.id,
-    level_1_defeated: item.level_1_defeated,
-    level_2_defeated: item.level_2_defeated,
-    level_3_defeated: item.level_3_defeated,
-    level_4_defeated: item.level_4_defeated,
-    nemesis_id: item.nemesis_id,
-    unlocked: item.unlocked,
-    monster_name: (item.nemesis as unknown as { monster_name: string })
-      .monster_name,
-    node: (item.nemesis as unknown as { node: string }).node,
-    instinct: (item.nemesis as unknown as { instinct: string | null }).instinct,
-    basic_action: (item.nemesis as unknown as { basic_action: string | null })
-      .basic_action,
-    blind_spot: (item.nemesis as unknown as { blind_spot: string | null })
-      .blind_spot,
-    defeat_outcome: (
-      item.nemesis as unknown as { defeat_outcome: string | null }
-    ).defeat_outcome,
-    deployment_rules: (
-      item.nemesis as unknown as { deployment_rules: string | null }
-    ).deployment_rules,
-    victory_outcome: (
-      item.nemesis as unknown as { victory_outcome: string | null }
-    ).victory_outcome,
-    custom: !!(item.nemesis as unknown as { custom: boolean }).custom
-  }))
+  // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
+  // local/sharing-architecture.md — transitive visibility gap).
+  return data.flatMap((item) => {
+    const rawNemesis = item.nemesis as unknown as
+      | {
+          custom: boolean
+          monster_name: string
+          node: string
+          instinct: string | null
+          basic_action: string | null
+          blind_spot: string | null
+          defeat_outcome: string | null
+          deployment_rules: string | null
+          victory_outcome: string | null
+        }
+      | {
+          custom: boolean
+          monster_name: string
+          node: string
+          instinct: string | null
+          basic_action: string | null
+          blind_spot: string | null
+          defeat_outcome: string | null
+          deployment_rules: string | null
+          victory_outcome: string | null
+        }[]
+      | null
+
+    const nemesis = Array.isArray(rawNemesis)
+      ? (rawNemesis[0] ?? null)
+      : rawNemesis
+
+    if (!nemesis) return []
+
+    return [
+      {
+        available_levels: (levelsByNemesisId.get(item.nemesis_id) ?? []).sort(
+          (a, b) => a - b
+        ),
+        collective_cognition_level_1: item.collective_cognition_level_1,
+        collective_cognition_level_2: item.collective_cognition_level_2,
+        collective_cognition_level_3: item.collective_cognition_level_3,
+        id: item.id,
+        level_1_defeated: item.level_1_defeated,
+        level_2_defeated: item.level_2_defeated,
+        level_3_defeated: item.level_3_defeated,
+        level_4_defeated: item.level_4_defeated,
+        nemesis_id: item.nemesis_id,
+        unlocked: item.unlocked,
+        monster_name: nemesis.monster_name,
+        node: nemesis.node,
+        instinct: nemesis.instinct,
+        basic_action: nemesis.basic_action,
+        blind_spot: nemesis.blind_spot,
+        defeat_outcome: nemesis.defeat_outcome,
+        deployment_rules: nemesis.deployment_rules,
+        victory_outcome: nemesis.victory_outcome,
+        custom: nemesis.custom
+      }
+    ]
+  })
 }
 
 /**
@@ -142,39 +170,65 @@ export async function addSettlementNemeses(
     levelsByNemesisId.set(row.nemesis_id, levels)
   }
 
-  return data.map((item) => ({
-    available_levels: (levelsByNemesisId.get(item.nemesis_id) ?? []).sort(
-      (a, b) => a - b
-    ),
-    collective_cognition_level_1: item.collective_cognition_level_1,
-    collective_cognition_level_2: item.collective_cognition_level_2,
-    collective_cognition_level_3: item.collective_cognition_level_3,
-    id: item.id,
-    level_1_defeated: item.level_1_defeated,
-    level_2_defeated: item.level_2_defeated,
-    level_3_defeated: item.level_3_defeated,
-    level_4_defeated: item.level_4_defeated,
-    nemesis_id: item.nemesis_id,
-    unlocked: item.unlocked,
-    monster_name: (item.nemesis as unknown as { monster_name: string })
-      .monster_name,
-    node: (item.nemesis as unknown as { node: string }).node,
-    instinct: (item.nemesis as unknown as { instinct: string | null }).instinct,
-    basic_action: (item.nemesis as unknown as { basic_action: string | null })
-      .basic_action,
-    blind_spot: (item.nemesis as unknown as { blind_spot: string | null })
-      .blind_spot,
-    defeat_outcome: (
-      item.nemesis as unknown as { defeat_outcome: string | null }
-    ).defeat_outcome,
-    deployment_rules: (
-      item.nemesis as unknown as { deployment_rules: string | null }
-    ).deployment_rules,
-    victory_outcome: (
-      item.nemesis as unknown as { victory_outcome: string | null }
-    ).victory_outcome,
-    custom: !!(item.nemesis as unknown as { custom: boolean }).custom
-  }))
+  return data.flatMap((item) => {
+    const rawNemesis = item.nemesis as unknown as
+      | {
+          custom: boolean
+          monster_name: string
+          node: string
+          instinct: string | null
+          basic_action: string | null
+          blind_spot: string | null
+          defeat_outcome: string | null
+          deployment_rules: string | null
+          victory_outcome: string | null
+        }
+      | {
+          custom: boolean
+          monster_name: string
+          node: string
+          instinct: string | null
+          basic_action: string | null
+          blind_spot: string | null
+          defeat_outcome: string | null
+          deployment_rules: string | null
+          victory_outcome: string | null
+        }[]
+      | null
+
+    const nemesis = Array.isArray(rawNemesis)
+      ? (rawNemesis[0] ?? null)
+      : rawNemesis
+
+    if (!nemesis) return []
+
+    return [
+      {
+        available_levels: (levelsByNemesisId.get(item.nemesis_id) ?? []).sort(
+          (a, b) => a - b
+        ),
+        collective_cognition_level_1: item.collective_cognition_level_1,
+        collective_cognition_level_2: item.collective_cognition_level_2,
+        collective_cognition_level_3: item.collective_cognition_level_3,
+        id: item.id,
+        level_1_defeated: item.level_1_defeated,
+        level_2_defeated: item.level_2_defeated,
+        level_3_defeated: item.level_3_defeated,
+        level_4_defeated: item.level_4_defeated,
+        nemesis_id: item.nemesis_id,
+        unlocked: item.unlocked,
+        monster_name: nemesis.monster_name,
+        node: nemesis.node,
+        instinct: nemesis.instinct,
+        basic_action: nemesis.basic_action,
+        blind_spot: nemesis.blind_spot,
+        defeat_outcome: nemesis.defeat_outcome,
+        deployment_rules: nemesis.deployment_rules,
+        victory_outcome: nemesis.victory_outcome,
+        custom: nemesis.custom
+      }
+    ]
+  })
 }
 
 /**
