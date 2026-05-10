@@ -4193,16 +4193,19 @@ export type Database = {
       }
       settlement_shared_user: {
         Row: {
+          created_at: string
           settlement_id: string
           shared_user_id: string
           user_id: string
         }
         Insert: {
+          created_at?: string
           settlement_id: string
           shared_user_id: string
           user_id: string
         }
         Update: {
+          created_at?: string
           settlement_id?: string
           shared_user_id?: string
           user_id?: string
@@ -5809,6 +5812,15 @@ export type Database = {
       check_username_available: {
         Args: { desired_username: string }
         Returns: boolean
+      }
+      get_settlement_collaborators: {
+        Args: { target_settlement: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          shared_user_id: string
+          username: string
+        }[]
       }
       get_shared_settlement_owners: {
         Args: never

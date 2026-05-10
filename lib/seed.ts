@@ -793,7 +793,17 @@ async function addSettlementNemeses(
 
     if (getNemesisError) throw getNemesisError
 
-    const nemesis = allNemeses.sort(() => Math.random() - 0.5)[0]
+    // Best-effort dev tooling: if the catalog has no nemesis for this node
+    // (typically because the DB was reset with `--no-seed`), log and skip
+    // rather than crashing the whole seed run on `undefined.id`.
+    const nemesis = (allNemeses ?? []).sort(() => Math.random() - 0.5)[0]
+    if (!nemesis) {
+      console.warn(
+        `addSettlementNemeses: no nemesis catalog row found for node ${node}; skipping. ` +
+          `Run \`npx supabase db reset\` (without --no-seed) to repopulate.`
+      )
+      continue
+    }
 
     const { error: createSettlementNemesisError } = await supabase
       .from('settlement_nemesis')
@@ -837,7 +847,16 @@ async function addSettlementQuarries(
 
     if (getQuarryError) throw getQuarryError
 
-    const quarry = allQuarries.sort(() => Math.random() - 0.5)[0]
+    // Best-effort dev tooling: skip-and-warn if the catalog is empty for
+    // this node so the rest of the seed run still completes.
+    const quarry = (allQuarries ?? []).sort(() => Math.random() - 0.5)[0]
+    if (!quarry) {
+      console.warn(
+        `addSettlementQuarries: no quarry catalog row found for node ${node}; skipping. ` +
+          `Run \`npx supabase db reset\` (without --no-seed) to repopulate.`
+      )
+      continue
+    }
 
     const { error: createSettlementQuarryError } = await supabase
       .from('settlement_quarry')

@@ -9,6 +9,7 @@ import {
   canFistPump,
   canSurge,
   cn,
+  formatJoinedTimeAgo,
   getAvailableNodes,
   getCardColorStyles,
   getColorStyle,
@@ -372,5 +373,87 @@ describe('calculateSettlementCollectiveCognition', () => {
     } as unknown as SettlementDetail
 
     expect(calculateSettlementCollectiveCognition(s)).toBe(4)
+  })
+})
+
+describe('formatJoinedTimeAgo', () => {
+  const NOW = new Date('2026-05-10T12:00:00.000Z').getTime()
+
+  it('returns "just now" for sub-second deltas', () => {
+    expect(formatJoinedTimeAgo('2026-05-10T12:00:00.000Z', NOW)).toBe(
+      'just now'
+    )
+  })
+
+  it('returns "just now" at 1 second', () => {
+    expect(formatJoinedTimeAgo('2026-05-10T11:59:59.000Z', NOW)).toBe(
+      'just now'
+    )
+  })
+
+  it('pluralizes seconds correctly', () => {
+    expect(formatJoinedTimeAgo('2026-05-10T11:59:55.000Z', NOW)).toBe(
+      '5 seconds ago'
+    )
+  })
+
+  it('singularizes 1 minute', () => {
+    expect(formatJoinedTimeAgo('2026-05-10T11:59:00.000Z', NOW)).toBe(
+      '1 minute ago'
+    )
+  })
+
+  it('pluralizes minutes', () => {
+    expect(formatJoinedTimeAgo('2026-05-10T11:55:00.000Z', NOW)).toBe(
+      '5 minutes ago'
+    )
+  })
+
+  it('singularizes 1 hour', () => {
+    expect(formatJoinedTimeAgo('2026-05-10T11:00:00.000Z', NOW)).toBe(
+      '1 hour ago'
+    )
+  })
+
+  it('pluralizes hours', () => {
+    expect(formatJoinedTimeAgo('2026-05-10T09:00:00.000Z', NOW)).toBe(
+      '3 hours ago'
+    )
+  })
+
+  it('singularizes 1 day', () => {
+    expect(formatJoinedTimeAgo('2026-05-09T12:00:00.000Z', NOW)).toBe(
+      '1 day ago'
+    )
+  })
+
+  it('pluralizes days', () => {
+    expect(formatJoinedTimeAgo('2026-04-26T12:00:00.000Z', NOW)).toBe(
+      '14 days ago'
+    )
+  })
+
+  it('rolls over into months', () => {
+    // 31 days back ⇒ 1 month
+    expect(formatJoinedTimeAgo('2026-04-09T12:00:00.000Z', NOW)).toBe(
+      '1 month ago'
+    )
+  })
+
+  it('rolls over into years', () => {
+    // ~365 days back ⇒ 1 year (12 months bucket)
+    expect(formatJoinedTimeAgo('2025-05-10T12:00:00.000Z', NOW)).toBe(
+      '1 year ago'
+    )
+  })
+
+  it('falls back to "recently" for invalid timestamps', () => {
+    expect(formatJoinedTimeAgo('not-a-date', NOW)).toBe('recently')
+  })
+
+  it('clamps future timestamps to "just now" instead of producing negative values', () => {
+    expect(formatJoinedTimeAgo('2026-05-10T12:01:00.000Z', NOW)).toBe(
+      'just now'
+    )
   })
 })

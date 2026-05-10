@@ -24,6 +24,7 @@ import { QuarriesCard } from '@/components/settlement/quarries/quarries-card'
 import { ResourceOverviewCard } from '@/components/settlement/resources/resource-overview-card'
 import { ResourcesCard } from '@/components/settlement/resources/resources-card'
 import { SeedPatternsCard } from '@/components/settlement/seed-patterns/seed-patterns-card'
+import { SharingCard } from '@/components/settlement/sharing/sharing-card'
 import { SquireProgressionCards } from '@/components/settlement/squires/squire-progression-cards'
 import { SquireSuspicionsCard } from '@/components/settlement/squires/squire-suspicions-card'
 import { SettlementSurvivorsCard } from '@/components/settlement/survivors/settlement-survivors-card'
@@ -638,6 +639,19 @@ export function SettlementCard({
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
+          )}
+
+          {/*
+            Sharing Tab
+
+            The tab itself is gated upstream (sidebar entry) to development
+            builds only until the §9 entitlement plumbing exists; rendering here
+            is intentionally unconditional so a deep link still works in dev.
+            The active settlement is read from `useLocal()` inside the panel, so
+            we don't plumb it as a prop.
+          */}
+          {selectedSettlement && selectedTab === TabType.SHARING && (
+            <SharingCard local={local} />
           )}
         </div>
       </div>

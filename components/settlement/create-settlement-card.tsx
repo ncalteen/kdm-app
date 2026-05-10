@@ -194,7 +194,7 @@ export function CreateSettlementCard({
       })}
       className="space-y-6">
       <Form {...form}>
-        <Card className="max-w-[500px] mt-10 mx-auto">
+        <Card className="max-w-[500px] mt-14 mx-auto">
           <CardHeader className="px-6 pt-2 pb-0">
             <CardTitle className="flex items-center gap-2 text-base">
               <LanternMark className="h-5 w-5 text-amber-400/90" />
