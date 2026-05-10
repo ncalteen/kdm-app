@@ -278,16 +278,33 @@ describe('RLS: collaborator CRUD on survivor + survivor junctions + gear_grid', 
   it.each(SURVIVOR_JUNCTION_TABLES)(
     'stranger CANNOT INSERT a row into %s for another user survivor',
     async (table) => {
-      const { data, error } = await stranger.client
-        .from(table)
-        .insert(buildJunctionInsertRow(table))
-        .select('id')
-      expect(data ?? []).toEqual([])
-      // 23505 is not accepted here: the collaborator-CAN-DELETE test runs
-      // first inside the same describe and clears the fixture row, so a
-      // surviving 23505 would mask a real RLS hole. Allow only RLS / API
-      // denial codes.
-      if (error) expect(error.code).toMatch(/PGRST|42501/)
+      const rowId = fixture.survivorJunctionIds[table]
+      const insertRow = buildJunctionInsertRow(table)
+
+      // Make this test self-contained: remove the conflicting seeded row so
+      // the assertion exercises RLS denial instead of depending on execution
+      // order to avoid a 23505 unique-constraint error.
+      const { error: deleteError } = await admin.from(table).delete().eq('id', rowId)
+      expect(deleteError).toBeNull()
+
+      try {
+        const { data, error } = await stranger.client
+          .from(table)
+          .insert(insertRow)
+          .select('id')
+        expect(data ?? []).toEqual([])
+        expect(error).not.toBeNull()
+        if (error) expect(error.code).toMatch(/PGRST|42501/)
+      } finally {
+        const { data: restored, error: restoreError } = await admin
+          .from(table)
+          .insert(insertRow)
+          .select('id')
+          .single<{ id: string }>()
+        expect(restoreError).toBeNull()
+        expect(restored?.id).toBeDefined()
+        if (restored?.id) fixture.survivorJunctionIds[table] = restored.id
+      }
     }
   )
 
