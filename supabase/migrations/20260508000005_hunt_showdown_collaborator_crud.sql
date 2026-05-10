@@ -81,9 +81,8 @@
 -- 1. Direct-settlement tables — settlement_id is on the row.
 --
 do $$
-declare
-  t text;
-  direct_tables text[] := array[
+declare t text;
+direct_tables text [] := array [
     'hunt',
     'hunt_ai_deck',
     'hunt_hunt_board',
@@ -94,156 +93,198 @@ declare
     'showdown_monster',
     'showdown_survivor'
   ];
-begin
-  foreach t in array direct_tables loop
-    execute format('drop policy if exists "Allow select for owner" on %I', t);
-    execute format('drop policy if exists "Allow select for shared" on %I', t);
-    execute format('drop policy if exists "Allow insert for owner" on %I', t);
-    execute format('drop policy if exists "Allow update for owner" on %I', t);
-    execute format('drop policy if exists "Allow delete for owner" on %I', t);
-
-    execute format(
-      $f$create policy "Allow select for member" on %I
-        for select to authenticated using (
-          is_settlement_owner(settlement_id)
-          or is_settlement_collaborator(settlement_id)
-        )$f$,
-      t
-    );
-    execute format(
-      $f$create policy "Allow insert for member" on %I
-        for insert to authenticated with check (
-          is_settlement_owner(settlement_id)
-          or is_settlement_collaborator(settlement_id)
-        )$f$,
-      t
-    );
-    execute format(
-      $f$create policy "Allow update for member" on %I
-        for update to authenticated using (
-          is_settlement_owner(settlement_id)
-          or is_settlement_collaborator(settlement_id)
-        ) with check (
-          is_settlement_owner(settlement_id)
-          or is_settlement_collaborator(settlement_id)
-        )$f$,
-      t
-    );
-    execute format(
-      $f$create policy "Allow delete for member" on %I
-        for delete to authenticated using (
-          is_settlement_owner(settlement_id)
-          or is_settlement_collaborator(settlement_id)
-        )$f$,
-      t
-    );
-  end loop;
+begin foreach t in array direct_tables loop execute format(
+  'drop policy if exists "Allow select for owner" on %I',
+  t
+);
+execute format(
+  'drop policy if exists "Allow select for shared" on %I',
+  t
+);
+execute format(
+  'drop policy if exists "Allow insert for owner" on %I',
+  t
+);
+execute format(
+  'drop policy if exists "Allow update for owner" on %I',
+  t
+);
+execute format(
+  'drop policy if exists "Allow delete for owner" on %I',
+  t
+);
+execute format(
+  $f$create policy "Allow select for member" on %I for
+  select to authenticated using (
+      is_settlement_owner(settlement_id)
+      or is_settlement_collaborator(settlement_id)
+    ) $f$,
+    t
+);
+execute format(
+  $f$create policy "Allow insert for member" on %I for
+  insert to authenticated with check (
+      is_settlement_owner(settlement_id)
+      or is_settlement_collaborator(settlement_id)
+    ) $f$,
+    t
+);
+execute format(
+  $f$create policy "Allow update for member" on %I for
+  update to authenticated using (
+      is_settlement_owner(settlement_id)
+      or is_settlement_collaborator(settlement_id)
+    ) with check (
+      is_settlement_owner(settlement_id)
+      or is_settlement_collaborator(settlement_id)
+    ) $f$,
+    t
+);
+execute format(
+  $f$create policy "Allow delete for member" on %I for delete to authenticated using (
+    is_settlement_owner(settlement_id)
+    or is_settlement_collaborator(settlement_id)
+  ) $f$,
+  t
+);
+end loop;
 end $$;
 --
 -- 2. Monster-scoped junctions — resolve membership via the parent
 --    hunt_monster / showdown_monster row.
 --
 do $$
-declare
-  spec record;
-begin
-  for spec in
-    select *
-    from (values
-      ('hunt_monster_trait',               'hunt_monster',     'hunt_monster_id'),
-      ('hunt_monster_mood',                'hunt_monster',     'hunt_monster_id'),
-      ('hunt_monster_survivor_status',     'hunt_monster',     'hunt_monster_id'),
-      ('showdown_monster_trait',           'showdown_monster', 'showdown_monster_id'),
-      ('showdown_monster_mood',            'showdown_monster', 'showdown_monster_id'),
-      ('showdown_monster_survivor_status', 'showdown_monster', 'showdown_monster_id')
-    ) as t (child, parent, fk)
-  loop
-    execute format(
-      'drop policy if exists "Allow select for owner" on %I',
-      spec.child
-    );
-    execute format(
-      'drop policy if exists "Allow select for shared" on %I',
-      spec.child
-    );
-    execute format(
-      'drop policy if exists "Allow insert for owner" on %I',
-      spec.child
-    );
-    execute format(
-      'drop policy if exists "Allow update for owner" on %I',
-      spec.child
-    );
-    execute format(
-      'drop policy if exists "Allow delete for owner" on %I',
-      spec.child
-    );
-
-    -- %1 child table, %2 parent table, %3 FK column.
-    execute format(
-      $f$create policy "Allow select for member" on %1$I
-        for select to authenticated using (
-          exists (
-            select 1 from %2$I m
-            where m.id = %1$I.%3$I
-              and (
-                is_settlement_owner(m.settlement_id)
-                or is_settlement_collaborator(m.settlement_id)
-              )
+declare spec record;
+begin for spec in
+select *
+from (
+    values (
+        'hunt_monster_trait',
+        'hunt_monster',
+        'hunt_monster_id'
+      ),
+      (
+        'hunt_monster_mood',
+        'hunt_monster',
+        'hunt_monster_id'
+      ),
+      (
+        'hunt_monster_survivor_status',
+        'hunt_monster',
+        'hunt_monster_id'
+      ),
+      (
+        'showdown_monster_trait',
+        'showdown_monster',
+        'showdown_monster_id'
+      ),
+      (
+        'showdown_monster_mood',
+        'showdown_monster',
+        'showdown_monster_id'
+      ),
+      (
+        'showdown_monster_survivor_status',
+        'showdown_monster',
+        'showdown_monster_id'
+      )
+  ) as t (child, parent, fk) loop execute format(
+    'drop policy if exists "Allow select for owner" on %I',
+    spec.child
+  );
+execute format(
+  'drop policy if exists "Allow select for shared" on %I',
+  spec.child
+);
+execute format(
+  'drop policy if exists "Allow insert for owner" on %I',
+  spec.child
+);
+execute format(
+  'drop policy if exists "Allow update for owner" on %I',
+  spec.child
+);
+execute format(
+  'drop policy if exists "Allow delete for owner" on %I',
+  spec.child
+);
+-- %1 child table, %2 parent table, %3 FK column.
+execute format(
+  $f$create policy "Allow select for member" on %1$I for
+  select to authenticated using (
+      exists (
+        select 1
+        from %2$I m
+        where m.id = %1$I. %3$I
+          and (
+            is_settlement_owner(m.settlement_id)
+            or is_settlement_collaborator(m.settlement_id)
           )
-        )$f$,
-      spec.child, spec.parent, spec.fk
-    );
-    execute format(
-      $f$create policy "Allow insert for member" on %1$I
-        for insert to authenticated with check (
-          exists (
-            select 1 from %2$I m
-            where m.id = %1$I.%3$I
-              and (
-                is_settlement_owner(m.settlement_id)
-                or is_settlement_collaborator(m.settlement_id)
-              )
+      )
+    ) $f$,
+    spec.child,
+    spec.parent,
+    spec.fk
+);
+execute format(
+  $f$create policy "Allow insert for member" on %1$I for
+  insert to authenticated with check (
+      exists (
+        select 1
+        from %2$I m
+        where m.id = %1$I. %3$I
+          and (
+            is_settlement_owner(m.settlement_id)
+            or is_settlement_collaborator(m.settlement_id)
           )
-        )$f$,
-      spec.child, spec.parent, spec.fk
-    );
-    execute format(
-      $f$create policy "Allow update for member" on %1$I
-        for update to authenticated using (
-          exists (
-            select 1 from %2$I m
-            where m.id = %1$I.%3$I
-              and (
-                is_settlement_owner(m.settlement_id)
-                or is_settlement_collaborator(m.settlement_id)
-              )
+      )
+    ) $f$,
+    spec.child,
+    spec.parent,
+    spec.fk
+);
+execute format(
+  $f$create policy "Allow update for member" on %1$I for
+  update to authenticated using (
+      exists (
+        select 1
+        from %2$I m
+        where m.id = %1$I. %3$I
+          and (
+            is_settlement_owner(m.settlement_id)
+            or is_settlement_collaborator(m.settlement_id)
           )
-        ) with check (
-          exists (
-            select 1 from %2$I m
-            where m.id = %1$I.%3$I
-              and (
-                is_settlement_owner(m.settlement_id)
-                or is_settlement_collaborator(m.settlement_id)
-              )
+      )
+    ) with check (
+      exists (
+        select 1
+        from %2$I m
+        where m.id = %1$I. %3$I
+          and (
+            is_settlement_owner(m.settlement_id)
+            or is_settlement_collaborator(m.settlement_id)
           )
-        )$f$,
-      spec.child, spec.parent, spec.fk
-    );
-    execute format(
-      $f$create policy "Allow delete for member" on %1$I
-        for delete to authenticated using (
-          exists (
-            select 1 from %2$I m
-            where m.id = %1$I.%3$I
-              and (
-                is_settlement_owner(m.settlement_id)
-                or is_settlement_collaborator(m.settlement_id)
-              )
-          )
-        )$f$,
-      spec.child, spec.parent, spec.fk
-    );
-  end loop;
+      )
+    ) $f$,
+    spec.child,
+    spec.parent,
+    spec.fk
+);
+execute format(
+  $f$create policy "Allow delete for member" on %1$I for delete to authenticated using (
+    exists (
+      select 1
+      from %2$I m
+      where m.id = %1$I. %3$I
+        and (
+          is_settlement_owner(m.settlement_id)
+          or is_settlement_collaborator(m.settlement_id)
+        )
+    )
+  ) $f$,
+  spec.child,
+  spec.parent,
+  spec.fk
+);
+end loop;
 end $$;

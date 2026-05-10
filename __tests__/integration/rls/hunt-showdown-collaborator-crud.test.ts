@@ -252,8 +252,7 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
       parentColumn: 'hunt_monster_id',
       catalogColumn: 'survivor_status_id',
       catalogId: () => catalog.survivorStatusId,
-      seededRowId: () =>
-        fixture.monsterJunctionIds.hunt_monster_survivor_status
+      seededRowId: () => fixture.monsterJunctionIds.hunt_monster_survivor_status
     },
     {
       table: 'showdown_monster_trait',
@@ -351,16 +350,15 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
       expect(setupError).toBeNull()
 
       try {
-        const { data: inserted, error: insertError } =
-          await collaborator.client
-            .from('hunt_survivor')
-            .insert({
-              hunt_id: fixture.huntId,
-              settlement_id: fixture.settlementId,
-              survivor_id: extraSurvivor!.id
-            })
-            .select('id, hunt_id, survivor_id')
-            .single()
+        const { data: inserted, error: insertError } = await collaborator.client
+          .from('hunt_survivor')
+          .insert({
+            hunt_id: fixture.huntId,
+            settlement_id: fixture.settlementId,
+            survivor_id: extraSurvivor!.id
+          })
+          .select('id, hunt_id, survivor_id')
+          .single()
         expect(insertError).toBeNull()
         expect(inserted?.hunt_id).toBe(fixture.huntId)
         expect(inserted?.survivor_id).toBe(extraSurvivor!.id)
