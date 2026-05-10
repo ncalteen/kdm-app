@@ -218,13 +218,6 @@ export function SettlementCard({
       />
     )
 
-  // Sharing tab is always accessible, regardless of settlement state. The
-  // tab itself is gated upstream (sidebar entry) to development builds only
-  // until the §9 entitlement plumbing exists; rendering here is intentionally
-  // unconditional so a deep link still works in dev. The active settlement is
-  // read from `useLocal()` inside the panel, so we don't plumb it as a prop.
-  if (selectedTab === TabType.SHARING) return <SharingCard local={local} />
-
   // Help tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.HELP) return <HelpCard />
 
@@ -646,6 +639,19 @@ export function SettlementCard({
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
+          )}
+
+          {/*
+            Sharing Tab
+
+            The tab itself is gated upstream (sidebar entry) to development
+            builds only until the §9 entitlement plumbing exists; rendering here
+            is intentionally unconditional so a deep link still works in dev.
+            The active settlement is read from `useLocal()` inside the panel, so
+            we don't plumb it as a prop.
+          */}
+          {selectedSettlement && selectedTab === TabType.SHARING && (
+            <SharingCard local={local} />
           )}
         </div>
       </div>

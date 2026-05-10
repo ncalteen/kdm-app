@@ -34,7 +34,7 @@ interface SharingCardProps {
  */
 export function SharingCard({ local }: SharingCardProps): ReactElement {
   return (
-    <div className="flex flex-col gap-4 pt-12 px-2">
+    <div className="flex flex-col gap-4 px-2">
       <CollaboratorsPanel local={local} />
     </div>
   )
