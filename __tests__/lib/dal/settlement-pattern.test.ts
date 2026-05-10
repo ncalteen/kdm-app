@@ -33,11 +33,11 @@ describe('getSettlementPatterns', () => {
     )
   })
 
-  it('returns mapped patterns', async () => {
+  it('returns mapped patterns (pattern as object)', async () => {
     const rawItem = {
       id: 'sp-1',
       pattern_id: 'pat-1',
-      pattern: { pattern_name: 'Rawhide Headband' }
+      pattern: { custom: false, pattern_name: 'Rawhide Headband' }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -48,9 +48,69 @@ describe('getSettlementPatterns', () => {
     const result = await getSettlementPatterns('settlement-1')
 
     expect(result).toEqual([
-      { id: 'sp-1', pattern_id: 'pat-1', pattern_name: 'Rawhide Headband' }
+      {
+        id: 'sp-1',
+        pattern_id: 'pat-1',
+        pattern_name: 'Rawhide Headband',
+        custom: false
+      }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_pattern')
+  })
+
+  it('returns mapped patterns (pattern as single-element array)', async () => {
+    const rawItem = {
+      id: 'sp-1',
+      pattern_id: 'pat-1',
+      pattern: [{ custom: true, pattern_name: 'Rawhide Headband' }]
+    }
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data: [rawItem], error: null })
+      })
+    })
+
+    const result = await getSettlementPatterns('settlement-1')
+
+    expect(result).toEqual([
+      {
+        id: 'sp-1',
+        pattern_id: 'pat-1',
+        pattern_name: 'Rawhide Headband',
+        custom: true
+      }
+    ])
+  })
+
+  it('skips junction rows whose embedded pattern is null (RLS-hidden)', async () => {
+    const visibleItem = {
+      id: 'sp-1',
+      pattern_id: 'pat-1',
+      pattern: { custom: false, pattern_name: 'Rawhide Headband' }
+    }
+    const hiddenItem = {
+      id: 'sp-2',
+      pattern_id: 'pat-2',
+      pattern: null
+    }
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi
+          .fn()
+          .mockResolvedValue({ data: [visibleItem, hiddenItem], error: null })
+      })
+    })
+
+    const result = await getSettlementPatterns('settlement-1')
+
+    expect(result).toEqual([
+      {
+        id: 'sp-1',
+        pattern_id: 'pat-1',
+        pattern_name: 'Rawhide Headband',
+        custom: false
+      }
+    ])
   })
 
   it('returns empty array when no patterns exist', async () => {

@@ -29,10 +29,14 @@ export async function getSettlementPatterns(
   // local/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
-      const pattern = item.pattern as unknown as {
-        custom: boolean
-        pattern_name: string
-      } | null
+      const rawPattern = item.pattern as unknown as
+        | { custom: boolean; pattern_name: string }
+        | { custom: boolean; pattern_name: string }[]
+        | null
+
+      const pattern = Array.isArray(rawPattern)
+        ? (rawPattern[0] ?? null)
+        : rawPattern
 
       if (!pattern) return []
 
