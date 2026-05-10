@@ -24,7 +24,11 @@ describe('Realtime publication membership', () => {
   /**
    * Source of truth: every settlement-scoped table that must broadcast
    * changes for the multiplayer experience to work. Keep this list in sync
-   * with the `TABLE_DOMAIN_MAP` in `hooks/use-realtime.tsx`.
+   * with the `TABLE_DOMAIN_MAP` in `hooks/use-realtime.tsx`, with one
+   * exception: `settlement_shared_user` is part of the `supabase_realtime`
+   * publication (added in E1.4) but is consumed by a user-level subscription
+   * landing in [E1.5], so it does not appear in the per-settlement
+   * `TABLE_DOMAIN_MAP`.
    */
   const EXPECTED_TABLES = [
     // Core settlement & junctions

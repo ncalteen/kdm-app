@@ -25,6 +25,7 @@ do $$ begin if not exists (
   where pubname = 'supabase_realtime'
     and schemaname = 'public'
     and tablename = 'settlement_shared_user'
-) then execute 'alter publication supabase_realtime add table settlement_shared_user';
+) then alter publication supabase_realtime
+add table settlement_shared_user;
 end if;
 end $$;
