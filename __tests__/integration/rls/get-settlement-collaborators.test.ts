@@ -100,13 +100,14 @@ describe('RPC: get_settlement_collaborators', () => {
       target_settlement: settlementId
     })
 
-    // Either PostgREST refuses execution outright, or the function returns
-    // an empty result set — both satisfy "anon cannot read this".
-    if (error) {
-      expect(error.code ?? '').toMatch(/PGRST|42501/)
-    } else {
-      expect(data ?? []).toEqual([])
-    }
+    // The migration explicitly `revoke execute … from anon`, so PostgREST
+    // must refuse the call rather than returning empty data. Pinning the
+    // contract with a strict error assertion guards against accidentally
+    // dropping the revoke (otherwise the in-function `auth.uid()` filter
+    // would silently return [] and this test would still pass).
+    expect(data).toBeNull()
+    expect(error).not.toBeNull()
+    expect(error?.code ?? '').toMatch(/PGRST|42501/)
   })
 
   it('reflects added shares dynamically', async () => {

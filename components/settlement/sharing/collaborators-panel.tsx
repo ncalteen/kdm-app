@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { LocalStateType } from '@/contexts/local-context'
+import { LocalStateType, useLocal } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addSettlementSharedUsers,
@@ -51,8 +51,6 @@ import {
 interface CollaboratorsPanelProps {
   /** Local State (used to gate optional toasts) */
   local: LocalStateType
-  /** Selected Settlement (panel is hidden when null or not owner) */
-  selectedSettlement: SettlementDetail | null
 }
 
 /**
@@ -62,6 +60,12 @@ interface CollaboratorsPanelProps {
  * settlement invite another user by exact username, see the current list of
  * shared users, and revoke a share. Hidden entirely from collaborators via
  * the {@link OwnerOnly} wrapper so a non-owner never even sees the affordance.
+ *
+ * `selectedSettlement` is intentionally read from `useLocal()` rather than
+ * accepted as a prop. Both `OwnerOnly` and the data-fetching effect must
+ * agree on which settlement is active; sourcing one through context and the
+ * other through props left room for the gate and the data to disagree
+ * (e.g., a stale prop after a settlement switch).
  *
  * Anti-enumeration contract:
  *   - Username field is plain text only — no typeahead, no autocomplete.
@@ -82,9 +86,10 @@ interface CollaboratorsPanelProps {
  *   the settlement owner)
  */
 export function CollaboratorsPanel({
-  local,
-  selectedSettlement
+  local
 }: CollaboratorsPanelProps): ReactElement | null {
+  const { selectedSettlement } = useLocal()
+
   return (
     <OwnerOnly>
       {selectedSettlement ? (
@@ -129,7 +134,13 @@ function CollaboratorsPanelContent({
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [username, setUsername] = useState<string>('')
   const [isInviting, setIsInviting] = useState<boolean>(false)
-  const [revokingUserId, setRevokingUserId] = useState<string | null>(null)
+  // Tracking a Set of pending revoke IDs (rather than a single id) lets us
+  // correctly disable just the rows that have a request in flight while
+  // still rejecting concurrent clicks on a single row. The owner can fan
+  // out multiple revokes safely without one rollback clobbering another.
+  const [revokingUserIds, setRevokingUserIds] = useState<Set<string>>(
+    () => new Set()
+  )
 
   const settlementId = selectedSettlement.id
 
@@ -248,14 +259,28 @@ function CollaboratorsPanelContent({
    * `getUnshareBlockers` should be inserted before the optimistic update
    * here and the blockers modal opened when the result is non-empty.
    *
+   * On failure we re-fetch via `refresh()` rather than restoring a
+   * snapshot of the prior list. A snapshot rollback would clobber any
+   * concurrent invite/revoke (or realtime update) that landed while the
+   * request was in flight; re-fetching gets the canonical state from
+   * the server and is safe to interleave with other pending mutations.
+   *
    * @param sharedUserId Shared User ID
    */
   const handleRevoke = useCallback(
     async (sharedUserId: string) => {
-      const previous = collaborators
-      setRevokingUserId(sharedUserId)
+      // Reject double-clicks on a single row without preventing other
+      // rows from also being revoked concurrently.
+      if (revokingUserIds.has(sharedUserId)) return
 
-      // Optimistic remove.
+      setRevokingUserIds((prev) => {
+        const next = new Set(prev)
+        next.add(sharedUserId)
+        return next
+      })
+
+      // Optimistic remove via functional update so the change composes
+      // cleanly with any other in-flight optimistic updates.
       setCollaborators((prev) =>
         prev.filter((c) => c.shared_user_id !== sharedUserId)
       )
@@ -264,15 +289,20 @@ function CollaboratorsPanelContent({
         await removeSettlementSharedUsers(settlementId, [sharedUserId])
         toast.success(SETTLEMENT_SHARE_REVOKE_SUCCESS_MESSAGE())
       } catch (err) {
-        // Rollback.
-        setCollaborators(previous)
         console.error('Settlement Share Revoke Error:', err)
         toast.error(ERROR_MESSAGE())
+        // Re-sync from the server instead of restoring a snapshot —
+        // see function-level comment.
+        await refresh()
       } finally {
-        setRevokingUserId(null)
+        setRevokingUserIds((prev) => {
+          const next = new Set(prev)
+          next.delete(sharedUserId)
+          return next
+        })
       }
     },
-    [collaborators, settlementId, toast]
+    [refresh, revokingUserIds, settlementId, toast]
   )
 
   const trimmedUsername = username.trim()
@@ -351,7 +381,7 @@ function CollaboratorsPanelContent({
                         @{c.username || 'unknown'}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        Joined {formatJoinedTimeAgo(c.created_at)}
+                        Joined: {formatJoinedTimeAgo(c.created_at)}
                       </span>
                     </div>
                   </div>
@@ -360,9 +390,9 @@ function CollaboratorsPanelContent({
                     variant="ghost"
                     size="icon"
                     aria-label={`Revoke share with @${c.username || 'this collaborator'}`}
-                    disabled={revokingUserId === c.shared_user_id}
+                    disabled={revokingUserIds.has(c.shared_user_id)}
                     onClick={() => handleRevoke(c.shared_user_id)}>
-                    {revokingUserId === c.shared_user_id ? (
+                    {revokingUserIds.has(c.shared_user_id) ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <XIcon className="h-4 w-4" />

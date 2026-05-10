@@ -1,11 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+const useLocalMock = vi.fn()
 
 vi.mock('@/contexts/local-context', () => ({
-  useLocal: () => ({
-    selectedSettlementId: 'settlement-1',
-    selectedSettlement: { id: 'settlement-1', role: 'owner' }
-  })
+  useLocal: () => useLocalMock()
 }))
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -37,15 +36,22 @@ import { CollaboratorsPanel } from '@/components/settlement/sharing/collaborator
 type CollaboratorsPanelProps = Parameters<typeof CollaboratorsPanel>[0]
 
 const baseProps: CollaboratorsPanelProps = {
-  local: {} as CollaboratorsPanelProps['local'],
-  selectedSettlement: {
-    id: 'settlement-1',
-    role: 'owner'
-  } as CollaboratorsPanelProps['selectedSettlement']
+  local: {} as CollaboratorsPanelProps['local']
 }
+
+const ownerContext = {
+  selectedSettlementId: 'settlement-1',
+  selectedSettlement: { id: 'settlement-1', role: 'owner' }
+}
+
+afterEach(() => {
+  useLocalMock.mockReset()
+})
 
 describe('CollaboratorsPanel', () => {
   it('renders the share form when the caller is the owner', () => {
+    useLocalMock.mockReturnValue(ownerContext)
+
     const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
 
     expect(html).toContain('Light another lantern')
@@ -56,14 +62,30 @@ describe('CollaboratorsPanel', () => {
   })
 
   it('renders nothing when no settlement is selected', () => {
-    const html = renderToStaticMarkup(
-      <CollaboratorsPanel {...baseProps} selectedSettlement={null} />
-    )
+    useLocalMock.mockReturnValue({
+      selectedSettlementId: null,
+      selectedSettlement: null
+    })
+
+    const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
+
+    expect(html).toBe('')
+  })
+
+  it('renders nothing when the caller is a collaborator (non-owner)', () => {
+    useLocalMock.mockReturnValue({
+      selectedSettlementId: 'settlement-1',
+      selectedSettlement: { id: 'settlement-1', role: 'collaborator' }
+    })
+
+    const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
 
     expect(html).toBe('')
   })
 
   it('shows the loading copy on the initial render before the fetch resolves', () => {
+    useLocalMock.mockReturnValue(ownerContext)
+
     const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
 
     expect(html).toContain('Gathering the watch')

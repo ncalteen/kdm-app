@@ -44,24 +44,28 @@
 --     independently of PUBLIC. The implicit `auth.uid()` filter would
 --     return null/empty for anon callers anyway, but the explicit revoke
 --     keeps the contract obvious.
+--
+-- Hardening: `set search_path = ''` + fully-qualified table references
+-- prevent `pg_temp` / schema-shadowing attacks against this SECURITY
+-- DEFINER function. Mirrors the pattern used by
+-- `lookup_user_by_username` (20260510000000).
 --------------------------------------------------------------------------------
 alter table settlement_shared_user
 add column if not exists created_at timestamptz not null default now();
-
 create or replace function get_settlement_collaborators(target_settlement uuid) returns table (
     shared_user_id uuid,
     username varchar,
     avatar_url text,
     created_at timestamptz
   ) language sql security definer
-set search_path = public stable as $$
+set search_path = '' stable as $$
 select ssu.shared_user_id,
   us.username,
   us.avatar_url,
   ssu.created_at
-from settlement_shared_user ssu
-  join user_settings us on us.user_id = ssu.shared_user_id
-  join settlement s on s.id = ssu.settlement_id
+from public.settlement_shared_user ssu
+  join public.user_settings us on us.user_id = ssu.shared_user_id
+  join public.settlement s on s.id = ssu.settlement_id
 where ssu.settlement_id = target_settlement
   and s.user_id = auth.uid()
 order by ssu.created_at asc;

@@ -1,11 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+const useLocalMock = vi.fn()
 
 vi.mock('@/contexts/local-context', () => ({
-  useLocal: () => ({
-    selectedSettlementId: 'settlement-1',
-    selectedSettlement: { id: 'settlement-1', role: 'owner' }
-  })
+  useLocal: () => useLocalMock()
 }))
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -37,15 +36,20 @@ import { SharingCard } from '@/components/settlement/sharing/sharing-card'
 type SharingCardProps = Parameters<typeof SharingCard>[0]
 
 const baseProps: SharingCardProps = {
-  local: {} as SharingCardProps['local'],
-  selectedSettlement: {
-    id: 'settlement-1',
-    role: 'owner'
-  } as SharingCardProps['selectedSettlement']
+  local: {} as SharingCardProps['local']
 }
+
+afterEach(() => {
+  useLocalMock.mockReset()
+})
 
 describe('SharingCard', () => {
   it('renders the share-management panel for the owner', () => {
+    useLocalMock.mockReturnValue({
+      selectedSettlementId: 'settlement-1',
+      selectedSettlement: { id: 'settlement-1', role: 'owner' }
+    })
+
     const html = renderToStaticMarkup(<SharingCard {...baseProps} />)
 
     expect(html).toContain('Light another lantern')
@@ -53,9 +57,12 @@ describe('SharingCard', () => {
   })
 
   it('renders no panel content when no settlement is selected', () => {
-    const html = renderToStaticMarkup(
-      <SharingCard {...baseProps} selectedSettlement={null} />
-    )
+    useLocalMock.mockReturnValue({
+      selectedSettlementId: null,
+      selectedSettlement: null
+    })
+
+    const html = renderToStaticMarkup(<SharingCard {...baseProps} />)
 
     // The wrapper div is still emitted, but the inner panel short-circuits
     // because `selectedSettlement` is null.

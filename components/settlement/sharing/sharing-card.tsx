@@ -2,7 +2,6 @@
 
 import { CollaboratorsPanel } from '@/components/settlement/sharing/collaborators-panel'
 import { LocalStateType } from '@/contexts/local-context'
-import { SettlementDetail } from '@/lib/types'
 import { ReactElement } from 'react'
 
 /**
@@ -11,8 +10,6 @@ import { ReactElement } from 'react'
 interface SharingCardProps {
   /** Local State */
   local: LocalStateType
-  /** Selected Settlement (panel is hidden when null or not owner) */
-  selectedSettlement: SettlementDetail | null
 }
 
 /**
@@ -28,19 +25,17 @@ interface SharingCardProps {
  * from `local/sharing-architecture.md` §9 lands. Once paid gating exists,
  * the gate moves from `NODE_ENV` to a `user_can_share()` check.
  *
+ * The active settlement is read from `useLocal()` inside
+ * {@link CollaboratorsPanel}, so this card no longer needs to plumb it
+ * through props (single source of truth — see panel docs).
+ *
  * @param props Sharing Card Properties
  * @returns Sharing Card Component
  */
-export function SharingCard({
-  local,
-  selectedSettlement
-}: SharingCardProps): ReactElement {
+export function SharingCard({ local }: SharingCardProps): ReactElement {
   return (
     <div className="flex flex-col gap-4 pt-12 px-2">
-      <CollaboratorsPanel
-        local={local}
-        selectedSettlement={selectedSettlement}
-      />
+      <CollaboratorsPanel local={local} />
     </div>
   )
 }
