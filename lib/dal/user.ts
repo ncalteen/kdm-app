@@ -368,3 +368,33 @@ export async function renameUsername(
 
   return data ? 'success' : 'collision'
 }
+
+/**
+ * Lookup User By Username
+ *
+ * Resolves an exact username to its `auth.users.id` via the SECURITY DEFINER
+ * `lookup_user_by_username` RPC. Used by the share-settlement invite flow to
+ * convert a typed handle into a `shared_user_id` without ever pulling the
+ * full `user_settings` table client-side.
+ *
+ * The RPC enforces a 30-lookups-per-rolling-60s rate limit per caller and
+ * deliberately collapses both "rate-limited" and "not-found" into a NULL
+ * return so callers cannot distinguish the two cases — closing the
+ * enumeration side channel documented in `local/sharing-architecture.md` §4 P9.
+ *
+ * @param username Exact Username
+ * @returns User ID, or null if no match (or the caller is over budget)
+ * @throws For unexpected DB errors (network, missing session, etc.)
+ */
+export async function lookupUserByUsername(
+  username: string
+): Promise<string | null> {
+  const supabase = createClient()
+  const { data, error } = await supabase.rpc('lookup_user_by_username', {
+    p_username: username
+  })
+
+  if (error) throw new Error(`Username Lookup Error: ${error.message}`)
+
+  return data ?? null
+}

@@ -22,7 +22,8 @@ const {
   addUserSettings,
   updateUserSettings,
   removeUserSettings,
-  renameUsername
+  renameUsername,
+  lookupUserByUsername
 } = await import('@/lib/dal/user')
 
 beforeEach(() => {
@@ -445,6 +446,41 @@ describe('renameUsername', () => {
 
     await expect(renameUsername('valid_name')).rejects.toThrow(
       'Error Renaming Username: connection lost'
+    )
+  })
+})
+
+describe('lookupUserByUsername', () => {
+  it('returns the user_id when the RPC resolves the handle', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: 'user-123',
+      error: null
+    })
+
+    const result = await lookupUserByUsername('alice')
+
+    expect(result).toBe('user-123')
+    expect(mockSupabase.rpc).toHaveBeenCalledWith('lookup_user_by_username', {
+      p_username: 'alice'
+    })
+  })
+
+  it('returns null when the RPC resolves to null (not-found or rate-limited)', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: null })
+
+    const result = await lookupUserByUsername('nobody')
+
+    expect(result).toBeNull()
+  })
+
+  it('throws on unexpected RPC errors', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'connection lost' }
+    })
+
+    await expect(lookupUserByUsername('alice')).rejects.toThrow(
+      'Username Lookup Error: connection lost'
     )
   })
 })
