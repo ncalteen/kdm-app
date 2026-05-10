@@ -1,19 +1,25 @@
 'use client'
 
-import { useRealtimeSubscriptions } from '@/hooks/use-realtime'
+import {
+  ShareChangeEvent,
+  useRealtimeSubscriptions,
+  useUserRealtimeSubscriptions
+} from '@/hooks/use-realtime'
 import { LOCAL_STORAGE_KEY } from '@/lib/common'
 import { getHunt } from '@/lib/dal/hunt'
 import { getSettlement } from '@/lib/dal/settlement'
 import { getSettlementPhase } from '@/lib/dal/settlement-phase'
 import { getShowdown } from '@/lib/dal/showdown'
 import { getSurvivor, getSurvivors } from '@/lib/dal/survivor'
-import { getUserSettings } from '@/lib/dal/user'
+import { getSettlementForUser, getUserSettings } from '@/lib/dal/user'
 import { TabType } from '@/lib/enums'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
 import {
   HuntDetail,
   HuntStateSetter,
   SettlementDetail,
+  SettlementListEntry,
   SettlementPhaseDetail,
   SettlementStateSetter,
   ShowdownDetail,
@@ -32,8 +38,10 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState
 } from 'react'
+import { toast as sonnerToast } from 'sonner'
 
 /**
  * Local State Type
@@ -177,6 +185,17 @@ interface LocalContextType {
   userSettings: UserSettingsDetail | null
   /** Set User Settings */
   setUserSettings: (settings: UserSettingsDetail | null) => void
+
+  /**
+   * Settlement List
+   *
+   * Cached result of `getSettlementForUser`. Refreshed automatically when
+   * the user-level realtime channel observes share grants / revokes
+   * targeting the current user (Phase 1.5 — issue #144).
+   */
+  settlementList: SettlementListEntry[]
+  /** Whether the initial settlement-list fetch is still pending */
+  isSettlementListLoading: boolean
 }
 
 /**
@@ -276,6 +295,29 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   // issuing a redundant `auth.getUser()` call.
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
+  // Authenticated user ID — drives the per-user realtime channel that
+  // delivers share grant / revoke notifications. Mirrors the lifecycle of
+  // `isAuthenticated` and is captured from the same `auth.getUser()` call
+  // to avoid a redundant round trip.
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Settlement list shown in the switcher. Held at the context layer so the
+  // user-level realtime channel can refresh it from a single source of
+  // truth when a share is granted to or revoked from the current user
+  // (Phase 1.5 — issue #144).
+  const [settlementList, setSettlementList] = useState<SettlementListEntry[]>(
+    []
+  )
+  const [isSettlementListLoading, setIsSettlementListLoading] =
+    useState<boolean>(true)
+
+  // Toast helpers used by the share-change handler. Sonner is imported
+  // directly here (rather than via `useToast`) to avoid a circular import
+  // — `hooks/use-toast.tsx` already imports `LocalStateType` from this
+  // module. The `disableToasts` gating from `useToast` is reproduced inline
+  // for success / info events; errors are always shown.
+  const disableToasts = local.disableToasts === true
+
   useEffect(() => {
     let isCancelled = false
 
@@ -283,7 +325,9 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
     supabase.auth.getUser().then(({ data, error }) => {
       if (isCancelled) return
+      const authedUserId = !error ? (data?.user?.id ?? null) : null
       setIsAuthenticated(!error && !!data?.user)
+      setUserId(authedUserId)
     })
 
     // Re-evaluate when the auth state changes (e.g. login/logout).
@@ -296,6 +340,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
       if (!session?.user) {
         setIsAuthenticated(false)
+        setUserId(null)
         return
       }
 
@@ -306,10 +351,12 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           // Stale session — sign out to clear the invalid token.
           supabase.auth.signOut()
           setIsAuthenticated(false)
+          setUserId(null)
           return
         }
 
         setIsAuthenticated(true)
+        setUserId(data.user.id)
       })
     })
 
@@ -487,6 +534,131 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           })
       }
     }
+  })
+
+  // Fetch the settlement list once authentication is confirmed and again on
+  // every share grant / revoke event delivered through the user-level
+  // realtime channel below. Wrapped in a callback so the realtime handler
+  // can refresh on demand.
+  const refetchSettlementList = useCallback(() => {
+    getSettlementForUser()
+      .then((data) => setSettlementList(data))
+      .catch((err: unknown) => {
+        console.error('Settlement List Fetch Error:', err)
+        sonnerToast.error(ERROR_MESSAGE())
+      })
+  }, [])
+
+  useEffect(() => {
+    let isCancelled = false
+
+    if (!isAuthenticated)
+      return () => {
+        isCancelled = true
+      }
+
+    getSettlementForUser()
+      .then((data) => {
+        if (isCancelled) return
+        setSettlementList(data)
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+        console.error('Settlement List Fetch Error:', err)
+        sonnerToast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!isCancelled) setIsSettlementListLoading(false)
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated])
+
+  // Per-user realtime channel listening for inserts / deletes on
+  // `settlement_shared_user` where `shared_user_id = userId`. Toasts the
+  // recipient on grant / revoke and refreshes the cached settlement list.
+  // When the active settlement is the one being revoked, the existing
+  // settlement-channel cascade clears all derived state via a fresh
+  // `getSettlement` fetch (RLS will return null post-revoke).
+  //
+  // A short debounce on the refetch coalesces bursts (e.g. an owner mass
+  // revoking) into a single list refresh while still firing one toast per
+  // event for clarity.
+  const shareChangeRefetchTimerRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
+
+  const handleShareChange = useCallback(
+    (event: ShareChangeEvent) => {
+      if (event.event === 'INSERT') {
+        if (!disableToasts)
+          sonnerToast.success('A new lantern joins the watch.')
+      } else {
+        if (!disableToasts) sonnerToast.info('A lantern dims. Its watch ends.')
+
+        // If the active settlement is the one being revoked, force a
+        // fresh fetch so the existing onSettlementChange cascade clears
+        // derived state. RLS will return null post-revoke.
+        if (event.settlementId === selectedSettlementId) {
+          getSettlement(event.settlementId)
+            .then((settlement) => {
+              if (!settlement) {
+                setSelectedSettlementState(null)
+                setSelectedSettlementIdState(null)
+                setSelectedHuntState(null)
+                setSelectedHuntIdState(null)
+                setSelectedHuntMonsterIndexState(0)
+                setSelectedSettlementPhaseState(null)
+                setSelectedSettlementPhaseIdState(null)
+                setSelectedShowdownState(null)
+                setSelectedShowdownIdState(null)
+                setSelectedShowdownMonsterIndexState(0)
+                setSelectedSurvivorState(null)
+                setSelectedSurvivorIdState(null)
+                setSurvivors([])
+
+                setLocalState((prev) => ({
+                  ...prev,
+                  selectedSettlementId: null,
+                  selectedHuntId: null,
+                  selectedHuntMonsterIndex: 0,
+                  selectedSettlementPhaseId: null,
+                  selectedShowdownId: null,
+                  selectedShowdownMonsterIndex: 0,
+                  selectedSurvivorId: null
+                }))
+              }
+            })
+            .catch((err: unknown) => {
+              console.error('Revoked Settlement Refetch Error:', err)
+            })
+        }
+      }
+
+      if (shareChangeRefetchTimerRef.current)
+        clearTimeout(shareChangeRefetchTimerRef.current)
+
+      shareChangeRefetchTimerRef.current = setTimeout(() => {
+        shareChangeRefetchTimerRef.current = null
+        refetchSettlementList()
+      }, 300)
+    },
+    [disableToasts, refetchSettlementList, selectedSettlementId]
+  )
+
+  useEffect(() => {
+    return () => {
+      if (shareChangeRefetchTimerRef.current)
+        clearTimeout(shareChangeRefetchTimerRef.current)
+    }
+  }, [])
+
+  useUserRealtimeSubscriptions({
+    enabled: isAuthenticated === true,
+    userId,
+    onShareChange: handleShareChange
   })
 
   /**
@@ -1282,7 +1454,10 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       updateLocal,
 
       userSettings,
-      setUserSettings
+      setUserSettings,
+
+      settlementList,
+      isSettlementListLoading
     }),
     [
       isAuthenticated,
@@ -1307,6 +1482,8 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       survivors,
       local,
       userSettings,
+      settlementList,
+      isSettlementListLoading,
       setSelectedHunt,
       setSelectedHuntId,
       setSelectedHuntMonsterIndex,

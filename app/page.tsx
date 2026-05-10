@@ -122,7 +122,10 @@ function MainPage(): ReactElement {
     updateLocal,
 
     userSettings,
-    setUserSettings
+    setUserSettings,
+
+    settlementList,
+    isSettlementListLoading
   } = useLocal()
 
   return (
@@ -131,14 +134,15 @@ function MainPage(): ReactElement {
         <SiteHeader />
 
         <AppSidebar
-          local={local}
           isCreatingNewSettlement={isCreatingNewSettlement}
+          isSettlementListLoading={isSettlementListLoading}
           selectedHuntId={selectedHuntId}
           selectedSettlement={selectedSettlement}
           selectedSettlementId={selectedSettlementId}
           selectedSettlementPhaseId={selectedSettlementPhaseId}
           selectedShowdownId={selectedShowdownId}
           selectedTab={selectedTab}
+          settlementList={settlementList}
           setIsCreatingNewSettlement={setIsCreatingNewSettlement}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlementId={setSelectedSettlementId}

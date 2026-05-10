@@ -1,7 +1,6 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
-import { DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
-import { SettlementRole, UserSettingsDetail } from '@/lib/types'
+import { SettlementListEntry, UserSettingsDetail } from '@/lib/types'
 import { SupabaseClient } from '@supabase/supabase-js'
 
 /**
@@ -180,15 +179,7 @@ export async function getUserSettings(): Promise<UserSettingsDetail | null> {
  *
  * @returns List of Settlement(s)
  */
-export async function getSettlementForUser(): Promise<
-  {
-    campaign_type: DatabaseCampaignType
-    id: string
-    settlement_name: string
-    role: SettlementRole
-    owner_username: string | null
-  }[]
-> {
+export async function getSettlementForUser(): Promise<SettlementListEntry[]> {
   const userId = await getUserId()
   const supabase = createClient()
 
@@ -229,13 +220,7 @@ export async function getSettlementForUser(): Promise<
     )
   )
 
-  const results: {
-    campaign_type: DatabaseCampaignType
-    id: string
-    settlement_name: string
-    role: SettlementRole
-    owner_username: string | null
-  }[] = []
+  const results: SettlementListEntry[] = []
 
   for (const s of ownedResult.data ?? [])
     results.push({ ...s, role: 'owner', owner_username: null })

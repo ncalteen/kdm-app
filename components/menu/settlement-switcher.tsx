@@ -20,20 +20,10 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
-import { getSettlementForUser } from '@/lib/dal/user'
-import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
-import { ERROR_MESSAGE } from '@/lib/messages'
-import { SettlementDetail, SettlementRole } from '@/lib/types'
+import { CampaignType } from '@/lib/enums'
+import { SettlementDetail, SettlementListEntry } from '@/lib/types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
-import {
-  ComponentProps,
-  ReactElement,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
+import { ComponentProps, ReactElement } from 'react'
 
 /**
  * Settlement Switcher Properties
@@ -41,8 +31,12 @@ import {
 interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
   /** Is Creating New Settlement */
   isCreatingNewSettlement: boolean
-  /** Local State */
-  local: LocalStateType
+  /**
+   * Whether the settlement list is still loading its initial fetch.
+   * Subsequent realtime-driven refreshes do not toggle this flag, so the
+   * skeleton only appears on first mount.
+   */
+  isSettlementListLoading: boolean
   /** Selected Hunt ID */
   selectedHuntId: string | null
   /** Selected Settlement */
@@ -53,6 +47,14 @@ interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
   selectedSettlementPhaseId: string | null
   /** Selected Showdown ID */
   selectedShowdownId: string | null
+  /**
+   * Settlement List
+   *
+   * Owned + shared settlements available to the current user. Sourced from
+   * `LocalContext` so updates from the per-user realtime channel
+   * (#144 / E1.5) propagate without an extra fetch.
+   */
+  settlementList: SettlementListEntry[]
   /** Set Is Creating New Settlement */
   setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set Selected Hunt ID */
@@ -80,12 +82,13 @@ interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
  */
 export function SettlementSwitcher({
   isCreatingNewSettlement,
-  local,
+  isSettlementListLoading,
   selectedHuntId,
   selectedSettlement,
   selectedSettlementId,
   selectedSettlementPhaseId,
   selectedShowdownId,
+  settlementList,
   setIsCreatingNewSettlement,
   setSelectedHuntId,
   setSelectedSettlementId,
@@ -93,53 +96,6 @@ export function SettlementSwitcher({
   setSelectedShowdownId,
   setSelectedSurvivorId
 }: SettlementSwitcherProps): ReactElement {
-  const { toast } = useToast(local)
-
-  const [settlementList, setSettlementList] = useState<
-    {
-      campaign_type: DatabaseCampaignType
-      id: string
-      settlement_name: string
-      role: SettlementRole
-      owner_username: string | null
-    }[]
-  >([])
-  const [isLoading, setIsLoading] = useState(true)
-  const fetchedRef = useRef(false)
-
-  /**
-   * Load Settlements
-   *
-   * Gather the list of settlements available to the user. Uses a ref to
-   * prevent redundant fetches on re-renders while still refetching when the
-   * selected settlement changes.
-   */
-  useEffect(() => {
-    // Always refetch when selectedSettlementId changes, but track initial load
-    fetchedRef.current = false
-
-    let isCancelled = false
-
-    getSettlementForUser()
-      .then((data) => {
-        if (isCancelled) return
-        setSettlementList(data)
-        fetchedRef.current = true
-      })
-      .catch((err: unknown) => {
-        if (isCancelled) return
-        console.error('Settlement List Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
-      .finally(() => {
-        if (!isCancelled) setIsLoading(false)
-      })
-
-    return () => {
-      isCancelled = true
-    }
-  }, [selectedSettlementId, toast])
-
   /**
    * Handle Settlement Selection
    *
@@ -150,7 +106,7 @@ export function SettlementSwitcher({
     setSelectedSettlementId(settlementId)
   }
 
-  if (isLoading)
+  if (isSettlementListLoading)
     return (
       <SidebarMenu>
         <SidebarMenuItem>
