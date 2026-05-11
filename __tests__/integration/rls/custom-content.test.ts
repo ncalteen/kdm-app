@@ -70,6 +70,12 @@ const SPECS: CustomContentSpec[] = [
     nameCol: 'ability_impairment_name'
   },
   {
+    table: 'armor_set',
+    sharedTable: 'armor_set_shared_user',
+    fkCol: 'armor_set_id',
+    nameCol: 'armor_set_name'
+  },
+  {
     table: 'character',
     sharedTable: 'character_shared_user',
     fkCol: 'character_id',
@@ -81,6 +87,12 @@ const SPECS: CustomContentSpec[] = [
     fkCol: 'collective_cognition_reward_id',
     nameCol: 'reward_name',
     extras: { collective_cognition: 1 }
+  },
+  {
+    table: 'constellation',
+    sharedTable: 'constellation_shared_user',
+    fkCol: 'constellation_id',
+    nameCol: 'constellation_name'
   },
   {
     table: 'disorder',
@@ -471,26 +483,34 @@ describe('RLS: custom-content tables', () => {
       const entry = ids.get(spec.table)!
       const updPayload = { [spec.nameCol]: 'GUEST-EDIT' }
 
-      const { data: upd } = await sharedGuest.client
+      const { data: upd, error: updErr } = await sharedGuest.client
         .from(spec.table)
         .update(updPayload)
         .eq('id', entry.sharedCustomId)
         .select('id')
+      // RLS filters the row out of the UPDATE...RETURNING set rather than
+      // raising a permission error, so error must be null and the
+      // returning array must be empty. Asserting both pins the policy-
+      // driven 0-rows-updated behavior and prevents a silent PostgREST
+      // error from being misread as success.
+      expect(updErr).toBeNull()
       expect(upd ?? []).toEqual([])
 
-      const { data: del } = await sharedGuest.client
+      const { data: del, error: delErr } = await sharedGuest.client
         .from(spec.table)
         .delete()
         .eq('id', entry.sharedCustomId)
         .select('id')
+      expect(delErr).toBeNull()
       expect(del ?? []).toEqual([])
 
       // Row must still exist and be unchanged.
-      const { data: check } = await admin
+      const { data: check, error: checkErr } = await admin
         .from(spec.table)
         .select(`id, ${spec.nameCol}`)
         .eq('id', entry.sharedCustomId)
         .single()
+      expect(checkErr).toBeNull()
       expect(check).not.toBeNull()
       expect(
         (check as unknown as Record<string, string>)[spec.nameCol]

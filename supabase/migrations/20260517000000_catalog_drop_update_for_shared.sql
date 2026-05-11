@@ -1,11 +1,10 @@
 --------------------------------------------------------------------------------
 -- [E2.2] Drop `Allow update for shared and custom` on every catalog table.
 --
--- Source of truth: local/sharing-architecture.md §5.2 Decision 2 and §6
--- Permission Matrix. Rules text on catalog rows is author-only:
--- collaborators may SELECT custom catalog rows (via the transitive-SELECT
--- work delivered in [E2.1.a], [E2.1.b], [E2.1.c]) but they must never
--- modify them.
+-- Tracking: Epic E2 (#122), this phase: #149. Rules text on catalog rows
+-- is author-only: collaborators may SELECT custom catalog rows (via the
+-- transitive-SELECT work delivered in [E2.1.a] (#162), [E2.1.b] (#159),
+-- [E2.1.c] (#160)) but they must never modify them.
 --
 -- Author UPDATE remains untouched via the existing
 -- `Allow update for owner and custom` policy on each table.
