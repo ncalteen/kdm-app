@@ -16,7 +16,32 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  *  3. ...or by users in the matching `<table>_shared_user` join table.
  *
  * This suite runs a single matrix over every table that follows this pattern.
+ *
+ * Phase 2 [E2.1.a] (migration 20260514000000) drops the
+ * `Allow select for shared and custom` policy on 16 catalog tables and
+ * replaces it with transitive SELECT via the settlement_x / survivor_x
+ * junctions. For those tables, the legacy shared_user triad alone no
+ * longer grants SELECT. The two it.each loops that pin the legacy
+ * behavior skip those 16 tables; a separate matrix pins the new negative.
  */
+const LEGACY_SHARED_SELECT_DROPPED: ReadonlySet<string> = new Set([
+  'ability_impairment',
+  'collective_cognition_reward',
+  'disorder',
+  'fighting_art',
+  'gear',
+  'innovation',
+  'knowledge',
+  'location',
+  'milestone',
+  'nemesis',
+  'pattern',
+  'principle',
+  'quarry',
+  'resource',
+  'secret_fighting_art',
+  'seed_pattern'
+])
 
 interface CustomContentSpec {
   /** Table name */
@@ -324,7 +349,7 @@ describe('RLS: custom-content tables', () => {
     }
   )
 
-  it.each(SPECS)(
+  it.each(SPECS.filter((s) => !LEGACY_SHARED_SELECT_DROPPED.has(s.table)))(
     '[$table] shared guest CAN SELECT the shared custom row but attacker cannot',
     async (spec) => {
       const entry = ids.get(spec.table)!
@@ -339,6 +364,30 @@ describe('RLS: custom-content tables', () => {
         .select('id')
         .eq('id', entry.sharedCustomId)
       expect(a).toEqual([])
+    }
+  )
+
+  it.each(SPECS.filter((s) => LEGACY_SHARED_SELECT_DROPPED.has(s.table)))(
+    '[$table] legacy *_shared_user triad alone NO LONGER grants SELECT (Phase 2 [E2.1.a])',
+    async (spec) => {
+      // After 20260514000000, the legacy `Allow select for shared and
+      // custom` policy is gone for these 16 catalogs. SELECT now requires
+      // either (a) authoring the row or (b) the row being attached to a
+      // settlement/survivor the caller can see. sharedGuest has neither.
+      const entry = ids.get(spec.table)!
+
+      const { data: g, error: gErr } = await sharedGuest.client
+        .from(spec.table)
+        .select('id')
+        .eq('id', entry.sharedCustomId)
+      expect(gErr).toBeNull()
+      expect(g ?? []).toEqual([])
+
+      const { data: a } = await attacker.client
+        .from(spec.table)
+        .select('id')
+        .eq('id', entry.sharedCustomId)
+      expect(a ?? []).toEqual([])
     }
   )
 
@@ -374,7 +423,7 @@ describe('RLS: custom-content tables', () => {
     }
   )
 
-  it.each(SPECS)(
+  it.each(SPECS.filter((s) => !LEGACY_SHARED_SELECT_DROPPED.has(s.table)))(
     '[$table] shared guest CAN UPDATE but cannot DELETE (documents shared access model)',
     async (spec) => {
       // Every catalog table pairs a `Allow update for shared and custom`
@@ -382,6 +431,12 @@ describe('RLS: custom-content tables', () => {
       // rows they've been granted access to. There is intentionally no
       // matching `Allow delete for shared` policy: delete is owner-only.
       // This test pins both halves of that decision.
+      //
+      // The legacy UPDATE-for-shared path is scheduled for removal in
+      // [E2.2] (issue #149). Tables whose SELECT-for-shared has already
+      // been dropped in [E2.1.a] are excluded from this matrix because
+      // PostgREST filters the UPDATE...RETURNING by SELECT visibility,
+      // making the returning array empty even when the row is mutated.
       const entry = ids.get(spec.table)!
       const updPayload = { [spec.nameCol]: 'GUEST-EDIT' }
 
