@@ -540,7 +540,7 @@ describe('RLS: catalog transitive SELECT via hunt/showdown/armor', () => {
         )
     })
 
-    it('owner can read the armor_set selected on their survivor`s gear_grid', async () => {
+    it("owner can read the armor_set selected on their survivor's gear_grid", async () => {
       const { data, error } = await owner.client
         .from('armor_set')
         .select('id, armor_set_name')
