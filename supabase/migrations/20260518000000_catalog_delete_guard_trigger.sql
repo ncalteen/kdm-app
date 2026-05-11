@@ -45,12 +45,15 @@ declare blocking_count int := 0;
 blocking_names text [] := array []::text [];
 begin -- Bypass for service-role / admin contexts. Triggers fire even when RLS
 -- is bypassed, so fixture teardown and auth.users cascade-deletes must
--- skip the guard explicitly. The check mirrors `is_admin()` (which
--- looks at `auth.role()`) and adds the supabase service_role role name.
+-- skip the guard explicitly. `public.is_admin()` covers the
+-- `auth.role() = 'admin'` case (and stays in lock-step with that helper
+-- if its definition ever changes). The two explicit checks handle the
+-- Supabase service_role and the no-auth / direct-DB context (where
+-- `auth.role()` returns NULL) that `is_admin()` would not match.
 if (
   auth.role() = 'service_role'
-  or auth.role() = 'admin'
   or auth.role() is null
+  or public.is_admin()
 ) then return old;
 end if;
 -- Non-custom rows: catalog seed data. The RLS policies govern these;

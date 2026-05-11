@@ -121,7 +121,7 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
   // ---------------------------------------------------------------------------
   describe('EC-5: delete blocked when a non-self settlement references the row', () => {
     it('settlement_<x> direct junction blocks (knowledge via settlement_knowledge)', async () => {
-      const { data: k } = await admin
+      const { data: k, error: kErr } = await admin
         .from('knowledge')
         .insert({
           knowledge_name: `Knowledge Blocked ${Date.now()}-${Math.random()}`,
@@ -130,17 +130,23 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         })
         .select('id')
         .single()
+      if (kErr || !k) throw new Error(`seed knowledge: ${kErr?.message}`)
 
-      await admin.from('settlement_knowledge').insert({
-        settlement_id: otherSettlementId,
-        knowledge_id: k!.id
-      })
+      const { error: attachErr } = await admin
+        .from('settlement_knowledge')
+        .insert({
+          settlement_id: otherSettlementId,
+          knowledge_id: k.id
+        })
+      if (attachErr)
+        throw new Error(`seed settlement_knowledge: ${attachErr.message}`)
 
       const { error } = await author.client
         .from('knowledge')
         .delete()
-        .eq('id', k!.id)
+        .eq('id', k.id)
       expect(error).not.toBeNull()
+      expect(error?.code).toBe('0A000')
       expect(error?.message).toMatch(/unmake what others rely upon/i)
       expect(error?.message).toContain('Delete Guard — Other Settlement')
 
@@ -148,13 +154,13 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
       const { data: still } = await admin
         .from('knowledge')
         .select('id')
-        .eq('id', k!.id)
+        .eq('id', k.id)
         .maybeSingle()
       expect(still).not.toBeNull()
     })
 
     it('survivor_<x> junction blocks (disorder via survivor_disorder on a non-self settlement)', async () => {
-      const { data: sv } = await admin
+      const { data: sv, error: svErr } = await admin
         .from('survivor')
         .insert({
           settlement_id: otherSettlementId,
@@ -163,8 +169,9 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         })
         .select('id')
         .single()
+      if (svErr || !sv) throw new Error(`seed survivor: ${svErr?.message}`)
 
-      const { data: d } = await admin
+      const { data: d, error: dErr } = await admin
         .from('disorder')
         .insert({
           disorder_name: `Disorder Blocked ${Date.now()}-${Math.random()}`,
@@ -173,22 +180,25 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         })
         .select('id')
         .single()
+      if (dErr || !d) throw new Error(`seed disorder: ${dErr?.message}`)
 
-      await admin
+      const { error: jErr } = await admin
         .from('survivor_disorder')
-        .insert({ survivor_id: sv!.id, disorder_id: d!.id })
+        .insert({ survivor_id: sv.id, disorder_id: d.id })
+      if (jErr) throw new Error(`seed survivor_disorder: ${jErr.message}`)
 
       const { error } = await author.client
         .from('disorder')
         .delete()
-        .eq('id', d!.id)
+        .eq('id', d.id)
       expect(error).not.toBeNull()
+      expect(error?.code).toBe('0A000')
       expect(error?.message).toMatch(/unmake what others rely upon/i)
       expect(error?.message).toContain('Delete Guard — Other Settlement')
     })
 
     it('survivor direct column blocks (philosophy via survivor.philosophy_id)', async () => {
-      const { data: p } = await admin
+      const { data: p, error: pErr } = await admin
         .from('philosophy')
         .insert({
           philosophy_name: `Philosophy Blocked ${Date.now()}-${Math.random()}`,
@@ -197,24 +207,27 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         })
         .select('id')
         .single()
+      if (pErr || !p) throw new Error(`seed philosophy: ${pErr?.message}`)
 
-      await admin.from('survivor').insert({
+      const { error: svErr } = await admin.from('survivor').insert({
         settlement_id: otherSettlementId,
         gender: 'FEMALE',
         survivor_name: 'Philosophy-Carrying Survivor',
-        philosophy_id: p!.id
+        philosophy_id: p.id
       })
+      if (svErr) throw new Error(`seed survivor: ${svErr.message}`)
 
       const { error } = await author.client
         .from('philosophy')
         .delete()
-        .eq('id', p!.id)
+        .eq('id', p.id)
       expect(error).not.toBeNull()
+      expect(error?.code).toBe('0A000')
       expect(error?.message).toMatch(/unmake what others rely upon/i)
     })
 
-    it('hunt_monster_trait junction blocks (trait via another owner`s hunt)', async () => {
-      const { data: t } = await admin
+    it("hunt_monster_trait junction blocks (trait via another owner's hunt)", async () => {
+      const { data: t, error: tErr } = await admin
         .from('trait')
         .insert({
           trait_name: `Trait Blocked ${Date.now()}-${Math.random()}`,
@@ -223,44 +236,50 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         })
         .select('id')
         .single()
+      if (tErr || !t) throw new Error(`seed trait: ${tErr?.message}`)
 
-      const { data: hunt } = await admin
+      const { data: hunt, error: huntErr } = await admin
         .from('hunt')
         .insert({ settlement_id: otherSettlementId, monster_level: 1 })
         .select('id')
         .single()
+      if (huntErr || !hunt) throw new Error(`seed hunt: ${huntErr?.message}`)
 
-      const { data: ad } = await admin
+      const { data: ad, error: adErr } = await admin
         .from('hunt_ai_deck')
-        .insert({ hunt_id: hunt!.id, settlement_id: otherSettlementId })
+        .insert({ hunt_id: hunt.id, settlement_id: otherSettlementId })
         .select('id')
         .single()
+      if (adErr || !ad) throw new Error(`seed hunt_ai_deck: ${adErr?.message}`)
 
-      const { data: hm } = await admin
+      const { data: hm, error: hmErr } = await admin
         .from('hunt_monster')
         .insert({
-          ai_deck_id: ad!.id,
-          hunt_id: hunt!.id,
+          ai_deck_id: ad.id,
+          hunt_id: hunt.id,
           settlement_id: otherSettlementId
         })
         .select('id')
         .single()
+      if (hmErr || !hm) throw new Error(`seed hunt_monster: ${hmErr?.message}`)
 
-      await admin
+      const { error: hmtErr } = await admin
         .from('hunt_monster_trait')
-        .insert({ hunt_monster_id: hm!.id, trait_id: t!.id })
+        .insert({ hunt_monster_id: hm.id, trait_id: t.id })
+      if (hmtErr) throw new Error(`seed hunt_monster_trait: ${hmtErr.message}`)
 
       const { error } = await author.client
         .from('trait')
         .delete()
-        .eq('id', t!.id)
+        .eq('id', t.id)
       expect(error).not.toBeNull()
+      expect(error?.code).toBe('0A000')
       expect(error?.message).toMatch(/unmake what others rely upon/i)
       expect(error?.message).toContain('Delete Guard — Other Settlement')
     })
 
     it('gear_grid selected_armor_set_id blocks (armor_set via gear_grid -> survivor)', async () => {
-      const { data: sv } = await admin
+      const { data: sv, error: svErr } = await admin
         .from('survivor')
         .insert({
           settlement_id: otherSettlementId,
@@ -269,8 +288,9 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         })
         .select('id')
         .single()
+      if (svErr || !sv) throw new Error(`seed survivor: ${svErr?.message}`)
 
-      const { data: as_ } = await admin
+      const { data: as_, error: asErr } = await admin
         .from('armor_set')
         .insert({
           armor_set_name: `Armor Blocked ${Date.now()}-${Math.random()}`,
@@ -279,18 +299,20 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         })
         .select('id')
         .single()
+      if (asErr || !as_) throw new Error(`seed armor_set: ${asErr?.message}`)
 
       const { error: ggErr } = await admin.from('gear_grid').insert({
-        survivor_id: sv!.id,
-        selected_armor_set_id: as_!.id
+        survivor_id: sv.id,
+        selected_armor_set_id: as_.id
       })
-      if (ggErr) throw new Error(`insert gear_grid: ${ggErr.message}`)
+      if (ggErr) throw new Error(`seed gear_grid: ${ggErr.message}`)
 
       const { error } = await author.client
         .from('armor_set')
         .delete()
-        .eq('id', as_!.id)
+        .eq('id', as_.id)
       expect(error).not.toBeNull()
+      expect(error?.code).toBe('0A000')
       expect(error?.message).toMatch(/unmake what others rely upon/i)
     })
 
@@ -302,7 +324,7 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
       const s3 = await seedSettlement(otherOwner.id, 'Delete Guard — Gamma')
       const s4 = await seedSettlement(otherOwner.id, 'Delete Guard — Delta')
 
-      const { data: k } = await admin
+      const { data: k, error: kErr } = await admin
         .from('knowledge')
         .insert({
           knowledge_name: `Multi Block ${Date.now()}-${Math.random()}`,
@@ -311,18 +333,22 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         })
         .select('id')
         .single()
+      if (kErr || !k) throw new Error(`seed knowledge: ${kErr?.message}`)
 
       for (const sid of [otherSettlementId, s2, s3, s4]) {
-        await admin
+        const { error: skErr } = await admin
           .from('settlement_knowledge')
-          .insert({ settlement_id: sid, knowledge_id: k!.id })
+          .insert({ settlement_id: sid, knowledge_id: k.id })
+        if (skErr)
+          throw new Error(`seed settlement_knowledge: ${skErr.message}`)
       }
 
       const { error } = await author.client
         .from('knowledge')
         .delete()
-        .eq('id', k!.id)
+        .eq('id', k.id)
       expect(error).not.toBeNull()
+      expect(error?.code).toBe('0A000')
       // Count of 4 blocking settlements.
       expect(error?.message).toMatch(/4 settlement\(s\)/)
       // Listed names are alphabetically sorted, first 3 only.
@@ -346,7 +372,7 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
     it('admin can delete a non-custom row regardless of attachments (service-role bypass)', async () => {
       // The trigger short-circuits for service_role; we just confirm that
       // a non-custom-row delete via admin succeeds even when attached.
-      const { data: k } = await admin
+      const { data: k, error: kErr } = await admin
         .from('knowledge')
         .insert({
           knowledge_name: `Seed-like ${Date.now()}-${Math.random()}`,
@@ -354,12 +380,14 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         })
         .select('id')
         .single()
+      if (kErr || !k) throw new Error(`seed knowledge: ${kErr?.message}`)
 
-      await admin
+      const { error: skErr } = await admin
         .from('settlement_knowledge')
-        .insert({ settlement_id: otherSettlementId, knowledge_id: k!.id })
+        .insert({ settlement_id: otherSettlementId, knowledge_id: k.id })
+      if (skErr) throw new Error(`seed settlement_knowledge: ${skErr.message}`)
 
-      const { error } = await admin.from('knowledge').delete().eq('id', k!.id)
+      const { error } = await admin.from('knowledge').delete().eq('id', k.id)
       expect(error).toBeNull()
     })
   })
@@ -370,7 +398,7 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
   // ---------------------------------------------------------------------------
   describe('service-role bypass', () => {
     it('admin can delete a custom row referenced by a non-self settlement', async () => {
-      const { data: k } = await admin
+      const { data: k, error: kErr } = await admin
         .from('knowledge')
         .insert({
           knowledge_name: `Admin Force Delete ${Date.now()}-${Math.random()}`,
@@ -379,18 +407,20 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         })
         .select('id')
         .single()
+      if (kErr || !k) throw new Error(`seed knowledge: ${kErr?.message}`)
 
-      await admin
+      const { error: skErr } = await admin
         .from('settlement_knowledge')
-        .insert({ settlement_id: otherSettlementId, knowledge_id: k!.id })
+        .insert({ settlement_id: otherSettlementId, knowledge_id: k.id })
+      if (skErr) throw new Error(`seed settlement_knowledge: ${skErr.message}`)
 
-      const { error } = await admin.from('knowledge').delete().eq('id', k!.id)
+      const { error } = await admin.from('knowledge').delete().eq('id', k.id)
       expect(error).toBeNull()
 
       const { data: gone } = await admin
         .from('knowledge')
         .select('id')
-        .eq('id', k!.id)
+        .eq('id', k.id)
         .maybeSingle()
       expect(gone).toBeNull()
     })
@@ -418,7 +448,7 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
     }>)(
       '[$table] author can delete a custom row (no junction to block)',
       async (spec) => {
-        const { data: row } = await admin
+        const { data: row, error: rowErr } = await admin
           .from(spec.table)
           .insert({
             [spec.nameCol]: `${spec.table} ${Date.now()}-${Math.random()}`,
@@ -428,17 +458,19 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
           })
           .select('id')
           .single()
+        if (rowErr || !row)
+          throw new Error(`seed ${spec.table}: ${rowErr?.message}`)
 
         const { error: delErr } = await author.client
           .from(spec.table)
           .delete()
-          .eq('id', row!.id)
+          .eq('id', row.id)
         expect(delErr).toBeNull()
 
         const { data: gone } = await admin
           .from(spec.table)
           .select('id')
-          .eq('id', row!.id)
+          .eq('id', row.id)
           .maybeSingle()
         expect(gone).toBeNull()
       }
