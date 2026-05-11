@@ -6,47 +6,28 @@ import { InnovationDetail } from '@/lib/types'
 /**
  * Get Innovations
  *
- * Retrieves all innovations available to the authenticated user:
+ * Retrieves all innovations visible to the authenticated user. RLS surfaces:
  * - Built-in (non-custom) innovations
  * - Custom innovations owned by the user
- * - Custom innovations shared with the user
+ * - Custom innovations on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `innovation`)
  *
  * @returns Innovations
  */
 export async function getInnovations(): Promise<{
   [key: string]: InnovationDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('innovation')
-      .select('id, custom, innovation_name, rules, consequences, benefits')
-      .eq('custom', false),
-    supabase
-      .from('innovation')
-      .select('id, custom, innovation_name, rules, consequences, benefits')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('innovation_shared_user')
-      .select(
-        'innovation(id, custom, innovation_name, rules, consequences, benefits)'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('innovation')
+    .select('id, custom, innovation_name, rules, consequences, benefits')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Innovations: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Innovations: ${error.message}`)
 
   const innovationMap: { [key: string]: InnovationDetail } = {}
-
-  for (const i of nonCustomResult.data ?? []) innovationMap[i.id] = i
-  for (const i of userCustomResult.data ?? []) innovationMap[i.id] = i
-  for (const row of sharedResult.data ?? [])
-    innovationMap[row.innovation[0].id] = row.innovation[0]
+  for (const i of data ?? []) innovationMap[i.id] = i
 
   return innovationMap
 }

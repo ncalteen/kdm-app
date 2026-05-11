@@ -6,56 +6,32 @@ import { CollectiveCognitionRewardDetail } from '@/lib/types'
 /**
  * Get Collective Cognition Rewards
  *
- * Retrieves all collective cognition rewards available to the authenticated
- * user:
+ * Retrieves all collective cognition rewards visible to the authenticated
+ * user. RLS surfaces:
  * - Built-in (non-custom) rewards
  * - Custom rewards owned by the user
- * - Custom rewards shared with the user
+ * - Custom rewards on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `collective_cognition_reward`)
  *
  * @returns Collective Cognition Rewards
  */
 export async function getCollectiveCognitionRewards(): Promise<{
   [key: string]: CollectiveCognitionRewardDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  // Fetch all three categories of rewards in parallel
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    // Non-custom rewards (available to all users)
-    supabase
-      .from('collective_cognition_reward')
-      .select('id, custom, reward_name, collective_cognition, rules')
-      .eq('custom', false),
-    // Custom rewards created by the user
-    supabase
-      .from('collective_cognition_reward')
-      .select('id, custom, reward_name, collective_cognition, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    // Custom rewards shared with the user
-    supabase
-      .from('collective_cognition_reward_shared_user')
-      .select(
-        'collective_cognition_reward(id, custom, reward_name, collective_cognition, rules)'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('collective_cognition_reward')
+    .select('id, custom, reward_name, collective_cognition, rules')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(
-        `Error Fetching Collective Cognition Rewards: ${result.error.message}`
-      )
+  if (error)
+    throw new Error(
+      `Error Fetching Collective Cognition Rewards: ${error.message}`
+    )
 
-  // Collect rewards from all sources, deduplicating by ID
   const rewardMap: { [key: string]: CollectiveCognitionRewardDetail } = {}
-
-  for (const r of nonCustomResult.data ?? []) rewardMap[r.id] = r
-  for (const r of userCustomResult.data ?? []) rewardMap[r.id] = r
-  for (const row of sharedResult.data ?? [])
-    rewardMap[row.collective_cognition_reward[0].id] =
-      row.collective_cognition_reward[0]
+  for (const r of data ?? []) rewardMap[r.id] = r
 
   return rewardMap
 }

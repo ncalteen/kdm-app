@@ -5,45 +5,25 @@ import { TraitDetail } from '@/lib/types'
 /**
  * Get Traits
  *
- * Retrieves all monster traits available to the authenticated user:
+ * Retrieves all monster traits visible to the authenticated user. RLS
+ * surfaces:
  * - Built-in (non-custom) traits
  * - Custom traits owned by the user
- * - Custom traits shared with the user
  *
  * @returns Traits by ID
  */
 export async function getTraits(): Promise<{ [key: string]: TraitDetail }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('trait')
-      .select('id, custom, trait_name, rules')
-      .eq('custom', false),
-    supabase
-      .from('trait')
-      .select('id, custom, trait_name, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('trait_shared_user')
-      .select('trait(id, custom, trait_name, rules)')
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('trait')
+    .select('id, custom, trait_name, rules')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Traits: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Traits: ${error.message}`)
 
   const map: { [key: string]: TraitDetail } = {}
-
-  for (const t of nonCustomResult.data ?? []) map[t.id] = t
-  for (const t of userCustomResult.data ?? []) map[t.id] = t
-  for (const row of sharedResult.data ?? []) {
-    const trait = Array.isArray(row.trait) ? row.trait[0] : row.trait
-    if (trait) map[trait.id] = trait
-  }
+  for (const t of data ?? []) map[t.id] = t
 
   return map
 }

@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MonsterNode } from '@/lib/enums'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
   auth: { getUser: vi.fn() },
@@ -44,61 +44,29 @@ describe('getNemeses', () => {
     custom: true,
     monster_name: 'My Nemesis'
   })
-  const sharedNemesis = makeNemesis({
-    id: 'n3',
-    custom: true,
-    monster_name: 'Shared Nemesis'
-  })
 
-  const setupThreeSources = (
-    nonCustomData: object[],
-    userCustomData: object[],
-    sharedData: object[]
-  ) => {
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            in: vi.fn().mockResolvedValue({ data: nonCustomData, error: null })
-          })
-        })
+  const mockSelectIn = (data: object[] | null, error: object | null = null) => {
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        in: vi.fn().mockResolvedValue({ data, error })
       })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              in: vi
-                .fn()
-                .mockResolvedValue({ data: userCustomData, error: null })
-            })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: sharedData, error: null })
-        })
-      })
+    })
   }
 
-  it('returns nemeses from all three sources', async () => {
+  it('returns every nemesis surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
-    setupThreeSources(
-      [nonCustomNemesis],
-      [userCustomNemesis],
-      [{ nemesis: [sharedNemesis] }]
-    )
+    mockSelectIn([nonCustomNemesis, userCustomNemesis])
 
     const result = await getNemeses()
 
     expect(result).toEqual({
       n1: nonCustomNemesis,
-      n2: userCustomNemesis,
-      n3: sharedNemesis
+      n2: userCustomNemesis
     })
+    expect(mockSupabase.from).toHaveBeenCalledWith('nemesis')
   })
 
   it('excludes alternates when includeAlternates is false', async () => {
@@ -110,7 +78,7 @@ describe('getNemeses', () => {
     const nemesisA = makeNemesis({ id: 'n1', alternate_id: 'n2' })
     const nemesisB = makeNemesis({ id: 'n2', alternate_id: null })
 
-    setupThreeSources([nemesisA, nemesisB], [], [])
+    mockSelectIn([nemesisA, nemesisB])
 
     const result = await getNemeses(
       [
@@ -137,7 +105,7 @@ describe('getNemeses', () => {
     const nemesisA = makeNemesis({ id: 'n1', vignette_id: 'n2' })
     const nemesisB = makeNemesis({ id: 'n2', vignette_id: null })
 
-    setupThreeSources([nemesisA, nemesisB], [], [])
+    mockSelectIn([nemesisA, nemesisB])
 
     const result = await getNemeses(
       [
@@ -169,7 +137,7 @@ describe('getNemeses', () => {
     const nemesisB = makeNemesis({ id: 'n2' })
     const nemesisC = makeNemesis({ id: 'n3' })
 
-    setupThreeSources([nemesisA, nemesisB, nemesisC], [], [])
+    mockSelectIn([nemesisA, nemesisB, nemesisC])
 
     const result = await getNemeses()
 
@@ -197,48 +165,25 @@ describe('getNemeses', () => {
     )
   })
 
-  it('throws when a source query fails', async () => {
+  it('throws when the query fails', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            in: vi
-              .fn()
-              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              in: vi.fn().mockResolvedValue({ data: [], error: null })
-            })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSelectIn(null, { message: 'DB error' })
 
     await expect(getNemeses()).rejects.toThrow(
       'Error Fetching Nemeses: DB error'
     )
   })
 
-  it('returns empty map when all sources are empty', async () => {
+  it('returns empty map when the query returns no rows', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
-    setupThreeSources([], [], [])
+    mockSelectIn([])
 
     const result = await getNemeses()
     expect(result).toEqual({})

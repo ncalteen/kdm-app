@@ -73,12 +73,12 @@ function normalizeArmorSet(row: RawArmorSetRow): ArmorSetDetail {
 /**
  * Get Armor Sets
  *
- * Retrieves every armor set available to the authenticated user together
- * with each set's slots and the gear pieces that can satisfy them:
+ * Retrieves every armor set visible to the authenticated user together
+ * with each set's slots and the gear pieces that can satisfy them. RLS
+ * surfaces:
  *
  * - Built-in (non-custom) armor sets
  * - Custom armor sets owned by the user
- * - Custom armor sets shared with the user
  *
  * The `Clothed & Satiated` fallback set is intentionally excluded from the
  * database catalog and is evaluated client-side as a fallback when no other
@@ -87,55 +87,20 @@ function normalizeArmorSet(row: RawArmorSetRow): ArmorSetDetail {
  * @returns Armor Set Details (deduplicated by ID)
  */
 export async function getArmorSets(): Promise<ArmorSetDetail[]> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('armor_set')
-      .select(
-        'id, custom, armor_set_name, bonuses, armor_set_slot(id, slot_name, slot_order, required, armor_set_slot_gear(gear_id))'
-      )
-      .eq('custom', false),
-    supabase
-      .from('armor_set')
-      .select(
-        'id, custom, armor_set_name, bonuses, armor_set_slot(id, slot_name, slot_order, required, armor_set_slot_gear(gear_id))'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('armor_set_shared_user')
-      .select(
-        'armor_set(id, custom, armor_set_name, bonuses, armor_set_slot(id, slot_name, slot_order, required, armor_set_slot_gear(gear_id)))'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('armor_set')
+    .select(
+      'id, custom, armor_set_name, bonuses, armor_set_slot(id, slot_name, slot_order, required, armor_set_slot_gear(gear_id))'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Armor Sets: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Armor Sets: ${error.message}`)
 
   const armorSets = new Map<string, ArmorSetDetail>()
-
-  for (const row of (nonCustomResult.data ?? []) as unknown as RawArmorSetRow[])
+  for (const row of (data ?? []) as unknown as RawArmorSetRow[])
     armorSets.set(row.id, normalizeArmorSet(row))
-
-  for (const row of (userCustomResult.data ??
-    []) as unknown as RawArmorSetRow[])
-    armorSets.set(row.id, normalizeArmorSet(row))
-
-  // Shared rows nest the parent armor set under `armor_set`. PostgREST may
-  // return that field as either an object or a single-element array depending
-  // on relation cardinality detection, so normalize both shapes.
-  for (const row of (sharedResult.data ?? []) as unknown as {
-    armor_set: RawArmorSetRow | RawArmorSetRow[] | null
-  }[]) {
-    const armorSet = Array.isArray(row.armor_set)
-      ? (row.armor_set[0] ?? null)
-      : (row.armor_set ?? null)
-    if (armorSet?.id) armorSets.set(armorSet.id, normalizeArmorSet(armorSet))
-  }
 
   return Array.from(armorSets.values())
 }

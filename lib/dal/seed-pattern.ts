@@ -26,62 +26,32 @@ function toSeedPatternDetail(
 /**
  * Get Seed Patterns
  *
- * Retrieves the seed patterns a user has access to. This includes:
+ * Retrieves the seed patterns visible to the authenticated user. RLS
+ * surfaces:
  *
  * - Non-custom seed patterns
  * - Custom seed patterns created by the user
- * - Custom seed patterns shared with the user (via the
- *   seed_pattern_shared_user table)
+ * - Custom seed patterns on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `seed_pattern`)
  *
  * @returns Seed Pattern Data
  */
 export async function getSeedPatterns(): Promise<{
   [key: string]: SeedPatternDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  // Fetch all three categories of seed patterns in parallel
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    // Non-custom seed patterns (available to all users)
-    supabase
-      .from('seed_pattern')
-      .select(
-        'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity)'
-      )
-      .eq('custom', false),
-    // Custom seed patterns created by the user
-    supabase
-      .from('seed_pattern')
-      .select(
-        'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity)'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    // Custom seed patterns shared with the user
-    supabase
-      .from('seed_pattern_shared_user')
-      .select(
-        'seed_pattern(id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity))'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('seed_pattern')
+    .select(
+      'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity)'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Seed Patterns: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Seed Patterns: ${error.message}`)
 
-  // Collect seed patterns from all sources, deduplicating by ID
   const seedPatternMap: { [key: string]: SeedPatternDetail } = {}
-
-  for (const s of nonCustomResult.data ?? [])
-    seedPatternMap[s.id] = toSeedPatternDetail(s)
-  for (const s of userCustomResult.data ?? [])
-    seedPatternMap[s.id] = toSeedPatternDetail(s)
-  for (const row of sharedResult.data ?? []) {
-    const sp = row.seed_pattern?.[0]
-    if (sp?.id) seedPatternMap[sp.id] = toSeedPatternDetail(sp)
-  }
+  for (const s of data ?? []) seedPatternMap[s.id] = toSeedPatternDetail(s)
 
   return seedPatternMap
 }

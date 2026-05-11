@@ -6,44 +6,27 @@ import { ResourceDetail } from '@/lib/types'
 /**
  * Get Resources
  *
- * Retrieves all resources available to the authenticated user:
+ * Retrieves all resources visible to the authenticated user. RLS surfaces:
  * - Built-in (non-custom) resources
  * - Custom resources owned by the user
- * - Custom resources shared with the user
+ * - Custom resources on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `resource`)
  *
  * @returns Resources
  */
 export async function getResources(): Promise<{
   [key: string]: ResourceDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('resource')
-      .select(
-        'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'
-      )
-      .eq('custom', false),
-    supabase
-      .from('resource')
-      .select(
-        'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('resource_shared_user')
-      .select(
-        `resource(${'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'})`
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('resource')
+    .select(
+      'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Resources: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Resources: ${error.message}`)
 
   const resourceMap: { [key: string]: ResourceDetail } = {}
 
@@ -71,10 +54,7 @@ export async function getResources(): Promise<{
     }
   }
 
-  for (const r of nonCustomResult.data ?? []) resourceMap[r.id] = toDetail(r)
-  for (const r of userCustomResult.data ?? []) resourceMap[r.id] = toDetail(r)
-  for (const row of sharedResult.data ?? [])
-    resourceMap[row.resource[0].id] = toDetail(row.resource[0])
+  for (const r of data ?? []) resourceMap[r.id] = toDetail(r)
 
   return resourceMap
 }

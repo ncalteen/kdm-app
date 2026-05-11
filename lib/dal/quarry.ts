@@ -7,11 +7,12 @@ import { QuarryDetail } from '@/lib/types'
 /**
  * Get Quarries
  *
- * Retrieves the quarries a user has access to. This includes:
+ * Retrieves the quarries visible to the authenticated user. RLS surfaces:
  *
  * - Non-custom quarries
  * - Custom quarries created by the user
- * - Custom quarries shared with the user (via the quarry_shared_user table)
+ * - Custom quarries on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `quarry`)
  *
  * @param nodeTypes Optional Node Types Filter
  * @param includeAlternates Whether to Include Alternate Quarries (Default: true)
@@ -28,48 +29,20 @@ export async function getQuarries(
   includeAlternates = true,
   includeVignettes = true
 ): Promise<{ [key: string]: QuarryDetail }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  // Fetch all three categories of quarries in parallel
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    // Non-custom quarries (available to all users)
-    supabase
-      .from('quarry')
-      .select(
-        'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
-      )
-      .eq('custom', false)
-      .in('node', nodeTypes),
-    // Custom quarries created by the user
-    supabase
-      .from('quarry')
-      .select(
-        'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId)
-      .in('node', nodeTypes),
-    // Custom quarries shared with the user
-    supabase
-      .from('quarry_shared_user')
-      .select(
-        'quarry(id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('quarry')
+    .select(
+      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
+    )
+    .in('node', nodeTypes)
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Quarries: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Quarries: ${error.message}`)
 
-  // Collect quarries from all sources, deduplicating by ID
   const quarryMap: { [key: string]: QuarryDetail } = {}
-
-  for (const q of nonCustomResult.data ?? []) quarryMap[q.id] = q
-  for (const q of userCustomResult.data ?? []) quarryMap[q.id] = q
-  for (const row of sharedResult.data ?? [])
-    quarryMap[row.quarry[0].id] = row.quarry[0]
+  for (const q of data ?? []) quarryMap[q.id] = q
 
   // Build sets of IDs that are referenced as alternates or vignettes by other
   // records. When the corresponding flag is false, these IDs are excluded.

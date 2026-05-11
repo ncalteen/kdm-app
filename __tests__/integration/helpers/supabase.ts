@@ -79,12 +79,12 @@ export async function createTestUser(): Promise<TestUser> {
   if (createErr || !created.user)
     throw new Error(`createUser failed: ${createErr?.message}`)
 
-  // Seed the user_settings row with a unique username. All `*_shared_user`
-  // tables have a FK from `shared_user_id` → `user_settings(user_id)`, so
-  // tests that grant a share will fail FK validation unless this row exists
-  // before the share is inserted. The `username` column has a non-empty
-  // CHECK constraint and a uniqueness constraint, so we derive it from the
-  // test email suffix.
+  // Seed the user_settings row with a unique username. The
+  // `settlement_shared_user` table has a FK from `shared_user_id` →
+  // `user_settings(user_id)`, so tests that grant a share will fail FK
+  // validation unless this row exists before the share is inserted. The
+  // `username` column has a non-empty CHECK constraint and a uniqueness
+  // constraint, so we derive it from the test email suffix.
   const { error: settingsErr } = await admin
     .from('user_settings')
     .insert({ user_id: created.user.id, username: `rls-${suffix}` })

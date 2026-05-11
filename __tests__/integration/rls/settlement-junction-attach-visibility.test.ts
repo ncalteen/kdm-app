@@ -52,8 +52,7 @@ describe('RLS: settlement junction attach visibility guard', () => {
   describe('knowledge (in-depth)', () => {
     it("blocks attaching a stranger's invisible custom knowledge", async () => {
       // Stranger authors a custom catalog row that the owner has no path
-      // to SEE: not a member of any shared settlement, no entry in
-      // legacy knowledge_shared_user.
+      // to SEE: not a member of any shared settlement.
       const { data: foreign, error: foreignErr } = await admin
         .from('knowledge')
         .insert({

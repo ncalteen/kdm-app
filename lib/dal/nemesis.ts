@@ -7,11 +7,12 @@ import { NemesisDetail } from '@/lib/types'
 /**
  * Get Nemeses
  *
- * Retrieves the nemeses a user has access to. This includes:
+ * Retrieves the nemeses visible to the authenticated user. RLS surfaces:
  *
  * - Non-custom nemeses
  * - Custom nemeses created by the user
- * - Custom nemeses shared with the user (via the nemesis_shared_user table)
+ * - Custom nemeses on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `nemesis`)
  *
  * @param nodeTypes Optional Node Types Filter
  * @param includeAlternates Whether to Include Alternate Nemeses (Default: true)
@@ -29,48 +30,20 @@ export async function getNemeses(
   includeAlternates = true,
   includeVignettes = true
 ): Promise<{ [key: string]: NemesisDetail }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  // Fetch all three categories of nemeses in parallel
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    // Non-custom nemeses (available to all users)
-    supabase
-      .from('nemesis')
-      .select(
-        'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
-      )
-      .eq('custom', false)
-      .in('node', nodeTypes),
-    // Custom nemeses created by the user
-    supabase
-      .from('nemesis')
-      .select(
-        'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId)
-      .in('node', nodeTypes),
-    // Custom nemeses shared with the user
-    supabase
-      .from('nemesis_shared_user')
-      .select(
-        'nemesis(id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('nemesis')
+    .select(
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
+    )
+    .in('node', nodeTypes)
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Nemeses: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Nemeses: ${error.message}`)
 
-  // Collect nemeses from all sources, deduplicating by ID
   const nemesisMap: { [key: string]: NemesisDetail } = {}
-
-  for (const n of nonCustomResult.data ?? []) nemesisMap[n.id] = n
-  for (const n of userCustomResult.data ?? []) nemesisMap[n.id] = n
-  for (const row of sharedResult.data ?? [])
-    nemesisMap[row.nemesis[0].id] = row.nemesis[0]
+  for (const n of data ?? []) nemesisMap[n.id] = n
 
   // Build sets of IDs that are referenced as alternates or vignettes by other
   // records. When the corresponding flag is false, these IDs are excluded.

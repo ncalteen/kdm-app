@@ -23,64 +23,41 @@ beforeEach(() => {
 
 describe('getCollectiveCognitionRewards', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomReward = {
+  const row1 = {
     id: 'r1',
     custom: false,
     reward_name: 'Ammonia',
-    collective_cognition: 3
+    collective_cognition: 1,
+    rules: null
   }
-  const userCustomReward = {
+  const row2 = {
     id: 'r2',
     custom: true,
-    reward_name: 'My Reward',
-    collective_cognition: 5
-  }
-  const sharedReward = {
-    id: 'r3',
-    custom: true,
-    reward_name: 'Shared Reward',
-    collective_cognition: 2
+    reward_name: 'Custom Reward',
+    collective_cognition: 2,
+    rules: null
   }
 
-  it('returns rewards from all three sources', async () => {
+  it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: [nonCustomReward], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: [userCustomReward], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ collective_cognition_reward: [sharedReward] }],
-            error: null
-          })
-        })
-      })
+    const select = vi
+      .fn()
+      .mockResolvedValue({ data: [row1, row2], error: null })
+    mockSupabase.from.mockReturnValueOnce({ select })
 
     const result = await getCollectiveCognitionRewards()
 
-    expect(result).toEqual({
-      r1: nonCustomReward,
-      r2: userCustomReward,
-      r3: sharedReward
-    })
+    expect(result).toEqual({ [row1.id]: row1, [row2.id]: row2 })
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'collective_cognition_reward'
+    )
+    expect(select).toHaveBeenCalledWith(
+      'id, custom, reward_name, collective_cognition, rules'
+    )
   })
 
   it('throws when user is not authenticated', async () => {
@@ -95,7 +72,7 @@ describe('getCollectiveCognitionRewards', () => {
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
-  it('throws when auth returns an error', async () => {
+  it('throws when auth errors', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: null },
       error: { message: 'Auth error' }
@@ -106,62 +83,32 @@ describe('getCollectiveCognitionRewards', () => {
     )
   })
 
-  it('throws when any query fails', async () => {
+  it('throws when the query fails', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi
+        .fn()
+        .mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    })
 
     await expect(getCollectiveCognitionRewards()).rejects.toThrow(
       'Error Fetching Collective Cognition Rewards: DB error'
     )
   })
 
-  it('returns empty map when all sources return empty arrays', async () => {
+  it('returns an empty map when the query returns no rows', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({ data: [], error: null })
+    })
 
     const result = await getCollectiveCognitionRewards()
     expect(result).toEqual({})

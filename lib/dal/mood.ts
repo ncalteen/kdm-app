@@ -5,45 +5,25 @@ import { MoodDetail } from '@/lib/types'
 /**
  * Get Moods
  *
- * Retrieves all monster moods available to the authenticated user:
+ * Retrieves all monster moods visible to the authenticated user. RLS
+ * surfaces:
  * - Built-in (non-custom) moods
  * - Custom moods owned by the user
- * - Custom moods shared with the user
  *
  * @returns Moods by ID
  */
 export async function getMoods(): Promise<{ [key: string]: MoodDetail }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('mood')
-      .select('id, custom, mood_name, rules')
-      .eq('custom', false),
-    supabase
-      .from('mood')
-      .select('id, custom, mood_name, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('mood_shared_user')
-      .select('mood(id, custom, mood_name, rules)')
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('mood')
+    .select('id, custom, mood_name, rules')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Moods: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Moods: ${error.message}`)
 
   const map: { [key: string]: MoodDetail } = {}
-
-  for (const m of nonCustomResult.data ?? []) map[m.id] = m
-  for (const m of userCustomResult.data ?? []) map[m.id] = m
-  for (const row of sharedResult.data ?? []) {
-    const mood = Array.isArray(row.mood) ? row.mood[0] : row.mood
-    if (mood) map[mood.id] = mood
-  }
+  for (const m of data ?? []) map[m.id] = m
 
   return map
 }

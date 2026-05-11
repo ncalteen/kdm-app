@@ -23,114 +23,61 @@ beforeEach(() => {
 
 describe('getMoods', () => {
   const userId = 'user-1'
-  const nonCustom = { id: 'm1', custom: false, mood_name: 'Aloof', rules: null }
-  const userCustom = { id: 'm2', custom: true, mood_name: 'Mine', rules: null }
-  const shared = { id: 'm3', custom: true, mood_name: 'Shared', rules: null }
+  const row1 = { id: 'm1', custom: false, mood_name: 'Mood', rules: null }
+  const row2 = { id: 'm2', custom: true, mood_name: 'Custom', rules: null }
 
-  it('returns moods from all three sources', async () => {
+  it('returns every row surfaced by RLS', async () => {
     vi.mocked(getUserId).mockResolvedValue(userId)
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustom], error: null })
-        })
+
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({
+        data: [row1, row2],
+        error: null
       })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustom], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ mood: [shared] }],
-            error: null
-          })
-        })
-      })
+    })
 
     const result = await getMoods()
-    expect(result).toEqual({ m1: nonCustom, m2: userCustom, m3: shared })
+
+    expect(result).toEqual({ [row1.id]: row1, [row2.id]: row2 })
+    expect(mockSupabase.from).toHaveBeenCalledWith('mood')
   })
 
-  it('handles shared mood as single object (not array)', async () => {
-    vi.mocked(getUserId).mockResolvedValue(userId)
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: [{ mood: shared }], error: null })
-        })
-      })
+  it('throws when user is not authenticated', async () => {
+    vi.mocked(getUserId).mockRejectedValue(new Error('Not Authenticated'))
 
-    const result = await getMoods()
-    expect(result).toEqual({ m3: shared })
+    await expect(getMoods()).rejects.toThrow('Not Authenticated')
+    expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
-  it('skips shared rows with null mood', async () => {
+  it('throws when auth errors', async () => {
+    vi.mocked(getUserId).mockRejectedValue(
+      new Error('Error Fetching User: Auth error')
+    )
+
+    await expect(getMoods()).rejects.toThrow('Error Fetching User: Auth error')
+  })
+
+  it('throws when the query fails', async () => {
     vi.mocked(getUserId).mockResolvedValue(userId)
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [{ mood: null }], error: null })
-        })
-      })
+
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi
+        .fn()
+        .mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    })
+
+    await expect(getMoods()).rejects.toThrow('Error Fetching Moods: DB error')
+  })
+
+  it('returns an empty map when the query returns no rows', async () => {
+    vi.mocked(getUserId).mockResolvedValue(userId)
+
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({ data: [], error: null })
+    })
 
     const result = await getMoods()
     expect(result).toEqual({})
-  })
-
-  it('throws on query error', async () => {
-    vi.mocked(getUserId).mockResolvedValue(userId)
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB' } })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-
-    await expect(getMoods()).rejects.toThrow('Error Fetching Moods: DB')
   })
 })
 

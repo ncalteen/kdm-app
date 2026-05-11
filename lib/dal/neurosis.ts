@@ -6,51 +6,27 @@ import { NeurosisDetail } from '@/lib/types'
 /**
  * Get Neuroses
  *
- * Retrieves all neuroses available to the authenticated user:
+ * Retrieves all neuroses visible to the authenticated user. RLS surfaces:
  *
  * - Built-in (non-custom) neuroses
  * - Custom neuroses owned by the user
- * - Custom neuroses shared with the user
  *
  * @returns Neuroses
  */
 export async function getNeuroses(): Promise<{
   [key: string]: NeurosisDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  // Fetch all three categories of neuroses in parallel
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    // Non-custom neuroses (available to all users)
-    supabase
-      .from('neurosis')
-      .select('id, custom, neurosis_name, rules')
-      .eq('custom', false),
-    // Custom neuroses created by the user
-    supabase
-      .from('neurosis')
-      .select('id, custom, neurosis_name, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    // Custom neuroses shared with the user
-    supabase
-      .from('neurosis_shared_user')
-      .select('neurosis(id, custom, neurosis_name, rules)')
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('neurosis')
+    .select('id, custom, neurosis_name, rules')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Neuroses: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Neuroses: ${error.message}`)
 
-  // Collect neuroses from all sources, deduplicating by ID
   const neurosisMap: { [key: string]: NeurosisDetail } = {}
-
-  for (const n of nonCustomResult.data ?? []) neurosisMap[n.id] = n
-  for (const n of userCustomResult.data ?? []) neurosisMap[n.id] = n
-  for (const row of sharedResult.data ?? [])
-    neurosisMap[row.neurosis[0].id] = row.neurosis[0]
+  for (const n of data ?? []) neurosisMap[n.id] = n
 
   return neurosisMap
 }

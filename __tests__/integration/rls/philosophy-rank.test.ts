@@ -10,35 +10,35 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  * RLS — Philosophy Rank Table
  *
  * `philosophy_rank` has no ownership columns of its own; access is derived
- * from the parent `philosophy` row via six policies:
+ * from the parent `philosophy` row via five policies:
  *
  *   1. INSERT — owner of a custom philosophy only.
  *   2. SELECT — any authenticated user when parent philosophy is non-custom.
  *   3. SELECT — owner of a custom philosophy.
  *   4. UPDATE — owner of a custom philosophy.
  *   5. DELETE — owner of a custom philosophy.
- *   6. SELECT — user present in `philosophy_shared_user` for the parent.
  *
- * Notably there is **no** update/delete/insert policy for shared guests:
- * shared access to a philosophy is read-only at the rank level.
+ * Custom philosophies are author-only: non-owners (including settlement
+ * collaborators) have no path to read, update, insert, or delete philosophy
+ * ranks.
  */
 describe('RLS: philosophy_rank', () => {
   let owner: TestUser
   let attacker: TestUser
-  let sharedGuest: TestUser
+  let nonOwner: TestUser
 
   let nonCustomPhilosophyId: string
   let ownerCustomPhilosophyId: string
-  let sharedCustomPhilosophyId: string
+  let secondOwnerCustomPhilosophyId: string
 
   let nonCustomRankId: string
   let ownerCustomRankId: string
-  let sharedCustomRankId: string
+  let secondOwnerCustomRankId: string
 
   beforeAll(async () => {
     owner = await createTestUser()
     attacker = await createTestUser()
-    sharedGuest = await createTestUser()
+    nonOwner = await createTestUser()
 
     const insertPhilosophy = async (row: {
       philosophy_name: string
@@ -78,39 +78,30 @@ describe('RLS: philosophy_rank', () => {
       custom: true,
       user_id: owner.id
     })
-    sharedCustomPhilosophyId = await insertPhilosophy({
-      philosophy_name: 'RLS-philosophy_rank-shared',
+    secondOwnerCustomPhilosophyId = await insertPhilosophy({
+      philosophy_name: 'RLS-philosophy_rank-own-2',
       custom: true,
       user_id: owner.id
     })
 
-    const { error: shareErr } = await admin
-      .from('philosophy_shared_user')
-      .insert({
-        philosophy_id: sharedCustomPhilosophyId,
-        shared_user_id: sharedGuest.id,
-        user_id: owner.id
-      })
-    if (shareErr) throw new Error(`share philosophy: ${shareErr.message}`)
-
     nonCustomRankId = await insertRank(nonCustomPhilosophyId)
     ownerCustomRankId = await insertRank(ownerCustomPhilosophyId)
-    sharedCustomRankId = await insertRank(sharedCustomPhilosophyId)
+    secondOwnerCustomRankId = await insertRank(secondOwnerCustomPhilosophyId)
   })
 
   afterAll(async () => {
-    // Cascades delete ranks + shared_user rows via FK ON DELETE CASCADE.
+    // Cascades delete ranks via FK ON DELETE CASCADE.
     await admin
       .from('philosophy')
       .delete()
       .in('id', [
         nonCustomPhilosophyId,
         ownerCustomPhilosophyId,
-        sharedCustomPhilosophyId
+        secondOwnerCustomPhilosophyId
       ])
     await deleteTestUser(owner.id)
     await deleteTestUser(attacker.id)
-    await deleteTestUser(sharedGuest.id)
+    await deleteTestUser(nonOwner.id)
   })
 
   // --------------------------------------------------------------------------
@@ -118,7 +109,7 @@ describe('RLS: philosophy_rank', () => {
   // --------------------------------------------------------------------------
 
   it('all authenticated users CAN SELECT ranks of a non-custom philosophy', async () => {
-    for (const user of [owner, attacker, sharedGuest]) {
+    for (const user of [owner, attacker, nonOwner]) {
       const { data, error } = await user.client
         .from('philosophy_rank')
         .select('id')
@@ -141,25 +132,11 @@ describe('RLS: philosophy_rank', () => {
       .eq('id', ownerCustomRankId)
     expect(a).toEqual([])
 
-    const { data: g } = await sharedGuest.client
+    const { data: n } = await nonOwner.client
       .from('philosophy_rank')
       .select('id')
       .eq('id', ownerCustomRankId)
-    expect(g).toEqual([])
-  })
-
-  it('shared guest CAN SELECT ranks of a shared custom philosophy but attacker cannot', async () => {
-    const { data: g } = await sharedGuest.client
-      .from('philosophy_rank')
-      .select('id')
-      .eq('id', sharedCustomRankId)
-    expect(g).toHaveLength(1)
-
-    const { data: a } = await attacker.client
-      .from('philosophy_rank')
-      .select('id')
-      .eq('id', sharedCustomRankId)
-    expect(a).toEqual([])
+    expect(n).toEqual([])
   })
 
   // --------------------------------------------------------------------------
@@ -196,14 +173,13 @@ describe('RLS: philosophy_rank', () => {
     expect(error?.code).toMatch(/PGRST|42501/)
   })
 
-  it('shared guest cannot INSERT a rank into a philosophy shared with them', async () => {
-    // Shared access is read-only at the rank level.
-    const { data, error } = await sharedGuest.client
+  it('non-owner cannot INSERT a rank into a custom philosophy they do not own', async () => {
+    const { data, error } = await nonOwner.client
       .from('philosophy_rank')
       .insert({
-        philosophy_id: sharedCustomPhilosophyId,
+        philosophy_id: ownerCustomPhilosophyId,
         rank_number: 101,
-        rules: 'GUEST-INSERT'
+        rules: 'NONOWNER-INSERT'
       })
       .select('id')
     expect(data ?? []).toEqual([])
@@ -212,7 +188,7 @@ describe('RLS: philosophy_rank', () => {
 
   it('no user (including owner) can INSERT a rank into a non-custom philosophy', async () => {
     // Only admin / service role should ever attach ranks to catalog rows.
-    for (const user of [owner, attacker, sharedGuest]) {
+    for (const user of [owner, attacker, nonOwner]) {
       const { data, error } = await user.client
         .from('philosophy_rank')
         .insert({
@@ -256,25 +232,24 @@ describe('RLS: philosophy_rank', () => {
     expect(check?.rules).not.toBe('HACKED')
   })
 
-  it('shared guest cannot UPDATE a rank on a philosophy shared with them', async () => {
-    // No "Allow update for shared" policy exists; share grants read only.
-    const { data } = await sharedGuest.client
+  it('non-owner cannot UPDATE a rank on a custom philosophy they do not own', async () => {
+    const { data } = await nonOwner.client
       .from('philosophy_rank')
-      .update({ rules: 'GUEST-EDIT' })
-      .eq('id', sharedCustomRankId)
+      .update({ rules: 'NONOWNER-EDIT' })
+      .eq('id', secondOwnerCustomRankId)
       .select('id')
     expect(data ?? []).toEqual([])
 
     const { data: check } = await owner.client
       .from('philosophy_rank')
       .select('rules')
-      .eq('id', sharedCustomRankId)
+      .eq('id', secondOwnerCustomRankId)
       .single<{ rules: string }>()
-    expect(check?.rules).not.toBe('GUEST-EDIT')
+    expect(check?.rules).not.toBe('NONOWNER-EDIT')
   })
 
   it('no user (including owner) can UPDATE a rank on a non-custom philosophy', async () => {
-    for (const user of [owner, attacker, sharedGuest]) {
+    for (const user of [owner, attacker, nonOwner]) {
       const { data } = await user.client
         .from('philosophy_rank')
         .update({ rules: 'CATALOG-EDIT' })
@@ -310,23 +285,23 @@ describe('RLS: philosophy_rank', () => {
     expect(check).toHaveLength(1)
   })
 
-  it('shared guest cannot DELETE a rank on a philosophy shared with them', async () => {
-    const { data } = await sharedGuest.client
+  it('non-owner cannot DELETE a rank on a custom philosophy they do not own', async () => {
+    const { data } = await nonOwner.client
       .from('philosophy_rank')
       .delete()
-      .eq('id', sharedCustomRankId)
+      .eq('id', secondOwnerCustomRankId)
       .select('id')
     expect(data ?? []).toEqual([])
 
     const { data: check } = await owner.client
       .from('philosophy_rank')
       .select('id')
-      .eq('id', sharedCustomRankId)
+      .eq('id', secondOwnerCustomRankId)
     expect(check).toHaveLength(1)
   })
 
   it('no user can DELETE a rank on a non-custom philosophy', async () => {
-    for (const user of [owner, attacker, sharedGuest]) {
+    for (const user of [owner, attacker, nonOwner]) {
       const { data } = await user.client
         .from('philosophy_rank')
         .delete()

@@ -53,54 +53,31 @@ function toGearDetail(
 /**
  * Get Gear
  *
- * Retrieves all gear available to the authenticated user:
+ * Retrieves all gear visible to the authenticated user. RLS surfaces:
  *
  * - Built-in (non-custom) gear
  * - Custom gear owned by the user
- * - Custom gear shared with the user
+ * - Custom gear on settlements the user collaborates on (via the transitive
+ *   SELECT policy on `gear`)
  *
  * @returns Gear keyed by ID
  */
 export async function getGear(): Promise<{
   [key: string]: GearDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('gear')
-      .select(
-        'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity)'
-      )
-      .eq('custom', false),
-    supabase
-      .from('gear')
-      .select(
-        'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity)'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('gear_shared_user')
-      .select(
-        'gear(id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity))'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('gear')
+    .select(
+      'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity)'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Gear: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Gear: ${error.message}`)
 
   const gearMap: { [key: string]: GearDetail } = {}
-
-  for (const g of nonCustomResult.data ?? []) gearMap[g.id] = toGearDetail(g)
-  for (const g of userCustomResult.data ?? []) gearMap[g.id] = toGearDetail(g)
-  for (const row of sharedResult.data ?? []) {
-    const g = row.gear?.[0]
-    if (g?.id) gearMap[g.id] = toGearDetail(g)
-  }
+  for (const g of data ?? []) gearMap[g.id] = toGearDetail(g)
 
   return gearMap
 }

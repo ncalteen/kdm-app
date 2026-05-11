@@ -25,207 +25,68 @@ beforeEach(() => {
 })
 
 describe('getDisorders', () => {
-  const mockUserId = 'user-1'
-
-  const nonCustomDisorder = {
+  const userId = 'user-1'
+  const row1 = {
     id: 'd1',
     custom: false,
-    disorder_name: 'Anxiety'
+    disorder_name: 'Disorder',
+    rules: null
   }
-  const userCustomDisorder = {
-    id: 'd2',
-    custom: true,
-    disorder_name: 'My Disorder'
-  }
-  const sharedDisorder = {
-    id: 'd3',
-    custom: true,
-    disorder_name: 'Shared Disorder'
-  }
+  const row2 = { id: 'd2', custom: true, disorder_name: 'Custom', rules: null }
 
-  it('returns disorders from all three sources', async () => {
-    vi.mocked(getUserId).mockResolvedValue(mockUserId)
+  it('returns every row surfaced by RLS', async () => {
+    vi.mocked(getUserId).mockResolvedValue(userId)
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: [nonCustomDisorder], error: null })
-        })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({
+        data: [row1, row2],
+        error: null
       })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: [userCustomDisorder], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ disorder: [sharedDisorder] }],
-            error: null
-          })
-        })
-      })
-
-    const result = await getDisorders()
-
-    expect(result).toEqual({
-      d1: nonCustomDisorder,
-      d2: userCustomDisorder,
-      d3: sharedDisorder
     })
-  })
-
-  it('handles shared disorder as single object (not array)', async () => {
-    vi.mocked(getUserId).mockResolvedValue(mockUserId)
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ disorder: sharedDisorder }],
-            error: null
-          })
-        })
-      })
 
     const result = await getDisorders()
 
-    expect(result).toEqual({ d3: sharedDisorder })
+    expect(result).toEqual({ [row1.id]: row1, [row2.id]: row2 })
+    expect(mockSupabase.from).toHaveBeenCalledWith('disorder')
   })
 
-  it('throws when getUserId fails (not authenticated)', async () => {
+  it('throws when user is not authenticated', async () => {
     vi.mocked(getUserId).mockRejectedValue(new Error('Not Authenticated'))
 
     await expect(getDisorders()).rejects.toThrow('Not Authenticated')
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
-  it('throws when non-custom query fails', async () => {
-    vi.mocked(getUserId).mockResolvedValue(mockUserId)
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+  it('throws when auth errors', async () => {
+    vi.mocked(getUserId).mockRejectedValue(
+      new Error('Error Fetching User: Auth error')
+    )
 
     await expect(getDisorders()).rejects.toThrow(
-      'Error Fetching Built-in Disorders: DB error'
+      'Error Fetching User: Auth error'
     )
   })
 
-  it('throws when user-custom query fails', async () => {
-    vi.mocked(getUserId).mockResolvedValue(mockUserId)
+  it('throws when the query fails', async () => {
+    vi.mocked(getUserId).mockResolvedValue(userId)
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi
+        .fn()
+        .mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    })
 
     await expect(getDisorders()).rejects.toThrow(
-      'Error Fetching Custom Disorders: DB error'
+      'Error Fetching Disorders: DB error'
     )
   })
 
-  it('throws when shared query fails', async () => {
-    vi.mocked(getUserId).mockResolvedValue(mockUserId)
+  it('returns an empty map when the query returns no rows', async () => {
+    vi.mocked(getUserId).mockResolvedValue(userId)
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-
-    await expect(getDisorders()).rejects.toThrow(
-      'Error Fetching Shared Disorders: DB error'
-    )
-  })
-
-  it('returns empty map when all sources are empty', async () => {
-    vi.mocked(getUserId).mockResolvedValue(mockUserId)
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({ data: [], error: null })
+    })
 
     const result = await getDisorders()
     expect(result).toEqual({})

@@ -7,51 +7,30 @@ import { MilestoneDetail } from '@/lib/types'
 /**
  * Get Milestones
  *
- * Retrieves all milestones available to the authenticated user:
+ * Retrieves all milestones visible to the authenticated user. RLS surfaces:
  * - Built-in (non-custom) milestones
  * - Custom milestones owned by the user
- * - Custom milestones shared with the user
+ * - Custom milestones on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `milestone`)
  *
  * @returns Milestones
  */
 export async function getMilestones(): Promise<{
   [key: string]: MilestoneDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('milestone')
-      .select(
-        'id, custom, milestone_name, event_name, campaign_types, requirements, rules'
-      )
-      .eq('custom', false),
-    supabase
-      .from('milestone')
-      .select(
-        'id, custom, milestone_name, event_name, campaign_types, requirements, rules'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('milestone_shared_user')
-      .select(
-        'milestone(id, custom, milestone_name, event_name, campaign_types, requirements, rules)'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('milestone')
+    .select(
+      'id, custom, milestone_name, event_name, campaign_types, requirements, rules'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Milestones: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Milestones: ${error.message}`)
 
   const milestoneMap: { [key: string]: MilestoneDetail } = {}
-
-  for (const m of nonCustomResult.data ?? []) milestoneMap[m.id] = m
-  for (const m of userCustomResult.data ?? []) milestoneMap[m.id] = m
-  for (const row of sharedResult.data ?? [])
-    milestoneMap[row.milestone[0].id] = row.milestone[0]
+  for (const m of data ?? []) milestoneMap[m.id] = m
 
   return milestoneMap
 }

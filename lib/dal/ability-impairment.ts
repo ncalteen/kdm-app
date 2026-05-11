@@ -5,51 +5,31 @@ import { AbilityImpairmentDetail } from '@/lib/types'
 /**
  * Get Ability Impairments
  *
- * Retrieves all ability/impairments available to the authenticated user:
+ * Retrieves all ability/impairments visible to the authenticated user. RLS
+ * surfaces:
  * - Built-in (non-custom) ability/impairments
  * - Custom ability/impairments owned by the user
- * - Custom ability/impairments shared with the user
+ * - Custom ability/impairments attached to a survivor the user can see
+ *   (via the transitive SELECT policy on `ability_impairment` through the
+ *   `survivor_ability_impairment` junction)
  *
  * @returns Ability/Impairments by ID
  */
 export async function getAbilityImpairments(): Promise<{
   [key: string]: AbilityImpairmentDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('ability_impairment')
-      .select('id, custom, ability_impairment_name, rules')
-      .eq('custom', false),
-    supabase
-      .from('ability_impairment')
-      .select('id, custom, ability_impairment_name, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('ability_impairment_shared_user')
-      .select('ability_impairment(id, custom, ability_impairment_name, rules)')
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('ability_impairment')
+    .select('id, custom, ability_impairment_name, rules')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(
-        `Error Fetching Ability/Impairments: ${result.error.message}`
-      )
+  if (error)
+    throw new Error(`Error Fetching Ability/Impairments: ${error.message}`)
 
   const map: { [key: string]: AbilityImpairmentDetail } = {}
-
-  for (const a of nonCustomResult.data ?? []) map[a.id] = a
-  for (const a of userCustomResult.data ?? []) map[a.id] = a
-  for (const row of sharedResult.data ?? []) {
-    const ai = Array.isArray(row.ability_impairment)
-      ? row.ability_impairment[0]
-      : row.ability_impairment
-    if (ai) map[ai.id] = ai
-  }
+  for (const a of data ?? []) map[a.id] = a
 
   return map
 }

@@ -6,45 +6,29 @@ import { FightingArtDetail } from '@/lib/types'
 /**
  * Get Fighting Arts
  *
- * Retrieves all fighting arts available to the authenticated user:
+ * Retrieves all fighting arts visible to the authenticated user. RLS
+ * surfaces:
  * - Built-in (non-custom) fighting arts
  * - Custom fighting arts owned by the user
- * - Custom fighting arts shared with the user
+ * - Custom fighting arts on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `fighting_art`)
  *
  * @returns Fighting Arts
  */
 export async function getFightingArts(): Promise<{
   [key: string]: FightingArtDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('fighting_art')
-      .select('id, custom, fighting_art_name, rules')
-      .eq('custom', false),
-    supabase
-      .from('fighting_art')
-      .select('id, custom, fighting_art_name, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('fighting_art_shared_user')
-      .select('fighting_art(id, custom, fighting_art_name, rules)')
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('fighting_art')
+    .select('id, custom, fighting_art_name, rules')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Fighting Arts: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Fighting Arts: ${error.message}`)
 
   const fightingArtMap: { [key: string]: FightingArtDetail } = {}
-
-  for (const f of nonCustomResult.data ?? []) fightingArtMap[f.id] = f
-  for (const f of userCustomResult.data ?? []) fightingArtMap[f.id] = f
-  for (const row of sharedResult.data ?? [])
-    fightingArtMap[row.fighting_art[0].id] = row.fighting_art[0]
+  for (const f of data ?? []) fightingArtMap[f.id] = f
 
   return fightingArtMap
 }

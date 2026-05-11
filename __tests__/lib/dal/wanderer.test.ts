@@ -59,52 +59,28 @@ describe('getWanderers', () => {
     custom: true,
     wanderer_name: 'My Wanderer'
   }
-  const sharedWanderer = {
-    ...baseWanderer,
-    id: 'w3',
-    custom: true,
-    wanderer_name: 'Shared Wanderer'
+
+  const mockSelect = (data: object[] | null, error: object | null = null) => {
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({ data, error })
+    })
   }
 
-  it('returns wanderers from all three sources', async () => {
+  it('returns every wanderer surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: [nonCustomWanderer], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: [userCustomWanderer], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ wanderer: [sharedWanderer] }],
-            error: null
-          })
-        })
-      })
+    mockSelect([nonCustomWanderer, userCustomWanderer])
 
     const result = await getWanderers()
 
     expect(result).toEqual({
       w1: nonCustomWanderer,
-      w2: userCustomWanderer,
-      w3: sharedWanderer
+      w2: userCustomWanderer
     })
+    expect(mockSupabase.from).toHaveBeenCalledWith('wanderer')
   })
 
   it('throws when user is not authenticated', async () => {
@@ -128,62 +104,26 @@ describe('getWanderers', () => {
     )
   })
 
-  it('throws when any source query fails', async () => {
+  it('throws when the query fails', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSelect(null, { message: 'DB error' })
 
     await expect(getWanderers()).rejects.toThrow(
       'Error Fetching Wanderers: DB error'
     )
   })
 
-  it('returns empty map when all sources return empty arrays', async () => {
+  it('returns an empty map when the query returns no rows', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSelect([])
 
     const result = await getWanderers()
     expect(result).toEqual({})

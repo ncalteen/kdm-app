@@ -6,45 +6,28 @@ import { LocationDetail } from '@/lib/types'
 /**
  * Get Locations
  *
- * Retrieves all locations available to the authenticated user:
+ * Retrieves all locations visible to the authenticated user. RLS surfaces:
  * - Built-in (non-custom) locations
  * - Custom locations owned by the user
- * - Custom locations shared with the user
+ * - Custom locations on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `location`)
  *
  * @returns Locations
  */
 export async function getLocations(): Promise<{
   [key: string]: LocationDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('location')
-      .select('id, custom, location_name, rules')
-      .eq('custom', false),
-    supabase
-      .from('location')
-      .select('id, custom, location_name, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('location_shared_user')
-      .select('location(id, custom, location_name, rules)')
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('location')
+    .select('id, custom, location_name, rules')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Locations: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Locations: ${error.message}`)
 
   const locationMap: { [key: string]: LocationDetail } = {}
-
-  for (const l of nonCustomResult.data ?? []) locationMap[l.id] = l
-  for (const l of userCustomResult.data ?? []) locationMap[l.id] = l
-  for (const row of sharedResult.data ?? [])
-    locationMap[row.location[0].id] = row.location[0]
+  for (const l of data ?? []) locationMap[l.id] = l
 
   return locationMap
 }

@@ -20,8 +20,9 @@ describe('RLS: user_settings', () => {
     owner = await createTestUser()
     attacker = await createTestUser()
 
-    // `createTestUser` seeds a user_settings row for the created user (so that
-    // it satisfies the `*_shared_user.shared_user_id` FK). Look it up.
+    // `createTestUser` seeds a user_settings row for the created user (so
+    // that it satisfies the `settlement_shared_user.shared_user_id` FK).
+    // Look it up.
     const { data, error } = await admin
       .from('user_settings')
       .select('id')
