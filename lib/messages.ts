@@ -1356,6 +1356,17 @@ export const NEUROSIS_REMOVED_MESSAGE = () => 'The neurosis loosens its grip.'
 export const NEUROSIS_UPDATED_MESSAGE = () => 'The neurosis has shifted.'
 
 /**
+ * Not Authorized
+ *
+ * Used when an RLS policy, ownership trigger, or PostgREST permission check
+ * rejects a mutation attempted by a collaborator on an owner-only control.
+ *
+ * @returns Not Authorized Message
+ */
+export const NOT_AUTHORIZED_MESSAGE = () =>
+  'This is not yours. Speak to the keeper of this settlement.'
+
+/**
  * Scout Conflict
  *
  * @returns Scout Conflict Message
