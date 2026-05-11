@@ -537,15 +537,24 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     onCatalogChange: () => {
       if (!selectedSettlementId) return
 
-      // Custom-content catalog row changes (rules text edits by the
-      // author, etc.) are materialized into `SettlementDetail` — the
-      // settlement collections (knowledges, gear, locations, ...) embed
-      // each catalog row's rules / definitions at fetch time. The
-      // cheapest correct response to a delivered catalog event is to
-      // re-pull the active settlement; the per-domain 300ms debounce in
-      // `useRealtimeSubscriptions` collapses bursts of edits into a
-      // single refetch. RLS is what makes this coarse subscription safe:
-      // events for catalog rows the user cannot read (i.e. rows not
+      // Custom-content catalog row changes (rules text edits, etc.) are
+      // materialized into multiple cached views by the DAL projections:
+      //   * `selectedSettlement` (knowledges, gear, locations,
+      //     milestones, innovations, ...).
+      //   * `survivors` + `selectedSurvivor` (disorders, fighting arts,
+      //     secret fighting arts, knowledges, neurosis, ability
+      //     impairments — embedded via `SURVIVOR_SELECT`).
+      //   * `selectedHunt` / `selectedShowdown` monster details (traits,
+      //     moods, survivor_status rules embedded via the monster
+      //     projections).
+      // A single catalog event can touch any of them, so each
+      // materialized collection is refreshed in lockstep — refetching
+      // `SettlementDetail` alone would leave survivor disorders / hunt
+      // monster traits / etc. stale. The 300ms catalog-domain debounce
+      // in `useRealtimeSubscriptions` collapses bursts of rules edits
+      // into a single dispatch, so this fan-out runs at most once per
+      // burst. RLS is what makes the coarse subscription safe: events
+      // for catalog rows the user cannot read (i.e. rows not
       // transitively reachable through any settlement they belong to)
       // are never delivered. See `local/sharing-architecture.md` §8.2.2
       // (recommendation B).
@@ -554,7 +563,41 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
           setSelectedSettlementState(settlement)
         })
         .catch((err: unknown) => {
-          console.error('Realtime Catalog Refetch Error:', err)
+          console.error('Realtime Catalog Settlement Refetch Error:', err)
+        })
+
+      getSurvivors(selectedSettlementId)
+        .then((updatedSurvivors) => {
+          setSurvivors(updatedSurvivors ?? [])
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Catalog Survivors Refetch Error:', err)
+        })
+
+      if (selectedSurvivorId) {
+        getSurvivor(selectedSurvivorId)
+          .then((survivor) => {
+            setSelectedSurvivorState(survivor)
+          })
+          .catch((err: unknown) => {
+            console.error('Realtime Catalog Survivor Refetch Error:', err)
+          })
+      }
+
+      getHunt(selectedSettlementId)
+        .then((hunt) => {
+          setSelectedHuntState(hunt)
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Catalog Hunt Refetch Error:', err)
+        })
+
+      getShowdown(selectedSettlementId)
+        .then((showdown) => {
+          setSelectedShowdownState(showdown)
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Catalog Showdown Refetch Error:', err)
         })
     }
   })

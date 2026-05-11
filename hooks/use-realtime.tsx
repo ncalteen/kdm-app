@@ -9,8 +9,19 @@ import { useEffect, useRef } from 'react'
  * Groups of related tables that trigger the same re-fetch when any table in
  * the group changes.
  *
- * `catalog` covers custom-content tables (knowledge, disorder, gear, etc.)
- * whose rules text is materialized into the active `SettlementDetail`.
+ * `catalog` covers custom-content tables (knowledge, disorder, gear,
+ * trait, mood, survivor_status, etc.) whose rules / definitions are
+ * materialized into **multiple** cached views by the DAL projections:
+ *   * `SettlementDetail`: knowledges, gear, locations, milestones,
+ *     innovations, etc. (rules embedded via the settlement junctions).
+ *   * `SurvivorDetail`: disorders, fighting arts, secret fighting arts,
+ *     knowledges (x3), neurosis, ability impairments (rules embedded
+ *     via `SURVIVOR_SELECT`).
+ *   * `HuntDetail` / `ShowdownDetail` monsters: traits, moods, and
+ *     survivor_status rules embedded via the monster projections.
+ * The consumer is therefore expected to refresh all materialized
+ * collections on a catalog event, not just `SettlementDetail`.
+ *
  * Changes are received without a row-level filter because the realtime
  * channel filter syntax does not support joins; RLS gates which catalog
  * rows the subscriber can actually see (transitive visibility via
@@ -209,12 +220,18 @@ interface UseRealtimeSubscriptionsOptions {
   onSurvivorChange: () => void
   /**
    * Called when a custom-content catalog row (knowledge, disorder, gear,
-   * etc.) reachable through the active settlement changes. The callback
-   * fires on any catalog event delivered by RLS — including rows
-   * referenced through a survivor / hunt / showdown — so the consumer
-   * typically refetches the materialized `SettlementDetail` to pull the
-   * latest rules text. The 300ms domain debounce collapses bursts of
-   * catalog edits into a single refetch.
+   * trait, mood, survivor_status, etc.) reachable through the active
+   * settlement changes. The callback fires on any catalog event
+   * delivered by RLS — including rows referenced through a survivor /
+   * hunt / showdown.
+   *
+   * Catalog rules / definitions are embedded by multiple DAL projections
+   * (`SettlementDetail`, `SurvivorDetail`, hunt/showdown monster
+   * details), so the consumer is expected to refresh every materialized
+   * view in lockstep — refetching `SettlementDetail` alone would leave
+   * survivor disorders, hunt monster traits, etc. stale. The 300ms
+   * domain debounce collapses bursts of catalog edits into a single
+   * dispatch.
    */
   onCatalogChange: () => void
 }
