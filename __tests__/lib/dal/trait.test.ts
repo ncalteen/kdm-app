@@ -50,11 +50,11 @@ describe('getTraits', () => {
   })
 
   it('throws when auth errors', async () => {
-    vi.mocked(getUserId).mockRejectedValue(new Error('Error Fetching User: Auth error'))
-
-    await expect(getTraits()).rejects.toThrow(
-      'Error Fetching User: Auth error'
+    vi.mocked(getUserId).mockRejectedValue(
+      new Error('Error Fetching User: Auth error')
     )
+
+    await expect(getTraits()).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when the query fails', async () => {
@@ -66,9 +66,7 @@ describe('getTraits', () => {
         .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     })
 
-    await expect(getTraits()).rejects.toThrow(
-      'Error Fetching Traits: DB error'
-    )
+    await expect(getTraits()).rejects.toThrow('Error Fetching Traits: DB error')
   })
 
   it('returns an empty map when the query returns no rows', async () => {

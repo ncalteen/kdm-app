@@ -25,8 +25,22 @@ beforeEach(() => {
 
 describe('getInnovations', () => {
   const mockUser = { id: 'user-1' }
-  const row1 = { id: 'i1', custom: false, innovation_name: 'Innovation', tags: [], consequence_innovation_ids: [], requirement_innovation_ids: [] }
-  const row2 = { id: 'i2', custom: true, innovation_name: 'Custom', tags: [], consequence_innovation_ids: [], requirement_innovation_ids: [] }
+  const row1 = {
+    id: 'i1',
+    custom: false,
+    innovation_name: 'Innovation',
+    tags: [],
+    consequence_innovation_ids: [],
+    requirement_innovation_ids: []
+  }
+  const row2 = {
+    id: 'i2',
+    custom: true,
+    innovation_name: 'Custom',
+    tags: [],
+    consequence_innovation_ids: [],
+    requirement_innovation_ids: []
+  }
 
   it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({

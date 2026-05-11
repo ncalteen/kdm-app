@@ -27,8 +27,18 @@ beforeEach(() => {
 
 describe('getAbilityImpairments', () => {
   const userId = 'user-1'
-  const row1 = { id: 'a1', custom: false, ability_impairment_name: 'Ability', rules: null }
-  const row2 = { id: 'a2', custom: true, ability_impairment_name: 'Mine', rules: null }
+  const row1 = {
+    id: 'a1',
+    custom: false,
+    ability_impairment_name: 'Ability',
+    rules: null
+  }
+  const row2 = {
+    id: 'a2',
+    custom: true,
+    ability_impairment_name: 'Mine',
+    rules: null
+  }
 
   it('returns every row surfaced by RLS', async () => {
     vi.mocked(getUserId).mockResolvedValue(userId)
@@ -54,7 +64,9 @@ describe('getAbilityImpairments', () => {
   })
 
   it('throws when auth errors', async () => {
-    vi.mocked(getUserId).mockRejectedValue(new Error('Error Fetching User: Auth error'))
+    vi.mocked(getUserId).mockRejectedValue(
+      new Error('Error Fetching User: Auth error')
+    )
 
     await expect(getAbilityImpairments()).rejects.toThrow(
       'Error Fetching User: Auth error'

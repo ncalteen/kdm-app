@@ -26,8 +26,20 @@ beforeEach(() => {
 
 describe('getMilestones', () => {
   const mockUser = { id: 'user-1' }
-  const row1 = { id: 'm1', custom: false, milestone_name: 'Milestone', rules: null, story_event_id: null }
-  const row2 = { id: 'm2', custom: true, milestone_name: 'Custom', rules: null, story_event_id: null }
+  const row1 = {
+    id: 'm1',
+    custom: false,
+    milestone_name: 'Milestone',
+    rules: null,
+    story_event_id: null
+  }
+  const row2 = {
+    id: 'm2',
+    custom: true,
+    milestone_name: 'Custom',
+    rules: null,
+    story_event_id: null
+  }
 
   it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({

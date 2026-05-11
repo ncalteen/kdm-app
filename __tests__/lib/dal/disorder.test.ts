@@ -26,7 +26,12 @@ beforeEach(() => {
 
 describe('getDisorders', () => {
   const userId = 'user-1'
-  const row1 = { id: 'd1', custom: false, disorder_name: 'Disorder', rules: null }
+  const row1 = {
+    id: 'd1',
+    custom: false,
+    disorder_name: 'Disorder',
+    rules: null
+  }
   const row2 = { id: 'd2', custom: true, disorder_name: 'Custom', rules: null }
 
   it('returns every row surfaced by RLS', async () => {
@@ -53,7 +58,9 @@ describe('getDisorders', () => {
   })
 
   it('throws when auth errors', async () => {
-    vi.mocked(getUserId).mockRejectedValue(new Error('Error Fetching User: Auth error'))
+    vi.mocked(getUserId).mockRejectedValue(
+      new Error('Error Fetching User: Auth error')
+    )
 
     await expect(getDisorders()).rejects.toThrow(
       'Error Fetching User: Auth error'

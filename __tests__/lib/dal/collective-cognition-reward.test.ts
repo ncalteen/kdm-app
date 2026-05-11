@@ -23,8 +23,20 @@ beforeEach(() => {
 
 describe('getCollectiveCognitionRewards', () => {
   const mockUser = { id: 'user-1' }
-  const row1 = { id: 'r1', custom: false, name: 'Reward', threshold: 1, rules: null }
-  const row2 = { id: 'r2', custom: true, name: 'Custom', threshold: 2, rules: null }
+  const row1 = {
+    id: 'r1',
+    custom: false,
+    name: 'Reward',
+    threshold: 1,
+    rules: null
+  }
+  const row2 = {
+    id: 'r2',
+    custom: true,
+    name: 'Custom',
+    threshold: 2,
+    rules: null
+  }
 
   it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
@@ -42,7 +54,9 @@ describe('getCollectiveCognitionRewards', () => {
     const result = await getCollectiveCognitionRewards()
 
     expect(result).toEqual({ [row1.id]: row1, [row2.id]: row2 })
-    expect(mockSupabase.from).toHaveBeenCalledWith('collective_cognition_reward')
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'collective_cognition_reward'
+    )
   })
 
   it('throws when user is not authenticated', async () => {
@@ -51,7 +65,9 @@ describe('getCollectiveCognitionRewards', () => {
       error: null
     })
 
-    await expect(getCollectiveCognitionRewards()).rejects.toThrow('Not Authenticated')
+    await expect(getCollectiveCognitionRewards()).rejects.toThrow(
+      'Not Authenticated'
+    )
     expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 

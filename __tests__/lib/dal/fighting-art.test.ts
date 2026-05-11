@@ -25,8 +25,18 @@ beforeEach(() => {
 
 describe('getFightingArts', () => {
   const mockUser = { id: 'user-1' }
-  const row1 = { id: 'f1', custom: false, fighting_art_name: 'Art', rules: null }
-  const row2 = { id: 'f2', custom: true, fighting_art_name: 'Custom', rules: null }
+  const row1 = {
+    id: 'f1',
+    custom: false,
+    fighting_art_name: 'Art',
+    rules: null
+  }
+  const row2 = {
+    id: 'f2',
+    custom: true,
+    fighting_art_name: 'Custom',
+    rules: null
+  }
 
   it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({

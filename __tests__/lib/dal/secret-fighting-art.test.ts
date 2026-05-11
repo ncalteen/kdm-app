@@ -24,8 +24,18 @@ beforeEach(() => {
 
 describe('getSecretFightingArts', () => {
   const mockUser = { id: 'user-1' }
-  const row1 = { id: 's1', custom: false, secret_fighting_art_name: 'Secret', rules: null }
-  const row2 = { id: 's2', custom: true, secret_fighting_art_name: 'Custom', rules: null }
+  const row1 = {
+    id: 's1',
+    custom: false,
+    secret_fighting_art_name: 'Secret',
+    rules: null
+  }
+  const row2 = {
+    id: 's2',
+    custom: true,
+    secret_fighting_art_name: 'Custom',
+    rules: null
+  }
 
   it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({

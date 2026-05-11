@@ -24,8 +24,18 @@ beforeEach(() => {
 
 describe('getStrainMilestones', () => {
   const mockUser = { id: 'user-1' }
-  const row1 = { id: 's1', custom: false, strain_milestone_name: 'Strain', rules: null }
-  const row2 = { id: 's2', custom: true, strain_milestone_name: 'Custom', rules: null }
+  const row1 = {
+    id: 's1',
+    custom: false,
+    strain_milestone_name: 'Strain',
+    rules: null
+  }
+  const row2 = {
+    id: 's2',
+    custom: true,
+    strain_milestone_name: 'Custom',
+    rules: null
+  }
 
   it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({

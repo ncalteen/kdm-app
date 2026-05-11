@@ -20,7 +20,12 @@ beforeEach(() => {
 
 describe('getNeuroses', () => {
   const mockUser = { id: 'user-1' }
-  const row1 = { id: 'n1', custom: false, neurosis_name: 'Neurosis', rules: null }
+  const row1 = {
+    id: 'n1',
+    custom: false,
+    neurosis_name: 'Neurosis',
+    rules: null
+  }
   const row2 = { id: 'n2', custom: true, neurosis_name: 'Custom', rules: null }
 
   it('returns every row surfaced by RLS', async () => {

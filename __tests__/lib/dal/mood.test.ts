@@ -50,11 +50,11 @@ describe('getMoods', () => {
   })
 
   it('throws when auth errors', async () => {
-    vi.mocked(getUserId).mockRejectedValue(new Error('Error Fetching User: Auth error'))
-
-    await expect(getMoods()).rejects.toThrow(
-      'Error Fetching User: Auth error'
+    vi.mocked(getUserId).mockRejectedValue(
+      new Error('Error Fetching User: Auth error')
     )
+
+    await expect(getMoods()).rejects.toThrow('Error Fetching User: Auth error')
   })
 
   it('throws when the query fails', async () => {
@@ -66,9 +66,7 @@ describe('getMoods', () => {
         .mockResolvedValue({ data: null, error: { message: 'DB error' } })
     })
 
-    await expect(getMoods()).rejects.toThrow(
-      'Error Fetching Moods: DB error'
-    )
+    await expect(getMoods()).rejects.toThrow('Error Fetching Moods: DB error')
   })
 
   it('returns an empty map when the query returns no rows', async () => {

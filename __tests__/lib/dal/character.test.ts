@@ -18,8 +18,18 @@ beforeEach(() => {
 
 describe('getCharacters', () => {
   const mockUser = { id: 'user-1' }
-  const row1 = { id: 'c1', custom: false, character_name: 'Survivor', is_named: true }
-  const row2 = { id: 'c2', custom: true, character_name: 'Custom', is_named: false }
+  const row1 = {
+    id: 'c1',
+    custom: false,
+    character_name: 'Survivor',
+    is_named: true
+  }
+  const row2 = {
+    id: 'c2',
+    custom: true,
+    character_name: 'Custom',
+    is_named: false
+  }
 
   it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({

@@ -28,8 +28,18 @@ beforeEach(() => {
 
 describe('getSurvivorStatuses', () => {
   const userId = 'user-1'
-  const row1 = { id: 's1', custom: false, survivor_status_name: 'Status', rules: null }
-  const row2 = { id: 's2', custom: true, survivor_status_name: 'Custom', rules: null }
+  const row1 = {
+    id: 's1',
+    custom: false,
+    survivor_status_name: 'Status',
+    rules: null
+  }
+  const row2 = {
+    id: 's2',
+    custom: true,
+    survivor_status_name: 'Custom',
+    rules: null
+  }
 
   it('returns every row surfaced by RLS', async () => {
     vi.mocked(getUserId).mockResolvedValue(userId)
@@ -55,7 +65,9 @@ describe('getSurvivorStatuses', () => {
   })
 
   it('throws when auth errors', async () => {
-    vi.mocked(getUserId).mockRejectedValue(new Error('Error Fetching User: Auth error'))
+    vi.mocked(getUserId).mockRejectedValue(
+      new Error('Error Fetching User: Auth error')
+    )
 
     await expect(getSurvivorStatuses()).rejects.toThrow(
       'Error Fetching User: Auth error'
