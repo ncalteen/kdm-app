@@ -435,3 +435,32 @@ export function formatJoinedTimeAgo(
   const diffYears = Math.floor(diffMonths / 12)
   return diffYears === 1 ? '1 year ago' : `${diffYears} years ago`
 }
+
+/**
+ * Get Catalog Delete Guard Message
+ *
+ * Extracts the user-facing message raised by the
+ * `enforce_catalog_delete_guard` Postgres trigger when present in a
+ * caught error. DAL helpers re-throw delete failures as
+ * `new Error('Error Removing X: <postgrest message>')`, so the trigger
+ * text is preserved on `Error.message`. When the error matches, the
+ * extracted slice is suitable to pass directly to a toast.
+ *
+ * The trigger renders messages in the shape
+ * `You cannot unmake what others rely upon (N settlement(s): name1, ...)`.
+ * The nested `(s)` literal means a naive `\([^)]+\)` match terminates too
+ * early; the regex below skips past the literal `settlement(s):` before
+ * consuming the comma-separated settlement names.
+ *
+ * @param err Caught Error Value
+ * @returns Trigger Message Slice, or null when the error is unrelated
+ */
+export function getCatalogDeleteGuardMessage(err: unknown): string | null {
+  if (!(err instanceof Error)) return null
+
+  const match = err.message.match(
+    /You cannot unmake what others rely upon \(\d+ settlement\(s\): [^)]+\)/
+  )
+
+  return match ? match[0] : null
+}

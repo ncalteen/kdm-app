@@ -27,6 +27,7 @@ import {
   NAMELESS_OBJECT_ERROR_MESSAGE
 } from '@/lib/messages'
 import { AbilityImpairmentDetail } from '@/lib/types'
+import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -208,8 +209,9 @@ export function CustomAbilityImpairmentsCard({
         .then(() => toast.success(ABILITY_IMPAIRMENT_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
           setItems(previous)
-          console.error('Delete Ability/Impairment Error:', err)
-          toast.error(ERROR_MESSAGE())
+          const guard = getCatalogDeleteGuardMessage(err)
+          if (!guard) console.error('Delete Ability/Impairment Error:', err)
+          toast.error(guard ?? ERROR_MESSAGE())
         })
     },
     [items, toast]

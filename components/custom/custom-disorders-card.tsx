@@ -27,6 +27,7 @@ import {
   NAMELESS_OBJECT_ERROR_MESSAGE
 } from '@/lib/messages'
 import { DisorderDetail } from '@/lib/types'
+import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -201,8 +202,9 @@ export function CustomDisordersCard({
         .then(() => toast.success(DISORDER_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
           setItems(previous)
-          console.error('Delete Disorder Error:', err)
-          toast.error(ERROR_MESSAGE())
+          const guard = getCatalogDeleteGuardMessage(err)
+          if (!guard) console.error('Delete Disorder Error:', err)
+          toast.error(guard ?? ERROR_MESSAGE())
         })
     },
     [items, toast]

@@ -39,6 +39,7 @@ import {
   PHILOSOPHY_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { KnowledgeDetail, NeurosisDetail, PhilosophyDetail } from '@/lib/types'
+import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -311,8 +312,9 @@ export function CustomPhilosophiesCard({
         })
         .catch((err: unknown) => {
           setItems(previous)
-          console.error('Delete Philosophy Error:', err)
-          toast.error(ERROR_MESSAGE())
+          const guard = getCatalogDeleteGuardMessage(err)
+          if (!guard) console.error('Delete Philosophy Error:', err)
+          toast.error(guard ?? ERROR_MESSAGE())
         })
     },
     [items, toast, onPhilosophiesChange]

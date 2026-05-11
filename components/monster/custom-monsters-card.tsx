@@ -19,6 +19,7 @@ import { getUserCustomQuarries, removeQuarry } from '@/lib/dal/quarry'
 import { MonsterType } from '@/lib/enums'
 import { CUSTOM_MONSTER_DELETED_MESSAGE, ERROR_MESSAGE } from '@/lib/messages'
 import { NemesisDetail, QuarryDetail } from '@/lib/types'
+import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -127,8 +128,9 @@ export function CustomMonstersCard({
         .catch((err: unknown) => {
           // Rollback
           setMonsters(previousMonsters)
-          console.error('Delete Monster Error:', err)
-          toast.error(ERROR_MESSAGE())
+          const guard = getCatalogDeleteGuardMessage(err)
+          if (!guard) console.error('Delete Monster Error:', err)
+          toast.error(guard ?? ERROR_MESSAGE())
         })
     },
     [monsters, toast]
