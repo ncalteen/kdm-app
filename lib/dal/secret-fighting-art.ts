@@ -6,57 +6,31 @@ import { SecretFightingArtDetail } from '@/lib/types'
 /**
  * Get Secret Fighting Arts
  *
- * Retrieves the secret fighting arts a user has access to. This includes:
+ * Retrieves the secret fighting arts visible to the authenticated user. RLS
+ * surfaces:
  *
  * - Non-custom secret fighting arts
  * - Custom secret fighting arts created by the user
- * - Custom secret fighting arts shared with the user (via the
- *   secret_fighting_art_shared_user table)
+ * - Custom secret fighting arts on settlements the user collaborates on
+ *   (via the transitive SELECT policy on `secret_fighting_art`)
  *
  * @returns Secret Fighting Art Data
  */
 export async function getSecretFightingArts(): Promise<{
   [key: string]: SecretFightingArtDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  // Fetch all three categories of secret fighting arts in parallel
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    // Non-custom secret fighting arts (available to all users)
-    supabase
-      .from('secret_fighting_art')
-      .select('id, custom, secret_fighting_art_name, rules')
-      .eq('custom', false),
-    // Custom secret fighting arts created by the user
-    supabase
-      .from('secret_fighting_art')
-      .select('id, custom, secret_fighting_art_name, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    // Custom secret fighting arts shared with the user
-    supabase
-      .from('secret_fighting_art_shared_user')
-      .select(
-        'secret_fighting_art(id, custom, secret_fighting_art_name, rules)'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('secret_fighting_art')
+    .select('id, custom, secret_fighting_art_name, rules')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(
-        `Error Fetching Secret Fighting Arts: ${result.error.message}`
-      )
+  if (error)
+    throw new Error(`Error Fetching Secret Fighting Arts: ${error.message}`)
 
-  // Collect secret fighting arts from all sources, deduplicating by ID
   const secretFightingArtMap: { [key: string]: SecretFightingArtDetail } = {}
-
-  for (const s of nonCustomResult.data ?? []) secretFightingArtMap[s.id] = s
-  for (const s of userCustomResult.data ?? []) secretFightingArtMap[s.id] = s
-  for (const row of sharedResult.data ?? [])
-    secretFightingArtMap[row.secret_fighting_art[0].id] =
-      row.secret_fighting_art[0]
+  for (const s of data ?? []) secretFightingArtMap[s.id] = s
 
   return secretFightingArtMap
 }

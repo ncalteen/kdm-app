@@ -27,135 +27,63 @@ beforeEach(() => {
 
 describe('getAbilityImpairments', () => {
   const userId = 'user-1'
-  const nonCustom = {
-    id: 'a1',
-    custom: false,
-    ability_impairment_name: 'Ability',
-    rules: null
-  }
-  const userCustom = {
-    id: 'a2',
-    custom: true,
-    ability_impairment_name: 'Mine',
-    rules: null
-  }
-  const shared = {
-    id: 'a3',
-    custom: true,
-    ability_impairment_name: 'Shared',
-    rules: null
-  }
+  const row1 = { id: 'a1', custom: false, ability_impairment_name: 'Ability', rules: null }
+  const row2 = { id: 'a2', custom: true, ability_impairment_name: 'Mine', rules: null }
 
-  it('returns rows from all three sources', async () => {
+  it('returns every row surfaced by RLS', async () => {
     vi.mocked(getUserId).mockResolvedValue(userId)
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [nonCustom], error: null })
-        })
+
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({
+        data: [row1, row2],
+        error: null
       })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [userCustom], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ ability_impairment: [shared] }],
-            error: null
-          })
-        })
-      })
+    })
 
     const result = await getAbilityImpairments()
-    expect(result).toEqual({ a1: nonCustom, a2: userCustom, a3: shared })
+
+    expect(result).toEqual({ [row1.id]: row1, [row2.id]: row2 })
+    expect(mockSupabase.from).toHaveBeenCalledWith('ability_impairment')
   })
 
-  it('handles shared row as single object', async () => {
-    vi.mocked(getUserId).mockResolvedValue(userId)
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ ability_impairment: shared }],
-            error: null
-          })
-        })
-      })
+  it('throws when user is not authenticated', async () => {
+    vi.mocked(getUserId).mockRejectedValue(new Error('Not Authenticated'))
 
-    const result = await getAbilityImpairments()
-    expect(result).toEqual({ a3: shared })
+    await expect(getAbilityImpairments()).rejects.toThrow('Not Authenticated')
+    expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 
-  it('skips shared rows with null payload', async () => {
+  it('throws when auth errors', async () => {
+    vi.mocked(getUserId).mockRejectedValue(new Error('Error Fetching User: Auth error'))
+
+    await expect(getAbilityImpairments()).rejects.toThrow(
+      'Error Fetching User: Auth error'
+    )
+  })
+
+  it('throws when the query fails', async () => {
     vi.mocked(getUserId).mockResolvedValue(userId)
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ ability_impairment: null }],
-            error: null
-          })
-        })
-      })
+
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi
+        .fn()
+        .mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    })
+
+    await expect(getAbilityImpairments()).rejects.toThrow(
+      'Error Fetching Ability/Impairments: DB error'
+    )
+  })
+
+  it('returns an empty map when the query returns no rows', async () => {
+    vi.mocked(getUserId).mockResolvedValue(userId)
+
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({ data: [], error: null })
+    })
 
     const result = await getAbilityImpairments()
     expect(result).toEqual({})
-  })
-
-  it('throws on query error', async () => {
-    vi.mocked(getUserId).mockResolvedValue(userId)
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB' } })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-
-    await expect(getAbilityImpairments()).rejects.toThrow(
-      'Error Fetching Ability/Impairments: DB'
-    )
   })
 })
 

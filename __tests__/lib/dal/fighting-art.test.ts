@@ -25,61 +25,26 @@ beforeEach(() => {
 
 describe('getFightingArts', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomFightingArt = {
-    id: 'fa1',
-    custom: false,
-    fighting_art_name: 'Rawhide'
-  }
-  const userCustomFightingArt = {
-    id: 'fa2',
-    custom: true,
-    fighting_art_name: 'My Fighting Art'
-  }
-  const sharedFightingArt = {
-    id: 'fa3',
-    custom: true,
-    fighting_art_name: 'Shared Fighting Art'
-  }
+  const row1 = { id: 'f1', custom: false, fighting_art_name: 'Art', rules: null }
+  const row2 = { id: 'f2', custom: true, fighting_art_name: 'Custom', rules: null }
 
-  it('returns fighting arts from all three sources', async () => {
+  it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: [nonCustomFightingArt], error: null })
-        })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({
+        data: [row1, row2],
+        error: null
       })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: [userCustomFightingArt], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ fighting_art: [sharedFightingArt] }],
-            error: null
-          })
-        })
-      })
+    })
 
     const result = await getFightingArts()
 
-    expect(result).toEqual({
-      fa1: nonCustomFightingArt,
-      fa2: userCustomFightingArt,
-      fa3: sharedFightingArt
-    })
+    expect(result).toEqual({ [row1.id]: row1, [row2.id]: row2 })
+    expect(mockSupabase.from).toHaveBeenCalledWith('fighting_art')
   })
 
   it('throws when user is not authenticated', async () => {
@@ -103,126 +68,32 @@ describe('getFightingArts', () => {
     )
   })
 
-  it('throws when non-custom query fails', async () => {
+  it('throws when the query fails', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi
+        .fn()
+        .mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    })
 
     await expect(getFightingArts()).rejects.toThrow(
       'Error Fetching Fighting Arts: DB error'
     )
   })
 
-  it('throws when user-custom query fails', async () => {
+  it('returns an empty map when the query returns no rows', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-
-    await expect(getFightingArts()).rejects.toThrow(
-      'Error Fetching Fighting Arts: DB error'
-    )
-  })
-
-  it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({ data: [], error: null })
     })
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-
-    await expect(getFightingArts()).rejects.toThrow(
-      'Error Fetching Fighting Arts: DB error'
-    )
-  })
-
-  it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
-    })
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
 
     const result = await getFightingArts()
     expect(result).toEqual({})

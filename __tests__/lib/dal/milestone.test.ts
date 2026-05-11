@@ -26,67 +26,26 @@ beforeEach(() => {
 
 describe('getMilestones', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomMilestone = {
-    id: 'm1',
-    custom: false,
-    milestone_name: 'First Story',
-    event_name: 'Returning Survivors',
-    campaign_types: ['PEOPLE_OF_THE_LANTERN']
-  }
-  const userCustomMilestone = {
-    id: 'm2',
-    custom: true,
-    milestone_name: 'My Milestone',
-    event_name: 'Custom Event',
-    campaign_types: ['CUSTOM']
-  }
-  const sharedMilestone = {
-    id: 'm3',
-    custom: true,
-    milestone_name: 'Shared Milestone',
-    event_name: 'Shared Event',
-    campaign_types: ['CUSTOM']
-  }
+  const row1 = { id: 'm1', custom: false, milestone_name: 'Milestone', rules: null, story_event_id: null }
+  const row2 = { id: 'm2', custom: true, milestone_name: 'Custom', rules: null, story_event_id: null }
 
-  it('returns milestones from all three sources', async () => {
+  it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: [nonCustomMilestone], error: null })
-        })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({
+        data: [row1, row2],
+        error: null
       })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: [userCustomMilestone], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ milestone: [sharedMilestone] }],
-            error: null
-          })
-        })
-      })
+    })
 
     const result = await getMilestones()
 
-    expect(result).toEqual({
-      m1: nonCustomMilestone,
-      m2: userCustomMilestone,
-      m3: sharedMilestone
-    })
+    expect(result).toEqual({ [row1.id]: row1, [row2.id]: row2 })
+    expect(mockSupabase.from).toHaveBeenCalledWith('milestone')
   })
 
   it('throws when user is not authenticated', async () => {
@@ -110,126 +69,32 @@ describe('getMilestones', () => {
     )
   })
 
-  it('throws when non-custom query fails', async () => {
+  it('throws when the query fails', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi
+        .fn()
+        .mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    })
 
     await expect(getMilestones()).rejects.toThrow(
       'Error Fetching Milestones: DB error'
     )
   })
 
-  it('throws when user-custom query fails', async () => {
+  it('returns an empty map when the query returns no rows', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-
-    await expect(getMilestones()).rejects.toThrow(
-      'Error Fetching Milestones: DB error'
-    )
-  })
-
-  it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({ data: [], error: null })
     })
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-
-    await expect(getMilestones()).rejects.toThrow(
-      'Error Fetching Milestones: DB error'
-    )
-  })
-
-  it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
-    })
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
 
     const result = await getMilestones()
     expect(result).toEqual({})

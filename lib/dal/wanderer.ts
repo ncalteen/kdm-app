@@ -35,61 +35,32 @@ function flattenWanderer(row: RawWandererRow): WandererDetail {
 /**
  * Get Wanderers
  *
- * Retrieves the wanderers a user has access to. This includes:
+ * Retrieves the wanderers visible to the authenticated user. RLS surfaces:
  *
  * - Non-custom wanderers
  * - Custom wanderers created by the user
- * - Custom wanderers shared with the user (via the wanderer_shared_user table)
+ * - Custom wanderers on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `wanderer`)
  *
  * @returns Wanderer Data
  */
 export async function getWanderers(): Promise<{
   [key: string]: WandererDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  // Fetch all three categories of wanderers in parallel
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    // Non-custom wanderers (available to all users)
-    supabase
-      .from('wanderer')
-      .select(
-        'id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules))'
-      )
-      .eq('custom', false),
-    // Custom wanderers created by the user
-    supabase
-      .from('wanderer')
-      .select(
-        'id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules))'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    // Custom wanderers shared with the user
-    supabase
-      .from('wanderer_shared_user')
-      .select(
-        'wanderer(id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules)))'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('wanderer')
+    .select(
+      'id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules))'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Wanderers: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Wanderers: ${error.message}`)
 
-  // Collect wanderers from all sources, deduplicating by ID
   const wandererMap: { [key: string]: WandererDetail } = {}
-
-  for (const w of nonCustomResult.data ?? [])
+  for (const w of data ?? [])
     wandererMap[w.id] = flattenWanderer(w as unknown as RawWandererRow)
-  for (const w of userCustomResult.data ?? [])
-    wandererMap[w.id] = flattenWanderer(w as unknown as RawWandererRow)
-  for (const row of sharedResult.data ?? []) {
-    const w = Array.isArray(row.wanderer) ? row.wanderer[0] : row.wanderer
-    if (w) wandererMap[w.id] = flattenWanderer(w as unknown as RawWandererRow)
-  }
 
   return wandererMap
 }

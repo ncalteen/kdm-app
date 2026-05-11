@@ -44,89 +44,28 @@ describe('getSeedPatterns', () => {
     custom: true,
     seed_pattern_name: 'My Seed Pattern'
   }
-  const sharedSeedPattern = {
-    id: 'sp3',
-    custom: true,
-    seed_pattern_name: 'Shared Seed Pattern'
+
+  const mockSelect = (data: object[] | null, error: object | null = null) => {
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({ data, error })
+    })
   }
 
-  it('returns seed patterns from all three sources', async () => {
+  it('returns every seed pattern surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: [nonCustomSeedPattern], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: [userCustomSeedPattern], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ seed_pattern: [sharedSeedPattern] }],
-            error: null
-          })
-        })
-      })
+    mockSelect([nonCustomSeedPattern, userCustomSeedPattern])
 
     const result = await getSeedPatterns()
 
     expect(result).toEqual({
       sp1: withSeedPatternDefaults(nonCustomSeedPattern),
-      sp2: withSeedPatternDefaults(userCustomSeedPattern),
-      sp3: withSeedPatternDefaults(sharedSeedPattern)
+      sp2: withSeedPatternDefaults(userCustomSeedPattern)
     })
-  })
-
-  it('skips shared seed patterns with no id', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
-    })
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [
-              {
-                seed_pattern: [
-                  { id: undefined, custom: true, seed_pattern_name: 'Bad' }
-                ]
-              }
-            ],
-            error: null
-          })
-        })
-      })
-
-    const result = await getSeedPatterns()
-    expect(result).toEqual({})
+    expect(mockSupabase.from).toHaveBeenCalledWith('seed_pattern')
   })
 
   it('throws when user is not authenticated', async () => {
@@ -150,126 +89,26 @@ describe('getSeedPatterns', () => {
     )
   })
 
-  it('throws when non-custom query fails', async () => {
+  it('throws when the query fails', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSelect(null, { message: 'DB error' })
 
     await expect(getSeedPatterns()).rejects.toThrow(
       'Error Fetching Seed Patterns: DB error'
     )
   })
 
-  it('throws when user-custom query fails', async () => {
+  it('returns an empty map when the query returns no rows', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-
-    await expect(getSeedPatterns()).rejects.toThrow(
-      'Error Fetching Seed Patterns: DB error'
-    )
-  })
-
-  it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
-    })
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-
-    await expect(getSeedPatterns()).rejects.toThrow(
-      'Error Fetching Seed Patterns: DB error'
-    )
-  })
-
-  it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
-    })
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSelect([])
 
     const result = await getSeedPatterns()
     expect(result).toEqual({})

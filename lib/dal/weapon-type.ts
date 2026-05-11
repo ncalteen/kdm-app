@@ -6,52 +6,30 @@ import { WeaponTypeDetail } from '@/lib/types'
 /**
  * Get Weapon Types
  *
- * Retrieves all weapon types available to the authenticated user:
+ * Retrieves all weapon types visible to the authenticated user. RLS
+ * surfaces:
  *
  * - Built-in (non-custom) weapon types
  * - Custom weapon types owned by the user
- * - Custom weapon types shared with the user
  *
  * @returns Weapon Types
  */
 export async function getWeaponTypes(): Promise<{
   [key: string]: WeaponTypeDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('weapon_type')
-      .select(
-        'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules'
-      )
-      .eq('custom', false),
-    supabase
-      .from('weapon_type')
-      .select(
-        'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('weapon_type_shared_user')
-      .select(
-        'weapon_type(id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules)'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('weapon_type')
+    .select(
+      'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Weapon Types: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Weapon Types: ${error.message}`)
 
   const weaponTypeMap: { [key: string]: WeaponTypeDetail } = {}
-
-  for (const w of nonCustomResult.data ?? []) weaponTypeMap[w.id] = w
-  for (const w of userCustomResult.data ?? []) weaponTypeMap[w.id] = w
-  for (const row of sharedResult.data ?? [])
-    weaponTypeMap[row.weapon_type[0].id] = row.weapon_type[0]
+  for (const w of data ?? []) weaponTypeMap[w.id] = w
 
   return weaponTypeMap
 }

@@ -6,51 +6,30 @@ import { KnowledgeDetail } from '@/lib/types'
 /**
  * Get Knowledges
  *
- * Retrieves all knowledges available to the authenticated user:
+ * Retrieves all knowledges visible to the authenticated user. RLS surfaces:
  * - Built-in (non-custom) knowledges
  * - Custom knowledges owned by the user
- * - Custom knowledges shared with the user
+ * - Custom knowledges on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `knowledge`)
  *
  * @returns Knowledges
  */
 export async function getKnowledges(): Promise<{
   [key: string]: KnowledgeDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('knowledge')
-      .select(
-        'id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone'
-      )
-      .eq('custom', false),
-    supabase
-      .from('knowledge')
-      .select(
-        'id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('knowledge_shared_user')
-      .select(
-        'knowledge(id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone)'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('knowledge')
+    .select(
+      'id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Knowledges: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Knowledges: ${error.message}`)
 
   const knowledgeMap: { [key: string]: KnowledgeDetail } = {}
-
-  for (const k of nonCustomResult.data ?? []) knowledgeMap[k.id] = k
-  for (const k of userCustomResult.data ?? []) knowledgeMap[k.id] = k
-  for (const row of sharedResult.data ?? [])
-    knowledgeMap[row.knowledge[0].id] = row.knowledge[0]
+  for (const k of data ?? []) knowledgeMap[k.id] = k
 
   return knowledgeMap
 }

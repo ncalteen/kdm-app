@@ -20,61 +20,26 @@ beforeEach(() => {
 
 describe('getWeaponTypes', () => {
   const mockUser = { id: 'user-1' }
-  const nonCustomWeaponType = {
-    id: 'wt1',
-    custom: false,
-    weapon_type_name: 'Sword'
-  }
-  const userCustomWeaponType = {
-    id: 'wt2',
-    custom: true,
-    weapon_type_name: 'My Weapon Type'
-  }
-  const sharedWeaponType = {
-    id: 'wt3',
-    custom: true,
-    weapon_type_name: 'Shared Weapon Type'
-  }
+  const row1 = { id: 'wt1', custom: false, weapon_type_name: 'Sword' }
+  const row2 = { id: 'wt2', custom: true, weapon_type_name: 'My Weapon Type' }
 
-  it('returns weapon types from all three sources', async () => {
+  it('returns every row surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: [nonCustomWeaponType], error: null })
-        })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({
+        data: [row1, row2],
+        error: null
       })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: [userCustomWeaponType], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ weapon_type: [sharedWeaponType] }],
-            error: null
-          })
-        })
-      })
+    })
 
     const result = await getWeaponTypes()
 
-    expect(result).toEqual({
-      wt1: nonCustomWeaponType,
-      wt2: userCustomWeaponType,
-      wt3: sharedWeaponType
-    })
+    expect(result).toEqual({ [row1.id]: row1, [row2.id]: row2 })
+    expect(mockSupabase.from).toHaveBeenCalledWith('weapon_type')
   })
 
   it('throws when user is not authenticated', async () => {
@@ -98,126 +63,32 @@ describe('getWeaponTypes', () => {
     )
   })
 
-  it('throws when non-custom query fails', async () => {
+  it('throws when the query fails', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi
+        .fn()
+        .mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    })
 
     await expect(getWeaponTypes()).rejects.toThrow(
       'Error Fetching Weapon Types: DB error'
     )
   })
 
-  it('throws when user-custom query fails', async () => {
+  it('returns an empty map when the query returns no rows', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi
-              .fn()
-              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-
-    await expect(getWeaponTypes()).rejects.toThrow(
-      'Error Fetching Weapon Types: DB error'
-    )
-  })
-
-  it('throws when shared query fails', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValue({ data: [], error: null })
     })
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi
-            .fn()
-            .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-        })
-      })
-
-    await expect(getWeaponTypes()).rejects.toThrow(
-      'Error Fetching Weapon Types: DB error'
-    )
-  })
-
-  it('returns empty map when all sources return empty arrays', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null
-    })
-
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
 
     const result = await getWeaponTypes()
     expect(result).toEqual({})

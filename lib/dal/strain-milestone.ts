@@ -6,54 +6,31 @@ import { StrainMilestoneDetail } from '@/lib/types'
 /**
  * Get Strain Milestones
  *
- * Retrieves all strain milestones available to the authenticated user:
+ * Retrieves all strain milestones visible to the authenticated user. RLS
+ * surfaces:
  *
  * - Built-in (non-custom) strain milestones
  * - Custom strain milestones owned by the user
- * - Custom strain milestones shared with the user
  *
  * @returns Strain Milestones
  */
 export async function getStrainMilestones(): Promise<{
   [key: string]: StrainMilestoneDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('strain_milestone')
-      .select(
-        'id, custom, strain_milestone_name, milestone_condition, permanent_effect'
-      )
-      .eq('custom', false),
-    supabase
-      .from('strain_milestone')
-      .select(
-        'id, custom, strain_milestone_name, milestone_condition, permanent_effect'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('strain_milestone_shared_user')
-      .select(
-        'strain_milestone(id, custom, strain_milestone_name, milestone_condition, permanent_effect)'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('strain_milestone')
+    .select(
+      'id, custom, strain_milestone_name, milestone_condition, permanent_effect'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(
-        `Error Fetching Strain Milestones: ${result.error.message}`
-      )
+  if (error)
+    throw new Error(`Error Fetching Strain Milestones: ${error.message}`)
 
   const strainMilestoneMap: { [key: string]: StrainMilestoneDetail } = {}
-
-  for (const s of nonCustomResult.data ?? []) strainMilestoneMap[s.id] = s
-  for (const s of userCustomResult.data ?? []) strainMilestoneMap[s.id] = s
-  for (const row of sharedResult.data ?? [])
-    strainMilestoneMap[row.strain_milestone[0].id] = row.strain_milestone[0]
+  for (const s of data ?? []) strainMilestoneMap[s.id] = s
 
   return strainMilestoneMap
 }

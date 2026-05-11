@@ -5,51 +5,28 @@ import { SurvivorStatusDetail } from '@/lib/types'
 /**
  * Get Survivor Statuses
  *
- * Retrieves all survivor statuses available to the authenticated user:
+ * Retrieves all survivor statuses visible to the authenticated user. RLS
+ * surfaces:
  * - Built-in (non-custom) statuses
  * - Custom statuses owned by the user
- * - Custom statuses shared with the user
  *
  * @returns Survivor Statuses by ID
  */
 export async function getSurvivorStatuses(): Promise<{
   [key: string]: SurvivorStatusDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('survivor_status')
-      .select('id, custom, survivor_status_name, rules')
-      .eq('custom', false),
-    supabase
-      .from('survivor_status')
-      .select('id, custom, survivor_status_name, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('survivor_status_shared_user')
-      .select('survivor_status(id, custom, survivor_status_name, rules)')
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('survivor_status')
+    .select('id, custom, survivor_status_name, rules')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(
-        `Error Fetching Survivor Statuses: ${result.error.message}`
-      )
+  if (error)
+    throw new Error(`Error Fetching Survivor Statuses: ${error.message}`)
 
   const map: { [key: string]: SurvivorStatusDetail } = {}
-
-  for (const s of nonCustomResult.data ?? []) map[s.id] = s
-  for (const s of userCustomResult.data ?? []) map[s.id] = s
-  for (const row of sharedResult.data ?? []) {
-    const status = Array.isArray(row.survivor_status)
-      ? row.survivor_status[0]
-      : row.survivor_status
-    if (status) map[status.id] = status
-  }
+  for (const s of data ?? []) map[s.id] = s
 
   return map
 }

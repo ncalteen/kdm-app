@@ -6,50 +6,26 @@ import { CharacterDetail } from '@/lib/types'
 /**
  * Get Characters
  *
- * Retrieves all characters available to the authenticated user:
+ * Retrieves all characters visible to the authenticated user. RLS surfaces:
  * - Built-in (non-custom) characters
  * - Custom characters owned by the user
- * - Custom characters shared with the user
  *
  * @returns Characters
  */
 export async function getCharacters(): Promise<{
   [key: string]: CharacterDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  // Fetch all three categories of characters in parallel
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    // Non-custom characters (available to all users)
-    supabase
-      .from('character')
-      .select('id, custom, character_name, rules')
-      .eq('custom', false),
-    // Custom characters created by the user
-    supabase
-      .from('character')
-      .select('id, custom, character_name, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    // Custom characters shared with the user
-    supabase
-      .from('character_shared_user')
-      .select('character(id, custom, character_name, rules)')
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('character')
+    .select('id, custom, character_name, rules')
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Characters: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Characters: ${error.message}`)
 
-  // Collect characters from all sources, deduplicating by ID
   const characterMap: { [key: string]: CharacterDetail } = {}
-
-  for (const c of nonCustomResult.data ?? []) characterMap[c.id] = c
-  for (const c of userCustomResult.data ?? []) characterMap[c.id] = c
-  for (const row of sharedResult.data ?? [])
-    characterMap[row.character[0].id] = row.character[0]
+  for (const c of data ?? []) characterMap[c.id] = c
 
   return characterMap
 }

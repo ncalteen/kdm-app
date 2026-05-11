@@ -50,56 +50,31 @@ function toPatternDetail(
 /**
  * Get Patterns
  *
- * Retrieves all patterns available to the authenticated user:
+ * Retrieves all patterns visible to the authenticated user. RLS surfaces:
  *
  * - Built-in (non-custom) patterns
  * - Custom patterns owned by the user
- * - Custom patterns shared with the user
+ * - Custom patterns on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `pattern`)
  *
  * @returns Patterns
  */
 export async function getPatterns(): Promise<{
   [key: string]: PatternDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('pattern')
-      .select(
-        'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(cost_gear_id, quantity), pattern_resource_cost(resource_id, quantity), pattern_resource_type_cost(resource_type, quantity), pattern_innovation_requirement(innovation_id)'
-      )
-      .eq('custom', false),
-    supabase
-      .from('pattern')
-      .select(
-        'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(cost_gear_id, quantity), pattern_resource_cost(resource_id, quantity), pattern_resource_type_cost(resource_type, quantity), pattern_innovation_requirement(innovation_id)'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('pattern_shared_user')
-      .select(
-        'pattern(id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(cost_gear_id, quantity), pattern_resource_cost(resource_id, quantity), pattern_resource_type_cost(resource_type, quantity), pattern_innovation_requirement(innovation_id))'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('pattern')
+    .select(
+      'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(cost_gear_id, quantity), pattern_resource_cost(resource_id, quantity), pattern_resource_type_cost(resource_type, quantity), pattern_innovation_requirement(innovation_id)'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Patterns: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Patterns: ${error.message}`)
 
   const patternMap: { [key: string]: PatternDetail } = {}
-
-  for (const p of nonCustomResult.data ?? [])
-    patternMap[p.id] = toPatternDetail(p)
-  for (const p of userCustomResult.data ?? [])
-    patternMap[p.id] = toPatternDetail(p)
-  for (const row of sharedResult.data ?? []) {
-    const p = row.pattern?.[0]
-    if (p?.id) patternMap[p.id] = toPatternDetail(p)
-  }
+  for (const p of data ?? []) patternMap[p.id] = toPatternDetail(p)
 
   return patternMap
 }

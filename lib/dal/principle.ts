@@ -7,51 +7,30 @@ import { PrincipleDetail } from '@/lib/types'
 /**
  * Get Principles
  *
- * Retrieves all principles available to the authenticated user:
+ * Retrieves all principles visible to the authenticated user. RLS surfaces:
  * - Built-in (non-custom) principles
  * - Custom principles owned by the user
- * - Custom principles shared with the user
+ * - Custom principles on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `principle`)
  *
  * @returns Principles
  */
 export async function getPrinciples(): Promise<{
   [key: string]: PrincipleDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('principle')
-      .select(
-        'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
-      )
-      .eq('custom', false),
-    supabase
-      .from('principle')
-      .select(
-        'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
-      )
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('principle_shared_user')
-      .select(
-        'principle(id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules)'
-      )
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('principle')
+    .select(
+      'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
+    )
 
-  for (const result of [nonCustomResult, userCustomResult, sharedResult])
-    if (result.error)
-      throw new Error(`Error Fetching Principles: ${result.error.message}`)
+  if (error) throw new Error(`Error Fetching Principles: ${error.message}`)
 
   const principleMap: { [key: string]: PrincipleDetail } = {}
-
-  for (const p of nonCustomResult.data ?? []) principleMap[p.id] = p
-  for (const p of userCustomResult.data ?? []) principleMap[p.id] = p
-  for (const row of sharedResult.data ?? [])
-    principleMap[row.principle[0].id] = row.principle[0]
+  for (const p of data ?? []) principleMap[p.id] = p
 
   return principleMap
 }

@@ -45,61 +45,29 @@ describe('getQuarries', () => {
     custom: true,
     monster_name: 'My Quarry'
   })
-  const sharedQuarry = makeQuarry({
-    id: 'q3',
-    custom: true,
-    monster_name: 'Shared Quarry'
-  })
 
-  const setupThreeSources = (
-    nonCustomData: object[],
-    userCustomData: object[],
-    sharedData: object[]
-  ) => {
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            in: vi.fn().mockResolvedValue({ data: nonCustomData, error: null })
-          })
-        })
+  const mockSelectIn = (data: object[] | null, error: object | null = null) => {
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        in: vi.fn().mockResolvedValue({ data, error })
       })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              in: vi
-                .fn()
-                .mockResolvedValue({ data: userCustomData, error: null })
-            })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: sharedData, error: null })
-        })
-      })
+    })
   }
 
-  it('returns quarries from all three sources', async () => {
+  it('returns every quarry surfaced by RLS', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
-    setupThreeSources(
-      [nonCustomQuarry],
-      [userCustomQuarry],
-      [{ quarry: [sharedQuarry] }]
-    )
+    mockSelectIn([nonCustomQuarry, userCustomQuarry])
 
     const result = await getQuarries()
 
     expect(result).toEqual({
       q1: nonCustomQuarry,
-      q2: userCustomQuarry,
-      q3: sharedQuarry
+      q2: userCustomQuarry
     })
+    expect(mockSupabase.from).toHaveBeenCalledWith('quarry')
   })
 
   it('excludes alternates when includeAlternates is false', async () => {
@@ -111,7 +79,7 @@ describe('getQuarries', () => {
     const quarryA = makeQuarry({ id: 'q1', alternate_id: 'q2' })
     const quarryB = makeQuarry({ id: 'q2', alternate_id: null })
 
-    setupThreeSources([quarryA, quarryB], [], [])
+    mockSelectIn([quarryA, quarryB])
 
     const result = await getQuarries([MonsterNode.NQ1], false, true)
 
@@ -128,7 +96,7 @@ describe('getQuarries', () => {
     const quarryA = makeQuarry({ id: 'q1', vignette_id: 'q2' })
     const quarryB = makeQuarry({ id: 'q2', vignette_id: null })
 
-    setupThreeSources([quarryA, quarryB], [], [])
+    mockSelectIn([quarryA, quarryB])
 
     const result = await getQuarries([MonsterNode.NQ1], true, false)
 
@@ -150,7 +118,7 @@ describe('getQuarries', () => {
     const quarryB = makeQuarry({ id: 'q2' })
     const quarryC = makeQuarry({ id: 'q3' })
 
-    setupThreeSources([quarryA, quarryB, quarryC], [], [])
+    mockSelectIn([quarryA, quarryB, quarryC])
 
     const result = await getQuarries()
 
@@ -178,48 +146,25 @@ describe('getQuarries', () => {
     )
   })
 
-  it('throws when a source query fails', async () => {
+  it('throws when the query fails', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
 
-    mockSupabase.from
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            in: vi
-              .fn()
-              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              in: vi.fn().mockResolvedValue({ data: [], error: null })
-            })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: [], error: null })
-        })
-      })
+    mockSelectIn(null, { message: 'DB error' })
 
     await expect(getQuarries()).rejects.toThrow(
       'Error Fetching Quarries: DB error'
     )
   })
 
-  it('returns empty map when all sources are empty', async () => {
+  it('returns empty map when the query returns no rows', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
     })
-    setupThreeSources([], [], [])
+    mockSelectIn([])
 
     const result = await getQuarries()
     expect(result).toEqual({})

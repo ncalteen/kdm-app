@@ -6,10 +6,11 @@ import { DisorderDetail } from '@/lib/types'
 /**
  * Get Disorders
  *
- * Retrieves all disorders available to the authenticated user:
+ * Retrieves all disorders visible to the authenticated user. RLS surfaces:
  * - Built-in (non-custom) disorders
  * - Custom disorders owned by the user
- * - Custom disorders shared with the user
+ * - Custom disorders on settlements the user collaborates on (via the
+ *   transitive SELECT policy on `disorder`)
  *
  * Uses `getUserId()` to centralize the auth check rather than repeating
  * `supabase.auth.getUser()` inline.
@@ -19,52 +20,17 @@ import { DisorderDetail } from '@/lib/types'
 export async function getDisorders(): Promise<{
   [key: string]: DisorderDetail
 }> {
-  const userId = await getUserId()
+  await getUserId()
   const supabase = createClient()
 
-  // Fetch all three categories of disorders in parallel.
-  const [nonCustomResult, userCustomResult, sharedResult] = await Promise.all([
-    supabase
-      .from('disorder')
-      .select('id, custom, disorder_name, rules')
-      .eq('custom', false),
-    supabase
-      .from('disorder')
-      .select('id, custom, disorder_name, rules')
-      .eq('custom', true)
-      .eq('user_id', userId),
-    supabase
-      .from('disorder_shared_user')
-      .select('disorder(id, custom, disorder_name, rules)')
-      .eq('shared_user_id', userId)
-  ])
+  const { data, error } = await supabase
+    .from('disorder')
+    .select('id, custom, disorder_name, rules')
 
-  if (nonCustomResult.error)
-    throw new Error(
-      `Error Fetching Built-in Disorders: ${nonCustomResult.error.message}`
-    )
-  if (userCustomResult.error)
-    throw new Error(
-      `Error Fetching Custom Disorders: ${userCustomResult.error.message}`
-    )
-  if (sharedResult.error)
-    throw new Error(
-      `Error Fetching Shared Disorders: ${sharedResult.error.message}`
-    )
+  if (error) throw new Error(`Error Fetching Disorders: ${error.message}`)
 
   const disorderMap: { [key: string]: DisorderDetail } = {}
-
-  for (const d of nonCustomResult.data ?? []) disorderMap[d.id] = d
-  for (const d of userCustomResult.data ?? []) disorderMap[d.id] = d
-
-  // Safely handle the shared-user join — Supabase may return the joined
-  // table as a single object or an array depending on the relationship type.
-  for (const row of sharedResult.data ?? []) {
-    const disorder = Array.isArray(row.disorder)
-      ? row.disorder[0]
-      : row.disorder
-    if (disorder) disorderMap[disorder.id] = disorder
-  }
+  for (const d of data ?? []) disorderMap[d.id] = d
 
   return disorderMap
 }
