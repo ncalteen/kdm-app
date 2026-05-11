@@ -1,6 +1,7 @@
 'use client'
 
 import { LanternMark } from '@/components/generic/lantern-mark'
+import { OwnerOnly } from '@/components/generic/owner-only'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -369,33 +370,37 @@ export function SettingsCard({
         </Card>
       )}
 
-      {/* Settlement Settings — owner only; collaborators are read-only on
-          settlement.uses_scouts at the RLS layer. */}
-      {selectedSettlement && selectedSettlement.role === 'owner' && (
-        <Card className="p-0">
-          <CardHeader className="px-4 pt-3 pb-0">
-            <CardTitle className="text-lg">Settlement Settings</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="uses-scouts" className="font-medium text-sm">
-                  Uses Scouts
-                </Label>
-                <div className="text-sm text-muted-foreground">
-                  Require a scout for hunts and showdowns.
+      {/* Settlement Settings — owner only. Wrapped in <OwnerOnly> so
+          collaborators never see the destructive metadata-mutating affordance
+          (uses_scouts is one of the [E1.3] owner-only columns; the RLS layer
+          rejects collaborator UPDATEs on it). */}
+      <OwnerOnly>
+        {selectedSettlement && (
+          <Card className="p-0">
+            <CardHeader className="px-4 pt-3 pb-0">
+              <CardTitle className="text-lg">Settlement Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="uses-scouts" className="font-medium text-sm">
+                    Uses Scouts
+                  </Label>
+                  <div className="text-sm text-muted-foreground">
+                    Require a scout for hunts and showdowns.
+                  </div>
                 </div>
+                <Switch
+                  id="uses-scouts"
+                  checked={selectedSettlement.uses_scouts ?? false}
+                  onCheckedChange={handleUsesScoutsChange}
+                  aria-label="Uses Scouts"
+                />
               </div>
-              <Switch
-                id="uses-scouts"
-                checked={selectedSettlement.uses_scouts ?? false}
-                onCheckedChange={handleUsesScoutsChange}
-                aria-label="Uses Scouts"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        )}
+      </OwnerOnly>
 
       {/* Delete Selected Hunt */}
       {selectedHunt && (
@@ -452,64 +457,70 @@ export function SettingsCard({
         </Card>
       )}
 
-      {/* Danger Zone — owner only; only the settlement owner may delete the
-          settlement. RLS rejects DELETE for collaborators. */}
-      {selectedSettlement && selectedSettlement.role === 'owner' && (
-        <Card className="p-0 border-destructive">
-          <CardHeader className="px-4 pt-3 pb-0">
-            <CardTitle className="text-lg text-destructive flex items-center gap-2">
-              <SkullIcon className="h-5 w-5" aria-hidden="true" />
-              Danger Zone
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-sm">
-                  Permanently delete this settlement
+      {/* Danger Zone — owner only. Wrapped in <OwnerOnly> so collaborators
+          never see the destructive affordance (RLS rejects settlement DELETE
+          for non-owners). */}
+      <OwnerOnly>
+        {selectedSettlement && (
+          <Card className="p-0 border-destructive">
+            <CardHeader className="px-4 pt-3 pb-0">
+              <CardTitle className="text-lg text-destructive flex items-center gap-2">
+                <SkullIcon className="h-5 w-5" aria-hidden="true" />
+                Danger Zone
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-sm">
+                    Permanently delete this settlement
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    This action cannot be undone. All survivors will be
+                    forgotten.
+                  </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  This action cannot be undone. All survivors will be forgotten.
-                </div>
-              </div>
-              <AlertDialog
-                open={isDeleteDialogOpen}
-                onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setIsDeleteDialogOpen(true)}>
-                    <Trash2Icon className="h-4 w-4 mr-2" />
-                    Delete {selectedSettlement.settlement_name ?? 'Settlement'}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Settlement</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      The darkness hungers for{' '}
-                      {selectedSettlement.settlement_name}.{' '}
-                      <strong>
-                        Once consumed, all who dwelled within will be forgotten.
-                      </strong>
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteSettlement}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                <AlertDialog
+                  open={isDeleteDialogOpen}
+                  onOpenChange={setIsDeleteDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setIsDeleteDialogOpen(true)}>
+                      <Trash2Icon className="h-4 w-4 mr-2" />
                       Delete{' '}
                       {selectedSettlement.settlement_name ?? 'Settlement'}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Settlement</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        The darkness hungers for{' '}
+                        {selectedSettlement.settlement_name}.{' '}
+                        <strong>
+                          Once consumed, all who dwelled within will be
+                          forgotten.
+                        </strong>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteSettlement}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Delete{' '}
+                        {selectedSettlement.settlement_name ?? 'Settlement'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </OwnerOnly>
     </div>
   )
 }
