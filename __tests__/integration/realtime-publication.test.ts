@@ -4,21 +4,21 @@ import { describe, expect, it } from 'vitest'
 /**
  * Integration — Realtime Publication Membership
  *
- * Asserts that every settlement-scoped table is included in the
- * `supabase_realtime` publication. Tables in the publication broadcast
- * row-level changes to subscribed clients, which is what powers multiplayer
- * sync for shared settlements.
+ * Asserts that every settlement-scoped table AND every catalog table
+ * covered by [E2.1.a/b/c] is included in the `supabase_realtime`
+ * publication. Tables in the publication broadcast row-level changes to
+ * subscribed clients, which is what powers multiplayer sync for shared
+ * settlements and collaborator-visible custom rules text.
  *
- * If a new settlement-scoped table is added to the schema without being
- * added to the publication, this test fails with a list of missing tables —
- * a much more actionable signal than discovering the gap in production when
- * a collaborator's UI silently goes stale.
+ * If a new settlement-scoped table or a custom catalog is added to the
+ * schema without being added to the publication, this test fails with a
+ * list of missing tables — a much more actionable signal than discovering
+ * the gap in production when a collaborator's UI silently goes stale.
  *
- * Catalog tables (`survivor_status`, `armor_set`, `wanderer*`, etc.) are
- * intentionally out of scope: they are tracked under E2.4 and rely on a
- * different subscription model. `settlement_shared_user` is included here
- * (added to the publication in E1.4) so user-level subscriptions receive
- * invite / revoke events.
+ * `settlement_shared_user` is included here (added to the publication in
+ * E1.4) so user-level subscriptions receive invite / revoke events; it is
+ * intentionally absent from the per-settlement `TABLE_DOMAIN_MAP` in
+ * `hooks/use-realtime.tsx`.
  */
 describe('Realtime publication membership', () => {
   /**
@@ -82,6 +82,55 @@ describe('Realtime publication membership', () => {
     'gear_grid'
   ] as const
 
+  /**
+   * Source of truth: every catalog table whose custom rows must broadcast
+   * to settlement collaborators. Mirrors the `catalog_tables` array in
+   * `20260519000000_catalog_realtime_publication.sql`. New custom-content
+   * tables should be added here alongside their publication-membership
+   * migration.
+   */
+  const EXPECTED_CATALOG_TABLES = [
+    // Settlement-attached catalogs ([E2.1.a]).
+    'knowledge',
+    'disorder',
+    'gear',
+    'pattern',
+    'seed_pattern',
+    'innovation',
+    'fighting_art',
+    'secret_fighting_art',
+    'collective_cognition_reward',
+    'location',
+    'milestone',
+    'principle',
+    'resource',
+    'quarry',
+    'nemesis',
+    'ability_impairment',
+    // Survivor-column-direct catalogs ([E2.1.b]).
+    'neurosis',
+    'philosophy',
+    'philosophy_rank',
+    'weapon_type',
+    // Hunt / showdown / armor catalogs ([E2.1.c]).
+    'trait',
+    'mood',
+    'armor_set',
+    'armor_set_slot',
+    'quarry_level',
+    'quarry_level_trait',
+    'quarry_level_mood',
+    'nemesis_level',
+    'nemesis_level_trait',
+    'nemesis_level_mood',
+    // Catalogs without a settlement-bound junction (yet).
+    'character',
+    'strain_milestone',
+    'wanderer',
+    'constellation',
+    'survivor_status'
+  ] as const
+
   it('includes every settlement-scoped table in `supabase_realtime`', async () => {
     const { data, error } = await admin.rpc('realtime_publication_tables')
 
@@ -104,5 +153,18 @@ describe('Realtime publication membership', () => {
     const rows = (data ?? []) as { tablename: string }[]
     const matches = rows.filter((r) => r.tablename === 'settlement_shared_user')
     expect(matches).toHaveLength(1)
+  })
+
+  // [E2.4] acceptance: every catalog table covered by E2.1.a/b/c is in
+  // the publication so collaborators receive rules-text edits live.
+  it('includes every catalog table in `supabase_realtime` ([E2.4])', async () => {
+    const { data, error } = await admin.rpc('realtime_publication_tables')
+
+    expect(error).toBeNull()
+    const rows = (data ?? []) as { tablename: string }[]
+    const actual = new Set(rows.map((r) => r.tablename))
+    const missing = EXPECTED_CATALOG_TABLES.filter((t) => !actual.has(t))
+
+    expect(missing).toEqual([])
   })
 })
