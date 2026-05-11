@@ -2,7 +2,8 @@
 
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { ERROR_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE, NOT_AUTHORIZED_MESSAGE } from '@/lib/messages'
+import { isAuthorizationError } from '@/lib/security/classify-mutation-error'
 import { useCallback } from 'react'
 
 /**
@@ -12,7 +13,11 @@ import { useCallback } from 'react'
  * The hook then runs `persist`, invoking `onSuccess` (to replace temp IDs,
  * etc.) on resolve, or `rollback` (to undo the optimistic update) on reject.
  * It always logs with a consistent `"${context} Error:"` prefix and surfaces
- * the shared `ERROR_MESSAGE()` toast on failure.
+ * the shared `ERROR_MESSAGE()` toast on failure. Rejections that look like
+ * authorization boundaries (RLS, the [E1.3] ownership trigger, or a PostgREST
+ * permission/visibility check) are instead surfaced as the lantern-themed
+ * `NOT_AUTHORIZED_MESSAGE()` toast so collaborators clicking an owner-only
+ * control get a meaningful message instead of the generic fallback.
  */
 export interface OptimisticMutationOptions<T> {
   /**
@@ -83,7 +88,13 @@ export function useOptimisticMutation(local: LocalStateType) {
       } catch (err) {
         if (rollback) rollback(err)
         console.error(`${context} Error:`, err)
-        toast.error(errorMessage ?? ERROR_MESSAGE())
+        if (errorMessage) {
+          toast.error(errorMessage)
+        } else if (isAuthorizationError(err)) {
+          toast.error(NOT_AUTHORIZED_MESSAGE())
+        } else {
+          toast.error(ERROR_MESSAGE())
+        }
       }
     },
     [toast]
