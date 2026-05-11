@@ -26,15 +26,15 @@ describe('getCollectiveCognitionRewards', () => {
   const row1 = {
     id: 'r1',
     custom: false,
-    name: 'Reward',
-    threshold: 1,
+    reward_name: 'Ammonia',
+    collective_cognition: 1,
     rules: null
   }
   const row2 = {
     id: 'r2',
     custom: true,
-    name: 'Custom',
-    threshold: 2,
+    reward_name: 'Custom Reward',
+    collective_cognition: 2,
     rules: null
   }
 
@@ -44,18 +44,19 @@ describe('getCollectiveCognitionRewards', () => {
       error: null
     })
 
-    mockSupabase.from.mockReturnValueOnce({
-      select: vi.fn().mockResolvedValue({
-        data: [row1, row2],
-        error: null
-      })
-    })
+    const select = vi
+      .fn()
+      .mockResolvedValue({ data: [row1, row2], error: null })
+    mockSupabase.from.mockReturnValueOnce({ select })
 
     const result = await getCollectiveCognitionRewards()
 
     expect(result).toEqual({ [row1.id]: row1, [row2.id]: row2 })
     expect(mockSupabase.from).toHaveBeenCalledWith(
       'collective_cognition_reward'
+    )
+    expect(select).toHaveBeenCalledWith(
+      'id, custom, reward_name, collective_cognition, rules'
     )
   })
 

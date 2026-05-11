@@ -9,8 +9,9 @@ import { AbilityImpairmentDetail } from '@/lib/types'
  * surfaces:
  * - Built-in (non-custom) ability/impairments
  * - Custom ability/impairments owned by the user
- * - Custom ability/impairments authored by the user (transitive visibility
- *   for collaborators is not yet wired up for this catalog)
+ * - Custom ability/impairments attached to a survivor the user can see
+ *   (via the transitive SELECT policy on `ability_impairment` through the
+ *   `survivor_ability_impairment` junction)
  *
  * @returns Ability/Impairments by ID
  */

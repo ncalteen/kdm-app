@@ -39,8 +39,9 @@ function flattenWanderer(row: RawWandererRow): WandererDetail {
  *
  * - Non-custom wanderers
  * - Custom wanderers created by the user
- * - Custom wanderers on settlements the user collaborates on (via the
- *   transitive SELECT policy on `wanderer`)
+ *
+ * `wanderer` has no settlement/survivor junction and no transitive SELECT
+ * policy, so custom rows are author-only.
  *
  * @returns Wanderer Data
  */
