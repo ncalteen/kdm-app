@@ -42,6 +42,7 @@ import {
   ResourceDetail,
   WeaponTypeDetail
 } from '@/lib/types'
+import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -342,8 +343,9 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
         })
         .catch((err: unknown) => {
           setItems(previous)
-          console.error('Delete Gear Error:', err)
-          toast.error(ERROR_MESSAGE())
+          const guard = getCatalogDeleteGuardMessage(err)
+          if (!guard) console.error('Delete Gear Error:', err)
+          toast.error(guard ?? ERROR_MESSAGE())
         })
     },
     [items, toast]

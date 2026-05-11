@@ -12,6 +12,7 @@ import {
   formatJoinedTimeAgo,
   getAvailableNodes,
   getCardColorStyles,
+  getCatalogDeleteGuardMessage,
   getColorStyle,
   getOverwhelmingDarknessLabel,
   saveToLocalStorage,
@@ -455,5 +456,37 @@ describe('formatJoinedTimeAgo', () => {
     expect(formatJoinedTimeAgo('2026-05-10T12:01:00.000Z', NOW)).toBe(
       'just now'
     )
+  })
+})
+
+describe('getCatalogDeleteGuardMessage', () => {
+  it('extracts the friendly message from a wrapped DAL error', () => {
+    const err = new Error(
+      'Error Removing Disorder: You cannot unmake what others rely upon (1 settlement(s): PotL 1)'
+    )
+    expect(getCatalogDeleteGuardMessage(err)).toBe(
+      'You cannot unmake what others rely upon (1 settlement(s): PotL 1)'
+    )
+  })
+
+  it('extracts the message with multiple blocking settlement names', () => {
+    const err = new Error(
+      'Error Removing Knowledge: You cannot unmake what others rely upon (4 settlement(s): Alpha, Beta, Delta)'
+    )
+    expect(getCatalogDeleteGuardMessage(err)).toBe(
+      'You cannot unmake what others rely upon (4 settlement(s): Alpha, Beta, Delta)'
+    )
+  })
+
+  it('returns null when the error is unrelated to the catalog delete guard', () => {
+    const err = new Error('Error Removing Disorder: network timeout')
+    expect(getCatalogDeleteGuardMessage(err)).toBeNull()
+  })
+
+  it('returns null for non-Error values', () => {
+    expect(getCatalogDeleteGuardMessage(null)).toBeNull()
+    expect(getCatalogDeleteGuardMessage(undefined)).toBeNull()
+    expect(getCatalogDeleteGuardMessage('string')).toBeNull()
+    expect(getCatalogDeleteGuardMessage({ message: 'boom' })).toBeNull()
   })
 })

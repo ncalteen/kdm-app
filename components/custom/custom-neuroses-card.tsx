@@ -27,6 +27,7 @@ import {
   NEUROSIS_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { NeurosisDetail } from '@/lib/types'
+import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -206,8 +207,9 @@ export function CustomNeurosesCard({
         .then(() => toast.success(NEUROSIS_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
           setItems(previous)
-          console.error('Delete Neurosis Error:', err)
-          toast.error(ERROR_MESSAGE())
+          const guard = getCatalogDeleteGuardMessage(err)
+          if (!guard) console.error('Delete Neurosis Error:', err)
+          toast.error(guard ?? ERROR_MESSAGE())
         })
     },
     [items, toast]

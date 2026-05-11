@@ -27,6 +27,7 @@ import {
   NAMELESS_OBJECT_ERROR_MESSAGE
 } from '@/lib/messages'
 import { InnovationDetail } from '@/lib/types'
+import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -226,8 +227,9 @@ export function CustomInnovationsCard({
         .then(() => toast.success(INNOVATION_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
           setItems(previous)
-          console.error('Delete Innovation Error:', err)
-          toast.error(ERROR_MESSAGE())
+          const guard = getCatalogDeleteGuardMessage(err)
+          if (!guard) console.error('Delete Innovation Error:', err)
+          toast.error(guard ?? ERROR_MESSAGE())
         })
     },
     [items, toast]

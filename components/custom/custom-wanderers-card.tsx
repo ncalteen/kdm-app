@@ -25,6 +25,7 @@ import {
   GearDetail,
   WandererDetail
 } from '@/lib/types'
+import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -114,8 +115,9 @@ export function CustomWanderersCard({
         .then(() => toast.success(WANDERER_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
           setWanderers(previous)
-          console.error('Delete Wanderer Error:', err)
-          toast.error(ERROR_MESSAGE())
+          const guard = getCatalogDeleteGuardMessage(err)
+          if (!guard) console.error('Delete Wanderer Error:', err)
+          toast.error(guard ?? ERROR_MESSAGE())
         })
     },
     [wanderers, toast]

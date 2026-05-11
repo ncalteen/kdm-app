@@ -27,6 +27,7 @@ import {
   STRAIN_MILESTONE_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { StrainMilestoneDetail } from '@/lib/types'
+import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 
@@ -222,8 +223,9 @@ export function CustomStrainMilestonesCard({
         .then(() => toast.success(STRAIN_MILESTONE_REMOVED_MESSAGE()))
         .catch((err: unknown) => {
           setItems(previous)
-          console.error('Delete Strain Milestone Error:', err)
-          toast.error(ERROR_MESSAGE())
+          const guard = getCatalogDeleteGuardMessage(err)
+          if (!guard) console.error('Delete Strain Milestone Error:', err)
+          toast.error(guard ?? ERROR_MESSAGE())
         })
     },
     [items, toast]
