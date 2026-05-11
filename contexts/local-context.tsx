@@ -533,6 +533,29 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
             console.error('Realtime Survivor Refetch Error:', err)
           })
       }
+    },
+    onCatalogChange: () => {
+      if (!selectedSettlementId) return
+
+      // Custom-content catalog row changes (rules text edits by the
+      // author, etc.) are materialized into `SettlementDetail` — the
+      // settlement collections (knowledges, gear, locations, ...) embed
+      // each catalog row's rules / definitions at fetch time. The
+      // cheapest correct response to a delivered catalog event is to
+      // re-pull the active settlement; the per-domain 300ms debounce in
+      // `useRealtimeSubscriptions` collapses bursts of edits into a
+      // single refetch. RLS is what makes this coarse subscription safe:
+      // events for catalog rows the user cannot read (i.e. rows not
+      // transitively reachable through any settlement they belong to)
+      // are never delivered. See `local/sharing-architecture.md` §8.2.2
+      // (recommendation B).
+      getSettlement(selectedSettlementId)
+        .then((settlement) => {
+          setSelectedSettlementState(settlement)
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Catalog Refetch Error:', err)
+        })
     }
   })
 

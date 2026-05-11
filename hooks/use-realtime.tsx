@@ -8,6 +8,16 @@ import { useEffect, useRef } from 'react'
  *
  * Groups of related tables that trigger the same re-fetch when any table in
  * the group changes.
+ *
+ * `catalog` covers custom-content tables (knowledge, disorder, gear, etc.)
+ * whose rules text is materialized into the active `SettlementDetail`.
+ * Changes are received without a row-level filter because the realtime
+ * channel filter syntax does not support joins; RLS gates which catalog
+ * rows the subscriber can actually see (transitive visibility via
+ * settlement membership — see `local/sharing-architecture.md` §8.2.2,
+ * recommendation B). The single coarse subscription pays a small
+ * bandwidth cost in exchange for not having to track every referenced
+ * catalog row id per settlement.
  */
 type RealtimeDomain =
   | 'settlement'
@@ -15,6 +25,7 @@ type RealtimeDomain =
   | 'showdown'
   | 'settlementPhase'
   | 'survivor'
+  | 'catalog'
 
 /**
  * Table Domain Entry
@@ -125,7 +136,54 @@ const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   survivor_disorder: { domain: 'survivor', filterColumn: null },
   survivor_fighting_art: { domain: 'survivor', filterColumn: null },
   survivor_secret_fighting_art: { domain: 'survivor', filterColumn: null },
-  gear_grid: { domain: 'survivor', filterColumn: null }
+  gear_grid: { domain: 'survivor', filterColumn: null },
+
+  // Catalog domain — custom-content tables whose rules / definitions are
+  // materialized into `SettlementDetail` (and its survivor / hunt /
+  // showdown collections). Subscribed unfiltered because the realtime
+  // channel cannot express the join from a catalog row back to the
+  // active settlement; RLS gates which rows are delivered to the
+  // subscriber via transitive visibility through settlement membership
+  // (see `local/sharing-architecture.md` §8.2.2 recommendation B). Kept
+  // in sync with the `catalog_tables` array in
+  // `supabase/migrations/20260519000000_catalog_realtime_publication.sql`
+  // and the `EXPECTED_CATALOG_TABLES` list in
+  // `__tests__/integration/realtime-publication.test.ts`.
+  knowledge: { domain: 'catalog', filterColumn: null },
+  disorder: { domain: 'catalog', filterColumn: null },
+  gear: { domain: 'catalog', filterColumn: null },
+  pattern: { domain: 'catalog', filterColumn: null },
+  seed_pattern: { domain: 'catalog', filterColumn: null },
+  innovation: { domain: 'catalog', filterColumn: null },
+  fighting_art: { domain: 'catalog', filterColumn: null },
+  secret_fighting_art: { domain: 'catalog', filterColumn: null },
+  collective_cognition_reward: { domain: 'catalog', filterColumn: null },
+  location: { domain: 'catalog', filterColumn: null },
+  milestone: { domain: 'catalog', filterColumn: null },
+  principle: { domain: 'catalog', filterColumn: null },
+  resource: { domain: 'catalog', filterColumn: null },
+  quarry: { domain: 'catalog', filterColumn: null },
+  nemesis: { domain: 'catalog', filterColumn: null },
+  ability_impairment: { domain: 'catalog', filterColumn: null },
+  neurosis: { domain: 'catalog', filterColumn: null },
+  philosophy: { domain: 'catalog', filterColumn: null },
+  philosophy_rank: { domain: 'catalog', filterColumn: null },
+  weapon_type: { domain: 'catalog', filterColumn: null },
+  trait: { domain: 'catalog', filterColumn: null },
+  mood: { domain: 'catalog', filterColumn: null },
+  armor_set: { domain: 'catalog', filterColumn: null },
+  armor_set_slot: { domain: 'catalog', filterColumn: null },
+  quarry_level: { domain: 'catalog', filterColumn: null },
+  quarry_level_trait: { domain: 'catalog', filterColumn: null },
+  quarry_level_mood: { domain: 'catalog', filterColumn: null },
+  nemesis_level: { domain: 'catalog', filterColumn: null },
+  nemesis_level_trait: { domain: 'catalog', filterColumn: null },
+  nemesis_level_mood: { domain: 'catalog', filterColumn: null },
+  character: { domain: 'catalog', filterColumn: null },
+  strain_milestone: { domain: 'catalog', filterColumn: null },
+  wanderer: { domain: 'catalog', filterColumn: null },
+  constellation: { domain: 'catalog', filterColumn: null },
+  survivor_status: { domain: 'catalog', filterColumn: null }
 }
 
 /** Debounce delay in milliseconds for batching rapid changes. */
@@ -149,6 +207,16 @@ interface UseRealtimeSubscriptionsOptions {
   onSettlementPhaseChange: () => void
   /** Called when survivor data changes */
   onSurvivorChange: () => void
+  /**
+   * Called when a custom-content catalog row (knowledge, disorder, gear,
+   * etc.) reachable through the active settlement changes. The callback
+   * fires on any catalog event delivered by RLS — including rows
+   * referenced through a survivor / hunt / showdown — so the consumer
+   * typically refetches the materialized `SettlementDetail` to pull the
+   * latest rules text. The 300ms domain debounce collapses bursts of
+   * catalog edits into a single refetch.
+   */
+  onCatalogChange: () => void
 }
 
 /**
@@ -216,6 +284,9 @@ export function useRealtimeSubscriptions(
               break
             case 'survivor':
               callbacks.onSurvivorChange()
+              break
+            case 'catalog':
+              callbacks.onCatalogChange()
               break
           }
         }, DEBOUNCE_MS)
