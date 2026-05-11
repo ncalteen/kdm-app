@@ -13,7 +13,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  *
  *  1. Non-custom rows are readable by any authenticated user.
  *  2. Custom rows are readable/writable only by their owner...
- *  3. ...or by users in the matching `<table>_shared_user` join table.
+ *  3. ...or readable by users in the matching `<table>_shared_user` join
+ *     table (the legacy SELECT-for-shared path, where it still exists).
  *
  * This suite runs a single matrix over every table that follows this pattern.
  *
@@ -23,6 +24,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  * junctions. For those tables, the legacy shared_user triad alone no
  * longer grants SELECT. The two it.each loops that pin the legacy
  * behavior skip those 16 tables; a separate matrix pins the new negative.
+ *
+ * Phase 2 [E2.2] (migration 20260517000000) drops the
+ * `Allow update for shared and custom` policy on every catalog table.
+ * Writes to custom catalog rows are now author-only — collaborators may
+ * SELECT but never UPDATE or DELETE.
  */
 const LEGACY_SHARED_SELECT_DROPPED: ReadonlySet<string> = new Set([
   'ability_impairment',
@@ -64,6 +70,12 @@ const SPECS: CustomContentSpec[] = [
     nameCol: 'ability_impairment_name'
   },
   {
+    table: 'armor_set',
+    sharedTable: 'armor_set_shared_user',
+    fkCol: 'armor_set_id',
+    nameCol: 'armor_set_name'
+  },
+  {
     table: 'character',
     sharedTable: 'character_shared_user',
     fkCol: 'character_id',
@@ -75,6 +87,12 @@ const SPECS: CustomContentSpec[] = [
     fkCol: 'collective_cognition_reward_id',
     nameCol: 'reward_name',
     extras: { collective_cognition: 1 }
+  },
+  {
+    table: 'constellation',
+    sharedTable: 'constellation_shared_user',
+    fkCol: 'constellation_id',
+    nameCol: 'constellation_name'
   },
   {
     table: 'disorder',
@@ -423,20 +441,45 @@ describe('RLS: custom-content tables', () => {
     }
   )
 
-  it.each(SPECS.filter((s) => !LEGACY_SHARED_SELECT_DROPPED.has(s.table)))(
-    '[$table] shared guest CAN UPDATE but cannot DELETE (documents shared access model)',
+  it.each(SPECS)(
+    '[$table] author (owner) CAN UPDATE their custom row',
     async (spec) => {
-      // Every catalog table pairs a `Allow update for shared and custom`
-      // policy with its shared-user join table, so shared users can mutate
-      // rows they've been granted access to. There is intentionally no
-      // matching `Allow delete for shared` policy: delete is owner-only.
-      // This test pins both halves of that decision.
+      // Pins the acceptance criterion of [E2.2] (issue #149): after the
+      // `Allow update for shared and custom` policy is dropped, the
+      // surviving `Allow update for owner and custom` policy still lets
+      // the author edit their own custom row.
+      const entry = ids.get(spec.table)!
+      const newName = `RLS-${spec.table}-author-edit`
+
+      const { data: upd, error } = await owner.client
+        .from(spec.table)
+        .update({ [spec.nameCol]: newName })
+        .eq('id', entry.ownerCustomId)
+        .select(`id, ${spec.nameCol}`)
+        .single()
+      expect(error).toBeNull()
+      expect(upd).not.toBeNull()
+      expect((upd as unknown as Record<string, string>)[spec.nameCol]).toBe(
+        newName
+      )
+    }
+  )
+
+  it.each(SPECS)(
+    '[$table] shared guest CANNOT UPDATE or DELETE the shared custom row (author-only writes, [E2.2])',
+    async (spec) => {
+      // After [E2.2] (issue #149, migration
+      // 20260517000000_catalog_drop_update_for_shared.sql) the
+      // `Allow update for shared and custom` policy is gone on every
+      // catalog table. Writes to custom catalog rows are now author-only;
+      // collaborators / shared users may SELECT (where the corresponding
+      // SELECT policy still grants it) but never UPDATE or DELETE.
       //
-      // The legacy UPDATE-for-shared path is scheduled for removal in
-      // [E2.2] (issue #149). Tables whose SELECT-for-shared has already
-      // been dropped in [E2.1.a] are excluded from this matrix because
-      // PostgREST filters the UPDATE...RETURNING by SELECT visibility,
-      // making the returning array empty even when the row is mutated.
+      // For tables in LEGACY_SHARED_SELECT_DROPPED, the shared user also
+      // cannot SELECT post-[E2.1.a], so the UPDATE/DELETE returning is
+      // doubly-empty. For the rest, the returning is empty because the
+      // UPDATE policy is gone. Either way the row must be unchanged —
+      // verified via admin to bypass RLS.
       const entry = ids.get(spec.table)!
       const updPayload = { [spec.nameCol]: 'GUEST-EDIT' }
 
@@ -445,22 +488,33 @@ describe('RLS: custom-content tables', () => {
         .update(updPayload)
         .eq('id', entry.sharedCustomId)
         .select('id')
+      // RLS filters the row out of the UPDATE...RETURNING set rather than
+      // raising a permission error, so error must be null and the
+      // returning array must be empty. Asserting both pins the policy-
+      // driven 0-rows-updated behavior and prevents a silent PostgREST
+      // error from being misread as success.
       expect(updErr).toBeNull()
-      expect(upd ?? []).toHaveLength(1)
+      expect(upd ?? []).toEqual([])
 
-      const { data: del } = await sharedGuest.client
+      const { data: del, error: delErr } = await sharedGuest.client
         .from(spec.table)
         .delete()
         .eq('id', entry.sharedCustomId)
         .select('id')
+      expect(delErr).toBeNull()
       expect(del ?? []).toEqual([])
 
-      // Row must still be visible to the owner.
-      const { data: check } = await owner.client
+      // Row must still exist and be unchanged.
+      const { data: check, error: checkErr } = await admin
         .from(spec.table)
-        .select('id')
+        .select(`id, ${spec.nameCol}`)
         .eq('id', entry.sharedCustomId)
-      expect(check ?? []).toHaveLength(1)
+        .single()
+      expect(checkErr).toBeNull()
+      expect(check).not.toBeNull()
+      expect(
+        (check as unknown as Record<string, string>)[spec.nameCol]
+      ).not.toBe('GUEST-EDIT')
     }
   )
 
