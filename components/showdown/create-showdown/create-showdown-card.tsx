@@ -545,11 +545,23 @@ export function CreateShowdownCard({
           // carry `author_username`. Use null placeholders here; the next
           // `getShowdown` round-trip resolves the real values from the
           // settlement member-username map (E2.8).
-          traits: level.traits.map((t) => ({ ...t, author_username: null })),
-          moods: level.moods.map((m) => ({ ...m, author_username: null })),
+          traits: level.traits.map((t) => ({
+            ...t,
+            author_user_id: null,
+            author_username: null,
+            author_avatar_url: null
+          })),
+          moods: level.moods.map((m) => ({
+            ...m,
+            author_user_id: null,
+            author_username: null,
+            author_avatar_url: null
+          })),
           survivor_statuses: level.survivor_statuses.map((s) => ({
             ...s,
-            author_username: null
+            author_user_id: null,
+            author_username: null,
+            author_avatar_url: null
           })),
           ai_deck: {
             id: aiDeck.id,

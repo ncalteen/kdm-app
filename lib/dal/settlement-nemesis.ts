@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementNemesisDetail } from '@/lib/types'
 
@@ -26,25 +30,25 @@ type RawEmbeddedNemesis = EmbeddedNemesis | EmbeddedNemesis[] | null
  * resolution pattern.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
+ * @param prefetchedMemberProfiles Optional pre-fetched map of IDs to usernames
  * @returns Settlement Nemesis Data
  */
 export async function getSettlementNemeses(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['nemeses']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_nemesis')
       .select(
         'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(custom, user_id, monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
       )
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
@@ -106,10 +110,10 @@ export async function getSettlementNemeses(
         deployment_rules: nemesis.deployment_rules,
         victory_outcome: nemesis.victory_outcome,
         custom: nemesis.custom,
-        author_username:
-          nemesis.custom && nemesis.user_id
-            ? (memberUsernames.get(nemesis.user_id) ?? null)
-            : null
+        ...resolveSettlementAuthorship(
+          { custom: nemesis.custom, user_id: nemesis.user_id },
+          memberProfiles
+        )
       }
     ]
   })
@@ -134,7 +138,7 @@ export async function addSettlementNemeses(
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_nemesis')
       .insert(
@@ -211,10 +215,10 @@ export async function addSettlementNemeses(
         deployment_rules: nemesis.deployment_rules,
         victory_outcome: nemesis.victory_outcome,
         custom: nemesis.custom,
-        author_username:
-          nemesis.custom && nemesis.user_id
-            ? (memberUsernames.get(nemesis.user_id) ?? null)
-            : null
+        ...resolveSettlementAuthorship(
+          { custom: nemesis.custom, user_id: nemesis.user_id },
+          memberProfiles
+        )
       }
     ]
   })

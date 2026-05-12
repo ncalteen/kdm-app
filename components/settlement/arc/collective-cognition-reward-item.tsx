@@ -1,5 +1,6 @@
 'use client'
 
+import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import {
   CustomItemDisplay,
   CustomRulesText
@@ -85,6 +86,12 @@ export const RewardItem = memo(function RewardItem({
         }
         title={customDetail?.title ?? reward.reward_name}
         showCustomBadge
+      />
+
+      <AuthoredByChip
+        authorUserId={reward.author_user_id}
+        authorUsername={reward.author_username}
+        authorAvatarUrl={reward.author_avatar_url}
       />
 
       {/* Collective Cognition Badge and Remove Button */}

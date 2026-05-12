@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -12,25 +16,25 @@ import { SettlementDetail } from '@/lib/types'
  * resolution pattern.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
+ * @param prefetchedMemberProfiles Optional pre-fetched map of IDs to usernames
  * @returns Settlement Philosophies
  */
 export async function getSettlementPhilosophies(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['philosophies']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_philosophy')
       .select(
         'id,  philosophy_id, philosophy(custom, user_id, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id)'
       )
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
@@ -77,10 +81,10 @@ export async function getSettlementPhilosophies(
           tier: philosophy.tier,
           neurosis_id: philosophy.neurosis_id,
           custom: philosophy.custom,
-          author_username:
-            philosophy.custom && philosophy.user_id
-              ? (memberUsernames.get(philosophy.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: philosophy.custom, user_id: philosophy.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []

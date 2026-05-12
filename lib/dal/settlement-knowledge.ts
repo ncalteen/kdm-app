@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -32,14 +36,14 @@ import { SettlementDetail } from '@/lib/types'
  * **Performance** When called from {@link getSettlement} (which loads
  * every settlement-attached collection in parallel), the caller should
  * start the member-username RPC alongside the collection queries and
- * pass the resulting **promise** via `prefetchedMemberUsernames`. Each
+ * pass the resulting **promise** via `prefetchedMemberProfiles`. Each
  * collection DAL awaits the same shared promise inside its own
  * `Promise.all`, so all ~13 collection queries and the single RPC run
  * concurrently. When called standalone the second argument can be
  * omitted; the DAL transparently issues its own RPC.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional in-flight (or resolved)
+ * @param prefetchedMemberProfiles Optional in-flight (or resolved)
  *   member-username map. When provided, the DAL skips its own
  *   `get_settlement_member_usernames` RPC and awaits this promise
  *   alongside its main query.
@@ -47,20 +51,20 @@ import { SettlementDetail } from '@/lib/types'
  */
 export async function getSettlementKnowledges(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['knowledges']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_knowledge')
       .select(
         'id, knowledge_id, knowledge(custom, user_id, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone)'
       )
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
@@ -112,10 +116,10 @@ export async function getSettlementKnowledges(
           observation_rank_up_milestone:
             knowledge.observation_rank_up_milestone,
           custom: knowledge.custom,
-          author_username:
-            knowledge.custom && knowledge.user_id
-              ? (memberUsernames.get(knowledge.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: knowledge.custom, user_id: knowledge.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []

@@ -4,6 +4,7 @@ import {
   CustomItemDisplay,
   CustomRulesText
 } from '@/components/custom/custom-rules-sheet'
+import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { SettlementDetail } from '@/lib/types'
@@ -65,6 +66,12 @@ export const LocationItem = memo(function LocationItem({
         }
         title={customDetail?.title ?? location.location_name}
         showCustomBadge
+      />
+
+      <AuthoredByChip
+        authorUserId={location.author_user_id}
+        authorUsername={location.author_username}
+        authorAvatarUrl={location.author_avatar_url}
       />
 
       {/* Remove Button */}

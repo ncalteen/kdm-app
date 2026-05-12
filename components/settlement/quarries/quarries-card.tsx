@@ -159,7 +159,9 @@ export function QuarriesCard({
         custom: quarryInfo.custom,
         // Optimistic placeholder; the realtime/refetch reconciles
         // `author_username` from the catalog row's `user_id` (E2.8).
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
 
       // Capture the updated quarries list so async callbacks reference it
@@ -236,7 +238,9 @@ export function QuarriesCard({
                   unlocked: false,
                   custom: ins.custom,
                   // Realtime/refetch reconciles author_username (E2.8).
-                  author_username: null
+                  author_user_id: null,
+                  author_username: null,
+                  author_avatar_url: null
                 }))
               }
             }
@@ -317,7 +321,9 @@ export function QuarriesCard({
                   unlocked: false,
                   custom: inserted[i].custom,
                   // Realtime/refetch reconciles author_username (E2.8).
-                  author_username: null
+                  author_user_id: null,
+                  author_username: null,
+                  author_avatar_url: null
                 }))
               }
             }
@@ -552,6 +558,9 @@ export function QuarriesCard({
                   onRemove={handleRemove}
                   onToggleUnlocked={handleToggleUnlocked}
                   unlocked={quarry.unlocked}
+                  authorUserId={quarry.author_user_id}
+                  authorUsername={quarry.author_username}
+                  authorAvatarUrl={quarry.author_avatar_url}
                 />
               ))}
           </div>

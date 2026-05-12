@@ -4976,6 +4976,7 @@ export type Database = {
       get_settlement_member_usernames: {
         Args: { target_settlement: string }
         Returns: {
+          avatar_url: string
           user_id: string
           username: string
         }[]

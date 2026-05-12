@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementQuarryDetail } from '@/lib/types'
 
@@ -11,25 +15,25 @@ import { SettlementDetail, SettlementQuarryDetail } from '@/lib/types'
  * resolution pattern.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
+ * @param prefetchedMemberProfiles Optional pre-fetched map of IDs to usernames
  * @returns Settlement Quarry Data
  */
 export async function getSettlementQuarries(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['quarries']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_quarry')
       .select(
         'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(custom, user_id, monster_name, node, prologue, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
       )
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
@@ -93,10 +97,10 @@ export async function getSettlementQuarries(
           deployment_rules: quarry.deployment_rules,
           victory_outcome: quarry.victory_outcome,
           custom: quarry.custom,
-          author_username:
-            quarry.custom && quarry.user_id
-              ? (memberUsernames.get(quarry.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: quarry.custom, user_id: quarry.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []

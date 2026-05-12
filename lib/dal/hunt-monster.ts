@@ -1,5 +1,9 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { createClient } from '@/lib/supabase/client'
 import {
   HuntMonsterDetail,
@@ -12,49 +16,32 @@ import {
  * Catalog Row With Authorship
  *
  * Raw shape of a `trait` / `mood` / `survivor_status` embed coming back from
- * Supabase before `author_username` is resolved. The `user_id` is dropped on
- * the way out so it never leaks into `HuntMonsterDetail`.
+ * Supabase before the author triplet is resolved. The `user_id` is dropped
+ * on the way out so it never leaks into `HuntMonsterDetail`.
  */
 type WithAuthorship<T> = T & { user_id: string | null }
-
-/**
- * Resolve Author Username
- *
- * Returns the catalog author's username for custom rows, or `null` for
- * built-ins / rows authored by users no longer connected to the settlement.
- *
- * @param row Catalog Row With `custom` + `user_id`
- * @param memberUsernames Settlement Member Username Map
- * @returns Author Username Or Null
- */
-function resolveAuthorUsername(
-  row: { custom: boolean; user_id: string | null } | null | undefined,
-  memberUsernames: Map<string, string>
-): string | null {
-  if (!row || !row.custom || !row.user_id) return null
-  return memberUsernames.get(row.user_id) ?? null
-}
 
 /**
  * Get Hunt Monsters
  *
  * Retrieves all monsters assigned to a hunt.
  *
- * Each embedded `trait` / `mood` / `survivor_status` row carries
- * `author_username` — `null` for built-ins, and the catalog author's
- * username for custom rows so the UI can render the "By @username" chip
- * (E2.8; see `local/sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
+ * Each embedded `trait` / `mood` / `survivor_status` row carries the
+ * author triplet (`author_user_id`, `author_username`,
+ * `author_avatar_url`) — all `null` for built-ins, populated for custom
+ * rows so the UI can render the avatar/tooltip chip (E2.8 / E2.9; see
+ * `local/sharing-architecture.md` §7.4 / §10 Phase 2 items 2.6–2.7).
  *
  * @param huntId Hunt ID
- * @param prefetchedMemberUsernames Optional in-flight (or resolved)
- *   member-username map. When called from {@link getHunt} (which fetches
+ * @param prefetchedMemberProfiles Optional in-flight (or resolved)
+ *   member-profile map. When called from {@link getHunt} (which fetches
  *   the map once for the whole settlement load), pass the promise to skip
  *   the extra RPC.
  * @returns Hunt Monsters
  */
 export async function getHuntMonsters(
   huntId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<{ [key: string]: HuntMonsterDetail } | null> {
   if (!huntId) return null
 
@@ -77,13 +64,13 @@ export async function getHuntMonsters(
     (data[0] as { settlement_id?: string | null } | undefined)?.settlement_id ??
     null
 
-  const memberUsernames =
+  const memberProfiles =
     data.length === 0
-      ? new Map<string, string>()
-      : await (prefetchedMemberUsernames ??
+      ? new Map<string, SettlementMemberProfile>()
+      : await (prefetchedMemberProfiles ??
           (settlementId
             ? getSettlementMemberUsernames(settlementId)
-            : Promise.resolve(new Map<string, string>())))
+            : Promise.resolve(new Map<string, SettlementMemberProfile>())))
 
   const huntMonsterMap: { [key: string]: HuntMonsterDetail } = {}
 
@@ -115,9 +102,9 @@ export async function getHuntMonsters(
         .filter((t): t is WithAuthorship<TraitDetail> => t !== null)
         .map(({ user_id, ...trait }) => ({
           ...trait,
-          author_username: resolveAuthorUsername(
+          ...resolveSettlementAuthorship(
             { custom: trait.custom, user_id },
-            memberUsernames
+            memberProfiles
           )
         })),
       moods: (moodRows ?? [])
@@ -125,9 +112,9 @@ export async function getHuntMonsters(
         .filter((m): m is WithAuthorship<MoodDetail> => m !== null)
         .map(({ user_id, ...mood }) => ({
           ...mood,
-          author_username: resolveAuthorUsername(
+          ...resolveSettlementAuthorship(
             { custom: mood.custom, user_id },
-            memberUsernames
+            memberProfiles
           )
         })),
       survivor_statuses: (statusRows ?? [])
@@ -135,9 +122,9 @@ export async function getHuntMonsters(
         .filter((s): s is WithAuthorship<SurvivorStatusDetail> => s !== null)
         .map(({ user_id, ...status }) => ({
           ...status,
-          author_username: resolveAuthorUsername(
+          ...resolveSettlementAuthorship(
             { custom: status.custom, user_id },
-            memberUsernames
+            memberProfiles
           )
         }))
     }

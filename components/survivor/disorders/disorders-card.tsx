@@ -1,6 +1,7 @@
 'use client'
 
 import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
+import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -67,7 +68,7 @@ export function DisordersCard({
   const [availableDisorders, setAvailableDisorders] = useState<{
     [key: string]: DisorderDetail
   }>({})
-  const [disorders, setDisorders] = useState<DisorderDetail[]>(
+  const [disorders, setDisorders] = useState<SurvivorDetail['disorders']>(
     selectedSurvivor?.disorders ?? []
   )
   const [addOpen, setAddOpen] = useState<boolean>(false)
@@ -112,11 +113,16 @@ export function DisordersCard({
       setAddOpen(false)
       setSearch('')
 
-      const optimisticItem: DisorderDetail = {
+      const optimisticItem: SurvivorDetail['disorders'][number] = {
         id: disorderId,
         custom: detail.custom,
         disorder_name: detail.disorder_name,
-        rules: detail.rules
+        rules: detail.rules ?? '',
+        // The realtime refetch will backfill the authorship triplet from the
+        // settlement member-profile map.
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
       const oldDisorders = [...disorders]
 
@@ -225,11 +231,14 @@ export function DisordersCard({
         toast.success(DISORDER_CREATED_MESSAGE())
 
         // Add to survivor immediately with the data we already have
-        const optimisticItem: DisorderDetail = {
+        const optimisticItem: SurvivorDetail['disorders'][number] = {
           id: newDisorder.id,
           custom: newDisorder.custom,
           disorder_name: newDisorder.disorder_name,
-          rules: newDisorder.rules
+          rules: newDisorder.rules ?? '',
+          author_user_id: null,
+          author_username: null,
+          author_avatar_url: null
         }
         const oldDisorders = [...disorders]
 
@@ -349,6 +358,11 @@ export function DisordersCard({
                 description="A disorder afflicting this survivor."
                 sections={[{ label: 'Rules', content: item.rules }]}
                 showCustomBadge
+              />
+              <AuthoredByChip
+                authorUserId={item.author_user_id}
+                authorUsername={item.author_username}
+                authorAvatarUrl={item.author_avatar_url}
               />
               <Button
                 variant="ghost"

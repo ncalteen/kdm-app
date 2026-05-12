@@ -1,5 +1,6 @@
 'use client'
 
+import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import {
   CustomItemDisplay,
   CustomPhilosophyRulesText,
@@ -72,6 +73,12 @@ export const PhilosophyItem = memo(function PhilosophyItem({
           showCustomBadge
         />
       )}
+
+      <AuthoredByChip
+        authorUserId={philosophy.author_user_id}
+        authorUsername={philosophy.author_username}
+        authorAvatarUrl={philosophy.author_avatar_url}
+      />
 
       {/* Remove Button */}
       <Button

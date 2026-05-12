@@ -168,7 +168,9 @@ export function NemesesCard({
         custom: nemesisInfo.custom,
         // Optimistic placeholder; the realtime/refetch reconciles
         // `author_username` from the catalog row's `user_id` (E2.8).
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
 
       // Capture the updated nemeses list so async callbacks reference it
@@ -244,7 +246,9 @@ export function NemesesCard({
                   unlocked: false,
                   custom: ins.custom,
                   // Realtime/refetch reconciles author_username (E2.8).
-                  author_username: null
+                  author_user_id: null,
+                  author_username: null,
+                  author_avatar_url: null
                 }))
               }
             }
@@ -571,6 +575,9 @@ export function NemesesCard({
                   onRemove={handleRemove}
                   onToggleUnlocked={handleToggleUnlocked}
                   onToggleLevel={handleToggleLevel}
+                  authorUserId={nemesis.author_user_id}
+                  authorUsername={nemesis.author_username}
+                  authorAvatarUrl={nemesis.author_avatar_url}
                 />
               ))}
           </div>

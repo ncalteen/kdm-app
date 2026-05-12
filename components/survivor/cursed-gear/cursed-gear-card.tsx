@@ -138,7 +138,9 @@ export function CursedGearCard({
         // Optimistic placeholders for the catalog flags. The realtime
         // refetch backfills the true values from the catalog row.
         custom: gearDetail.custom ?? false,
-        author_username: gearDetail.author_username ?? null
+        author_user_id: gearDetail.author_user_id ?? null,
+        author_username: gearDetail.author_username ?? null,
+        author_avatar_url: gearDetail.author_avatar_url ?? null
       }
       const oldCursedGear = [...cursedGear]
       const updatedCursedGear = [...cursedGear, optimisticItem]
@@ -293,6 +295,9 @@ export function CursedGearCard({
                 gearId={item.id}
                 gearName={item.gear_name}
                 onRemove={() => handleRemove(originalIndex)}
+                authorUserId={item.author_user_id}
+                authorUsername={item.author_username}
+                authorAvatarUrl={item.author_avatar_url}
               />
             )
           })}

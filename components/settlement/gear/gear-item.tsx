@@ -1,6 +1,7 @@
 'use client'
 
 import { CustomGearRulesTrigger } from '@/components/custom/custom-rules-sheet'
+import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Button } from '@/components/ui/button'
 import { SettlementDetail } from '@/lib/types'
@@ -54,6 +55,12 @@ export const GearItem = memo(function GearItem({
         gearId={gear.gear_id}
         gearName={gear.gear_name}
         showCustomBadge
+      />
+
+      <AuthoredByChip
+        authorUserId={gear.author_user_id}
+        authorUsername={gear.author_username}
+        authorAvatarUrl={gear.author_avatar_url}
       />
 
       {/* Quantity and Remove Button */}

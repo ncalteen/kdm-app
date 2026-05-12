@@ -1,5 +1,6 @@
 'use client'
 
+import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -38,21 +39,35 @@ interface TraitsMoodsProps {
   /** Monster data */
   monster: HuntMonsterDetail | ShowdownMonsterDetail
   /**
-   * Called when the traits list should change. Each entry carries
-   * `author_username` so the monster detail's typed shape is preserved.
-   * The picker augments fresh catalog rows with `author_username: null`;
-   * the realtime refetch backfills the real value.
+   * Called when the traits list should change. Each entry carries the
+   * authorship triplet (`author_user_id`, `author_username`,
+   * `author_avatar_url`) so the monster detail's typed shape is preserved.
+   * The picker augments fresh catalog rows with `author_user_id: null`,
+   * `author_username: null`, and `author_avatar_url: null`; the realtime
+   * refetch backfills the real values.
    */
   onTraitsChange: (
-    traits: (TraitDetail & { author_username: string | null })[]
+    traits: (TraitDetail & {
+      author_user_id: string | null
+      author_username: string | null
+      author_avatar_url: string | null
+    })[]
   ) => void
   /** Called when the moods list should change. See `onTraitsChange`. */
   onMoodsChange: (
-    moods: (MoodDetail & { author_username: string | null })[]
+    moods: (MoodDetail & {
+      author_user_id: string | null
+      author_username: string | null
+      author_avatar_url: string | null
+    })[]
   ) => void
   /** Called when the survivor statuses list should change. See `onTraitsChange`. */
   onSurvivorStatusesChange: (
-    statuses: (SurvivorStatusDetail & { author_username: string | null })[]
+    statuses: (SurvivorStatusDetail & {
+      author_user_id: string | null
+      author_username: string | null
+      author_avatar_url: string | null
+    })[]
   ) => void
 }
 
@@ -154,7 +169,12 @@ export function TraitsMoods({
                         onSelect={() => {
                           onTraitsChange([
                             ...monster.traits,
-                            { ...trait, author_username: null }
+                            {
+                              ...trait,
+                              author_user_id: null,
+                              author_username: null,
+                              author_avatar_url: null
+                            }
                           ])
                           setOpenTraitPicker(false)
                         }}>
@@ -184,6 +204,11 @@ export function TraitsMoods({
               title={trait.trait_name}
               sections={[{ label: 'Rules', content: trait.rules }]}
               showCustomBadge
+            />
+            <AuthoredByChip
+              authorUserId={trait.author_user_id}
+              authorUsername={trait.author_username}
+              authorAvatarUrl={trait.author_avatar_url}
             />
             <Button
               type="button"
@@ -234,7 +259,12 @@ export function TraitsMoods({
                         onSelect={() => {
                           onMoodsChange([
                             ...monster.moods,
-                            { ...mood, author_username: null }
+                            {
+                              ...mood,
+                              author_user_id: null,
+                              author_username: null,
+                              author_avatar_url: null
+                            }
                           ])
                           setOpenMoodPicker(false)
                         }}>
@@ -264,6 +294,11 @@ export function TraitsMoods({
               title={mood.mood_name}
               sections={[{ label: 'Rules', content: mood.rules }]}
               showCustomBadge
+            />
+            <AuthoredByChip
+              authorUserId={mood.author_user_id}
+              authorUsername={mood.author_username}
+              authorAvatarUrl={mood.author_avatar_url}
             />
             <Button
               type="button"
@@ -314,7 +349,12 @@ export function TraitsMoods({
                         onSelect={() => {
                           onSurvivorStatusesChange([
                             ...monster.survivor_statuses,
-                            { ...status, author_username: null }
+                            {
+                              ...status,
+                              author_user_id: null,
+                              author_username: null,
+                              author_avatar_url: null
+                            }
                           ])
                           setOpenStatusPicker(false)
                         }}>
@@ -344,6 +384,11 @@ export function TraitsMoods({
               title={status.survivor_status_name}
               sections={[{ label: 'Rules', content: status.rules }]}
               showCustomBadge
+            />
+            <AuthoredByChip
+              authorUserId={status.author_user_id}
+              authorUsername={status.author_username}
+              authorAvatarUrl={status.author_avatar_url}
             />
             <Button
               type="button"

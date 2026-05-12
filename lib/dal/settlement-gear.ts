@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -12,23 +16,23 @@ import { SettlementDetail } from '@/lib/types'
  * canonical resolution pattern.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
+ * @param prefetchedMemberProfiles Optional pre-fetched map of IDs to usernames
  * @returns Settlement Gear Data
  */
 export async function getSettlementGear(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['gear']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_gear')
       .select('gear_id, id, quantity, gear(gear_name, custom, user_id)')
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error) throw new Error(`Error Fetching Settlement Gear: ${error.message}`)
@@ -60,10 +64,10 @@ export async function getSettlementGear(
           id: item.id,
           quantity: item.quantity,
           custom: !!gear.custom,
-          author_username:
-            gear.custom && gear.user_id
-              ? (memberUsernames.get(gear.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: gear.custom, user_id: gear.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []

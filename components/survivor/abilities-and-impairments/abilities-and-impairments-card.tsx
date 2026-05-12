@@ -1,6 +1,7 @@
 'use client'
 
 import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
+import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -82,7 +83,7 @@ export function AbilitiesAndImpairmentsCard({
   const [availableItems, setAvailableItems] = useState<{
     [key: string]: AbilityImpairmentDetail
   }>({})
-  const [items, setItems] = useState<AbilityImpairmentDetail[]>(
+  const [items, setItems] = useState<SurvivorDetail['abilities_impairments']>(
     selectedSurvivor?.abilities_impairments ?? []
   )
   const [skipNextHunt, setSkipNextHunt] = useState<boolean>(
@@ -133,11 +134,16 @@ export function AbilitiesAndImpairmentsCard({
       setAddOpen(false)
       setSearch('')
 
-      const optimisticItem: AbilityImpairmentDetail = {
+      const optimisticItem: SurvivorDetail['abilities_impairments'][number] = {
         id: itemId,
         custom: detail.custom,
         ability_impairment_name: detail.ability_impairment_name,
-        rules: detail.rules ?? null
+        rules: detail.rules ?? '',
+        // The realtime refetch will backfill the authorship triplet from the
+        // settlement member-profile map.
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
       const oldItems = [...items]
 
@@ -239,12 +245,16 @@ export function AbilitiesAndImpairmentsCard({
         toast.success(ABILITY_IMPAIRMENT_CREATED_MESSAGE())
 
         // Add to survivor immediately
-        const optimisticItem: AbilityImpairmentDetail = {
-          id: newItem.id,
-          custom: newItem.custom,
-          ability_impairment_name: newItem.ability_impairment_name,
-          rules: newItem.rules ?? null
-        }
+        const optimisticItem: SurvivorDetail['abilities_impairments'][number] =
+          {
+            id: newItem.id,
+            custom: newItem.custom,
+            ability_impairment_name: newItem.ability_impairment_name,
+            rules: newItem.rules ?? '',
+            author_user_id: null,
+            author_username: null,
+            author_avatar_url: null
+          }
         const oldItems = [...items]
 
         setItems([...items, optimisticItem])
@@ -397,6 +407,11 @@ export function AbilitiesAndImpairmentsCard({
                   description="An ability or impairment carried by this survivor."
                   sections={[{ label: 'Rules', content: item.rules }]}
                   showCustomBadge
+                />
+                <AuthoredByChip
+                  authorUserId={item.author_user_id}
+                  authorUsername={item.author_username}
+                  authorAvatarUrl={item.author_avatar_url}
                 />
                 <Button
                   variant="ghost"

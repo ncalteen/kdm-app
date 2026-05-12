@@ -61,7 +61,9 @@ describe('getSettlementSeedPatterns', () => {
         seed_pattern_id: 'sp-1',
         seed_pattern_name: 'Skull Cap Helm',
         custom: false,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_seed_pattern')

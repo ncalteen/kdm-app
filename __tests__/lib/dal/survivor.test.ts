@@ -327,20 +327,37 @@ describe('getSurvivors', () => {
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
     mockSupabase.rpc.mockResolvedValue({
-      data: [{ user_id: 'author-1', username: 'ashen.veil' }],
+      data: [
+        {
+          user_id: 'author-1',
+          username: 'ashen.veil',
+          avatar_url: 'https://a/ashen.png'
+        }
+      ],
       error: null
     })
 
     const result = await getSurvivors('set-1')
 
     expect(result![0].cursed_gear[0].author_username).toBe('ashen.veil')
+    expect(result![0].cursed_gear[0].author_user_id).toBe('author-1')
+    expect(result![0].cursed_gear[0].author_avatar_url).toBe(
+      'https://a/ashen.png'
+    )
     expect(result![0].cursed_gear[0]).not.toHaveProperty('user_id')
     // Built-in disorder resolves to null author.
     expect(result![0].disorders[0].author_username).toBeNull()
+    expect(result![0].disorders[0].author_user_id).toBeNull()
+    expect(result![0].disorders[0].author_avatar_url).toBeNull()
     // Custom row authored by a member who left the settlement resolves to
     // null even though `custom` is true.
     expect(result![0].fighting_arts[0].author_username).toBeNull()
+    expect(result![0].fighting_arts[0].author_user_id).toBe('ghost-1')
+    expect(result![0].fighting_arts[0].author_avatar_url).toBeNull()
     expect(result![0].knowledge_1?.author_username).toBe('ashen.veil')
+    expect(result![0].knowledge_1?.author_avatar_url).toBe(
+      'https://a/ashen.png'
+    )
     expect(mockSupabase.rpc).toHaveBeenCalledWith(
       'get_settlement_member_usernames',
       { target_settlement: 'set-1' }
@@ -382,12 +399,18 @@ describe('getSurvivors', () => {
     mockSupabase.from.mockReturnValue({ select: mockSelect })
 
     const prefetched = Promise.resolve(
-      new Map<string, string>([['author-1', 'prefetched.user']])
+      new Map<string, { username: string; avatar_url: string | null }>([
+        [
+          'author-1',
+          { username: 'prefetched.user', avatar_url: 'https://a/p.png' }
+        ]
+      ])
     )
 
     const result = await getSurvivors('set-1', prefetched)
 
     expect(result![0].cursed_gear[0].author_username).toBe('prefetched.user')
+    expect(result![0].cursed_gear[0].author_avatar_url).toBe('https://a/p.png')
     expect(mockSupabase.rpc).not.toHaveBeenCalled()
   })
 })

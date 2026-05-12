@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -14,25 +18,25 @@ import { SettlementDetail } from '@/lib/types'
  * for the canonical resolution pattern.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
+ * @param prefetchedMemberProfiles Optional pre-fetched map of IDs to usernames
  * @returns Settlement Innovation Data
  */
 export async function getSettlementInnovations(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['innovations']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_innovation')
       .select(
         'id, innovation_id, innovation(custom, user_id, innovation_name, rules, consequences, benefits)'
       )
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
@@ -65,10 +69,10 @@ export async function getSettlementInnovations(
           // The catalog `availableInnovations` lookup filters by user_id and
           // would otherwise return undefined for those rows.
           custom: !!innovation.custom,
-          author_username:
-            innovation.custom && innovation.user_id
-              ? (memberUsernames.get(innovation.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: innovation.custom, user_id: innovation.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []
@@ -93,7 +97,7 @@ export async function addSettlementInnovations(
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_innovation')
       .insert(
@@ -128,10 +132,10 @@ export async function addSettlementInnovations(
           consequences: innovation.consequences ?? null,
           benefits: innovation.benefits ?? null,
           custom: !!innovation.custom,
-          author_username:
-            innovation.custom && innovation.user_id
-              ? (memberUsernames.get(innovation.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: innovation.custom, user_id: innovation.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []

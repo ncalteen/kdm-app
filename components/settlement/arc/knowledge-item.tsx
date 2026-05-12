@@ -1,5 +1,6 @@
 'use client'
 
+import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import {
   CustomItemDisplay,
   CustomKnowledgeRulesText,
@@ -81,6 +82,12 @@ export const KnowledgeItem = memo(function KnowledgeItem({
           showCustomBadge
         />
       )}
+
+      <AuthoredByChip
+        authorUserId={knowledge.author_user_id}
+        authorUsername={knowledge.author_username}
+        authorAvatarUrl={knowledge.author_avatar_url}
+      />
 
       {/* Remove Button */}
       <Button

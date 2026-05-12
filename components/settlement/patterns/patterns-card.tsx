@@ -195,7 +195,9 @@ export function PatternsCard({
         custom: patternInfo.custom,
         // Optimistic placeholder; the realtime/refetch reconciles
         // `author_username` from the catalog row's `user_id` (E2.8).
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
 
       const updatedPatterns = [...selectedSettlement.patterns, optimisticRow]

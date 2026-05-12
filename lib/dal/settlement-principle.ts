@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -12,25 +16,25 @@ import { SettlementDetail } from '@/lib/types'
  * resolution pattern.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
+ * @param prefetchedMemberProfiles Optional pre-fetched map of IDs to usernames
  * @returns Settlement Principles
  */
 export async function getSettlementPrinciples(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['principles']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_principle')
       .select(
         'id,  option_1_selected, option_2_selected, principle_id, principle(custom, user_id, principle_name, option_1_name, option_2_name, option_1_rules, option_2_rules)'
       )
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
@@ -79,10 +83,10 @@ export async function getSettlementPrinciples(
           principle_id: item.principle_id,
           principle_name: principle.principle_name,
           custom: principle.custom,
-          author_username:
-            principle.custom && principle.user_id
-              ? (memberUsernames.get(principle.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: principle.custom, user_id: principle.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []

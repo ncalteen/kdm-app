@@ -1,5 +1,6 @@
 'use client'
 
+import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -43,6 +44,12 @@ export interface NemesisItemProps {
       | 'level_4_defeated',
     defeated: boolean
   ) => void
+  /** Author User ID (null for built-ins; powers E2.9 authored-by chip) */
+  authorUserId?: string | null
+  /** Author Username (null for built-ins / ghost authors) */
+  authorUsername?: string | null
+  /** Author Avatar URL (null for built-ins / no avatar) */
+  authorAvatarUrl?: string | null
 }
 
 /**
@@ -86,7 +93,10 @@ export const NemesisItem = memo(function NemesisItem({
   availableLevels,
   onRemove,
   onToggleUnlocked,
-  onToggleLevel
+  onToggleLevel,
+  authorUserId = null,
+  authorUsername = null,
+  authorAvatarUrl = null
 }: NemesisItemProps): ReactElement {
   // Map level numbers to their current defeated state for easy lookup.
   const defeatedState: Record<number, boolean> = {
@@ -122,6 +132,12 @@ export const NemesisItem = memo(function NemesisItem({
           Custom
         </Badge>
       )}
+
+      <AuthoredByChip
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
+        authorAvatarUrl={authorAvatarUrl}
+      />
 
       {/* Level Checkboxes and Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">
