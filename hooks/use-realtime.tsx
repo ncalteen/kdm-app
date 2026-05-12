@@ -12,12 +12,12 @@ import { useEffect, useRef } from 'react'
  * `catalog` covers custom-content tables (knowledge, disorder, gear,
  * trait, mood, survivor_status, etc.) whose rules / definitions are
  * materialized into **multiple** cached views by the DAL projections:
- *   * `SettlementDetail`: knowledges, gear, locations, milestones,
+ *   - `SettlementDetail`: knowledges, gear, locations, milestones,
  *     innovations, etc. (rules embedded via the settlement junctions).
- *   * `SurvivorDetail`: disorders, fighting arts, secret fighting arts,
+ *   - `SurvivorDetail`: disorders, fighting arts, secret fighting arts,
  *     knowledges (x3), neurosis, ability impairments (rules embedded
  *     via `SURVIVOR_SELECT`).
- *   * `HuntDetail` / `ShowdownDetail` monsters: traits, moods, and
+ *   - `HuntDetail` / `ShowdownDetail` monsters: traits, moods, and
  *     survivor_status rules embedded via the monster projections.
  * The consumer is therefore expected to refresh all materialized
  * collections on a catalog event, not just `SettlementDetail`.
