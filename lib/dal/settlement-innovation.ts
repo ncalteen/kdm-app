@@ -1,3 +1,4 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -7,6 +8,10 @@ import { SettlementDetail } from '@/lib/types'
  *
  * Retrieves the innovations associated with a settlement. Uses a join to
  * resolve innovation names. Safely handles the Supabase join result shape.
+ *
+ * Each returned row carries `author_username` (null for built-ins; the
+ * catalog author's username for customs) — see `getSettlementKnowledges`
+ * for the canonical resolution pattern.
  *
  * @param settlementId Settlement ID
  * @returns Settlement Innovation Data
@@ -18,12 +23,15 @@ export async function getSettlementInnovations(
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_innovation')
-    .select(
-      'id, innovation_id, innovation(custom, innovation_name, rules, consequences, benefits)'
-    )
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_innovation')
+      .select(
+        'id, innovation_id, innovation(custom, user_id, innovation_name, rules, consequences, benefits)'
+      )
+      .eq('settlement_id', settlementId),
+    getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Innovations: ${error.message}`)
@@ -54,7 +62,11 @@ export async function getSettlementInnovations(
           // settlement membership (EC-6 in local/sharing-architecture.md).
           // The catalog `availableInnovations` lookup filters by user_id and
           // would otherwise return undefined for those rows.
-          custom: !!innovation.custom
+          custom: !!innovation.custom,
+          author_username:
+            innovation.custom && innovation.user_id
+              ? (memberUsernames.get(innovation.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []
@@ -79,17 +91,20 @@ export async function addSettlementInnovations(
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_innovation')
-    .insert(
-      innovationIds.map((innovationId) => ({
-        innovation_id: innovationId,
-        settlement_id: settlementId
-      }))
-    )
-    .select(
-      'id, innovation_id, innovation(custom, innovation_name, rules, consequences, benefits)'
-    )
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_innovation')
+      .insert(
+        innovationIds.map((innovationId) => ({
+          innovation_id: innovationId,
+          settlement_id: settlementId
+        }))
+      )
+      .select(
+        'id, innovation_id, innovation(custom, user_id, innovation_name, rules, consequences, benefits)'
+      ),
+    getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Adding Settlement Innovations: ${error.message}`)
@@ -110,7 +125,11 @@ export async function addSettlementInnovations(
           rules: innovation.rules ?? null,
           consequences: innovation.consequences ?? null,
           benefits: innovation.benefits ?? null,
-          custom: !!innovation.custom
+          custom: !!innovation.custom,
+          author_username:
+            innovation.custom && innovation.user_id
+              ? (memberUsernames.get(innovation.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []

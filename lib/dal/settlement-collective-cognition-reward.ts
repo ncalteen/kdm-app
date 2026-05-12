@@ -1,3 +1,4 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -6,6 +7,9 @@ import { SettlementDetail } from '@/lib/types'
  * Get Settlement Collective Cognition Rewards
  *
  * Retrieves the collective cognition rewards associated with a settlement.
+ * Each returned row carries `author_username` (null for built-ins; the
+ * catalog author's username for customs) — see `getSettlementKnowledges`
+ * for the canonical resolution pattern.
  *
  * @param settlementId Settlement ID
  * @returns Settlement Collective Cognition Reward Data
@@ -17,12 +21,15 @@ export async function getSettlementCollectiveCognitionRewards(
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_collective_cognition_reward')
-    .select(
-      'collective_cognition_reward_id, id, unlocked, collective_cognition_reward(custom, collective_cognition, reward_name, rules)'
-    )
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_collective_cognition_reward')
+      .select(
+        'collective_cognition_reward_id, id, unlocked, collective_cognition_reward(custom, user_id, collective_cognition, reward_name, rules)'
+      )
+      .eq('settlement_id', settlementId),
+    getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(
@@ -36,12 +43,14 @@ export async function getSettlementCollectiveCognitionRewards(
       const embeddedReward = item.collective_cognition_reward as unknown as
         | {
             custom: boolean
+            user_id: string | null
             reward_name: string
             collective_cognition: number
             rules: string | null
           }
         | {
             custom: boolean
+            user_id: string | null
             reward_name: string
             collective_cognition: number
             rules: string | null
@@ -62,7 +71,11 @@ export async function getSettlementCollectiveCognitionRewards(
           reward_name: reward.reward_name,
           collective_cognition: reward.collective_cognition,
           rules: reward.rules,
-          custom: reward.custom
+          custom: reward.custom,
+          author_username:
+            reward.custom && reward.user_id
+              ? (memberUsernames.get(reward.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []

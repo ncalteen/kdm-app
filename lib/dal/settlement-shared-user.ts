@@ -2,6 +2,57 @@ import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
+ * Get Settlement Member Usernames
+ *
+ * Returns a `Map<user_id, username>` of every user connected to a
+ * settlement — the owner plus every collaborator listed in
+ * `settlement_shared_user`. Powers the "By @username" authorship chip on
+ * custom catalog rows materialized into `SettlementDetail`'s collections
+ * (E2.8 in local/sharing-architecture.md §7.4 / §10 Phase 2 item 2.6).
+ *
+ * Goes through the `get_settlement_member_usernames` SECURITY DEFINER RPC
+ * because RLS on `user_settings` restricts SELECT to the row owner. A
+ * direct embedded query
+ * (`settlement_<x> → <catalog> → user_settings`) would silently return
+ * `null` for every author who is not the calling user. The RPC scopes
+ * results to settlements the caller is a member of (owner or
+ * collaborator); unrelated callers receive an empty map. Mirrors
+ * {@link getSettlementSharedUsers}'s use of `get_settlement_collaborators`.
+ *
+ * @param settlementId Settlement ID
+ * @returns Map of `user_id -> username` for every settlement member
+ */
+export async function getSettlementMemberUsernames(
+  settlementId: string | null | undefined
+): Promise<Map<string, string>> {
+  if (!settlementId) throw new Error('Required: Settlement ID')
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase.rpc(
+    'get_settlement_member_usernames',
+    {
+      target_settlement: settlementId
+    }
+  )
+
+  if (error)
+    throw new Error(
+      `Error Fetching Settlement Member Usernames: ${error.message}`
+    )
+
+  const map = new Map<string, string>()
+  for (const row of (data ?? []) as {
+    user_id: string | null
+    username: string | null
+  }[]) {
+    if (row.user_id && row.username) map.set(row.user_id, row.username)
+  }
+
+  return map
+}
+
+/**
  * Settlement Collaborator Detail
  *
  * Row shape returned by {@link getSettlementSharedUsers}. Includes the

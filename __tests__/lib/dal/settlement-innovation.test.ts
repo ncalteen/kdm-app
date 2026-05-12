@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -17,6 +18,9 @@ const {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Default: no settlement members surfaced (covers tests that don't
+  // exercise author_username resolution). Individual tests override.
+  mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
 })
 
 describe('getSettlementInnovations', () => {
@@ -55,7 +59,8 @@ describe('getSettlementInnovations', () => {
         rules: null,
         consequences: null,
         benefits: null,
-        custom: false
+        custom: false,
+        author_username: null
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_innovation')
@@ -83,7 +88,8 @@ describe('getSettlementInnovations', () => {
         rules: null,
         consequences: null,
         benefits: null,
-        custom: true
+        custom: true,
+        author_username: null
       }
     ])
   })
@@ -152,7 +158,8 @@ describe('addSettlementInnovations', () => {
         rules: null,
         consequences: null,
         benefits: null,
-        custom: false
+        custom: false,
+        author_username: null
       }
     ])
     expect(mockInsert).toHaveBeenCalledWith([

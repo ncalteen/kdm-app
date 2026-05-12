@@ -1,3 +1,4 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -5,7 +6,10 @@ import { SettlementDetail } from '@/lib/types'
 /**
  * Get Settlement Locations
  *
- * Retrieves the locations associated with a settlement.
+ * Retrieves the locations associated with a settlement. Each returned row
+ * carries `author_username` (null for built-ins; the catalog author's
+ * username for customs) — see `getSettlementKnowledges` for the canonical
+ * resolution pattern.
  *
  * @param settlementId Settlement ID
  * @returns Settlement Location Data
@@ -17,10 +21,15 @@ export async function getSettlementLocations(
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_location')
-    .select('id, location_id, unlocked, location(custom, location_name, rules)')
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_location')
+      .select(
+        'id, location_id, unlocked, location(custom, user_id, location_name, rules)'
+      )
+      .eq('settlement_id', settlementId),
+    getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Locations: ${error.message}`)
@@ -34,6 +43,7 @@ export async function getSettlementLocations(
         Array.isArray(rawLocation) ? (rawLocation[0] ?? null) : rawLocation
       ) as {
         custom: boolean
+        user_id: string | null
         location_name: string
         rules: string | null
       } | null
@@ -47,7 +57,11 @@ export async function getSettlementLocations(
           location_name: location.location_name,
           rules: location.rules,
           unlocked: item.unlocked,
-          custom: location.custom
+          custom: location.custom,
+          author_username:
+            location.custom && location.user_id
+              ? (memberUsernames.get(location.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []

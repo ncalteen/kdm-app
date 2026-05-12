@@ -1,10 +1,14 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
 /**
  * Get Settlement Seed Patterns
  *
- * Retrieves the seed patterns associated with a settlement.
+ * Retrieves the seed patterns associated with a settlement. Each returned
+ * row carries `author_username` (null for built-ins; the catalog author's
+ * username for customs) — see `getSettlementKnowledges` for the canonical
+ * resolution pattern.
  *
  * @param settlementId Settlement ID
  * @returns Settlement Seed Pattern Data
@@ -16,10 +20,15 @@ export async function getSettlementSeedPatterns(
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_seed_pattern')
-    .select('id, seed_pattern_id, seed_pattern(custom, seed_pattern_name)')
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_seed_pattern')
+      .select(
+        'id, seed_pattern_id, seed_pattern(custom, user_id, seed_pattern_name)'
+      )
+      .eq('settlement_id', settlementId),
+    getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Seed Patterns: ${error.message}`)
@@ -31,10 +40,12 @@ export async function getSettlementSeedPatterns(
       const seedPatternRelation = item.seed_pattern as unknown as
         | {
             custom: boolean
+            user_id: string | null
             seed_pattern_name: string
           }
         | {
             custom: boolean
+            user_id: string | null
             seed_pattern_name: string
           }[]
         | null
@@ -50,7 +61,11 @@ export async function getSettlementSeedPatterns(
           id: item.id,
           seed_pattern_id: item.seed_pattern_id,
           seed_pattern_name: seedPattern.seed_pattern_name,
-          custom: seedPattern.custom
+          custom: seedPattern.custom,
+          author_username:
+            seedPattern.custom && seedPattern.user_id
+              ? (memberUsernames.get(seedPattern.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []

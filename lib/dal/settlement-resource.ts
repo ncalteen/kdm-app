@@ -1,3 +1,4 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -5,7 +6,10 @@ import { SettlementDetail } from '@/lib/types'
 /**
  * Get Settlement Resources
  *
- * Retrieves the resources associated with a settlement.
+ * Retrieves the resources associated with a settlement. Each returned row
+ * carries `author_username` (null for built-ins; the catalog author's
+ * username for customs) — see `getSettlementKnowledges` for the canonical
+ * resolution pattern.
  *
  * @param settlementId Settlement ID
  * @returns Settlement Resources Data
@@ -17,12 +21,15 @@ export async function getSettlementResources(
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_resource')
-    .select(
-      'id, resource_id, quantity, resource(custom, category, quarry_id, resource_name, resource_types, quarry(monster_name, node))'
-    )
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_resource')
+      .select(
+        'id, resource_id, quantity, resource(custom, user_id, category, quarry_id, resource_name, resource_types, quarry(monster_name, node))'
+      )
+      .eq('settlement_id', settlementId),
+    getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Resources: ${error.message}`)
@@ -34,6 +41,7 @@ export async function getSettlementResources(
       const resource = item.resource as unknown as
         | {
             custom: boolean
+            user_id: string | null
             category: string
             quarry_id: string | null
             resource_name: string
@@ -42,6 +50,7 @@ export async function getSettlementResources(
           }
         | {
             custom: boolean
+            user_id: string | null
             category: string
             quarry_id: string | null
             resource_name: string
@@ -64,7 +73,11 @@ export async function getSettlementResources(
           resource_id: item.resource_id,
           resource_name: res.resource_name,
           resource_types: res.resource_types,
-          custom: res.custom
+          custom: res.custom,
+          author_username:
+            res.custom && res.user_id
+              ? (memberUsernames.get(res.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []

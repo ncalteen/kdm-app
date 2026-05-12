@@ -1,3 +1,4 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -6,6 +7,26 @@ import { SettlementDetail } from '@/lib/types'
  * Get Settlement Knowledges
  *
  * Retrieves the knowledges associated with a settlement.
+ *
+ * Each returned row carries `author_username` — `null` for built-in
+ * (non-custom) knowledges, and the catalog author's username for custom
+ * knowledges so the UI can render the "By @username" chip on custom
+ * cards (E2.8; see `local/sharing-architecture.md` §7.4 / §10 Phase 2
+ * item 2.6).
+ *
+ * **Author username resolution (canonical pattern; mirrored by sibling
+ * `settlement_*` DALs).** The catalog row's `user_id` cannot be
+ * resolved through a direct PostgREST embed of `user_settings` because
+ * RLS on `user_settings` restricts SELECT to the row owner; the JOIN
+ * is therefore performed against a `Map<user_id, username>` produced
+ * by the `get_settlement_member_usernames` SECURITY DEFINER RPC (via
+ * {@link getSettlementMemberUsernames}). The map covers every user
+ * connected to the settlement — owner plus collaborators — so any
+ * custom row attached to the settlement resolves to its author's
+ * username, while rows authored by users who are no longer connected
+ * resolve to `null`. The catalog row's `user_id` itself is readable
+ * via the existing transitive settlement-membership SELECT policy
+ * (20260512000000_catalog_visibility_via_settlement.sql).
  *
  * @param settlementId Settlement ID
  * @returns Settlement Knowledge Data
@@ -17,12 +38,15 @@ export async function getSettlementKnowledges(
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_knowledge')
-    .select(
-      'id, knowledge_id, knowledge(custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone)'
-    )
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_knowledge')
+      .select(
+        'id, knowledge_id, knowledge(custom, user_id, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone)'
+      )
+      .eq('settlement_id', settlementId),
+    getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Knowledges: ${error.message}`)
@@ -38,6 +62,7 @@ export async function getSettlementKnowledges(
       const rawKnowledge = item.knowledge as unknown as
         | {
             custom: boolean
+            user_id: string | null
             knowledge_name: string
             philosophy_id: string | null
             rules: string | null
@@ -46,6 +71,7 @@ export async function getSettlementKnowledges(
           }
         | {
             custom: boolean
+            user_id: string | null
             knowledge_name: string
             philosophy_id: string | null
             rules: string | null
@@ -70,7 +96,11 @@ export async function getSettlementKnowledges(
           observation_conditions: knowledge.observation_conditions,
           observation_rank_up_milestone:
             knowledge.observation_rank_up_milestone,
-          custom: knowledge.custom
+          custom: knowledge.custom,
+          author_username:
+            knowledge.custom && knowledge.user_id
+              ? (memberUsernames.get(knowledge.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []

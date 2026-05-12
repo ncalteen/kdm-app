@@ -1,10 +1,14 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementQuarryDetail } from '@/lib/types'
 
 /**
  * Get Settlement Quarries
  *
- * Retrieves the quarries associated with a settlement.
+ * Retrieves the quarries associated with a settlement. Each returned row
+ * carries `author_username` (null for built-ins; the catalog author's
+ * username for customs) — see `getSettlementKnowledges` for the canonical
+ * resolution pattern.
  *
  * @param settlementId Settlement ID
  * @returns Settlement Quarry Data
@@ -16,12 +20,15 @@ export async function getSettlementQuarries(
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_quarry')
-    .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(custom, monster_name, node, prologue, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
-    )
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_quarry')
+      .select(
+        'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(custom, user_id, monster_name, node, prologue, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
+      )
+      .eq('settlement_id', settlementId),
+    getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Quarries: ${error.message}`)
@@ -33,6 +40,7 @@ export async function getSettlementQuarries(
       const rawQuarry = item.quarry as unknown as
         | {
             custom: boolean
+            user_id: string | null
             monster_name: string
             node: string
             prologue: boolean
@@ -45,6 +53,7 @@ export async function getSettlementQuarries(
           }
         | {
             custom: boolean
+            user_id: string | null
             monster_name: string
             node: string
             prologue: boolean
@@ -81,7 +90,11 @@ export async function getSettlementQuarries(
           defeat_outcome: quarry.defeat_outcome,
           deployment_rules: quarry.deployment_rules,
           victory_outcome: quarry.victory_outcome,
-          custom: quarry.custom
+          custom: quarry.custom,
+          author_username:
+            quarry.custom && quarry.user_id
+              ? (memberUsernames.get(quarry.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []
