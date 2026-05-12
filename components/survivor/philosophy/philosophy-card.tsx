@@ -842,7 +842,7 @@ export function PhilosophyCard({
         {/* Neurosis */}
         <div className="flex flex-col gap-1">
           <div className="flex flex-row items-center gap-1">
-            <div className="flex-grow">
+            <div className="grow">
               <SelectNeurosis
                 selectedSettlement={selectedSettlement}
                 value={neurosis?.id ?? ''}
@@ -867,9 +867,9 @@ export function PhilosophyCard({
 
         {/* Tenet Knowledge and Ranks */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-2 mt-1">
-          <div className="flex-grow flex flex-col gap-1">
+          <div className="grow flex flex-col gap-1">
             <div className="flex flex-row items-center gap-1">
-              <div className="flex-grow">
+              <div className="grow">
                 <TenetKnowledgeSelect
                   knowledges={selectedSettlement?.knowledges ?? []}
                   value={tenetKnowledge?.id}

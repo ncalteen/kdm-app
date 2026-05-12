@@ -212,7 +212,7 @@ export function WeaponProficiencyCard({
                     <Checkbox
                       key={j}
                       disabled
-                      className="!bg-white border border-gray-300 h-3 w-3"
+                      className="bg-white! border border-gray-300 h-3 w-3"
                     />
                   ))}
                   {i === 0 ? (

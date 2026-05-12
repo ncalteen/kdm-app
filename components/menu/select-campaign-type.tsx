@@ -77,7 +77,7 @@ export function SelectCampaignType({
           role="combobox"
           aria-expanded={open}
           id={id}
-          className="w-full max-w-[250px] justify-between">
+          className="w-full max-w-62.5 justify-between">
           {value
             ? campaignOptions.find((campaign) => campaign.value === value)
                 ?.label
@@ -86,7 +86,7 @@ export function SelectCampaignType({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-full max-w-[250px] p-0">
+      <PopoverContent className="w-full max-w-62.5 p-0">
         <Command>
           <CommandInput placeholder="Seek your path..." />
           <CommandList>

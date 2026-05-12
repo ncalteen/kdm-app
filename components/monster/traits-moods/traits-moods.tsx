@@ -178,7 +178,7 @@ export function TraitsMoods({
         {monster.traits.map((trait) => (
           <div key={trait.id} className="flex items-center gap-2">
             <CustomRulesText
-              className="flex-grow"
+              className="grow"
               custom={trait.custom}
               label={trait.trait_name}
               title={trait.trait_name}
@@ -258,7 +258,7 @@ export function TraitsMoods({
         {monster.moods.map((mood) => (
           <div key={mood.id} className="flex items-center gap-2">
             <CustomRulesText
-              className="flex-grow"
+              className="grow"
               custom={mood.custom}
               label={mood.mood_name}
               title={mood.mood_name}
@@ -338,7 +338,7 @@ export function TraitsMoods({
         {monster.survivor_statuses.map((status) => (
           <div key={status.id} className="flex items-center gap-2">
             <CustomRulesText
-              className="flex-grow"
+              className="grow"
               custom={status.custom}
               label={status.survivor_status_name}
               title={status.survivor_status_name}

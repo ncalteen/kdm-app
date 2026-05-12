@@ -865,10 +865,10 @@ export function KnowledgeCard({
       <CardContent className="p-0 flex flex-col">
         {/* Knowledge 1 */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-2">
-          <div className="flex-grow flex flex-col gap-1">
+          <div className="grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
               <div className="flex flex-row items-center gap-1">
-                <div className="flex-grow">
+                <div className="grow">
                   <KnowledgeSelect
                     knowledges={selectedSettlement?.knowledges ?? []}
                     value={knowledge1?.id}
@@ -987,10 +987,10 @@ export function KnowledgeCard({
 
         {/* Knowledge 2 */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-2">
-          <div className="flex-grow flex flex-col gap-1">
+          <div className="grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
               <div className="flex flex-row items-center gap-1">
-                <div className="flex-grow">
+                <div className="grow">
                   <KnowledgeSelect
                     knowledges={selectedSettlement?.knowledges ?? []}
                     value={knowledge2?.id}

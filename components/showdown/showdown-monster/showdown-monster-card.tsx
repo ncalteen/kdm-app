@@ -214,7 +214,7 @@ export function ShowdownMonsterCard({
 
   return (
     <Card className="w-full border-2 rounded-xl p-0 gap-0 transition-all duration-200 hover:shadow-lg">
-      <CardHeader className="flex p-3 border-b-1 bg-red-100/50 dark:bg-red-950/30">
+      <CardHeader className="flex p-3 border-b bg-red-100/50 dark:bg-red-950/30">
         <div className="flex items-center gap-3 w-full py-0 pb-0 my-0">
           <div className="h-12 w-12 bg-red-200 dark:bg-red-800 rounded-full flex items-center justify-center">
             <SkullIcon className="h-6 w-6 text-red-700 dark:text-red-300" />
@@ -252,7 +252,7 @@ export function ShowdownMonsterCard({
       </CardHeader>
       <CardContent className="p-2 py-0 mt-0">
         <div className="flex flex-col lg:flex-row lg:gap-2">
-          <div className="flex flex-col flex-1 max-w-[400px]">
+          <div className="flex flex-col flex-1 max-w-100">
             <ShowdownMonsterBaseStats
               monster={monster}
               saveMonsterData={saveMonsterData}

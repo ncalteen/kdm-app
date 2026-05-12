@@ -271,7 +271,7 @@ function CustomRulesSheetBody({
     <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-md">
       <SheetHeader className="gap-2 border-b border-border/60 px-6 pt-6 pb-4">
         <div className="flex items-start justify-between gap-3 pr-8">
-          <SheetTitle className="text-lg font-semibold leading-tight tracking-tight break-words">
+          <SheetTitle className="text-lg font-semibold leading-tight tracking-tight wrap-break-word">
             {title}
           </SheetTitle>
           <Badge
@@ -738,7 +738,7 @@ export function GearSheetBody({
     <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-md">
       <SheetHeader className="gap-2 border-b border-border/60 px-4 pt-4 pb-3 sm:px-6 sm:pt-6 sm:pb-4">
         <div className="flex items-start justify-between gap-3 pr-8">
-          <SheetTitle className="text-base sm:text-lg font-semibold leading-tight tracking-tight break-words">
+          <SheetTitle className="text-base sm:text-lg font-semibold leading-tight tracking-tight wrap-break-word">
             {detail?.gear_name ?? gearName}
           </SheetTitle>
           {custom && (

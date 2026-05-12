@@ -173,7 +173,7 @@ export const createColumns = ({
         </div>
       ),
       meta: {
-        className: 'hidden md:table-cell md:w-[100px] text-center'
+        className: 'hidden md:table-cell md:w-25 text-center'
       }
     },
     {
@@ -196,7 +196,7 @@ export const createColumns = ({
         </div>
       ),
       meta: {
-        className: 'w-[80px] md:w-[100px] text-center'
+        className: 'w-20 md:w-25 text-center'
       }
     },
     {
@@ -245,7 +245,7 @@ export const createColumns = ({
           </div>
         ),
       meta: {
-        className: 'w-[60px] md:w-[100px] text-center'
+        className: 'w-15 md:w-25 text-center'
       }
     },
     {
@@ -271,7 +271,7 @@ export const createColumns = ({
           </div>
         ),
       meta: {
-        className: 'w-[60px] md:w-[100px] text-center'
+        className: 'w-15 md:w-25 text-center'
       }
     }
   ]

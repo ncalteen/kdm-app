@@ -53,7 +53,7 @@ export const KnowledgeItem = memo(function KnowledgeItem({
       {/* Knowledge Name */}
       {knowledge.custom ? (
         <CustomKnowledgeRulesText
-          className="ml-1 flex-grow"
+          className="ml-1 grow"
           custom={knowledge.custom}
           knowledgeName={knowledge.knowledge_name}
           rules={knowledge.rules}
@@ -64,7 +64,7 @@ export const KnowledgeItem = memo(function KnowledgeItem({
         />
       ) : (
         <CustomRulesText
-          className="ml-1 flex-grow"
+          className="ml-1 grow"
           custom={customDetail?.custom ?? knowledge.custom}
           description={customDetail?.description}
           label={knowledge.knowledge_name}

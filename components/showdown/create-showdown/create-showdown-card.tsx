@@ -724,7 +724,7 @@ export function CreateShowdownCard({
   ])
 
   return (
-    <Card className="w-full max-w-[400px]">
+    <Card className="w-full max-w-100">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <SkullIcon className="h-5 w-5" />
@@ -735,7 +735,7 @@ export function CreateShowdownCard({
       <CardContent className="flex flex-col gap-2 w-full">
         {/* Monster Selection */}
         <div className="flex items-center justify-between">
-          <Label className="text-left whitespace-nowrap min-w-[90px]">
+          <Label className="text-left whitespace-nowrap min-w-22.5">
             Monster
           </Label>
           {availableMonsters.length > 0 ? (
@@ -765,7 +765,7 @@ export function CreateShowdownCard({
 
         {/* Monster Level */}
         <div className="flex items-center justify-between">
-          <Label className="text-left whitespace-nowrap min-w-[90px]">
+          <Label className="text-left whitespace-nowrap min-w-22.5">
             Level
           </Label>
           <Select
@@ -788,7 +788,7 @@ export function CreateShowdownCard({
         {/* Monster Version */}
         {showVersionSelector && (
           <div className="flex items-center justify-between">
-            <Label className="text-left whitespace-nowrap min-w-[90px]">
+            <Label className="text-left whitespace-nowrap min-w-22.5">
               Version
             </Label>
             <Select
@@ -832,7 +832,7 @@ export function CreateShowdownCard({
 
         {/* Starting Turn */}
         <div className="flex items-center justify-between">
-          <Label className="text-left whitespace-nowrap min-w-[90px]">
+          <Label className="text-left whitespace-nowrap min-w-22.5">
             First Turn
           </Label>
           <Select

@@ -243,7 +243,7 @@ export function CustomCharactersCard({
   }, [])
 
   return (
-    <Card className="p-0 border-1 gap-0">
+    <Card className="p-0 border gap-0">
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center justify-between">
           <span>Characters</span>
@@ -278,7 +278,7 @@ export function CustomCharactersCard({
             </div>
           </div>
         ) : (
-          <div className="max-h-[400px] overflow-y-auto rounded-md border">
+          <div className="max-h-100 overflow-y-auto rounded-md border">
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>

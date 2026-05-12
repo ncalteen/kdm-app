@@ -53,7 +53,7 @@ export const PhilosophyItem = memo(function PhilosophyItem({
       {/* Philosophy Name */}
       {philosophy.custom ? (
         <CustomPhilosophyRulesText
-          className="ml-1 flex-grow"
+          className="ml-1 grow"
           custom={philosophy.custom}
           philosophyId={philosophy.philosophy_id}
           philosophyName={philosophy.philosophy_name}
@@ -63,7 +63,7 @@ export const PhilosophyItem = memo(function PhilosophyItem({
         />
       ) : (
         <CustomRulesText
-          className="ml-1 flex-grow"
+          className="ml-1 grow"
           custom={customDetail?.custom ?? philosophy.custom}
           description={customDetail?.description}
           label={philosophy.philosophy_name}

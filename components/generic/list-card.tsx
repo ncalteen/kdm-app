@@ -262,7 +262,7 @@ export function ListCard({
   )
 
   return (
-    <Card className="p-0 border-1 gap-0">
+    <Card className="p-0 border gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           {icon}
@@ -283,7 +283,7 @@ export function ListCard({
 
       {/* Item List */}
       <CardContent className="p-1 pb-0">
-        <div className="flex flex-col h-[240px]">
+        <div className="flex flex-col h-60">
           <div className="flex-1 overflow-y-auto">
             {items.length === 0 && !isAddingNew && (
               <p className="text-sm text-muted-foreground text-center py-4">

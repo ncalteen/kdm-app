@@ -83,7 +83,7 @@ export function SelectSurvivorType({
           aria-expanded={open}
           disabled={disabled}
           id={id}
-          className="w-full max-w-[250px] justify-between">
+          className="w-full max-w-62.5 justify-between">
           {value
             ? survivorTypeOptions.find((option) => option.value === value)
                 ?.label
@@ -92,7 +92,7 @@ export function SelectSurvivorType({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-full max-w-[200px] p-0">
+      <PopoverContent className="w-full max-w-50 p-0">
         <Command>
           <CommandInput placeholder="Search survivor type..." />
           <CommandList>

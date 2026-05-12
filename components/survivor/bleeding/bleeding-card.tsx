@@ -6,12 +6,12 @@ import { Label } from '@/components/ui/label'
 import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
+import { SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE } from '@/lib/messages'
 import {
   ShowdownDetail,
   ShowdownStateSetter,
   SurvivorDetail
 } from '@/lib/types'
-import { SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE } from '@/lib/messages'
 import { ReactElement } from 'react'
 
 /**

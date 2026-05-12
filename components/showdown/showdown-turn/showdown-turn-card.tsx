@@ -298,7 +298,7 @@ export function TurnCard({
   const isScout = selectedSurvivorRecord?.scout ?? false
 
   return (
-    <Card className="h-full min-w-[300px] border-2 rounded-xl pt-0 pb-2 gap-2 transition-all duration-200 hover:shadow-lg">
+    <Card className="h-full min-w-75 border-2 rounded-xl pt-0 pb-2 gap-2 transition-all duration-200 hover:shadow-lg">
       <CardHeader className="flex items-center gap-3 p-3 rounded-t-lg">
         <Avatar className="h-12 w-12 border-2 items-center justify-center">
           <AvatarFallback className="font-bold text-lg text-white bg-slate-500">
@@ -333,7 +333,7 @@ export function TurnCard({
                   <Toggle
                     size="sm"
                     variant="outline"
-                    className="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:outline-green-500 data-[state=on]:*:[svg]:stroke-green-500 w-[120px]"
+                    className="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:outline-green-500 data-[state=on]:*:[svg]:stroke-green-500 w-30"
                     pressed={selectedSurvivorRecord?.movement_used ?? false}
                     onPressedChange={(pressed) =>
                       selectedSurvivorRecord
@@ -350,7 +350,7 @@ export function TurnCard({
                   <Toggle
                     size="sm"
                     variant="outline"
-                    className="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:outline-green-500 data-[state=on]:*:[svg]:stroke-green-500 w-[120px]"
+                    className="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:outline-green-500 data-[state=on]:*:[svg]:stroke-green-500 w-30"
                     pressed={selectedSurvivorRecord?.activation_used ?? false}
                     onPressedChange={(pressed) =>
                       selectedSurvivorRecord
@@ -394,7 +394,7 @@ export function TurnCard({
                   <Toggle
                     size="sm"
                     variant="outline"
-                    className="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:outline-green-500 data-[state=on]:*:[svg]:stroke-green-500 w-[120px]"
+                    className="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:outline-green-500 data-[state=on]:*:[svg]:stroke-green-500 w-30"
                     pressed={currentMonster?.ai_card_drawn ?? false}
                     onPressedChange={(pressed) =>
                       updateMonsterAiCardDrawn(!!pressed)

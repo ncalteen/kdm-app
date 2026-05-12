@@ -67,7 +67,7 @@ export function SettlementPhaseBoard({
             {settlementPhaseSteps.map((space) => (
               <div
                 key={space.index}
-                className="relative w-[75px] sm:w-[85px] md:w-[90px] h-[75px] sm:h-[85px] md:h-[90px] flex-shrink-0 flex items-center justify-center">
+                className="relative w-18.75 sm:w-21.25 md:w-22.5 h-18.75 sm:h-21.25 md:h-22.5 shrink-0 flex items-center justify-center">
                 <SettlementPhaseBoardSpace
                   index={space.index}
                   label={space.step}

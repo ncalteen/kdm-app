@@ -92,7 +92,7 @@ export function NotesCard({
 
   return (
     <Card className="p-0 pb-1 border-0 h-full flex flex-col">
-      <CardHeader className="px-2 py-0 flex-shrink-0">
+      <CardHeader className="px-2 py-0 shrink-0">
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <StickyNoteIcon className="h-4 w-4" /> Notes
         </CardTitle>
@@ -113,7 +113,7 @@ export function NotesCard({
             className="w-full flex-1 resize-none"
             style={{ minHeight: '200px' }}
           />
-          <div className="flex justify-end pt-1 flex-shrink-0">
+          <div className="flex justify-end pt-1 shrink-0">
             <Button
               type="button"
               size="sm"

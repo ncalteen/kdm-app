@@ -611,7 +611,7 @@ export function MonsterForm({
     (mode === 'create' && Object.keys(levels).length === 0)
 
   return (
-    <Card className="p-0 border-1 gap-0">
+    <Card className="p-0 border gap-0">
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center justify-between">
           <span className="flex items-center gap-2">
@@ -1118,7 +1118,7 @@ export function MonsterForm({
               <div key={levelNum} className="border rounded-lg">
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between p-3 hover:bg-accent/50 rounded-t-lg h-[44px]"
+                  className="w-full flex items-center justify-between p-3 hover:bg-accent/50 rounded-t-lg h-11"
                   onClick={() => toggleLevel(levelNum)}>
                   <span className="text-sm font-medium">
                     Level {levelNum}{' '}
@@ -1254,7 +1254,7 @@ export function MonsterForm({
                                         <NumericInput
                                           label="Life"
                                           value={sub.life ?? 0}
-                                          className="max-w-[75px]"
+                                          className="max-w-18.75"
                                           min={0}
                                           onChange={(v) =>
                                             updateSubMonster(levelNum, subIdx, {

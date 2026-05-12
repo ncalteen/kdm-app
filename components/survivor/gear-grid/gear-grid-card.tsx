@@ -468,7 +468,7 @@ export function GearGridCard({
   }, [persistSlotChange, viewingSlot])
 
   return (
-    <Card className="p-0 border-1 gap-0">
+    <Card className="p-0 border gap-0">
       <CardHeader className="px-4 pt-2 pb-0">
         <CardTitle className="text-md flex flex-row items-center justify-between gap-2">
           {/*
@@ -622,7 +622,7 @@ export function GearGridCard({
         <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-md">
           <SheetHeader className="gap-2 border-b border-border/60 px-6 pt-6 pb-4">
             <div className="flex items-start justify-between gap-3 pr-8">
-              <SheetTitle className="text-lg font-semibold leading-tight tracking-tight break-words">
+              <SheetTitle className="text-lg font-semibold leading-tight tracking-tight wrap-break-word">
                 {activeBonus?.name ?? ''}
               </SheetTitle>
               {activeBonus?.isFallback && (

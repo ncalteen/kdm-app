@@ -83,7 +83,7 @@ export function SelectPhilosophy({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className="w-50 justify-between"
           disabled={disabled}
           onKeyDown={handleKeyDown}>
           {propValue

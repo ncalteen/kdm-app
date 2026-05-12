@@ -100,7 +100,7 @@ export function HuntCard({
     />
   ) : (
     <div className="lg:mt-10 flex flex-wrap items-start justify-center gap-4">
-      <div className="w-full max-w-[400px] order-2 md:order-1">
+      <div className="w-full max-w-100 order-2 md:order-1">
         <CreateHuntCard
           local={local}
           selectedSettlement={selectedSettlement}
@@ -110,7 +110,7 @@ export function HuntCard({
           userSettings={userSettings}
         />
       </div>
-      <div className="w-full max-w-[400px] order-1 md:order-2">
+      <div className="w-full max-w-100 order-1 md:order-2">
         <ListCard
           local={local}
           icon={<MapPinPlusIcon className="h-4 w-4" />}

@@ -38,7 +38,7 @@ export const CursedGearItem = memo(function CursedGearItem({
   return (
     <div className="flex items-center gap-2 pl-2">
       <CustomGearRulesTrigger
-        className="ml-1 flex-grow truncate"
+        className="ml-1 grow truncate"
         custom={custom}
         gearId={gearId}
         gearName={gearName}

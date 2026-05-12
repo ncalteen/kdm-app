@@ -794,11 +794,11 @@ export function FightingArtsCard({
         <div className="flex flex-col">
           {fightingArts.map((art, index) => (
             <div key={`regular-${art.id}`} className="flex items-center gap-2">
-              <Badge variant="default" className="w-[60px] text-center">
+              <Badge variant="default" className="w-15 text-center">
                 Fighting
               </Badge>
               <CustomRulesText
-                className="flex-grow"
+                className="grow"
                 custom={art.custom}
                 label={art.fighting_art_name}
                 title={art.fighting_art_name}
@@ -818,11 +818,11 @@ export function FightingArtsCard({
 
           {secretFightingArts.map((art, index) => (
             <div key={`secret-${art.id}`} className="flex items-center gap-2">
-              <Badge variant="secondary" className="w-[60px] text-center">
+              <Badge variant="secondary" className="w-15 text-center">
                 Secret
               </Badge>
               <CustomRulesText
-                className="flex-grow"
+                className="grow"
                 custom={art.custom}
                 label={art.secret_fighting_art_name}
                 title={art.secret_fighting_art_name}
