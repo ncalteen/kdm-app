@@ -16,7 +16,7 @@ import { SettlementDetail } from '@/lib/types'
  */
 export async function getSettlementSeedPatterns(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Map<string, string>
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SettlementDetail['seed_patterns']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 

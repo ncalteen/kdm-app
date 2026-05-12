@@ -16,7 +16,7 @@ import { SettlementDetail, SettlementQuarryDetail } from '@/lib/types'
  */
 export async function getSettlementQuarries(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Map<string, string>
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SettlementDetail['quarries']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 

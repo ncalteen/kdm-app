@@ -17,7 +17,7 @@ import { SettlementDetail } from '@/lib/types'
  */
 export async function getSettlementPhilosophies(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Map<string, string>
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SettlementDetail['philosophies']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 

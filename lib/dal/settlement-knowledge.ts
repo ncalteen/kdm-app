@@ -31,20 +31,23 @@ import { SettlementDetail } from '@/lib/types'
  *
  * **Performance** When called from {@link getSettlement} (which loads
  * every settlement-attached collection in parallel), the caller should
- * fetch the member-username map once and pass it via
- * `prefetchedMemberUsernames` so all ~13 collection DALs share one RPC
- * call. When called standalone the second argument can be omitted; the
- * DAL transparently issues its own RPC.
+ * start the member-username RPC alongside the collection queries and
+ * pass the resulting **promise** via `prefetchedMemberUsernames`. Each
+ * collection DAL awaits the same shared promise inside its own
+ * `Promise.all`, so all ~13 collection queries and the single RPC run
+ * concurrently. When called standalone the second argument can be
+ * omitted; the DAL transparently issues its own RPC.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched member-username
- *   map. When provided, the DAL skips its own
- *   `get_settlement_member_usernames` RPC.
+ * @param prefetchedMemberUsernames Optional in-flight (or resolved)
+ *   member-username map. When provided, the DAL skips its own
+ *   `get_settlement_member_usernames` RPC and awaits this promise
+ *   alongside its main query.
  * @returns Settlement Knowledge Data
  */
 export async function getSettlementKnowledges(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Map<string, string>
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SettlementDetail['knowledges']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 

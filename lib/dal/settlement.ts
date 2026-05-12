@@ -317,10 +317,13 @@ export async function getSettlement(
 
   if (!settlement) return null
 
-  // Fetch the settlement member-username map once and pass it to every
-  // settlement-collection DAL below to avoid issuing the same RPC ~13 times
-  // per settlement load.
-  const memberUsernames = await getSettlementMemberUsernames(settlementId)
+  // Start the settlement member-username RPC once and share the in-flight
+  // promise across every settlement-collection DAL below. This avoids the
+  // ~13× RPC fan-out we'd get if each DAL fetched the map itself, and —
+  // critically — keeps the RPC running concurrently with the collection
+  // queries inside the Promise.all instead of forcing a sequential
+  // round-trip before them.
+  const memberUsernamesPromise = getSettlementMemberUsernames(settlementId)
 
   const [
     collectiveCognitionRewards,
@@ -339,20 +342,23 @@ export async function getSettlement(
     seedPatterns,
     timelineYears
   ] = await Promise.all([
-    getSettlementCollectiveCognitionRewards(settlementId, memberUsernames),
-    getSettlementGear(settlementId, memberUsernames),
-    getSettlementInnovations(settlementId, memberUsernames),
-    getSettlementKnowledges(settlementId, memberUsernames),
-    getSettlementLocations(settlementId, memberUsernames),
-    getSettlementMilestones(settlementId, memberUsernames),
-    getSettlementNemeses(settlementId, memberUsernames),
+    getSettlementCollectiveCognitionRewards(
+      settlementId,
+      memberUsernamesPromise
+    ),
+    getSettlementGear(settlementId, memberUsernamesPromise),
+    getSettlementInnovations(settlementId, memberUsernamesPromise),
+    getSettlementKnowledges(settlementId, memberUsernamesPromise),
+    getSettlementLocations(settlementId, memberUsernamesPromise),
+    getSettlementMilestones(settlementId, memberUsernamesPromise),
+    getSettlementNemeses(settlementId, memberUsernamesPromise),
     getNeuroses(),
-    getSettlementPatterns(settlementId, memberUsernames),
-    getSettlementPhilosophies(settlementId, memberUsernames),
-    getSettlementPrinciples(settlementId, memberUsernames),
-    getSettlementQuarries(settlementId, memberUsernames),
-    getSettlementResources(settlementId, memberUsernames),
-    getSettlementSeedPatterns(settlementId, memberUsernames),
+    getSettlementPatterns(settlementId, memberUsernamesPromise),
+    getSettlementPhilosophies(settlementId, memberUsernamesPromise),
+    getSettlementPrinciples(settlementId, memberUsernamesPromise),
+    getSettlementQuarries(settlementId, memberUsernamesPromise),
+    getSettlementResources(settlementId, memberUsernamesPromise),
+    getSettlementSeedPatterns(settlementId, memberUsernamesPromise),
     getSettlementTimelineYears(settlementId)
   ])
 

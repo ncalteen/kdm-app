@@ -31,7 +31,7 @@ type RawEmbeddedNemesis = EmbeddedNemesis | EmbeddedNemesis[] | null
  */
 export async function getSettlementNemeses(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Map<string, string>
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SettlementDetail['nemeses']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
