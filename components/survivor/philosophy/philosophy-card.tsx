@@ -264,8 +264,9 @@ export function PhilosophyCard({
             neurosis_name: matchedNeurosis.neurosis_name,
             custom: matchedNeurosis.custom,
             rules: null,
-            // Neuroses are a global catalog (getNeuroses); author_username is
-            // not surfaced for them. Keep it null for type compatibility.
+            // This optimistic cascade only has the picker/catalog neurosis
+            // data, so author_username remains null until the next refetch
+            // hydrates the full survivor neurosis detail.
             author_username: null
           }
         : null
@@ -404,8 +405,8 @@ export function PhilosophyCard({
             neurosis_name: neurosisDetail.neurosis_name,
             custom: neurosisDetail.custom,
             rules: null,
-            // Neuroses are a global catalog (getNeuroses); author_username is
-            // not surfaced for them. Keep it null for type compatibility.
+            // This optimistic local neurosis detail does not carry authorship;
+            // keep author_username null here and let the next refetch backfill it.
             author_username: null
           }
         : null
