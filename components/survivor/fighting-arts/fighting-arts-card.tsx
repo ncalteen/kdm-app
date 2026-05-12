@@ -96,11 +96,11 @@ export function FightingArtsCard({
   }>({})
   const [availableSecretFightingArts, setAvailableSecretFightingArts] =
     useState<{ [key: string]: SecretFightingArtDetail }>({})
-  const [fightingArts, setFightingArts] = useState<FightingArtDetail[]>(
-    selectedSurvivor?.fighting_arts ?? []
-  )
+  const [fightingArts, setFightingArts] = useState<
+    SurvivorDetail['fighting_arts']
+  >(selectedSurvivor?.fighting_arts ?? [])
   const [secretFightingArts, setSecretFightingArts] = useState<
-    SecretFightingArtDetail[]
+    SurvivorDetail['secret_fighting_arts']
   >(selectedSurvivor?.secret_fighting_arts ?? [])
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -195,11 +195,15 @@ export function FightingArtsCard({
       const detail = availableFightingArts[fightingArtId]
       if (!detail) return
 
-      const optimisticItem: FightingArtDetail = {
+      const optimisticItem: SurvivorDetail['fighting_arts'][number] = {
         id: fightingArtId,
         fighting_art_name: detail.fighting_art_name,
         custom: detail.custom,
-        rules: detail.rules ?? null
+        rules: detail.rules ?? null,
+        // The realtime refetch will backfill `author_username` from the
+        // settlement member-username map. Custom rows authored by the
+        // current user will resolve to their username after the round-trip.
+        author_username: null
       }
       const oldArts = [...fightingArts]
 
@@ -250,11 +254,13 @@ export function FightingArtsCard({
       const detail = availableSecretFightingArts[secretFightingArtId]
       if (!detail) return
 
-      const optimisticItem: SecretFightingArtDetail = {
+      const optimisticItem: SurvivorDetail['secret_fighting_arts'][number] = {
         id: secretFightingArtId,
         secret_fighting_art_name: detail.secret_fighting_art_name,
         custom: detail.custom,
-        rules: detail.rules ?? null
+        rules: detail.rules ?? null,
+        // See note in `handleAddRegular`.
+        author_username: null
       }
       const oldArts = [...secretFightingArts]
 
@@ -481,11 +487,13 @@ export function FightingArtsCard({
         toast.success(FIGHTING_ART_CREATED_MESSAGE())
 
         // Add to survivor immediately
-        const optimisticItem: FightingArtDetail = {
+        const optimisticItem: SurvivorDetail['fighting_arts'][number] = {
           id: newArt.id,
           fighting_art_name: newArt.fighting_art_name,
           custom: newArt.custom,
-          rules: newArt.rules ?? null
+          rules: newArt.rules ?? null,
+          // See note in `handleAddRegular`.
+          author_username: null
         }
         const oldArts = [...fightingArts]
 
@@ -559,11 +567,13 @@ export function FightingArtsCard({
         toast.success(SECRET_FIGHTING_ART_CREATED_MESSAGE())
 
         // Add to survivor immediately
-        const optimisticItem: SecretFightingArtDetail = {
+        const optimisticItem: SurvivorDetail['secret_fighting_arts'][number] = {
           id: newArt.id,
           secret_fighting_art_name: newArt.secret_fighting_art_name,
           custom: newArt.custom,
-          rules: newArt.rules ?? null
+          rules: newArt.rules ?? null,
+          // See note in `handleAddRegular`.
+          author_username: null
         }
         const oldArts = [...secretFightingArts]
 

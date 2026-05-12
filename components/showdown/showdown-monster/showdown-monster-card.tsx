@@ -30,12 +30,9 @@ import {
   TRAIT_UPDATED_MESSAGE
 } from '@/lib/messages'
 import {
-  MoodDetail,
   ShowdownDetail,
   ShowdownMonsterDetail,
-  ShowdownStateSetter,
-  SurvivorStatusDetail,
-  TraitDetail
+  ShowdownStateSetter
 } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
@@ -172,7 +169,7 @@ export function ShowdownMonsterCard({
   )
 
   const onTraitsChange = useCallback(
-    (traits: TraitDetail[]) => {
+    (traits: ShowdownMonsterDetail['traits']) => {
       const prevTraits = monster?.traits ?? []
       const successMsg =
         traits.length > prevTraits.length
@@ -184,7 +181,7 @@ export function ShowdownMonsterCard({
   )
 
   const onMoodsChange = useCallback(
-    (moods: MoodDetail[]) => {
+    (moods: ShowdownMonsterDetail['moods']) => {
       const prevMoods = monster?.moods ?? []
       const successMsg =
         moods.length > prevMoods.length
@@ -196,7 +193,7 @@ export function ShowdownMonsterCard({
   )
 
   const onSurvivorStatusesChange = useCallback(
-    (survivor_statuses: SurvivorStatusDetail[]) => {
+    (survivor_statuses: ShowdownMonsterDetail['survivor_statuses']) => {
       const prevStatuses = monster?.survivor_statuses ?? []
       const successMsg =
         survivor_statuses.length > prevStatuses.length

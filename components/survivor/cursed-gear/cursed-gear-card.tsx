@@ -37,7 +37,7 @@ import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /** Cursed gear item shape matching SurvivorDetail['cursed_gear'][0] */
-type CursedGearRow = { id: string; gear_name: string }
+type CursedGearRow = SurvivorDetail['cursed_gear'][number]
 
 /**
  * Cursed Gear Card Properties
@@ -134,7 +134,11 @@ export function CursedGearCard({
 
       const optimisticItem: CursedGearRow = {
         id: gearId,
-        gear_name: gearDetail.gear_name
+        gear_name: gearDetail.gear_name,
+        // Optimistic placeholders for the catalog flags. The realtime
+        // refetch backfills the true values from the catalog row.
+        custom: gearDetail.custom ?? false,
+        author_username: gearDetail.author_username ?? null
       }
       const oldCursedGear = [...cursedGear]
       const updatedCursedGear = [...cursedGear, optimisticItem]

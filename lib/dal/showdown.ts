@@ -1,5 +1,6 @@
 import { getShowdownMonsters } from '@/lib/dal/showdown-monster'
 import { getShowdownSurvivors } from '@/lib/dal/showdown-survivor'
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { ShowdownDetail } from '@/lib/types'
@@ -8,6 +9,12 @@ import { ShowdownDetail } from '@/lib/types'
  * Get Showdown
  *
  * Gets the unique showdown for a specific settlement.
+ *
+ * Starts the settlement member-username RPC once and shares the in-flight
+ * promise with {@link getShowdownMonsters} so the trait / mood /
+ * survivor-status `author_username` resolution does not issue a duplicate
+ * RPC (E2.8; see `local/sharing-architecture.md` §7.4 / §10 Phase 2 item
+ * 2.6).
  *
  * @param settlementId Settlement ID
  * @returns Showdown Data
@@ -28,8 +35,13 @@ export async function getShowdown(
   if (error) throw new Error(`Error Fetching Showdown: ${error.message}`)
   if (!data) return null
 
+  // Start the member-username RPC once and share the in-flight promise with
+  // the monster fetch (the only sub-query that materializes custom catalog
+  // rows). The showdown-survivor fetch does not need it.
+  const memberUsernamesPromise = getSettlementMemberUsernames(settlementId)
+
   const [showdownMonsters, showdownSurvivors] = await Promise.all([
-    getShowdownMonsters(data.id),
+    getShowdownMonsters(data.id, memberUsernamesPromise),
     getShowdownSurvivors(data.id)
   ])
 

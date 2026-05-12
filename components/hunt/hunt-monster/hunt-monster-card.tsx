@@ -29,14 +29,7 @@ import {
   TRAIT_REMOVED_MESSAGE,
   TRAIT_UPDATED_MESSAGE
 } from '@/lib/messages'
-import {
-  HuntDetail,
-  HuntMonsterDetail,
-  HuntStateSetter,
-  MoodDetail,
-  SurvivorStatusDetail,
-  TraitDetail
-} from '@/lib/types'
+import { HuntDetail, HuntMonsterDetail, HuntStateSetter } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
 
@@ -191,7 +184,7 @@ export function HuntMonsterCard({
    * @param traits New list of selected traits
    */
   const onTraitsChange = useCallback(
-    (traits: TraitDetail[]) => {
+    (traits: HuntMonsterDetail['traits']) => {
       const prevTraits = monster?.traits ?? []
       const successMsg =
         traits.length > prevTraits.length
@@ -208,7 +201,7 @@ export function HuntMonsterCard({
    * @param moods New list of selected moods
    */
   const onMoodsChange = useCallback(
-    (moods: MoodDetail[]) => {
+    (moods: HuntMonsterDetail['moods']) => {
       const prevMoods = monster?.moods ?? []
       const successMsg =
         moods.length > prevMoods.length
@@ -225,7 +218,7 @@ export function HuntMonsterCard({
    * @param survivor_statuses New list of selected survivor statuses
    */
   const onSurvivorStatusesChange = useCallback(
-    (survivor_statuses: SurvivorStatusDetail[]) => {
+    (survivor_statuses: HuntMonsterDetail['survivor_statuses']) => {
       const prevStatuses = monster?.survivor_statuses ?? []
       const successMsg =
         survivor_statuses.length > prevStatuses.length

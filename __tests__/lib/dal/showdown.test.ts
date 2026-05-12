@@ -16,6 +16,10 @@ vi.mock('@/lib/dal/showdown-survivor', () => ({
   getShowdownSurvivors: vi.fn()
 }))
 
+vi.mock('@/lib/dal/settlement-shared-user', () => ({
+  getSettlementMemberUsernames: vi.fn().mockResolvedValue(new Map())
+}))
+
 const { getShowdown, addShowdown, updateShowdown, removeShowdown } =
   await import('@/lib/dal/showdown')
 const { getShowdownMonsters } = await import('@/lib/dal/showdown-monster')
@@ -82,7 +86,10 @@ describe('getShowdown', () => {
       showdown_monsters: mockMonsters,
       showdown_survivors: mockSurvivors
     })
-    expect(getShowdownMonsters).toHaveBeenCalledWith('showdown-1')
+    expect(getShowdownMonsters).toHaveBeenCalledWith(
+      'showdown-1',
+      expect.any(Promise)
+    )
     expect(getShowdownSurvivors).toHaveBeenCalledWith('showdown-1')
   })
 

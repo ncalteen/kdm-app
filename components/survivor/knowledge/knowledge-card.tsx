@@ -373,11 +373,13 @@ export function KnowledgeCard({
                 ? {
                     id: knowledgeId,
                     knowledge_name: knowledgeDetail.knowledge_name,
+                    custom: knowledgeDetail.custom,
                     rules: knowledgeDetail.rules,
                     observation_conditions:
                       knowledgeDetail.observation_conditions,
                     observation_rank_up_milestone:
-                      knowledgeDetail.observation_rank_up_milestone
+                      knowledgeDetail.observation_rank_up_milestone,
+                    author_username: knowledgeDetail.author_username
                   }
                 : null,
               knowledge_1_observation_rank: 0,
@@ -626,11 +628,13 @@ export function KnowledgeCard({
                 ? {
                     id: knowledgeId,
                     knowledge_name: knowledgeDetail.knowledge_name,
+                    custom: knowledgeDetail.custom,
                     rules: knowledgeDetail.rules,
                     observation_conditions:
                       knowledgeDetail.observation_conditions,
                     observation_rank_up_milestone:
-                      knowledgeDetail.observation_rank_up_milestone
+                      knowledgeDetail.observation_rank_up_milestone,
+                    author_username: knowledgeDetail.author_username
                   }
                 : null,
               knowledge_2_observation_rank: 0,

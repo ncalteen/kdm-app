@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -31,6 +32,8 @@ const {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Default: no settlement members map (resolved authors will be null).
+  mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
 })
 
 // Helper to build a minimal survivor base object
@@ -259,6 +262,133 @@ describe('getSurvivors', () => {
       fighting_arts: [],
       secret_fighting_arts: []
     })
+  })
+
+  it('resolves author_username for custom catalog rows across collections', async () => {
+    const survivorRow = {
+      ...baseSurvivor,
+      abilities_impairments: [],
+      cursed_gear: [
+        {
+          gear: {
+            id: 'g-1',
+            custom: true,
+            user_id: 'author-1',
+            gear_name: 'Hollow Blade'
+          }
+        }
+      ],
+      disorders: [
+        {
+          disorder: {
+            id: 'd-1',
+            custom: false,
+            user_id: null,
+            disorder_name: 'Standard',
+            rules: null
+          }
+        }
+      ],
+      fighting_arts: [
+        {
+          fighting_art: {
+            id: 'fa-1',
+            custom: true,
+            user_id: 'ghost-1',
+            fighting_art_name: 'Forsaken Step',
+            rules: null
+          }
+        }
+      ],
+      secret_fighting_arts: [],
+      hunt_survivor: [],
+      showdown_survivor: [],
+      knowledge_1: {
+        id: 'k-1',
+        custom: true,
+        user_id: 'author-1',
+        knowledge_name: 'Whispers',
+        rules: null,
+        observation_conditions: null,
+        observation_rank_up_milestone: null
+      },
+      knowledge_2: null,
+      neurosis: null,
+      philosophy: null,
+      tenet_knowledge: null
+    }
+
+    const mockReturns = vi
+      .fn()
+      .mockResolvedValue({ data: [survivorRow], error: null })
+    const mockOrder = vi.fn().mockReturnValue({ returns: mockReturns })
+    const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
+    mockSupabase.from.mockReturnValue({ select: mockSelect })
+
+    mockSupabase.rpc.mockResolvedValue({
+      data: [{ user_id: 'author-1', username: 'ashen.veil' }],
+      error: null
+    })
+
+    const result = await getSurvivors('set-1')
+
+    expect(result![0].cursed_gear[0].author_username).toBe('ashen.veil')
+    expect(result![0].cursed_gear[0]).not.toHaveProperty('user_id')
+    // Built-in disorder resolves to null author.
+    expect(result![0].disorders[0].author_username).toBeNull()
+    // Custom row authored by a member who left the settlement resolves to
+    // null even though `custom` is true.
+    expect(result![0].fighting_arts[0].author_username).toBeNull()
+    expect(result![0].knowledge_1?.author_username).toBe('ashen.veil')
+    expect(mockSupabase.rpc).toHaveBeenCalledWith(
+      'get_settlement_member_usernames',
+      { target_settlement: 'set-1' }
+    )
+  })
+
+  it('uses the prefetched member-username promise instead of issuing a duplicate RPC', async () => {
+    const survivorRow = {
+      ...baseSurvivor,
+      abilities_impairments: [],
+      cursed_gear: [
+        {
+          gear: {
+            id: 'g-1',
+            custom: true,
+            user_id: 'author-1',
+            gear_name: 'Hollow Blade'
+          }
+        }
+      ],
+      disorders: [],
+      fighting_arts: [],
+      secret_fighting_arts: [],
+      hunt_survivor: [],
+      showdown_survivor: [],
+      knowledge_1: null,
+      knowledge_2: null,
+      neurosis: null,
+      philosophy: null,
+      tenet_knowledge: null
+    }
+
+    const mockReturns = vi
+      .fn()
+      .mockResolvedValue({ data: [survivorRow], error: null })
+    const mockOrder = vi.fn().mockReturnValue({ returns: mockReturns })
+    const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
+    mockSupabase.from.mockReturnValue({ select: mockSelect })
+
+    const prefetched = Promise.resolve(
+      new Map<string, string>([['author-1', 'prefetched.user']])
+    )
+
+    const result = await getSurvivors('set-1', prefetched)
+
+    expect(result![0].cursed_gear[0].author_username).toBe('prefetched.user')
+    expect(mockSupabase.rpc).not.toHaveBeenCalled()
   })
 })
 

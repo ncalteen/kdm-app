@@ -541,9 +541,16 @@ export function CreateShowdownCard({
         showdownMonsters[showdownMonsterId] = {
           id: showdownMonsterId,
           ...showdownMonster,
-          traits: level.traits,
-          moods: level.moods,
-          survivor_statuses: level.survivor_statuses,
+          // The catalog rows pulled from the selected quarry level don't
+          // carry `author_username`. Use null placeholders here; the next
+          // `getShowdown` round-trip resolves the real values from the
+          // settlement member-username map (E2.8).
+          traits: level.traits.map((t) => ({ ...t, author_username: null })),
+          moods: level.moods.map((m) => ({ ...m, author_username: null })),
+          survivor_statuses: level.survivor_statuses.map((s) => ({
+            ...s,
+            author_username: null
+          })),
           ai_deck: {
             id: aiDeck.id,
             basic_cards: aiDeck.basic_cards,

@@ -37,12 +37,23 @@ import { ReactElement, useEffect, useState } from 'react'
 interface TraitsMoodsProps {
   /** Monster data */
   monster: HuntMonsterDetail | ShowdownMonsterDetail
-  /** Called when the traits list should change */
-  onTraitsChange: (traits: TraitDetail[]) => void
-  /** Called when the moods list should change */
-  onMoodsChange: (moods: MoodDetail[]) => void
-  /** Called when the survivor statuses list should change */
-  onSurvivorStatusesChange: (statuses: SurvivorStatusDetail[]) => void
+  /**
+   * Called when the traits list should change. Each entry carries
+   * `author_username` so the monster detail's typed shape is preserved.
+   * The picker augments fresh catalog rows with `author_username: null`;
+   * the realtime refetch backfills the real value.
+   */
+  onTraitsChange: (
+    traits: (TraitDetail & { author_username: string | null })[]
+  ) => void
+  /** Called when the moods list should change. See `onTraitsChange`. */
+  onMoodsChange: (
+    moods: (MoodDetail & { author_username: string | null })[]
+  ) => void
+  /** Called when the survivor statuses list should change. See `onTraitsChange`. */
+  onSurvivorStatusesChange: (
+    statuses: (SurvivorStatusDetail & { author_username: string | null })[]
+  ) => void
 }
 
 /**
@@ -141,7 +152,10 @@ export function TraitsMoods({
                         key={trait.id}
                         value={trait.trait_name}
                         onSelect={() => {
-                          onTraitsChange([...monster.traits, trait])
+                          onTraitsChange([
+                            ...monster.traits,
+                            { ...trait, author_username: null }
+                          ])
                           setOpenTraitPicker(false)
                         }}>
                         {trait.trait_name}
@@ -218,7 +232,10 @@ export function TraitsMoods({
                         key={mood.id}
                         value={mood.mood_name}
                         onSelect={() => {
-                          onMoodsChange([...monster.moods, mood])
+                          onMoodsChange([
+                            ...monster.moods,
+                            { ...mood, author_username: null }
+                          ])
                           setOpenMoodPicker(false)
                         }}>
                         {mood.mood_name}
@@ -297,7 +314,7 @@ export function TraitsMoods({
                         onSelect={() => {
                           onSurvivorStatusesChange([
                             ...monster.survivor_statuses,
-                            status
+                            { ...status, author_username: null }
                           ])
                           setOpenStatusPicker(false)
                         }}>

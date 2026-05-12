@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -17,6 +18,8 @@ const {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Default: no settlement members map (resolved authors will be null).
+  mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
 })
 
 describe('getHuntMonsters', () => {
@@ -109,6 +112,147 @@ describe('getHuntMonsters', () => {
     await expect(getHuntMonsters('hunt-1')).rejects.toThrow(
       'Error Fetching Hunt Monsters: DB error'
     )
+  })
+
+  it('resolves author_username for custom trait/mood/survivor_status rows authored by a settlement member', async () => {
+    const rawMonster = {
+      id: 'monster-1',
+      monster_name: 'White Lion',
+      hunt_id: 'hunt-1',
+      settlement_id: 'settlement-1',
+      hunt_ai_deck: null,
+      hunt_monster_trait: [
+        {
+          trait: {
+            id: 't-1',
+            custom: true,
+            user_id: 'author-1',
+            trait_name: 'Hollow Roar',
+            rules: null
+          }
+        },
+        {
+          trait: {
+            id: 't-2',
+            custom: false,
+            user_id: null,
+            trait_name: 'Standard',
+            rules: null
+          }
+        }
+      ],
+      hunt_monster_mood: [
+        {
+          mood: {
+            id: 'm-1',
+            custom: true,
+            user_id: 'ghost-1',
+            mood_name: 'Forsaken',
+            rules: null
+          }
+        }
+      ],
+      hunt_monster_survivor_status: [
+        {
+          survivor_status: {
+            id: 's-1',
+            custom: true,
+            user_id: 'author-1',
+            survivor_status_name: 'Marked',
+            rules: null
+          }
+        }
+      ]
+    }
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data: [rawMonster], error: null })
+      })
+    })
+    mockSupabase.rpc.mockResolvedValue({
+      data: [{ user_id: 'author-1', username: 'ashen.veil' }],
+      error: null
+    })
+
+    const result = await getHuntMonsters('hunt-1')
+
+    expect(result!['monster-1'].traits).toEqual([
+      {
+        id: 't-1',
+        custom: true,
+        trait_name: 'Hollow Roar',
+        rules: null,
+        author_username: 'ashen.veil'
+      },
+      {
+        id: 't-2',
+        custom: false,
+        trait_name: 'Standard',
+        rules: null,
+        author_username: null
+      }
+    ])
+    // Ghost author (member left settlement) resolves to null.
+    expect(result!['monster-1'].moods[0].author_username).toBeNull()
+    expect(result!['monster-1'].survivor_statuses[0].author_username).toBe(
+      'ashen.veil'
+    )
+    expect(mockSupabase.rpc).toHaveBeenCalledWith(
+      'get_settlement_member_usernames',
+      { target_settlement: 'settlement-1' }
+    )
+  })
+
+  it('skips the member-username RPC when no monsters exist', async () => {
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data: [], error: null })
+      })
+    })
+
+    const result = await getHuntMonsters('hunt-1')
+
+    expect(result).toEqual({})
+    expect(mockSupabase.rpc).not.toHaveBeenCalled()
+  })
+
+  it('uses the prefetched member-username promise instead of issuing a duplicate RPC', async () => {
+    const rawMonster = {
+      id: 'monster-1',
+      monster_name: 'White Lion',
+      hunt_id: 'hunt-1',
+      settlement_id: 'settlement-1',
+      hunt_ai_deck: null,
+      hunt_monster_trait: [
+        {
+          trait: {
+            id: 't-1',
+            custom: true,
+            user_id: 'author-1',
+            trait_name: 'Hollow Roar',
+            rules: null
+          }
+        }
+      ],
+      hunt_monster_mood: [],
+      hunt_monster_survivor_status: []
+    }
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data: [rawMonster], error: null })
+      })
+    })
+
+    const prefetched = Promise.resolve(
+      new Map<string, string>([['author-1', 'prefetched.user']])
+    )
+
+    const result = await getHuntMonsters('hunt-1', prefetched)
+
+    expect(result!['monster-1'].traits[0].author_username).toBe(
+      'prefetched.user'
+    )
+    expect(mockSupabase.rpc).not.toHaveBeenCalled()
   })
 })
 
