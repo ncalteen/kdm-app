@@ -45,6 +45,7 @@ import {
 } from '@/lib/dal/settlement-quarry'
 import { getSettlementResources } from '@/lib/dal/settlement-resource'
 import { getSettlementSeedPatterns } from '@/lib/dal/settlement-seed-pattern'
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import {
   addSettlementTimelineYears,
   getSettlementTimelineYears
@@ -316,6 +317,11 @@ export async function getSettlement(
 
   if (!settlement) return null
 
+  // Fetch the settlement member-username map once and pass it to every
+  // settlement-collection DAL below to avoid issuing the same RPC ~13 times
+  // per settlement load.
+  const memberUsernames = await getSettlementMemberUsernames(settlementId)
+
   const [
     collectiveCognitionRewards,
     gear,
@@ -333,20 +339,20 @@ export async function getSettlement(
     seedPatterns,
     timelineYears
   ] = await Promise.all([
-    getSettlementCollectiveCognitionRewards(settlementId),
-    getSettlementGear(settlementId),
-    getSettlementInnovations(settlementId),
-    getSettlementKnowledges(settlementId),
-    getSettlementLocations(settlementId),
-    getSettlementMilestones(settlementId),
-    getSettlementNemeses(settlementId),
+    getSettlementCollectiveCognitionRewards(settlementId, memberUsernames),
+    getSettlementGear(settlementId, memberUsernames),
+    getSettlementInnovations(settlementId, memberUsernames),
+    getSettlementKnowledges(settlementId, memberUsernames),
+    getSettlementLocations(settlementId, memberUsernames),
+    getSettlementMilestones(settlementId, memberUsernames),
+    getSettlementNemeses(settlementId, memberUsernames),
     getNeuroses(),
-    getSettlementPatterns(settlementId),
-    getSettlementPhilosophies(settlementId),
-    getSettlementPrinciples(settlementId),
-    getSettlementQuarries(settlementId),
-    getSettlementResources(settlementId),
-    getSettlementSeedPatterns(settlementId),
+    getSettlementPatterns(settlementId, memberUsernames),
+    getSettlementPhilosophies(settlementId, memberUsernames),
+    getSettlementPrinciples(settlementId, memberUsernames),
+    getSettlementQuarries(settlementId, memberUsernames),
+    getSettlementResources(settlementId, memberUsernames),
+    getSettlementSeedPatterns(settlementId, memberUsernames),
     getSettlementTimelineYears(settlementId)
   ])
 

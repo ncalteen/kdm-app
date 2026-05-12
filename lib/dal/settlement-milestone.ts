@@ -12,10 +12,12 @@ import { SettlementDetail } from '@/lib/types'
  * resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Milestone Data
  */
 export async function getSettlementMilestones(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Map<string, string>
 ): Promise<SettlementDetail['milestones']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
@@ -28,7 +30,7 @@ export async function getSettlementMilestones(
         'complete, id, milestone_id, milestone(custom, user_id, event_name, milestone_name, requirements, rules)'
       )
       .eq('settlement_id', settlementId),
-    getSettlementMemberUsernames(settlementId)
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)

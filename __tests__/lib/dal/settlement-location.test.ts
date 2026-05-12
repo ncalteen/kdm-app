@@ -42,7 +42,12 @@ describe('getSettlementLocations', () => {
       id: 'sl-1',
       location_id: 'loc-1',
       unlocked: true,
-      location: { location_name: 'Lantern Hoard' }
+      location: {
+        custom: false,
+        user_id: null,
+        location_name: 'Lantern Hoard',
+        rules: null
+      }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -57,7 +62,9 @@ describe('getSettlementLocations', () => {
         id: 'sl-1',
         location_id: 'loc-1',
         location_name: 'Lantern Hoard',
+        rules: null,
         unlocked: true,
+        custom: false,
         author_username: null
       }
     ])

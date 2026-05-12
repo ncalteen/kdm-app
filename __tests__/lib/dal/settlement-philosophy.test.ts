@@ -41,7 +41,15 @@ describe('getSettlementPhilosophies', () => {
     const rawItem = {
       id: 'sph-1',
       philosophy_id: 'ph-1',
-      philosophy: { philosophy_name: 'Survival of the Fittest' }
+      philosophy: {
+        custom: false,
+        user_id: null,
+        philosophy_name: 'Survival of the Fittest',
+        hunt_xp_milestones: null,
+        tenet_knowledge_id: null,
+        tier: null,
+        neurosis_id: null
+      }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -56,6 +64,11 @@ describe('getSettlementPhilosophies', () => {
         id: 'sph-1',
         philosophy_id: 'ph-1',
         philosophy_name: 'Survival of the Fittest',
+        hunt_xp_milestones: null,
+        tenet_knowledge_id: null,
+        tier: null,
+        neurosis_id: null,
+        custom: false,
         author_username: null
       }
     ])

@@ -12,10 +12,12 @@ import { SettlementDetail } from '@/lib/types'
  * canonical resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Gear Data
  */
 export async function getSettlementGear(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Map<string, string>
 ): Promise<SettlementDetail['gear']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
@@ -26,7 +28,7 @@ export async function getSettlementGear(
       .from('settlement_gear')
       .select('gear_id, id, quantity, gear(gear_name, custom, user_id)')
       .eq('settlement_id', settlementId),
-    getSettlementMemberUsernames(settlementId)
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error) throw new Error(`Error Fetching Settlement Gear: ${error.message}`)

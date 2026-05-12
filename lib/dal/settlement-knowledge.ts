@@ -27,12 +27,24 @@ import { SettlementDetail } from '@/lib/types'
  * resolve to `null`. The catalog row's `user_id` itself is readable
  * via the existing transitive settlement-membership SELECT policy
  * (20260512000000_catalog_visibility_via_settlement.sql).
+ * username for the catalog row's `user_id` (custom rows) or `null` (built-ins).
+ *
+ * **Performance** When called from {@link getSettlement} (which loads
+ * every settlement-attached collection in parallel), the caller should
+ * fetch the member-username map once and pass it via
+ * `prefetchedMemberUsernames` so all ~13 collection DALs share one RPC
+ * call. When called standalone the second argument can be omitted; the
+ * DAL transparently issues its own RPC.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched member-username
+ *   map. When provided, the DAL skips its own
+ *   `get_settlement_member_usernames` RPC.
  * @returns Settlement Knowledge Data
  */
 export async function getSettlementKnowledges(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Map<string, string>
 ): Promise<SettlementDetail['knowledges']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
@@ -45,7 +57,7 @@ export async function getSettlementKnowledges(
         'id, knowledge_id, knowledge(custom, user_id, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone)'
       )
       .eq('settlement_id', settlementId),
-    getSettlementMemberUsernames(settlementId)
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)

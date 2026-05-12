@@ -44,9 +44,13 @@ describe('getSettlementPrinciples', () => {
       option_2_selected: true,
       principle_id: 'prin-1',
       principle: {
+        custom: false,
+        user_id: null,
         principle_name: 'New Life',
         option_1_name: 'Protect the Young',
-        option_2_name: 'Survival of the Fittest'
+        option_2_name: 'Survival of the Fittest',
+        option_1_rules: null,
+        option_2_rules: null
       }
     }
     mockSupabase.from.mockReturnValue({
@@ -61,11 +65,14 @@ describe('getSettlementPrinciples', () => {
       {
         id: 'spr-1',
         option_1_name: 'Protect the Young',
+        option_1_rules: null,
         option_1_selected: false,
         option_2_name: 'Survival of the Fittest',
+        option_2_rules: null,
         option_2_selected: true,
         principle_id: 'prin-1',
         principle_name: 'New Life',
+        custom: false,
         author_username: null
       }
     ])

@@ -61,6 +61,9 @@ vi.mock('@/lib/dal/settlement-resource', () => ({
 vi.mock('@/lib/dal/settlement-seed-pattern', () => ({
   getSettlementSeedPatterns: vi.fn().mockResolvedValue([])
 }))
+vi.mock('@/lib/dal/settlement-shared-user', () => ({
+  getSettlementMemberUsernames: vi.fn().mockResolvedValue(new Map())
+}))
 vi.mock('@/lib/dal/settlement-timeline-year', () => ({
   getSettlementTimelineYears: vi.fn().mockResolvedValue([]),
   addSettlementTimelineYears: vi.fn()

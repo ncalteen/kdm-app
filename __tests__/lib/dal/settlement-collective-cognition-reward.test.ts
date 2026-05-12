@@ -43,8 +43,11 @@ describe('getSettlementCollectiveCognitionRewards', () => {
       collective_cognition_reward_id: 'cr-1',
       unlocked: false,
       collective_cognition_reward: {
+        custom: false,
+        user_id: null,
         reward_name: 'Reward A',
-        collective_cognition: 3
+        collective_cognition: 3,
+        rules: null
       }
     }
     mockSupabase.from.mockReturnValue({
@@ -62,6 +65,8 @@ describe('getSettlementCollectiveCognitionRewards', () => {
         unlocked: false,
         reward_name: 'Reward A',
         collective_cognition: 3,
+        rules: null,
+        custom: false,
         author_username: null
       }
     ])

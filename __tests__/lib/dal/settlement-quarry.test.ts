@@ -46,7 +46,19 @@ describe('getSettlementQuarries', () => {
       id: 'sq-1',
       quarry_id: 'q-1',
       unlocked: true,
-      quarry: { monster_name: 'White Lion', node: 'white_lion', prologue: true }
+      quarry: {
+        custom: false,
+        user_id: null,
+        monster_name: 'White Lion',
+        node: 'white_lion',
+        prologue: true,
+        instinct: null,
+        basic_action: null,
+        blind_spot: null,
+        defeat_outcome: null,
+        deployment_rules: null,
+        victory_outcome: null
+      }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -68,6 +80,13 @@ describe('getSettlementQuarries', () => {
         prologue: true,
         quarry_id: 'q-1',
         unlocked: true,
+        instinct: null,
+        basic_action: null,
+        blind_spot: null,
+        defeat_outcome: null,
+        deployment_rules: null,
+        victory_outcome: null,
+        custom: false,
         author_username: null
       }
     ])

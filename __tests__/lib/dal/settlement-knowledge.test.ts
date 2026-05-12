@@ -41,7 +41,15 @@ describe('getSettlementKnowledges', () => {
     const rawItem = {
       id: 'sk-1',
       knowledge_id: 'k-1',
-      knowledge: { knowledge_name: 'Hovel' }
+      knowledge: {
+        custom: false,
+        user_id: null,
+        knowledge_name: 'Hovel',
+        philosophy_id: null,
+        rules: null,
+        observation_conditions: null,
+        observation_rank_up_milestone: null
+      }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -56,6 +64,11 @@ describe('getSettlementKnowledges', () => {
         id: 'sk-1',
         knowledge_id: 'k-1',
         knowledge_name: 'Hovel',
+        philosophy_id: null,
+        rules: null,
+        observation_conditions: null,
+        observation_rank_up_milestone: null,
+        custom: false,
         author_username: null
       }
     ])

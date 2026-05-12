@@ -43,6 +43,8 @@ describe('getSettlementResources', () => {
       resource_id: 'res-1',
       quantity: 2,
       resource: {
+        custom: false,
+        user_id: null,
         category: 'basic',
         quarry_id: 'q-1',
         resource_name: 'Bone',
@@ -69,6 +71,7 @@ describe('getSettlementResources', () => {
         resource_id: 'res-1',
         resource_name: 'Bone',
         resource_types: ['bone'],
+        custom: false,
         author_username: null
       }
     ])
@@ -81,6 +84,8 @@ describe('getSettlementResources', () => {
       resource_id: 'res-1',
       quantity: 1,
       resource: {
+        custom: false,
+        user_id: null,
         category: 'basic',
         quarry_id: null,
         resource_name: 'Scrap',

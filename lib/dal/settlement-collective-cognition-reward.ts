@@ -12,10 +12,12 @@ import { SettlementDetail } from '@/lib/types'
  * for the canonical resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Collective Cognition Reward Data
  */
 export async function getSettlementCollectiveCognitionRewards(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Map<string, string>
 ): Promise<SettlementDetail['collective_cognition_rewards']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
@@ -28,7 +30,7 @@ export async function getSettlementCollectiveCognitionRewards(
         'collective_cognition_reward_id, id, unlocked, collective_cognition_reward(custom, user_id, collective_cognition, reward_name, rules)'
       )
       .eq('settlement_id', settlementId),
-    getSettlementMemberUsernames(settlementId)
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)

@@ -14,10 +14,12 @@ import { SettlementDetail } from '@/lib/types'
  * for the canonical resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Innovation Data
  */
 export async function getSettlementInnovations(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Map<string, string>
 ): Promise<SettlementDetail['innovations']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
@@ -30,7 +32,7 @@ export async function getSettlementInnovations(
         'id, innovation_id, innovation(custom, user_id, innovation_name, rules, consequences, benefits)'
       )
       .eq('settlement_id', settlementId),
-    getSettlementMemberUsernames(settlementId)
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)

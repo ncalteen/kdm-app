@@ -41,7 +41,11 @@ describe('getSettlementSeedPatterns', () => {
     const rawItem = {
       id: 'ssp-1',
       seed_pattern_id: 'sp-1',
-      seed_pattern: { seed_pattern_name: 'Skull Cap Helm' }
+      seed_pattern: {
+        custom: false,
+        user_id: null,
+        seed_pattern_name: 'Skull Cap Helm'
+      }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -56,6 +60,7 @@ describe('getSettlementSeedPatterns', () => {
         id: 'ssp-1',
         seed_pattern_id: 'sp-1',
         seed_pattern_name: 'Skull Cap Helm',
+        custom: false,
         author_username: null
       }
     ])

@@ -12,10 +12,12 @@ import { SettlementDetail } from '@/lib/types'
  * resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Resources Data
  */
 export async function getSettlementResources(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Map<string, string>
 ): Promise<SettlementDetail['resources']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
@@ -28,7 +30,7 @@ export async function getSettlementResources(
         'id, resource_id, quantity, resource(custom, user_id, category, quarry_id, resource_name, resource_types, quarry(monster_name, node))'
       )
       .eq('settlement_id', settlementId),
-    getSettlementMemberUsernames(settlementId)
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)

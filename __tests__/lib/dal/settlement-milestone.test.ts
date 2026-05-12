@@ -43,8 +43,12 @@ describe('getSettlementMilestones', () => {
       id: 'sm-1',
       milestone_id: 'mil-1',
       milestone: {
+        custom: false,
+        user_id: null,
         event_name: 'First Story',
-        milestone_name: 'First Survivor Death'
+        milestone_name: 'First Survivor Death',
+        requirements: null,
+        rules: null
       }
     }
     mockSupabase.from.mockReturnValue({
@@ -62,6 +66,9 @@ describe('getSettlementMilestones', () => {
         id: 'sm-1',
         milestone_id: 'mil-1',
         milestone_name: 'First Survivor Death',
+        requirements: null,
+        rules: null,
+        custom: false,
         author_username: null
       }
     ])

@@ -11,10 +11,12 @@ import { SettlementDetail } from '@/lib/types'
  * resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Seed Pattern Data
  */
 export async function getSettlementSeedPatterns(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Map<string, string>
 ): Promise<SettlementDetail['seed_patterns']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
@@ -27,7 +29,7 @@ export async function getSettlementSeedPatterns(
         'id, seed_pattern_id, seed_pattern(custom, user_id, seed_pattern_name)'
       )
       .eq('settlement_id', settlementId),
-    getSettlementMemberUsernames(settlementId)
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)

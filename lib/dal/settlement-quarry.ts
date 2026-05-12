@@ -11,10 +11,12 @@ import { SettlementDetail, SettlementQuarryDetail } from '@/lib/types'
  * resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Quarry Data
  */
 export async function getSettlementQuarries(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Map<string, string>
 ): Promise<SettlementDetail['quarries']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
@@ -27,7 +29,7 @@ export async function getSettlementQuarries(
         'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, collective_cognition_prologue, id, quarry_id, unlocked, quarry(custom, user_id, monster_name, node, prologue, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
       )
       .eq('settlement_id', settlementId),
-    getSettlementMemberUsernames(settlementId)
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)

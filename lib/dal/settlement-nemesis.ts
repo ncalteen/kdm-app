@@ -26,10 +26,12 @@ type RawEmbeddedNemesis = EmbeddedNemesis | EmbeddedNemesis[] | null
  * resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Nemesis Data
  */
 export async function getSettlementNemeses(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Map<string, string>
 ): Promise<SettlementDetail['nemeses']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
@@ -42,7 +44,7 @@ export async function getSettlementNemeses(
         'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(custom, user_id, monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
       )
       .eq('settlement_id', settlementId),
-    getSettlementMemberUsernames(settlementId)
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
