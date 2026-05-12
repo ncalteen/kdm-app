@@ -243,9 +243,11 @@ export function PhilosophyCard({
         ? {
             id: philosophyId,
             philosophy_name: philosophyDetail.philosophy_name,
+            custom: philosophyDetail.custom,
             hunt_xp_milestones: philosophyDetail.hunt_xp_milestones,
             tenet_knowledge_id: philosophyDetail.tenet_knowledge_id,
-            tier: philosophyDetail.tier
+            tier: philosophyDetail.tier,
+            author_username: philosophyDetail.author_username
           }
         : null
 
@@ -260,7 +262,12 @@ export function PhilosophyCard({
         ? {
             id: matchedNeurosis.id,
             neurosis_name: matchedNeurosis.neurosis_name,
-            rules: null
+            custom: matchedNeurosis.custom,
+            rules: null,
+            // This optimistic cascade only has the picker/catalog neurosis
+            // data, so author_username remains null until the next refetch
+            // hydrates the full survivor neurosis detail.
+            author_username: null
           }
         : null
 
@@ -277,10 +284,12 @@ export function PhilosophyCard({
         ? {
             id: matchedKnowledge.knowledge_id,
             knowledge_name: matchedKnowledge.knowledge_name,
+            custom: matchedKnowledge.custom,
             rules: matchedKnowledge.rules,
             observation_conditions: matchedKnowledge.observation_conditions,
             observation_rank_up_milestone:
-              matchedKnowledge.observation_rank_up_milestone
+              matchedKnowledge.observation_rank_up_milestone,
+            author_username: matchedKnowledge.author_username
           }
         : null
       const newTenetKnowledgeState = {
@@ -394,7 +403,11 @@ export function PhilosophyCard({
         ? {
             id: neurosisId,
             neurosis_name: neurosisDetail.neurosis_name,
-            rules: null
+            custom: neurosisDetail.custom,
+            rules: null,
+            // This optimistic local neurosis detail does not carry authorship;
+            // keep author_username null here and let the next refetch backfill it.
+            author_username: null
           }
         : null
 
@@ -567,11 +580,13 @@ export function PhilosophyCard({
                 ? {
                     id: knowledgeId,
                     knowledge_name: knowledgeDetail.knowledge_name,
+                    custom: knowledgeDetail.custom,
                     rules: knowledgeDetail.rules,
                     observation_conditions:
                       knowledgeDetail.observation_conditions,
                     observation_rank_up_milestone:
-                      knowledgeDetail.observation_rank_up_milestone
+                      knowledgeDetail.observation_rank_up_milestone,
+                    author_username: knowledgeDetail.author_username
                   }
                 : null,
               tenet_knowledge_observation_rank: 0,
@@ -827,7 +842,7 @@ export function PhilosophyCard({
         {/* Neurosis */}
         <div className="flex flex-col gap-1">
           <div className="flex flex-row items-center gap-1">
-            <div className="flex-grow">
+            <div className="grow">
               <SelectNeurosis
                 selectedSettlement={selectedSettlement}
                 value={neurosis?.id ?? ''}
@@ -852,9 +867,9 @@ export function PhilosophyCard({
 
         {/* Tenet Knowledge and Ranks */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-2 mt-1">
-          <div className="flex-grow flex flex-col gap-1">
+          <div className="grow flex flex-col gap-1">
             <div className="flex flex-row items-center gap-1">
-              <div className="flex-grow">
+              <div className="grow">
                 <TenetKnowledgeSelect
                   knowledges={selectedSettlement?.knowledges ?? []}
                   value={tenetKnowledge?.id}

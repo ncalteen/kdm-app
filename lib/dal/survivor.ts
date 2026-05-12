@@ -4,6 +4,7 @@ import {
   SURVIVOR_ON_HUNT_ERROR_MESSAGE,
   SURVIVOR_ON_SHOWDOWN_ERROR_MESSAGE
 } from '@/lib/messages'
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { createClient } from '@/lib/supabase/client'
 import { SurvivorDetail } from '@/lib/types'
 import { NewSurvivorInput } from '@/schemas/new-survivor-input'
@@ -20,33 +21,47 @@ import { NewSurvivorInput } from '@/schemas/new-survivor-input'
  * - The `knowledge` table appears three times via FK aliases
  *   (`survivor_knowledge_1_id_fkey` etc.) — PostgREST requires the explicit
  *   constraint name to disambiguate.
+ * - Every embed selects the catalog row's `custom` flag and `user_id` so the
+ *   mapper can resolve `author_username` against the settlement-member
+ *   username map (E2.8; see `local/sharing-architecture.md` §7.4 / §10
+ *   Phase 2 item 2.6).
  */
 const SURVIVOR_SELECT = `
   *,
   abilities_impairments:survivor_ability_impairment(
-    ability_impairment(id, custom, ability_impairment_name, rules)
+    ability_impairment(id, custom, user_id, ability_impairment_name, rules)
   ),
   cursed_gear:survivor_cursed_gear(
-    gear(id, gear_name)
+    gear(id, custom, user_id, gear_name)
   ),
   disorders:survivor_disorder(
-    disorder(id, custom, disorder_name, rules)
+    disorder(id, custom, user_id, disorder_name, rules)
   ),
   fighting_arts:survivor_fighting_art(
-    fighting_art(id, custom, fighting_art_name, rules)
+    fighting_art(id, custom, user_id, fighting_art_name, rules)
   ),
   secret_fighting_arts:survivor_secret_fighting_art(
-    secret_fighting_art(id, custom, secret_fighting_art_name, rules)
+    secret_fighting_art(id, custom, user_id, secret_fighting_art_name, rules)
   ),
   gear_grid(id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right, selected_armor_set_id),
   hunt_survivor(survivor_id),
   showdown_survivor(survivor_id),
-  knowledge_1:knowledge!survivor_knowledge_1_id_fkey(id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone),
-  knowledge_2:knowledge!survivor_knowledge_2_id_fkey(id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone),
-  neurosis(id, neurosis_name, rules),
-  philosophy(id, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier),
-  tenet_knowledge:knowledge!survivor_tenet_knowledge_id_fkey(id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone)
+  knowledge_1:knowledge!survivor_knowledge_1_id_fkey(id, custom, user_id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone),
+  knowledge_2:knowledge!survivor_knowledge_2_id_fkey(id, custom, user_id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone),
+  neurosis(id, custom, user_id, neurosis_name, rules),
+  philosophy(id, custom, user_id, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier),
+  tenet_knowledge:knowledge!survivor_tenet_knowledge_id_fkey(id, custom, user_id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone)
 `
+
+/**
+ * Catalog Row With Authorship
+ *
+ * Helper that augments a `SurvivorDetail` collection entry with the raw
+ * `user_id` returned by the embedded catalog row. The DAL strips `user_id`
+ * during the map step so it never leaks into `SurvivorDetail`, but it's
+ * required transiently to look up `author_username`.
+ */
+type WithAuthorship<T> = T & { user_id: string | null }
 
 /**
  * Raw Survivor Row Shape
@@ -54,39 +69,119 @@ const SURVIVOR_SELECT = `
  * Captures the runtime shape returned by Supabase for `SURVIVOR_SELECT`.
  * Generated types can't express the FK-aliased projections precisely, so a
  * focused interface keeps the mapper type-safe without `as unknown` casts.
+ *
+ * The embedded catalog rows carry `user_id` here (stripped during the map
+ * step before reaching `SurvivorDetail`) so each row's `author_username`
+ * can be resolved from the settlement member-username map.
  */
 type SurvivorRow = Tables<'survivor'> & {
   abilities_impairments: {
-    ability_impairment: SurvivorDetail['abilities_impairments'][number] | null
+    ability_impairment: WithAuthorship<
+      Omit<SurvivorDetail['abilities_impairments'][number], 'author_username'>
+    > | null
   }[]
-  cursed_gear: { gear: SurvivorDetail['cursed_gear'][number] | null }[]
-  disorders: { disorder: SurvivorDetail['disorders'][number] | null }[]
+  cursed_gear: {
+    gear: WithAuthorship<
+      Omit<SurvivorDetail['cursed_gear'][number], 'author_username'>
+    > | null
+  }[]
+  disorders: {
+    disorder: WithAuthorship<
+      Omit<SurvivorDetail['disorders'][number], 'author_username'>
+    > | null
+  }[]
   fighting_arts: {
-    fighting_art: SurvivorDetail['fighting_arts'][number] | null
+    fighting_art: WithAuthorship<
+      Omit<SurvivorDetail['fighting_arts'][number], 'author_username'>
+    > | null
   }[]
   secret_fighting_arts: {
-    secret_fighting_art: SurvivorDetail['secret_fighting_arts'][number] | null
+    secret_fighting_art: WithAuthorship<
+      Omit<SurvivorDetail['secret_fighting_arts'][number], 'author_username'>
+    > | null
   }[]
   gear_grid: SurvivorDetail['gear_grid'] | SurvivorDetail['gear_grid'][] | null
   hunt_survivor: { survivor_id: string }[]
   showdown_survivor: { survivor_id: string }[]
-  knowledge_1: SurvivorDetail['knowledge_1']
-  knowledge_2: SurvivorDetail['knowledge_2']
-  neurosis: SurvivorDetail['neurosis']
-  philosophy: SurvivorDetail['philosophy']
-  tenet_knowledge: SurvivorDetail['tenet_knowledge']
+  knowledge_1: WithAuthorship<
+    Omit<NonNullable<SurvivorDetail['knowledge_1']>, 'author_username'>
+  > | null
+  knowledge_2: WithAuthorship<
+    Omit<NonNullable<SurvivorDetail['knowledge_2']>, 'author_username'>
+  > | null
+  neurosis: WithAuthorship<
+    Omit<NonNullable<SurvivorDetail['neurosis']>, 'author_username'>
+  > | null
+  philosophy: WithAuthorship<
+    Omit<NonNullable<SurvivorDetail['philosophy']>, 'author_username'>
+  > | null
+  tenet_knowledge: WithAuthorship<
+    Omit<NonNullable<SurvivorDetail['tenet_knowledge']>, 'author_username'>
+  > | null
+}
+
+/**
+ * Resolve Author Username
+ *
+ * Returns the catalog author's username for custom rows, or `null` for
+ * built-ins / rows authored by users no longer connected to the settlement.
+ * Mirrors the canonical pattern in `settlement_*` collection DALs.
+ *
+ * @param row Catalog Row With `custom` + `user_id`
+ * @param memberUsernames Settlement Member Username Map
+ * @returns Author Username Or Null
+ */
+function resolveAuthorUsername(
+  row: { custom: boolean; user_id: string | null } | null | undefined,
+  memberUsernames: Map<string, string>
+): string | null {
+  if (!row || !row.custom || !row.user_id) return null
+  return memberUsernames.get(row.user_id) ?? null
+}
+
+/**
+ * Strip Author User ID
+ *
+ * Returns a new object with the embedded `user_id` removed and the resolved
+ * `author_username` attached. Keeps `user_id` from leaking into
+ * `SurvivorDetail` while preserving every other catalog field.
+ *
+ * @param row Catalog Row With `user_id`
+ * @param memberUsernames Settlement Member Username Map
+ * @returns Catalog Row With `author_username`
+ */
+function withAuthorUsername<
+  T extends { custom: boolean; user_id: string | null }
+>(
+  row: T,
+  memberUsernames: Map<string, string>
+): Omit<T, 'user_id'> & { author_username: string | null } {
+  const { user_id, ...rest } = row
+  return {
+    ...rest,
+    author_username: resolveAuthorUsername(
+      { custom: row.custom, user_id },
+      memberUsernames
+    )
+  }
 }
 
 /**
  * Map Survivor Row to SurvivorDetail
  *
  * Flattens the junction-table embeds (`[{ disorder: {...} }]` →
- * `[{...}]`) and derives the `embarked` flag from hunt/showdown membership.
+ * `[{...}]`), derives the `embarked` flag from hunt/showdown membership,
+ * and resolves `author_username` for every custom catalog row using the
+ * settlement member-username map.
  *
  * @param row Survivor Row
+ * @param memberUsernames Settlement Member Username Map
  * @returns Survivor Detail
  */
-function mapSurvivorRow(row: SurvivorRow): SurvivorDetail {
+function mapSurvivorRow(
+  row: SurvivorRow,
+  memberUsernames: Map<string, string>
+): SurvivorDetail {
   const {
     abilities_impairments,
     cursed_gear,
@@ -96,6 +191,11 @@ function mapSurvivorRow(row: SurvivorRow): SurvivorDetail {
     gear_grid,
     hunt_survivor,
     showdown_survivor,
+    knowledge_1,
+    knowledge_2,
+    neurosis,
+    philosophy,
+    tenet_knowledge,
     ...survivor
   } = row
 
@@ -109,26 +209,53 @@ function mapSurvivorRow(row: SurvivorRow): SurvivorDetail {
   return {
     ...survivor,
     abilities_impairments: abilities_impairments
-      .map((r) => r.ability_impairment)
+      .map((r) =>
+        r.ability_impairment
+          ? withAuthorUsername(r.ability_impairment, memberUsernames)
+          : null
+      )
       .filter((x): x is SurvivorDetail['abilities_impairments'][number] =>
         Boolean(x)
       ),
     cursed_gear: cursed_gear
-      .map((r) => r.gear)
+      .map((r) => (r.gear ? withAuthorUsername(r.gear, memberUsernames) : null))
       .filter((x): x is SurvivorDetail['cursed_gear'][number] => Boolean(x)),
     disorders: disorders
-      .map((r) => r.disorder)
+      .map((r) =>
+        r.disorder ? withAuthorUsername(r.disorder, memberUsernames) : null
+      )
       .filter((x): x is SurvivorDetail['disorders'][number] => Boolean(x)),
     embarked: hunt_survivor.length > 0 || showdown_survivor.length > 0,
     fighting_arts: fighting_arts
-      .map((r) => r.fighting_art)
+      .map((r) =>
+        r.fighting_art
+          ? withAuthorUsername(r.fighting_art, memberUsernames)
+          : null
+      )
       .filter((x): x is SurvivorDetail['fighting_arts'][number] => Boolean(x)),
     gear_grid: gridRow,
+    knowledge_1: knowledge_1
+      ? withAuthorUsername(knowledge_1, memberUsernames)
+      : null,
+    knowledge_2: knowledge_2
+      ? withAuthorUsername(knowledge_2, memberUsernames)
+      : null,
+    neurosis: neurosis ? withAuthorUsername(neurosis, memberUsernames) : null,
+    philosophy: philosophy
+      ? withAuthorUsername(philosophy, memberUsernames)
+      : null,
     secret_fighting_arts: secret_fighting_arts
-      .map((r) => r.secret_fighting_art)
+      .map((r) =>
+        r.secret_fighting_art
+          ? withAuthorUsername(r.secret_fighting_art, memberUsernames)
+          : null
+      )
       .filter((x): x is SurvivorDetail['secret_fighting_arts'][number] =>
         Boolean(x)
-      )
+      ),
+    tenet_knowledge: tenet_knowledge
+      ? withAuthorUsername(tenet_knowledge, memberUsernames)
+      : null
   }
 }
 
@@ -166,11 +293,22 @@ export async function addSquiresOfTheCitadelSurvivors(
  * (disorders, fighting arts, etc.) resolved to their display names. Issues
  * a single PostgREST request that joins every related entity in one call.
  *
+ * Each embedded catalog row carries `author_username` so the UI can render
+ * the "By @username" chip on custom rows (E2.8; see
+ * `local/sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6). The
+ * username map is fetched alongside the main query via the
+ * `get_settlement_member_usernames` SECURITY DEFINER RPC.
+ *
  * @param survivorId Survivor ID
+ * @param prefetchedMemberUsernames Optional in-flight (or resolved)
+ *   member-username map. When the caller already has the map (e.g. when
+ *   loading a settlement page that also fetches survivors), pass the
+ *   promise to avoid an extra RPC.
  * @returns Survivor Data with Embarked Status
  */
 export async function getSurvivor(
-  survivorId: string | null | undefined
+  survivorId: string | null | undefined,
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SurvivorDetail | null> {
   if (!survivorId) throw new Error('Required: Survivor ID')
 
@@ -185,7 +323,13 @@ export async function getSurvivor(
   if (error) throw new Error(`Error Fetching Survivor: ${error.message}`)
   if (!data) return null
 
-  return mapSurvivorRow(data)
+  // The survivor row carries `settlement_id` regardless of whether the
+  // caller provided a prefetched map, so we can derive the settlement
+  // scope here without an extra round-trip.
+  const memberUsernames = await (prefetchedMemberUsernames ??
+    getSettlementMemberUsernames(data.settlement_id))
+
+  return mapSurvivorRow(data, memberUsernames)
 }
 
 /**
@@ -195,27 +339,37 @@ export async function getSurvivor(
  * Issues a single PostgREST request that joins every related entity in one
  * call.
  *
+ * Each embedded catalog row carries `author_username`; see {@link getSurvivor}
+ * for details.
+ *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional in-flight (or resolved)
+ *   member-username map. When called from an aggregator that already
+ *   fetches the map, pass the promise to skip the extra RPC.
  * @returns List of Survivors with Embarked Status
  */
 export async function getSurvivors(
-  settlementId: string | null
+  settlementId: string | null,
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SurvivorDetail[] | null> {
   if (!settlementId) return null
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('survivor')
-    .select(SURVIVOR_SELECT)
-    .eq('settlement_id', settlementId)
-    .order('id', { ascending: true })
-    .returns<SurvivorRow[]>()
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('survivor')
+      .select(SURVIVOR_SELECT)
+      .eq('settlement_id', settlementId)
+      .order('id', { ascending: true })
+      .returns<SurvivorRow[]>(),
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error) throw new Error(`Error Fetching Survivors: ${error.message}`)
   if (!data?.length) return null
 
-  return data.map(mapSurvivorRow)
+  return data.map((row) => mapSurvivorRow(row, memberUsernames))
 }
 
 /**

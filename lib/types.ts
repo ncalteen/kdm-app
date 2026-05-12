@@ -400,12 +400,30 @@ export type HuntMonsterDetail = Omit<
 > & {
   /** AI Deck */
   ai_deck: HuntAIDeckDetail
-  /** Traits (joined from hunt_monster_trait → trait) */
-  traits: TraitDetail[]
-  /** Moods (joined from hunt_monster_mood → mood) */
-  moods: MoodDetail[]
-  /** Survivor statuses (joined from hunt_monster_survivor_status → survivor_status) */
-  survivor_statuses: SurvivorStatusDetail[]
+  /**
+   * Traits (joined from hunt_monster_trait → trait).
+   *
+   * Each entry carries `author_username` — `null` for built-in (non-custom)
+   * traits, and the catalog author's username for custom traits so the UI can
+   * render the "By @username" chip (E2.8; see `local/sharing-architecture.md`
+   * §7.4 / §10 Phase 2 item 2.6).
+   */
+  traits: (TraitDetail & { author_username: string | null })[]
+  /**
+   * Moods (joined from hunt_monster_mood → mood).
+   *
+   * Each entry carries `author_username`; see `traits` above.
+   */
+  moods: (MoodDetail & { author_username: string | null })[]
+  /**
+   * Survivor statuses (joined from hunt_monster_survivor_status →
+   * survivor_status).
+   *
+   * Each entry carries `author_username`; see `traits` above.
+   */
+  survivor_statuses: (SurvivorStatusDetail & {
+    author_username: string | null
+  })[]
 }
 
 /**
@@ -1192,12 +1210,30 @@ export type ShowdownMonsterDetail = Omit<
 > & {
   /** AI Deck */
   ai_deck: ShowdownAIDeckDetail
-  /** Traits (joined from showdown_monster_trait → trait) */
-  traits: TraitDetail[]
-  /** Moods (joined from showdown_monster_mood → mood) */
-  moods: MoodDetail[]
-  /** Survivor statuses (joined from showdown_monster_survivor_status → survivor_status) */
-  survivor_statuses: SurvivorStatusDetail[]
+  /**
+   * Traits (joined from showdown_monster_trait → trait).
+   *
+   * Each entry carries `author_username` — `null` for built-in (non-custom)
+   * traits, and the catalog author's username for custom traits so the UI can
+   * render the "By @username" chip (E2.8; see `local/sharing-architecture.md`
+   * §7.4 / §10 Phase 2 item 2.6).
+   */
+  traits: (TraitDetail & { author_username: string | null })[]
+  /**
+   * Moods (joined from showdown_monster_mood → mood).
+   *
+   * Each entry carries `author_username`; see `traits` above.
+   */
+  moods: (MoodDetail & { author_username: string | null })[]
+  /**
+   * Survivor statuses (joined from showdown_monster_survivor_status →
+   * survivor_status).
+   *
+   * Each entry carries `author_username`; see `traits` above.
+   */
+  survivor_statuses: (SurvivorStatusDetail & {
+    author_username: string | null
+  })[]
 }
 
 /**
@@ -1227,7 +1263,14 @@ export type StrainMilestoneDetail = Omit<
  * Includes additional information not present in the survivor table.
  */
 export type SurvivorDetail = Tables<'survivor'> & {
-  /** Abilities and Impairments */
+  /**
+   * Abilities and Impairments.
+   *
+   * Each entry carries `author_username` — `null` for built-in (non-custom)
+   * rows, and the catalog author's username for custom rows so the UI can
+   * render the "By @username" chip (E2.8; see
+   * `local/sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
+   */
   abilities_impairments: {
     /** Ability or Impairment Name */
     ability_impairment_name: string
@@ -1237,15 +1280,29 @@ export type SurvivorDetail = Tables<'survivor'> & {
     id: string
     /** Rules */
     rules: string
+    /** Author Username (null for built-ins / unknown authors) */
+    author_username: string | null
   }[]
-  /** Cursed Gear */
+  /**
+   * Cursed Gear.
+   *
+   * Each entry carries `author_username`; see `abilities_impairments` above.
+   */
   cursed_gear: {
+    /** Custom */
+    custom: boolean
     /** Cursed Gear Name */
     gear_name: string
     /** Cursed Gear ID */
     id: string
+    /** Author Username (null for built-ins / unknown authors) */
+    author_username: string | null
   }[]
-  /** Disorders */
+  /**
+   * Disorders.
+   *
+   * Each entry carries `author_username`; see `abilities_impairments` above.
+   */
   disorders: {
     /** Custom */
     custom: boolean
@@ -1255,75 +1312,127 @@ export type SurvivorDetail = Tables<'survivor'> & {
     id: string
     /** Rules */
     rules: string
+    /** Author Username (null for built-ins / unknown authors) */
+    author_username: string | null
   }[]
   /** Survivor Embarked on Hunt/Showdown */
   embarked: boolean
-  /** Fighting Arts */
-  fighting_arts: FightingArtDetail[]
+  /**
+   * Fighting Arts.
+   *
+   * Each entry carries `author_username`; see `abilities_impairments` above.
+   */
+  fighting_arts: (FightingArtDetail & { author_username: string | null })[]
   /** Gear Grid (3x3 of equipped gear; null until first edit) */
   gear_grid: GearGridDetail | null
-  /** Knowledge 1 */
+  /**
+   * Knowledge 1.
+   *
+   * Carries `author_username`; see `abilities_impairments` above.
+   */
   knowledge_1: {
     /** Knowledge ID */
     id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Custom */
+    custom: boolean
     /** Rules */
     rules: string | null
     /** Observation Conditions */
     observation_conditions: string | null
     /** Observation Rank Up Milestone */
     observation_rank_up_milestone: number | null
+    /** Author Username (null for built-ins / unknown authors) */
+    author_username: string | null
   } | null
-  /** Knowledge 2 */
+  /**
+   * Knowledge 2.
+   *
+   * Carries `author_username`; see `abilities_impairments` above.
+   */
   knowledge_2: {
     /** Knowledge ID */
     id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Custom */
+    custom: boolean
     /** Rules */
     rules: string | null
     /** Observation Conditions */
     observation_conditions: string | null
     /** Observation Rank Up Milestone */
     observation_rank_up_milestone: number | null
+    /** Author Username (null for built-ins / unknown authors) */
+    author_username: string | null
   } | null
-  /** Neurosis */
+  /**
+   * Neurosis.
+   *
+   * Carries `author_username`; see `abilities_impairments` above.
+   */
   neurosis: {
     /** Neurosis ID */
     id: string
     /** Neurosis Name */
     neurosis_name: string
+    /** Custom */
+    custom: boolean
     /** Rules */
     rules: string | null
+    /** Author Username (null for built-ins / unknown authors) */
+    author_username: string | null
   } | null
-  /** Philosophy */
+  /**
+   * Philosophy.
+   *
+   * Carries `author_username`; see `abilities_impairments` above.
+   */
   philosophy: {
     /** Philosophy ID */
     id: string
     /** Philosophy Name */
     philosophy_name: string
+    /** Custom */
+    custom: boolean
     /** Hunt XP Milestones */
     hunt_xp_milestones: number[] | null
     /** Tenet Knowledge ID */
     tenet_knowledge_id: string | null
     /** Tier */
     tier: number | null
+    /** Author Username (null for built-ins / unknown authors) */
+    author_username: string | null
   } | null
-  /** Secret Fighting Arts */
-  secret_fighting_arts: SecretFightingArtDetail[]
-  /** Tenet Knowledge */
+  /**
+   * Secret Fighting Arts.
+   *
+   * Each entry carries `author_username`; see `abilities_impairments` above.
+   */
+  secret_fighting_arts: (SecretFightingArtDetail & {
+    author_username: string | null
+  })[]
+  /**
+   * Tenet Knowledge.
+   *
+   * Carries `author_username`; see `abilities_impairments` above.
+   */
   tenet_knowledge: {
     /** Knowledge ID */
     id: string
     /** Knowledge Name */
     knowledge_name: string
+    /** Custom */
+    custom: boolean
     /** Rules */
     rules: string | null
     /** Observation Conditions */
     observation_conditions: string | null
     /** Observation Rank Up Milestone */
     observation_rank_up_milestone: number | null
+    /** Author Username (null for built-ins / unknown authors) */
+    author_username: string | null
   } | null
 }
 

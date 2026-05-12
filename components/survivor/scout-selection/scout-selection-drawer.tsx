@@ -136,7 +136,7 @@ export function ScoutSelectionDrawer({
         </DrawerHeader>
 
         <div className="px-4 pb-4 h-[60vh] flex gap-4">
-          <div className="flex flex-wrap gap-2 overflow-y-auto min-w-[200px]">
+          <div className="flex flex-wrap gap-2 overflow-y-auto min-w-50">
             {survivors.map((survivor) => (
               <ScoutSelectionCard
                 key={survivor.id}
@@ -150,7 +150,7 @@ export function ScoutSelectionDrawer({
           </div>
 
           {!isMobile && (
-            <div className="w-[450px]">
+            <div className="w-112.5">
               <SurvivorDetailsPanel
                 local={local}
                 survivor={hoveredSurvivor ?? lastHoveredSurvivor}

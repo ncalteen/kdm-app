@@ -35,7 +35,7 @@ export function SurvivorDetailsPanel({
   survivors
 }: SurvivorDetailsPanelProps): ReactElement {
   return survivor === null ? (
-    <div className="w-[450px] h-full flex items-center justify-center text-muted-foreground">
+    <div className="w-112.5 h-full flex items-center justify-center text-muted-foreground">
       <div className="text-center">
         {survivors && survivors.length > 0 ? (
           <>
@@ -52,7 +52,7 @@ export function SurvivorDetailsPanel({
       </div>
     </div>
   ) : (
-    <div className="w-[450px] h-full bg-gradient-to-br from-background to-background/95 border-2 border-border rounded-lg">
+    <div className="w-112.5 h-full bg-linear-to-br from-background to-background/95 border-2 border-border rounded-lg">
       {/* Header */}
       <div className="bg-muted/30 border-b border-border/30 p-4">
         <div className="flex items-center gap-4">
@@ -126,7 +126,7 @@ export function SurvivorDetailsPanel({
                 {survivor.secret_fighting_arts.map((art, index) => (
                   <div
                     key={index}
-                    className="text-xs bg-gradient-to-r from-yellow-100 to-yellow-50 dark:from-yellow-900/30 dark:to-yellow-800/20 border border-yellow-200/50 dark:border-yellow-700/30 rounded px-2 py-1">
+                    className="text-xs bg-linear-to-r from-yellow-100 to-yellow-50 dark:from-yellow-900/30 dark:to-yellow-800/20 border border-yellow-200/50 dark:border-yellow-700/30 rounded px-2 py-1">
                     {art.secret_fighting_art_name}
                   </div>
                 ))}
@@ -234,7 +234,7 @@ export function SurvivorDetailsPanel({
                 {survivor.cursed_gear.map((gear, index) => (
                   <div
                     key={index}
-                    className="text-xs bg-gradient-to-r from-purple-100 to-purple-50 dark:from-purple-900/30 dark:to-purple-800/20 border border-purple-200/50 dark:border-purple-700/30 rounded px-2 py-1">
+                    className="text-xs bg-linear-to-r from-purple-100 to-purple-50 dark:from-purple-900/30 dark:to-purple-800/20 border border-purple-200/50 dark:border-purple-700/30 rounded px-2 py-1">
                     {gear.gear_name}
                   </div>
                 ))}
@@ -252,7 +252,7 @@ export function SurvivorDetailsPanel({
                 {survivor.next_departure.map((departure, index) => (
                   <div
                     key={index}
-                    className="text-xs bg-gradient-to-r from-teal-100 to-teal-50 dark:from-teal-900/30 dark:to-teal-800/20 border border-teal-200/50 dark:border-teal-700/30 rounded px-2 py-1">
+                    className="text-xs bg-linear-to-r from-teal-100 to-teal-50 dark:from-teal-900/30 dark:to-teal-800/20 border border-teal-200/50 dark:border-teal-700/30 rounded px-2 py-1">
                     {departure}
                   </div>
                 ))}

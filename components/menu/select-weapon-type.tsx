@@ -159,7 +159,7 @@ export function SelectWeaponType({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="justify-between text-sm min-w-[180px]"
+          className="justify-between text-sm min-w-45"
           disabled={disabled}>
           {value && weaponTypes[value]
             ? weaponTypes[value].weapon_type_name

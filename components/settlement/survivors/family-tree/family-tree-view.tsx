@@ -394,7 +394,7 @@ export function FamilyTreeView({
             </TooltipTrigger>
             <TooltipContent>Zoom out</TooltipContent>
           </Tooltip>
-          <div className="px-2 text-xs tabular-nums text-muted-foreground min-w-[3rem] text-center">
+          <div className="px-2 text-xs tabular-nums text-muted-foreground min-w-12 text-center">
             {Math.round(scale * 100)}%
           </div>
           <Tooltip>
@@ -438,7 +438,7 @@ export function FamilyTreeView({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         className={cn(
-          'relative w-full overflow-hidden rounded-md border bg-gradient-to-br from-background via-background/95 to-background/85 select-none',
+          'relative w-full overflow-hidden rounded-md border bg-linear-to-br from-background via-background/95 to-background/85 select-none',
           isPanning ? 'cursor-grabbing' : 'cursor-grab'
         )}
         style={{

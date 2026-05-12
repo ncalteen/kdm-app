@@ -65,7 +65,7 @@ export function MultiSelectDropdown({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between h-auto min-h-[2.5rem] px-3">
+          className="w-full justify-between h-auto min-h-10 px-3">
           <span className="truncate">{triggerLabel}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>

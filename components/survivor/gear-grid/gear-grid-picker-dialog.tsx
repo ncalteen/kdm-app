@@ -122,7 +122,7 @@ export function GearGridPickerDialog({
     <div className="rounded-md border">
       <Command>
         <CommandInput placeholder="Search gear..." />
-        <CommandList className="max-h-[40vh] sm:max-h-[320px]">
+        <CommandList className="max-h-[40vh] sm:max-h-80">
           <CommandEmpty>No gear in settlement storage.</CommandEmpty>
           <CommandGroup>
             {sortedCandidates.map((candidate) => {
@@ -227,7 +227,7 @@ export function GearGridPickerDialog({
               Cap the preview cell so it doesn't take more than ~30% of the
               drawer height on small screens, leaving room for the list.
             */}
-            <div className="mx-auto w-full max-w-[200px]">{previewPane}</div>
+            <div className="mx-auto w-full max-w-50">{previewPane}</div>
           </div>
 
           <DrawerFooter className="flex flex-row justify-end gap-2">

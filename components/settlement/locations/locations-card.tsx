@@ -404,7 +404,7 @@ export function LocationsCard({
   )
 
   return (
-    <Card className="p-0 border-1 gap-0">
+    <Card className="p-0 border gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <HouseIcon className="h-4 w-4" />
@@ -475,7 +475,7 @@ export function LocationsCard({
 
       {/* Locations List */}
       <CardContent className="p-1 pb-0">
-        <div className="flex flex-col h-[400px]">
+        <div className="flex flex-col h-100">
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.locations ||
               selectedSettlement.locations.length === 0) &&

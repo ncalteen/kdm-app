@@ -42,7 +42,7 @@ export function SurvivorSelectionCard({
   tempSelection
 }: SurvivorSelectionCardProps): ReactElement {
   return (
-    <div className="w-[200px] h-[280px] border-4 rounded-xl border-border/20 hover:border-border/50 transition-all duration-200">
+    <div className="w-50 h-70 border-4 rounded-xl border-border/20 hover:border-border/50 transition-all duration-200">
       <Button
         variant={tempSelection.includes(survivor.id) ? 'default' : 'outline'}
         className="justify-start flex flex-col p-0 w-full h-full items-stretch relative overflow-hidden"
@@ -53,7 +53,7 @@ export function SurvivorSelectionCard({
         {/* Header with Avatar and Name */}
         <div className="bg-muted/20 p-3 border-b border-border/20">
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border-1 border-background items-center justify-center">
+            <Avatar className="h-10 w-10 border border-background items-center justify-center">
               <AvatarFallback className="font-bold text-lg">
                 {survivor.survivor_name
                   ? survivor.survivor_name

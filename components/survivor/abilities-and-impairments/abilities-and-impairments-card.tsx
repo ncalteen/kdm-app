@@ -390,7 +390,7 @@ export function AbilitiesAndImpairmentsCard({
                 key={`${item.id}-${index}`}
                 className="flex items-center gap-2">
                 <CustomRulesText
-                  className="ml-1 flex-grow"
+                  className="ml-1 grow"
                   custom={item.custom}
                   label={item.ability_impairment_name}
                   title={item.ability_impairment_name}

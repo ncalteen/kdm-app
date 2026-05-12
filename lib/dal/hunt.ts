@@ -1,6 +1,7 @@
 import { getHuntHuntBoard } from '@/lib/dal/hunt-hunt-board'
 import { getHuntMonsters } from '@/lib/dal/hunt-monster'
 import { getHuntSurvivors } from '@/lib/dal/hunt-survivor'
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { HuntDetail } from '@/lib/types'
@@ -9,6 +10,11 @@ import { HuntDetail } from '@/lib/types'
  * Get Hunt
  *
  * Gets the unique hunt for a settlement.
+ *
+ * Starts the settlement member-username RPC once and shares the in-flight
+ * promise with {@link getHuntMonsters} so the trait / mood / survivor-status
+ * `author_username` resolution does not issue a duplicate RPC (E2.8; see
+ * `local/sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
  *
  * @param settlementId Settlement ID
  * @returns Hunt Data
@@ -31,9 +37,14 @@ export async function getHunt(
   if (error) throw new Error(`Error Fetching Hunt: ${error.message}`)
   if (!data) return null
 
+  // Start the member-username RPC once and share the in-flight promise with
+  // the monster fetch (the only sub-query that materializes custom catalog
+  // rows). The board and hunt-survivor fetches don't need it.
+  const memberUsernamesPromise = getSettlementMemberUsernames(settlementId)
+
   const [huntHuntBoard, huntMonsters, huntSurvivors] = await Promise.all([
     getHuntHuntBoard(data.id),
-    getHuntMonsters(data.id),
+    getHuntMonsters(data.id, memberUsernamesPromise),
     getHuntSurvivors(data.id)
   ])
 

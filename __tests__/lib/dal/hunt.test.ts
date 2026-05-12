@@ -20,6 +20,10 @@ vi.mock('@/lib/dal/hunt-survivor', () => ({
   getHuntSurvivors: vi.fn()
 }))
 
+vi.mock('@/lib/dal/settlement-shared-user', () => ({
+  getSettlementMemberUsernames: vi.fn().mockResolvedValue(new Map())
+}))
+
 const { getHunt, addHunt, updateHunt, removeHunt } =
   await import('@/lib/dal/hunt')
 const { getHuntHuntBoard } = await import('@/lib/dal/hunt-hunt-board')
@@ -96,7 +100,7 @@ describe('getHunt', () => {
       hunt_survivors: mockSurvivors
     })
     expect(getHuntHuntBoard).toHaveBeenCalledWith('hunt-1')
-    expect(getHuntMonsters).toHaveBeenCalledWith('hunt-1')
+    expect(getHuntMonsters).toHaveBeenCalledWith('hunt-1', expect.any(Promise))
     expect(getHuntSurvivors).toHaveBeenCalledWith('hunt-1')
   })
 

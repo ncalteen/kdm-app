@@ -234,7 +234,7 @@ export function CustomTraitsCard({
   }, [])
 
   return (
-    <Card className="p-0 border-1 gap-0">
+    <Card className="p-0 border gap-0">
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center justify-between">
           <span>Traits</span>
@@ -264,14 +264,12 @@ export function CustomTraitsCard({
             </div>
           </div>
         ) : (
-          <div className="max-h-[400px] overflow-y-auto rounded-md border">
+          <div className="max-h-100 overflow-y-auto rounded-md border">
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead className="w-[100px] text-right">
-                    Actions
-                  </TableHead>
+                  <TableHead className="w-25 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -139,7 +139,7 @@ export function SelectMonsterNode({
             aria-expanded={open}
             id={id}
             disabled={disabled}
-            className="w-full justify-between h-auto min-h-[2.5rem] px-3">
+            className="w-full justify-between h-auto min-h-10 px-3">
             <span className="truncate">
               {propValue.length > 0
                 ? `${propValue.length} selected`
@@ -149,7 +149,7 @@ export function SelectMonsterNode({
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent className="w-[250px] p-0">
+        <PopoverContent className="w-62.5 p-0">
           <Command>
             <CommandInput placeholder="Search monsters..." />
             <CommandList>

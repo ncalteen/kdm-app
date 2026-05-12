@@ -96,7 +96,7 @@ export function SurvivorDataTable<TData, TValue>({
   )
 
   return (
-    <div className="flex flex-col gap-2 flex-shrink-0">
+    <div className="flex flex-col gap-2 shrink-0">
       <div className="flex items-center pb-2 gap-2">
         <Input
           placeholder="Filter survivors..."
@@ -122,7 +122,7 @@ export function SurvivorDataTable<TData, TValue>({
         )}
       </div>
 
-      <div className="overflow-auto h-[300px] w-full rounded-md border">
+      <div className="overflow-auto h-75 w-full rounded-md border">
         <table className="min-w-full">
           <thead className="sticky top-0 bg-accent">
             {table.getHeaderGroups().map((headerGroup) => (

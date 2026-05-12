@@ -297,7 +297,7 @@ describe('RLS: catalog visibility via settlement membership', () => {
           .maybeSingle()
         expect(ownerErr).toBeNull()
         expect(ownerRead).not.toBeNull()
-        expect((ownerRead as Record<string, unknown>)[c.nameCol]).toBe(name)
+        expect(ownerRead![c.nameCol as never]).toBe(name)
 
         // Stranger does not.
         const { data: strangerRead } = await stranger.client

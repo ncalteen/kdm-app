@@ -49,7 +49,7 @@ export function SettlementPhaseBoardSpace({
         isOver && 'border-primary bg-primary/10',
         className
       )}>
-      <div className="text-[10px] sm:text-xs font-medium text-center break-words px-1 sm:px-2 leading-tight">
+      <div className="text-[10px] sm:text-xs font-medium text-center wrap-break-word px-1 sm:px-2 leading-tight">
         {label ?? index}
       </div>
       <div className="mt-auto flex flex-col items-center">{children}</div>

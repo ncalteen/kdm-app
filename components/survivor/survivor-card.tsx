@@ -101,7 +101,7 @@ export function SurvivorCard({
       <CardContent className="px-2">
         <div className="flex flex-col xl:flex-row xl:flex-wrap gap-2 w-full">
           {/* First Column - Essential Stats */}
-          <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px]">
+          <div className="flex flex-col flex-1 gap-1 xl:min-w-112.5">
             <StatusCard
               local={local}
               selectedSurvivor={selectedSurvivor}
@@ -168,7 +168,7 @@ export function SurvivorCard({
           </div>
 
           {/* Second Column - Combat */}
-          <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px]">
+          <div className="flex flex-col flex-1 gap-1 xl:min-w-112.5">
             <AttributeCard
               local={local}
               mode={mode}
@@ -235,7 +235,7 @@ export function SurvivorCard({
           {/* Third Column - ARC */}
           {selectedSettlement?.survivor_type ===
             DatabaseSurvivorType[SurvivorType.ARC] && (
-            <div className="flex flex-col flex-1 gap-1 xl:min-w-[450px] order-3">
+            <div className="flex flex-col flex-1 gap-1 xl:min-w-112.5 order-3">
               <PhilosophyCard
                 local={local}
                 selectedSettlement={selectedSettlement}
@@ -254,7 +254,7 @@ export function SurvivorCard({
           )}
 
           {/* Fourth Column - Gear Grid */}
-          <div className="flex flex-col flex-1 gap-1 xl:min-w-[320px] xl:max-w-[420px]">
+          <div className="flex flex-col flex-1 gap-1 xl:min-w-[320px] xl:max-w-105">
             <GearGridCard
               local={local}
               selectedSettlement={selectedSettlement}

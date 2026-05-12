@@ -104,7 +104,7 @@ export function SelectWanderers({
   )
 
   return (
-    <div className="flex flex-col gap-2 w-full max-w-[250px]">
+    <div className="flex flex-col gap-2 w-full max-w-62.5">
       <Popover
         open={open}
         onOpenChange={(isOpen) => !disabled && setOpen(isOpen)}>
@@ -115,7 +115,7 @@ export function SelectWanderers({
             aria-expanded={open}
             id={id}
             disabled={disabled}
-            className="w-full justify-between h-auto min-h-[2.5rem] px-3">
+            className="w-full justify-between h-auto min-h-10 px-3">
             <span className="truncate">
               {propValue.length > 0
                 ? `${propValue.length} selected`
@@ -125,7 +125,7 @@ export function SelectWanderers({
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent className="w-[250px] p-0">
+        <PopoverContent className="w-62.5 p-0">
           <Command>
             <CommandInput placeholder="Search wanderers..." />
             <CommandList>

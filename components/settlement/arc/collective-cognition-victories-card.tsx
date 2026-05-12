@@ -194,7 +194,7 @@ export function CollectiveCognitionVictoriesCard({
   )
 
   return (
-    <Card className="p-0 border-1 gap-0">
+    <Card className="p-0 border gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <TrophyIcon className="h-4 w-4" /> Settlement Victories

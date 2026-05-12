@@ -336,7 +336,7 @@ export function CreateSurvivorForm({
           render={({ field }) => (
             <FormItem>
               <div className="flex items-center justify-between gap-2">
-                <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                <FormLabel className="text-left whitespace-nowrap min-w-30">
                   Parent 1
                 </FormLabel>
                 <div className="w-[75%]">
@@ -368,7 +368,7 @@ export function CreateSurvivorForm({
           render={({ field }) => (
             <FormItem>
               <div className="flex items-center justify-between gap-2">
-                <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                <FormLabel className="text-left whitespace-nowrap min-w-30">
                   Parent 2
                 </FormLabel>
                 <div className="w-[75%]">
@@ -408,7 +408,7 @@ export function CreateSurvivorForm({
       })}
       className="py-3 space-y-6">
       <Form {...form}>
-        <Card className="max-w-[500px] mx-auto">
+        <Card className="max-w-125 mx-auto">
           <CardContent className="w-full space-y-2">
             {Object.keys(availableWanderers).length > 0 ? (
               <Tabs
@@ -428,7 +428,7 @@ export function CreateSurvivorForm({
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                          <FormLabel className="text-left whitespace-nowrap min-w-30">
                             Name
                           </FormLabel>
                           <FormControl>
@@ -453,7 +453,7 @@ export function CreateSurvivorForm({
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                          <FormLabel className="text-left whitespace-nowrap min-w-30">
                             Gender
                           </FormLabel>
                           <ToggleGroup
@@ -494,7 +494,7 @@ export function CreateSurvivorForm({
 
                 <TabsContent value="wanderer" className="space-y-2 mt-4">
                   <div className="flex items-center justify-between">
-                    <Label className="text-left whitespace-nowrap min-w-[120px]">
+                    <Label className="text-left whitespace-nowrap min-w-30">
                       Wanderer
                     </Label>
                     <SelectWanderer
@@ -526,7 +526,7 @@ export function CreateSurvivorForm({
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                        <FormLabel className="text-left whitespace-nowrap min-w-30">
                           Name
                         </FormLabel>
                         <FormControl>
@@ -551,7 +551,7 @@ export function CreateSurvivorForm({
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-left whitespace-nowrap min-w-[120px]">
+                        <FormLabel className="text-left whitespace-nowrap min-w-30">
                           Gender
                         </FormLabel>
                         <ToggleGroup

@@ -546,9 +546,16 @@ export function CreateHuntCard({
             overtone_cards: aiDeck.overtone_cards
           },
           id: huntMonsterId,
-          traits: level.traits,
-          moods: level.moods,
-          survivor_statuses: level.survivor_statuses,
+          // The catalog rows pulled from the selected quarry level don't
+          // carry `author_username`. Use null placeholders here; the next
+          // `getHunt` round-trip resolves the real values from the
+          // settlement member-username map (E2.8).
+          traits: level.traits.map((t) => ({ ...t, author_username: null })),
+          moods: level.moods.map((m) => ({ ...m, author_username: null })),
+          survivor_statuses: level.survivor_statuses.map((s) => ({
+            ...s,
+            author_username: null
+          })),
           ...huntMonster
         }
       }
@@ -657,7 +664,7 @@ export function CreateHuntCard({
   ])
 
   return (
-    <Card className="w-full max-w-[400px]">
+    <Card className="w-full max-w-100">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PawPrintIcon className="h-5 w-5" />
@@ -668,7 +675,7 @@ export function CreateHuntCard({
       <CardContent className="flex flex-col gap-2 w-full">
         {/* Hunt Quarry */}
         <div className="flex items-center justify-between">
-          <Label className="text-left whitespace-nowrap min-w-[90px]">
+          <Label className="text-left whitespace-nowrap min-w-22.5">
             Quarry
           </Label>
 
@@ -697,7 +704,7 @@ export function CreateHuntCard({
 
         {/* Monster Level */}
         <div className="flex items-center justify-between">
-          <Label className="text-left whitespace-nowrap min-w-[90px]">
+          <Label className="text-left whitespace-nowrap min-w-22.5">
             Level
           </Label>
 
@@ -722,7 +729,7 @@ export function CreateHuntCard({
         {/* Monster Version */}
         {showVersionSelector && (
           <div className="flex items-center justify-between">
-            <Label className="text-left whitespace-nowrap min-w-[90px]">
+            <Label className="text-left whitespace-nowrap min-w-22.5">
               Version
             </Label>
 

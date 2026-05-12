@@ -463,7 +463,7 @@ export function WandererForm({
 
   if (isLoadingEdit)
     return (
-      <Card className="p-0 border-1 gap-0">
+      <Card className="p-0 border gap-0">
         <CardContent className="p-8 text-center">
           <p className="text-sm text-muted-foreground">
             Peering into the darkness...
@@ -473,7 +473,7 @@ export function WandererForm({
     )
 
   return (
-    <Card className="p-0 border-1 gap-0">
+    <Card className="p-0 border gap-0">
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center gap-2">
           <Button
@@ -492,7 +492,7 @@ export function WandererForm({
       <CardContent className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
         {/* Row 1: Name, Gender, Hunt XP, Arc */}
         <div className="flex flex-wrap items-end gap-3 justify-between">
-          <div className="space-y-1 w-full sm:w-auto sm:min-w-[160px]">
+          <div className="space-y-1 w-full sm:w-auto sm:min-w-40">
             <Label htmlFor="wanderer-name">Name</Label>
             <Input
               ref={nameInputRef}
@@ -503,7 +503,7 @@ export function WandererForm({
               aria-label="Wanderer name"
             />
           </div>
-          <div className="space-y-1 w-[100px]">
+          <div className="space-y-1 w-25">
             <Label htmlFor="wanderer-gender">Gender</Label>
             <Select
               value={gender}

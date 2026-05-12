@@ -196,7 +196,7 @@ export function NumericInput({
 
         <DialogFooter className="flex justify-center w-full items-center sm:justify-center">
           <Button
-            className="w-[150px]"
+            className="w-37.5"
             name="save-value"
             id="save-value-button"
             onClick={handleSave}

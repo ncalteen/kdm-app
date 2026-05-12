@@ -373,11 +373,13 @@ export function KnowledgeCard({
                 ? {
                     id: knowledgeId,
                     knowledge_name: knowledgeDetail.knowledge_name,
+                    custom: knowledgeDetail.custom,
                     rules: knowledgeDetail.rules,
                     observation_conditions:
                       knowledgeDetail.observation_conditions,
                     observation_rank_up_milestone:
-                      knowledgeDetail.observation_rank_up_milestone
+                      knowledgeDetail.observation_rank_up_milestone,
+                    author_username: knowledgeDetail.author_username
                   }
                 : null,
               knowledge_1_observation_rank: 0,
@@ -626,11 +628,13 @@ export function KnowledgeCard({
                 ? {
                     id: knowledgeId,
                     knowledge_name: knowledgeDetail.knowledge_name,
+                    custom: knowledgeDetail.custom,
                     rules: knowledgeDetail.rules,
                     observation_conditions:
                       knowledgeDetail.observation_conditions,
                     observation_rank_up_milestone:
-                      knowledgeDetail.observation_rank_up_milestone
+                      knowledgeDetail.observation_rank_up_milestone,
+                    author_username: knowledgeDetail.author_username
                   }
                 : null,
               knowledge_2_observation_rank: 0,
@@ -861,10 +865,10 @@ export function KnowledgeCard({
       <CardContent className="p-0 flex flex-col">
         {/* Knowledge 1 */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-2">
-          <div className="flex-grow flex flex-col gap-1">
+          <div className="grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
               <div className="flex flex-row items-center gap-1">
-                <div className="flex-grow">
+                <div className="grow">
                   <KnowledgeSelect
                     knowledges={selectedSettlement?.knowledges ?? []}
                     value={knowledge1?.id}
@@ -983,10 +987,10 @@ export function KnowledgeCard({
 
         {/* Knowledge 2 */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-2">
-          <div className="flex-grow flex flex-col gap-1">
+          <div className="grow flex flex-col gap-1">
             <div className="flex flex-col gap-1">
               <div className="flex flex-row items-center gap-1">
-                <div className="flex-grow">
+                <div className="grow">
                   <KnowledgeSelect
                     knowledges={selectedSettlement?.knowledges ?? []}
                     value={knowledge2?.id}

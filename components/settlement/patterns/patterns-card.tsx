@@ -353,7 +353,7 @@ export function PatternsCard({
   }, [pendingCraftPattern, selectedSettlement?.innovations])
 
   return (
-    <Card className="p-0 border-1 gap-0">
+    <Card className="p-0 border gap-0">
       <CardHeader className="px-2 pt-2 pb-0">
         <CardTitle className="text-md flex flex-row items-center gap-1 h-8">
           <ScissorsLineDashedIcon className="h-4 w-4" />
@@ -401,7 +401,7 @@ export function PatternsCard({
       </CardHeader>
 
       <CardContent className="p-1 pb-0">
-        <div className="flex flex-col h-[200px]">
+        <div className="flex flex-col h-50">
           <div className="flex-1 overflow-y-auto">
             {(!selectedSettlement?.patterns ||
               selectedSettlement.patterns.length === 0) &&

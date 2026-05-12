@@ -194,7 +194,7 @@ export function CreateSettlementCard({
       })}
       className="space-y-6">
       <Form {...form}>
-        <Card className="max-w-[500px] mt-14 mx-auto">
+        <Card className="max-w-125 mt-14 mx-auto">
           <CardHeader className="px-6 pt-2 pb-0">
             <CardTitle className="flex items-center gap-2 text-base">
               <LanternMark className="h-5 w-5 text-amber-400/90" />
@@ -223,7 +223,7 @@ export function CreateSettlementCard({
                         onChange={(e) =>
                           form.setValue(field.name, e.target.value)
                         }
-                        className="w-full max-w-[250px]"
+                        className="w-full max-w-62.5"
                       />
                     </FormControl>
                   </div>
@@ -325,7 +325,7 @@ export function CreateSettlementCard({
         </Card>
 
         {/* Monster Node Selection */}
-        <Card className="max-w-[500px] mx-auto pt-0">
+        <Card className="max-w-125 mx-auto pt-0">
           <CardContent className="flex flex-col gap-6 w-full pt-6">
             {/* Quarry Nodes Row */}
             <div className="grid grid-cols-4 gap-2">
@@ -522,7 +522,7 @@ export function CreateSettlementCard({
         </Card>
       </Form>
 
-      <div className="flex items-center justify-center gap-2 max-w-[500px] mx-auto">
+      <div className="flex items-center justify-center gap-2 max-w-125 mx-auto">
         <Button
           type="button"
           variant="outline"
