@@ -165,7 +165,10 @@ export function NemesesCard({
         node: nemesisInfo.node,
         unlocked: false,
         victory_outcome: nemesisInfo.victory_outcome,
-        custom: nemesisInfo.custom
+        custom: nemesisInfo.custom,
+        // Optimistic placeholder; the realtime/refetch reconciles
+        // `author_username` from the catalog row's `user_id` (E2.8).
+        author_username: null
       }
 
       // Capture the updated nemeses list so async callbacks reference it
@@ -239,7 +242,9 @@ export function NemesesCard({
                   location_name: ins.location_name,
                   rules: ins.rules,
                   unlocked: false,
-                  custom: ins.custom
+                  custom: ins.custom,
+                  // Realtime/refetch reconciles author_username (E2.8).
+                  author_username: null
                 }))
               }
             }

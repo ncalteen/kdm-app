@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -17,6 +18,9 @@ const {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Default: no settlement members surfaced (covers tests that don't
+  // exercise author_username resolution). Individual tests override.
+  mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
 })
 
 describe('getSettlementQuarries', () => {
@@ -42,7 +46,19 @@ describe('getSettlementQuarries', () => {
       id: 'sq-1',
       quarry_id: 'q-1',
       unlocked: true,
-      quarry: { monster_name: 'White Lion', node: 'white_lion', prologue: true }
+      quarry: {
+        custom: false,
+        user_id: null,
+        monster_name: 'White Lion',
+        node: 'white_lion',
+        prologue: true,
+        instinct: null,
+        basic_action: null,
+        blind_spot: null,
+        defeat_outcome: null,
+        deployment_rules: null,
+        victory_outcome: null
+      }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -63,7 +79,15 @@ describe('getSettlementQuarries', () => {
         node: 'white_lion',
         prologue: true,
         quarry_id: 'q-1',
-        unlocked: true
+        unlocked: true,
+        instinct: null,
+        basic_action: null,
+        blind_spot: null,
+        defeat_outcome: null,
+        deployment_rules: null,
+        victory_outcome: null,
+        custom: false,
+        author_username: null
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_quarry')

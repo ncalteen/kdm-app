@@ -1,3 +1,4 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -5,22 +6,30 @@ import { SettlementDetail } from '@/lib/types'
 /**
  * Get Settlement Patterns
  *
- * Retrieves the patterns associated with a settlement.
+ * Retrieves the patterns associated with a settlement. Each returned row
+ * carries `author_username` (null for built-ins; the catalog author's
+ * username for customs) — see `getSettlementKnowledges` for the canonical
+ * resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Pattern Data
  */
 export async function getSettlementPatterns(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SettlementDetail['patterns']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_pattern')
-    .select('id, pattern_id, pattern(custom, pattern_name)')
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_pattern')
+      .select('id, pattern_id, pattern(custom, user_id, pattern_name)')
+      .eq('settlement_id', settlementId),
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Patterns: ${error.message}`)
@@ -30,8 +39,8 @@ export async function getSettlementPatterns(
   return (
     data?.flatMap((item) => {
       const rawPattern = item.pattern as unknown as
-        | { custom: boolean; pattern_name: string }
-        | { custom: boolean; pattern_name: string }[]
+        | { custom: boolean; user_id: string | null; pattern_name: string }
+        | { custom: boolean; user_id: string | null; pattern_name: string }[]
         | null
 
       const pattern = Array.isArray(rawPattern)
@@ -45,7 +54,11 @@ export async function getSettlementPatterns(
           id: item.id,
           pattern_id: item.pattern_id,
           pattern_name: pattern.pattern_name,
-          custom: pattern.custom
+          custom: pattern.custom,
+          author_username:
+            pattern.custom && pattern.user_id
+              ? (memberUsernames.get(pattern.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []

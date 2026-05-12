@@ -17,7 +17,8 @@ const {
   getSettlementSharedUsers,
   addSettlementSharedUsers,
   removeSettlementSharedUsers,
-  getUnshareBlockers
+  getUnshareBlockers,
+  getSettlementMemberUsernames
 } = await import('@/lib/dal/settlement-shared-user')
 const { getUserId } = await import('@/lib/dal/user')
 
@@ -241,6 +242,87 @@ describe('getUnshareBlockers', () => {
 
     await expect(getUnshareBlockers('settlement-1', 'user-2')).rejects.toThrow(
       'Error Fetching Unshare Blockers: permission denied'
+    )
+  })
+})
+
+describe('getSettlementMemberUsernames', () => {
+  it('throws when settlementId is null', async () => {
+    await expect(getSettlementMemberUsernames(null)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
+    expect(mockSupabase.rpc).not.toHaveBeenCalled()
+  })
+
+  it('throws when settlementId is undefined', async () => {
+    await expect(getSettlementMemberUsernames(undefined)).rejects.toThrow(
+      'Required: Settlement ID'
+    )
+    expect(mockSupabase.rpc).not.toHaveBeenCalled()
+  })
+
+  it('calls get_settlement_member_usernames and builds a user_id -> username map', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: [
+        { user_id: 'u-1', username: 'alpha' },
+        { user_id: 'u-2', username: 'beta' }
+      ],
+      error: null
+    })
+
+    const result = await getSettlementMemberUsernames('settlement-1')
+
+    expect(mockSupabase.rpc).toHaveBeenCalledWith(
+      'get_settlement_member_usernames',
+      { target_settlement: 'settlement-1' }
+    )
+    expect(result).toBeInstanceOf(Map)
+    expect(result.size).toBe(2)
+    expect(result.get('u-1')).toBe('alpha')
+    expect(result.get('u-2')).toBe('beta')
+  })
+
+  it('returns an empty map when the RPC returns null data', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: null })
+
+    const result = await getSettlementMemberUsernames('settlement-1')
+
+    expect(result).toBeInstanceOf(Map)
+    expect(result.size).toBe(0)
+  })
+
+  it('returns an empty map when the RPC returns an empty list', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
+
+    const result = await getSettlementMemberUsernames('settlement-1')
+
+    expect(result.size).toBe(0)
+  })
+
+  it('skips rows with null user_id or null username', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: [
+        { user_id: 'u-1', username: 'alpha' },
+        { user_id: null, username: 'orphan' },
+        { user_id: 'u-3', username: null }
+      ],
+      error: null
+    })
+
+    const result = await getSettlementMemberUsernames('settlement-1')
+
+    expect(result.size).toBe(1)
+    expect(result.get('u-1')).toBe('alpha')
+  })
+
+  it('throws on RPC error', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'permission denied' }
+    })
+
+    await expect(getSettlementMemberUsernames('settlement-1')).rejects.toThrow(
+      'Error Fetching Settlement Member Usernames: permission denied'
     )
   })
 })

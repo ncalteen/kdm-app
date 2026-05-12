@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -17,6 +18,9 @@ const {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Default: no settlement members surfaced (covers tests that don't
+  // exercise author_username resolution). Individual tests override.
+  mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
 })
 
 describe('getSettlementPatterns', () => {
@@ -52,7 +56,8 @@ describe('getSettlementPatterns', () => {
         id: 'sp-1',
         pattern_id: 'pat-1',
         pattern_name: 'Rawhide Headband',
-        custom: false
+        custom: false,
+        author_username: null
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_pattern')
@@ -77,7 +82,8 @@ describe('getSettlementPatterns', () => {
         id: 'sp-1',
         pattern_id: 'pat-1',
         pattern_name: 'Rawhide Headband',
-        custom: true
+        custom: true,
+        author_username: null
       }
     ])
   })
@@ -108,7 +114,8 @@ describe('getSettlementPatterns', () => {
         id: 'sp-1',
         pattern_id: 'pat-1',
         pattern_name: 'Rawhide Headband',
-        custom: false
+        custom: false,
+        author_username: null
       }
     ])
   })

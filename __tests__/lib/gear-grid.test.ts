@@ -327,7 +327,8 @@ describe('computeEmbarkGearShortages', () => {
       gear_id: gearId,
       gear_name: gearName,
       quantity,
-      custom: false
+      custom: false,
+      author_username: null
     }
   }
 

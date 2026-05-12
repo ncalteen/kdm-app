@@ -1,3 +1,4 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -5,24 +6,32 @@ import { SettlementDetail } from '@/lib/types'
 /**
  * Get Settlement Principles
  *
- * Gets the settlement principles for a given settlement.
+ * Gets the settlement principles for a given settlement. Each returned
+ * row carries `author_username` (null for built-ins; the catalog author's
+ * username for customs) — see `getSettlementKnowledges` for the canonical
+ * resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Principles
  */
 export async function getSettlementPrinciples(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SettlementDetail['principles']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_principle')
-    .select(
-      'id,  option_1_selected, option_2_selected, principle_id, principle(custom, principle_name, option_1_name, option_2_name, option_1_rules, option_2_rules)'
-    )
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_principle')
+      .select(
+        'id,  option_1_selected, option_2_selected, principle_id, principle(custom, user_id, principle_name, option_1_name, option_2_name, option_1_rules, option_2_rules)'
+      )
+      .eq('settlement_id', settlementId),
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Principles: ${error.message}`)
@@ -34,6 +43,7 @@ export async function getSettlementPrinciples(
       const embeddedPrinciple = item.principle as unknown as
         | {
             custom: boolean
+            user_id: string | null
             principle_name: string
             option_1_name: string
             option_2_name: string
@@ -42,6 +52,7 @@ export async function getSettlementPrinciples(
           }
         | {
             custom: boolean
+            user_id: string | null
             principle_name: string
             option_1_name: string
             option_2_name: string
@@ -67,7 +78,11 @@ export async function getSettlementPrinciples(
           option_2_selected: item.option_2_selected,
           principle_id: item.principle_id,
           principle_name: principle.principle_name,
-          custom: principle.custom
+          custom: principle.custom,
+          author_username:
+            principle.custom && principle.user_id
+              ? (memberUsernames.get(principle.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []

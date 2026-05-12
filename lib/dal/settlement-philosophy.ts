@@ -1,3 +1,4 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -5,24 +6,32 @@ import { SettlementDetail } from '@/lib/types'
 /**
  * Get Settlement Philosophies
  *
- * Gets the settlement philosophies for a given settlement.
+ * Gets the settlement philosophies for a given settlement. Each returned
+ * row carries `author_username` (null for built-ins; the catalog author's
+ * username for customs) — see `getSettlementKnowledges` for the canonical
+ * resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Philosophies
  */
 export async function getSettlementPhilosophies(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SettlementDetail['philosophies']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_philosophy')
-    .select(
-      'id,  philosophy_id, philosophy(custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id)'
-    )
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_philosophy')
+      .select(
+        'id,  philosophy_id, philosophy(custom, user_id, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id)'
+      )
+      .eq('settlement_id', settlementId),
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Philosophies: ${error.message}`)
@@ -34,6 +43,7 @@ export async function getSettlementPhilosophies(
       const rawPhilosophy = item.philosophy as unknown as
         | {
             custom: boolean
+            user_id: string | null
             philosophy_name: string
             hunt_xp_milestones: number[] | null
             tenet_knowledge_id: string | null
@@ -42,6 +52,7 @@ export async function getSettlementPhilosophies(
           }
         | {
             custom: boolean
+            user_id: string | null
             philosophy_name: string
             hunt_xp_milestones: number[] | null
             tenet_knowledge_id: string | null
@@ -65,7 +76,11 @@ export async function getSettlementPhilosophies(
           tenet_knowledge_id: philosophy.tenet_knowledge_id,
           tier: philosophy.tier,
           neurosis_id: philosophy.neurosis_id,
-          custom: philosophy.custom
+          custom: philosophy.custom,
+          author_username:
+            philosophy.custom && philosophy.user_id
+              ? (memberUsernames.get(philosophy.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -17,6 +18,9 @@ const {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Default: no settlement members surfaced (covers tests that don't
+  // exercise author_username resolution). Individual tests override.
+  mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
 })
 
 describe('getSettlementPrinciples', () => {
@@ -40,9 +44,13 @@ describe('getSettlementPrinciples', () => {
       option_2_selected: true,
       principle_id: 'prin-1',
       principle: {
+        custom: false,
+        user_id: null,
         principle_name: 'New Life',
         option_1_name: 'Protect the Young',
-        option_2_name: 'Survival of the Fittest'
+        option_2_name: 'Survival of the Fittest',
+        option_1_rules: null,
+        option_2_rules: null
       }
     }
     mockSupabase.from.mockReturnValue({
@@ -57,11 +65,15 @@ describe('getSettlementPrinciples', () => {
       {
         id: 'spr-1',
         option_1_name: 'Protect the Young',
+        option_1_rules: null,
         option_1_selected: false,
         option_2_name: 'Survival of the Fittest',
+        option_2_rules: null,
         option_2_selected: true,
         principle_id: 'prin-1',
-        principle_name: 'New Life'
+        principle_name: 'New Life',
+        custom: false,
+        author_username: null
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_principle')

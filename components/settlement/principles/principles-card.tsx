@@ -157,7 +157,10 @@ export function PrinciplesCard({
         option_2_selected: false,
         principle_id: principleId,
         principle_name: principleInfo.principle_name,
-        custom: principleInfo.custom
+        custom: principleInfo.custom,
+        // Optimistic placeholder; the realtime/refetch reconciles
+        // `author_username` from the catalog row's `user_id` (E2.8).
+        author_username: null
       }
 
       // Capture the updated principles list so async callbacks reference it
@@ -361,7 +364,10 @@ export function PrinciplesCard({
           option_2_selected: false,
           principle_id: newPrinciple.id,
           principle_name: newPrinciple.principle_name,
-          custom: true
+          custom: true,
+          // Optimistic placeholder; the realtime/refetch reconciles
+          // `author_username` from the catalog row's `user_id` (E2.8).
+          author_username: null
         }
         const updatedPrinciples = [
           ...(selectedSettlement.principles ?? []),

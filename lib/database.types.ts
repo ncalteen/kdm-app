@@ -4973,6 +4973,13 @@ export type Database = {
           username: string
         }[]
       }
+      get_settlement_member_usernames: {
+        Args: { target_settlement: string }
+        Returns: {
+          user_id: string
+          username: string
+        }[]
+      }
       get_shared_settlement_owners: {
         Args: never
         Returns: {

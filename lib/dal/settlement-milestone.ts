@@ -1,3 +1,4 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -5,24 +6,32 @@ import { SettlementDetail } from '@/lib/types'
 /**
  * Get Settlement Milestones
  *
- * Retrieves the milestones associated with a settlement.
+ * Retrieves the milestones associated with a settlement. Each returned row
+ * carries `author_username` (null for built-ins; the catalog author's
+ * username for customs) — see `getSettlementKnowledges` for the canonical
+ * resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Milestone Data
  */
 export async function getSettlementMilestones(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SettlementDetail['milestones']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_milestone')
-    .select(
-      'complete, id, milestone_id, milestone(custom, event_name, milestone_name, requirements, rules)'
-    )
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_milestone')
+      .select(
+        'complete, id, milestone_id, milestone(custom, user_id, event_name, milestone_name, requirements, rules)'
+      )
+      .eq('settlement_id', settlementId),
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Milestones: ${error.message}`)
@@ -34,6 +43,7 @@ export async function getSettlementMilestones(
       const rawMilestone = item.milestone as unknown as
         | {
             custom: boolean
+            user_id: string | null
             event_name: string
             milestone_name: string
             requirements: string | null
@@ -41,6 +51,7 @@ export async function getSettlementMilestones(
           }
         | {
             custom: boolean
+            user_id: string | null
             event_name: string
             milestone_name: string
             requirements: string | null
@@ -63,7 +74,11 @@ export async function getSettlementMilestones(
           milestone_name: milestone.milestone_name,
           requirements: milestone.requirements,
           rules: milestone.rules,
-          custom: milestone.custom
+          custom: milestone.custom,
+          author_username:
+            milestone.custom && milestone.user_id
+              ? (memberUsernames.get(milestone.user_id) ?? null)
+              : null
         }
       ]
     }) ?? []

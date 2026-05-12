@@ -1,8 +1,10 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementNemesisDetail } from '@/lib/types'
 
 type EmbeddedNemesis = {
   custom: boolean
+  user_id: string | null
   monster_name: string
   node: string
   instinct: string | null
@@ -18,24 +20,32 @@ type RawEmbeddedNemesis = EmbeddedNemesis | EmbeddedNemesis[] | null
 /**
  * Get Settlement Nemeses
  *
- * Retrieves the nemeses associated with a settlement.
+ * Retrieves the nemeses associated with a settlement. Each returned row
+ * carries `author_username` (null for built-ins; the catalog author's
+ * username for customs) — see `getSettlementKnowledges` for the canonical
+ * resolution pattern.
  *
  * @param settlementId Settlement ID
+ * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
  * @returns Settlement Nemesis Data
  */
 export async function getSettlementNemeses(
-  settlementId: string | null | undefined
+  settlementId: string | null | undefined,
+  prefetchedMemberUsernames?: Promise<Map<string, string>>
 ): Promise<SettlementDetail['nemeses']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_nemesis')
-    .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(custom, monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
-    )
-    .eq('settlement_id', settlementId)
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_nemesis')
+      .select(
+        'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(custom, user_id, monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
+      )
+      .eq('settlement_id', settlementId),
+    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Fetching Settlement Nemeses: ${error.message}`)
@@ -95,7 +105,11 @@ export async function getSettlementNemeses(
         defeat_outcome: nemesis.defeat_outcome,
         deployment_rules: nemesis.deployment_rules,
         victory_outcome: nemesis.victory_outcome,
-        custom: nemesis.custom
+        custom: nemesis.custom,
+        author_username:
+          nemesis.custom && nemesis.user_id
+            ? (memberUsernames.get(nemesis.user_id) ?? null)
+            : null
       }
     ]
   })
@@ -120,25 +134,28 @@ export async function addSettlementNemeses(
 
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('settlement_nemesis')
-    .insert(
-      nemesisIds.map((nemesisId) => ({
-        collective_cognition_level_1: false,
-        collective_cognition_level_2: false,
-        collective_cognition_level_3: false,
-        level_1_defeated: false,
-        level_2_defeated: false,
-        level_3_defeated: false,
-        level_4_defeated: false,
-        nemesis_id: nemesisId,
-        settlement_id: settlementId,
-        unlocked: false
-      }))
-    )
-    .select(
-      'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(custom, monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
-    )
+  const [{ data, error }, memberUsernames] = await Promise.all([
+    supabase
+      .from('settlement_nemesis')
+      .insert(
+        nemesisIds.map((nemesisId) => ({
+          collective_cognition_level_1: false,
+          collective_cognition_level_2: false,
+          collective_cognition_level_3: false,
+          level_1_defeated: false,
+          level_2_defeated: false,
+          level_3_defeated: false,
+          level_4_defeated: false,
+          nemesis_id: nemesisId,
+          settlement_id: settlementId,
+          unlocked: false
+        }))
+      )
+      .select(
+        'collective_cognition_level_1, collective_cognition_level_2, collective_cognition_level_3, id, level_1_defeated, level_2_defeated, level_3_defeated, level_4_defeated, nemesis_id, unlocked, nemesis(custom, user_id, monster_name, node, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome)'
+      ),
+    getSettlementMemberUsernames(settlementId)
+  ])
 
   if (error)
     throw new Error(`Error Adding Settlement Nemeses: ${error.message}`)
@@ -193,7 +210,11 @@ export async function addSettlementNemeses(
         defeat_outcome: nemesis.defeat_outcome,
         deployment_rules: nemesis.deployment_rules,
         victory_outcome: nemesis.victory_outcome,
-        custom: nemesis.custom
+        custom: nemesis.custom,
+        author_username:
+          nemesis.custom && nemesis.user_id
+            ? (memberUsernames.get(nemesis.user_id) ?? null)
+            : null
       }
     ]
   })

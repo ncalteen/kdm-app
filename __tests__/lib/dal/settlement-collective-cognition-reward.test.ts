@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -17,6 +18,9 @@ const {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Default: no settlement members surfaced (covers tests that don't
+  // exercise author_username resolution). Individual tests override.
+  mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
 })
 
 describe('getSettlementCollectiveCognitionRewards', () => {
@@ -39,8 +43,11 @@ describe('getSettlementCollectiveCognitionRewards', () => {
       collective_cognition_reward_id: 'cr-1',
       unlocked: false,
       collective_cognition_reward: {
+        custom: false,
+        user_id: null,
         reward_name: 'Reward A',
-        collective_cognition: 3
+        collective_cognition: 3,
+        rules: null
       }
     }
     mockSupabase.from.mockReturnValue({
@@ -57,7 +64,10 @@ describe('getSettlementCollectiveCognitionRewards', () => {
         id: 'scr-1',
         unlocked: false,
         reward_name: 'Reward A',
-        collective_cognition: 3
+        collective_cognition: 3,
+        rules: null,
+        custom: false,
+        author_username: null
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith(

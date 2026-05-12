@@ -797,6 +797,8 @@ export type SettlementDetail = Omit<
     unlocked: boolean
     /** Whether the underlying reward is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Gear */
   gear: {
@@ -810,6 +812,8 @@ export type SettlementDetail = Omit<
     quantity: number
     /** Whether the underlying gear is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Innovations */
   innovations: {
@@ -827,6 +831,8 @@ export type SettlementDetail = Omit<
     benefits: string | null
     /** Whether the underlying innovation is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Knowledges */
   knowledges: {
@@ -846,6 +852,8 @@ export type SettlementDetail = Omit<
     observation_rank_up_milestone: number | null
     /** Whether the underlying knowledge is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Locations */
   locations: {
@@ -861,6 +869,8 @@ export type SettlementDetail = Omit<
     unlocked: boolean
     /** Whether the underlying location is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Neuroses */
   neuroses: {
@@ -889,6 +899,8 @@ export type SettlementDetail = Omit<
     rules: string | null
     /** Whether the underlying milestone is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Nemeses */
   nemeses: {
@@ -932,6 +944,8 @@ export type SettlementDetail = Omit<
     victory_outcome: string | null
     /** Whether the underlying nemesis is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Patterns */
   patterns: {
@@ -943,6 +957,8 @@ export type SettlementDetail = Omit<
     pattern_name: string
     /** Whether the underlying pattern is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Philosophies */
   philosophies: {
@@ -962,6 +978,8 @@ export type SettlementDetail = Omit<
     neurosis_id: string | null
     /** Whether the underlying philosophy is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Principles */
   principles: {
@@ -985,6 +1003,8 @@ export type SettlementDetail = Omit<
     principle_name: string
     /** Whether the underlying principle is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Quarries */
   quarries: {
@@ -1022,6 +1042,8 @@ export type SettlementDetail = Omit<
     victory_outcome: string | null
     /** Whether the underlying quarry is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Resources */
   resources: {
@@ -1045,6 +1067,8 @@ export type SettlementDetail = Omit<
     resource_types: string[]
     /** Whether the underlying resource is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Seed Patterns */
   seed_patterns: {
@@ -1056,6 +1080,8 @@ export type SettlementDetail = Omit<
     seed_pattern_name: string
     /** Whether the underlying seed pattern is user-defined */
     custom: boolean
+    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    author_username: string | null
   }[]
   /** Caller's Role on This Settlement */
   role: SettlementRole

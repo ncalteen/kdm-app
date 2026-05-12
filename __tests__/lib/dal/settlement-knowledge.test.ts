@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -17,6 +18,9 @@ const {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Default: no settlement members surfaced (covers tests that don't
+  // exercise author_username resolution). Individual tests override.
+  mockSupabase.rpc.mockResolvedValue({ data: [], error: null })
 })
 
 describe('getSettlementKnowledges', () => {
@@ -37,7 +41,15 @@ describe('getSettlementKnowledges', () => {
     const rawItem = {
       id: 'sk-1',
       knowledge_id: 'k-1',
-      knowledge: { knowledge_name: 'Hovel' }
+      knowledge: {
+        custom: false,
+        user_id: null,
+        knowledge_name: 'Hovel',
+        philosophy_id: null,
+        rules: null,
+        observation_conditions: null,
+        observation_rank_up_milestone: null
+      }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -48,9 +60,83 @@ describe('getSettlementKnowledges', () => {
     const result = await getSettlementKnowledges('settlement-1')
 
     expect(result).toEqual([
-      { id: 'sk-1', knowledge_id: 'k-1', knowledge_name: 'Hovel' }
+      {
+        id: 'sk-1',
+        knowledge_id: 'k-1',
+        knowledge_name: 'Hovel',
+        philosophy_id: null,
+        rules: null,
+        observation_conditions: null,
+        observation_rank_up_milestone: null,
+        custom: false,
+        author_username: null
+      }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_knowledge')
+    expect(mockSupabase.rpc).toHaveBeenCalledWith(
+      'get_settlement_member_usernames',
+      { target_settlement: 'settlement-1' }
+    )
+  })
+
+  it('returns author_username for custom rows authored by a settlement member', async () => {
+    const rawItem = {
+      id: 'sk-1',
+      knowledge_id: 'k-1',
+      knowledge: {
+        custom: true,
+        user_id: 'author-1',
+        knowledge_name: 'Whispers',
+        philosophy_id: null,
+        rules: null,
+        observation_conditions: null,
+        observation_rank_up_milestone: null
+      }
+    }
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data: [rawItem], error: null })
+      })
+    })
+    mockSupabase.rpc.mockResolvedValue({
+      data: [{ user_id: 'author-1', username: 'ashen.veil' }],
+      error: null
+    })
+
+    const [result] = await getSettlementKnowledges('settlement-1')
+
+    expect(result.custom).toBe(true)
+    expect(result.author_username).toBe('ashen.veil')
+  })
+
+  it('returns null author_username for custom rows whose author left the settlement', async () => {
+    const rawItem = {
+      id: 'sk-1',
+      knowledge_id: 'k-1',
+      knowledge: {
+        custom: true,
+        user_id: 'ghost-1',
+        knowledge_name: 'Echoes',
+        philosophy_id: null,
+        rules: null,
+        observation_conditions: null,
+        observation_rank_up_milestone: null
+      }
+    }
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data: [rawItem], error: null })
+      })
+    })
+    mockSupabase.rpc.mockResolvedValue({
+      data: [{ user_id: 'someone-else', username: 'still.here' }],
+      error: null
+    })
+
+    const [result] = await getSettlementKnowledges('settlement-1')
+
+    expect(result.custom).toBe(true)
+    expect(result.author_username).toBeNull()
   })
 
   it('returns empty array when no knowledges exist', async () => {

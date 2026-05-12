@@ -135,7 +135,10 @@ export function MilestonesCard({
         milestone_name: milestoneInfo.milestone_name,
         requirements: milestoneInfo.requirements ?? null,
         rules: milestoneInfo.rules ?? null,
-        custom: milestoneInfo.custom
+        custom: milestoneInfo.custom,
+        // Optimistic placeholder; the realtime/refetch reconciles
+        // `author_username` from the catalog row's `user_id` (E2.8).
+        author_username: null
       }
 
       // Capture the updated milestones list so async callbacks reference it
@@ -315,7 +318,10 @@ export function MilestonesCard({
           milestone_name: newMilestone.milestone_name,
           requirements: newMilestone.requirements ?? null,
           rules: newMilestone.rules ?? null,
-          custom: true
+          custom: true,
+          // Optimistic placeholder; the realtime/refetch reconciles
+          // `author_username` from the catalog row's `user_id` (E2.8).
+          author_username: null
         }
 
         const updatedMilestones = [
