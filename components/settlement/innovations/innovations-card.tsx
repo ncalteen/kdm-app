@@ -143,7 +143,10 @@ export function InnovationsCard({
         rules: detail.rules ?? null,
         consequences: detail.consequences ?? null,
         benefits: detail.benefits ?? null,
-        custom: detail.custom
+        custom: detail.custom,
+        // Optimistic placeholder; the realtime/refetch reconciles
+        // `author_username` from the catalog row's `user_id` (E2.8).
+        author_username: null
       }
       const oldInnovations = [...innovations]
 
@@ -297,7 +300,10 @@ export function InnovationsCard({
           rules: newInnovation.rules ?? null,
           consequences: newInnovation.consequences ?? null,
           benefits: newInnovation.benefits ?? null,
-          custom: true
+          custom: true,
+          // Optimistic placeholder; the realtime/refetch reconciles
+          // `author_username` from the catalog row's `user_id` (E2.8).
+          author_username: null
         }
         const oldInnovations = [...innovations]
 

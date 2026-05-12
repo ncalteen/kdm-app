@@ -122,7 +122,10 @@ export function useCraftGearPersistence({
           gear_name: gearInfo.gear_name,
           id: tempId,
           quantity: 1,
-          custom: gearInfo.custom ?? false
+          custom: gearInfo.custom ?? false,
+          // Optimistic placeholder; the realtime/refetch reconciles
+          // `author_username` from the catalog row's `user_id` (E2.8).
+          author_username: null
         }
 
         nextGear = [...deductedGear, optimisticRow]

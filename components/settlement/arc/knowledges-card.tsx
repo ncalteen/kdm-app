@@ -147,7 +147,10 @@ export function KnowledgesCard({
         observation_conditions: knowledgeInfo.observation_conditions ?? null,
         observation_rank_up_milestone:
           knowledgeInfo.observation_rank_up_milestone ?? null,
-        custom: knowledgeInfo.custom ?? false
+        custom: knowledgeInfo.custom ?? false,
+        // Optimistic placeholder; the realtime/refetch reconciles
+        // `author_username` from the catalog row's `user_id` (E2.8).
+        author_username: null
       }
 
       const updatedKnowledges = [
@@ -291,7 +294,10 @@ export function KnowledgesCard({
           observation_conditions: newKnowledge.observation_conditions ?? null,
           observation_rank_up_milestone:
             newKnowledge.observation_rank_up_milestone ?? null,
-          custom: newKnowledge.custom ?? true
+          custom: newKnowledge.custom ?? true,
+          // Optimistic placeholder; the realtime/refetch reconciles
+          // `author_username` from the catalog row's `user_id` (E2.8).
+          author_username: null
         }
 
         const updatedKnowledges = [

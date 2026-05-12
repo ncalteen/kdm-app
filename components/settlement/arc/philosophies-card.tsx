@@ -135,7 +135,10 @@ export function PhilosophiesCard({
         philosophy_name: philosophyInfo.philosophy_name,
         tenet_knowledge_id: null,
         tier: null,
-        custom: philosophyInfo.custom ?? false
+        custom: philosophyInfo.custom ?? false,
+        // Optimistic placeholder; the realtime/refetch reconciles
+        // `author_username` from the catalog row's `user_id` (E2.8).
+        author_username: null
       }
 
       const updatedPhilosophies = [

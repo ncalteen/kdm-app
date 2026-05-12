@@ -160,7 +160,10 @@ export function ResourcesCard({
         resource_id: resourceId,
         resource_name: resourceInfo.resource_name,
         resource_types: resourceInfo.resource_types,
-        custom: resourceInfo.custom
+        custom: resourceInfo.custom,
+        // Optimistic placeholder; the realtime/refetch reconciles
+        // `author_username` from the catalog row's `user_id` (E2.8).
+        author_username: null
       }
 
       // Determine whether the resource should also unlock a pattern. Only
@@ -184,7 +187,10 @@ export function ResourcesCard({
               id: tempPatternId,
               pattern_id: unlockPatternInfo.id,
               pattern_name: unlockPatternInfo.pattern_name,
-              custom: unlockPatternInfo.custom
+              custom: unlockPatternInfo.custom,
+              // Optimistic placeholder; the realtime/refetch reconciles
+              // `author_username` from the catalog row's `user_id` (E2.8).
+              author_username: null
             }
           : null
 

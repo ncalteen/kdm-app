@@ -156,7 +156,10 @@ export function QuarriesCard({
         quarry_id: quarryId,
         unlocked: false,
         victory_outcome: quarryInfo.victory_outcome,
-        custom: quarryInfo.custom
+        custom: quarryInfo.custom,
+        // Optimistic placeholder; the realtime/refetch reconciles
+        // `author_username` from the catalog row's `user_id` (E2.8).
+        author_username: null
       }
 
       // Capture the updated quarries list so async callbacks reference it
@@ -231,7 +234,9 @@ export function QuarriesCard({
                   location_name: ins.location_name,
                   rules: ins.rules,
                   unlocked: false,
-                  custom: ins.custom
+                  custom: ins.custom,
+                  // Realtime/refetch reconciles author_username (E2.8).
+                  author_username: null
                 }))
               }
             }
@@ -310,7 +315,9 @@ export function QuarriesCard({
                   collective_cognition: inserted[i].collective_cognition,
                   rules: inserted[i].rules,
                   unlocked: false,
-                  custom: inserted[i].custom
+                  custom: inserted[i].custom,
+                  // Realtime/refetch reconciles author_username (E2.8).
+                  author_username: null
                 }))
               }
             }

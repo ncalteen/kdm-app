@@ -180,7 +180,10 @@ export function SeedPatternsCard({
         id: tempId,
         seed_pattern_id: seedPatternId,
         seed_pattern_name: seedPatternInfo.seed_pattern_name,
-        custom: seedPatternInfo.custom
+        custom: seedPatternInfo.custom,
+        // Optimistic placeholder; the realtime/refetch reconciles
+        // `author_username` from the catalog row's `user_id` (E2.8).
+        author_username: null
       }
 
       const updatedSeedPatterns = [

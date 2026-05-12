@@ -153,7 +153,10 @@ export function CollectiveCognitionRewardsCard({
           reward_name: rewardInfo.reward_name,
           rules: rewardInfo.rules ?? null,
           unlocked: false,
-          custom: rewardInfo.custom
+          custom: rewardInfo.custom,
+          // Optimistic placeholder; the realtime/refetch reconciles
+          // `author_username` from the catalog row's `user_id` (E2.8).
+          author_username: null
         }
 
       const updatedRewards = [
@@ -349,7 +352,10 @@ export function CollectiveCognitionRewardsCard({
             reward_name: newReward.reward_name,
             rules: newReward.rules ?? null,
             unlocked: false,
-            custom: true
+            custom: true,
+            // Optimistic placeholder; the realtime/refetch reconciles
+            // `author_username` from the catalog row's `user_id` (E2.8).
+            author_username: null
           }
 
         const updatedRewards = [

@@ -152,7 +152,10 @@ export function LocationsCard({
         location_name: locationInfo.location_name,
         rules: locationInfo.rules ?? null,
         unlocked: false,
-        custom: locationInfo.custom
+        custom: locationInfo.custom,
+        // Optimistic placeholder; the realtime/refetch reconciles
+        // `author_username` from the catalog row's `user_id` (E2.8).
+        author_username: null
       }
 
       // Capture the updated locations list so async callbacks reference it
@@ -340,7 +343,10 @@ export function LocationsCard({
           location_name: newLocation.location_name,
           rules: newLocation.rules ?? null,
           unlocked: false,
-          custom: true
+          custom: true,
+          // Optimistic placeholder; the realtime/refetch reconciles
+          // `author_username` from the catalog row's `user_id` (E2.8).
+          author_username: null
         }
         const updatedLocations = [
           ...selectedSettlement.locations,
