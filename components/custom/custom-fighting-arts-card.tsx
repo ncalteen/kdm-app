@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addFightingArt,
-  getFightingArts,
+  getUserCustomFightingArts,
   removeFightingArt,
   updateFightingArt
 } from '@/lib/dal/fighting-art'
@@ -78,9 +78,8 @@ export function CustomFightingArtsCard({
     setIsLoading(true)
 
     try {
-      const data = await getFightingArts()
-      const custom = Object.values(data).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      const data = await getUserCustomFightingArts()
+      setItems(sortItems(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Fighting Arts Error:', err)
       toast.error(ERROR_MESSAGE())

@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addAbilityImpairment,
-  getAbilityImpairments,
+  getUserCustomAbilityImpairments,
   removeAbilityImpairment,
   updateAbilityImpairment
 } from '@/lib/dal/ability-impairment'
@@ -79,9 +79,8 @@ export function CustomAbilityImpairmentsCard({
     setIsLoading(true)
 
     try {
-      const data = await getAbilityImpairments()
-      const custom = Object.values(data).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      const data = await getUserCustomAbilityImpairments()
+      setItems(sortItems(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Abilities/Impairments Error:', err)
       toast.error(ERROR_MESSAGE())

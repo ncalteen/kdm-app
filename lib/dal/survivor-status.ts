@@ -32,6 +32,37 @@ export async function getSurvivorStatuses(): Promise<{
 }
 
 /**
+ * Get User Custom Survivor Statuses
+ *
+ * Retrieves only custom survivor statuses authored by the current user.
+ * Used by the user-content library so collaborator-authored customs visible
+ * via the transitive SELECT policy don't pollute the caller's personal
+ * catalog.
+ *
+ * @returns Custom Survivor Status Data Map
+ */
+export async function getUserCustomSurvivorStatuses(): Promise<{
+  [key: string]: SurvivorStatusDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('survivor_status')
+    .select('id, custom, survivor_status_name, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Survivor Statuses: ${error.message}`)
+
+  const map: { [key: string]: SurvivorStatusDetail } = {}
+  for (const s of data ?? []) map[s.id] = s
+
+  return map
+}
+
+/**
  * Add Survivor Status
  *
  * Inserts a new survivor status catalog row.

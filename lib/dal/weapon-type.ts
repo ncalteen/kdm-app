@@ -35,6 +35,38 @@ export async function getWeaponTypes(): Promise<{
 }
 
 /**
+ * Get User Custom Weapon Types
+ *
+ * Retrieves only custom weapon types authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Weapon Type Data Map
+ */
+export async function getUserCustomWeaponTypes(): Promise<{
+  [key: string]: WeaponTypeDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('weapon_type')
+    .select(
+      'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules'
+    )
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Weapon Types: ${error.message}`)
+
+  const weaponTypeMap: { [key: string]: WeaponTypeDetail } = {}
+  for (const w of data ?? []) weaponTypeMap[w.id] = w
+
+  return weaponTypeMap
+}
+
+/**
  * Add Weapon Type
  *
  * Adds a new weapon type record to the database.

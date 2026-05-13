@@ -35,6 +35,38 @@ export async function getKnowledges(): Promise<{
 }
 
 /**
+ * Get User Custom Knowledges
+ *
+ * Retrieves only custom knowledges authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Knowledge Data Map
+ */
+export async function getUserCustomKnowledges(): Promise<{
+  [key: string]: KnowledgeDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('knowledge')
+    .select(
+      'id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone'
+    )
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Knowledges: ${error.message}`)
+
+  const knowledgeMap: { [key: string]: KnowledgeDetail } = {}
+  for (const k of data ?? []) knowledgeMap[k.id] = k
+
+  return knowledgeMap
+}
+
+/**
  * Add Knowledge
  *
  * Adds a new knowledge record to the database.

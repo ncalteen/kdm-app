@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addLocation,
-  getLocations,
+  getUserCustomLocations,
   removeLocation,
   updateLocation
 } from '@/lib/dal/location'
@@ -76,9 +76,8 @@ export function CustomLocationsCard({
     setIsLoading(true)
 
     try {
-      const data = await getLocations()
-      const custom = Object.values(data).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      const data = await getUserCustomLocations()
+      setItems(sortItems(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Locations Error:', err)
       toast.error(ERROR_MESSAGE())

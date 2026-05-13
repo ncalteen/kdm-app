@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
   addGear,
   getGear,
+  getUserCustomGear,
   removeGear,
   replaceGearGearCosts,
   replaceGearResourceCosts,
@@ -102,17 +103,22 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
     setIsLoading(true)
 
     try {
-      const [gearData, locationData, resourceData, weaponTypeData] =
-        await Promise.all([
-          getGear(),
-          getLocations(),
-          getResources(),
-          getWeaponTypes()
-        ])
+      const [
+        gearData,
+        allGearData,
+        locationData,
+        resourceData,
+        weaponTypeData
+      ] = await Promise.all([
+        getUserCustomGear(),
+        getGear(),
+        getLocations(),
+        getResources(),
+        getWeaponTypes()
+      ])
 
-      const custom = Object.values(gearData).filter((i) => i.custom)
-      setItems(sortItems(custom))
-      setAllGear(gearData)
+      setItems(sortItems(Object.values(gearData)))
+      setAllGear(allGearData)
       setLocations(locationData)
       setResources(resourceData)
       setWeaponTypes(weaponTypeData)

@@ -32,6 +32,35 @@ export async function getNeuroses(): Promise<{
 }
 
 /**
+ * Get User Custom Neuroses
+ *
+ * Retrieves only custom neuroses authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Neurosis Data Map
+ */
+export async function getUserCustomNeuroses(): Promise<{
+  [key: string]: NeurosisDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('neurosis')
+    .select('id, custom, neurosis_name, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error) throw new Error(`Error Fetching Custom Neuroses: ${error.message}`)
+
+  const neurosisMap: { [key: string]: NeurosisDetail } = {}
+  for (const n of data ?? []) neurosisMap[n.id] = n
+
+  return neurosisMap
+}
+
+/**
  * Add Neurosis
  *
  * Adds a new neurosis record to the database.

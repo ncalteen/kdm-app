@@ -36,6 +36,36 @@ export async function getDisorders(): Promise<{
 }
 
 /**
+ * Get User Custom Disorders
+ *
+ * Retrieves only custom disorders authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Disorder Data Map
+ */
+export async function getUserCustomDisorders(): Promise<{
+  [key: string]: DisorderDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('disorder')
+    .select('id, custom, disorder_name, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Disorders: ${error.message}`)
+
+  const disorderMap: { [key: string]: DisorderDetail } = {}
+  for (const d of data ?? []) disorderMap[d.id] = d
+
+  return disorderMap
+}
+
+/**
  * Add Disorder
  *
  * Adds a new disorder record to the database.

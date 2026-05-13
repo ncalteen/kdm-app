@@ -21,7 +21,7 @@ import { getNemeses } from '@/lib/dal/nemesis'
 import { getQuarries } from '@/lib/dal/quarry'
 import {
   addSeedPattern,
-  getSeedPatterns,
+  getUserCustomSeedPatterns,
   removeSeedPattern,
   replaceSeedPatternGearCosts,
   updateSeedPattern
@@ -97,14 +97,13 @@ export function CustomSeedPatternsCard({
     try {
       const [seedPatternData, gearData, quarryData, nemesisData] =
         await Promise.all([
-          getSeedPatterns(),
+          getUserCustomSeedPatterns(),
           getGear(),
           getQuarries(),
           getNemeses()
         ])
 
-      const custom = Object.values(seedPatternData).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      setItems(sortItems(Object.values(seedPatternData)))
       setGear(gearData)
       setQuarries(quarryData)
       setNemeses(nemesisData)

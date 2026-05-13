@@ -36,6 +36,38 @@ export async function getPrinciples(): Promise<{
 }
 
 /**
+ * Get User Custom Principles
+ *
+ * Retrieves only custom principles authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Principle Data Map
+ */
+export async function getUserCustomPrinciples(): Promise<{
+  [key: string]: PrincipleDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('principle')
+    .select(
+      'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
+    )
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Principles: ${error.message}`)
+
+  const principleMap: { [key: string]: PrincipleDetail } = {}
+  for (const p of data ?? []) principleMap[p.id] = p
+
+  return principleMap
+}
+
+/**
  * Get Principle IDs
  *
  * Retrieves the IDs of principles. This depends on if they are custom

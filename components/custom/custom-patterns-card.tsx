@@ -20,7 +20,7 @@ import { getGear } from '@/lib/dal/gear'
 import { getInnovations } from '@/lib/dal/innovation'
 import {
   addPattern,
-  getPatterns,
+  getUserCustomPatterns,
   removePattern,
   replacePatternGearCosts,
   replacePatternInnovationRequirements,
@@ -102,14 +102,13 @@ export function CustomPatternsCard({
     try {
       const [patternData, gearData, resourceData, innovationData] =
         await Promise.all([
-          getPatterns(),
+          getUserCustomPatterns(),
           getGear(),
           getResources(),
           getInnovations()
         ])
 
-      const custom = Object.values(patternData).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      setItems(sortItems(Object.values(patternData)))
       setGear(gearData)
       setResources(resourceData)
       setInnovations(innovationData)
