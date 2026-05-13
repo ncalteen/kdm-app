@@ -18,7 +18,7 @@ import { getPatterns } from '@/lib/dal/pattern'
 import { getQuarries } from '@/lib/dal/quarry'
 import {
   addResource,
-  getResources,
+  getUserCustomResources,
   removeResource,
   updateResource
 } from '@/lib/dal/resource'
@@ -88,13 +88,12 @@ export function CustomResourcesCard({
 
     try {
       const [resourceData, quarryData, patternData] = await Promise.all([
-        getResources(),
+        getUserCustomResources(),
         getQuarries(),
         getPatterns()
       ])
 
-      const custom = Object.values(resourceData).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      setItems(sortItems(Object.values(resourceData)))
       setQuarries(quarryData)
       setPatterns(patternData)
     } catch (err: unknown) {

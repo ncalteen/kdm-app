@@ -38,10 +38,10 @@ export async function getShowdown(
   // Start the member-username RPC once and share the in-flight promise with
   // the monster fetch (the only sub-query that materializes custom catalog
   // rows). The showdown-survivor fetch does not need it.
-  const memberUsernamesPromise = getSettlementMemberUsernames(settlementId)
+  const memberProfilesPromise = getSettlementMemberUsernames(settlementId)
 
   const [showdownMonsters, showdownSurvivors] = await Promise.all([
-    getShowdownMonsters(data.id, memberUsernamesPromise),
+    getShowdownMonsters(data.id, memberProfilesPromise),
     getShowdownSurvivors(data.id)
   ])
 

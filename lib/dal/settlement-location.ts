@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -12,25 +16,25 @@ import { SettlementDetail } from '@/lib/types'
  * resolution pattern.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
+ * @param prefetchedMemberProfiles Optional pre-fetched map of IDs to usernames
  * @returns Settlement Location Data
  */
 export async function getSettlementLocations(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['locations']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_location')
       .select(
         'id, location_id, unlocked, location(custom, user_id, location_name, rules)'
       )
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
@@ -60,10 +64,10 @@ export async function getSettlementLocations(
           rules: location.rules,
           unlocked: item.unlocked,
           custom: location.custom,
-          author_username:
-            location.custom && location.user_id
-              ? (memberUsernames.get(location.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: location.custom, user_id: location.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []

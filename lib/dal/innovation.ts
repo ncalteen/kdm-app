@@ -33,6 +33,36 @@ export async function getInnovations(): Promise<{
 }
 
 /**
+ * Get User Custom Innovations
+ *
+ * Retrieves only custom innovations authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Innovation Data Map
+ */
+export async function getUserCustomInnovations(): Promise<{
+  [key: string]: InnovationDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('innovation')
+    .select('id, custom, innovation_name, rules, consequences, benefits')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Innovations: ${error.message}`)
+
+  const innovationMap: { [key: string]: InnovationDetail } = {}
+  for (const i of data ?? []) innovationMap[i.id] = i
+
+  return innovationMap
+}
+
+/**
  * Get Innovation IDs
  *
  * Retrieves the IDs of innovations. This depends on if they are custom

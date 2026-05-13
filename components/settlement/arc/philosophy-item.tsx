@@ -60,6 +60,8 @@ export const PhilosophyItem = memo(function PhilosophyItem({
           tier={philosophy.tier}
           huntXpMilestones={philosophy.hunt_xp_milestones}
           showCustomBadge
+          authorUserId={philosophy.author_user_id}
+          authorUsername={philosophy.author_username}
         />
       ) : (
         <CustomRulesText
@@ -70,6 +72,8 @@ export const PhilosophyItem = memo(function PhilosophyItem({
           sections={customDetail?.sections ?? []}
           title={customDetail?.title ?? philosophy.philosophy_name}
           showCustomBadge
+          authorUserId={philosophy.author_user_id}
+          authorUsername={philosophy.author_username}
         />
       )}
 

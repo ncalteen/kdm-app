@@ -60,7 +60,9 @@ describe('getSettlementInnovations', () => {
         consequences: null,
         benefits: null,
         custom: false,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_innovation')
@@ -89,7 +91,9 @@ describe('getSettlementInnovations', () => {
         consequences: null,
         benefits: null,
         custom: true,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
   })
@@ -159,7 +163,9 @@ describe('addSettlementInnovations', () => {
         consequences: null,
         benefits: null,
         custom: false,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
     expect(mockInsert).toHaveBeenCalledWith([

@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addNeurosis,
-  getNeuroses,
+  getUserCustomNeuroses,
   removeNeurosis,
   updateNeurosis
 } from '@/lib/dal/neurosis'
@@ -76,10 +76,9 @@ export function CustomNeurosesCard({
     setIsLoading(true)
 
     try {
-      const neurosisData = await getNeuroses()
+      const neurosisData = await getUserCustomNeuroses()
 
-      const custom = Object.values(neurosisData).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      setItems(sortItems(Object.values(neurosisData)))
     } catch (err: unknown) {
       console.error('Load Neuroses Error:', err)
       toast.error(ERROR_MESSAGE())

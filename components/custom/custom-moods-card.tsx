@@ -13,7 +13,12 @@ import {
 } from '@/components/ui/table'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { addMood, getMoods, removeMood, updateMood } from '@/lib/dal/mood'
+import {
+  addMood,
+  getUserCustomMoods,
+  removeMood,
+  updateMood
+} from '@/lib/dal/mood'
 import {
   ERROR_MESSAGE,
   MOOD_CREATED_MESSAGE,
@@ -69,10 +74,9 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
     setIsLoading(true)
 
     try {
-      const moodData = await getMoods()
+      const moodData = await getUserCustomMoods()
 
-      const custom = Object.values(moodData).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      setItems(sortItems(Object.values(moodData)))
     } catch (err: unknown) {
       console.error('Load Moods Error:', err)
       toast.error(ERROR_MESSAGE())

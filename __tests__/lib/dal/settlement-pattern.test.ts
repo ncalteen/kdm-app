@@ -57,7 +57,9 @@ describe('getSettlementPatterns', () => {
         pattern_id: 'pat-1',
         pattern_name: 'Rawhide Headband',
         custom: false,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_pattern')
@@ -83,7 +85,9 @@ describe('getSettlementPatterns', () => {
         pattern_id: 'pat-1',
         pattern_name: 'Rawhide Headband',
         custom: true,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
   })
@@ -115,7 +119,9 @@ describe('getSettlementPatterns', () => {
         pattern_id: 'pat-1',
         pattern_name: 'Rawhide Headband',
         custom: false,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
   })

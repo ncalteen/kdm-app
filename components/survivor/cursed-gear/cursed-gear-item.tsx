@@ -17,6 +17,10 @@ export interface CursedGearItemProps {
   gearName: string
   /** On Remove Handler */
   onRemove: () => void
+  /** Author User ID (powers the sheet footer's authored-by note) */
+  authorUserId?: string | null
+  /** Author Username (powers the sheet footer's authored-by note) */
+  authorUsername?: string | null
 }
 
 /**
@@ -33,7 +37,9 @@ export const CursedGearItem = memo(function CursedGearItem({
   custom,
   gearId,
   gearName,
-  onRemove
+  onRemove,
+  authorUserId = null,
+  authorUsername = null
 }: CursedGearItemProps): ReactElement {
   return (
     <div className="flex items-center gap-2 pl-2">
@@ -43,6 +49,8 @@ export const CursedGearItem = memo(function CursedGearItem({
         gearId={gearId}
         gearName={gearName}
         showCustomBadge
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
       />
       <Button
         variant="ghost"

@@ -200,10 +200,12 @@ export function FightingArtsCard({
         fighting_art_name: detail.fighting_art_name,
         custom: detail.custom,
         rules: detail.rules ?? null,
-        // The realtime refetch will backfill `author_username` from the
-        // settlement member-username map. Custom rows authored by the
-        // current user will resolve to their username after the round-trip.
-        author_username: null
+        // The realtime refetch will backfill the authorship triplet from the
+        // settlement member-profile map. Custom rows authored by the current
+        // user will resolve to their username/avatar after the round-trip.
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
       const oldArts = [...fightingArts]
 
@@ -260,7 +262,9 @@ export function FightingArtsCard({
         custom: detail.custom,
         rules: detail.rules ?? null,
         // See note in `handleAddRegular`.
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
       const oldArts = [...secretFightingArts]
 
@@ -493,7 +497,9 @@ export function FightingArtsCard({
           custom: newArt.custom,
           rules: newArt.rules ?? null,
           // See note in `handleAddRegular`.
-          author_username: null
+          author_user_id: null,
+          author_username: null,
+          author_avatar_url: null
         }
         const oldArts = [...fightingArts]
 
@@ -573,7 +579,9 @@ export function FightingArtsCard({
           custom: newArt.custom,
           rules: newArt.rules ?? null,
           // See note in `handleAddRegular`.
-          author_username: null
+          author_user_id: null,
+          author_username: null,
+          author_avatar_url: null
         }
         const oldArts = [...secretFightingArts]
 
@@ -805,6 +813,8 @@ export function FightingArtsCard({
                 description="A fighting art mastered by this survivor."
                 sections={[{ label: 'Rules', content: art.rules }]}
                 showCustomBadge
+                authorUserId={art.author_user_id}
+                authorUsername={art.author_username}
               />
               <Button
                 variant="ghost"
@@ -829,6 +839,8 @@ export function FightingArtsCard({
                 description="A secret fighting art guarded by this survivor."
                 sections={[{ label: 'Rules', content: art.rules }]}
                 showCustomBadge
+                authorUserId={art.author_user_id}
+                authorUsername={art.author_username}
               />
               <Button
                 variant="ghost"

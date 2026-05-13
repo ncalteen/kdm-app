@@ -37,6 +37,38 @@ export async function getCollectiveCognitionRewards(): Promise<{
 }
 
 /**
+ * Get User Custom Collective Cognition Rewards
+ *
+ * Retrieves only custom rewards authored by the current user. Used by the
+ * user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Collective Cognition Reward Data Map
+ */
+export async function getUserCustomCollectiveCognitionRewards(): Promise<{
+  [key: string]: CollectiveCognitionRewardDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('collective_cognition_reward')
+    .select('id, custom, reward_name, collective_cognition, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Custom Collective Cognition Rewards: ${error.message}`
+    )
+
+  const rewardMap: { [key: string]: CollectiveCognitionRewardDetail } = {}
+  for (const r of data ?? []) rewardMap[r.id] = r
+
+  return rewardMap
+}
+
+/**
  * Get Collective Cognition Reward IDs
  *
  * Retrieves the IDs of collective cognition rewards. This depends on if they

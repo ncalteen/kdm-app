@@ -60,6 +60,61 @@ export async function getResources(): Promise<{
 }
 
 /**
+ * Get User Custom Resources
+ *
+ * Retrieves only custom resources authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Resource Data Map
+ */
+export async function getUserCustomResources(): Promise<{
+  [key: string]: ResourceDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('resource')
+    .select(
+      'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'
+    )
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Resources: ${error.message}`)
+
+  const resourceMap: { [key: string]: ResourceDetail } = {}
+
+  const toDetail = (r: Record<string, unknown>): ResourceDetail => {
+    const raw = r.quarry
+    const quarry = raw
+      ? Array.isArray(raw)
+        ? (raw as { monster_name: string; node: string }[])[0]
+        : (raw as { monster_name: string; node: string })
+      : null
+    return {
+      id: r.id as string,
+      category: r.category as ResourceDetail['category'],
+      custom: r.custom as boolean,
+      nemesis_id: null,
+      pattern_id: (r.pattern_id as string | null) ?? null,
+      quarry_id: r.quarry_id as string | null,
+      quarry_monster_name: quarry?.monster_name ?? null,
+      quarry_node: quarry?.node ?? null,
+      resource_name: r.resource_name as string,
+      resource_types: r.resource_types as ResourceDetail['resource_types'],
+      rules: (r.rules as string | null) ?? null
+    }
+  }
+
+  for (const r of data ?? []) resourceMap[r.id] = toDetail(r)
+
+  return resourceMap
+}
+
+/**
  * Add Resource
  *
  * Adds a new resource record to the database.

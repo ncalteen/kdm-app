@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addDisorder,
-  getDisorders,
+  getUserCustomDisorders,
   removeDisorder,
   updateDisorder
 } from '@/lib/dal/disorder'
@@ -76,9 +76,8 @@ export function CustomDisordersCard({
     setIsLoading(true)
 
     try {
-      const data = await getDisorders()
-      const custom = Object.values(data).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      const data = await getUserCustomDisorders()
+      setItems(sortItems(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Disorders Error:', err)
       toast.error(ERROR_MESSAGE())

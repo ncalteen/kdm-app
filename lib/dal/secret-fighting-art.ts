@@ -36,6 +36,39 @@ export async function getSecretFightingArts(): Promise<{
 }
 
 /**
+ * Get User Custom Secret Fighting Arts
+ *
+ * Retrieves only custom secret fighting arts authored by the current user.
+ * Used by the user-content library so collaborator-authored customs visible
+ * via the transitive SELECT policy don't pollute the caller's personal
+ * catalog.
+ *
+ * @returns Custom Secret Fighting Art Data Map
+ */
+export async function getUserCustomSecretFightingArts(): Promise<{
+  [key: string]: SecretFightingArtDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('secret_fighting_art')
+    .select('id, custom, secret_fighting_art_name, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Custom Secret Fighting Arts: ${error.message}`
+    )
+
+  const secretFightingArtMap: { [key: string]: SecretFightingArtDetail } = {}
+  for (const s of data ?? []) secretFightingArtMap[s.id] = s
+
+  return secretFightingArtMap
+}
+
+/**
  * Add Secret Fighting Art
  *
  * Adds a new secret fighting art record to the database.

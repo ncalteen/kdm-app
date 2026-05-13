@@ -261,11 +261,11 @@ describe('getSettlementMemberUsernames', () => {
     expect(mockSupabase.rpc).not.toHaveBeenCalled()
   })
 
-  it('calls get_settlement_member_usernames and builds a user_id -> username map', async () => {
+  it('calls get_settlement_member_usernames and builds a user_id -> profile map', async () => {
     mockSupabase.rpc.mockResolvedValue({
       data: [
-        { user_id: 'u-1', username: 'alpha' },
-        { user_id: 'u-2', username: 'beta' }
+        { user_id: 'u-1', username: 'alpha', avatar_url: 'https://a/1.png' },
+        { user_id: 'u-2', username: 'beta', avatar_url: null }
       ],
       error: null
     })
@@ -278,8 +278,14 @@ describe('getSettlementMemberUsernames', () => {
     )
     expect(result).toBeInstanceOf(Map)
     expect(result.size).toBe(2)
-    expect(result.get('u-1')).toBe('alpha')
-    expect(result.get('u-2')).toBe('beta')
+    expect(result.get('u-1')).toEqual({
+      username: 'alpha',
+      avatar_url: 'https://a/1.png'
+    })
+    expect(result.get('u-2')).toEqual({
+      username: 'beta',
+      avatar_url: null
+    })
   })
 
   it('returns an empty map when the RPC returns null data', async () => {
@@ -302,9 +308,9 @@ describe('getSettlementMemberUsernames', () => {
   it('skips rows with null user_id or null username', async () => {
     mockSupabase.rpc.mockResolvedValue({
       data: [
-        { user_id: 'u-1', username: 'alpha' },
-        { user_id: null, username: 'orphan' },
-        { user_id: 'u-3', username: null }
+        { user_id: 'u-1', username: 'alpha', avatar_url: null },
+        { user_id: null, username: 'orphan', avatar_url: null },
+        { user_id: 'u-3', username: null, avatar_url: null }
       ],
       error: null
     })
@@ -312,7 +318,7 @@ describe('getSettlementMemberUsernames', () => {
     const result = await getSettlementMemberUsernames('settlement-1')
 
     expect(result.size).toBe(1)
-    expect(result.get('u-1')).toBe('alpha')
+    expect(result.get('u-1')).toEqual({ username: 'alpha', avatar_url: null })
   })
 
   it('throws on RPC error', async () => {

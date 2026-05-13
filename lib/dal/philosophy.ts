@@ -34,6 +34,38 @@ export async function getPhilosophies(): Promise<{
 }
 
 /**
+ * Get User Custom Philosophies
+ *
+ * Retrieves only custom philosophies authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Philosophy Data Map
+ */
+export async function getUserCustomPhilosophies(): Promise<{
+  [key: string]: PhilosophyDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('philosophy')
+    .select(
+      'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id'
+    )
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Philosophies: ${error.message}`)
+
+  const philosophyMap: { [key: string]: PhilosophyDetail } = {}
+  for (const p of data ?? []) philosophyMap[p.id] = p
+
+  return philosophyMap
+}
+
+/**
  * Add Philosophy
  *
  * Adds a new philosophy record to the database.

@@ -46,26 +46,30 @@ export const PrincipleItem = memo(function PrincipleItem({
   return (
     <div className="grid grid-cols-3 items-center gap-2 pl-2">
       {/* Principle Name */}
-      <CustomRulesText
-        className="font-bold truncate"
-        custom={principle.custom}
-        description={customDetail?.description}
-        label={principle.principle_name}
-        sections={
-          customDetail?.sections ?? [
-            {
-              label: principle.option_1_name,
-              content: principle.option_1_rules
-            },
-            {
-              label: principle.option_2_name,
-              content: principle.option_2_rules
-            }
-          ]
-        }
-        title={customDetail?.title ?? principle.principle_name}
-        showCustomBadge
-      />
+      <div className="flex items-center gap-1 min-w-0">
+        <CustomRulesText
+          className="font-bold truncate"
+          custom={principle.custom}
+          description={customDetail?.description}
+          label={principle.principle_name}
+          sections={
+            customDetail?.sections ?? [
+              {
+                label: principle.option_1_name,
+                content: principle.option_1_rules
+              },
+              {
+                label: principle.option_2_name,
+                content: principle.option_2_rules
+              }
+            ]
+          }
+          title={customDetail?.title ?? principle.principle_name}
+          showCustomBadge
+          authorUserId={principle.author_user_id}
+          authorUsername={principle.author_username}
+        />
+      </div>
 
       {/* Option Checkboxes */}
       <div className="flex flex-col gap-1">

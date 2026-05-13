@@ -34,6 +34,36 @@ export async function getFightingArts(): Promise<{
 }
 
 /**
+ * Get User Custom Fighting Arts
+ *
+ * Retrieves only custom fighting arts authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Fighting Art Data Map
+ */
+export async function getUserCustomFightingArts(): Promise<{
+  [key: string]: FightingArtDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('fighting_art')
+    .select('id, custom, fighting_art_name, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Fighting Arts: ${error.message}`)
+
+  const fightingArtMap: { [key: string]: FightingArtDetail } = {}
+  for (const f of data ?? []) fightingArtMap[f.id] = f
+
+  return fightingArtMap
+}
+
+/**
  * Add Fighting Art
  *
  * Adds a new fighting art record to the database.

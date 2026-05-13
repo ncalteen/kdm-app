@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addCollectiveCognitionReward,
-  getCollectiveCognitionRewards,
+  getUserCustomCollectiveCognitionRewards,
   removeCollectiveCognitionReward,
   updateCollectiveCognitionReward
 } from '@/lib/dal/collective-cognition-reward'
@@ -80,9 +80,8 @@ export function CustomCollectiveCognitionRewardsCard({
     setIsLoading(true)
 
     try {
-      const data = await getCollectiveCognitionRewards()
-      const custom = Object.values(data).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      const data = await getUserCustomCollectiveCognitionRewards()
+      setItems(sortItems(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Collective Cognition Rewards Error:', err)
       toast.error(ERROR_MESSAGE())

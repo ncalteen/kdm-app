@@ -57,15 +57,19 @@ export const ResourceItem = memo(function ResourceItem({
       ].join(' ')}>
       {/* Resource Name */}
       <div className="row-start-1 col-start-1 sm:col-end-2 sm:row-start-1 flex flex-col min-w-0 ml-1">
-        <CustomRulesText
-          className="truncate"
-          custom={resource.custom}
-          description={customDetail?.description}
-          label={resource.resource_name}
-          sections={customDetail?.sections ?? []}
-          title={customDetail?.title ?? resource.resource_name}
-          showCustomBadge
-        />
+        <div className="flex items-center gap-1 min-w-0">
+          <CustomRulesText
+            className="truncate"
+            custom={resource.custom}
+            description={customDetail?.description}
+            label={resource.resource_name}
+            sections={customDetail?.sections ?? []}
+            title={customDetail?.title ?? resource.resource_name}
+            showCustomBadge
+            authorUserId={resource.author_user_id}
+            authorUsername={resource.author_username}
+          />
+        </div>
         {resource.category.toUpperCase() === 'MONSTER' &&
           resource.quarry_monster_name && (
             <span className="text-xs text-muted-foreground truncate">

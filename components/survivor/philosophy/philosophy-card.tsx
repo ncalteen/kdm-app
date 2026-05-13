@@ -247,7 +247,9 @@ export function PhilosophyCard({
             hunt_xp_milestones: philosophyDetail.hunt_xp_milestones,
             tenet_knowledge_id: philosophyDetail.tenet_knowledge_id,
             tier: philosophyDetail.tier,
-            author_username: philosophyDetail.author_username
+            author_user_id: philosophyDetail.author_user_id,
+            author_username: philosophyDetail.author_username,
+            author_avatar_url: philosophyDetail.author_avatar_url
           }
         : null
 
@@ -265,9 +267,11 @@ export function PhilosophyCard({
             custom: matchedNeurosis.custom,
             rules: null,
             // This optimistic cascade only has the picker/catalog neurosis
-            // data, so author_username remains null until the next refetch
-            // hydrates the full survivor neurosis detail.
-            author_username: null
+            // data, so the authorship triplet remains null until the next
+            // refetch hydrates the full survivor neurosis detail.
+            author_user_id: null,
+            author_username: null,
+            author_avatar_url: null
           }
         : null
 
@@ -289,7 +293,9 @@ export function PhilosophyCard({
             observation_conditions: matchedKnowledge.observation_conditions,
             observation_rank_up_milestone:
               matchedKnowledge.observation_rank_up_milestone,
-            author_username: matchedKnowledge.author_username
+            author_user_id: matchedKnowledge.author_user_id,
+            author_username: matchedKnowledge.author_username,
+            author_avatar_url: matchedKnowledge.author_avatar_url
           }
         : null
       const newTenetKnowledgeState = {
@@ -406,8 +412,10 @@ export function PhilosophyCard({
             custom: neurosisDetail.custom,
             rules: null,
             // This optimistic local neurosis detail does not carry authorship;
-            // keep author_username null here and let the next refetch backfill it.
-            author_username: null
+            // keep the triplet null here and let the next refetch backfill it.
+            author_user_id: null,
+            author_username: null,
+            author_avatar_url: null
           }
         : null
 
@@ -586,7 +594,9 @@ export function PhilosophyCard({
                       knowledgeDetail.observation_conditions,
                     observation_rank_up_milestone:
                       knowledgeDetail.observation_rank_up_milestone,
-                    author_username: knowledgeDetail.author_username
+                    author_user_id: knowledgeDetail.author_user_id,
+                    author_username: knowledgeDetail.author_username,
+                    author_avatar_url: knowledgeDetail.author_avatar_url
                   }
                 : null,
               tenet_knowledge_observation_rank: 0,
@@ -806,13 +816,21 @@ export function PhilosophyCard({
                   )
 
                 return (
-                  <CustomPhilosophyRulesIconButton
-                    custom={settlementPhilosophy?.custom}
-                    philosophyId={philosophy?.id ?? null}
-                    philosophyName={philosophy?.philosophy_name ?? null}
-                    tier={philosophy?.tier ?? null}
-                    huntXpMilestones={philosophy?.hunt_xp_milestones ?? null}
-                  />
+                  <>
+                    <CustomPhilosophyRulesIconButton
+                      custom={settlementPhilosophy?.custom}
+                      philosophyId={philosophy?.id ?? null}
+                      philosophyName={philosophy?.philosophy_name ?? null}
+                      tier={philosophy?.tier ?? null}
+                      huntXpMilestones={philosophy?.hunt_xp_milestones ?? null}
+                      authorUserId={
+                        settlementPhilosophy?.author_user_id ?? null
+                      }
+                      authorUsername={
+                        settlementPhilosophy?.author_username ?? null
+                      }
+                    />
+                  </>
                 )
               })()}
             </div>
@@ -853,6 +871,10 @@ export function PhilosophyCard({
               const settlementNeurosis = selectedSettlement?.neuroses.find(
                 (n) => n.id === neurosis?.id
               )
+              // Note: settlement-level neuroses come from the global catalog
+              // (`getNeuroses`) and do not yet carry authorship, so the chip
+              // is intentionally omitted here. Custom-authored neurosis chips
+              // can be added once settlement.neuroses gains the triplet.
               return (
                 <CustomNeurosisRulesIconButton
                   custom={settlementNeurosis?.custom}
@@ -881,18 +903,24 @@ export function PhilosophyCard({
                   (k) => k.knowledge_id === tenetKnowledge?.id
                 )
                 return (
-                  <CustomKnowledgeRulesIconButton
-                    custom={settlementKnowledge?.custom}
-                    knowledgeName={settlementKnowledge?.knowledge_name}
-                    rules={settlementKnowledge?.rules}
-                    observationConditions={
-                      settlementKnowledge?.observation_conditions
-                    }
-                    observationRankUpMilestone={
-                      settlementKnowledge?.observation_rank_up_milestone
-                    }
-                    philosophyId={settlementKnowledge?.philosophy_id}
-                  />
+                  <>
+                    <CustomKnowledgeRulesIconButton
+                      custom={settlementKnowledge?.custom}
+                      knowledgeName={settlementKnowledge?.knowledge_name}
+                      rules={settlementKnowledge?.rules}
+                      observationConditions={
+                        settlementKnowledge?.observation_conditions
+                      }
+                      observationRankUpMilestone={
+                        settlementKnowledge?.observation_rank_up_milestone
+                      }
+                      philosophyId={settlementKnowledge?.philosophy_id}
+                      authorUserId={settlementKnowledge?.author_user_id ?? null}
+                      authorUsername={
+                        settlementKnowledge?.author_username ?? null
+                      }
+                    />
+                  </>
                 )
               })()}
             </div>

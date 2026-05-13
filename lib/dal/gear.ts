@@ -83,6 +83,37 @@ export async function getGear(): Promise<{
 }
 
 /**
+ * Get User Custom Gear
+ *
+ * Retrieves only custom gear authored by the current user. Used by the
+ * user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Gear Data Map
+ */
+export async function getUserCustomGear(): Promise<{
+  [key: string]: GearDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('gear')
+    .select(
+      'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity)'
+    )
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error) throw new Error(`Error Fetching Custom Gear: ${error.message}`)
+
+  const gearMap: { [key: string]: GearDetail } = {}
+  for (const g of data ?? []) gearMap[g.id] = toGearDetail(g)
+
+  return gearMap
+}
+
+/**
  * Add Gear
  *
  * Adds a new gear record to the database. Junction rows (gear, resource, and

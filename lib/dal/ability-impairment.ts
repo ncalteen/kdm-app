@@ -35,6 +35,39 @@ export async function getAbilityImpairments(): Promise<{
 }
 
 /**
+ * Get User Custom Ability Impairments
+ *
+ * Retrieves only custom ability/impairments authored by the current user.
+ * Used by the user-content library so collaborator-authored customs visible
+ * via the transitive SELECT policy don't pollute the caller's personal
+ * catalog.
+ *
+ * @returns Custom Ability/Impairment Data Map
+ */
+export async function getUserCustomAbilityImpairments(): Promise<{
+  [key: string]: AbilityImpairmentDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('ability_impairment')
+    .select('id, custom, ability_impairment_name, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Custom Ability/Impairments: ${error.message}`
+    )
+
+  const map: { [key: string]: AbilityImpairmentDetail } = {}
+  for (const a of data ?? []) map[a.id] = a
+
+  return map
+}
+
+/**
  * Add Ability Impairment
  *
  * Adds a new ability/impairment record to the database.

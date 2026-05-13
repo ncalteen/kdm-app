@@ -29,6 +29,35 @@ export async function getMoods(): Promise<{ [key: string]: MoodDetail }> {
 }
 
 /**
+ * Get User Custom Moods
+ *
+ * Retrieves only custom moods authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Mood Data Map
+ */
+export async function getUserCustomMoods(): Promise<{
+  [key: string]: MoodDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('mood')
+    .select('id, custom, mood_name, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error) throw new Error(`Error Fetching Custom Moods: ${error.message}`)
+
+  const map: { [key: string]: MoodDetail } = {}
+  for (const m of data ?? []) map[m.id] = m
+
+  return map
+}
+
+/**
  * Add Mood
  *
  * Inserts a new mood catalog row.

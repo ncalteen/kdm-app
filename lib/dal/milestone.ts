@@ -36,6 +36,38 @@ export async function getMilestones(): Promise<{
 }
 
 /**
+ * Get User Custom Milestones
+ *
+ * Retrieves only custom milestones authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Milestone Data Map
+ */
+export async function getUserCustomMilestones(): Promise<{
+  [key: string]: MilestoneDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('milestone')
+    .select(
+      'id, custom, milestone_name, event_name, campaign_types, requirements, rules'
+    )
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Milestones: ${error.message}`)
+
+  const milestoneMap: { [key: string]: MilestoneDetail } = {}
+  for (const m of data ?? []) milestoneMap[m.id] = m
+
+  return milestoneMap
+}
+
+/**
  * Get Milestone IDs
  *
  * Retrieves the IDs of milestones. This depends on if they are custom

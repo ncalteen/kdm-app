@@ -40,11 +40,11 @@ export async function getHunt(
   // Start the member-username RPC once and share the in-flight promise with
   // the monster fetch (the only sub-query that materializes custom catalog
   // rows). The board and hunt-survivor fetches don't need it.
-  const memberUsernamesPromise = getSettlementMemberUsernames(settlementId)
+  const memberProfilesPromise = getSettlementMemberUsernames(settlementId)
 
   const [huntHuntBoard, huntMonsters, huntSurvivors] = await Promise.all([
     getHuntHuntBoard(data.id),
-    getHuntMonsters(data.id, memberUsernamesPromise),
+    getHuntMonsters(data.id, memberProfilesPromise),
     getHuntSurvivors(data.id)
   ])
 

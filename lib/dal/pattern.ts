@@ -80,6 +80,37 @@ export async function getPatterns(): Promise<{
 }
 
 /**
+ * Get User Custom Patterns
+ *
+ * Retrieves only custom patterns authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Pattern Data Map
+ */
+export async function getUserCustomPatterns(): Promise<{
+  [key: string]: PatternDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('pattern')
+    .select(
+      'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(cost_gear_id, quantity), pattern_resource_cost(resource_id, quantity), pattern_resource_type_cost(resource_type, quantity), pattern_innovation_requirement(innovation_id)'
+    )
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error) throw new Error(`Error Fetching Custom Patterns: ${error.message}`)
+
+  const patternMap: { [key: string]: PatternDetail } = {}
+  for (const p of data ?? []) patternMap[p.id] = toPatternDetail(p)
+
+  return patternMap
+}
+
+/**
  * Add Pattern
  *
  * Adds a new pattern record to the database. Junction rows (gear, resource,

@@ -86,6 +86,8 @@ export const SeedPatternItem = memo(function SeedPatternItem({
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? seedPattern.seed_pattern_name}
         showCustomBadge
+        authorUserId={seedPattern.author_user_id}
+        authorUsername={seedPattern.author_username}
       />
 
       {/* Action Buttons */}

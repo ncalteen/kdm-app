@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addMilestone,
-  getMilestones,
+  getUserCustomMilestones,
   removeMilestone,
   updateMilestone
 } from '@/lib/dal/milestone'
@@ -80,9 +80,8 @@ export function CustomMilestonesCard({
     setIsLoading(true)
 
     try {
-      const data = await getMilestones()
-      const custom = Object.values(data).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      const data = await getUserCustomMilestones()
+      setItems(sortItems(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Milestones Error:', err)
       toast.error(ERROR_MESSAGE())

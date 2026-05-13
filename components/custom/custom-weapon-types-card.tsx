@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addWeaponType,
-  getWeaponTypes,
+  getUserCustomWeaponTypes,
   removeWeaponType,
   updateWeaponType
 } from '@/lib/dal/weapon-type'
@@ -79,9 +79,8 @@ export function CustomWeaponTypesCard({
     setIsLoading(true)
 
     try {
-      const data = await getWeaponTypes()
-      const custom = Object.values(data).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      const data = await getUserCustomWeaponTypes()
+      setItems(sortItems(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Weapon Types Error:', err)
       toast.error(ERROR_MESSAGE())

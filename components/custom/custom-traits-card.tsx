@@ -13,7 +13,12 @@ import {
 } from '@/components/ui/table'
 import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
-import { addTrait, getTraits, removeTrait, updateTrait } from '@/lib/dal/trait'
+import {
+  addTrait,
+  getUserCustomTraits,
+  removeTrait,
+  updateTrait
+} from '@/lib/dal/trait'
 import {
   ERROR_MESSAGE,
   NAMELESS_OBJECT_ERROR_MESSAGE,
@@ -71,10 +76,9 @@ export function CustomTraitsCard({
     setIsLoading(true)
 
     try {
-      const traitData = await getTraits()
+      const traitData = await getUserCustomTraits()
 
-      const custom = Object.values(traitData).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      setItems(sortItems(Object.values(traitData)))
     } catch (err: unknown) {
       console.error('Load Traits Error:', err)
       toast.error(ERROR_MESSAGE())

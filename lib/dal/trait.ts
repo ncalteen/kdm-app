@@ -29,6 +29,35 @@ export async function getTraits(): Promise<{ [key: string]: TraitDetail }> {
 }
 
 /**
+ * Get User Custom Traits
+ *
+ * Retrieves only custom traits authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Trait Data Map
+ */
+export async function getUserCustomTraits(): Promise<{
+  [key: string]: TraitDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('trait')
+    .select('id, custom, trait_name, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error) throw new Error(`Error Fetching Custom Traits: ${error.message}`)
+
+  const map: { [key: string]: TraitDetail } = {}
+  for (const t of data ?? []) map[t.id] = t
+
+  return map
+}
+
+/**
  * Add Trait
  *
  * Inserts a new trait catalog row.

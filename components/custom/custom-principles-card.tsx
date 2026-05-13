@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addPrinciple,
-  getPrinciples,
+  getUserCustomPrinciples,
   removePrinciple,
   updatePrinciple
 } from '@/lib/dal/principle'
@@ -79,9 +79,8 @@ export function CustomPrinciplesCard({
     setIsLoading(true)
 
     try {
-      const data = await getPrinciples()
-      const custom = Object.values(data).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      const data = await getUserCustomPrinciples()
+      setItems(sortItems(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Principles Error:', err)
       toast.error(ERROR_MESSAGE())

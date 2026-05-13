@@ -36,6 +36,39 @@ export async function getStrainMilestones(): Promise<{
 }
 
 /**
+ * Get User Custom Strain Milestones
+ *
+ * Retrieves only custom strain milestones authored by the current user.
+ * Used by the user-content library so collaborator-authored customs visible
+ * via the transitive SELECT policy don't pollute the caller's personal
+ * catalog.
+ *
+ * @returns Custom Strain Milestone Data Map
+ */
+export async function getUserCustomStrainMilestones(): Promise<{
+  [key: string]: StrainMilestoneDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('strain_milestone')
+    .select(
+      'id, custom, strain_milestone_name, milestone_condition, permanent_effect'
+    )
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Strain Milestones: ${error.message}`)
+
+  const strainMilestoneMap: { [key: string]: StrainMilestoneDetail } = {}
+  for (const s of data ?? []) strainMilestoneMap[s.id] = s
+
+  return strainMilestoneMap
+}
+
+/**
  * Add Strain Milestone
  *
  * Adds a new strain milestone record to the database.

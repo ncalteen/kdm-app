@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addSurvivorStatus,
-  getSurvivorStatuses,
+  getUserCustomSurvivorStatuses,
   removeSurvivorStatus,
   updateSurvivorStatus
 } from '@/lib/dal/survivor-status'
@@ -80,10 +80,9 @@ export function CustomSurvivorStatusesCard({
     setIsLoading(true)
 
     try {
-      const statusData = await getSurvivorStatuses()
+      const statusData = await getUserCustomSurvivorStatuses()
 
-      const custom = Object.values(statusData).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      setItems(sortItems(Object.values(statusData)))
     } catch (err: unknown) {
       console.error('Load Survivor Statuses Error:', err)
       toast.error(ERROR_MESSAGE())

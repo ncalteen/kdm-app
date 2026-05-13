@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -12,23 +16,23 @@ import { SettlementDetail } from '@/lib/types'
  * resolution pattern.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
+ * @param prefetchedMemberProfiles Optional pre-fetched map of IDs to usernames
  * @returns Settlement Pattern Data
  */
 export async function getSettlementPatterns(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['patterns']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_pattern')
       .select('id, pattern_id, pattern(custom, user_id, pattern_name)')
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
@@ -55,10 +59,10 @@ export async function getSettlementPatterns(
           pattern_id: item.pattern_id,
           pattern_name: pattern.pattern_name,
           custom: pattern.custom,
-          author_username:
-            pattern.custom && pattern.user_id
-              ? (memberUsernames.get(pattern.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: pattern.custom, user_id: pattern.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []

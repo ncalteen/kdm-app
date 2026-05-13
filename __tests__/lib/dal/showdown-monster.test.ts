@@ -170,7 +170,13 @@ describe('getShowdownMonsters', () => {
       })
     })
     mockSupabase.rpc.mockResolvedValue({
-      data: [{ user_id: 'author-1', username: 'ashen.veil' }],
+      data: [
+        {
+          user_id: 'author-1',
+          username: 'ashen.veil',
+          avatar_url: 'https://a/ashen.png'
+        }
+      ],
       error: null
     })
 
@@ -182,20 +188,33 @@ describe('getShowdownMonsters', () => {
         custom: true,
         trait_name: 'Hollow Roar',
         rules: null,
-        author_username: 'ashen.veil'
+        author_user_id: 'author-1',
+        author_username: 'ashen.veil',
+        author_avatar_url: 'https://a/ashen.png'
       },
       {
         id: 't-2',
         custom: false,
         trait_name: 'Standard',
         rules: null,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
-    // Ghost author (member left settlement) resolves to null.
+    // Ghost author (member left settlement) resolves to null username but
+    // retains the author_user_id.
     expect(result!['monster-1'].moods[0].author_username).toBeNull()
+    expect(result!['monster-1'].moods[0].author_user_id).toBe('ghost-1')
+    expect(result!['monster-1'].moods[0].author_avatar_url).toBeNull()
     expect(result!['monster-1'].survivor_statuses[0].author_username).toBe(
       'ashen.veil'
+    )
+    expect(result!['monster-1'].survivor_statuses[0].author_user_id).toBe(
+      'author-1'
+    )
+    expect(result!['monster-1'].survivor_statuses[0].author_avatar_url).toBe(
+      'https://a/ashen.png'
     )
     expect(mockSupabase.rpc).toHaveBeenCalledWith(
       'get_settlement_member_usernames',
@@ -244,13 +263,21 @@ describe('getShowdownMonsters', () => {
     })
 
     const prefetched = Promise.resolve(
-      new Map<string, string>([['author-1', 'prefetched.user']])
+      new Map<string, { username: string; avatar_url: string | null }>([
+        [
+          'author-1',
+          { username: 'prefetched.user', avatar_url: 'https://a/p.png' }
+        ]
+      ])
     )
 
     const result = await getShowdownMonsters('showdown-1', prefetched)
 
     expect(result!['monster-1'].traits[0].author_username).toBe(
       'prefetched.user'
+    )
+    expect(result!['monster-1'].traits[0].author_avatar_url).toBe(
+      'https://a/p.png'
     )
     expect(mockSupabase.rpc).not.toHaveBeenCalled()
   })

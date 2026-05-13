@@ -116,7 +116,9 @@ describe('getSettlementNemeses', () => {
         deployment_rules: null,
         victory_outcome: null,
         custom: false,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_nemesis')
@@ -238,7 +240,9 @@ describe('addSettlementNemeses', () => {
         deployment_rules: null,
         victory_outcome: null,
         custom: false,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
   })

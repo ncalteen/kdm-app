@@ -4,7 +4,11 @@ import {
   SURVIVOR_ON_HUNT_ERROR_MESSAGE,
   SURVIVOR_ON_SHOWDOWN_ERROR_MESSAGE
 } from '@/lib/messages'
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { createClient } from '@/lib/supabase/client'
 import { SurvivorDetail } from '@/lib/types'
 import { NewSurvivorInput } from '@/schemas/new-survivor-input'
@@ -22,9 +26,10 @@ import { NewSurvivorInput } from '@/schemas/new-survivor-input'
  *   (`survivor_knowledge_1_id_fkey` etc.) — PostgREST requires the explicit
  *   constraint name to disambiguate.
  * - Every embed selects the catalog row's `custom` flag and `user_id` so the
- *   mapper can resolve `author_username` against the settlement-member
- *   username map (E2.8; see `local/sharing-architecture.md` §7.4 / §10
- *   Phase 2 item 2.6).
+ *   mapper can resolve `author_user_id`, `author_username`, and
+ *   `author_avatar_url` against the settlement-member profile map (E2.8 /
+ *   E2.9; see `local/sharing-architecture.md` §7.4 / §10 Phase 2 items
+ *   2.6–2.7).
  */
 const SURVIVOR_SELECT = `
   *,
@@ -59,9 +64,13 @@ const SURVIVOR_SELECT = `
  * Helper that augments a `SurvivorDetail` collection entry with the raw
  * `user_id` returned by the embedded catalog row. The DAL strips `user_id`
  * during the map step so it never leaks into `SurvivorDetail`, but it's
- * required transiently to look up `author_username`.
+ * required transiently to resolve the `author_user_id` / `author_username` /
+ * `author_avatar_url` triplet.
  */
 type WithAuthorship<T> = T & { user_id: string | null }
+
+/** Authorship Triplet Keys Stripped From Detail Sub-Types */
+type AuthorshipKeys = 'author_user_id' | 'author_username' | 'author_avatar_url'
 
 /**
  * Raw Survivor Row Shape
@@ -71,97 +80,83 @@ type WithAuthorship<T> = T & { user_id: string | null }
  * focused interface keeps the mapper type-safe without `as unknown` casts.
  *
  * The embedded catalog rows carry `user_id` here (stripped during the map
- * step before reaching `SurvivorDetail`) so each row's `author_username`
- * can be resolved from the settlement member-username map.
+ * step before reaching `SurvivorDetail`) so the author triplet can be
+ * resolved from the settlement member-profile map.
  */
 type SurvivorRow = Tables<'survivor'> & {
   abilities_impairments: {
     ability_impairment: WithAuthorship<
-      Omit<SurvivorDetail['abilities_impairments'][number], 'author_username'>
+      Omit<SurvivorDetail['abilities_impairments'][number], AuthorshipKeys>
     > | null
   }[]
   cursed_gear: {
     gear: WithAuthorship<
-      Omit<SurvivorDetail['cursed_gear'][number], 'author_username'>
+      Omit<SurvivorDetail['cursed_gear'][number], AuthorshipKeys>
     > | null
   }[]
   disorders: {
     disorder: WithAuthorship<
-      Omit<SurvivorDetail['disorders'][number], 'author_username'>
+      Omit<SurvivorDetail['disorders'][number], AuthorshipKeys>
     > | null
   }[]
   fighting_arts: {
     fighting_art: WithAuthorship<
-      Omit<SurvivorDetail['fighting_arts'][number], 'author_username'>
+      Omit<SurvivorDetail['fighting_arts'][number], AuthorshipKeys>
     > | null
   }[]
   secret_fighting_arts: {
     secret_fighting_art: WithAuthorship<
-      Omit<SurvivorDetail['secret_fighting_arts'][number], 'author_username'>
+      Omit<SurvivorDetail['secret_fighting_arts'][number], AuthorshipKeys>
     > | null
   }[]
   gear_grid: SurvivorDetail['gear_grid'] | SurvivorDetail['gear_grid'][] | null
   hunt_survivor: { survivor_id: string }[]
   showdown_survivor: { survivor_id: string }[]
   knowledge_1: WithAuthorship<
-    Omit<NonNullable<SurvivorDetail['knowledge_1']>, 'author_username'>
+    Omit<NonNullable<SurvivorDetail['knowledge_1']>, AuthorshipKeys>
   > | null
   knowledge_2: WithAuthorship<
-    Omit<NonNullable<SurvivorDetail['knowledge_2']>, 'author_username'>
+    Omit<NonNullable<SurvivorDetail['knowledge_2']>, AuthorshipKeys>
   > | null
   neurosis: WithAuthorship<
-    Omit<NonNullable<SurvivorDetail['neurosis']>, 'author_username'>
+    Omit<NonNullable<SurvivorDetail['neurosis']>, AuthorshipKeys>
   > | null
   philosophy: WithAuthorship<
-    Omit<NonNullable<SurvivorDetail['philosophy']>, 'author_username'>
+    Omit<NonNullable<SurvivorDetail['philosophy']>, AuthorshipKeys>
   > | null
   tenet_knowledge: WithAuthorship<
-    Omit<NonNullable<SurvivorDetail['tenet_knowledge']>, 'author_username'>
+    Omit<NonNullable<SurvivorDetail['tenet_knowledge']>, AuthorshipKeys>
   > | null
 }
 
 /**
- * Resolve Author Username
+ * Strip Author User ID And Resolve Author Triplet
  *
- * Returns the catalog author's username for custom rows, or `null` for
- * built-ins / rows authored by users no longer connected to the settlement.
- * Mirrors the canonical pattern in `settlement_*` collection DALs.
- *
- * @param row Catalog Row With `custom` + `user_id`
- * @param memberUsernames Settlement Member Username Map
- * @returns Author Username Or Null
- */
-function resolveAuthorUsername(
-  row: { custom: boolean; user_id: string | null } | null | undefined,
-  memberUsernames: Map<string, string>
-): string | null {
-  if (!row || !row.custom || !row.user_id) return null
-  return memberUsernames.get(row.user_id) ?? null
-}
-
-/**
- * Strip Author User ID
- *
- * Returns a new object with the embedded `user_id` removed and the resolved
- * `author_username` attached. Keeps `user_id` from leaking into
- * `SurvivorDetail` while preserving every other catalog field.
+ * Returns a new object with the embedded `user_id` removed and the
+ * `author_user_id`, `author_username`, `author_avatar_url` triplet
+ * resolved against the settlement member-profile map. Built-ins and ghost
+ * authors resolve to all-`null`; see {@link resolveSettlementAuthorship}.
  *
  * @param row Catalog Row With `user_id`
- * @param memberUsernames Settlement Member Username Map
- * @returns Catalog Row With `author_username`
+ * @param memberProfiles Settlement Member Profile Map
+ * @returns Catalog Row With Author Triplet
  */
 function withAuthorUsername<
   T extends { custom: boolean; user_id: string | null }
 >(
   row: T,
-  memberUsernames: Map<string, string>
-): Omit<T, 'user_id'> & { author_username: string | null } {
+  memberProfiles: Map<string, SettlementMemberProfile>
+): Omit<T, 'user_id'> & {
+  author_user_id: string | null
+  author_username: string | null
+  author_avatar_url: string | null
+} {
   const { user_id, ...rest } = row
   return {
     ...rest,
-    author_username: resolveAuthorUsername(
+    ...resolveSettlementAuthorship(
       { custom: row.custom, user_id },
-      memberUsernames
+      memberProfiles
     )
   }
 }
@@ -171,16 +166,17 @@ function withAuthorUsername<
  *
  * Flattens the junction-table embeds (`[{ disorder: {...} }]` →
  * `[{...}]`), derives the `embarked` flag from hunt/showdown membership,
- * and resolves `author_username` for every custom catalog row using the
- * settlement member-username map.
+ * and resolves the author triplet (`author_user_id`,
+ * `author_username`, `author_avatar_url`) for every custom catalog row
+ * using the settlement member-profile map.
  *
  * @param row Survivor Row
- * @param memberUsernames Settlement Member Username Map
+ * @param memberProfiles Settlement Member Profile Map
  * @returns Survivor Detail
  */
 function mapSurvivorRow(
   row: SurvivorRow,
-  memberUsernames: Map<string, string>
+  memberProfiles: Map<string, SettlementMemberProfile>
 ): SurvivorDetail {
   const {
     abilities_impairments,
@@ -211,50 +207,50 @@ function mapSurvivorRow(
     abilities_impairments: abilities_impairments
       .map((r) =>
         r.ability_impairment
-          ? withAuthorUsername(r.ability_impairment, memberUsernames)
+          ? withAuthorUsername(r.ability_impairment, memberProfiles)
           : null
       )
       .filter((x): x is SurvivorDetail['abilities_impairments'][number] =>
         Boolean(x)
       ),
     cursed_gear: cursed_gear
-      .map((r) => (r.gear ? withAuthorUsername(r.gear, memberUsernames) : null))
+      .map((r) => (r.gear ? withAuthorUsername(r.gear, memberProfiles) : null))
       .filter((x): x is SurvivorDetail['cursed_gear'][number] => Boolean(x)),
     disorders: disorders
       .map((r) =>
-        r.disorder ? withAuthorUsername(r.disorder, memberUsernames) : null
+        r.disorder ? withAuthorUsername(r.disorder, memberProfiles) : null
       )
       .filter((x): x is SurvivorDetail['disorders'][number] => Boolean(x)),
     embarked: hunt_survivor.length > 0 || showdown_survivor.length > 0,
     fighting_arts: fighting_arts
       .map((r) =>
         r.fighting_art
-          ? withAuthorUsername(r.fighting_art, memberUsernames)
+          ? withAuthorUsername(r.fighting_art, memberProfiles)
           : null
       )
       .filter((x): x is SurvivorDetail['fighting_arts'][number] => Boolean(x)),
     gear_grid: gridRow,
     knowledge_1: knowledge_1
-      ? withAuthorUsername(knowledge_1, memberUsernames)
+      ? withAuthorUsername(knowledge_1, memberProfiles)
       : null,
     knowledge_2: knowledge_2
-      ? withAuthorUsername(knowledge_2, memberUsernames)
+      ? withAuthorUsername(knowledge_2, memberProfiles)
       : null,
-    neurosis: neurosis ? withAuthorUsername(neurosis, memberUsernames) : null,
+    neurosis: neurosis ? withAuthorUsername(neurosis, memberProfiles) : null,
     philosophy: philosophy
-      ? withAuthorUsername(philosophy, memberUsernames)
+      ? withAuthorUsername(philosophy, memberProfiles)
       : null,
     secret_fighting_arts: secret_fighting_arts
       .map((r) =>
         r.secret_fighting_art
-          ? withAuthorUsername(r.secret_fighting_art, memberUsernames)
+          ? withAuthorUsername(r.secret_fighting_art, memberProfiles)
           : null
       )
       .filter((x): x is SurvivorDetail['secret_fighting_arts'][number] =>
         Boolean(x)
       ),
     tenet_knowledge: tenet_knowledge
-      ? withAuthorUsername(tenet_knowledge, memberUsernames)
+      ? withAuthorUsername(tenet_knowledge, memberProfiles)
       : null
   }
 }
@@ -293,22 +289,22 @@ export async function addSquiresOfTheCitadelSurvivors(
  * (disorders, fighting arts, etc.) resolved to their display names. Issues
  * a single PostgREST request that joins every related entity in one call.
  *
- * Each embedded catalog row carries `author_username` so the UI can render
- * the "By @username" chip on custom rows (E2.8; see
- * `local/sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6). The
- * username map is fetched alongside the main query via the
+ * Each embedded catalog row carries the author triplet so the UI can
+ * render the avatar/tooltip chip on custom rows (E2.8/E2.9; see
+ * `local/sharing-architecture.md` §7.4 / §10 Phase 2 items 2.6–2.7). The
+ * profile map is fetched alongside the main query via the
  * `get_settlement_member_usernames` SECURITY DEFINER RPC.
  *
  * @param survivorId Survivor ID
- * @param prefetchedMemberUsernames Optional in-flight (or resolved)
- *   member-username map. When the caller already has the map (e.g. when
+ * @param prefetchedMemberProfiles Optional in-flight (or resolved)
+ *   member-profile map. When the caller already has the map (e.g. when
  *   loading a settlement page that also fetches survivors), pass the
  *   promise to avoid an extra RPC.
  * @returns Survivor Data with Embarked Status
  */
 export async function getSurvivor(
   survivorId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SurvivorDetail | null> {
   if (!survivorId) throw new Error('Required: Survivor ID')
 
@@ -326,10 +322,10 @@ export async function getSurvivor(
   // The survivor row carries `settlement_id` regardless of whether the
   // caller provided a prefetched map, so we can derive the settlement
   // scope here without an extra round-trip.
-  const memberUsernames = await (prefetchedMemberUsernames ??
+  const memberProfiles = await (prefetchedMemberProfiles ??
     getSettlementMemberUsernames(data.settlement_id))
 
-  return mapSurvivorRow(data, memberUsernames)
+  return mapSurvivorRow(data, memberProfiles)
 }
 
 /**
@@ -339,37 +335,37 @@ export async function getSurvivor(
  * Issues a single PostgREST request that joins every related entity in one
  * call.
  *
- * Each embedded catalog row carries `author_username`; see {@link getSurvivor}
- * for details.
+ * Each embedded catalog row carries the author triplet; see
+ * {@link getSurvivor} for details.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional in-flight (or resolved)
- *   member-username map. When called from an aggregator that already
+ * @param prefetchedMemberProfiles Optional in-flight (or resolved)
+ *   member-profile map. When called from an aggregator that already
  *   fetches the map, pass the promise to skip the extra RPC.
  * @returns List of Survivors with Embarked Status
  */
 export async function getSurvivors(
   settlementId: string | null,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SurvivorDetail[] | null> {
   if (!settlementId) return null
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('survivor')
       .select(SURVIVOR_SELECT)
       .eq('settlement_id', settlementId)
       .order('id', { ascending: true })
       .returns<SurvivorRow[]>(),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error) throw new Error(`Error Fetching Survivors: ${error.message}`)
   if (!data?.length) return null
 
-  return data.map((row) => mapSurvivorRow(row, memberUsernames))
+  return data.map((row) => mapSurvivorRow(row, memberProfiles))
 }
 
 /**

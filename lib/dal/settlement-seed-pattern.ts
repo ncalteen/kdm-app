@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
 
@@ -11,25 +15,25 @@ import { SettlementDetail } from '@/lib/types'
  * resolution pattern.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
+ * @param prefetchedMemberProfiles Optional pre-fetched map of IDs to usernames
  * @returns Settlement Seed Pattern Data
  */
 export async function getSettlementSeedPatterns(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['seed_patterns']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_seed_pattern')
       .select(
         'id, seed_pattern_id, seed_pattern(custom, user_id, seed_pattern_name)'
       )
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
@@ -64,10 +68,10 @@ export async function getSettlementSeedPatterns(
           seed_pattern_id: item.seed_pattern_id,
           seed_pattern_name: seedPattern.seed_pattern_name,
           custom: seedPattern.custom,
-          author_username:
-            seedPattern.custom && seedPattern.user_id
-              ? (memberUsernames.get(seedPattern.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: seedPattern.custom, user_id: seedPattern.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []

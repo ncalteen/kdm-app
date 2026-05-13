@@ -91,6 +91,8 @@ export const PatternItem = memo(function PatternItem({
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? pattern.pattern_name}
         showCustomBadge
+        authorUserId={pattern.author_user_id}
+        authorUsername={pattern.author_username}
       />
 
       {/* Action Buttons */}

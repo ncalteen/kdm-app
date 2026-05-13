@@ -61,6 +61,8 @@ export const KnowledgeItem = memo(function KnowledgeItem({
           observationRankUpMilestone={knowledge.observation_rank_up_milestone}
           philosophyId={knowledge.philosophy_id}
           showCustomBadge
+          authorUserId={knowledge.author_user_id}
+          authorUsername={knowledge.author_username}
         />
       ) : (
         <CustomRulesText
@@ -79,6 +81,8 @@ export const KnowledgeItem = memo(function KnowledgeItem({
           }
           title={customDetail?.title ?? knowledge.knowledge_name}
           showCustomBadge
+          authorUserId={knowledge.author_user_id}
+          authorUsername={knowledge.author_username}
         />
       )}
 

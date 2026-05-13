@@ -379,7 +379,9 @@ export function KnowledgeCard({
                       knowledgeDetail.observation_conditions,
                     observation_rank_up_milestone:
                       knowledgeDetail.observation_rank_up_milestone,
-                    author_username: knowledgeDetail.author_username
+                    author_user_id: knowledgeDetail.author_user_id,
+                    author_username: knowledgeDetail.author_username,
+                    author_avatar_url: knowledgeDetail.author_avatar_url
                   }
                 : null,
               knowledge_1_observation_rank: 0,
@@ -634,7 +636,9 @@ export function KnowledgeCard({
                       knowledgeDetail.observation_conditions,
                     observation_rank_up_milestone:
                       knowledgeDetail.observation_rank_up_milestone,
-                    author_username: knowledgeDetail.author_username
+                    author_user_id: knowledgeDetail.author_user_id,
+                    author_username: knowledgeDetail.author_username,
+                    author_avatar_url: knowledgeDetail.author_avatar_url
                   }
                 : null,
               knowledge_2_observation_rank: 0,
@@ -882,18 +886,26 @@ export function KnowledgeCard({
                       (k) => k.knowledge_id === knowledge1?.id
                     )
                   return (
-                    <CustomKnowledgeRulesIconButton
-                      custom={settlementKnowledge?.custom}
-                      knowledgeName={settlementKnowledge?.knowledge_name}
-                      rules={settlementKnowledge?.rules}
-                      observationConditions={
-                        settlementKnowledge?.observation_conditions
-                      }
-                      observationRankUpMilestone={
-                        settlementKnowledge?.observation_rank_up_milestone
-                      }
-                      philosophyId={settlementKnowledge?.philosophy_id}
-                    />
+                    <>
+                      <CustomKnowledgeRulesIconButton
+                        custom={settlementKnowledge?.custom}
+                        knowledgeName={settlementKnowledge?.knowledge_name}
+                        rules={settlementKnowledge?.rules}
+                        observationConditions={
+                          settlementKnowledge?.observation_conditions
+                        }
+                        observationRankUpMilestone={
+                          settlementKnowledge?.observation_rank_up_milestone
+                        }
+                        philosophyId={settlementKnowledge?.philosophy_id}
+                        authorUserId={
+                          settlementKnowledge?.author_user_id ?? null
+                        }
+                        authorUsername={
+                          settlementKnowledge?.author_username ?? null
+                        }
+                      />
+                    </>
                   )
                 })()}
               </div>
@@ -1004,18 +1016,26 @@ export function KnowledgeCard({
                       (k) => k.knowledge_id === knowledge2?.id
                     )
                   return (
-                    <CustomKnowledgeRulesIconButton
-                      custom={settlementKnowledge?.custom}
-                      knowledgeName={settlementKnowledge?.knowledge_name}
-                      rules={settlementKnowledge?.rules}
-                      observationConditions={
-                        settlementKnowledge?.observation_conditions
-                      }
-                      observationRankUpMilestone={
-                        settlementKnowledge?.observation_rank_up_milestone
-                      }
-                      philosophyId={settlementKnowledge?.philosophy_id}
-                    />
+                    <>
+                      <CustomKnowledgeRulesIconButton
+                        custom={settlementKnowledge?.custom}
+                        knowledgeName={settlementKnowledge?.knowledge_name}
+                        rules={settlementKnowledge?.rules}
+                        observationConditions={
+                          settlementKnowledge?.observation_conditions
+                        }
+                        observationRankUpMilestone={
+                          settlementKnowledge?.observation_rank_up_milestone
+                        }
+                        philosophyId={settlementKnowledge?.philosophy_id}
+                        authorUserId={
+                          settlementKnowledge?.author_user_id ?? null
+                        }
+                        authorUsername={
+                          settlementKnowledge?.author_username ?? null
+                        }
+                      />
+                    </>
                   )
                 })()}
               </div>

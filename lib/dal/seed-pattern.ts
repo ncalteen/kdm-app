@@ -57,6 +57,39 @@ export async function getSeedPatterns(): Promise<{
 }
 
 /**
+ * Get User Custom Seed Patterns
+ *
+ * Retrieves only custom seed patterns authored by the current user. Used
+ * by the user-content library so collaborator-authored customs visible via
+ * the transitive SELECT policy don't pollute the caller's personal
+ * catalog.
+ *
+ * @returns Custom Seed Pattern Data Map
+ */
+export async function getUserCustomSeedPatterns(): Promise<{
+  [key: string]: SeedPatternDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('seed_pattern')
+    .select(
+      'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity)'
+    )
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Seed Patterns: ${error.message}`)
+
+  const seedPatternMap: { [key: string]: SeedPatternDetail } = {}
+  for (const s of data ?? []) seedPatternMap[s.id] = toSeedPatternDetail(s)
+
+  return seedPatternMap
+}
+
+/**
  * Add Seed Pattern
  *
  * Adds a new seed pattern record to the database. Gear costs are persisted

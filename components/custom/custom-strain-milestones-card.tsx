@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addStrainMilestone,
-  getStrainMilestones,
+  getUserCustomStrainMilestones,
   removeStrainMilestone,
   updateStrainMilestone
 } from '@/lib/dal/strain-milestone'
@@ -81,9 +81,8 @@ export function CustomStrainMilestonesCard({
     setIsLoading(true)
 
     try {
-      const data = await getStrainMilestones()
-      const custom = Object.values(data).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      const data = await getUserCustomStrainMilestones()
+      setItems(sortItems(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Strain Milestones Error:', err)
       toast.error(ERROR_MESSAGE())

@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addKnowledge,
-  getKnowledges,
+  getUserCustomKnowledges,
   removeKnowledge,
   updateKnowledge
 } from '@/lib/dal/knowledge'
@@ -88,12 +88,11 @@ export function CustomKnowledgeCard({
 
     try {
       const [knowledgeData, philosophyData] = await Promise.all([
-        getKnowledges(),
+        getUserCustomKnowledges(),
         getPhilosophies()
       ])
 
-      const custom = Object.values(knowledgeData).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      setItems(sortItems(Object.values(knowledgeData)))
       setAvailablePhilosophies(philosophyData)
     } catch (err: unknown) {
       console.error('Load Knowledge Error:', err)

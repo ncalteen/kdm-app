@@ -31,6 +31,36 @@ export async function getCharacters(): Promise<{
 }
 
 /**
+ * Get User Custom Characters
+ *
+ * Retrieves only custom characters authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Character Data Map
+ */
+export async function getUserCustomCharacters(): Promise<{
+  [key: string]: CharacterDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('character')
+    .select('id, custom, character_name, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Characters: ${error.message}`)
+
+  const characterMap: { [key: string]: CharacterDetail } = {}
+  for (const c of data ?? []) characterMap[c.id] = c
+
+  return characterMap
+}
+
+/**
  * Add Character
  *
  * Adds a new character record to the database.

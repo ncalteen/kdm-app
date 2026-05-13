@@ -2,13 +2,45 @@ import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 
 /**
+ * Settlement Member Profile
+ *
+ * Lightweight `(username, avatar_url)` pair resolved per settlement
+ * member by {@link getSettlementMemberUsernames}. Powers the E2.9
+ * authorship chip's tooltip (`username`) and avatar (`avatar_url`)
+ * without forcing a second round-trip after the catalog-row fetch.
+ */
+export interface SettlementMemberProfile {
+  /** Username */
+  username: string
+  /** Provider-Supplied Avatar URL (OAuth; nullable) */
+  avatar_url: string | null
+}
+
+/**
+ * Settlement Authorship Resolution
+ *
+ * Triplet of fields emitted onto every catalog row materialized into a
+ * settlement-scoped detail type. All three are `null` for built-ins and
+ * for custom rows whose author is no longer connected to the settlement.
+ */
+export interface SettlementAuthorshipResolution {
+  /** Author User ID (`null` for built-ins) */
+  author_user_id: string | null
+  /** Author Username (`null` for built-ins / ghost authors) */
+  author_username: string | null
+  /** Author Avatar URL (`null` for built-ins / ghost authors / no avatar) */
+  author_avatar_url: string | null
+}
+
+/**
  * Get Settlement Member Usernames
  *
- * Returns a `Map<user_id, username>` of every user connected to a
- * settlement — the owner plus every collaborator listed in
+ * Returns a `Map<user_id, {username, avatar_url}>` of every user connected
+ * to a settlement — the owner plus every collaborator listed in
  * `settlement_shared_user`. Powers the "By @username" authorship chip on
  * custom catalog rows materialized into `SettlementDetail`'s collections
- * (E2.8 in local/sharing-architecture.md §7.4 / §10 Phase 2 item 2.6).
+ * (E2.8) and its avatar (E2.9) in
+ * `local/sharing-architecture.md` §7.4 / §10 Phase 2 items 2.6–2.7.
  *
  * Goes through the `get_settlement_member_usernames` SECURITY DEFINER RPC
  * because RLS on `user_settings` restricts SELECT to the row owner. A
@@ -19,12 +51,17 @@ import { createClient } from '@/lib/supabase/client'
  * collaborator); unrelated callers receive an empty map. Mirrors
  * {@link getSettlementSharedUsers}'s use of `get_settlement_collaborators`.
  *
+ * The returned map now also carries `avatar_url` so the E2.9 chip can
+ * render the author's avatar without an extra round-trip. The function
+ * name is kept for source-compat with the dozen-plus DAL callers that
+ * already prefetch the map.
+ *
  * @param settlementId Settlement ID
- * @returns Map of `user_id -> username` for every settlement member
+ * @returns Map of `user_id -> { username, avatar_url }` for every member
  */
 export async function getSettlementMemberUsernames(
   settlementId: string | null | undefined
-): Promise<Map<string, string>> {
+): Promise<Map<string, SettlementMemberProfile>> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
@@ -41,15 +78,58 @@ export async function getSettlementMemberUsernames(
       `Error Fetching Settlement Member Usernames: ${error.message}`
     )
 
-  const map = new Map<string, string>()
+  const map = new Map<string, SettlementMemberProfile>()
   for (const row of (data ?? []) as {
     user_id: string | null
     username: string | null
+    avatar_url: string | null
   }[]) {
-    if (row.user_id && row.username) map.set(row.user_id, row.username)
+    if (row.user_id && row.username) {
+      map.set(row.user_id, {
+        username: row.username,
+        avatar_url: row.avatar_url ?? null
+      })
+    }
   }
 
   return map
+}
+
+/**
+ * Resolve Settlement Authorship
+ *
+ * Returns the `(author_user_id, author_username, author_avatar_url)`
+ * triplet that every settlement-scoped catalog row carries. Built-in
+ * rows resolve to all-`null`; custom rows authored by a settlement
+ * member resolve to the member's profile; custom rows authored by a user
+ * who has since left the settlement resolve to `(user_id, null, null)`
+ * so the UI can still distinguish built-ins from ghost authors.
+ *
+ * This is the canonical helper used by every settlement-attached
+ * sub-DAL (gear, knowledge, etc.) and by `survivor` / `hunt-monster` /
+ * `showdown-monster` so the row-to-detail mapping stays consistent.
+ *
+ * @param row Catalog Row With `custom` + `user_id`
+ * @param memberProfiles Settlement Member Profile Map
+ * @returns Author Triplet
+ */
+export function resolveSettlementAuthorship(
+  row: { custom: boolean; user_id: string | null } | null | undefined,
+  memberProfiles: Map<string, SettlementMemberProfile>
+): SettlementAuthorshipResolution {
+  if (!row || !row.custom || !row.user_id) {
+    return {
+      author_user_id: null,
+      author_username: null,
+      author_avatar_url: null
+    }
+  }
+  const profile = memberProfiles.get(row.user_id) ?? null
+  return {
+    author_user_id: row.user_id,
+    author_username: profile?.username ?? null,
+    author_avatar_url: profile?.avatar_url ?? null
+  }
 }
 
 /**

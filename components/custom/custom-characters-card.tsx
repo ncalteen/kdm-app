@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addCharacter,
-  getCharacters,
+  getUserCustomCharacters,
   removeCharacter,
   updateCharacter
 } from '@/lib/dal/character'
@@ -79,11 +79,9 @@ export function CustomCharactersCard({
     setIsLoading(true)
 
     try {
-      const data = await getCharacters()
+      const data = await getUserCustomCharacters()
 
-      // Only show custom characters
-      const customChars = Object.values(data).filter((c) => c.custom)
-      setCharacters(sortCharacters(customChars))
+      setCharacters(sortCharacters(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Characters Error:', err)
       toast.error(ERROR_MESSAGE())

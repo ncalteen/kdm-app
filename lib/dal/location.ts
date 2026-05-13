@@ -33,6 +33,36 @@ export async function getLocations(): Promise<{
 }
 
 /**
+ * Get User Custom Locations
+ *
+ * Retrieves only custom locations authored by the current user. Used by
+ * the user-content library so collaborator-authored customs visible via the
+ * transitive SELECT policy don't pollute the caller's personal catalog.
+ *
+ * @returns Custom Location Data Map
+ */
+export async function getUserCustomLocations(): Promise<{
+  [key: string]: LocationDetail
+}> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('location')
+    .select('id, custom, location_name, rules')
+    .eq('custom', true)
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Custom Locations: ${error.message}`)
+
+  const locationMap: { [key: string]: LocationDetail } = {}
+  for (const l of data ?? []) locationMap[l.id] = l
+
+  return locationMap
+}
+
+/**
  * Get Location IDs
  *
  * Retrieves the IDs of locations. This depends on if they are custom locations

@@ -65,6 +65,8 @@ export const LocationItem = memo(function LocationItem({
         }
         title={customDetail?.title ?? location.location_name}
         showCustomBadge
+        authorUserId={location.author_user_id}
+        authorUsername={location.author_username}
       />
 
       {/* Remove Button */}

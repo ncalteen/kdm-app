@@ -15,7 +15,7 @@ import { LocalStateType } from '@/contexts/local-context'
 import { useToast } from '@/hooks/use-toast'
 import {
   addInnovation,
-  getInnovations,
+  getUserCustomInnovations,
   removeInnovation,
   updateInnovation
 } from '@/lib/dal/innovation'
@@ -79,9 +79,8 @@ export function CustomInnovationsCard({
     setIsLoading(true)
 
     try {
-      const data = await getInnovations()
-      const custom = Object.values(data).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      const data = await getUserCustomInnovations()
+      setItems(sortItems(Object.values(data)))
     } catch (err: unknown) {
       console.error('Load Innovations Error:', err)
       toast.error(ERROR_MESSAGE())

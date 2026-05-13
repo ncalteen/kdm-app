@@ -323,7 +323,7 @@ export async function getSettlement(
   // critically — keeps the RPC running concurrently with the collection
   // queries inside the Promise.all instead of forcing a sequential
   // round-trip before them.
-  const memberUsernamesPromise = getSettlementMemberUsernames(settlementId)
+  const memberProfilesPromise = getSettlementMemberUsernames(settlementId)
 
   const [
     collectiveCognitionRewards,
@@ -344,21 +344,21 @@ export async function getSettlement(
   ] = await Promise.all([
     getSettlementCollectiveCognitionRewards(
       settlementId,
-      memberUsernamesPromise
+      memberProfilesPromise
     ),
-    getSettlementGear(settlementId, memberUsernamesPromise),
-    getSettlementInnovations(settlementId, memberUsernamesPromise),
-    getSettlementKnowledges(settlementId, memberUsernamesPromise),
-    getSettlementLocations(settlementId, memberUsernamesPromise),
-    getSettlementMilestones(settlementId, memberUsernamesPromise),
-    getSettlementNemeses(settlementId, memberUsernamesPromise),
+    getSettlementGear(settlementId, memberProfilesPromise),
+    getSettlementInnovations(settlementId, memberProfilesPromise),
+    getSettlementKnowledges(settlementId, memberProfilesPromise),
+    getSettlementLocations(settlementId, memberProfilesPromise),
+    getSettlementMilestones(settlementId, memberProfilesPromise),
+    getSettlementNemeses(settlementId, memberProfilesPromise),
     getNeuroses(),
-    getSettlementPatterns(settlementId, memberUsernamesPromise),
-    getSettlementPhilosophies(settlementId, memberUsernamesPromise),
-    getSettlementPrinciples(settlementId, memberUsernamesPromise),
-    getSettlementQuarries(settlementId, memberUsernamesPromise),
-    getSettlementResources(settlementId, memberUsernamesPromise),
-    getSettlementSeedPatterns(settlementId, memberUsernamesPromise),
+    getSettlementPatterns(settlementId, memberProfilesPromise),
+    getSettlementPhilosophies(settlementId, memberProfilesPromise),
+    getSettlementPrinciples(settlementId, memberProfilesPromise),
+    getSettlementQuarries(settlementId, memberProfilesPromise),
+    getSettlementResources(settlementId, memberProfilesPromise),
+    getSettlementSeedPatterns(settlementId, memberProfilesPromise),
     getSettlementTimelineYears(settlementId)
   ])
 

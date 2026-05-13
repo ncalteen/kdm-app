@@ -408,13 +408,21 @@ export type HuntMonsterDetail = Omit<
    * render the "By @username" chip (E2.8; see `local/sharing-architecture.md`
    * §7.4 / §10 Phase 2 item 2.6).
    */
-  traits: (TraitDetail & { author_username: string | null })[]
+  traits: (TraitDetail & {
+    author_user_id: string | null
+    author_username: string | null
+    author_avatar_url: string | null
+  })[]
   /**
    * Moods (joined from hunt_monster_mood → mood).
    *
    * Each entry carries `author_username`; see `traits` above.
    */
-  moods: (MoodDetail & { author_username: string | null })[]
+  moods: (MoodDetail & {
+    author_user_id: string | null
+    author_username: string | null
+    author_avatar_url: string | null
+  })[]
   /**
    * Survivor statuses (joined from hunt_monster_survivor_status →
    * survivor_status).
@@ -422,7 +430,9 @@ export type HuntMonsterDetail = Omit<
    * Each entry carries `author_username`; see `traits` above.
    */
   survivor_statuses: (SurvivorStatusDetail & {
+    author_user_id: string | null
     author_username: string | null
+    author_avatar_url: string | null
   })[]
 }
 
@@ -815,8 +825,12 @@ export type SettlementDetail = Omit<
     unlocked: boolean
     /** Whether the underlying reward is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Gear */
   gear: {
@@ -830,8 +844,12 @@ export type SettlementDetail = Omit<
     quantity: number
     /** Whether the underlying gear is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Innovations */
   innovations: {
@@ -849,8 +867,12 @@ export type SettlementDetail = Omit<
     benefits: string | null
     /** Whether the underlying innovation is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Knowledges */
   knowledges: {
@@ -870,8 +892,12 @@ export type SettlementDetail = Omit<
     observation_rank_up_milestone: number | null
     /** Whether the underlying knowledge is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Locations */
   locations: {
@@ -887,8 +913,12 @@ export type SettlementDetail = Omit<
     unlocked: boolean
     /** Whether the underlying location is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Neuroses */
   neuroses: {
@@ -917,8 +947,12 @@ export type SettlementDetail = Omit<
     rules: string | null
     /** Whether the underlying milestone is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Nemeses */
   nemeses: {
@@ -962,8 +996,12 @@ export type SettlementDetail = Omit<
     victory_outcome: string | null
     /** Whether the underlying nemesis is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Patterns */
   patterns: {
@@ -975,8 +1013,12 @@ export type SettlementDetail = Omit<
     pattern_name: string
     /** Whether the underlying pattern is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Philosophies */
   philosophies: {
@@ -996,8 +1038,12 @@ export type SettlementDetail = Omit<
     neurosis_id: string | null
     /** Whether the underlying philosophy is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Principles */
   principles: {
@@ -1021,8 +1067,12 @@ export type SettlementDetail = Omit<
     principle_name: string
     /** Whether the underlying principle is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Quarries */
   quarries: {
@@ -1060,8 +1110,12 @@ export type SettlementDetail = Omit<
     victory_outcome: string | null
     /** Whether the underlying quarry is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Resources */
   resources: {
@@ -1085,8 +1139,12 @@ export type SettlementDetail = Omit<
     resource_types: string[]
     /** Whether the underlying resource is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Seed Patterns */
   seed_patterns: {
@@ -1098,8 +1156,12 @@ export type SettlementDetail = Omit<
     seed_pattern_name: string
     /** Whether the underlying seed pattern is user-defined */
     custom: boolean
-    /** Author Username (null for built-ins; see E2.8 / §7.4) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Caller's Role on This Settlement */
   role: SettlementRole
@@ -1218,13 +1280,21 @@ export type ShowdownMonsterDetail = Omit<
    * render the "By @username" chip (E2.8; see `local/sharing-architecture.md`
    * §7.4 / §10 Phase 2 item 2.6).
    */
-  traits: (TraitDetail & { author_username: string | null })[]
+  traits: (TraitDetail & {
+    author_user_id: string | null
+    author_username: string | null
+    author_avatar_url: string | null
+  })[]
   /**
    * Moods (joined from showdown_monster_mood → mood).
    *
    * Each entry carries `author_username`; see `traits` above.
    */
-  moods: (MoodDetail & { author_username: string | null })[]
+  moods: (MoodDetail & {
+    author_user_id: string | null
+    author_username: string | null
+    author_avatar_url: string | null
+  })[]
   /**
    * Survivor statuses (joined from showdown_monster_survivor_status →
    * survivor_status).
@@ -1232,7 +1302,9 @@ export type ShowdownMonsterDetail = Omit<
    * Each entry carries `author_username`; see `traits` above.
    */
   survivor_statuses: (SurvivorStatusDetail & {
+    author_user_id: string | null
     author_username: string | null
+    author_avatar_url: string | null
   })[]
 }
 
@@ -1280,8 +1352,12 @@ export type SurvivorDetail = Tables<'survivor'> & {
     id: string
     /** Rules */
     rules: string
-    /** Author Username (null for built-ins / unknown authors) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /**
    * Cursed Gear.
@@ -1295,8 +1371,12 @@ export type SurvivorDetail = Tables<'survivor'> & {
     gear_name: string
     /** Cursed Gear ID */
     id: string
-    /** Author Username (null for built-ins / unknown authors) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /**
    * Disorders.
@@ -1312,8 +1392,12 @@ export type SurvivorDetail = Tables<'survivor'> & {
     id: string
     /** Rules */
     rules: string
-    /** Author Username (null for built-ins / unknown authors) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   }[]
   /** Survivor Embarked on Hunt/Showdown */
   embarked: boolean
@@ -1322,7 +1406,11 @@ export type SurvivorDetail = Tables<'survivor'> & {
    *
    * Each entry carries `author_username`; see `abilities_impairments` above.
    */
-  fighting_arts: (FightingArtDetail & { author_username: string | null })[]
+  fighting_arts: (FightingArtDetail & {
+    author_user_id: string | null
+    author_username: string | null
+    author_avatar_url: string | null
+  })[]
   /** Gear Grid (3x3 of equipped gear; null until first edit) */
   gear_grid: GearGridDetail | null
   /**
@@ -1343,8 +1431,12 @@ export type SurvivorDetail = Tables<'survivor'> & {
     observation_conditions: string | null
     /** Observation Rank Up Milestone */
     observation_rank_up_milestone: number | null
-    /** Author Username (null for built-ins / unknown authors) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   } | null
   /**
    * Knowledge 2.
@@ -1364,8 +1456,12 @@ export type SurvivorDetail = Tables<'survivor'> & {
     observation_conditions: string | null
     /** Observation Rank Up Milestone */
     observation_rank_up_milestone: number | null
-    /** Author Username (null for built-ins / unknown authors) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   } | null
   /**
    * Neurosis.
@@ -1381,8 +1477,12 @@ export type SurvivorDetail = Tables<'survivor'> & {
     custom: boolean
     /** Rules */
     rules: string | null
-    /** Author Username (null for built-ins / unknown authors) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   } | null
   /**
    * Philosophy.
@@ -1402,8 +1502,12 @@ export type SurvivorDetail = Tables<'survivor'> & {
     tenet_knowledge_id: string | null
     /** Tier */
     tier: number | null
-    /** Author Username (null for built-ins / unknown authors) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   } | null
   /**
    * Secret Fighting Arts.
@@ -1411,7 +1515,9 @@ export type SurvivorDetail = Tables<'survivor'> & {
    * Each entry carries `author_username`; see `abilities_impairments` above.
    */
   secret_fighting_arts: (SecretFightingArtDetail & {
+    author_user_id: string | null
     author_username: string | null
+    author_avatar_url: string | null
   })[]
   /**
    * Tenet Knowledge.
@@ -1431,8 +1537,12 @@ export type SurvivorDetail = Tables<'survivor'> & {
     observation_conditions: string | null
     /** Observation Rank Up Milestone */
     observation_rank_up_milestone: number | null
-    /** Author Username (null for built-ins / unknown authors) */
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
     author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
   } | null
 }
 

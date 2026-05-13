@@ -1,4 +1,8 @@
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import {
+  getSettlementMemberUsernames,
+  resolveSettlementAuthorship,
+  type SettlementMemberProfile
+} from '@/lib/dal/settlement-shared-user'
 import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail } from '@/lib/types'
@@ -12,25 +16,25 @@ import { SettlementDetail } from '@/lib/types'
  * for the canonical resolution pattern.
  *
  * @param settlementId Settlement ID
- * @param prefetchedMemberUsernames Optional pre-fetched map of IDs to usernames
+ * @param prefetchedMemberProfiles Optional pre-fetched map of IDs to usernames
  * @returns Settlement Collective Cognition Reward Data
  */
 export async function getSettlementCollectiveCognitionRewards(
   settlementId: string | null | undefined,
-  prefetchedMemberUsernames?: Promise<Map<string, string>>
+  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
 ): Promise<SettlementDetail['collective_cognition_rewards']> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
 
-  const [{ data, error }, memberUsernames] = await Promise.all([
+  const [{ data, error }, memberProfiles] = await Promise.all([
     supabase
       .from('settlement_collective_cognition_reward')
       .select(
         'collective_cognition_reward_id, id, unlocked, collective_cognition_reward(custom, user_id, collective_cognition, reward_name, rules)'
       )
       .eq('settlement_id', settlementId),
-    prefetchedMemberUsernames ?? getSettlementMemberUsernames(settlementId)
+    prefetchedMemberProfiles ?? getSettlementMemberUsernames(settlementId)
   ])
 
   if (error)
@@ -74,10 +78,10 @@ export async function getSettlementCollectiveCognitionRewards(
           collective_cognition: reward.collective_cognition,
           rules: reward.rules,
           custom: reward.custom,
-          author_username:
-            reward.custom && reward.user_id
-              ? (memberUsernames.get(reward.user_id) ?? null)
-              : null
+          ...resolveSettlementAuthorship(
+            { custom: reward.custom, user_id: reward.user_id },
+            memberProfiles
+          )
         }
       ]
     }) ?? []

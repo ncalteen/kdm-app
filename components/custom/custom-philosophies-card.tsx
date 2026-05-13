@@ -21,7 +21,7 @@ import { getKnowledges } from '@/lib/dal/knowledge'
 import { getNeuroses } from '@/lib/dal/neurosis'
 import {
   addPhilosophy,
-  getPhilosophies,
+  getUserCustomPhilosophies,
   removePhilosophy,
   updatePhilosophy
 } from '@/lib/dal/philosophy'
@@ -102,13 +102,12 @@ export function CustomPhilosophiesCard({
 
     try {
       const [philosophyData, knowledgeData, neurosisData] = await Promise.all([
-        getPhilosophies(),
+        getUserCustomPhilosophies(),
         getKnowledges(),
         getNeuroses()
       ])
 
-      const custom = Object.values(philosophyData).filter((i) => i.custom)
-      setItems(sortItems(custom))
+      setItems(sortItems(Object.values(philosophyData)))
       setAvailableKnowledges(knowledgeData)
       setAvailableNeuroses(neurosisData)
     } catch (err: unknown) {

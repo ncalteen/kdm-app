@@ -12,6 +12,7 @@ import {
   SheetTitle,
   SheetTrigger
 } from '@/components/ui/sheet'
+import { useLocal } from '@/contexts/local-context'
 import { getGear } from '@/lib/dal/gear'
 import { getLocations } from '@/lib/dal/location'
 import { getNeuroses } from '@/lib/dal/neurosis'
@@ -126,6 +127,21 @@ interface BaseCustomRulesSheetProps {
   sections: CustomRulesSection[]
   /** Sheet Title */
   title: string
+  /**
+   * Author User ID
+   *
+   * Identifies the user who authored the custom row. When non-null and not
+   * the current viewer, the sheet renders an "Authored by: @username" note
+   * in its footer.
+   */
+  authorUserId?: string | null
+  /**
+   * Author Username
+   *
+   * Surfaces in the sheet footer as `@username`. Falls back to `unknown`
+   * when missing (e.g. the author has left the settlement).
+   */
+  authorUsername?: string | null
 }
 
 /**
@@ -162,6 +178,41 @@ const MARKDOWN_BODY_CLASS = cn(
   '[&_table]:!text-xs [&_table]:!my-2',
   '[&_blockquote]:!my-1.5 [&_blockquote]:!border-l-2 [&_blockquote]:!pl-3 [&_blockquote]:!italic'
 )
+
+/**
+ * Authored By Footer
+ *
+ * Renders an "Authored by: @username" note inside the sheet's footer when
+ * the custom row has a recorded author who is **not** the current viewer.
+ * Built-ins (no author) and self-authored rows render nothing so the footer
+ * area collapses naturally.
+ *
+ * @param props Author User ID and Username
+ * @returns Authored By Footer Component (or `null`)
+ */
+function AuthoredByFooter({
+  authorUserId,
+  authorUsername
+}: {
+  authorUserId: string | null | undefined
+  authorUsername: string | null | undefined
+}): ReactElement | null {
+  const { userSettings } = useLocal()
+  const currentUserId = userSettings?.user_id ?? null
+
+  if (!authorUserId) return null
+  if (currentUserId && currentUserId === authorUserId) return null
+
+  const displayUsername = authorUsername ?? 'unknown'
+
+  return (
+    <SheetFooter className="border-t border-border/60 px-6 py-3">
+      <p className="text-xs italic text-muted-foreground">
+        Authored by: @{displayUsername}
+      </p>
+    </SheetFooter>
+  )
+}
 
 /**
  * Custom Rules Section Block
@@ -249,7 +300,9 @@ function CustomRulesSectionBlock({
 function CustomRulesSheetBody({
   description,
   sections,
-  title
+  title,
+  authorUserId,
+  authorUsername
 }: BaseCustomRulesSheetProps): ReactElement {
   // Stable-sort sections so any stat-tile (entries) blocks float to the top of
   // the sheet. The philosophy sheet's `Tier` / `Hunt XP Milestones` overview
@@ -295,6 +348,11 @@ function CustomRulesSheetBody({
           />
         ))}
       </div>
+
+      <AuthoredByFooter
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
+      />
     </SheetContent>
   )
 }
@@ -340,7 +398,9 @@ export function CustomRulesText({
   label,
   sections,
   showCustomBadge,
-  title
+  title,
+  authorUserId,
+  authorUsername
 }: CustomRulesTextProps): ReactElement {
   const showBadge = !!(showCustomBadge && custom)
 
@@ -371,6 +431,8 @@ export function CustomRulesText({
         description={description}
         sections={sections}
         title={title}
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
       />
     </Sheet>
   )
@@ -424,7 +486,9 @@ export function CustomRulesIconButton({
   description,
   sections,
   showCustomBadge,
-  title
+  title,
+  authorUserId,
+  authorUsername
 }: CustomRulesIconButtonProps): ReactElement | null {
   if (!custom) return null
 
@@ -446,6 +510,8 @@ export function CustomRulesIconButton({
           description={description}
           sections={sections}
           title={title}
+          authorUserId={authorUserId}
+          authorUsername={authorUsername}
         />
       </Sheet>
       {showCustomBadge && (
@@ -677,6 +743,21 @@ export interface GearSheetBodyProps {
    * the user to scroll past the rules text.
    */
   footer?: ReactNode
+  /**
+   * Author User ID
+   *
+   * Identifies the user who authored the custom gear row. When non-null and
+   * not the current viewer, the sheet renders an "Authored by: @username"
+   * note in its footer.
+   */
+  authorUserId?: string | null
+  /**
+   * Author Username
+   *
+   * Surfaces in the sheet footer as `@username`. Falls back to `unknown`
+   * when missing.
+   */
+  authorUsername?: string | null
 }
 
 /**
@@ -702,7 +783,9 @@ export function GearSheetBody({
   loading,
   locations,
   resources,
-  weaponTypes
+  weaponTypes,
+  authorUserId,
+  authorUsername
 }: GearSheetBodyProps): ReactElement {
   const showSkeleton = loading || !loaded
   const category = detail ? inferGearCategoryFromDetail(detail) : 'OTHER'
@@ -1027,6 +1110,11 @@ export function GearSheetBody({
           {footer}
         </SheetFooter>
       )}
+
+      <AuthoredByFooter
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
+      />
     </SheetContent>
   )
 }
@@ -1054,6 +1142,21 @@ interface CustomGearRulesTriggerProps {
    * a sibling next to the trigger.
    */
   showCustomBadge?: boolean
+  /**
+   * Author User ID
+   *
+   * Identifies the user who authored the custom gear row. When non-null and
+   * not the current viewer, the sheet renders an "Authored by: @username"
+   * note in its footer.
+   */
+  authorUserId?: string | null
+  /**
+   * Author Username
+   *
+   * Surfaces in the sheet footer as `@username`. Falls back to `unknown`
+   * when missing.
+   */
+  authorUsername?: string | null
 }
 
 /**
@@ -1073,7 +1176,9 @@ export function CustomGearRulesTrigger({
   gearId,
   gearName,
   showCustomBadge,
-  variant = 'text'
+  variant = 'text',
+  authorUserId,
+  authorUsername
 }: CustomGearRulesTriggerProps): ReactElement | null {
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<GearDetail | null>(null)
@@ -1160,6 +1265,8 @@ export function CustomGearRulesTrigger({
         locations={locations}
         resources={resources}
         weaponTypes={weaponTypes}
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
       />
     </Sheet>
   )
@@ -1185,6 +1292,10 @@ interface CustomWeaponTypeRulesIconButtonProps {
   weaponTypeId: string | null | undefined
   /** Class Name (Optional) */
   className?: string
+  /** Author User ID (powers the sheet footer's authored-by note) */
+  authorUserId?: string | null
+  /** Author Username (powers the sheet footer's authored-by note) */
+  authorUsername?: string | null
 }
 
 /**
@@ -1201,7 +1312,9 @@ interface CustomWeaponTypeRulesIconButtonProps {
  */
 export function CustomWeaponTypeRulesIconButton({
   className,
-  weaponTypeId
+  weaponTypeId,
+  authorUserId,
+  authorUsername
 }: CustomWeaponTypeRulesIconButtonProps): ReactElement | null {
   const [open, setOpen] = useState(false)
   const [loadedFor, setLoadedFor] = useState<string | null | undefined>(
@@ -1273,6 +1386,8 @@ export function CustomWeaponTypeRulesIconButton({
             content: detail.master_proficiency_rules
           }
         ]}
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
       />
     </Sheet>
   )
@@ -1294,6 +1409,10 @@ interface CustomPhilosophyRulesIconButtonProps {
   huntXpMilestones?: number[] | null
   /** Class Name (Optional) */
   className?: string
+  /** Author User ID (powers the sheet footer's authored-by note) */
+  authorUserId?: string | null
+  /** Author Username (powers the sheet footer's authored-by note) */
+  authorUsername?: string | null
 }
 
 /**
@@ -1313,7 +1432,9 @@ export function CustomPhilosophyRulesIconButton({
   huntXpMilestones,
   philosophyId,
   philosophyName,
-  tier
+  tier,
+  authorUserId,
+  authorUsername
 }: CustomPhilosophyRulesIconButtonProps): ReactElement | null {
   const [open, setOpen] = useState(false)
   const [ranks, setRanks] = useState<PhilosophyRankDetail[] | null>(null)
@@ -1389,6 +1510,8 @@ export function CustomPhilosophyRulesIconButton({
         title={title}
         description="A custom philosophy defined by you."
         sections={sections}
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
       />
     </Sheet>
   )
@@ -1418,6 +1541,10 @@ interface CustomKnowledgeRulesIconButtonProps {
   philosophyId?: string | null
   /** Optional Class Name */
   className?: string
+  /** Author User ID (powers the sheet footer's authored-by note) */
+  authorUserId?: string | null
+  /** Author Username (powers the sheet footer's authored-by note) */
+  authorUsername?: string | null
 }
 
 /**
@@ -1439,7 +1566,9 @@ export function CustomKnowledgeRulesIconButton({
   observationConditions,
   observationRankUpMilestone,
   philosophyId,
-  rules
+  rules,
+  authorUserId,
+  authorUsername
 }: CustomKnowledgeRulesIconButtonProps): ReactElement | null {
   const [open, setOpen] = useState(false)
   const [philosophy, setPhilosophy] = useState<PhilosophyDetail | null>(null)
@@ -1510,6 +1639,8 @@ export function CustomKnowledgeRulesIconButton({
         title={knowledgeName}
         description="A custom knowledge defined by you."
         sections={sections}
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
       />
     </Sheet>
   )
@@ -1538,6 +1669,10 @@ interface CustomPhilosophyRulesTextProps {
    * as a sibling next to the trigger.
    */
   showCustomBadge?: boolean
+  /** Author User ID (powers the sheet footer's authored-by note) */
+  authorUserId?: string | null
+  /** Author Username (powers the sheet footer's authored-by note) */
+  authorUsername?: string | null
 }
 
 /**
@@ -1559,7 +1694,9 @@ export function CustomPhilosophyRulesText({
   philosophyId,
   philosophyName,
   showCustomBadge,
-  tier
+  tier,
+  authorUserId,
+  authorUsername
 }: CustomPhilosophyRulesTextProps): ReactElement {
   const [open, setOpen] = useState(false)
   const [ranks, setRanks] = useState<PhilosophyRankDetail[] | null>(null)
@@ -1641,6 +1778,8 @@ export function CustomPhilosophyRulesText({
         title={philosophyName}
         description="A custom philosophy defined by you."
         sections={sections}
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
       />
     </Sheet>
   )
@@ -1689,6 +1828,10 @@ interface CustomKnowledgeRulesTextProps {
    * as a sibling next to the trigger.
    */
   showCustomBadge?: boolean
+  /** Author User ID (powers the sheet footer's authored-by note) */
+  authorUserId?: string | null
+  /** Author Username (powers the sheet footer's authored-by note) */
+  authorUsername?: string | null
 }
 
 /**
@@ -1710,7 +1853,9 @@ export function CustomKnowledgeRulesText({
   observationRankUpMilestone,
   philosophyId,
   rules,
-  showCustomBadge
+  showCustomBadge,
+  authorUserId,
+  authorUsername
 }: CustomKnowledgeRulesTextProps): ReactElement {
   const [open, setOpen] = useState(false)
   const [philosophy, setPhilosophy] = useState<PhilosophyDetail | null>(null)
@@ -1790,6 +1935,8 @@ export function CustomKnowledgeRulesText({
         title={knowledgeName}
         description="A custom knowledge defined by you."
         sections={sections}
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
       />
     </Sheet>
   )
@@ -1819,6 +1966,10 @@ interface CustomNeurosisRulesIconButtonProps {
   neurosisName: string | null | undefined
   /** Class Name (Optional) */
   className?: string
+  /** Author User ID (powers the sheet footer's authored-by note) */
+  authorUserId?: string | null
+  /** Author Username (powers the sheet footer's authored-by note) */
+  authorUsername?: string | null
 }
 
 /**
@@ -1836,7 +1987,9 @@ export function CustomNeurosisRulesIconButton({
   className,
   custom,
   neurosisId,
-  neurosisName
+  neurosisName,
+  authorUserId,
+  authorUsername
 }: CustomNeurosisRulesIconButtonProps): ReactElement | null {
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<NeurosisDetail | null>(null)
@@ -1892,6 +2045,8 @@ export function CustomNeurosisRulesIconButton({
               : (detail?.rules ?? null)
           }
         ]}
+        authorUserId={authorUserId}
+        authorUsername={authorUsername}
       />
     </Sheet>
   )

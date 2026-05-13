@@ -72,7 +72,9 @@ describe('getSettlementResources', () => {
         resource_name: 'Bone',
         resource_types: ['bone'],
         custom: false,
-        author_username: null
+        author_user_id: null,
+        author_username: null,
+        author_avatar_url: null
       }
     ])
     expect(mockSupabase.from).toHaveBeenCalledWith('settlement_resource')
