@@ -575,9 +575,6 @@ export function NemesesCard({
                   onRemove={handleRemove}
                   onToggleUnlocked={handleToggleUnlocked}
                   onToggleLevel={handleToggleLevel}
-                  authorUserId={nemesis.author_user_id}
-                  authorUsername={nemesis.author_username}
-                  authorAvatarUrl={nemesis.author_avatar_url}
                 />
               ))}
           </div>

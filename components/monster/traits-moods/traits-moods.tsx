@@ -1,6 +1,5 @@
 'use client'
 
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -204,11 +203,8 @@ export function TraitsMoods({
               title={trait.trait_name}
               sections={[{ label: 'Rules', content: trait.rules }]}
               showCustomBadge
-            />
-            <AuthoredByChip
               authorUserId={trait.author_user_id}
               authorUsername={trait.author_username}
-              authorAvatarUrl={trait.author_avatar_url}
             />
             <Button
               type="button"
@@ -294,11 +290,8 @@ export function TraitsMoods({
               title={mood.mood_name}
               sections={[{ label: 'Rules', content: mood.rules }]}
               showCustomBadge
-            />
-            <AuthoredByChip
               authorUserId={mood.author_user_id}
               authorUsername={mood.author_username}
-              authorAvatarUrl={mood.author_avatar_url}
             />
             <Button
               type="button"
@@ -384,11 +377,8 @@ export function TraitsMoods({
               title={status.survivor_status_name}
               sections={[{ label: 'Rules', content: status.rules }]}
               showCustomBadge
-            />
-            <AuthoredByChip
               authorUserId={status.author_user_id}
               authorUsername={status.author_username}
-              authorAvatarUrl={status.author_avatar_url}
             />
             <Button
               type="button"

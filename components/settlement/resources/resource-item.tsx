@@ -4,7 +4,6 @@ import {
   CustomItemDisplay,
   CustomRulesText
 } from '@/components/custom/custom-rules-sheet'
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -67,11 +66,8 @@ export const ResourceItem = memo(function ResourceItem({
             sections={customDetail?.sections ?? []}
             title={customDetail?.title ?? resource.resource_name}
             showCustomBadge
-          />
-          <AuthoredByChip
             authorUserId={resource.author_user_id}
             authorUsername={resource.author_username}
-            authorAvatarUrl={resource.author_avatar_url}
           />
         </div>
         {resource.category.toUpperCase() === 'MONSTER' &&

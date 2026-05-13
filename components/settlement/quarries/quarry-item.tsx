@@ -1,6 +1,5 @@
 'use client'
 
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -26,12 +25,6 @@ export interface QuarryItemProps {
   onToggleUnlocked: (id: string, unlocked: boolean) => void
   /** Unlocked */
   unlocked: boolean
-  /** Author User ID (null for built-ins; powers E2.9 authored-by chip) */
-  authorUserId?: string | null
-  /** Author Username (null for built-ins / ghost authors) */
-  authorUsername?: string | null
-  /** Author Avatar URL (null for built-ins / no avatar) */
-  authorAvatarUrl?: string | null
 }
 
 /**
@@ -50,10 +43,7 @@ export const QuarryItem = memo(function QuarryItem({
   node,
   onRemove,
   onToggleUnlocked,
-  unlocked,
-  authorUserId = null,
-  authorUsername = null,
-  authorAvatarUrl = null
+  unlocked
 }: QuarryItemProps): ReactElement {
   return (
     <div className="flex items-center gap-2 pl-2">
@@ -77,12 +67,6 @@ export const QuarryItem = memo(function QuarryItem({
           Custom
         </Badge>
       )}
-
-      <AuthoredByChip
-        authorUserId={authorUserId}
-        authorUsername={authorUsername}
-        authorAvatarUrl={authorAvatarUrl}
-      />
 
       {/* Node Badge and Remove Button */}
       <div className="flex items-center gap-1 ml-auto shrink-0">

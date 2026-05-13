@@ -1,7 +1,6 @@
 'use client'
 
 import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -407,11 +406,8 @@ export function AbilitiesAndImpairmentsCard({
                   description="An ability or impairment carried by this survivor."
                   sections={[{ label: 'Rules', content: item.rules }]}
                   showCustomBadge
-                />
-                <AuthoredByChip
                   authorUserId={item.author_user_id}
                   authorUsername={item.author_username}
-                  authorAvatarUrl={item.author_avatar_url}
                 />
                 <Button
                   variant="ghost"

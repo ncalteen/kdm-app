@@ -1,7 +1,6 @@
 'use client'
 
 import { CustomKnowledgeRulesIconButton } from '@/components/custom/custom-rules-sheet'
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -888,17 +887,6 @@ export function KnowledgeCard({
                     )
                   return (
                     <>
-                      <AuthoredByChip
-                        authorUserId={
-                          settlementKnowledge?.author_user_id ?? null
-                        }
-                        authorUsername={
-                          settlementKnowledge?.author_username ?? null
-                        }
-                        authorAvatarUrl={
-                          settlementKnowledge?.author_avatar_url ?? null
-                        }
-                      />
                       <CustomKnowledgeRulesIconButton
                         custom={settlementKnowledge?.custom}
                         knowledgeName={settlementKnowledge?.knowledge_name}
@@ -910,6 +898,12 @@ export function KnowledgeCard({
                           settlementKnowledge?.observation_rank_up_milestone
                         }
                         philosophyId={settlementKnowledge?.philosophy_id}
+                        authorUserId={
+                          settlementKnowledge?.author_user_id ?? null
+                        }
+                        authorUsername={
+                          settlementKnowledge?.author_username ?? null
+                        }
                       />
                     </>
                   )
@@ -1023,17 +1017,6 @@ export function KnowledgeCard({
                     )
                   return (
                     <>
-                      <AuthoredByChip
-                        authorUserId={
-                          settlementKnowledge?.author_user_id ?? null
-                        }
-                        authorUsername={
-                          settlementKnowledge?.author_username ?? null
-                        }
-                        authorAvatarUrl={
-                          settlementKnowledge?.author_avatar_url ?? null
-                        }
-                      />
                       <CustomKnowledgeRulesIconButton
                         custom={settlementKnowledge?.custom}
                         knowledgeName={settlementKnowledge?.knowledge_name}
@@ -1045,6 +1028,12 @@ export function KnowledgeCard({
                           settlementKnowledge?.observation_rank_up_milestone
                         }
                         philosophyId={settlementKnowledge?.philosophy_id}
+                        authorUserId={
+                          settlementKnowledge?.author_user_id ?? null
+                        }
+                        authorUsername={
+                          settlementKnowledge?.author_username ?? null
+                        }
                       />
                     </>
                   )

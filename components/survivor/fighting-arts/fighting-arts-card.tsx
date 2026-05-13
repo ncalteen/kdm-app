@@ -1,7 +1,6 @@
 'use client'
 
 import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { CustomItemDialog } from '@/components/custom/dialogs/custom-item-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -814,11 +813,8 @@ export function FightingArtsCard({
                 description="A fighting art mastered by this survivor."
                 sections={[{ label: 'Rules', content: art.rules }]}
                 showCustomBadge
-              />
-              <AuthoredByChip
                 authorUserId={art.author_user_id}
                 authorUsername={art.author_username}
-                authorAvatarUrl={art.author_avatar_url}
               />
               <Button
                 variant="ghost"
@@ -843,11 +839,8 @@ export function FightingArtsCard({
                 description="A secret fighting art guarded by this survivor."
                 sections={[{ label: 'Rules', content: art.rules }]}
                 showCustomBadge
-              />
-              <AuthoredByChip
                 authorUserId={art.author_user_id}
                 authorUsername={art.author_username}
-                authorAvatarUrl={art.author_avatar_url}
               />
               <Button
                 variant="ghost"

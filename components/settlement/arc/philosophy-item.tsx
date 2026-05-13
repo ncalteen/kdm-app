@@ -1,6 +1,5 @@
 'use client'
 
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import {
   CustomItemDisplay,
   CustomPhilosophyRulesText,
@@ -61,6 +60,8 @@ export const PhilosophyItem = memo(function PhilosophyItem({
           tier={philosophy.tier}
           huntXpMilestones={philosophy.hunt_xp_milestones}
           showCustomBadge
+          authorUserId={philosophy.author_user_id}
+          authorUsername={philosophy.author_username}
         />
       ) : (
         <CustomRulesText
@@ -71,14 +72,10 @@ export const PhilosophyItem = memo(function PhilosophyItem({
           sections={customDetail?.sections ?? []}
           title={customDetail?.title ?? philosophy.philosophy_name}
           showCustomBadge
+          authorUserId={philosophy.author_user_id}
+          authorUsername={philosophy.author_username}
         />
       )}
-
-      <AuthoredByChip
-        authorUserId={philosophy.author_user_id}
-        authorUsername={philosophy.author_username}
-        authorAvatarUrl={philosophy.author_avatar_url}
-      />
 
       {/* Remove Button */}
       <Button

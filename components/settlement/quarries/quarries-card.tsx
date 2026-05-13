@@ -558,9 +558,6 @@ export function QuarriesCard({
                   onRemove={handleRemove}
                   onToggleUnlocked={handleToggleUnlocked}
                   unlocked={quarry.unlocked}
-                  authorUserId={quarry.author_user_id}
-                  authorUsername={quarry.author_username}
-                  authorAvatarUrl={quarry.author_avatar_url}
                 />
               ))}
           </div>

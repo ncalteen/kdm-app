@@ -1,6 +1,5 @@
 'use client'
 
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import {
   CustomItemDisplay,
   CustomRulesText
@@ -68,12 +67,8 @@ export const MilestoneItem = memo(function MilestoneItem({
         }
         title={customDetail?.title ?? milestone.milestone_name}
         showCustomBadge
-      />
-
-      <AuthoredByChip
         authorUserId={milestone.author_user_id}
         authorUsername={milestone.author_username}
-        authorAvatarUrl={milestone.author_avatar_url}
       />
 
       {/* Event Badge and Remove Button */}

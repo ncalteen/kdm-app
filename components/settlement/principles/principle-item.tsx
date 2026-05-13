@@ -1,6 +1,5 @@
 'use client'
 
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import {
   CustomItemDisplay,
   CustomRulesText
@@ -67,11 +66,8 @@ export const PrincipleItem = memo(function PrincipleItem({
           }
           title={customDetail?.title ?? principle.principle_name}
           showCustomBadge
-        />
-        <AuthoredByChip
           authorUserId={principle.author_user_id}
           authorUsername={principle.author_username}
-          authorAvatarUrl={principle.author_avatar_url}
         />
       </div>
 

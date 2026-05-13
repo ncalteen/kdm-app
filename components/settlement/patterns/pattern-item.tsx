@@ -4,7 +4,6 @@ import {
   CustomItemDisplay,
   CustomRulesText
 } from '@/components/custom/custom-rules-sheet'
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -92,12 +91,8 @@ export const PatternItem = memo(function PatternItem({
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? pattern.pattern_name}
         showCustomBadge
-      />
-
-      <AuthoredByChip
         authorUserId={pattern.author_user_id}
         authorUsername={pattern.author_username}
-        authorAvatarUrl={pattern.author_avatar_url}
       />
 
       {/* Action Buttons */}

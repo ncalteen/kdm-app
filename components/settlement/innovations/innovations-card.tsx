@@ -2,7 +2,6 @@
 
 import { CustomRulesText } from '@/components/custom/custom-rules-sheet'
 import { InnovationDialog } from '@/components/custom/dialogs/innovation-dialog'
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -479,11 +478,8 @@ export function InnovationsCard({
                     sections={sections}
                     title={item.innovation_name}
                     showCustomBadge
-                  />
-                  <AuthoredByChip
                     authorUserId={item.author_user_id}
                     authorUsername={item.author_username}
-                    authorAvatarUrl={item.author_avatar_url}
                   />
                   <Button
                     variant="ghost"

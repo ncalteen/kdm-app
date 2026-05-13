@@ -4,7 +4,6 @@ import {
   CustomItemDisplay,
   CustomRulesText
 } from '@/components/custom/custom-rules-sheet'
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -87,12 +86,8 @@ export const SeedPatternItem = memo(function SeedPatternItem({
         sections={customDetail?.sections ?? []}
         title={customDetail?.title ?? seedPattern.seed_pattern_name}
         showCustomBadge
-      />
-
-      <AuthoredByChip
         authorUserId={seedPattern.author_user_id}
         authorUsername={seedPattern.author_username}
-        authorAvatarUrl={seedPattern.author_avatar_url}
       />
 
       {/* Action Buttons */}

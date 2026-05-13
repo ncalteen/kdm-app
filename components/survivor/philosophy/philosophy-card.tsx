@@ -5,7 +5,6 @@ import {
   CustomNeurosisRulesIconButton,
   CustomPhilosophyRulesIconButton
 } from '@/components/custom/custom-rules-sheet'
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { NumericInput } from '@/components/menu/numeric-input'
 import { SelectNeurosis } from '@/components/menu/select-neurosis'
 import { SelectPhilosophy } from '@/components/menu/select-philosophy'
@@ -818,23 +817,18 @@ export function PhilosophyCard({
 
                 return (
                   <>
-                    <AuthoredByChip
-                      authorUserId={
-                        settlementPhilosophy?.author_user_id ?? null
-                      }
-                      authorUsername={
-                        settlementPhilosophy?.author_username ?? null
-                      }
-                      authorAvatarUrl={
-                        settlementPhilosophy?.author_avatar_url ?? null
-                      }
-                    />
                     <CustomPhilosophyRulesIconButton
                       custom={settlementPhilosophy?.custom}
                       philosophyId={philosophy?.id ?? null}
                       philosophyName={philosophy?.philosophy_name ?? null}
                       tier={philosophy?.tier ?? null}
                       huntXpMilestones={philosophy?.hunt_xp_milestones ?? null}
+                      authorUserId={
+                        settlementPhilosophy?.author_user_id ?? null
+                      }
+                      authorUsername={
+                        settlementPhilosophy?.author_username ?? null
+                      }
                     />
                   </>
                 )
@@ -910,15 +904,6 @@ export function PhilosophyCard({
                 )
                 return (
                   <>
-                    <AuthoredByChip
-                      authorUserId={settlementKnowledge?.author_user_id ?? null}
-                      authorUsername={
-                        settlementKnowledge?.author_username ?? null
-                      }
-                      authorAvatarUrl={
-                        settlementKnowledge?.author_avatar_url ?? null
-                      }
-                    />
                     <CustomKnowledgeRulesIconButton
                       custom={settlementKnowledge?.custom}
                       knowledgeName={settlementKnowledge?.knowledge_name}
@@ -930,6 +915,10 @@ export function PhilosophyCard({
                         settlementKnowledge?.observation_rank_up_milestone
                       }
                       philosophyId={settlementKnowledge?.philosophy_id}
+                      authorUserId={settlementKnowledge?.author_user_id ?? null}
+                      authorUsername={
+                        settlementKnowledge?.author_username ?? null
+                      }
                     />
                   </>
                 )

@@ -1,6 +1,5 @@
 'use client'
 
-import { AuthoredByChip } from '@/components/generic/authored-by-chip'
 import { CustomGearRulesTrigger } from '@/components/custom/custom-rules-sheet'
 import { Button } from '@/components/ui/button'
 import { TrashIcon } from 'lucide-react'
@@ -18,12 +17,10 @@ export interface CursedGearItemProps {
   gearName: string
   /** On Remove Handler */
   onRemove: () => void
-  /** Author User ID (null for built-ins; powers E2.9 authored-by chip) */
+  /** Author User ID (powers the sheet footer's authored-by note) */
   authorUserId?: string | null
-  /** Author Username (null for built-ins / ghost authors) */
+  /** Author Username (powers the sheet footer's authored-by note) */
   authorUsername?: string | null
-  /** Author Avatar URL (null for built-ins / no avatar) */
-  authorAvatarUrl?: string | null
 }
 
 /**
@@ -42,8 +39,7 @@ export const CursedGearItem = memo(function CursedGearItem({
   gearName,
   onRemove,
   authorUserId = null,
-  authorUsername = null,
-  authorAvatarUrl = null
+  authorUsername = null
 }: CursedGearItemProps): ReactElement {
   return (
     <div className="flex items-center gap-2 pl-2">
@@ -53,11 +49,8 @@ export const CursedGearItem = memo(function CursedGearItem({
         gearId={gearId}
         gearName={gearName}
         showCustomBadge
-      />
-      <AuthoredByChip
         authorUserId={authorUserId}
         authorUsername={authorUsername}
-        authorAvatarUrl={authorAvatarUrl}
       />
       <Button
         variant="ghost"

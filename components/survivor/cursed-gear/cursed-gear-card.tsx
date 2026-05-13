@@ -297,7 +297,6 @@ export function CursedGearCard({
                 onRemove={() => handleRemove(originalIndex)}
                 authorUserId={item.author_user_id}
                 authorUsername={item.author_username}
-                authorAvatarUrl={item.author_avatar_url}
               />
             )
           })}
