@@ -107,7 +107,7 @@ function psql(sql: string): string {
  * Run SQL and capture rows as `|`-separated CSV (no header, no padding).
  *
  * @param sql SQL Query
- * @returns Tab-Separated Rows
+ * @returns Pipe-Separated Rows
  */
 function psqlRows(sql: string): string[][] {
   const out = execFileSync(
