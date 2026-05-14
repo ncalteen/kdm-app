@@ -5006,6 +5006,10 @@ export type Database = {
         Args: { target_settlement: string }
         Returns: boolean
       }
+      is_settlement_member: {
+        Args: { target_settlement: string; target_user: string }
+        Returns: boolean
+      }
       is_settlement_owner: { Args: { record_id: string }; Returns: boolean }
       lookup_user_by_username: { Args: { p_username: string }; Returns: string }
       provision_user_settings_for_oauth: {
