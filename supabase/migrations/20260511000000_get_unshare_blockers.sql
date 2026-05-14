@@ -25,10 +25,30 @@
 --     therefore *not* directly read the collaborator's custom rows to
 --     enumerate them — the join lives on the database side under the
 --     definer's privileges.
---   - Phase 2 (E2.13) will rewrite this function against the new
---     transitive-visibility predicate; the surface area (parameters
---     and return shape) is intentionally stable so the callers don't
---     need to change.
+--
+-- Why the per-table UNION ALL shape is retained (issue #154):
+--   The E2.13 refactor explored a sibling shape that hoists the
+--   per-branch `s.user_id = auth.uid()` authorization join into a
+--   single CTE evaluated once (see
+--   `scripts/benchmark-unshare-blockers/get_unshare_blockers_v2.sql`).
+--   The harness at
+--   `__tests__/integration/benchmarks/get-unshare-blockers.bench.test.ts`
+--   compared both against a 100-blocker target settlement surrounded
+--   by 20 unrelated settlements. V1 ran at ~7 ms / V2 at ~6.5 ms
+--   median execution; both are ~14× under the 100 ms acceptance
+--   budget and the 6% gap sits inside run-to-run variance. The
+--   per-table UNION ALL was kept because:
+--     * Each catalog uses a different display-name column
+--       (`knowledge_name`, `gear_name`, …, `monster_name` for both
+--       quarry and nemesis); a "single SELECT over a transitive
+--       view" cannot project a uniform `item_name` without a
+--       dedicated unified view that doesn't yet exist.
+--     * The repetition is structural, mirroring the per-catalog
+--       `*_shared_user` triads, and the planner already handles the
+--       constant-row settlement-join cheaply once
+--       `settlement(id, user_id)` is hot in cache.
+--   Re-run the benchmark if a new catalog joins this function or
+--   attachment counts grow by an order of magnitude.
 --
 -- Scope:
 --   - Walks every `settlement_*` junction that points at a catalog row
@@ -41,8 +61,9 @@
 --     `survivor_disorder`, etc.). The plan calls those out as part of
 --     a comprehensive walk, but the issue body's example query and
 --     acceptance criterion limit this iteration to settlement
---     junctions. Closing the survivor-side gap is a known follow-up
---     and is naturally absorbed by E2.13's rewrite.
+--     junctions. Closing the survivor-side gap is tracked as a
+--     follow-up (E2.13 decided against the broader rewrite — see the
+--     "Why the per-table UNION ALL shape is retained" note above).
 --
 -- Authorization:
 --   - Returns rows only when `auth.uid()` is the owner of the target
