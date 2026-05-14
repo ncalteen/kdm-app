@@ -9,12 +9,13 @@
 -- CTE evaluated once rather than re-joined to `public.settlement` in
 -- every branch.
 --
--- This file exists only to support the issue #154 benchmark (see
--- `scripts/benchmark-unshare-blockers.sh`). It is NOT a real migration:
--- the benchmark installs it in a savepoint, measures both functions
--- against the same fixture, and rolls it back. Promote into a real
--- migration only after the numbers + maintenance trade-off make the
--- case for it.
+-- This file exists only to support the issue #154 benchmark (run from
+-- the Vitest integration benchmark under
+-- `__tests__/integration/benchmarks/...`). It is NOT a real migration:
+-- the benchmark creates this function for the run, measures both
+-- functions against the same fixture, and drops it during cleanup.
+-- Promote into a real migration only after the numbers +
+-- maintenance trade-off make the case for it.
 --
 -- Notes:
 --   - The per-table UNION ALL is preserved because each catalog table
