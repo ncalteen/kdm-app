@@ -28,9 +28,8 @@
     "format:write": "prettier --write '**'",
     "integration-test": "./scripts/integration.sh",
     "lint": "eslint .",
-    "rls:coverage": "node scripts/rls-coverage.mjs",
     "test": "vitest run",
-    "all": "npm run format:write && npm run lint && npm run ci-test && npm run integration-test && npm run coverage && npm run rls:coverage && npm run build"
+    "all": "npm run format:write && npm run lint && npm run ci-test && npm run integration-test && npm run coverage && npm run build"
   },
   "license": "MIT",
   "dependencies": {

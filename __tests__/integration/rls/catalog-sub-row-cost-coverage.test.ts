@@ -42,10 +42,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  *      updatable column — quantity).
  *   5. A stranger sees nothing.
  *   6. The author can DELETE the sub-row.
- *
- * Together with the existing sibling coverage these tests close every
- * (table × command) cell for the cost / requirement family per the
- * static `scripts/rls-coverage.mjs` report.
  */
 describe('RLS: catalog sub-row cost / requirement coverage', () => {
   let owner: TestUser
