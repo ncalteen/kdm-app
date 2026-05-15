@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { GITHUB_ISSUES_URL, SUPPORT_EMAIL } from '@/lib/common'
 import { MailIcon } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { ReactElement } from 'react'
 
 /**
@@ -18,7 +19,7 @@ import { ReactElement } from 'react'
  */
 export function HelpCard(): ReactElement {
   return (
-    <div className="flex flex-col gap-4 pt-12">
+    <div className="flex flex-col gap-2 pt-12 px-2">
       {/* Support Overview */}
       <Card className="p-0">
         <CardHeader className="px-4 pt-3 pb-0">
@@ -27,12 +28,44 @@ export function HelpCard(): ReactElement {
             Need Help?
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-4 pt-2">
-          <p className="text-sm text-muted-foreground">
-            In the plain of stone faces, only survivors who band together
-            persist. If the darkness has swallowed your progress or you wish to
-            share a discovery, call for aid below.
-          </p>
+        <CardContent className="p-4 pt-2 flex flex-row gap-4">
+          <div className="flex flex-col justify-between">
+            <p className="text-sm text-muted-foreground">
+              In the plain of stone faces, only survivors who band together
+              persist. If the darkness has swallowed your progress or you wish
+              to share a discovery, call for aid below.
+            </p>
+
+            <p className="text-sm text-muted-foreground">
+              If you like this project, consider supporting it on{' '}
+              <Link
+                href="https://github.com/sponsors/ncalteen"
+                className="underline"
+                target="_blank"
+                rel="noopener noreferrer">
+                GitHub Sponsors
+              </Link>{' '}
+              or by{' '}
+              <Link
+                href="https://github.com/sponsors/ncalteen"
+                className="underline"
+                target="_blank"
+                rel="noopener noreferrer">
+                buying me a coffee
+              </Link>
+              . Your support fuels development and keeps the lantern burning
+              bright in the darkest nights. Thank you for being a part of this
+              journey!
+            </p>
+          </div>
+
+          <Image
+            src="/bmc_qr.png"
+            alt=""
+            width={200}
+            height={200}
+            aria-hidden="true"
+          />
         </CardContent>
       </Card>
 
