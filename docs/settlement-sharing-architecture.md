@@ -88,8 +88,9 @@ This means **sharing has two distinct dimensions**:
    card/rule you authored across any settlement they own.
 
 The first is the **primary** product feature to be addressed in this document.
-The second is a **derived consequence** that we should consider thoroughly in the
-design of the sharing model to ensure that it can be supported at a later date.
+The second is a **derived consequence** that we should consider thoroughly in
+the design of the sharing model to ensure that it can be supported at a later
+date.
 
 ---
 

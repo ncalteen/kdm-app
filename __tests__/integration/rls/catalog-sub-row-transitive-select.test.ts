@@ -347,9 +347,32 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
         .single()
       if (svErr || !sv) throw new Error(`seed survivor: ${svErr?.message}`)
 
-      const { error: ggErr } = await admin
-        .from('gear_grid')
-        .insert({ survivor_id: sv.id, selected_armor_set_id: armorSetId })
+      // The `clear_selected_armor_set_if_unqualified` BEFORE-trigger added
+      // in 20260505000000_gear_grid_selected_armor_set.sql silently nulls
+      // `selected_armor_set_id` unless every required slot has a matching
+      // gear piece somewhere in the 9 grid positions. The armor set above
+      // has one required slot ('helm') with a single candidate piece, so
+      // we equip that piece in `pos_top_left` to keep the link intact —
+      // otherwise the RLS chain (gear_grid → armor_set) would have nothing
+      // to traverse and the transitive policy could not be exercised.
+      //
+      // The `validate_gear_grid_positions` BEFORE-trigger from
+      // 20260424000009_gear_grid.sql additionally requires every equipped
+      // piece to be present in the settlement's storage, so stage the gear
+      // in `settlement_gear` first.
+      const { error: sgErr2 } = await admin.from('settlement_gear').insert({
+        settlement_id: settlementId,
+        gear_id: slotGearId,
+        quantity: 1
+      })
+      if (sgErr2)
+        throw new Error(`seed settlement_gear (slot gear): ${sgErr2.message}`)
+
+      const { error: ggErr } = await admin.from('gear_grid').insert({
+        survivor_id: sv.id,
+        selected_armor_set_id: armorSetId,
+        pos_top_left: slotGearId
+      })
       if (ggErr) throw new Error(`seed gear_grid: ${ggErr.message}`)
     })
 
