@@ -105,13 +105,26 @@ function extractArrayLiteral(block) {
  * is in the net set if its last touch was a `create`. A `drop table`
  * removes every policy attached to that table (Postgres semantics).
  *
- * Two dynamic-SQL patterns are handled because they appear in real
+ * Within a single migration, statements are applied in **source order**
+ * — not in two passes of "all creates, then all drops". A migration
+ * that creates a policy, drops the table, then creates a new policy of
+ * the same name on the same table will end up with only the second
+ * policy in the net set, matching Postgres execution semantics.
+ *
+ * Three dynamic-SQL patterns are handled because they appear in real
  * migrations:
+ *
  *   1. `do $$ ... foreach t in array [...] loop execute format(
  *        'drop table if exists public.%I', t) ...` — mass drop tables.
  *   2. `do $$ ... foreach t in array [...] loop execute format(
- *        'drop policy if exists "X" on public.%I', t) ...` — mass drop
- *        the same-named policy across many tables.
+ *        'drop policy if exists "X" on %I', t) ...` — mass drop the
+ *        same-named policy across many tables. Both bare `on %I` and
+ *        `on public.%I` forms are accepted because real migrations mix
+ *        them.
+ *   3. `do $$ ... foreach t in array [...] loop execute format(
+ *        $f$ create policy "X" on %I for <cmd> ... $f$, t) ...` —
+ *        mass create the same-named policy across many tables (see
+ *        `20260508000002_settlement_junction_collaborator_crud.sql`).
  *
  * Migrations in this repo reference tables as bare identifiers on
  * `create policy` (no `public.` qualifier), so the regex accepts both
@@ -131,13 +144,31 @@ function parsePolicies() {
   const policies = new Map()
 
   const createRe =
-    /^\s*create\s+policy\s+"([^"]+)"\s+on\s+(?:public\.)?([a-z_][a-z0-9_]*)\s+for\s+(select|insert|update|delete|all)\b/gim
+    /create\s+policy\s+"([^"]+)"\s+on\s+(?:public\.)?([a-z_][a-z0-9_]*)\s+for\s+(select|insert|update|delete|all)\b/gi
   const dropPolicyRe =
-    /^\s*drop\s+policy\s+(?:if\s+exists\s+)?"([^"]+)"\s+on\s+(?:public\.)?([a-z_][a-z0-9_]*)\b/gim
+    /drop\s+policy\s+(?:if\s+exists\s+)?"([^"]+)"\s+on\s+(?:public\.)?([a-z_][a-z0-9_]*)\b/gi
   const dropTableRe =
-    /^\s*drop\s+table\s+(?:if\s+exists\s+)?(?:public\.)?([a-z_][a-z0-9_]*)\b/gim
-  // Dynamic block: capture the do-block body so we can mine arrays + execs.
+    /drop\s+table\s+(?:if\s+exists\s+)?(?:public\.)?([a-z_][a-z0-9_]*)\b/gi
+  // Dynamic block: capture the do-block body so we can mine arrays +
+  // execs. Body offset is tracked so dynamic statements are slotted
+  // into the file at the position of the surrounding `do $$ ... $$;`.
   const doBlockRe = /\bdo\s*\$\$([\s\S]*?)\$\$\s*;/gi
+
+  // Inside a do-block body: dynamic CREATE policy via
+  // `execute format($f$ create policy "X" on %I for <cmd> ... $f$, t)`.
+  // The dollar-quote tag is not always `$f$`, so accept any
+  // single-character tag.
+  const dynCreatePolicyRe =
+    /create\s+policy\s+"([^"]+)"\s+on\s+%I\s+for\s+(select|insert|update|delete|all)\b/gi
+  // Inside a do-block body: dynamic DROP policy via
+  // `execute format('drop policy if exists "X" on %I', t)`. Both
+  // `on %I` and `on public.%I` are accepted.
+  const dynDropPolicyRe =
+    /drop\s+policy\s+(?:if\s+exists\s+)?"([^"]+)"\s+on\s+(?:public\.)?%I\b/gi
+  // Inside a do-block body: dynamic DROP table via
+  // `execute format('drop table if exists public.%I', t)`. Both forms
+  // accepted for symmetry.
+  const dynDropTableRe = /drop\s+table\s+(?:if\s+exists\s+)?(?:public\.)?%I\b/gi
 
   /**
    * Apply a `drop table <name>` by removing every policy whose key is
@@ -154,53 +185,116 @@ function parsePolicies() {
   for (const f of files) {
     const sql = stripSqlComments(readFileSync(join(MIGRATIONS_DIR, f), 'utf-8'))
 
+    // Strip do-block bodies (replacing them with same-length space
+    // padding so offsets in the surviving text still match the
+    // original) before scanning for static statements. Anything inside
+    // a `do $$ ... $$;` block is handled by the dynamic pass below.
+    const staticOnly = sql.replace(/\bdo\s*\$\$([\s\S]*?)\$\$\s*;/gi, (full) =>
+      ' '.repeat(full.length)
+    )
+
+    /** @type {Array<{offset: number, apply: () => void}>} */
+    const statements = []
     let m
 
     // Static `create policy`.
     createRe.lastIndex = 0
-    while ((m = createRe.exec(sql))) {
+    while ((m = createRe.exec(staticOnly))) {
       const [, name, table, cmd] = m
-      policies.set(`${table}::${name}`, {
-        table,
-        policy: name,
-        cmd: cmd.toUpperCase(),
-        file: f
+      const offset = m.index
+      statements.push({
+        offset,
+        apply: () =>
+          policies.set(`${table}::${name}`, {
+            table,
+            policy: name,
+            cmd: cmd.toUpperCase(),
+            file: f
+          })
       })
     }
 
     // Static `drop policy`.
     dropPolicyRe.lastIndex = 0
-    while ((m = dropPolicyRe.exec(sql))) {
+    while ((m = dropPolicyRe.exec(staticOnly))) {
       const [, name, table] = m
-      policies.delete(`${table}::${name}`)
+      const offset = m.index
+      statements.push({
+        offset,
+        apply: () => policies.delete(`${table}::${name}`)
+      })
     }
 
     // Static `drop table` (outside do-blocks).
     dropTableRe.lastIndex = 0
-    while ((m = dropTableRe.exec(sql))) {
+    while ((m = dropTableRe.exec(staticOnly))) {
       const [, table] = m
-      dropTable(table)
+      const offset = m.index
+      statements.push({ offset, apply: () => dropTable(table) })
     }
 
-    // Dynamic `do $$ ... $$` blocks: look for `drop table` / `drop
-    // policy` execute-format patterns paired with array literals.
+    // Dynamic `do $$ ... $$` blocks: collect drop-table, drop-policy,
+    // and create-policy execute-format patterns paired with array
+    // literals. The whole `do $$ ... $$;` block is treated as a single
+    // logical statement positioned at the block's start offset.
     doBlockRe.lastIndex = 0
     while ((m = doBlockRe.exec(sql))) {
+      const blockOffset = m.index
       const body = m[1]
       const tableNames = extractArrayLiteral(body)
       if (tableNames.length === 0) continue
 
-      if (/drop\s+table[^;]*%I/i.test(body)) {
-        for (const t of tableNames) dropTable(t)
+      // Dynamic drop-table.
+      dynDropTableRe.lastIndex = 0
+      if (dynDropTableRe.exec(body)) {
+        statements.push({
+          offset: blockOffset,
+          apply: () => {
+            for (const t of tableNames) dropTable(t)
+          }
+        })
       }
-      const policyExec = body.match(
-        /drop\s+policy\s+if\s+exists\s+"([^"]+)"\s+on\s+public\.%I/i
-      )
-      if (policyExec) {
-        const policyName = policyExec[1]
-        for (const t of tableNames) policies.delete(`${t}::${policyName}`)
+
+      // Dynamic drop-policy. May appear multiple times within one
+      // block (the junction-crud migration drops five policies per
+      // table in one loop), so collect every match.
+      dynDropPolicyRe.lastIndex = 0
+      while ((m = dynDropPolicyRe.exec(body))) {
+        const policyName = m[1]
+        statements.push({
+          offset: blockOffset,
+          apply: () => {
+            for (const t of tableNames) policies.delete(`${t}::${policyName}`)
+          }
+        })
+      }
+
+      // Dynamic create-policy.
+      dynCreatePolicyRe.lastIndex = 0
+      while ((m = dynCreatePolicyRe.exec(body))) {
+        const policyName = m[1]
+        const cmd = m[2].toUpperCase()
+        statements.push({
+          offset: blockOffset,
+          apply: () => {
+            for (const t of tableNames)
+              policies.set(`${t}::${policyName}`, {
+                table: t,
+                policy: policyName,
+                cmd,
+                file: f
+              })
+          }
+        })
       }
     }
+
+    // Apply per-file statements in source order. Stable sort isn't
+    // critical because every offset is unique within a file (regex
+    // matches don't overlap), but `Array.prototype.sort` is stable in
+    // V8 anyway.
+    statements.sort((a, b) => a.offset - b.offset)
+    for (const s of statements) s.apply()
   }
 
   return [...policies.values()]

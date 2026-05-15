@@ -28,15 +28,28 @@
 -- then renders the cost line as "Unknown gear".
 --
 -- This migration closes that gap by adding `Allow select via referenced
--- cost` to `gear`, `resource`, and `innovation`. The policy fires when the
--- row is custom AND there is a cost / requirement row referencing it from
--- a settlement-visible custom recipe AND the referenced row's own author
--- is still a member of that settlement.
+-- cost` to `gear`, `resource`, and `innovation`, and `Allow select via
+-- referenced quarry/nemesis` to `location` and `collective_cognition_reward`.
+-- Each policy fires when the row is custom AND there is a cost /
+-- requirement / quarry / nemesis junction referencing it from a
+-- settlement-visible custom parent AND BOTH the parent recipe / parent
+-- quarry-nemesis author AND the referenced row's own author are still
+-- members of that settlement.
+--
+-- The parent-author membership clause is essential: without it, the
+-- SECURITY DEFINER helper would bypass the parent's RLS and continue
+-- exposing the referenced row even after the parent author was unshared
+-- (their parent recipe is no longer settlement-visible, but the cost it
+-- cites would leak as long as the cost author was still a member). The
+-- two clauses together keep the visibility envelope identical to: "if
+-- the parent recipe is invisible to me, every row it points to is
+-- invisible to me through this path as well."
 --
 -- Implementation notes:
 --
---   * The visibility walk is delegated to three SECURITY DEFINER helper
---     functions (one per referenced catalog). Inlining the joins directly
+--   * The visibility walk is delegated to five SECURITY DEFINER helper
+--     functions (one per referenced catalog: gear, resource, innovation,
+--     location, collective_cognition_reward). Inlining the joins directly
 --     in the policy body caused `42P17` infinite recursion on `gear`
 --     because the policy's `from gear parent_gear` self-join re-triggers
 --     `gear`'s own RLS, which in turn re-applies this policy. Wrapping the
@@ -47,18 +60,23 @@
 --   * The helpers return only a boolean, so no row content is exposed
 --     beyond the policy's effective `using` decision.
 --
---   * The author-membership clause (`is_settlement_member(sj.settlement_id,
---     <ref>.user_id)`) mirrors
+--   * The author-membership clauses mirror
 --     `20260523000000_catalog_author_membership_select.sql`. The cost
 --     junction INSERT policy on `gear_gear_cost` / `pattern_gear_cost` /
 --     `seed_pattern_gear_cost` only requires the PARENT recipe to be owned
 --     by the inserter (see `20260424000039_gear_extension.sql` line 126),
 --     so nothing stops a collaborator-authored recipe from referencing a
---     stranger-authored cost item. Without the author-membership clause,
+--     stranger-authored cost item. Without the referenced-row author check,
 --     the new SELECT path would silently expose stranger-authored rows
---     whenever a settlement collaborator happened to cite them. The clause
---     keeps the visibility envelope identical to "settlement member can
---     read settlement member's content".
+--     whenever a settlement collaborator happened to cite them. Without
+--     the parent-author check, an unshared parent author's recipe would
+--     stop being settlement-visible while the referenced row leaked
+--     through this helper (an EC-7 hole). Both clauses together keep the
+--     visibility envelope identical to "settlement member can read other
+--     settlement members' content, only while they remain a member".
+--     `quarry_location` / `nemesis_location` / `quarry_collective_
+--     cognition_reward` use the same parent (`quarry` / `nemesis`)
+--     author-membership gate.
 --
 -- Reference graph covered:
 --
@@ -75,6 +93,14 @@
 --   innovation (referenced as innovation_id):
 --     pattern_innovation_requirement.innovation_id       parent: pattern      (settlement_pattern)
 --     seed_pattern_innovation_requirement.innovation_id  parent: seed_pattern (settlement_seed_pattern)
+--
+--   location (referenced as location_id):
+--     quarry_location.location_id   parent: quarry  (settlement_quarry)
+--     nemesis_location.location_id  parent: nemesis (settlement_nemesis)
+--
+--   collective_cognition_reward (referenced as collective_cognition_reward_id):
+--     quarry_collective_cognition_reward.collective_cognition_reward_id
+--                                   parent: quarry  (settlement_quarry)
 --
 -- The `*_resource_type_cost` and `*_other_cost` tables reference an enum
 -- or a free-text label rather than a catalog row, so they have no
@@ -98,8 +124,9 @@
 -- 1. Helper: is_gear_visible_via_cost_reference(ref_gear_id, ref_gear_user_id)
 --
 -- Returns true when `ref_gear_id` is referenced as a cost item by some
--- settlement-attached custom recipe AND `ref_gear_user_id` is a member of
--- that settlement AND the caller is the settlement owner or a collaborator.
+-- settlement-attached custom recipe AND both the parent recipe's author
+-- AND `ref_gear_user_id` are still members of that settlement AND the
+-- caller is the settlement owner or a collaborator.
 --
 -- `SECURITY DEFINER` is required to break the RLS self-reference on `gear`
 -- (the function walks `gear_gear_cost -> gear parent_gear`, which would
@@ -127,6 +154,7 @@ select ref_gear_user_id is not null
           public.is_settlement_owner(sj.settlement_id)
           or public.is_settlement_collaborator(sj.settlement_id)
         )
+        and public.is_settlement_member(sj.settlement_id, parent_g.user_id)
         and public.is_settlement_member(sj.settlement_id, ref_gear_user_id)
     )
     or exists (
@@ -140,6 +168,7 @@ select ref_gear_user_id is not null
           public.is_settlement_owner(sj.settlement_id)
           or public.is_settlement_collaborator(sj.settlement_id)
         )
+        and public.is_settlement_member(sj.settlement_id, parent_p.user_id)
         and public.is_settlement_member(sj.settlement_id, ref_gear_user_id)
     )
     or exists (
@@ -153,6 +182,7 @@ select ref_gear_user_id is not null
           public.is_settlement_owner(sj.settlement_id)
           or public.is_settlement_collaborator(sj.settlement_id)
         )
+        and public.is_settlement_member(sj.settlement_id, parent_sp.user_id)
         and public.is_settlement_member(sj.settlement_id, ref_gear_user_id)
     )
   );
@@ -170,7 +200,9 @@ grant execute on function public.is_gear_visible_via_cost_reference(uuid, uuid) 
 -- self-reference exists here (`resource` is never joined to itself), but
 -- the helper is kept SECURITY DEFINER for symmetry and to ensure the
 -- intermediate parent joins (`gear`, `pattern`, `seed_pattern`) cannot
--- accidentally trigger their own transitive policies recursively.
+-- accidentally trigger their own transitive policies recursively. Both
+-- the parent recipe's author and the referenced resource's author must
+-- still be members of the parent's attached settlement.
 --
 create or replace function is_resource_visible_via_cost_reference(
 ref_resource_id uuid,
@@ -190,6 +222,7 @@ select ref_resource_user_id is not null
           public.is_settlement_owner(sj.settlement_id)
           or public.is_settlement_collaborator(sj.settlement_id)
         )
+        and public.is_settlement_member(sj.settlement_id, parent_g.user_id)
         and public.is_settlement_member(sj.settlement_id, ref_resource_user_id)
     )
     or exists (
@@ -203,6 +236,7 @@ select ref_resource_user_id is not null
           public.is_settlement_owner(sj.settlement_id)
           or public.is_settlement_collaborator(sj.settlement_id)
         )
+        and public.is_settlement_member(sj.settlement_id, parent_p.user_id)
         and public.is_settlement_member(sj.settlement_id, ref_resource_user_id)
     )
     or exists (
@@ -216,6 +250,7 @@ select ref_resource_user_id is not null
           public.is_settlement_owner(sj.settlement_id)
           or public.is_settlement_collaborator(sj.settlement_id)
         )
+        and public.is_settlement_member(sj.settlement_id, parent_sp.user_id)
         and public.is_settlement_member(sj.settlement_id, ref_resource_user_id)
     )
   );
@@ -230,7 +265,9 @@ grant execute on function public.is_resource_visible_via_cost_reference(uuid, uu
 --    ref_innovation_user_id)
 --
 -- Only two paths (no gear→innovation requirement table). Same SECURITY
--- DEFINER rationale as the helpers above.
+-- DEFINER rationale as the helpers above; both the parent pattern /
+-- seed_pattern author and the referenced innovation author must still be
+-- settlement members.
 --
 create or replace function is_innovation_visible_via_cost_reference(
 ref_innovation_id uuid,
@@ -250,6 +287,7 @@ select ref_innovation_user_id is not null
           public.is_settlement_owner(sj.settlement_id)
           or public.is_settlement_collaborator(sj.settlement_id)
         )
+        and public.is_settlement_member(sj.settlement_id, parent_p.user_id)
         and public.is_settlement_member(sj.settlement_id, ref_innovation_user_id)
     )
     or exists (
@@ -263,6 +301,7 @@ select ref_innovation_user_id is not null
           public.is_settlement_owner(sj.settlement_id)
           or public.is_settlement_collaborator(sj.settlement_id)
         )
+        and public.is_settlement_member(sj.settlement_id, parent_sp.user_id)
         and public.is_settlement_member(sj.settlement_id, ref_innovation_user_id)
     )
   );
@@ -273,7 +312,99 @@ revoke execute on function public.is_innovation_visible_via_cost_reference(uuid,
 from anon;
 grant execute on function public.is_innovation_visible_via_cost_reference(uuid, uuid) to authenticated;
 --
--- 4. SELECT policies: delegate to the helpers above.
+-- 4. Helper: is_location_visible_via_quarry_nemesis_reference(ref_location_id,
+--    ref_location_user_id)
+--
+-- `quarry_location.location_id` / `nemesis_location.location_id` reference
+-- catalog `location` rows the same way `gear_gear_cost.cost_gear_id`
+-- references a referenced gear. A custom quarry / nemesis attached to a
+-- settlement can cite a custom location that is NOT attached to any
+-- `settlement_location` of its own; without this path the location renders
+-- as "Unknown location" in the quarry / nemesis detail view even though
+-- the parent is visible.
+--
+-- Same parent-author membership guard as the cost-reference helpers above:
+-- both the parent quarry / nemesis author and the referenced location's
+-- author must still be members of the parent's attached settlement.
+--
+create or replace function is_location_visible_via_quarry_nemesis_reference(
+ref_location_id uuid,
+ref_location_user_id uuid
+) returns boolean language sql stable security definer
+set search_path = '' as $$
+select ref_location_user_id is not null
+  and (
+    exists (
+      select 1
+      from public.quarry_location ql
+        join public.quarry parent_q on parent_q.id = ql.quarry_id
+        join public.settlement_quarry sj on sj.quarry_id = parent_q.id
+      where ql.location_id = ref_location_id
+        and parent_q.custom
+        and (
+          public.is_settlement_owner(sj.settlement_id)
+          or public.is_settlement_collaborator(sj.settlement_id)
+        )
+        and public.is_settlement_member(sj.settlement_id, parent_q.user_id)
+        and public.is_settlement_member(sj.settlement_id, ref_location_user_id)
+    )
+    or exists (
+      select 1
+      from public.nemesis_location nl
+        join public.nemesis parent_n on parent_n.id = nl.nemesis_id
+        join public.settlement_nemesis sj on sj.nemesis_id = parent_n.id
+      where nl.location_id = ref_location_id
+        and parent_n.custom
+        and (
+          public.is_settlement_owner(sj.settlement_id)
+          or public.is_settlement_collaborator(sj.settlement_id)
+        )
+        and public.is_settlement_member(sj.settlement_id, parent_n.user_id)
+        and public.is_settlement_member(sj.settlement_id, ref_location_user_id)
+    )
+  );
+$$;
+revoke all on function public.is_location_visible_via_quarry_nemesis_reference(uuid, uuid)
+from public;
+revoke execute on function public.is_location_visible_via_quarry_nemesis_reference(uuid, uuid)
+from anon;
+grant execute on function public.is_location_visible_via_quarry_nemesis_reference(uuid, uuid) to authenticated;
+--
+-- 5. Helper: is_collective_cognition_reward_visible_via_quarry_reference(
+--    ref_ccr_id, ref_ccr_user_id)
+--
+-- Only one path (`quarry_collective_cognition_reward.collective_cognition_
+-- reward_id` → `collective_cognition_reward`). Mirrors the location helper
+-- with the same parent-author + referenced-author guard.
+--
+create or replace function is_collective_cognition_reward_visible_via_quarry_reference(
+ref_ccr_id uuid,
+ref_ccr_user_id uuid
+) returns boolean language sql stable security definer
+set search_path = '' as $$
+select ref_ccr_user_id is not null
+  and exists (
+    select 1
+    from public.quarry_collective_cognition_reward qccr
+      join public.quarry parent_q on parent_q.id = qccr.quarry_id
+      join public.settlement_quarry sj on sj.quarry_id = parent_q.id
+    where qccr.collective_cognition_reward_id = ref_ccr_id
+      and parent_q.custom
+      and (
+        public.is_settlement_owner(sj.settlement_id)
+        or public.is_settlement_collaborator(sj.settlement_id)
+      )
+      and public.is_settlement_member(sj.settlement_id, parent_q.user_id)
+      and public.is_settlement_member(sj.settlement_id, ref_ccr_user_id)
+  );
+$$;
+revoke all on function public.is_collective_cognition_reward_visible_via_quarry_reference(uuid, uuid)
+from public;
+revoke execute on function public.is_collective_cognition_reward_visible_via_quarry_reference(uuid, uuid)
+from anon;
+grant execute on function public.is_collective_cognition_reward_visible_via_quarry_reference(uuid, uuid) to authenticated;
+--
+-- 6. SELECT policies: delegate to the helpers above.
 --
 create policy "Allow select via referenced cost" on gear for
 select to authenticated using (
@@ -289,4 +420,17 @@ create policy "Allow select via referenced cost" on innovation for
 select to authenticated using (
     custom
     and is_innovation_visible_via_cost_reference(innovation.id, innovation.user_id)
+  );
+create policy "Allow select via referenced quarry/nemesis" on location for
+select to authenticated using (
+    custom
+    and is_location_visible_via_quarry_nemesis_reference(location.id, location.user_id)
+  );
+create policy "Allow select via referenced quarry" on collective_cognition_reward for
+select to authenticated using (
+    custom
+    and is_collective_cognition_reward_visible_via_quarry_reference(
+      collective_cognition_reward.id,
+      collective_cognition_reward.user_id
+    )
   );

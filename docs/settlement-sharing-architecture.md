@@ -952,13 +952,29 @@ see each other's edits live.
   columns point at (`cost_gear_id`, `resource_id`, `innovation_id`). Without
   those, collaborator-visible custom recipes render their cost lines as "Unknown
   gear / resource / innovation" because the UI resolves cost names through the
-  global catalog maps.
-  `20260526000000_catalog_referenced_row_transitive_select.sql` closes the gap
-  by adding `Allow select via referenced cost` on `gear`, `resource`, and
-  `innovation`. The policy is gated on
-  `is_settlement_member(sj.settlement_id, <ref>.user_id)` so stranger-authored
-  catalog rows referenced by a settlement collaborator's recipe stay hidden;
-  EC-7 (author unshared) also collapses the new path cleanly.
+  global catalog maps. The same gap exists for monster-cited content:
+  `quarry_location.location_id`, `nemesis_location.location_id`, and
+  `quarry_collective_cognition_reward.collective_cognition_reward_id` are all
+  similar references that need transitive SELECT on their parent catalog row.
+  `20260526000000_catalog_referenced_row_transitive_select.sql` closes both gaps
+  by adding `Allow select via referenced cost` on `gear`, `resource`,
+  `innovation` (PR #230 review feedback comments
+  [3249906530](https://github.com/ncalteen/kdm-app/pull/230#discussion_r3249906530),
+  [3249906574](https://github.com/ncalteen/kdm-app/pull/230#discussion_r3249906574),
+  [3249906599](https://github.com/ncalteen/kdm-app/pull/230#discussion_r3249906599))
+  and `Allow select via referenced quarry/nemesis` on `location` plus
+  `Allow select via referenced quarry` on `collective_cognition_reward` (PR #230
+  review feedback comment
+  [3249906701](https://github.com/ncalteen/kdm-app/pull/230#discussion_r3249906701)).
+  Each policy is implemented via a SECURITY DEFINER helper that walks the
+  junction table back to the parent recipe / parent quarry / parent nemesis,
+  joins through `settlement_*`, and asserts that **both** the parent's author
+  AND the referenced row's author are still settlement members. The
+  parent-author clause is essential: a SECURITY DEFINER helper bypasses RLS on
+  the parent table, so without it an unshared parent author's recipe (no longer
+  settlement-visible through its own policies) would still leak the referenced
+  row through this new path — an EC-7 hole that the test suite also covers as
+  `EC-7 (parent-author): owner loses access when parent author is unshared`.
   `*_resource_type_cost` and `*_other_cost` reference an enum / free-text label
   and have no referenced-row visibility gap. `pattern.crafted_gear_id` (recipe
   output) is out of scope here.
@@ -1085,9 +1101,14 @@ These need user decisions before/while building Phase 1.
 ## Appendix A — Inventory of Existing Tables
 
 This inventory was reconciled against the migration history through
-`20260526000000_catalog_referenced_row_transitive_select.sql` (which closed the
-cost-reference gap on `gear`, `resource`, and `innovation` left by
-`20260524000000_catalog_sub_row_transitive_select.sql`),
+`20260526000000_catalog_referenced_row_transitive_select.sql` (which closed both
+the cost-reference gap on `gear` / `resource` / `innovation` and the
+quarry/nemesis-cited reference gap on `location` / `collective_cognition_reward`
+left by `20260524000000_catalog_sub_row_transitive_select.sql`, and tightened
+each new helper with a parent-author membership clause so the SECURITY DEFINER
+walk also collapses cleanly under EC-7 when the parent recipe / parent quarry /
+parent nemesis author is unshared — PR #230 review feedback comments 3249906530
+/ 3249906574 / 3249906599 / 3249906701),
 `20260525000000_catalog_sub_row_realtime_publication.sql` (which extended the
 transitive SELECT policies and realtime publication added by
 `20260524000000_catalog_sub_row_transitive_select.sql` and the author-membership

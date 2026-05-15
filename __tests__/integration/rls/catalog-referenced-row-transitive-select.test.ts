@@ -15,17 +15,18 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  * `20260526000000_catalog_referenced_row_transitive_select.sql`. Each
  * scenario follows the same shape:
  *
- *   1. `collaborator` (the shared-user) authors a custom parent recipe
- *      (`gear` / `pattern` / `seed_pattern`) AND a custom referenced
- *      catalog row (`gear` / `resource` / `innovation`). A cost /
- *      requirement junction row links the two.
- *   2. `owner` attaches the parent recipe to their settlement via
- *      `settlement_gear` / `settlement_pattern` / `settlement_seed_pattern`.
+ *   1. `collaborator` (the shared-user) authors a custom parent recipe /
+ *      monster (`gear` / `pattern` / `seed_pattern` / `quarry` / `nemesis`)
+ *      AND a custom referenced catalog row (`gear` / `resource` /
+ *      `innovation` / `location` / `collective_cognition_reward`). A cost
+ *      / requirement / quarry-nemesis junction row links the two.
+ *   2. `owner` attaches the parent to their settlement via the matching
+ *      `settlement_*` link table.
  *   3. We assert that:
  *        a. The author (collaborator) still sees the referenced row via
  *           the pre-existing `Allow select for owner and custom` policy.
  *        b. The settlement owner (who is NOT the author) now sees the
- *           referenced row via the NEW `Allow select via referenced cost`
+ *           referenced row via the NEW `Allow select via referenced …`
  *           policy — this was the gap PR #230 review feedback identified.
  *        c. A stranger sees nothing.
  *
@@ -35,12 +36,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  *     collaborator cites it from their custom recipe`: the
  *     `is_settlement_member(sj.settlement_id, <ref>.user_id)` clause must
  *     deny access when the referenced row's author is not a member.
- *   - `owner loses access after collaborator (author) is unshared`:
- *     mirrors EC-7 for the new policy path.
- *   - `non-custom referenced rows are unaffected`: the `custom` predicate
- *     prevents the new policy from widening access to global catalog rows
- *     (they remain visible only via `Allow select for authenticated and
- *     non-custom`).
+ *   - `owner loses access after the referenced row's author is unshared`:
+ *     EC-7 variant flipping the referenced row's author membership off.
+ *   - `owner loses access after the PARENT recipe's author is unshared`:
+ *     PR #230 reviewer-flagged variant — the parent recipe is no longer
+ *     settlement-visible, so the transitive helper must also collapse
+ *     even when the referenced row's author is still a settlement member.
  *
  * Architecture: `docs/settlement-sharing-architecture.md` §10 Phase 2 (2.2),
  * Appendix B EC-6 / EC-7.
@@ -138,11 +139,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
     })
 
     it('stranger cannot read referenced cost gear', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('gear')
         .select('id')
         .eq('id', costGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -204,11 +206,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
     })
 
     it('stranger cannot read referenced cost gear', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('gear')
         .select('id')
         .eq('id', costGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -274,11 +277,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
     })
 
     it('stranger cannot read referenced cost gear', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('gear')
         .select('id')
         .eq('id', costGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -344,11 +348,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
     })
 
     it('stranger cannot read referenced resource', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('resource')
         .select('id')
         .eq('id', resourceId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -412,11 +417,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
     })
 
     it('stranger cannot read referenced resource', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('resource')
         .select('id')
         .eq('id', resourceId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -485,11 +491,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
     })
 
     it('stranger cannot read referenced resource', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('resource')
         .select('id')
         .eq('id', resourceId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -550,11 +557,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
     })
 
     it('stranger cannot read referenced innovation', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('innovation')
         .select('id')
         .eq('id', innovationId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -622,11 +630,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
     })
 
     it('stranger cannot read referenced innovation', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('innovation')
         .select('id')
         .eq('id', innovationId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -804,6 +813,351 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
         .select('id')
         .eq('id', ecCostGearId)
         .maybeSingle()
+      expect(data).toBeNull()
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // EC-7 (parent-author variant): when the PARENT recipe's author is
+  // unshared, the owner must also lose access to the referenced row even
+  // though the referenced row's author is still a settlement member.
+  // PR #230 review feedback flagged this gap (comment 3249906530):
+  // SECURITY DEFINER helpers bypass the parent recipe's own RLS, so
+  // without an explicit `is_settlement_member(sj.settlement_id,
+  // <parent>.user_id)` clause the helper would happily walk a parent
+  // whose author was no longer settlement-visible.
+  // ---------------------------------------------------------------------------
+  describe('EC-7 (parent-author): owner loses access when parent author is unshared', () => {
+    let pAuthOwner: TestUser
+    let parentAuthor: TestUser
+    let costAuthor: TestUser
+    let pAuthSettlementId: string
+    let pAuthCostGearId: string
+
+    beforeAll(async () => {
+      pAuthOwner = await createTestUser()
+      parentAuthor = await createTestUser()
+      costAuthor = await createTestUser()
+      pAuthSettlementId = await seedSettlement(
+        pAuthOwner.id,
+        'EC-7 Parent-Author Referenced Row'
+      )
+      await shareSettlement(pAuthSettlementId, parentAuthor.id, pAuthOwner.id)
+      await shareSettlement(pAuthSettlementId, costAuthor.id, pAuthOwner.id)
+
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: parent, error: pErr } = await admin
+        .from('gear')
+        .insert({
+          gear_name: `EC-7 Parent ${suffix}`,
+          custom: true,
+          user_id: parentAuthor.id
+        })
+        .select('id')
+        .single()
+      if (pErr || !parent) throw new Error(`pa parent gear: ${pErr?.message}`)
+
+      const { data: cost, error: cErr } = await admin
+        .from('gear')
+        .insert({
+          gear_name: `EC-7 Cost ${suffix}`,
+          custom: true,
+          user_id: costAuthor.id
+        })
+        .select('id')
+        .single()
+      if (cErr || !cost) throw new Error(`pa cost gear: ${cErr?.message}`)
+      pAuthCostGearId = cost.id
+
+      const { error: jErr } = await admin.from('gear_gear_cost').insert({
+        gear_id: parent.id,
+        cost_gear_id: pAuthCostGearId,
+        quantity: 1
+      })
+      if (jErr) throw new Error(`pa gear_gear_cost: ${jErr.message}`)
+
+      const { error: sjErr } = await admin.from('settlement_gear').insert({
+        settlement_id: pAuthSettlementId,
+        gear_id: parent.id,
+        quantity: 1
+      })
+      if (sjErr) throw new Error(`pa settlement_gear: ${sjErr.message}`)
+    })
+
+    afterAll(async () => {
+      await deleteTestUser(pAuthOwner.id)
+      await deleteTestUser(parentAuthor.id)
+      await deleteTestUser(costAuthor.id)
+    })
+
+    it('owner reads referenced cost gear while parent author is still shared', async () => {
+      const { data, error } = await pAuthOwner.client
+        .from('gear')
+        .select('id')
+        .eq('id', pAuthCostGearId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('owner cannot read referenced cost gear after PARENT author is unshared (cost author still shared)', async () => {
+      // Unshare the parent recipe's author only. The referenced cost
+      // gear's author remains a settlement member, so the
+      // ref-author-membership clause is still true — but the new
+      // parent-author-membership clause must flip false and collapse the
+      // helper.
+      const { error: unshareErr } = await admin
+        .from('settlement_shared_user')
+        .delete()
+        .eq('settlement_id', pAuthSettlementId)
+        .eq('shared_user_id', parentAuthor.id)
+      if (unshareErr) throw new Error(`pa unshare: ${unshareErr.message}`)
+
+      const { data } = await pAuthOwner.client
+        .from('gear')
+        .select('id')
+        .eq('id', pAuthCostGearId)
+        .maybeSingle()
+      expect(data).toBeNull()
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // location referenced as quarry_location.location_id
+  // ---------------------------------------------------------------------------
+  describe('location via quarry_location', () => {
+    let quarryId: string
+    let locationId: string
+
+    beforeAll(async () => {
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: q, error: qErr } = await admin
+        .from('quarry')
+        .insert({
+          monster_name: `Parent Quarry ${suffix}`,
+          node: 'NQ1',
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (qErr || !q) throw new Error(`seed parent quarry: ${qErr?.message}`)
+      quarryId = q.id
+
+      const { data: loc, error: locErr } = await admin
+        .from('location')
+        .insert({
+          location_name: `Quarry-Cited Location ${suffix}`,
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (locErr || !loc)
+        throw new Error(`seed referenced location: ${locErr?.message}`)
+      locationId = loc.id
+
+      const { error: jErr } = await admin
+        .from('quarry_location')
+        .insert({ quarry_id: quarryId, location_id: locationId })
+      if (jErr) throw new Error(`seed quarry_location: ${jErr.message}`)
+
+      const { error: sjErr } = await admin
+        .from('settlement_quarry')
+        .insert({ settlement_id: settlementId, quarry_id: quarryId })
+      if (sjErr) throw new Error(`seed settlement_quarry: ${sjErr.message}`)
+    })
+
+    it('collaborator (author) reads location via owner-and-custom', async () => {
+      const { data, error } = await collaborator.client
+        .from('location')
+        .select('id')
+        .eq('id', locationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('settlement owner reads referenced location via referenced-quarry policy', async () => {
+      const { data, error } = await owner.client
+        .from('location')
+        .select('id, location_name')
+        .eq('id', locationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read referenced location', async () => {
+      const { data, error } = await stranger.client
+        .from('location')
+        .select('id')
+        .eq('id', locationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // location referenced as nemesis_location.location_id
+  // ---------------------------------------------------------------------------
+  describe('location via nemesis_location', () => {
+    let nemesisId: string
+    let locationId: string
+
+    beforeAll(async () => {
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: n, error: nErr } = await admin
+        .from('nemesis')
+        .insert({
+          monster_name: `Parent Nemesis ${suffix}`,
+          node: 'NN1',
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (nErr || !n) throw new Error(`seed parent nemesis: ${nErr?.message}`)
+      nemesisId = n.id
+
+      const { data: loc, error: locErr } = await admin
+        .from('location')
+        .insert({
+          location_name: `Nemesis-Cited Location ${suffix}`,
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (locErr || !loc)
+        throw new Error(`seed referenced location: ${locErr?.message}`)
+      locationId = loc.id
+
+      const { error: jErr } = await admin
+        .from('nemesis_location')
+        .insert({ nemesis_id: nemesisId, location_id: locationId })
+      if (jErr) throw new Error(`seed nemesis_location: ${jErr.message}`)
+
+      const { error: sjErr } = await admin
+        .from('settlement_nemesis')
+        .insert({ settlement_id: settlementId, nemesis_id: nemesisId })
+      if (sjErr) throw new Error(`seed settlement_nemesis: ${sjErr.message}`)
+    })
+
+    it('collaborator (author) reads location via owner-and-custom', async () => {
+      const { data, error } = await collaborator.client
+        .from('location')
+        .select('id')
+        .eq('id', locationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('settlement owner reads referenced location via referenced-nemesis policy', async () => {
+      const { data, error } = await owner.client
+        .from('location')
+        .select('id, location_name')
+        .eq('id', locationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read referenced location', async () => {
+      const { data, error } = await stranger.client
+        .from('location')
+        .select('id')
+        .eq('id', locationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // collective_cognition_reward referenced as
+  // quarry_collective_cognition_reward.collective_cognition_reward_id
+  // ---------------------------------------------------------------------------
+  describe('collective_cognition_reward via quarry_collective_cognition_reward', () => {
+    let quarryId: string
+    let ccRewardId: string
+
+    beforeAll(async () => {
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: q, error: qErr } = await admin
+        .from('quarry')
+        .insert({
+          monster_name: `CCR Parent Quarry ${suffix}`,
+          node: 'NQ2',
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (qErr || !q)
+        throw new Error(`seed ccr parent quarry: ${qErr?.message}`)
+      quarryId = q.id
+
+      const { data: cc, error: ccErr } = await admin
+        .from('collective_cognition_reward')
+        .insert({
+          reward_name: `Cited CC Reward ${suffix}`,
+          collective_cognition: 1,
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (ccErr || !cc)
+        throw new Error(`seed referenced ccr: ${ccErr?.message}`)
+      ccRewardId = cc.id
+
+      const { error: jErr } = await admin
+        .from('quarry_collective_cognition_reward')
+        .insert({
+          quarry_id: quarryId,
+          collective_cognition_reward_id: ccRewardId
+        })
+      if (jErr)
+        throw new Error(
+          `seed quarry_collective_cognition_reward: ${jErr.message}`
+        )
+
+      const { error: sjErr } = await admin
+        .from('settlement_quarry')
+        .insert({ settlement_id: settlementId, quarry_id: quarryId })
+      if (sjErr) throw new Error(`seed settlement_quarry: ${sjErr.message}`)
+    })
+
+    it('collaborator (author) reads collective_cognition_reward via owner-and-custom', async () => {
+      const { data, error } = await collaborator.client
+        .from('collective_cognition_reward')
+        .select('id')
+        .eq('id', ccRewardId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('settlement owner reads referenced collective_cognition_reward via referenced-quarry policy', async () => {
+      const { data, error } = await owner.client
+        .from('collective_cognition_reward')
+        .select('id, reward_name')
+        .eq('id', ccRewardId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read referenced collective_cognition_reward', async () => {
+      const { data, error } = await stranger.client
+        .from('collective_cognition_reward')
+        .select('id')
+        .eq('id', ccRewardId)
+        .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })

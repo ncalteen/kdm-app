@@ -268,12 +268,13 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
     })
 
     it('stranger cannot select', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('gear_gear_cost')
         .select('gear_id')
         .eq('gear_id', parentGearId)
         .eq('cost_gear_id', costGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -284,6 +285,17 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('gear_id', parentGearId)
         .eq('cost_gear_id', costGearId)
       expect(error).toBeNull()
+
+      // Confirm the UPDATE actually landed by reading back through the
+      // service-role client (bypasses RLS so the assertion is exercised
+      // on the persisted row, not on a stale client cache).
+      const { data: readback } = await admin
+        .from('gear_gear_cost')
+        .select('quantity')
+        .eq('gear_id', parentGearId)
+        .eq('cost_gear_id', costGearId)
+        .maybeSingle()
+      expect(readback?.quantity).toBe(5)
     })
 
     it('author deletes the cost row', async () => {
@@ -293,6 +305,17 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('gear_id', parentGearId)
         .eq('cost_gear_id', costGearId)
       expect(error).toBeNull()
+
+      // Confirm the row is actually gone from the database via the
+      // service-role client (a SELECT through the author's client would
+      // also return null when blocked by RLS, so we must bypass it).
+      const { data: readback } = await admin
+        .from('gear_gear_cost')
+        .select('gear_id')
+        .eq('gear_id', parentGearId)
+        .eq('cost_gear_id', costGearId)
+        .maybeSingle()
+      expect(readback).toBeNull()
     })
   })
 
@@ -344,11 +367,12 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
     })
 
     it('stranger cannot select', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('gear_other_cost')
         .select('id')
         .eq('id', rowId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -358,6 +382,13 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .update({ quantity: 9 })
         .eq('id', rowId)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('gear_other_cost')
+        .select('quantity')
+        .eq('id', rowId)
+        .maybeSingle()
+      expect(readback?.quantity).toBe(9)
     })
 
     it('author deletes the cost row', async () => {
@@ -366,6 +397,13 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .delete()
         .eq('id', rowId)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('gear_other_cost')
+        .select('id')
+        .eq('id', rowId)
+        .maybeSingle()
+      expect(readback).toBeNull()
     })
   })
 
@@ -415,12 +453,13 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
     })
 
     it('stranger cannot select', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('gear_resource_type_cost')
         .select('gear_id')
         .eq('gear_id', parentGearId)
         .eq('resource_type', resourceType)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -431,6 +470,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('gear_id', parentGearId)
         .eq('resource_type', resourceType)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('gear_resource_type_cost')
+        .select('quantity')
+        .eq('gear_id', parentGearId)
+        .eq('resource_type', resourceType)
+        .maybeSingle()
+      expect(readback?.quantity).toBe(4)
     })
 
     it('author deletes the cost row', async () => {
@@ -440,6 +487,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('gear_id', parentGearId)
         .eq('resource_type', resourceType)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('gear_resource_type_cost')
+        .select('gear_id')
+        .eq('gear_id', parentGearId)
+        .eq('resource_type', resourceType)
+        .maybeSingle()
+      expect(readback).toBeNull()
     })
   })
 
@@ -490,12 +545,13 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
     })
 
     it('stranger cannot select', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('pattern_gear_cost')
         .select('pattern_id')
         .eq('pattern_id', patternId)
         .eq('cost_gear_id', costGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -506,6 +562,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('pattern_id', patternId)
         .eq('cost_gear_id', costGearId)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('pattern_gear_cost')
+        .select('quantity')
+        .eq('pattern_id', patternId)
+        .eq('cost_gear_id', costGearId)
+        .maybeSingle()
+      expect(readback?.quantity).toBe(6)
     })
 
     it('author deletes the cost row', async () => {
@@ -515,6 +579,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('pattern_id', patternId)
         .eq('cost_gear_id', costGearId)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('pattern_gear_cost')
+        .select('pattern_id')
+        .eq('pattern_id', patternId)
+        .eq('cost_gear_id', costGearId)
+        .maybeSingle()
+      expect(readback).toBeNull()
     })
   })
 
@@ -565,12 +637,13 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
     })
 
     it('stranger cannot select', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('pattern_resource_cost')
         .select('pattern_id')
         .eq('pattern_id', patternId)
         .eq('resource_id', resourceId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -581,6 +654,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('pattern_id', patternId)
         .eq('resource_id', resourceId)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('pattern_resource_cost')
+        .select('quantity')
+        .eq('pattern_id', patternId)
+        .eq('resource_id', resourceId)
+        .maybeSingle()
+      expect(readback?.quantity).toBe(7)
     })
 
     it('author deletes the cost row', async () => {
@@ -590,6 +671,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('pattern_id', patternId)
         .eq('resource_id', resourceId)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('pattern_resource_cost')
+        .select('pattern_id')
+        .eq('pattern_id', patternId)
+        .eq('resource_id', resourceId)
+        .maybeSingle()
+      expect(readback).toBeNull()
     })
   })
 
@@ -639,12 +728,13 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
     })
 
     it('stranger cannot select', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('pattern_resource_type_cost')
         .select('pattern_id')
         .eq('pattern_id', patternId)
         .eq('resource_type', resourceType)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -655,6 +745,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('pattern_id', patternId)
         .eq('resource_type', resourceType)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('pattern_resource_type_cost')
+        .select('quantity')
+        .eq('pattern_id', patternId)
+        .eq('resource_type', resourceType)
+        .maybeSingle()
+      expect(readback?.quantity).toBe(3)
     })
 
     it('author deletes the cost row', async () => {
@@ -664,6 +762,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('pattern_id', patternId)
         .eq('resource_type', resourceType)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('pattern_resource_type_cost')
+        .select('pattern_id')
+        .eq('pattern_id', patternId)
+        .eq('resource_type', resourceType)
+        .maybeSingle()
+      expect(readback).toBeNull()
     })
   })
 
@@ -714,12 +820,13 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
     })
 
     it('stranger cannot select', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('seed_pattern_resource_cost')
         .select('seed_pattern_id')
         .eq('seed_pattern_id', seedPatternId)
         .eq('resource_id', resourceId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -730,6 +837,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('seed_pattern_id', seedPatternId)
         .eq('resource_id', resourceId)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('seed_pattern_resource_cost')
+        .select('quantity')
+        .eq('seed_pattern_id', seedPatternId)
+        .eq('resource_id', resourceId)
+        .maybeSingle()
+      expect(readback?.quantity).toBe(8)
     })
 
     it('author deletes the cost row', async () => {
@@ -739,6 +854,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('seed_pattern_id', seedPatternId)
         .eq('resource_id', resourceId)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('seed_pattern_resource_cost')
+        .select('seed_pattern_id')
+        .eq('seed_pattern_id', seedPatternId)
+        .eq('resource_id', resourceId)
+        .maybeSingle()
+      expect(readback).toBeNull()
     })
   })
 
@@ -788,12 +911,13 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
     })
 
     it('stranger cannot select', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('seed_pattern_resource_type_cost')
         .select('seed_pattern_id')
         .eq('seed_pattern_id', seedPatternId)
         .eq('resource_type', resourceType)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -804,6 +928,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('seed_pattern_id', seedPatternId)
         .eq('resource_type', resourceType)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('seed_pattern_resource_type_cost')
+        .select('quantity')
+        .eq('seed_pattern_id', seedPatternId)
+        .eq('resource_type', resourceType)
+        .maybeSingle()
+      expect(readback?.quantity).toBe(4)
     })
 
     it('author deletes the cost row', async () => {
@@ -813,6 +945,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('seed_pattern_id', seedPatternId)
         .eq('resource_type', resourceType)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('seed_pattern_resource_type_cost')
+        .select('seed_pattern_id')
+        .eq('seed_pattern_id', seedPatternId)
+        .eq('resource_type', resourceType)
+        .maybeSingle()
+      expect(readback).toBeNull()
     })
   })
 
@@ -862,12 +1002,13 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
     })
 
     it('stranger cannot select', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('seed_pattern_innovation_requirement')
         .select('seed_pattern_id')
         .eq('seed_pattern_id', seedPatternId)
         .eq('innovation_id', innovationId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -881,6 +1022,16 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('seed_pattern_id', seedPatternId)
         .eq('innovation_id', innovationId)
       expect(error).toBeNull()
+
+      // No-op UPDATE: just confirm the row still exists with the same
+      // composite key via the service-role client.
+      const { data: readback } = await admin
+        .from('seed_pattern_innovation_requirement')
+        .select('seed_pattern_id, innovation_id')
+        .eq('seed_pattern_id', seedPatternId)
+        .eq('innovation_id', innovationId)
+        .maybeSingle()
+      expect(readback).not.toBeNull()
     })
 
     it('author deletes the requirement', async () => {
@@ -890,6 +1041,14 @@ describe('RLS: catalog sub-row cost / requirement coverage', () => {
         .eq('seed_pattern_id', seedPatternId)
         .eq('innovation_id', innovationId)
       expect(error).toBeNull()
+
+      const { data: readback } = await admin
+        .from('seed_pattern_innovation_requirement')
+        .select('seed_pattern_id')
+        .eq('seed_pattern_id', seedPatternId)
+        .eq('innovation_id', innovationId)
+        .maybeSingle()
+      expect(readback).toBeNull()
     })
   })
 })

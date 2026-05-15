@@ -142,12 +142,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read cost row', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('gear_resource_cost')
         .select('gear_id, resource_id')
         .eq('gear_id', gearId)
         .eq('resource_id', resourceId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -206,12 +207,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read requirement', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('pattern_innovation_requirement')
         .select('pattern_id')
         .eq('pattern_id', patternId)
         .eq('innovation_id', innovationId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -274,12 +276,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read cost row', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('seed_pattern_gear_cost')
         .select('seed_pattern_id')
         .eq('seed_pattern_id', seedPatternId)
         .eq('cost_gear_id', costGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -388,12 +391,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read slot_gear row', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('armor_set_slot_gear')
         .select('armor_set_slot_id')
         .eq('armor_set_slot_id', armorSetSlotId)
         .eq('gear_id', slotGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -466,12 +470,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read quarry_level_survivor_status', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('quarry_level_survivor_status')
         .select('quarry_level_id')
         .eq('quarry_level_id', quarryLevelId)
         .eq('survivor_status_id', survivorStatusId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -556,12 +561,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read nemesis_level_survivor_status', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('nemesis_level_survivor_status')
         .select('nemesis_level_id')
         .eq('nemesis_level_id', nemesisLevelId)
         .eq('survivor_status_id', survivorStatusId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -655,11 +661,12 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read survivor_status', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('survivor_status')
         .select('id')
         .eq('id', survivorStatusId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -746,11 +753,12 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read survivor_status', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('survivor_status')
         .select('id')
         .eq('id', survivorStatusId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -878,12 +886,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read quarry_location', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('quarry_location')
         .select('quarry_id')
         .eq('quarry_id', quarryId)
         .eq('location_id', locationId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -899,12 +908,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read quarry_timeline_year', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('quarry_timeline_year')
         .select('quarry_id')
         .eq('quarry_id', quarryId)
         .eq('year_number', 1)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -919,11 +929,12 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read quarry_hunt_board', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('quarry_hunt_board')
         .select('quarry_id')
         .eq('quarry_id', quarryId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -939,12 +950,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read quarry_hunt_board_position', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('quarry_hunt_board_position')
         .select('quarry_id')
         .eq('quarry_id', quarryId)
         .eq('level_number', 1)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -960,12 +972,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read quarry_collective_cognition_reward', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('quarry_collective_cognition_reward')
         .select('quarry_id')
         .eq('quarry_id', quarryId)
         .eq('collective_cognition_reward_id', ccRewardId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -981,12 +994,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read nemesis_location', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('nemesis_location')
         .select('nemesis_id')
         .eq('nemesis_id', nemesisId)
         .eq('location_id', locationId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -1002,12 +1016,13 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
     })
 
     it('stranger cannot read nemesis_timeline_year', async () => {
-      const { data } = await stranger.client
+      const { data, error } = await stranger.client
         .from('nemesis_timeline_year')
         .select('nemesis_id')
         .eq('nemesis_id', nemesisId)
         .eq('year_number', 1)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
