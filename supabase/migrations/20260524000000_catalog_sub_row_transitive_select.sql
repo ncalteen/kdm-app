@@ -54,11 +54,11 @@
 -- Both `Allow select for owner and custom` (author) and
 -- `Allow select for authenticated and non-custom` (catalog-default) remain
 -- untouched on every table here. This migration only adds the transitive
--- predicates that complete the Phase 2 picture per local/sharing-
+-- predicates that complete the Phase 2 picture per docs/sharing-
 -- architecture.md §10 Phase 2.
 --
 -- Citations:
---   local/sharing-architecture.md §5.2 Decision 2, §10 Phase 2 (2.2)
+--   docs/sharing-architecture.md §5.2 Decision 2, §10 Phase 2 (2.2)
 --   supabase/migrations/20260512000000_catalog_visibility_via_settlement.sql
 --   supabase/migrations/20260516000000_catalog_transitive_hunt_showdown.sql
 --   supabase/migrations/20260520000000_drop_catalog_shared_user_tables.sql
@@ -260,14 +260,27 @@ select to authenticated using (
 --
 -- 6. `survivor_status` — the catalog parent itself. Mirrors the 4-way
 --    UNION transitive SELECT for `trait` and `mood` from
---    `20260516000000_catalog_transitive_hunt_showdown.sql`.
+--    `20260523000000_catalog_author_membership_select.sql` (which
+--    rewrote the original `20260516000000` policies to include the
+--    author-membership check). Each reachability branch ends with
+--    `is_settlement_member(<branch>.settlement_id, survivor_status.user_id)`
+--    so visibility revokes the moment the status author is removed
+--    from `settlement_shared_user` — closing the EC-7 gap for
+--    `survivor_status` the same way `trait`/`mood` were closed.
+--
 --    A custom `survivor_status` is reachable to a caller through any of:
 --      a) `hunt_monster_survivor_status` -> `hunt_monster.settlement_id`
 --      b) `showdown_monster_survivor_status` -> `showdown_monster.settlement_id`
---      c) `quarry_level_survivor_status` -> `quarry_level` -> `quarry` ->
+--      c) `quarry_level_survivor_status` -> `quarry_level` ->
 --         `settlement_quarry`
---      d) `nemesis_level_survivor_status` -> `nemesis_level` -> `nemesis`
---         -> `settlement_nemesis`
+--      d) `nemesis_level_survivor_status` -> `nemesis_level` ->
+--         `settlement_nemesis`
+--
+--    The `quarry` / `nemesis` joins added in `[5]` above are intentionally
+--    omitted here: per the `trait`/`mood` precedent, `settlement_quarry`
+--    / `settlement_nemesis` membership already implies the parent is
+--    attached to a settlement the caller can see, and `quarry`/`nemesis`
+--    RLS independently enforces `custom`.
 --
 create policy "Allow select via hunt/showdown/quarry/nemesis" on survivor_status for
 select to authenticated using (
@@ -282,6 +295,7 @@ select to authenticated using (
             is_settlement_owner(hm.settlement_id)
             or is_settlement_collaborator(hm.settlement_id)
           )
+          and is_settlement_member(hm.settlement_id, survivor_status.user_id)
       )
       or exists (
         select 1
@@ -292,32 +306,31 @@ select to authenticated using (
             is_settlement_owner(sm.settlement_id)
             or is_settlement_collaborator(sm.settlement_id)
           )
+          and is_settlement_member(sm.settlement_id, survivor_status.user_id)
       )
       or exists (
         select 1
         from quarry_level_survivor_status qlss
           join quarry_level ql on ql.id = qlss.quarry_level_id
-          join quarry q on q.id = ql.quarry_id
-          join settlement_quarry sq on sq.quarry_id = q.id
+          join settlement_quarry sq on sq.quarry_id = ql.quarry_id
         where qlss.survivor_status_id = survivor_status.id
-          and q.custom
           and (
             is_settlement_owner(sq.settlement_id)
             or is_settlement_collaborator(sq.settlement_id)
           )
+          and is_settlement_member(sq.settlement_id, survivor_status.user_id)
       )
       or exists (
         select 1
         from nemesis_level_survivor_status nlss
           join nemesis_level nl on nl.id = nlss.nemesis_level_id
-          join nemesis n on n.id = nl.nemesis_id
-          join settlement_nemesis sn on sn.nemesis_id = n.id
+          join settlement_nemesis sn on sn.nemesis_id = nl.nemesis_id
         where nlss.survivor_status_id = survivor_status.id
-          and n.custom
           and (
             is_settlement_owner(sn.settlement_id)
             or is_settlement_collaborator(sn.settlement_id)
           )
+          and is_settlement_member(sn.settlement_id, survivor_status.user_id)
       )
     )
   );

@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 -- Phase 2 (partial): Catalog Visibility via Settlement Membership
 --
--- Implements EC-6 from local/sharing-architecture.md: when a custom catalog
+-- Implements EC-6 from docs/sharing-architecture.md: when a custom catalog
 -- row (e.g. a user-authored knowledge or quarry) is attached to a settlement,
 -- everyone who can SEE that settlement (the owner and any collaborators) can
 -- also SEE the catalog row's full content.
@@ -33,8 +33,8 @@
 --   * Realtime publication for these catalogs is tracked under E2.4.
 --
 -- Citations:
---   local/sharing-architecture.md §10 Phase 2 (2.1, 2.2)
---   local/sharing-architecture.md Appendix B EC-6
+--   docs/sharing-architecture.md §10 Phase 2 (2.1, 2.2)
+--   docs/sharing-architecture.md Appendix B EC-6
 --------------------------------------------------------------------------------
 create policy "Allow select via settlement membership" on knowledge for
 select to authenticated using (

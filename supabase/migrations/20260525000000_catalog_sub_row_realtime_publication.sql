@@ -24,7 +24,7 @@
 -- a prior partial application.
 --
 -- Citations:
---   local/sharing-architecture.md §5.2 Decision 6, §10 Phase 2 item 2.4
+--   docs/sharing-architecture.md §5.2 Decision 6, §10 Phase 2 item 2.4
 --   supabase/migrations/20260519000000_catalog_realtime_publication.sql
 --   supabase/migrations/20260524000000_catalog_sub_row_transitive_select.sql
 --------------------------------------------------------------------------------

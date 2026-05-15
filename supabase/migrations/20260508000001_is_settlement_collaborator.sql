@@ -15,7 +15,7 @@
 -- Mirrors the structure of `is_settlement_owner` introduced in
 -- `20260324185335_fix_shared_user_rls_recursion.sql`.
 --
--- Reference: `local/sharing-architecture.md` §5.2 Decision 3 / §10 Phase 1.1.
+-- Reference: `docs/sharing-architecture.md` §5.2 Decision 3 / §10 Phase 1.1.
 --------------------------------------------------------------------------------
 create or replace function is_settlement_collaborator(target_settlement uuid) returns boolean language sql stable security definer
 set search_path = '' as $$

@@ -10,7 +10,7 @@
 -- see the referencing junction. Concretely: if collaborator B authored a
 -- custom row, attached it to settlement S owned by A, and was then removed
 -- from S, A retained SELECT on the row even though the architectural
--- contract in `local/sharing-architecture.md` Appendix B EC-7 explicitly
+-- contract in `docs/sharing-architecture.md` Appendix B EC-7 explicitly
 -- says A should lose access. The author-membership clause closes that gap.
 --
 -- This migration:
@@ -32,7 +32,7 @@
 -- `nemesis.user_id` respectively).
 --
 -- Citations:
---   local/sharing-architecture.md Appendix B EC-7
+--   docs/sharing-architecture.md Appendix B EC-7
 --   issue #152 ([E2.12]) — gap discovered while writing the EC-2..EC-8 lock
 --   supabase/migrations/20260512000000_catalog_visibility_via_settlement.sql
 --   supabase/migrations/20260514000000_catalog_transitive_select.sql

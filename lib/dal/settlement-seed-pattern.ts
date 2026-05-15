@@ -40,7 +40,7 @@ export async function getSettlementSeedPatterns(
     throw new Error(`Error Fetching Settlement Seed Patterns: ${error.message}`)
 
   // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
-  // local/sharing-architecture.md — transitive visibility gap).
+  // docs/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
       const seedPatternRelation = item.seed_pattern as unknown as

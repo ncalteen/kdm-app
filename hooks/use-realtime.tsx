@@ -25,7 +25,7 @@ import { useEffect, useRef } from 'react'
  * Changes are received without a row-level filter because the realtime
  * channel filter syntax does not support joins; RLS gates which catalog
  * rows the subscriber can actually see (transitive visibility via
- * settlement membership — see `local/sharing-architecture.md` §8.2.2,
+ * settlement membership — see `docs/sharing-architecture.md` §8.2.2,
  * recommendation B). The single coarse subscription pays a small
  * bandwidth cost in exchange for not having to track every referenced
  * catalog row id per settlement.
@@ -155,7 +155,7 @@ const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   // channel cannot express the join from a catalog row back to the
   // active settlement; RLS gates which rows are delivered to the
   // subscriber via transitive visibility through settlement membership
-  // (see `local/sharing-architecture.md` §8.2.2 recommendation B). Kept
+  // (see `docs/sharing-architecture.md` §8.2.2 recommendation B). Kept
   // in sync with the `catalog_tables` array in
   // `supabase/migrations/20260519000000_catalog_realtime_publication.sql`
   // and the `EXPECTED_CATALOG_TABLES` list in

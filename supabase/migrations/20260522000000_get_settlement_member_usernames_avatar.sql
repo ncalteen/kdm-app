@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 -- Get Settlement Member Usernames — Extended With `avatar_url`
 --
--- E2.9 (local/sharing-architecture.md §7.4) needs an authorship chip with an
+-- E2.9 (docs/sharing-architecture.md §7.4) needs an authorship chip with an
 -- avatar on every custom-content card. The chip only renders when the row
 -- was authored by *another* settlement member, so the resolver already
 -- needs the author's username (E2.8). Returning `avatar_url` from the same

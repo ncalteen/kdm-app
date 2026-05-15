@@ -556,7 +556,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       // burst. RLS is what makes the coarse subscription safe: events
       // for catalog rows the user cannot read (i.e. rows not
       // transitively reachable through any settlement they belong to)
-      // are never delivered. See `local/sharing-architecture.md` §8.2.2
+      // are never delivered. See `docs/sharing-architecture.md` §8.2.2
       // (recommendation B).
       getSettlement(selectedSettlementId)
         .then((settlement) => {

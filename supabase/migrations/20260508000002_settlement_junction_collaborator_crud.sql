@@ -43,7 +43,7 @@
 --   settlement_seed_pattern
 --   settlement_timeline_year
 --
--- Reference: `local/sharing-architecture.md` §5.2 Decision 3 / §10 Phase 1.2 /
+-- Reference: `docs/sharing-architecture.md` §5.2 Decision 3 / §10 Phase 1.2 /
 -- Appendix A "Phase 1 collaborator CRUD list".
 --
 -- Closes [E1.2.a] (issue #135).

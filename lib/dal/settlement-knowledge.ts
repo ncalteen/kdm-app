@@ -15,7 +15,7 @@ import { SettlementDetail } from '@/lib/types'
  * Each returned row carries `author_username` — `null` for built-in
  * (non-custom) knowledges, and the catalog author's username for custom
  * knowledges so the UI can render the "By @username" chip on custom
- * cards (E2.8; see `local/sharing-architecture.md` §7.4 / §10 Phase 2
+ * cards (E2.8; see `docs/sharing-architecture.md` §7.4 / §10 Phase 2
  * item 2.6).
  *
  * **Author username resolution (canonical pattern; mirrored by sibling

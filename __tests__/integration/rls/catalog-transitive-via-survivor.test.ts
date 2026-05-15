@@ -26,7 +26,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  *                          tenet_knowledge_id
  *   * `philosophy_rank` ← parent philosophy reached via the same chain
  *
- * Architecture: local/sharing-architecture.md §5.2 Decision 2,
+ * Architecture: docs/sharing-architecture.md §5.2 Decision 2,
  * Appendix A, Appendix B EC-2 / EC-6.
  */
 describe('RLS: catalog transitive SELECT via survivor columns', () => {

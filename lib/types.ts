@@ -405,7 +405,7 @@ export type HuntMonsterDetail = Omit<
    *
    * Each entry carries `author_username` — `null` for built-in (non-custom)
    * traits, and the catalog author's username for custom traits so the UI can
-   * render the "By @username" chip (E2.8; see `local/sharing-architecture.md`
+   * render the "By @username" chip (E2.8; see `docs/sharing-architecture.md`
    * §7.4 / §10 Phase 2 item 2.6).
    */
   traits: (TraitDetail & {
@@ -1277,7 +1277,7 @@ export type ShowdownMonsterDetail = Omit<
    *
    * Each entry carries `author_username` — `null` for built-in (non-custom)
    * traits, and the catalog author's username for custom traits so the UI can
-   * render the "By @username" chip (E2.8; see `local/sharing-architecture.md`
+   * render the "By @username" chip (E2.8; see `docs/sharing-architecture.md`
    * §7.4 / §10 Phase 2 item 2.6).
    */
   traits: (TraitDetail & {
@@ -1341,7 +1341,7 @@ export type SurvivorDetail = Tables<'survivor'> & {
    * Each entry carries `author_username` — `null` for built-in (non-custom)
    * rows, and the catalog author's username for custom rows so the UI can
    * render the "By @username" chip (E2.8; see
-   * `local/sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
+   * `docs/sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
    */
   abilities_impairments: {
     /** Ability or Impairment Name */

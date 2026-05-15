@@ -12,7 +12,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  * RLS — Catalog Transitive Visibility (EC-2..EC-8)
  *
  * Comprehensive integration coverage for the canonical catalog-sharing edge
- * cases in `local/sharing-architecture.md` Appendix B (EC-2..EC-8). Each
+ * cases in `docs/sharing-architecture.md` Appendix B (EC-2..EC-8). Each
  * scenario is exercised as a single narrative `it` block against the live
  * RLS layer using the standard `__tests__/integration/helpers/supabase`
  * harness.
@@ -355,7 +355,7 @@ describe('RLS: catalog transitive visibility (EC-2..EC-8)', () => {
   // ---------------------------------------------------------------------------
   // EC-7: (EC-6) + A removes B from S → A loses access to D's rules text.
   //
-  // Per `local/sharing-architecture.md` Appendix B, after B is removed
+  // Per `docs/sharing-architecture.md` Appendix B, after B is removed
   // from S the settlement owner A must no longer be able to read the
   // rules text of the collaborator-authored disorder D, even though the
   // `survivor_disorder` row remains (it is not cascaded by removing the

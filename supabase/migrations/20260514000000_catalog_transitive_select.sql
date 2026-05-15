@@ -40,7 +40,7 @@
 -- UPDATE/INSERT/DELETE is enforced by [E2.2] (issue #149).
 --
 -- Citations:
---   local/sharing-architecture.md §10 Phase 2 (2.1, 2.2), Appendix A,
+--   docs/sharing-architecture.md §10 Phase 2 (2.1, 2.2), Appendix A,
 --   Appendix B EC-6
 --   supabase/migrations/20260508000001_is_settlement_collaborator.sql
 --   supabase/migrations/20260508000004_survivor_collaborator_crud.sql

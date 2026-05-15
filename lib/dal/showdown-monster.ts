@@ -1,9 +1,9 @@
-import { TablesInsert } from '@/lib/database.types'
 import {
   getSettlementMemberUsernames,
   resolveSettlementAuthorship,
   type SettlementMemberProfile
 } from '@/lib/dal/settlement-shared-user'
+import { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import {
   MoodDetail,
@@ -30,7 +30,7 @@ type WithAuthorship<T> = T & { user_id: string | null }
  * author triplet (`author_user_id`, `author_username`,
  * `author_avatar_url`) — all `null` for built-ins, populated for custom
  * rows so the UI can render the avatar/tooltip chip (E2.8 / E2.9; see
- * `local/sharing-architecture.md` §7.4 / §10 Phase 2 items 2.6–2.7).
+ * `docs/sharing-architecture.md` §7.4 / §10 Phase 2 items 2.6–2.7).
  *
  * @param showdownId Showdown ID
  * @param prefetchedMemberProfiles Optional in-flight (or resolved)

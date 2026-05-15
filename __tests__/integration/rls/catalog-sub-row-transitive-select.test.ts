@@ -33,7 +33,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  * `hunt_monster_survivor_status` arm, which is the most common reachability
  * path during hunt-phase play.
  *
- * Architecture: `local/sharing-architecture.md` §5.2 Decision 2, §10
+ * Architecture: `docs/sharing-architecture.md` §5.2 Decision 2, §10
  * Phase 2.2.
  */
 describe('RLS: catalog sub-row transitive SELECT', () => {
@@ -646,6 +646,124 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
         .from('survivor_status')
         .select('id')
         .eq('id', survivorStatusId)
+        .maybeSingle()
+      expect(data).toBeNull()
+    })
+  })
+
+  /**
+   * EC-7 (author-membership revoke) for `survivor_status`.
+   *
+   * `20260524000000`'s 4-way UNION policy ends every branch with
+   * `is_settlement_member(<branch>.settlement_id, survivor_status.user_id)`
+   * — mirroring the `trait`/`mood` policies in
+   * `20260523000000_catalog_author_membership_select.sql`. This block
+   * confirms that branch terminates SELECT visibility the moment the
+   * status author loses their `settlement_shared_user` row, even while
+   * the parent `hunt_monster_survivor_status` junction is still live.
+   *
+   * Uses a dedicated settlement + dedicated author so removing the
+   * collaborator from `settlement_shared_user` does not leak into the
+   * other describe blocks above (which depend on the shared `settlementId`
+   * relationship between `owner` and `collaborator`).
+   */
+  describe('survivor_status author-membership revoke (EC-7)', () => {
+    let ecOwner: TestUser
+    let ecAuthor: TestUser
+    let ecSettlementId: string
+    let ecSurvivorStatusId: string
+
+    beforeAll(async () => {
+      ecOwner = await createTestUser()
+      ecAuthor = await createTestUser()
+      ecSettlementId = await seedSettlement(
+        ecOwner.id,
+        'EC-7 survivor_status author-membership'
+      )
+      await shareSettlement(ecSettlementId, ecAuthor.id, ecOwner.id)
+
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: ss, error: ssErr } = await admin
+        .from('survivor_status')
+        .insert({
+          survivor_status_name: `EC7 Status ${suffix}`,
+          custom: true,
+          user_id: ecAuthor.id
+        })
+        .select('id')
+        .single()
+      if (ssErr || !ss)
+        throw new Error(`seed ec survivor_status: ${ssErr?.message}`)
+      ecSurvivorStatusId = ss.id
+
+      const { data: hunt, error: hErr } = await admin
+        .from('hunt')
+        .insert({ settlement_id: ecSettlementId, monster_level: 1 })
+        .select('id')
+        .single()
+      if (hErr || !hunt) throw new Error(`seed ec hunt: ${hErr?.message}`)
+
+      const { data: ad, error: adErr } = await admin
+        .from('hunt_ai_deck')
+        .insert({ hunt_id: hunt.id, settlement_id: ecSettlementId })
+        .select('id')
+        .single()
+      if (adErr || !ad)
+        throw new Error(`seed ec hunt_ai_deck: ${adErr?.message}`)
+
+      const { data: hm, error: hmErr } = await admin
+        .from('hunt_monster')
+        .insert({
+          ai_deck_id: ad.id,
+          hunt_id: hunt.id,
+          settlement_id: ecSettlementId
+        })
+        .select('id')
+        .single()
+      if (hmErr || !hm)
+        throw new Error(`seed ec hunt_monster: ${hmErr?.message}`)
+
+      const { error: jErr } = await admin
+        .from('hunt_monster_survivor_status')
+        .insert({
+          hunt_monster_id: hm.id,
+          survivor_status_id: ecSurvivorStatusId
+        })
+      if (jErr)
+        throw new Error(`seed ec hunt_monster_survivor_status: ${jErr.message}`)
+    })
+
+    afterAll(async () => {
+      await deleteTestUser(ecOwner.id)
+      await deleteTestUser(ecAuthor.id)
+    })
+
+    it('owner reads survivor_status while author is still shared', async () => {
+      const { data, error } = await ecOwner.client
+        .from('survivor_status')
+        .select('id')
+        .eq('id', ecSurvivorStatusId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('owner cannot read survivor_status after author is unshared', async () => {
+      // Revoke the author's settlement membership. The 4-way UNION policy
+      // requires `is_settlement_member(hm.settlement_id,
+      // survivor_status.user_id)` on the hunt arm, so all branches must
+      // now fail for the owner even though the junction row still exists.
+      const { error: unshareErr } = await admin
+        .from('settlement_shared_user')
+        .delete()
+        .eq('settlement_id', ecSettlementId)
+        .eq('shared_user_id', ecAuthor.id)
+      if (unshareErr) throw new Error(`ec-7 unshare: ${unshareErr.message}`)
+
+      const { data } = await ecOwner.client
+        .from('survivor_status')
+        .select('id')
+        .eq('id', ecSurvivorStatusId)
         .maybeSingle()
       expect(data).toBeNull()
     })

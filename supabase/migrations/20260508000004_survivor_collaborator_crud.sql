@@ -75,7 +75,7 @@
 --     prior gear_grid rewrite from catalog-style to settlement-scoped.
 --   * supabase/migrations/20260508000002_settlement_junction_collaborator_crud.sql
 --   * supabase/migrations/20260508000003_settlement_phase_collaborator_crud.sql
---   * `local/sharing-architecture.md` §5.2 Decision 3 / §10 Phase 1.2.c.
+--   * `docs/sharing-architecture.md` §5.2 Decision 3 / §10 Phase 1.2.c.
 --
 -- Closes [E1.2.c] (issue #145).
 --------------------------------------------------------------------------------

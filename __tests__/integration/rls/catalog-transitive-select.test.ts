@@ -23,7 +23,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  * `catalog-visibility-via-settlement.test.ts` but follows the
  * `catalog -> survivor_<x> -> survivor -> settlement` chain.
  *
- * Architecture references: local/sharing-architecture.md §10 Phase 2
+ * Architecture references: docs/sharing-architecture.md §10 Phase 2
  * (2.1, 2.2), Appendix A "Phase 2 transitive-visibility list",
  * Appendix B EC-6.
  */

@@ -5,7 +5,7 @@
 -- so an authenticated caller can issue a settlement-share invite by handle
 -- without ever pulling the full `user_settings` table.
 --
--- Source of truth: `local/sharing-architecture.md` §4 P9 (no enumeration) /
+-- Source of truth: `docs/sharing-architecture.md` §4 P9 (no enumeration) /
 -- §11 Q9 (REQUIRE EXACT MATCH) / §10 Phase 1 item 1.5. Tracking issue: #146.
 --
 -- Anti-enumeration guarantees:

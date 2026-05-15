@@ -15,7 +15,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  * collaborator listed in `settlement_shared_user`). Powers the "By
  * @username" authorship chip on custom catalog rows materialized into
  * `SettlementDetail`'s collections (E2.8 in
- * `local/sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
+ * `docs/sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
  *
  * This RPC exists because RLS on `user_settings` is owner-only, so a
  * direct PostgREST embed (`settlement_knowledge → knowledge →

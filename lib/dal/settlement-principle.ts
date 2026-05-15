@@ -41,7 +41,7 @@ export async function getSettlementPrinciples(
     throw new Error(`Error Fetching Settlement Principles: ${error.message}`)
 
   // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
-  // local/sharing-architecture.md — transitive visibility gap).
+  // docs/sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
       const embeddedPrinciple = item.principle as unknown as

@@ -43,7 +43,7 @@
 -- of catalog rules text is tracked under [E2.2] (issue #149).
 --
 -- Citations:
---   local/sharing-architecture.md §5.2 Decision 2, Appendix A,
+--   docs/sharing-architecture.md §5.2 Decision 2, Appendix A,
 --   Appendix B EC-2/EC-6/EC-7
 --   supabase/migrations/20260508000001_is_settlement_collaborator.sql
 --   supabase/migrations/20260512000000_catalog_visibility_via_settlement.sql
