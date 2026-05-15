@@ -4021,6 +4021,39 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_plan: {
+        Row: {
+          display_name: string
+          id: string
+          max_collaborators_per_settlement: number | null
+          max_owned_settlements: number | null
+          may_be_invited: boolean
+          may_create_custom: boolean
+          may_share: boolean
+          monthly_price_cents: number
+        }
+        Insert: {
+          display_name: string
+          id: string
+          max_collaborators_per_settlement?: number | null
+          max_owned_settlements?: number | null
+          may_be_invited?: boolean
+          may_create_custom?: boolean
+          may_share?: boolean
+          monthly_price_cents: number
+        }
+        Update: {
+          display_name?: string
+          id?: string
+          max_collaborators_per_settlement?: number | null
+          max_owned_settlements?: number | null
+          may_be_invited?: boolean
+          may_create_custom?: boolean
+          may_share?: boolean
+          monthly_price_cents?: number
+        }
+        Relationships: []
+      }
       survivor: {
         Row: {
           absolute_reaper: boolean | null
@@ -4754,6 +4787,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscription: {
+        Row: {
+          current_period_end: string | null
+          plan_id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_period_end?: string | null
+          plan_id: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_period_end?: string | null
+          plan_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscription_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wanderer: {
         Row: {
           accuracy: number
@@ -5002,6 +5073,26 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_armor_set_owner: { Args: { record_id: string }; Returns: boolean }
+      is_collective_cognition_reward_visible_via_quarry_reference: {
+        Args: { ref_ccr_id: string; ref_ccr_user_id: string }
+        Returns: boolean
+      }
+      is_gear_visible_via_cost_reference: {
+        Args: { ref_gear_id: string; ref_gear_user_id: string }
+        Returns: boolean
+      }
+      is_innovation_visible_via_cost_reference: {
+        Args: { ref_innovation_id: string; ref_innovation_user_id: string }
+        Returns: boolean
+      }
+      is_location_visible_via_quarry_nemesis_reference: {
+        Args: { ref_location_id: string; ref_location_user_id: string }
+        Returns: boolean
+      }
+      is_resource_visible_via_cost_reference: {
+        Args: { ref_resource_id: string; ref_resource_user_id: string }
+        Returns: boolean
+      }
       is_settlement_collaborator: {
         Args: { target_settlement: string }
         Returns: boolean

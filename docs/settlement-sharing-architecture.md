@@ -778,7 +778,23 @@ a sketch — concrete details depend on payment provider choice.
 
 ### 9.1 Entitlement model
 
-Two new tables (rough sketch):
+Three tiers, shipped together so the upgrade path is "go pay" rather than "go
+pay and also opt in to a SKU":
+
+| `id`            | Display name  | Price   | `max_owned_settlements` | `may_share` |
+| --------------- | ------------- | ------- | ----------------------- | ----------- |
+| `free`          | Wanderer      | $0 / mo | 5                       | false       |
+| `lantern`       | Lantern       | $1 / mo | unlimited               | false       |
+| `lantern_hoard` | Lantern Hoard | $5 / mo | unlimited               | true        |
+
+Every tier can be invited into someone else's settlement and can author custom
+catalog content. Sharing is the paid wall (Lantern Hoard only); the
+five-settlement cap exists on Free so the free tier remains generous enough to
+play a full campaign but stops short of being a permanent free SaaS for power
+users.
+
+Two tables (shipped in `20260527000000_subscription_plan.sql` and
+`20260527000001_user_subscription.sql`):
 
 ```sql
 create table subscription_plan (
@@ -803,7 +819,12 @@ create table user_subscription (
 );
 ```
 
-A SECURITY DEFINER helper:
+Every new sign-up (email or OAuth) is auto-provisioned with a `free` row, and a
+one-shot backfill in the `user_subscription` migration seeds existing users.
+Subsequent writes are reserved for the (forthcoming) Stripe webhook handler and
+admin operators.
+
+A SECURITY DEFINER helper (to be added in E3.3):
 
 ```sql
 create or replace function user_can_share() returns boolean
@@ -1022,7 +1043,11 @@ rules text → collaborator sees the new text within 300ms.
 ### Phase 3 — Paid-Feature Gating
 
 - **3.1** Add `subscription_plan` and `user_subscription` tables. Pre-populate
-  `subscription_plan` with `free` and one paid tier.
+  `subscription_plan` with `free`, `lantern`, and `lantern_hoard`. _Status:_
+  shipped in `20260527000000_subscription_plan.sql` and
+  `20260527000001_user_subscription.sql`. New sign-ups (email + OAuth) get a
+  `free` row automatically; existing users were backfilled in-place. Sharing RLS
+  still reads the legacy "any authenticated owner" path until 3.3 lands.
 - **3.2** Stripe integration: Checkout session, customer portal, webhook handler
   that writes to `user_subscription`. (note; this will require providing
   documentation to the Stripe account owner so they understand how the webhook
