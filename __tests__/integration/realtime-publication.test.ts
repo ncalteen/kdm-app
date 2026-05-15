@@ -131,6 +131,38 @@ describe('Realtime publication membership', () => {
     'survivor_status'
   ] as const
 
+  /**
+   * Source of truth: every catalog *sub-row* table whose custom rows must
+   * broadcast to settlement collaborators. Mirrors the
+   * `catalog_sub_row_tables` array in
+   * `20260525000000_catalog_sub_row_realtime_publication.sql` and the
+   * sub-row entries appended to `TABLE_DOMAIN_MAP` in
+   * `hooks/use-realtime.tsx`. New cost / level / slot child tables should
+   * be added here alongside their publication-membership migration.
+   */
+  const EXPECTED_CATALOG_SUB_ROW_TABLES = [
+    // Crafting cost children of `gear`.
+    'gear_gear_cost',
+    'gear_resource_cost',
+    'gear_resource_type_cost',
+    'gear_other_cost',
+    // Crafting cost children of `pattern`.
+    'pattern_gear_cost',
+    'pattern_resource_cost',
+    'pattern_resource_type_cost',
+    'pattern_innovation_requirement',
+    // Crafting cost children of `seed_pattern`.
+    'seed_pattern_gear_cost',
+    'seed_pattern_resource_cost',
+    'seed_pattern_resource_type_cost',
+    'seed_pattern_innovation_requirement',
+    // Armor set slot contents.
+    'armor_set_slot_gear',
+    // Monster-level survivor status junctions.
+    'quarry_level_survivor_status',
+    'nemesis_level_survivor_status'
+  ] as const
+
   it('includes every settlement-scoped table in `supabase_realtime`', async () => {
     const { data, error } = await admin.rpc('realtime_publication_tables')
 
@@ -164,6 +196,24 @@ describe('Realtime publication membership', () => {
     const rows = (data ?? []) as { tablename: string }[]
     const actual = new Set(rows.map((r) => r.tablename))
     const missing = EXPECTED_CATALOG_TABLES.filter((t) => !actual.has(t))
+
+    expect(missing).toEqual([])
+  })
+
+  // [E2.4 cont.] acceptance: every catalog sub-row table covered by
+  // `20260524000000_catalog_sub_row_transitive_select.sql` is in the
+  // publication so collaborators receive child INSERT / UPDATE / DELETE
+  // events live (cost lists, slot contents, monster-level status
+  // junctions).
+  it('includes every catalog sub-row table in `supabase_realtime` ([E2.4 cont.])', async () => {
+    const { data, error } = await admin.rpc('realtime_publication_tables')
+
+    expect(error).toBeNull()
+    const rows = (data ?? []) as { tablename: string }[]
+    const actual = new Set(rows.map((r) => r.tablename))
+    const missing = EXPECTED_CATALOG_SUB_ROW_TABLES.filter(
+      (t) => !actual.has(t)
+    )
 
     expect(missing).toEqual([])
   })

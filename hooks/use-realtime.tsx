@@ -194,7 +194,31 @@ const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   strain_milestone: { domain: 'catalog', filterColumn: null },
   wanderer: { domain: 'catalog', filterColumn: null },
   constellation: { domain: 'catalog', filterColumn: null },
-  survivor_status: { domain: 'catalog', filterColumn: null }
+  survivor_status: { domain: 'catalog', filterColumn: null },
+
+  // Catalog sub-row tables — children of the catalog parents above whose
+  // transitive SELECT and realtime publication membership were installed
+  // in `20260524000000_catalog_sub_row_transitive_select.sql` and
+  // `20260525000000_catalog_sub_row_realtime_publication.sql`. Subscribed
+  // unfiltered for the same reason as their parents; RLS gates delivery.
+  gear_gear_cost: { domain: 'catalog', filterColumn: null },
+  gear_resource_cost: { domain: 'catalog', filterColumn: null },
+  gear_resource_type_cost: { domain: 'catalog', filterColumn: null },
+  gear_other_cost: { domain: 'catalog', filterColumn: null },
+  pattern_gear_cost: { domain: 'catalog', filterColumn: null },
+  pattern_resource_cost: { domain: 'catalog', filterColumn: null },
+  pattern_resource_type_cost: { domain: 'catalog', filterColumn: null },
+  pattern_innovation_requirement: { domain: 'catalog', filterColumn: null },
+  seed_pattern_gear_cost: { domain: 'catalog', filterColumn: null },
+  seed_pattern_resource_cost: { domain: 'catalog', filterColumn: null },
+  seed_pattern_resource_type_cost: { domain: 'catalog', filterColumn: null },
+  seed_pattern_innovation_requirement: {
+    domain: 'catalog',
+    filterColumn: null
+  },
+  armor_set_slot_gear: { domain: 'catalog', filterColumn: null },
+  quarry_level_survivor_status: { domain: 'catalog', filterColumn: null },
+  nemesis_level_survivor_status: { domain: 'catalog', filterColumn: null }
 }
 
 /** Debounce delay in milliseconds for batching rapid changes. */
