@@ -8,16 +8,17 @@ Approved (target end state for Phases 0–4)
 >
 > This ADR captures the decision and consequences. The full architectural
 > rationale, schema sketches, RLS policy bodies, and edge-case catalog live in
-> [`local/sharing-architecture.md`](../../local/sharing-architecture.md). This
-> document links back to that source of truth rather than restating every
+> [`docs/settlement-sharing-architecture.md`](../../docs/settlement-sharing-architecture.md).
+> This document links back to that source of truth rather than restating every
 > detail.
 
 ## Context
 
 Archivist currently ships **two parallel sharing models** that contradict each
 other and produce the wrong polarity of permissions for every table the user
-actually cares about ([architecture §3](../../local/sharing-architecture.md), §4
-problems **P1–P12**):
+actually cares about
+([architecture §3](../../docs/settlement-sharing-architecture.md), §4 problems
+**P1–P12**):
 
 1. **Settlement-scoped sharing** via `settlement_shared_user`. Grants the
    invitee read access to a settlement and its child rows, but **denies**
@@ -119,7 +120,7 @@ Success looks like:
 ## Decision
 
 Adopt the architecture described in
-[`local/sharing-architecture.md` §5](../../local/sharing-architecture.md):
+[`docs/settlement-sharing-architecture.md` §5](../../docs/settlement-sharing-architecture.md):
 
 > **Collapse to a single sharing dimension — settlement membership — and let
 > visibility of related custom catalog rows flow transitively from settlement
@@ -199,8 +200,9 @@ wraps owner-only UI. (architecture §5.2 D7 / §10 Phase 0)
 
 ### D8 — Resolved owner-facing open questions
 
-The 10 open questions in [architecture §11](../../local/sharing-architecture.md)
-have been answered by the owner and are part of the binding decision:
+The 10 open questions in
+[architecture §11](../../docs/settlement-sharing-architecture.md) have been
+answered by the owner and are part of the binding decision:
 
 | #     | Question                                                                             | Resolution                                                                  |
 | ----- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
@@ -219,8 +221,8 @@ The hybrid override on D4 is the direct consequence of D8.1.
 
 ### Permission Matrix (target end state)
 
-Lifted from [architecture §6](../../local/sharing-architecture.md), with the D4
-hybrid override applied. Definitions:
+Lifted from [architecture §6](../../docs/settlement-sharing-architecture.md),
+with the D4 hybrid override applied. Definitions:
 
 - **Owner** = `settlement.user_id = auth.uid()`
 - **Collaborator** = exists `settlement_shared_user` row where
@@ -322,8 +324,8 @@ hybrid override applied. Definitions:
 
 ## References
 
-- [`local/sharing-architecture.md`](../../local/sharing-architecture.md) — Full
-  source of truth: §3 current state, §4 problems P1–P12, §5 recommended
+- [`docs/settlement-sharing-architecture.md`](../../docs/settlement-sharing-architecture.md)
+  — Full source of truth: §3 current state, §4 problems P1–P12, §5 recommended
   architecture (D1–D7), §6 permission matrix, §8 realtime, §9 paid gating, §10
   phased plan, §11 owner answers (D8).
 - [`docs/template-adr.md`](../template-adr.md) — ADR template this document

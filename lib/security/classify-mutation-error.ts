@@ -8,9 +8,9 @@
  * `ERROR_MESSAGE` to the lantern-themed `NOT_AUTHORIZED_MESSAGE` when a
  * collaborator hits an owner-only control or a row hidden by RLS.
  *
- * See `local/sharing-architecture.md` §10 Phase [E1.9] and the [E1.3] trigger
- * `enforce_settlement_owner_only_columns` for the full list of rejection
- * sources this maps.
+ * See `docs/settlement-sharing-architecture.md` §10 Phase [E1.9] and the [E1.3]
+ * trigger `enforce_settlement_owner_only_columns` for the full list of
+ * rejection sources this maps.
  */
 
 /**

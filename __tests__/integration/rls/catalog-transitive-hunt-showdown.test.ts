@@ -27,7 +27,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  *                       a settlement the caller can see.
  *   * `nemesis_level` — symmetric to quarry_level.
  *
- * Architecture: local/sharing-architecture.md §5.2 Decision 2 / Appendix A.
+ * Architecture: docs/settlement-sharing-architecture.md §5.2 Decision 2 /
+ * Appendix A.
  */
 describe('RLS: catalog transitive SELECT via hunt/showdown/armor', () => {
   let owner: TestUser

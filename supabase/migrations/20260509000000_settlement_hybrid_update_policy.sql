@@ -47,8 +47,8 @@
 --   `survival_limit`, `lantern_research`, `monster_volumes`.
 --
 -- Reference:
---   * `local/sharing-architecture.md` §5.2 Decision 4 (with OVERRIDE) /
---     §10 Phase 1.3.
+--   * `docs/settlement-sharing-architecture.md` §5.2 Decision 4 (with OVERRIDE)
+--     / §10 Phase 1.3.
 --   * supabase/migrations/20260220190650_settlement.sql — original RLS.
 --
 -- Closes [E1.3] (issue #133).

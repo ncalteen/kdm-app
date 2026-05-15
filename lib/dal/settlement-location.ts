@@ -41,7 +41,7 @@ export async function getSettlementLocations(
     throw new Error(`Error Fetching Settlement Locations: ${error.message}`)
 
   // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
-  // local/sharing-architecture.md — transitive visibility gap).
+  // docs/settlement-sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
       const rawLocation = item.location as unknown

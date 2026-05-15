@@ -40,7 +40,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  *   * `showdown_monster_*` junction        — `mood`      ↔ `showdown_monster_mood`
  *   * `armor_set` via `gear_grid`          — `armor_set` ↔ `gear_grid.selected_armor_set_id`
  *
- * Architecture: `local/sharing-architecture.md` §5.2 Decision 2, §10
+ * Architecture: `docs/settlement-sharing-architecture.md` §5.2 Decision 2, §10
  * Phase 2, Appendix A.
  */
 

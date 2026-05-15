@@ -50,8 +50,8 @@
 -- is_settlement_collaborator(settlement_id)`); the new clause is purely
 -- additive.
 --
--- Reference: `local/sharing-architecture.md` Appendix B EC-6 (transitive
--- visibility); PR #207 review feedback.
+-- Reference: `docs/settlement-sharing-architecture.md` Appendix B EC-6
+-- (transitive visibility); PR #207 review feedback.
 --------------------------------------------------------------------------------
 do $$
 declare rec record;

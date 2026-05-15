@@ -25,7 +25,7 @@ import { useEffect, useRef } from 'react'
  * Changes are received without a row-level filter because the realtime
  * channel filter syntax does not support joins; RLS gates which catalog
  * rows the subscriber can actually see (transitive visibility via
- * settlement membership — see `local/sharing-architecture.md` §8.2.2,
+ * settlement membership — see `docs/settlement-sharing-architecture.md` §8.2.2,
  * recommendation B). The single coarse subscription pays a small
  * bandwidth cost in exchange for not having to track every referenced
  * catalog row id per settlement.
@@ -155,7 +155,7 @@ const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   // channel cannot express the join from a catalog row back to the
   // active settlement; RLS gates which rows are delivered to the
   // subscriber via transitive visibility through settlement membership
-  // (see `local/sharing-architecture.md` §8.2.2 recommendation B). Kept
+  // (see `docs/settlement-sharing-architecture.md` §8.2.2 recommendation B). Kept
   // in sync with the `catalog_tables` array in
   // `supabase/migrations/20260519000000_catalog_realtime_publication.sql`
   // and the `EXPECTED_CATALOG_TABLES` list in
@@ -194,7 +194,46 @@ const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   strain_milestone: { domain: 'catalog', filterColumn: null },
   wanderer: { domain: 'catalog', filterColumn: null },
   constellation: { domain: 'catalog', filterColumn: null },
-  survivor_status: { domain: 'catalog', filterColumn: null }
+  survivor_status: { domain: 'catalog', filterColumn: null },
+
+  // Catalog sub-row tables — children of the catalog parents above whose
+  // transitive SELECT and realtime publication membership were installed
+  // in `20260524000000_catalog_sub_row_transitive_select.sql` and
+  // `20260525000000_catalog_sub_row_realtime_publication.sql`. Subscribed
+  // unfiltered for the same reason as their parents; RLS gates delivery.
+  gear_gear_cost: { domain: 'catalog', filterColumn: null },
+  gear_resource_cost: { domain: 'catalog', filterColumn: null },
+  gear_resource_type_cost: { domain: 'catalog', filterColumn: null },
+  gear_other_cost: { domain: 'catalog', filterColumn: null },
+  pattern_gear_cost: { domain: 'catalog', filterColumn: null },
+  pattern_resource_cost: { domain: 'catalog', filterColumn: null },
+  pattern_resource_type_cost: { domain: 'catalog', filterColumn: null },
+  pattern_innovation_requirement: { domain: 'catalog', filterColumn: null },
+  seed_pattern_gear_cost: { domain: 'catalog', filterColumn: null },
+  seed_pattern_resource_cost: { domain: 'catalog', filterColumn: null },
+  seed_pattern_resource_type_cost: { domain: 'catalog', filterColumn: null },
+  seed_pattern_innovation_requirement: {
+    domain: 'catalog',
+    filterColumn: null
+  },
+  armor_set_slot_gear: { domain: 'catalog', filterColumn: null },
+  quarry_level_survivor_status: { domain: 'catalog', filterColumn: null },
+  nemesis_level_survivor_status: { domain: 'catalog', filterColumn: null },
+  // Direct quarry/nemesis sub-rows whose transitive SELECT was
+  // installed alongside the level-survivor-status junctions. Wanderer
+  // children are intentionally absent because `wanderer` has no
+  // settlement junction, so collaborators never satisfy the SELECT
+  // predicate for custom wanderer rows.
+  quarry_location: { domain: 'catalog', filterColumn: null },
+  quarry_timeline_year: { domain: 'catalog', filterColumn: null },
+  quarry_hunt_board: { domain: 'catalog', filterColumn: null },
+  quarry_hunt_board_position: { domain: 'catalog', filterColumn: null },
+  quarry_collective_cognition_reward: {
+    domain: 'catalog',
+    filterColumn: null
+  },
+  nemesis_location: { domain: 'catalog', filterColumn: null },
+  nemesis_timeline_year: { domain: 'catalog', filterColumn: null }
 }
 
 /** Debounce delay in milliseconds for batching rapid changes. */

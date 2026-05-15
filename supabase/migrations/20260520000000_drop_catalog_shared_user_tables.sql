@@ -46,7 +46,7 @@
 -- `from('<table>')` call that relies on RLS to surface visible rows.
 --
 -- Citations:
---   local/sharing-architecture.md §5.2 Decision 2, §10 Phase 2 (2.2, 2.5),
+--   docs/settlement-sharing-architecture.md §5.2 Decision 2, §10 Phase 2 (2.2, 2.5),
 --     Appendix A "Tables to deprecate / drop"
 --   supabase/migrations/20260324185335_fix_shared_user_rls_recursion.sql
 --   supabase/migrations/20260514000000_catalog_transitive_select.sql

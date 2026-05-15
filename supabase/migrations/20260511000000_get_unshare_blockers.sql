@@ -12,8 +12,8 @@
 --   - Plan decision **D8** (Unsharing a collaborator who has authored
 --     attached custom catalog rows is *blocked* with a hard error
 --     listing the attached items the owner must remove first).
---   - `local/sharing-architecture.md` Appendix B EC-7 motivates the UX
---     gap this guard closes — without it, a survivor would still
+--   - `docs/settlement-sharing-architecture.md` Appendix B EC-7 motivates the
+--     UX gap this guard closes — without it, a survivor would still
 --     reference a custom disorder by name but the rules text would
 --     vanish on revoke.
 --   - Tracking issue: #147.

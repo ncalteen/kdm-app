@@ -40,7 +40,7 @@ export interface SettlementAuthorshipResolution {
  * `settlement_shared_user`. Powers the "By @username" authorship chip on
  * custom catalog rows materialized into `SettlementDetail`'s collections
  * (E2.8) and its avatar (E2.9) in
- * `local/sharing-architecture.md` §7.4 / §10 Phase 2 items 2.6–2.7.
+ * `docs/settlement-sharing-architecture.md` §7.4 / §10 Phase 2 items 2.6–2.7.
  *
  * Goes through the `get_settlement_member_usernames` SECURITY DEFINER RPC
  * because RLS on `user_settings` restricts SELECT to the row owner. A

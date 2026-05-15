@@ -12,7 +12,8 @@
 -- re-run.
 --
 -- Reference:
---   * `local/sharing-architecture.md` §5.2 Decision 5 / §3.2 / §10 Phase 1.4.
+--   * `docs/settlement-sharing-architecture.md` §5.2 Decision 5 / §3.2 / §10
+--     Phase 1.4.
 --   * supabase/migrations/20260327000000_enable_realtime_gameplay_tables.sql
 --   * supabase/migrations/20260503000001_gear_grid_realtime.sql
 --   * supabase/migrations/20260506000000_audit_realtime_publication.sql

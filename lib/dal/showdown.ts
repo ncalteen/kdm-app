@@ -1,6 +1,6 @@
+import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { getShowdownMonsters } from '@/lib/dal/showdown-monster'
 import { getShowdownSurvivors } from '@/lib/dal/showdown-survivor'
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { ShowdownDetail } from '@/lib/types'
@@ -13,8 +13,8 @@ import { ShowdownDetail } from '@/lib/types'
  * Starts the settlement member-username RPC once and shares the in-flight
  * promise with {@link getShowdownMonsters} so the trait / mood /
  * survivor-status `author_username` resolution does not issue a duplicate
- * RPC (E2.8; see `local/sharing-architecture.md` §7.4 / §10 Phase 2 item
- * 2.6).
+ * RPC (E2.8; see `docs/settlement-sharing-architecture.md` §7.4 / §10 Phase 2
+ * item 2.6).
  *
  * @param settlementId Settlement ID
  * @returns Showdown Data

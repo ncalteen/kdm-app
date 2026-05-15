@@ -43,7 +43,7 @@ export async function getSettlementCollectiveCognitionRewards(
     )
 
   // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
-  // local/sharing-architecture.md — transitive visibility gap).
+  // docs/settlement-sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
       const embeddedReward = item.collective_cognition_reward as unknown as
