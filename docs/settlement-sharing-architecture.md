@@ -943,6 +943,25 @@ see each other's edits live.
   `20260524000000_catalog_sub_row_transitive_select.sql`. Catalogs without a
   settlement-bound junction (`character`, `strain_milestone`, `wanderer`,
   `constellation`) remain author-only — see Phase 2.7.
+- **2.2.1** Extend transitive SELECT to catalog rows referenced by a custom
+  recipe's cost / requirement junction rows. `20260524000000` exposed the cost
+  junction rows themselves (`gear_gear_cost`, `pattern_gear_cost`,
+  `seed_pattern_gear_cost`, `gear_resource_cost`, `pattern_resource_cost`,
+  `seed_pattern_resource_cost`, `pattern_innovation_requirement`,
+  `seed_pattern_innovation_requirement`), but not the catalog rows the cost
+  columns point at (`cost_gear_id`, `resource_id`, `innovation_id`). Without
+  those, collaborator-visible custom recipes render their cost lines as "Unknown
+  gear / resource / innovation" because the UI resolves cost names through the
+  global catalog maps.
+  `20260526000000_catalog_referenced_row_transitive_select.sql` closes the gap
+  by adding `Allow select via referenced cost` on `gear`, `resource`, and
+  `innovation`. The policy is gated on
+  `is_settlement_member(sj.settlement_id, <ref>.user_id)` so stranger-authored
+  catalog rows referenced by a settlement collaborator's recipe stay hidden;
+  EC-7 (author unshared) also collapses the new path cleanly.
+  `*_resource_type_cost` and `*_other_cost` reference an enum / free-text label
+  and have no referenced-row visibility gap. `pattern.crafted_gear_id` (recipe
+  output) is out of scope here.
 - **2.3** Add a `BEFORE DELETE` trigger on each catalog table to block deletion
   while attached to a settlement the author doesn't own. _Status:_ shipped by
   `20260518000000_catalog_delete_guard_trigger.sql`.
@@ -1066,6 +1085,9 @@ These need user decisions before/while building Phase 1.
 ## Appendix A — Inventory of Existing Tables
 
 This inventory was reconciled against the migration history through
+`20260526000000_catalog_referenced_row_transitive_select.sql` (which closed the
+cost-reference gap on `gear`, `resource`, and `innovation` left by
+`20260524000000_catalog_sub_row_transitive_select.sql`),
 `20260525000000_catalog_sub_row_realtime_publication.sql` (which extended the
 transitive SELECT policies and realtime publication added by
 `20260524000000_catalog_sub_row_transitive_select.sql` and the author-membership
