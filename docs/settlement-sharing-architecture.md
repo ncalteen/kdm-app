@@ -88,7 +88,7 @@ This means **sharing has two distinct dimensions**:
    card/rule you authored across any settlement they own.
 
 The first is the **primary** product feature to be addressed in this document.
-The second is a **derived consequence** that we should consider throughly in the
+The second is a **derived consequence** that we should consider thoroughly in the
 design of the sharing model to ensure that it can be supported at a later date.
 
 ---
@@ -450,7 +450,7 @@ realtime hook receives the change, looks up whether the row is relevant to the
 currently selected settlement, then re-fetches if so. (Postgres doesn't expose a
 join filter to the realtime channel.)
 
-#### Decision 7 — Introduce Cxplicit `settlement_member` Semantics in Code
+#### Decision 7 — Introduce Explicit `settlement_member` Semantics in Code
 
 Replace `shared: boolean` with a richer model in domain types:
 
@@ -538,7 +538,7 @@ cannot truly be unlearned, only forgotten."_)
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------- | -------- |
 | **Settlement metadata**                                                                                                                                                                       |                                                        |                                               |          |
 | View settlement                                                                                                                                                                               | ✓                                                      | ✓                                             | ✗        |
-| Rename, change campaign type, edit settlement notes, change survivor type, change uses scouts                                                                                                 | ✓                                                      | ✗                                             | ✗        |
+| Rename, change campaign type, change survivor type, change uses scouts                                                                                                                        | ✓                                                      | ✗                                             | ✗        |
 | Share with new user / revoke share                                                                                                                                                            | ✓                                                      | ✗                                             | ✗        |
 | Delete settlement                                                                                                                                                                             | ✓                                                      | ✗                                             | ✗        |
 | **Settlement child rows** (`settlement_knowledge`, `settlement_milestone`, `settlement_quarry`, etc.)                                                                                         |                                                        |                                               |          |
@@ -1041,9 +1041,9 @@ These need user decisions before/while building Phase 1.
 
    PHASE 2
 
-1. **Username search anti-enumeration: prefix match only, or substring?**
-   Recommendation = prefix match (`like 'foo%'`), top 10, rate-limited per IP.
-   Substring search reveals user existence too easily.
+1. **Username search anti-enumeration: exact match only, or broader search?**
+   Recommendation = require exact username match only; do not implement prefix
+   or substring search. Broader search reveals user existence too easily.
 
    REQUIRE EXACT MATCH
 
@@ -1235,7 +1235,7 @@ correctly. Use this for test planning.
 | EC-2  | A creates custom knowledge K; A attaches K to settlement S; A shares S with B                                           | B can read K (rules included). B cannot edit K's rules text.                                                                                                                                                                                                                                                  |
 | EC-3  | (EC-2) + A unshares S                                                                                                   | B loses access to S. K's rules continue to be A's.                                                                                                                                                                                                                                                            |
 | EC-4  | (EC-2) + A removes K from S                                                                                             | B can no longer read K (no other settlement attaches it).                                                                                                                                                                                                                                                     |
-| EC-5  | (EC-2) + A deletes K entirely                                                                                           | Trigger blocks: "K is in use in another settlement (S, owner: you)". Owner can still delete because all attachments are on settlements they own.                                                                                                                                                              |
+| EC-5  | (EC-2) + A deletes K entirely                                                                                           | Delete is allowed because all attachments are on settlements A owns.                                                                                                                                                                                                                                          |
 | EC-6  | A shares S with B; B creates own custom disorder D; B attaches D to a survivor in S                                     | A can read D's rules. A cannot edit D's rules.                                                                                                                                                                                                                                                                |
 | EC-7  | (EC-6) + A removes B from S                                                                                             | A loses the ability to read D's rules (no other settlement of A's references D). The `survivor_disorder` row remains; the disorder name still renders, but the rules text becomes unavailable until B reattaches. (UX consideration: maybe show a stub.)                                                      |
 | EC-8  | (EC-6) + B deletes D                                                                                                    | Trigger blocks: "D is in use in A's settlement S, which you collaborate on; remove it from that settlement first."                                                                                                                                                                                            |
@@ -1243,7 +1243,7 @@ correctly. Use this for test planning.
 | EC-10 | A shares S with B; B and A edit the same survivor's `notes` field at the same time                                      | Last write wins. Realtime overrides B's local copy with A's value. UX: show a "(updated by @ashen.veil)" toast.                                                                                                                                                                                               |
 | EC-11 | A is on free plan; tries to share S                                                                                     | RLS denies INSERT to `settlement_shared_user`; UI shows upsell prompt.                                                                                                                                                                                                                                        |
 | EC-12 | A is on paid plan, shared S with B (free); A downgrades to free                                                         | B remains a collaborator (Option 1 from §9.3). A cannot create new shares. UI banner reminds A of the lapsed subscription.                                                                                                                                                                                    |
-| EC-13 | A invites B by typing username "ashen.veil"; B is signed up via OAuth with collision-suffixed username "ashen.veil1234" | A's typeahead surfaces both; A picks the right one.                                                                                                                                                                                                                                                           |
+| EC-13 | A invites B by typing username "ashen.veil"; B is signed up via OAuth with collision-suffixed username "ashen.veil1234" | Exact-match entry only: "ashen.veil" does not match "ashen.veil1234". UI returns a generic "Username not found" error and does not surface suggestions or alternate usernames.                                                                                                                                |
 | EC-14 | A invites B but B has not yet set a username (empty default)                                                            | A cannot find B because the username search RPC excludes empty usernames. We surface a hint: "Friends not appearing? Make sure they've chosen a name on the lantern hoard."                                                                                                                                   |
 | EC-15 | A is admin/superuser                                                                                                    | All admin-bypass RLS clauses (`is_admin()`) continue to apply unchanged.                                                                                                                                                                                                                                      |
 | EC-16 | A's account is deleted (auth cascade)                                                                                   | All A's owned settlements cascade-delete. Settlements where A was a collaborator: A's `settlement_shared_user` row cascades; the settlement itself remains for the owner. A's custom catalog rows cascade-delete; a `BEFORE DELETE` trigger on auth.users? Probably out of scope; cleanup pass is acceptable. |
