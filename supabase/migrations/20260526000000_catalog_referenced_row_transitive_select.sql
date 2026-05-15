@@ -80,10 +80,11 @@
 --
 -- Reference graph covered:
 --
---   gear (referenced as cost_gear_id):
+--   gear (referenced as cost_gear_id OR as armor_set_slot_gear.gear_id):
 --     gear_gear_cost.cost_gear_id          parent: gear         (settlement_gear)
 --     pattern_gear_cost.cost_gear_id       parent: pattern      (settlement_pattern)
 --     seed_pattern_gear_cost.cost_gear_id  parent: seed_pattern (settlement_seed_pattern)
+--     armor_set_slot_gear.gear_id          parent: armor_set    (gear_grid.selected_armor_set_id -> survivor.settlement_id)
 --
 --   resource (referenced as resource_id):
 --     gear_resource_cost.resource_id          parent: gear         (settlement_gear)
@@ -184,6 +185,29 @@ select ref_gear_user_id is not null
         )
         and public.is_settlement_member(sj.settlement_id, parent_sp.user_id)
         and public.is_settlement_member(sj.settlement_id, ref_gear_user_id)
+    )
+    or exists (
+      -- Custom armor-set slot candidates also reference `gear`. The chain
+      -- mirrors the parent `armor_set` / `armor_set_slot` policies in
+      -- 20260516000000 / 20260524000000: a settlement member sees the
+      -- referenced gear when the parent armor_set is custom and reachable
+      -- through `gear_grid.selected_armor_set_id` from one of their
+      -- survivors. Parent author here is `armor_set.user_id`; the
+      -- ref-author guard remains on `ref_gear_user_id`.
+      select 1
+      from public.armor_set_slot_gear asg
+        join public.armor_set_slot asl on asl.id = asg.armor_set_slot_id
+        join public.armor_set parent_a on parent_a.id = asl.armor_set_id
+        join public.gear_grid gg on gg.selected_armor_set_id = parent_a.id
+        join public.survivor sv on sv.id = gg.survivor_id
+      where asg.gear_id = ref_gear_id
+        and parent_a.custom
+        and (
+          public.is_settlement_owner(sv.settlement_id)
+          or public.is_settlement_collaborator(sv.settlement_id)
+        )
+        and public.is_settlement_member(sv.settlement_id, parent_a.user_id)
+        and public.is_settlement_member(sv.settlement_id, ref_gear_user_id)
     )
   );
 $$;

@@ -16,10 +16,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  * scenario follows the same shape:
  *
  *   1. `collaborator` (the shared-user) authors a custom parent recipe /
- *      monster (`gear` / `pattern` / `seed_pattern` / `quarry` / `nemesis`)
- *      AND a custom referenced catalog row (`gear` / `resource` /
- *      `innovation` / `location` / `collective_cognition_reward`). A cost
- *      / requirement / quarry-nemesis junction row links the two.
+ *      monster (`gear` / `pattern` / `seed_pattern` / `quarry` /
+ *      `nemesis` / `armor_set`) AND a custom referenced catalog row
+ *      (`gear` / `resource` / `innovation` / `location` /
+ *      `collective_cognition_reward`). A cost / requirement /
+ *      quarry-link / armor-set-slot junction row links the two.
  *   2. `owner` attaches the parent to their settlement via the matching
  *      `settlement_*` link table.
  *   3. We assert that:
@@ -36,12 +37,23 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  *     collaborator cites it from their custom recipe`: the
  *     `is_settlement_member(sj.settlement_id, <ref>.user_id)` clause must
  *     deny access when the referenced row's author is not a member.
+ *     Replicated per helper family (resource / innovation / location /
+ *     collective_cognition_reward) so a missing predicate in any one
+ *     SECURITY DEFINER helper cannot silently pass.
  *   - `owner loses access after the referenced row's author is unshared`:
  *     EC-7 variant flipping the referenced row's author membership off.
  *   - `owner loses access after the PARENT recipe's author is unshared`:
  *     PR #230 reviewer-flagged variant — the parent recipe is no longer
  *     settlement-visible, so the transitive helper must also collapse
- *     even when the referenced row's author is still a settlement member.
+ *     even when the referenced row's author is still a settlement
+ *     member. Replicated per helper family for the same reason as the
+ *     stranger-author boundary above.
+ *   - `gear referenced as an armor_set slot candidate via
+ *     armor_set_slot_gear`: the gear helper must also walk the
+ *     `armor_set_slot_gear -> armor_set_slot -> armor_set ->
+ *     gear_grid.selected_armor_set_id -> survivor.settlement_id` path
+ *     because `gearMap` in `lib/dal/armor-set.ts` resolves slot
+ *     candidates as referenced gear.
  *
  * Architecture: `docs/settlement-sharing-architecture.md` §10 Phase 2 (2.2),
  * Appendix B EC-6 / EC-7.
@@ -704,11 +716,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
     })
 
     it('owner cannot read stranger-authored referenced gear', async () => {
-      const { data } = await owner.client
+      const { data, error } = await owner.client
         .from('gear')
         .select('id')
         .eq('id', strangerCostGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
 
@@ -717,11 +730,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
       // not attached to a settlement they collaborate on. They can only see
       // the junction row (via the existing cost-row policy), not the
       // referenced gear itself.
-      const { data } = await collaborator.client
+      const { data, error } = await collaborator.client
         .from('gear')
         .select('id')
         .eq('id', strangerCostGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -808,11 +822,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
         .eq('shared_user_id', ecAuthor.id)
       if (unshareErr) throw new Error(`ec-7 unshare: ${unshareErr.message}`)
 
-      const { data } = await ecOwner.client
+      const { data, error } = await ecOwner.client
         .from('gear')
         .select('id')
         .eq('id', ecCostGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -913,11 +928,12 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
         .eq('shared_user_id', parentAuthor.id)
       if (unshareErr) throw new Error(`pa unshare: ${unshareErr.message}`)
 
-      const { data } = await pAuthOwner.client
+      const { data, error } = await pAuthOwner.client
         .from('gear')
         .select('id')
         .eq('id', pAuthCostGearId)
         .maybeSingle()
+      expect(error).toBeNull()
       expect(data).toBeNull()
     })
   })
@@ -1156,6 +1172,769 @@ describe('RLS: catalog referenced-row transitive SELECT', () => {
         .from('collective_cognition_reward')
         .select('id')
         .eq('id', ccRewardId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // gear referenced as armor_set_slot_gear.gear_id
+  //
+  // PR #230 review feedback flagged that the previous version of the gear
+  // helper walked only the three cost-junction paths
+  // (gear_gear_cost / pattern_gear_cost / seed_pattern_gear_cost). The UI
+  // also renders armor-set slot candidates through `gearMap[gearId]` (see
+  // `lib/dal/armor-set.ts`), so a collaborator-authored custom armor set
+  // that cites the author's custom gear would surface the slot row while
+  // hiding the referenced gear behind an "Unknown" label.
+  //
+  // The fourth EXISTS branch in `is_gear_visible_via_cost_reference` walks
+  // `armor_set_slot_gear -> armor_set_slot -> armor_set ->
+  //   gear_grid.selected_armor_set_id -> survivor.settlement_id`,
+  // mirroring the parent `Allow select via gear_grid` policies on
+  // `armor_set` / `armor_set_slot` from 20260516000000 / 20260524000000.
+  // Parent-author here is the armor_set's `user_id`.
+  //
+  // The seed below mirrors `catalog-sub-row-transitive-select.test.ts`'s
+  // `armor_set_slot_gear via gear_grid` block: a required slot needs a
+  // matching candidate piece equipped in the grid for the
+  // `clear_selected_armor_set_if_unqualified` trigger to keep
+  // `selected_armor_set_id` intact, and the equipped piece must exist in
+  // `settlement_gear` to satisfy `validate_gear_grid_positions`.
+  // ---------------------------------------------------------------------------
+  describe('gear via armor_set_slot_gear (armor set slot candidate)', () => {
+    let asOwner: TestUser
+    let asAuthor: TestUser
+    let asStranger: TestUser
+    let asSettlementId: string
+    let asArmorSetId: string
+    let asSlotGearId: string
+
+    beforeAll(async () => {
+      asOwner = await createTestUser()
+      asAuthor = await createTestUser()
+      asStranger = await createTestUser()
+      asSettlementId = await seedSettlement(
+        asOwner.id,
+        'Armor-Set Slot-Gear Referenced Row'
+      )
+      await shareSettlement(asSettlementId, asAuthor.id, asOwner.id)
+
+      const suffix = `${Date.now()}-${Math.random()}`
+
+      const { data: aset, error: aErr } = await admin
+        .from('armor_set')
+        .insert({
+          armor_set_name: `Slot-Gear ArmorSet ${suffix}`,
+          custom: true,
+          user_id: asAuthor.id
+        })
+        .select('id')
+        .single()
+      if (aErr || !aset) throw new Error(`as seed armor_set: ${aErr?.message}`)
+      asArmorSetId = aset.id
+
+      const { data: slot, error: sErr } = await admin
+        .from('armor_set_slot')
+        .insert({
+          armor_set_id: asArmorSetId,
+          slot_name: 'helm',
+          slot_order: 0,
+          required: true
+        })
+        .select('id')
+        .single()
+      if (sErr || !slot)
+        throw new Error(`as seed armor_set_slot: ${sErr?.message}`)
+
+      const { data: g, error: gErr } = await admin
+        .from('gear')
+        .insert({
+          gear_name: `Slot Candidate Gear ${suffix}`,
+          custom: true,
+          user_id: asAuthor.id
+        })
+        .select('id')
+        .single()
+      if (gErr || !g) throw new Error(`as seed gear: ${gErr?.message}`)
+      asSlotGearId = g.id
+
+      const { error: sgErr } = await admin
+        .from('armor_set_slot_gear')
+        .insert({ armor_set_slot_id: slot.id, gear_id: asSlotGearId })
+      if (sgErr)
+        throw new Error(`as seed armor_set_slot_gear: ${sgErr.message}`)
+
+      const { data: sv, error: svErr } = await admin
+        .from('survivor')
+        .insert({
+          settlement_id: asSettlementId,
+          gender: 'FEMALE',
+          survivor_name: `ArmorSet Carrier ${suffix}`
+        })
+        .select('id')
+        .single()
+      if (svErr || !sv) throw new Error(`as seed survivor: ${svErr?.message}`)
+
+      // Required-slot trigger needs a candidate piece equipped; equipped
+      // piece must exist in `settlement_gear`.
+      const { error: sgsErr } = await admin.from('settlement_gear').insert({
+        settlement_id: asSettlementId,
+        gear_id: asSlotGearId,
+        quantity: 1
+      })
+      if (sgsErr) throw new Error(`as seed settlement_gear: ${sgsErr.message}`)
+
+      const { error: ggErr } = await admin.from('gear_grid').insert({
+        survivor_id: sv.id,
+        selected_armor_set_id: asArmorSetId,
+        pos_top_left: asSlotGearId
+      })
+      if (ggErr) throw new Error(`as seed gear_grid: ${ggErr.message}`)
+    })
+
+    afterAll(async () => {
+      await deleteTestUser(asOwner.id)
+      await deleteTestUser(asAuthor.id)
+      await deleteTestUser(asStranger.id)
+    })
+
+    it('settlement owner reads slot-candidate gear via armor_set_slot_gear path', async () => {
+      const { data, error } = await asOwner.client
+        .from('gear')
+        .select('id, gear_name')
+        .eq('id', asSlotGearId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read slot-candidate gear', async () => {
+      const { data, error } = await asStranger.client
+        .from('gear')
+        .select('id')
+        .eq('id', asSlotGearId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+
+    it('owner loses access to slot-candidate gear when parent armor_set author is unshared', async () => {
+      // Parent author here is the armor_set's `user_id`. Unsharing them
+      // must collapse the new EXISTS branch even though no cost junction
+      // is involved.
+      const { error: unshareErr } = await admin
+        .from('settlement_shared_user')
+        .delete()
+        .eq('settlement_id', asSettlementId)
+        .eq('shared_user_id', asAuthor.id)
+      if (unshareErr)
+        throw new Error(`as parent-author unshare: ${unshareErr.message}`)
+
+      const { data, error } = await asOwner.client
+        .from('gear')
+        .select('id')
+        .eq('id', asSlotGearId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Per-helper coverage of the stranger-authored referenced-row boundary.
+  //
+  // The gear helper variant is already exercised by the top-level
+  // `security: stranger-authored referenced row stays hidden` block. The
+  // five SECURITY DEFINER helpers each implement their own
+  // `is_settlement_member(sj.settlement_id, <ref>.user_id)` check, so a
+  // missing predicate in any one of them would silently pass without
+  // these per-helper boundary tests. Each block below seeds a
+  // collaborator-authored parent and a STRANGER-authored referenced row,
+  // attaches the parent, and asserts the owner cannot SELECT the
+  // referenced row.
+  // ---------------------------------------------------------------------------
+  describe('security: stranger-authored referenced resource stays hidden', () => {
+    let strangerResourceId: string
+
+    beforeAll(async () => {
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: parent, error: pErr } = await admin
+        .from('gear')
+        .insert({
+          gear_name: `Sec-Resource Parent Gear ${suffix}`,
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (pErr || !parent) throw new Error(`sec-res parent: ${pErr?.message}`)
+
+      const { data: res, error: rErr } = await admin
+        .from('resource')
+        .insert({
+          resource_name: `Stranger Resource ${suffix}`,
+          category: 'BASIC',
+          resource_types: [],
+          custom: true,
+          user_id: stranger.id
+        })
+        .select('id')
+        .single()
+      if (rErr || !res) throw new Error(`sec-res stranger: ${rErr?.message}`)
+      strangerResourceId = res.id
+
+      const { error: jErr } = await admin.from('gear_resource_cost').insert({
+        gear_id: parent.id,
+        resource_id: strangerResourceId,
+        quantity: 1
+      })
+      if (jErr) throw new Error(`sec-res junction: ${jErr.message}`)
+
+      const { error: sjErr } = await admin.from('settlement_gear').insert({
+        settlement_id: settlementId,
+        gear_id: parent.id,
+        quantity: 1
+      })
+      if (sjErr) throw new Error(`sec-res settlement_gear: ${sjErr.message}`)
+    })
+
+    it('owner cannot read stranger-authored referenced resource', async () => {
+      const { data, error } = await owner.client
+        .from('resource')
+        .select('id')
+        .eq('id', strangerResourceId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  describe('security: stranger-authored referenced innovation stays hidden', () => {
+    let strangerInnovationId: string
+
+    beforeAll(async () => {
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: parent, error: pErr } = await admin
+        .from('pattern')
+        .insert({
+          pattern_name: `Sec-Innovation Parent Pattern ${suffix}`,
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (pErr || !parent) throw new Error(`sec-inv parent: ${pErr?.message}`)
+
+      const { data: inv, error: iErr } = await admin
+        .from('innovation')
+        .insert({
+          innovation_name: `Stranger Innovation ${suffix}`,
+          custom: true,
+          user_id: stranger.id
+        })
+        .select('id')
+        .single()
+      if (iErr || !inv) throw new Error(`sec-inv stranger: ${iErr?.message}`)
+      strangerInnovationId = inv.id
+
+      const { error: jErr } = await admin
+        .from('pattern_innovation_requirement')
+        .insert({ pattern_id: parent.id, innovation_id: strangerInnovationId })
+      if (jErr) throw new Error(`sec-inv junction: ${jErr.message}`)
+
+      const { error: sjErr } = await admin
+        .from('settlement_pattern')
+        .insert({ settlement_id: settlementId, pattern_id: parent.id })
+      if (sjErr) throw new Error(`sec-inv settlement_pattern: ${sjErr.message}`)
+    })
+
+    it('owner cannot read stranger-authored referenced innovation', async () => {
+      const { data, error } = await owner.client
+        .from('innovation')
+        .select('id')
+        .eq('id', strangerInnovationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  describe('security: stranger-authored referenced location stays hidden', () => {
+    let strangerLocationId: string
+
+    beforeAll(async () => {
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: q, error: qErr } = await admin
+        .from('quarry')
+        .insert({
+          monster_name: `Sec-Location Parent Quarry ${suffix}`,
+          node: 'NQ3',
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (qErr || !q) throw new Error(`sec-loc parent: ${qErr?.message}`)
+
+      const { data: loc, error: lErr } = await admin
+        .from('location')
+        .insert({
+          location_name: `Stranger Location ${suffix}`,
+          custom: true,
+          user_id: stranger.id
+        })
+        .select('id')
+        .single()
+      if (lErr || !loc) throw new Error(`sec-loc stranger: ${lErr?.message}`)
+      strangerLocationId = loc.id
+
+      const { error: jErr } = await admin
+        .from('quarry_location')
+        .insert({ quarry_id: q.id, location_id: strangerLocationId })
+      if (jErr) throw new Error(`sec-loc junction: ${jErr.message}`)
+
+      const { error: sjErr } = await admin
+        .from('settlement_quarry')
+        .insert({ settlement_id: settlementId, quarry_id: q.id })
+      if (sjErr) throw new Error(`sec-loc settlement_quarry: ${sjErr.message}`)
+    })
+
+    it('owner cannot read stranger-authored referenced location', async () => {
+      const { data, error } = await owner.client
+        .from('location')
+        .select('id')
+        .eq('id', strangerLocationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  describe('security: stranger-authored referenced collective_cognition_reward stays hidden', () => {
+    let strangerCcrId: string
+
+    beforeAll(async () => {
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: q, error: qErr } = await admin
+        .from('quarry')
+        .insert({
+          monster_name: `Sec-CCR Parent Quarry ${suffix}`,
+          node: 'NQ4',
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (qErr || !q) throw new Error(`sec-ccr parent: ${qErr?.message}`)
+
+      const { data: cc, error: cErr } = await admin
+        .from('collective_cognition_reward')
+        .insert({
+          reward_name: `Stranger CCR ${suffix}`,
+          collective_cognition: 1,
+          custom: true,
+          user_id: stranger.id
+        })
+        .select('id')
+        .single()
+      if (cErr || !cc) throw new Error(`sec-ccr stranger: ${cErr?.message}`)
+      strangerCcrId = cc.id
+
+      const { error: jErr } = await admin
+        .from('quarry_collective_cognition_reward')
+        .insert({
+          quarry_id: q.id,
+          collective_cognition_reward_id: strangerCcrId
+        })
+      if (jErr) throw new Error(`sec-ccr junction: ${jErr.message}`)
+
+      const { error: sjErr } = await admin
+        .from('settlement_quarry')
+        .insert({ settlement_id: settlementId, quarry_id: q.id })
+      if (sjErr) throw new Error(`sec-ccr settlement_quarry: ${sjErr.message}`)
+    })
+
+    it('owner cannot read stranger-authored referenced collective_cognition_reward', async () => {
+      const { data, error } = await owner.client
+        .from('collective_cognition_reward')
+        .select('id')
+        .eq('id', strangerCcrId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Per-helper coverage of the parent-author EC-7 boundary.
+  //
+  // The gear-cost variant is already exercised by
+  // `EC-7 (parent-author): owner loses access when parent author is
+  // unshared` above. Each helper implements its own parent-author
+  // membership clause, so a missing predicate in any one of the
+  // resource / innovation / location / collective_cognition_reward
+  // helpers would silently pass without these per-helper EC-7 tests.
+  // Each block below seeds two distinct authors (parentAuthor + ref
+  // author), attaches the parent recipe to a settlement they both
+  // share, then unshares parentAuthor and asserts the owner loses
+  // SELECT access on the referenced row.
+  // ---------------------------------------------------------------------------
+  describe('EC-7 (parent-author): owner loses access to referenced resource when parent author is unshared', () => {
+    let ecOwner: TestUser
+    let parentAuthor: TestUser
+    let refAuthor: TestUser
+    let ecSettlementId: string
+    let ecResourceId: string
+
+    beforeAll(async () => {
+      ecOwner = await createTestUser()
+      parentAuthor = await createTestUser()
+      refAuthor = await createTestUser()
+      ecSettlementId = await seedSettlement(
+        ecOwner.id,
+        'EC-7 PA Referenced Resource'
+      )
+      await shareSettlement(ecSettlementId, parentAuthor.id, ecOwner.id)
+      await shareSettlement(ecSettlementId, refAuthor.id, ecOwner.id)
+
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: parent, error: pErr } = await admin
+        .from('gear')
+        .insert({
+          gear_name: `EC-7-PA Resource Parent ${suffix}`,
+          custom: true,
+          user_id: parentAuthor.id
+        })
+        .select('id')
+        .single()
+      if (pErr || !parent) throw new Error(`pa-res parent: ${pErr?.message}`)
+
+      const { data: res, error: rErr } = await admin
+        .from('resource')
+        .insert({
+          resource_name: `EC-7-PA Resource ${suffix}`,
+          category: 'BASIC',
+          resource_types: [],
+          custom: true,
+          user_id: refAuthor.id
+        })
+        .select('id')
+        .single()
+      if (rErr || !res) throw new Error(`pa-res ref: ${rErr?.message}`)
+      ecResourceId = res.id
+
+      const { error: jErr } = await admin.from('gear_resource_cost').insert({
+        gear_id: parent.id,
+        resource_id: ecResourceId,
+        quantity: 1
+      })
+      if (jErr) throw new Error(`pa-res junction: ${jErr.message}`)
+
+      const { error: sjErr } = await admin.from('settlement_gear').insert({
+        settlement_id: ecSettlementId,
+        gear_id: parent.id,
+        quantity: 1
+      })
+      if (sjErr) throw new Error(`pa-res settlement_gear: ${sjErr.message}`)
+    })
+
+    afterAll(async () => {
+      await deleteTestUser(ecOwner.id)
+      await deleteTestUser(parentAuthor.id)
+      await deleteTestUser(refAuthor.id)
+    })
+
+    it('owner reads referenced resource while parent author is still shared', async () => {
+      const { data, error } = await ecOwner.client
+        .from('resource')
+        .select('id')
+        .eq('id', ecResourceId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('owner cannot read referenced resource after PARENT author is unshared', async () => {
+      const { error: unshareErr } = await admin
+        .from('settlement_shared_user')
+        .delete()
+        .eq('settlement_id', ecSettlementId)
+        .eq('shared_user_id', parentAuthor.id)
+      if (unshareErr) throw new Error(`pa-res unshare: ${unshareErr.message}`)
+
+      const { data, error } = await ecOwner.client
+        .from('resource')
+        .select('id')
+        .eq('id', ecResourceId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  describe('EC-7 (parent-author): owner loses access to referenced innovation when parent author is unshared', () => {
+    let ecOwner: TestUser
+    let parentAuthor: TestUser
+    let refAuthor: TestUser
+    let ecSettlementId: string
+    let ecInnovationId: string
+
+    beforeAll(async () => {
+      ecOwner = await createTestUser()
+      parentAuthor = await createTestUser()
+      refAuthor = await createTestUser()
+      ecSettlementId = await seedSettlement(
+        ecOwner.id,
+        'EC-7 PA Referenced Innovation'
+      )
+      await shareSettlement(ecSettlementId, parentAuthor.id, ecOwner.id)
+      await shareSettlement(ecSettlementId, refAuthor.id, ecOwner.id)
+
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: parent, error: pErr } = await admin
+        .from('pattern')
+        .insert({
+          pattern_name: `EC-7-PA Innovation Parent ${suffix}`,
+          custom: true,
+          user_id: parentAuthor.id
+        })
+        .select('id')
+        .single()
+      if (pErr || !parent) throw new Error(`pa-inv parent: ${pErr?.message}`)
+
+      const { data: inv, error: iErr } = await admin
+        .from('innovation')
+        .insert({
+          innovation_name: `EC-7-PA Innovation ${suffix}`,
+          custom: true,
+          user_id: refAuthor.id
+        })
+        .select('id')
+        .single()
+      if (iErr || !inv) throw new Error(`pa-inv ref: ${iErr?.message}`)
+      ecInnovationId = inv.id
+
+      const { error: jErr } = await admin
+        .from('pattern_innovation_requirement')
+        .insert({ pattern_id: parent.id, innovation_id: ecInnovationId })
+      if (jErr) throw new Error(`pa-inv junction: ${jErr.message}`)
+
+      const { error: sjErr } = await admin
+        .from('settlement_pattern')
+        .insert({ settlement_id: ecSettlementId, pattern_id: parent.id })
+      if (sjErr) throw new Error(`pa-inv settlement_pattern: ${sjErr.message}`)
+    })
+
+    afterAll(async () => {
+      await deleteTestUser(ecOwner.id)
+      await deleteTestUser(parentAuthor.id)
+      await deleteTestUser(refAuthor.id)
+    })
+
+    it('owner reads referenced innovation while parent author is still shared', async () => {
+      const { data, error } = await ecOwner.client
+        .from('innovation')
+        .select('id')
+        .eq('id', ecInnovationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('owner cannot read referenced innovation after PARENT author is unshared', async () => {
+      const { error: unshareErr } = await admin
+        .from('settlement_shared_user')
+        .delete()
+        .eq('settlement_id', ecSettlementId)
+        .eq('shared_user_id', parentAuthor.id)
+      if (unshareErr) throw new Error(`pa-inv unshare: ${unshareErr.message}`)
+
+      const { data, error } = await ecOwner.client
+        .from('innovation')
+        .select('id')
+        .eq('id', ecInnovationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  describe('EC-7 (parent-author): owner loses access to referenced location when parent author is unshared', () => {
+    let ecOwner: TestUser
+    let parentAuthor: TestUser
+    let refAuthor: TestUser
+    let ecSettlementId: string
+    let ecLocationId: string
+
+    beforeAll(async () => {
+      ecOwner = await createTestUser()
+      parentAuthor = await createTestUser()
+      refAuthor = await createTestUser()
+      ecSettlementId = await seedSettlement(
+        ecOwner.id,
+        'EC-7 PA Referenced Location'
+      )
+      await shareSettlement(ecSettlementId, parentAuthor.id, ecOwner.id)
+      await shareSettlement(ecSettlementId, refAuthor.id, ecOwner.id)
+
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: parent, error: qErr } = await admin
+        .from('quarry')
+        .insert({
+          monster_name: `EC-7-PA Location Parent Quarry ${suffix}`,
+          node: 'NN1',
+          custom: true,
+          user_id: parentAuthor.id
+        })
+        .select('id')
+        .single()
+      if (qErr || !parent) throw new Error(`pa-loc parent: ${qErr?.message}`)
+
+      const { data: loc, error: lErr } = await admin
+        .from('location')
+        .insert({
+          location_name: `EC-7-PA Location ${suffix}`,
+          custom: true,
+          user_id: refAuthor.id
+        })
+        .select('id')
+        .single()
+      if (lErr || !loc) throw new Error(`pa-loc ref: ${lErr?.message}`)
+      ecLocationId = loc.id
+
+      const { error: jErr } = await admin
+        .from('quarry_location')
+        .insert({ quarry_id: parent.id, location_id: ecLocationId })
+      if (jErr) throw new Error(`pa-loc junction: ${jErr.message}`)
+
+      const { error: sjErr } = await admin
+        .from('settlement_quarry')
+        .insert({ settlement_id: ecSettlementId, quarry_id: parent.id })
+      if (sjErr) throw new Error(`pa-loc settlement_quarry: ${sjErr.message}`)
+    })
+
+    afterAll(async () => {
+      await deleteTestUser(ecOwner.id)
+      await deleteTestUser(parentAuthor.id)
+      await deleteTestUser(refAuthor.id)
+    })
+
+    it('owner reads referenced location while parent author is still shared', async () => {
+      const { data, error } = await ecOwner.client
+        .from('location')
+        .select('id')
+        .eq('id', ecLocationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('owner cannot read referenced location after PARENT author is unshared', async () => {
+      const { error: unshareErr } = await admin
+        .from('settlement_shared_user')
+        .delete()
+        .eq('settlement_id', ecSettlementId)
+        .eq('shared_user_id', parentAuthor.id)
+      if (unshareErr) throw new Error(`pa-loc unshare: ${unshareErr.message}`)
+
+      const { data, error } = await ecOwner.client
+        .from('location')
+        .select('id')
+        .eq('id', ecLocationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).toBeNull()
+    })
+  })
+
+  describe('EC-7 (parent-author): owner loses access to referenced collective_cognition_reward when parent author is unshared', () => {
+    let ecOwner: TestUser
+    let parentAuthor: TestUser
+    let refAuthor: TestUser
+    let ecSettlementId: string
+    let ecCcrId: string
+
+    beforeAll(async () => {
+      ecOwner = await createTestUser()
+      parentAuthor = await createTestUser()
+      refAuthor = await createTestUser()
+      ecSettlementId = await seedSettlement(
+        ecOwner.id,
+        'EC-7 PA Referenced CCR'
+      )
+      await shareSettlement(ecSettlementId, parentAuthor.id, ecOwner.id)
+      await shareSettlement(ecSettlementId, refAuthor.id, ecOwner.id)
+
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: parent, error: qErr } = await admin
+        .from('quarry')
+        .insert({
+          monster_name: `EC-7-PA CCR Parent Quarry ${suffix}`,
+          node: 'NN2',
+          custom: true,
+          user_id: parentAuthor.id
+        })
+        .select('id')
+        .single()
+      if (qErr || !parent) throw new Error(`pa-ccr parent: ${qErr?.message}`)
+
+      const { data: cc, error: cErr } = await admin
+        .from('collective_cognition_reward')
+        .insert({
+          reward_name: `EC-7-PA CCR ${suffix}`,
+          collective_cognition: 1,
+          custom: true,
+          user_id: refAuthor.id
+        })
+        .select('id')
+        .single()
+      if (cErr || !cc) throw new Error(`pa-ccr ref: ${cErr?.message}`)
+      ecCcrId = cc.id
+
+      const { error: jErr } = await admin
+        .from('quarry_collective_cognition_reward')
+        .insert({
+          quarry_id: parent.id,
+          collective_cognition_reward_id: ecCcrId
+        })
+      if (jErr) throw new Error(`pa-ccr junction: ${jErr.message}`)
+
+      const { error: sjErr } = await admin
+        .from('settlement_quarry')
+        .insert({ settlement_id: ecSettlementId, quarry_id: parent.id })
+      if (sjErr) throw new Error(`pa-ccr settlement_quarry: ${sjErr.message}`)
+    })
+
+    afterAll(async () => {
+      await deleteTestUser(ecOwner.id)
+      await deleteTestUser(parentAuthor.id)
+      await deleteTestUser(refAuthor.id)
+    })
+
+    it('owner reads referenced collective_cognition_reward while parent author is still shared', async () => {
+      const { data, error } = await ecOwner.client
+        .from('collective_cognition_reward')
+        .select('id')
+        .eq('id', ecCcrId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('owner cannot read referenced collective_cognition_reward after PARENT author is unshared', async () => {
+      const { error: unshareErr } = await admin
+        .from('settlement_shared_user')
+        .delete()
+        .eq('settlement_id', ecSettlementId)
+        .eq('shared_user_id', parentAuthor.id)
+      if (unshareErr) throw new Error(`pa-ccr unshare: ${unshareErr.message}`)
+
+      const { data, error } = await ecOwner.client
+        .from('collective_cognition_reward')
+        .select('id')
+        .eq('id', ecCcrId)
         .maybeSingle()
       expect(error).toBeNull()
       expect(data).toBeNull()

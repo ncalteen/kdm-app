@@ -956,8 +956,14 @@ see each other's edits live.
   `quarry_location.location_id`, `nemesis_location.location_id`, and
   `quarry_collective_cognition_reward.collective_cognition_reward_id` are all
   similar references that need transitive SELECT on their parent catalog row.
-  `20260526000000_catalog_referenced_row_transitive_select.sql` closes both gaps
-  by adding `Allow select via referenced cost` on `gear`, `resource`,
+  Armor-set slot candidates are also a referenced-gear path:
+  `lib/dal/armor-set.ts` resolves `armor_set_slot_gear.gear_id` through the
+  global `gearMap`, so the gear helper must also walk
+  `armor_set_slot_gear -> armor_set_slot -> armor_set -> gear_grid.selected_armor_set_id -> survivor.settlement_id`
+  (PR #230 review feedback comment
+  [3250170129](https://github.com/ncalteen/kdm-app/pull/230#discussion_r3250170129)).
+  `20260526000000_catalog_referenced_row_transitive_select.sql` closes all these
+  gaps by adding `Allow select via referenced cost` on `gear`, `resource`,
   `innovation` (PR #230 review feedback comments
   [3249906530](https://github.com/ncalteen/kdm-app/pull/230#discussion_r3249906530),
   [3249906574](https://github.com/ncalteen/kdm-app/pull/230#discussion_r3249906574),
@@ -967,17 +973,23 @@ see each other's edits live.
   review feedback comment
   [3249906701](https://github.com/ncalteen/kdm-app/pull/230#discussion_r3249906701)).
   Each policy is implemented via a SECURITY DEFINER helper that walks the
-  junction table back to the parent recipe / parent quarry / parent nemesis,
-  joins through `settlement_*`, and asserts that **both** the parent's author
-  AND the referenced row's author are still settlement members. The
-  parent-author clause is essential: a SECURITY DEFINER helper bypasses RLS on
-  the parent table, so without it an unshared parent author's recipe (no longer
-  settlement-visible through its own policies) would still leak the referenced
-  row through this new path — an EC-7 hole that the test suite also covers as
-  `EC-7 (parent-author): owner loses access when parent author is unshared`.
-  `*_resource_type_cost` and `*_other_cost` reference an enum / free-text label
-  and have no referenced-row visibility gap. `pattern.crafted_gear_id` (recipe
-  output) is out of scope here.
+  junction table back to the parent recipe / parent quarry / parent nemesis /
+  parent armor-set, joins through `settlement_*`, and asserts that **both** the
+  parent's author AND the referenced row's author are still settlement members.
+  The parent-author clause is essential: a SECURITY DEFINER helper bypasses RLS
+  on the parent table, so without it an unshared parent author's recipe (no
+  longer settlement-visible through its own policies) would still leak the
+  referenced row through this new path — an EC-7 hole that the test suite covers
+  as `EC-7 (parent-author): owner loses access when parent author is unshared`
+  per helper family (gear, resource, innovation, location,
+  collective_cognition_reward) so a missing predicate in any one SECURITY
+  DEFINER helper cannot silently pass (PR #230 review feedback comments
+  [3250170202](https://github.com/ncalteen/kdm-app/pull/230#discussion_r3250170202),
+  [3250170235](https://github.com/ncalteen/kdm-app/pull/230#discussion_r3250170235)).
+  Stranger-authored referenced-row boundary tests are likewise replicated per
+  helper family. `*_resource_type_cost` and `*_other_cost` reference an enum /
+  free-text label and have no referenced-row visibility gap.
+  `pattern.crafted_gear_id` (recipe output) is out of scope here.
 - **2.3** Add a `BEFORE DELETE` trigger on each catalog table to block deletion
   while attached to a settlement the author doesn't own. _Status:_ shipped by
   `20260518000000_catalog_delete_guard_trigger.sql`.

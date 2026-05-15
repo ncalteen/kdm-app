@@ -100,6 +100,57 @@ function extractArrayLiteral(block) {
 }
 
 /**
+ * Extract the list of *table* identifiers that a dynamic `do $$ ... $$`
+ * loop iterates over. Three iteration shapes appear in this codebase's
+ * migrations; in every case the table name is the *first* element of
+ * each iteration row, because the surrounding `execute format(...)`
+ * calls always substitute that element into the policy's `on %I` /
+ * `on %1$I` target.
+ *
+ *   1. 2-D `text[][]` literal, iterated with
+ *      `foreach <var> slice 1 in array <2d>` and substituted via
+ *      positional placeholders (`%1$I`, `%2$I`, `%3$I`). The bound
+ *      variable is a `text[]` row whose first column is the table
+ *      identifier. See
+ *      `20260523000000_catalog_author_membership_select.sql`.
+ *
+ *   2. `VALUES` table inside `select * from (values (...), ...) as
+ *      <alias> (<col>, ...)`, iterated with `for <var> in select * ...`
+ *      and substituted via positional placeholders. The first column
+ *      of each tuple is the table identifier. See
+ *      `20260508000005_hunt_showdown_collaborator_crud.sql`.
+ *
+ *   3. 1-D `text[]` literal, iterated with `foreach <var> in array
+ *      <1d>` and substituted as a single argument (`%I` or `%1$I`).
+ *      See
+ *      `20260508000004_survivor_collaborator_crud.sql`, the catalog
+ *      shared-user cleanup migrations, etc.
+ *
+ * @param {string} body Body of a `do $$ ... $$;` block.
+ * @returns {string[]} Table identifiers, in iteration order.
+ */
+function extractTableList(body) {
+  // (1) 2-D array literal. Detected by an inner `array [` immediately
+  //     after the outer `array [`. Each inner array's first element is
+  //     the table identifier.
+  if (/array\s*\[\s*array\s*\[/i.test(body)) {
+    return [...body.matchAll(/array\s*\[\s*'([^']+)'/gi)].map((m) => m[1])
+  }
+
+  // (2) VALUES tuple list. Detected by `values (...) ... as <alias> (`.
+  //     The first column of each tuple is the table identifier.
+  const valuesMatch = body.match(
+    /\bvalues\s*((?:\(\s*'[^']*'[^)]*\)\s*,?\s*)+)\s*\)\s*as\s+\w+\s*\(/i
+  )
+  if (valuesMatch) {
+    return [...valuesMatch[1].matchAll(/\(\s*'([^']+)'/g)].map((m) => m[1])
+  }
+
+  // (3) 1-D array literal. Same shape as `extractArrayLiteral`.
+  return extractArrayLiteral(body)
+}
+
+/**
  * Parse `create policy`, `drop policy`, and `drop table` statements
  * out of every migration in lexical (= chronological) order. A policy
  * is in the net set if its last touch was a `create`. A `drop table`
@@ -157,18 +208,24 @@ function parsePolicies() {
   // Inside a do-block body: dynamic CREATE policy via
   // `execute format($f$ create policy "X" on %I for <cmd> ... $f$, t)`.
   // The dollar-quote tag is not always `$f$`, so accept any
-  // single-character tag.
+  // single-character tag. Positional placeholders (`%1$I` etc.) are
+  // also accepted because several migrations use them when the format
+  // string substitutes more than one identifier (see
+  // `20260523000000_catalog_author_membership_select.sql` and
+  // `20260508000004_survivor_collaborator_crud.sql`).
   const dynCreatePolicyRe =
-    /create\s+policy\s+"([^"]+)"\s+on\s+%I\s+for\s+(select|insert|update|delete|all)\b/gi
+    /create\s+policy\s+"([^"]+)"\s+on\s+(?:public\.)?%(?:[0-9]+\$)?I\s+for\s+(select|insert|update|delete|all)\b/gi
   // Inside a do-block body: dynamic DROP policy via
   // `execute format('drop policy if exists "X" on %I', t)`. Both
-  // `on %I` and `on public.%I` are accepted.
+  // `on %I` and `on public.%I` are accepted, as are positional
+  // placeholders for parity with the create regex.
   const dynDropPolicyRe =
-    /drop\s+policy\s+(?:if\s+exists\s+)?"([^"]+)"\s+on\s+(?:public\.)?%I\b/gi
+    /drop\s+policy\s+(?:if\s+exists\s+)?"([^"]+)"\s+on\s+(?:public\.)?%(?:[0-9]+\$)?I\b/gi
   // Inside a do-block body: dynamic DROP table via
   // `execute format('drop table if exists public.%I', t)`. Both forms
   // accepted for symmetry.
-  const dynDropTableRe = /drop\s+table\s+(?:if\s+exists\s+)?(?:public\.)?%I\b/gi
+  const dynDropTableRe =
+    /drop\s+table\s+(?:if\s+exists\s+)?(?:public\.)?%(?:[0-9]+\$)?I\b/gi
 
   /**
    * Apply a `drop table <name>` by removing every policy whose key is
@@ -234,14 +291,14 @@ function parsePolicies() {
     }
 
     // Dynamic `do $$ ... $$` blocks: collect drop-table, drop-policy,
-    // and create-policy execute-format patterns paired with array
-    // literals. The whole `do $$ ... $$;` block is treated as a single
+    // and create-policy execute-format patterns paired with the loop's
+    // table list. The whole `do $$ ... $$;` block is treated as a single
     // logical statement positioned at the block's start offset.
     doBlockRe.lastIndex = 0
     while ((m = doBlockRe.exec(sql))) {
       const blockOffset = m.index
       const body = m[1]
-      const tableNames = extractArrayLiteral(body)
+      const tableNames = extractTableList(body)
       if (tableNames.length === 0) continue
 
       // Dynamic drop-table.

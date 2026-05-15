@@ -59,8 +59,8 @@
 -- Both `Allow select for owner and custom` (author) and
 -- `Allow select for authenticated and non-custom` (catalog-default) remain
 -- untouched on every table here. This migration only adds the transitive
--- predicates that complete the Phase 2 picture per docs/sharing-
--- architecture.md §10 Phase 2.
+-- predicates that complete the Phase 2 picture per
+-- docs/settlement-sharing-architecture.md §10 Phase 2.
 --
 -- Citations:
 --   docs/settlement-sharing-architecture.md §5.2 Decision 2, §10 Phase 2 (2.2)
