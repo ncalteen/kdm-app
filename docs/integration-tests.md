@@ -76,7 +76,7 @@ npm run rls:coverage -- --strict
 1. Walks `supabase/migrations/*.sql` and harvests every
    `create policy ... on <table-name> for <cmd-name>` (handling `drop policy` /
    `drop table` and dynamic `do $$ ... execute format(...)` array loops).
-2. Walks `__tests__/integration/rls/*.test.ts` and detects table references in
+1. Walks `__tests__/integration/rls/*.test.ts` and detects table references in
    two passes:
    - **Exact**: literal `.from('<table>').<select|insert|update|upsert|delete>`
      gives a precise `(table, cmd)` touch.
@@ -85,7 +85,7 @@ npm run rls:coverage -- --strict
      of table names. The command cannot be statically determined, so the touch
      is recorded under `'*'` and the cell is reported as "indirect-only"
      coverage.
-3. Reports per-cell coverage, lists tables that were never touched, and notes
+1. Reports per-cell coverage, lists tables that were never touched, and notes
    indirect-only cells (which deserve a follow-up exact assertion if a
    regression would otherwise be invisible).
 
