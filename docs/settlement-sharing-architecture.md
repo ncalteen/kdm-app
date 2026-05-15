@@ -121,8 +121,8 @@ This is the most important finding for planning purposes:
   exposing a searchable directory of all users.
 - `hooks/use-realtime.tsx` **does** subscribe to `settlement_shared_user` via
   `useUserRealtimeSubscriptions`, listening for inserts/deletes filtered by
-  `shared_user_id`. Recipients can therefore receive share membership changes
-  in realtime, even though there is still no dedicated sharing UI for managing
+  `shared_user_id`. Recipients can therefore receive share membership changes in
+  realtime, even though there is still no dedicated sharing UI for managing
   invites or surfacing richer collaboration state.
 - There is **no payment / billing / entitlement infrastructure** anywhere in the
   codebase. No Stripe, no subscription tables, no plan / tier / paywall
