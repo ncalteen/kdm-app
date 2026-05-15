@@ -73,7 +73,8 @@
 --   * supabase/migrations/20260508000002_settlement_junction_collaborator_crud.sql
 --   * supabase/migrations/20260508000003_settlement_phase_collaborator_crud.sql
 --   * supabase/migrations/20260508000004_survivor_collaborator_crud.sql
---   * `docs/sharing-architecture.md` §5.2 Decision 3 / §10 Phase 1.2.d.
+--   * `docs/settlement-sharing-architecture.md` §5.2 Decision 3 / §10 Phase
+--     1.2.d.
 --
 -- Closes [E1.2.d] (issue #140).
 --------------------------------------------------------------------------------

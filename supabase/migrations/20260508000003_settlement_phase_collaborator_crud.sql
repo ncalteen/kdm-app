@@ -54,7 +54,8 @@
 --     — earlier fix that re-qualified column references on the join table.
 --   * supabase/migrations/20260508000002_settlement_junction_collaborator_crud.sql
 --     — sibling migration covering Phase 1.2.a junction tables.
---   * `docs/sharing-architecture.md` §5.2 Decision 3 / §10 Phase 1.2.b.
+--   * `docs/settlement-sharing-architecture.md` §5.2 Decision 3 / §10 Phase
+--     1.2.b.
 --
 -- Closes [E1.2.b] (issue #138).
 --------------------------------------------------------------------------------

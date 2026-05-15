@@ -11,7 +11,7 @@
 -- update arrive but never receives a corresponding child INSERT / UPDATE /
 -- DELETE until they manually reload.
 --
--- This migration closes that gap by adding the 15 catalog sub-row tables
+-- This migration closes that gap by adding the 22 catalog sub-row tables
 -- that received `Allow select via settlement membership` in
 -- `20260524000000_catalog_sub_row_transitive_select.sql`. Publication
 -- membership is strictly additive — RLS still gates delivery, so adding
@@ -24,7 +24,7 @@
 -- a prior partial application.
 --
 -- Citations:
---   docs/sharing-architecture.md §5.2 Decision 6, §10 Phase 2 item 2.4
+--   docs/settlement-sharing-architecture.md §5.2 Decision 6, §10 Phase 2 item 2.4
 --   supabase/migrations/20260519000000_catalog_realtime_publication.sql
 --   supabase/migrations/20260524000000_catalog_sub_row_transitive_select.sql
 --------------------------------------------------------------------------------
@@ -53,7 +53,20 @@ catalog_sub_row_tables text [] := array [
   -- Monster-level survivor status junctions (parent chains via
   -- settlement_quarry / settlement_nemesis).
   'quarry_level_survivor_status',
-  'nemesis_level_survivor_status'
+  'nemesis_level_survivor_status',
+  -- Direct quarry/nemesis sub-rows that received transitive SELECT in
+  -- `20260524000000` (locations, timeline years, hunt board, hunt
+  -- board positions, collective cognition rewards). Wanderer child
+  -- tables are intentionally absent — wanderer has no settlement
+  -- junction, so custom wanderer rules stay author-only and would
+  -- never satisfy a publication filter.
+  'quarry_location',
+  'quarry_timeline_year',
+  'quarry_hunt_board',
+  'quarry_hunt_board_position',
+  'quarry_collective_cognition_reward',
+  'nemesis_location',
+  'nemesis_timeline_year'
 ];
 begin foreach t in array catalog_sub_row_tables loop if not exists (
   select 1

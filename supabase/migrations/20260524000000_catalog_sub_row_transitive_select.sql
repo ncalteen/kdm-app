@@ -41,7 +41,12 @@
 --   3. `quarry_level_survivor_status` / `nemesis_level_survivor_status` —
 --      visible iff the parent quarry/nemesis is custom and attached to a
 --      settlement the caller can see (mirrors the trait/mood policies on
---      `quarry_level_trait`, `nemesis_level_trait`, etc.).
+--      `quarry_level_trait`, `nemesis_level_trait`, etc.). Direct sub-rows
+--      of `quarry` / `nemesis` (locations, timeline years, hunt board,
+--      hunt board positions, collective cognition rewards) follow the
+--      same pattern but join the parent table directly. `wanderer_*`
+--      child tables are intentionally excluded — `wanderer` has no
+--      settlement junction, so its custom children remain author-only.
 --
 -- And finally:
 --
@@ -58,7 +63,7 @@
 -- architecture.md §10 Phase 2.
 --
 -- Citations:
---   docs/sharing-architecture.md §5.2 Decision 2, §10 Phase 2 (2.2)
+--   docs/settlement-sharing-architecture.md §5.2 Decision 2, §10 Phase 2 (2.2)
 --   supabase/migrations/20260512000000_catalog_visibility_via_settlement.sql
 --   supabase/migrations/20260516000000_catalog_transitive_hunt_showdown.sql
 --   supabase/migrations/20260520000000_drop_catalog_shared_user_tables.sql
@@ -250,6 +255,124 @@ select to authenticated using (
         join nemesis n on n.id = nl.nemesis_id
         join settlement_nemesis sn on sn.nemesis_id = n.id
       where nl.id = nemesis_level_survivor_status.nemesis_level_id
+        and n.custom
+        and (
+          is_settlement_owner(sn.settlement_id)
+          or is_settlement_collaborator(sn.settlement_id)
+        )
+    )
+  );
+--
+-- 5b. Direct sub-rows of `quarry` and `nemesis` that were not addressed
+--     in `[5]`. The legacy `Allow select for shared and custom` policy
+--     on these tables was dropped in
+--     `20260520000000_drop_catalog_shared_user_tables.sql` and never
+--     replaced, leaving collaborators able to see the custom
+--     parent (via `quarry` / `nemesis`'s own transitive predicate
+--     installed in `20260514000000_catalog_transitive_select.sql` and
+--     `20260523000000_catalog_author_membership_select.sql`) but
+--     missing the parent's locations, timeline years, hunt board, hunt
+--     board positions, and collective cognition rewards. Each policy
+--     mirrors `[5]` but joins the parent table directly instead of
+--     going through `quarry_level` / `nemesis_level`.
+--
+--     `wanderer_*` child tables are deliberately not addressed here —
+--     `wanderer` has no settlement junction (no `settlement_wanderer`
+--     table; wanderers are copied into `survivor` rows at promotion
+--     time), so custom wanderers and their children are author-only by
+--     design after [E2.6].
+--
+create policy "Allow select via settlement membership" on quarry_location for
+select to authenticated using (
+    exists (
+      select 1
+      from quarry q
+        join settlement_quarry sq on sq.quarry_id = q.id
+      where q.id = quarry_location.quarry_id
+        and q.custom
+        and (
+          is_settlement_owner(sq.settlement_id)
+          or is_settlement_collaborator(sq.settlement_id)
+        )
+    )
+  );
+create policy "Allow select via settlement membership" on quarry_timeline_year for
+select to authenticated using (
+    exists (
+      select 1
+      from quarry q
+        join settlement_quarry sq on sq.quarry_id = q.id
+      where q.id = quarry_timeline_year.quarry_id
+        and q.custom
+        and (
+          is_settlement_owner(sq.settlement_id)
+          or is_settlement_collaborator(sq.settlement_id)
+        )
+    )
+  );
+create policy "Allow select via settlement membership" on quarry_hunt_board for
+select to authenticated using (
+    exists (
+      select 1
+      from quarry q
+        join settlement_quarry sq on sq.quarry_id = q.id
+      where q.id = quarry_hunt_board.quarry_id
+        and q.custom
+        and (
+          is_settlement_owner(sq.settlement_id)
+          or is_settlement_collaborator(sq.settlement_id)
+        )
+    )
+  );
+create policy "Allow select via settlement membership" on quarry_hunt_board_position for
+select to authenticated using (
+    exists (
+      select 1
+      from quarry q
+        join settlement_quarry sq on sq.quarry_id = q.id
+      where q.id = quarry_hunt_board_position.quarry_id
+        and q.custom
+        and (
+          is_settlement_owner(sq.settlement_id)
+          or is_settlement_collaborator(sq.settlement_id)
+        )
+    )
+  );
+create policy "Allow select via settlement membership" on quarry_collective_cognition_reward for
+select to authenticated using (
+    exists (
+      select 1
+      from quarry q
+        join settlement_quarry sq on sq.quarry_id = q.id
+      where q.id = quarry_collective_cognition_reward.quarry_id
+        and q.custom
+        and (
+          is_settlement_owner(sq.settlement_id)
+          or is_settlement_collaborator(sq.settlement_id)
+        )
+    )
+  );
+create policy "Allow select via settlement membership" on nemesis_location for
+select to authenticated using (
+    exists (
+      select 1
+      from nemesis n
+        join settlement_nemesis sn on sn.nemesis_id = n.id
+      where n.id = nemesis_location.nemesis_id
+        and n.custom
+        and (
+          is_settlement_owner(sn.settlement_id)
+          or is_settlement_collaborator(sn.settlement_id)
+        )
+    )
+  );
+create policy "Allow select via settlement membership" on nemesis_timeline_year for
+select to authenticated using (
+    exists (
+      select 1
+      from nemesis n
+        join settlement_nemesis sn on sn.nemesis_id = n.id
+      where n.id = nemesis_timeline_year.nemesis_id
         and n.custom
         and (
           is_settlement_owner(sn.settlement_id)

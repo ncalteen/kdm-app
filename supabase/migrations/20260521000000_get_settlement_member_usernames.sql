@@ -5,7 +5,8 @@
 -- to a settlement (the owner plus every collaborator listed in
 -- `settlement_shared_user`). Powers the "By @username" authorship chip on
 -- custom catalog rows materialized into `SettlementDetail`'s collections
--- (E2.8 in docs/sharing-architecture.md §7.4 / §10 Phase 2 item 2.6).
+-- (E2.8 in docs/settlement-sharing-architecture.md §7.4 / §10 Phase 2 item
+-- 2.6).
 --
 -- Why an RPC is required:
 --   - RLS on `user_settings` restricts SELECT to the row owner. A direct

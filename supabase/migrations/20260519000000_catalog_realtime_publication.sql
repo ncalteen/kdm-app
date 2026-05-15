@@ -38,7 +38,7 @@
 -- non-owners until [E2.5] / Appendix A Phase 2.5 cleanup.
 --
 -- Citations:
---   docs/sharing-architecture.md §5.2 Decision 6, §10 Phase 2 item 2.4
+--   docs/settlement-sharing-architecture.md §5.2 Decision 6, §10 Phase 2 item 2.4
 --   supabase/migrations/20260506000000_audit_realtime_publication.sql
 --   supabase/migrations/20260514000000_catalog_transitive_select.sql
 --   supabase/migrations/20260515000000_catalog_transitive_via_survivor.sql
