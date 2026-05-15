@@ -1,8 +1,7 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
-import { Card, CardContent } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
@@ -100,18 +99,16 @@ export function BleedingCard({
   }
 
   return (
-    <Card className="p-2 border-0 gap-0">
-      <CardContent className="flex flex-col gap-2 p-0">
-        <div className="flex flex-row items-center gap-2 justify-between">
-          <Label className="text-xs">Bleeding Tokens</Label>
-          <NumericInput
-            label="Bleeding Tokens"
-            value={bleedingTokens}
-            min={0}
-            onChange={saveBleedingTokens}
-            className="w-20"
-          />
-        </div>
+    <Card className="p-2 border-0 flex flex-row justify-between items-center">
+      <CardTitle className="text-sm">Bleeding Tokens</CardTitle>
+      <CardContent className="p-0">
+        <NumericInput
+          label="Bleeding Tokens"
+          value={bleedingTokens}
+          min={0}
+          onChange={saveBleedingTokens}
+          className="w-20"
+        />
       </CardContent>
     </Card>
   )
