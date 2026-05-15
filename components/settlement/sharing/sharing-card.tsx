@@ -22,8 +22,8 @@ interface SharingCardProps {
  *
  * The tab itself is gated upstream (sidebar entry + settlement-card branch)
  * to development builds only until the subscription / entitlement plumbing
- * from `docs/sharing-architecture.md` §9 lands. Once paid gating exists,
- * the gate moves from `NODE_ENV` to a `user_can_share()` check.
+ * from `docs/settlement-sharing-architecture.md` §9 lands. Once paid gating
+ * exists, the gate moves from `NODE_ENV` to a `user_can_share()` check.
  *
  * The active settlement is read from `useLocal()` inside
  * {@link CollaboratorsPanel}, so this card no longer needs to plumb it

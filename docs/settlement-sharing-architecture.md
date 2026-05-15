@@ -12,6 +12,7 @@
 1. [Real-Time Live Editing](#8-real-time-live-editing)
 1. [Paid-Feature Gating](#9-paid-feature-gating)
 1. [Action Plan](#10-action-plan-phased)
+1. [Open Questions](#11-open-questions)
 1. [Appendix A — Inventory of Existing Tables](#appendix-a--inventory-of-existing-tables)
 1. [Appendix B — Edge Cases Catalog](#appendix-b--edge-cases-catalog)
 
@@ -98,27 +99,32 @@ date.
 
 ### Frontend Reality
 
-This is the most important finding for planning purposes:
+This section reflects the in-tree implementation as of the migrations through
+`20260525000000_catalog_sub_row_realtime_publication.sql`:
 
-- **There is no sharing UI in the application today.** No share dialog, no
-  "shared with" panel, no recipient picker, no username search.
-  `getSettlementSharedUsers`, `addSettlementSharedUsers`,
-  `removeSettlementSharedUsers` exist in the DAL but are only consumed by
-  unit/integration tests.
-- The settlement switcher (`components/menu/settlement-switcher.tsx`) is the
-  only place that even fetches shared settlements
-  ([`getSettlementForUser`](lib/dal/user.ts#L168)). It does **not** display any
-  indicator for owned vs. shared. The `shared` flag flows through but is unused
-  by the renderer.
-- No client-side gating exists anywhere. UI surfaces never check
-  `settlement.shared` to disable destructive actions for collaborators.
-  Operations that RLS blocks would surface as a "darkness swallows your words"
-  toast and a confusing UX.
-- There is no username search. Catalog `*_shared_user` DALs return joined
-  usernames, but only for users _already_ shared with — there's no way for a
-  user to _find_ another to invite. This is by design. We should protect user
-  identities and ensure that users share their usernames explicitly rather than
-  exposing a searchable directory of all users.
+- **Owner-only sharing UI exists.** The
+  [`components/settlement/sharing/collaborators-panel.tsx`](../components/settlement/sharing/collaborators-panel.tsx)
+  surface lets a settlement owner add, list, and remove collaborators by
+  username. The DAL helpers `getSettlementSharedUsers`,
+  `addSettlementSharedUsers`, and `removeSettlementSharedUsers` are now consumed
+  by that UI in addition to the integration tests. Catalog-level `*_shared_user`
+  UI is intentionally absent because the transitive-visibility migrations
+  (`20260512000000` … `20260524000000`) make it redundant; only
+  `settlement_shared_user` is user-managed.
+- **Username lookup is implemented but rate-limited and exact-match only.**
+  [`lookupUserByUsername`](../lib/dal/user.ts) (in `lib/dal/user.ts`) is the
+  invariant used by the sharing UI's recipient picker. It enforces case
+  preservation, exact-match semantics, and the no-enumeration contract from §4
+  P9. There is still no fuzzy search and no listing of all users.
+- The settlement switcher (`components/menu/settlement-switcher.tsx`) fetches
+  both owned and shared settlements via
+  [`getSettlementForUser`](../lib/dal/user.ts). The `shared` flag is now used by
+  the renderer to badge shared settlements; destructive actions in downstream UI
+  surfaces check `settlement.shared` to hide owner-only controls.
+- No client-side gating exists for **every** RLS rule yet — some surfaces still
+  rely on the database to block disallowed mutations and surface a "darkness
+  swallows your words" toast. Phase 2 UX work continues to push client checks
+  for the common deny paths.
 - `hooks/use-realtime.tsx` **does** subscribe to `settlement_shared_user` via
   `useUserRealtimeSubscriptions`, listening for inserts/deletes filtered by
   `shared_user_id`. Recipients can therefore receive share membership changes in
@@ -1060,7 +1066,11 @@ These need user decisions before/while building Phase 1.
 ## Appendix A — Inventory of Existing Tables
 
 This inventory was reconciled against the migration history through
-`20260523000000_catalog_author_membership_select.sql`. Where the recommended
+`20260525000000_catalog_sub_row_realtime_publication.sql` (which extended the
+transitive SELECT policies and realtime publication added by
+`20260524000000_catalog_sub_row_transitive_select.sql` and the author-membership
+SELECT predicates introduced in
+`20260523000000_catalog_author_membership_select.sql`). Where the recommended
 phases reference a table that has since been split or renamed, the actual table
 names from the current schema are used.
 
@@ -1221,9 +1231,11 @@ For completeness, the full list of junctions being dropped:
 `settlement_shared_user` is the **only** `*_shared_user` table that survives —
 it is the keeper of the entire model.
 
-Before the drop migration ships, confirm that no DAL code in `lib/dal/` still
-writes to any catalog `*_shared_user` table. Reads should already be redundant
-given the transitive-visibility predicate.
+The drop migration `20260520000000_drop_catalog_shared_user_tables.sql` has
+already shipped. No DAL code in `lib/dal/` writes to any catalog `*_shared_user`
+table — reads are made redundant by the transitive-visibility predicate
+(`is_settlement_member` + `Allow select via settlement membership` on the
+catalog tables and their sub-rows).
 
 ---
 

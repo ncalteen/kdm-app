@@ -16,9 +16,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  * catalog row is attached to a settlement, both the settlement's owner and
  * its collaborators must be able to SELECT the catalog row's full content.
  *
- * Mirrors EC-6 from docs/sharing-architecture.md: a collaborator authors a
- * custom row, attaches it to a shared settlement, and the owner can read
- * the rules text.
+ * Mirrors EC-6 from docs/settlement-sharing-architecture.md: a collaborator
+ * authors a custom row, attaches it to a shared settlement, and the owner can
+ * read the rules text.
  *
  * Coverage strategy:
  *   * `knowledge` is exercised in depth (positive owner read, positive

@@ -73,9 +73,9 @@ interface CollaboratorsPanelProps {
  *
  * Anti-enumeration contract:
  *   - Username field is plain text only — no typeahead, no autocomplete.
- *     Per `docs/sharing-architecture.md` §11 Q9 the lookup is exact match
- *     only and rate-limited to 30/min by the `lookup_user_by_username` RPC
- *     (see #146). The "no such user" toast intentionally collapses both
+ *     Per `docs/settlement-sharing-architecture.md` §11 Q9 the lookup is exact
+ *     match only and rate-limited to 30/min by the `lookup_user_by_username`
+ *     RPC (see #146). The "no such user" toast intentionally collapses both
  *     "actually missing" and "rate-limited" cases so the caller cannot
  *     fingerprint registered handles.
  *

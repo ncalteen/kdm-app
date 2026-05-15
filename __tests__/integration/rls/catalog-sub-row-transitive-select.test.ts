@@ -33,7 +33,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
  * `hunt_monster_survivor_status` arm, which is the most common reachability
  * path during hunt-phase play.
  *
- * Architecture: `docs/sharing-architecture.md` §5.2 Decision 2, §10
+ * Architecture: `docs/settlement-sharing-architecture.md` §5.2 Decision 2, §10
  * Phase 2.2.
  */
 describe('RLS: catalog sub-row transitive SELECT', () => {
@@ -564,6 +564,19 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
         .maybeSingle()
       expect(data).toBeNull()
     })
+
+    it('settlement owner reads parent survivor_status via nemesis UNION', async () => {
+      // Mirror of the quarry-arm assertion above. Confirms the
+      // `nemesis_level_survivor_status` branch of the 4-way UNION on
+      // `survivor_status` reaches the parent for a non-author owner.
+      const { data, error } = await owner.client
+        .from('survivor_status')
+        .select('id, survivor_status_name')
+        .eq('id', survivorStatusId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
   })
 
   describe('survivor_status via hunt_monster_survivor_status (4-way UNION)', () => {
@@ -646,6 +659,354 @@ describe('RLS: catalog sub-row transitive SELECT', () => {
         .from('survivor_status')
         .select('id')
         .eq('id', survivorStatusId)
+        .maybeSingle()
+      expect(data).toBeNull()
+    })
+  })
+
+  describe('survivor_status via showdown_monster_survivor_status (4-way UNION)', () => {
+    let survivorStatusId: string
+    let showdownSettlementId: string
+
+    beforeAll(async () => {
+      // `showdown` has a unique constraint on settlement_id, so allocate
+      // a fresh settlement for this branch instead of reusing the shared
+      // one above.
+      showdownSettlementId = await seedSettlement(
+        owner.id,
+        `Showdown UNION Test ${Date.now()}`
+      )
+      await shareSettlement(showdownSettlementId, collaborator.id, owner.id)
+
+      const suffix = `${Date.now()}-${Math.random()}`
+      const { data: ss, error: ssErr } = await admin
+        .from('survivor_status')
+        .insert({
+          survivor_status_name: `Status ${suffix}`,
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (ssErr || !ss)
+        throw new Error(`seed survivor_status: ${ssErr?.message}`)
+      survivorStatusId = ss.id
+
+      const { data: showdown, error: shErr } = await admin
+        .from('showdown')
+        .insert({ settlement_id: showdownSettlementId, monster_level: 1 })
+        .select('id')
+        .single()
+      if (shErr || !showdown)
+        throw new Error(`seed showdown: ${shErr?.message}`)
+
+      const { data: ad, error: adErr } = await admin
+        .from('showdown_ai_deck')
+        .insert({
+          settlement_id: showdownSettlementId,
+          showdown_id: showdown.id
+        })
+        .select('id')
+        .single()
+      if (adErr || !ad)
+        throw new Error(`seed showdown_ai_deck: ${adErr?.message}`)
+
+      const { data: sm, error: smErr } = await admin
+        .from('showdown_monster')
+        .insert({
+          ai_deck_id: ad.id,
+          settlement_id: showdownSettlementId,
+          showdown_id: showdown.id
+        })
+        .select('id')
+        .single()
+      if (smErr || !sm)
+        throw new Error(`seed showdown_monster: ${smErr?.message}`)
+
+      const { error: jErr } = await admin
+        .from('showdown_monster_survivor_status')
+        .insert({
+          showdown_monster_id: sm.id,
+          survivor_status_id: survivorStatusId
+        })
+      if (jErr)
+        throw new Error(
+          `seed showdown_monster_survivor_status: ${jErr.message}`
+        )
+    })
+
+    it('settlement owner reads survivor_status via showdown junction', async () => {
+      const { data, error } = await owner.client
+        .from('survivor_status')
+        .select('id, survivor_status_name')
+        .eq('id', survivorStatusId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read survivor_status', async () => {
+      const { data } = await stranger.client
+        .from('survivor_status')
+        .select('id')
+        .eq('id', survivorStatusId)
+        .maybeSingle()
+      expect(data).toBeNull()
+    })
+  })
+
+  /**
+   * Direct quarry/nemesis sub-rows added in `[5b]` of
+   * `20260524000000_catalog_sub_row_transitive_select.sql`. Each
+   * sub-table joins straight to `quarry` / `nemesis` (no
+   * `quarry_level` / `nemesis_level` intermediary), so a separate
+   * block exercises owner-visibility and stranger-denial for each.
+   *
+   * `wanderer_*` child tables are intentionally not exercised here:
+   * `wanderer` has no settlement junction, so its custom children
+   * remain author-only by design after [E2.6] and there is no
+   * transitive predicate to lock in.
+   */
+  describe('direct quarry/nemesis sub-rows (settlement membership)', () => {
+    let quarryId: string
+    let nemesisId: string
+    let locationId: string
+    let ccRewardId: string
+
+    beforeAll(async () => {
+      const suffix = `${Date.now()}-${Math.random()}`
+
+      const { data: q, error: qErr } = await admin
+        .from('quarry')
+        .insert({
+          monster_name: `Direct Quarry ${suffix}`,
+          node: 'NQ1',
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (qErr || !q) throw new Error(`seed quarry: ${qErr?.message}`)
+      quarryId = q.id
+
+      const { data: n, error: nErr } = await admin
+        .from('nemesis')
+        .insert({
+          monster_name: `Direct Nemesis ${suffix}`,
+          node: 'NN1',
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (nErr || !n) throw new Error(`seed nemesis: ${nErr?.message}`)
+      nemesisId = n.id
+
+      const { data: loc, error: locErr } = await admin
+        .from('location')
+        .insert({
+          location_name: `Location ${suffix}`,
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (locErr || !loc) throw new Error(`seed location: ${locErr?.message}`)
+      locationId = loc.id
+
+      const { data: cc, error: ccErr } = await admin
+        .from('collective_cognition_reward')
+        .insert({
+          reward_name: `CC Reward ${suffix}`,
+          collective_cognition: 1,
+          custom: true,
+          user_id: collaborator.id
+        })
+        .select('id')
+        .single()
+      if (ccErr || !cc)
+        throw new Error(`seed collective_cognition_reward: ${ccErr?.message}`)
+      ccRewardId = cc.id
+
+      // Attach the parents to the shared settlement so the transitive
+      // predicate has something to traverse.
+      const { error: sqErr } = await admin
+        .from('settlement_quarry')
+        .insert({ settlement_id: settlementId, quarry_id: quarryId })
+      if (sqErr) throw new Error(`seed settlement_quarry: ${sqErr.message}`)
+      const { error: snErr } = await admin
+        .from('settlement_nemesis')
+        .insert({ settlement_id: settlementId, nemesis_id: nemesisId })
+      if (snErr) throw new Error(`seed settlement_nemesis: ${snErr.message}`)
+
+      // Seed one row in each child table covered by [5b].
+      const inserts = await Promise.all([
+        admin
+          .from('quarry_location')
+          .insert({ quarry_id: quarryId, location_id: locationId }),
+        admin
+          .from('quarry_timeline_year')
+          .insert({ quarry_id: quarryId, year_number: 1 }),
+        admin.from('quarry_hunt_board').insert({ quarry_id: quarryId }),
+        admin
+          .from('quarry_hunt_board_position')
+          .insert({ quarry_id: quarryId, level_number: 1 }),
+        admin.from('quarry_collective_cognition_reward').insert({
+          quarry_id: quarryId,
+          collective_cognition_reward_id: ccRewardId
+        }),
+        admin
+          .from('nemesis_location')
+          .insert({ nemesis_id: nemesisId, location_id: locationId }),
+        admin
+          .from('nemesis_timeline_year')
+          .insert({ nemesis_id: nemesisId, year_number: 1 })
+      ])
+      for (const r of inserts)
+        if (r.error) throw new Error(`seed direct sub-row: ${r.error.message}`)
+    })
+
+    it('settlement owner reads quarry_location via settlement membership', async () => {
+      const { data, error } = await owner.client
+        .from('quarry_location')
+        .select('quarry_id, location_id')
+        .eq('quarry_id', quarryId)
+        .eq('location_id', locationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read quarry_location', async () => {
+      const { data } = await stranger.client
+        .from('quarry_location')
+        .select('quarry_id')
+        .eq('quarry_id', quarryId)
+        .eq('location_id', locationId)
+        .maybeSingle()
+      expect(data).toBeNull()
+    })
+
+    it('settlement owner reads quarry_timeline_year via settlement membership', async () => {
+      const { data, error } = await owner.client
+        .from('quarry_timeline_year')
+        .select('quarry_id, year_number')
+        .eq('quarry_id', quarryId)
+        .eq('year_number', 1)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read quarry_timeline_year', async () => {
+      const { data } = await stranger.client
+        .from('quarry_timeline_year')
+        .select('quarry_id')
+        .eq('quarry_id', quarryId)
+        .eq('year_number', 1)
+        .maybeSingle()
+      expect(data).toBeNull()
+    })
+
+    it('settlement owner reads quarry_hunt_board via settlement membership', async () => {
+      const { data, error } = await owner.client
+        .from('quarry_hunt_board')
+        .select('quarry_id')
+        .eq('quarry_id', quarryId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read quarry_hunt_board', async () => {
+      const { data } = await stranger.client
+        .from('quarry_hunt_board')
+        .select('quarry_id')
+        .eq('quarry_id', quarryId)
+        .maybeSingle()
+      expect(data).toBeNull()
+    })
+
+    it('settlement owner reads quarry_hunt_board_position via settlement membership', async () => {
+      const { data, error } = await owner.client
+        .from('quarry_hunt_board_position')
+        .select('quarry_id, level_number')
+        .eq('quarry_id', quarryId)
+        .eq('level_number', 1)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read quarry_hunt_board_position', async () => {
+      const { data } = await stranger.client
+        .from('quarry_hunt_board_position')
+        .select('quarry_id')
+        .eq('quarry_id', quarryId)
+        .eq('level_number', 1)
+        .maybeSingle()
+      expect(data).toBeNull()
+    })
+
+    it('settlement owner reads quarry_collective_cognition_reward via settlement membership', async () => {
+      const { data, error } = await owner.client
+        .from('quarry_collective_cognition_reward')
+        .select('quarry_id, collective_cognition_reward_id')
+        .eq('quarry_id', quarryId)
+        .eq('collective_cognition_reward_id', ccRewardId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read quarry_collective_cognition_reward', async () => {
+      const { data } = await stranger.client
+        .from('quarry_collective_cognition_reward')
+        .select('quarry_id')
+        .eq('quarry_id', quarryId)
+        .eq('collective_cognition_reward_id', ccRewardId)
+        .maybeSingle()
+      expect(data).toBeNull()
+    })
+
+    it('settlement owner reads nemesis_location via settlement membership', async () => {
+      const { data, error } = await owner.client
+        .from('nemesis_location')
+        .select('nemesis_id, location_id')
+        .eq('nemesis_id', nemesisId)
+        .eq('location_id', locationId)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read nemesis_location', async () => {
+      const { data } = await stranger.client
+        .from('nemesis_location')
+        .select('nemesis_id')
+        .eq('nemesis_id', nemesisId)
+        .eq('location_id', locationId)
+        .maybeSingle()
+      expect(data).toBeNull()
+    })
+
+    it('settlement owner reads nemesis_timeline_year via settlement membership', async () => {
+      const { data, error } = await owner.client
+        .from('nemesis_timeline_year')
+        .select('nemesis_id, year_number')
+        .eq('nemesis_id', nemesisId)
+        .eq('year_number', 1)
+        .maybeSingle()
+      expect(error).toBeNull()
+      expect(data).not.toBeNull()
+    })
+
+    it('stranger cannot read nemesis_timeline_year', async () => {
+      const { data } = await stranger.client
+        .from('nemesis_timeline_year')
+        .select('nemesis_id')
+        .eq('nemesis_id', nemesisId)
+        .eq('year_number', 1)
         .maybeSingle()
       expect(data).toBeNull()
     })

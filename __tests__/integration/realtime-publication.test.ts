@@ -160,7 +160,19 @@ describe('Realtime publication membership', () => {
     'armor_set_slot_gear',
     // Monster-level survivor status junctions.
     'quarry_level_survivor_status',
-    'nemesis_level_survivor_status'
+    'nemesis_level_survivor_status',
+    // Direct quarry/nemesis sub-rows added alongside the level-status
+    // junctions. Wanderer child tables are intentionally absent —
+    // `wanderer` has no settlement junction, so collaborators never
+    // satisfy the SELECT predicate for custom wanderer rows and
+    // publication membership would be a no-op.
+    'quarry_location',
+    'quarry_timeline_year',
+    'quarry_hunt_board',
+    'quarry_hunt_board_position',
+    'quarry_collective_cognition_reward',
+    'nemesis_location',
+    'nemesis_timeline_year'
   ] as const
 
   it('includes every settlement-scoped table in `supabase_realtime`', async () => {

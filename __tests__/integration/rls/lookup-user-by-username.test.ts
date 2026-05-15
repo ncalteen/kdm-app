@@ -115,7 +115,8 @@ describe('RPC: lookup_user_by_username', () => {
     })
 
     // The caller cannot tell this `null` from the not-found case — that's
-    // the no-leak contract from `docs/sharing-architecture.md` §4 P9.
+    // the no-leak contract from `docs/settlement-sharing-architecture.md` §4
+    // P9.
     expect(error).toBeNull()
     expect(data).toBeNull()
   })
