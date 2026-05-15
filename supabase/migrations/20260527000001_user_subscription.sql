@@ -20,7 +20,8 @@
 create table user_subscription (
   user_id uuid primary key references auth.users(id) on delete cascade,
   plan_id text not null references subscription_plan(id),
-  status varchar not null default 'active',
+  status varchar not null default 'active'
+    check (status in ('active', 'past_due', 'canceled', 'trialing', 'incomplete')),
   -- 'active' | 'past_due' | 'canceled' | 'trialing' | 'incomplete'
   current_period_end timestamptz,
   stripe_customer_id text,

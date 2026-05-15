@@ -190,7 +190,7 @@ describe('RLS: subscription_plan + user_subscription', () => {
         .insert({ user_id: owner.id, plan_id: 'lantern_hoard' })
         .select('user_id')
       expect(data ?? []).toEqual([])
-      if (error) expect(error.code).toMatch(/PGRST|42501|23505/)
+      if (error) expect(error.code).toMatch(/PGRST|42501/)
     })
 
     it('owner cannot DELETE their own subscription row', async () => {
