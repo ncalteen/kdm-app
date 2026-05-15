@@ -48,12 +48,11 @@ DISABLE_LINTERS:
 EXCLUDED_DIRECTORIES:
   - .cache
   - .git
+  - .next
   - coverage
-  - dist
+  - local
   - megalinter-reports
   - node_modules
-  - public
-  - scripts
   - reports
 
 # If set to true, MegaLinter fails if a linter or formatter has autofixed
