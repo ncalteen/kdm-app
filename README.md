@@ -38,7 +38,7 @@ If you have any questions, suggestions, or problems, please feel free to
 If you like this project and want to support its development, please consider
 [buying me a coffee](https://buymeacoffee.com/ncalteenw)!
 
-[![Buy Me A Coffee](./img/bmc_qr.png)](https://www.buymeacoffee.com/ncalteenw)
+[![Buy Me A Coffee](./public/bmc_qr.png)](https://www.buymeacoffee.com/ncalteenw)
 
 ### Mobile Support
 
