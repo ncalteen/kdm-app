@@ -51,7 +51,8 @@ export async function getSettlementInnovations(
         : item.innovation
 
       // Skip rows whose embedded catalog row is invisible under RLS (see
-      // EC-6 in docs/sharing-architecture.md — transitive visibility gap).
+      // EC-6 in docs/settlement-sharing-architecture.md — transitive visibility
+      // gap).
       if (!innovation) return []
 
       return [
@@ -65,9 +66,10 @@ export async function getSettlementInnovations(
           // Pulled directly from the junction so the UI can show the Custom
           // badge / open the rules sheet for custom rows authored by
           // collaborators that the owner can only see transitively via
-          // settlement membership (EC-6 in docs/sharing-architecture.md).
-          // The catalog `availableInnovations` lookup filters by user_id and
-          // would otherwise return undefined for those rows.
+          // settlement membership (EC-6 in
+          // docs/settlement-sharing-architecture.md). The catalog
+          // `availableInnovations` lookup filters by user_id and would
+          // otherwise return undefined for those rows.
           custom: !!innovation.custom,
           ...resolveSettlementAuthorship(
             { custom: innovation.custom, user_id: innovation.user_id },

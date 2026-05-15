@@ -14,7 +14,7 @@ import { HuntDetail } from '@/lib/types'
  * Starts the settlement member-username RPC once and shares the in-flight
  * promise with {@link getHuntMonsters} so the trait / mood / survivor-status
  * `author_username` resolution does not issue a duplicate RPC (E2.8; see
- * `docs/sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
+ * `docs/settlement-sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
  *
  * @param settlementId Settlement ID
  * @returns Hunt Data
