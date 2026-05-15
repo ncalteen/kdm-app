@@ -119,9 +119,11 @@ This is the most important finding for planning purposes:
   user to _find_ another to invite. This is by design. We should protect user
   identities and ensure that users share their usernames explicitly rather than
   exposing a searchable directory of all users.
-- `hooks/use-realtime.tsx` does **not** subscribe to `settlement_shared_user`.
-  Adding a new share doesn't propagate; recipients learn about the new
-  settlement only on next page load.
+- `hooks/use-realtime.tsx` **does** subscribe to `settlement_shared_user` via
+  `useUserRealtimeSubscriptions`, listening for inserts/deletes filtered by
+  `shared_user_id`. Recipients can therefore receive share membership changes
+  in realtime, even though there is still no dedicated sharing UI for managing
+  invites or surfacing richer collaboration state.
 - There is **no payment / billing / entitlement infrastructure** anywhere in the
   codebase. No Stripe, no subscription tables, no plan / tier / paywall
   references. Sharing is currently free for everyone with database access.
