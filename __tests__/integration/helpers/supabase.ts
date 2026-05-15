@@ -91,6 +91,20 @@ export async function createTestUser(): Promise<TestUser> {
   if (settingsErr)
     throw new Error(`seed user_settings failed: ${settingsErr.message}`)
 
+  // Seed the default `free` subscription row. In production, the email and
+  // OAuth sign-up paths each provision this row automatically (see the
+  // `initialize_user_settings` RPC and `handle_new_oauth_user` trigger).
+  // GoTrue's admin createUser endpoint inserts auth.users with
+  // `provider = 'email'`, which the OAuth trigger short-circuits, and the
+  // test bypasses the email-flow RPC by inserting user_settings directly.
+  // Seeding here keeps RLS gating that consults `user_subscription` (E3.3
+  // and later) working in tests.
+  const { error: subErr } = await admin
+    .from('user_subscription')
+    .insert({ user_id: created.user.id, plan_id: 'free' })
+  if (subErr)
+    throw new Error(`seed user_subscription failed: ${subErr.message}`)
+
   const client = createClient(URL, ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false }
   })
