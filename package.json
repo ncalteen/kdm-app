@@ -17,7 +17,7 @@
   "scripts": {
     "build": "next build",
     "ci-test": "vitest run",
-    "coverage": "make-coverage-badge --output-path ./badges/coverage.svg",
+    "coverage": "make-coverage-badge --output-path ./badges/code-coverage.svg",
     "db:generate": "supabase gen types typescript --local > lib/database.types.ts",
     "db:migrate": "supabase migration up",
     "db:reset": "supabase db reset",

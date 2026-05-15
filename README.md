@@ -4,7 +4,7 @@
 ![Continuous Delivery](https://github.com/ncalteen/kdm-app/actions/workflows/continuous-delivery.yml/badge.svg)
 ![Linter](https://github.com/ncalteen/kdm-app/actions/workflows/linter.yml/badge.svg)
 
-![Code Coverage](./badges/coverage.svg)
+![Code Coverage](./badges/code-coverage.svg)
 
 _In a place of stone faces, nameless survivors stand together. They have
 nothing. Only a lantern to light their struggle._
