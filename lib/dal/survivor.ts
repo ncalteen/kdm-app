@@ -28,8 +28,8 @@ import { NewSurvivorInput } from '@/schemas/new-survivor-input'
  * - Every embed selects the catalog row's `custom` flag and `user_id` so the
  *   mapper can resolve `author_user_id`, `author_username`, and
  *   `author_avatar_url` against the settlement-member profile map (E2.8 /
- *   E2.9; see `docs/sharing-architecture.md` §7.4 / §10 Phase 2 items
- *   2.6–2.7).
+ *   E2.9; see `docs/settlement-sharing-architecture.md` §7.4 / §10 Phase 2
+ *   items 2.6–2.7).
  */
 const SURVIVOR_SELECT = `
   *,
@@ -291,7 +291,7 @@ export async function addSquiresOfTheCitadelSurvivors(
  *
  * Each embedded catalog row carries the author triplet so the UI can
  * render the avatar/tooltip chip on custom rows (E2.8/E2.9; see
- * `docs/sharing-architecture.md` §7.4 / §10 Phase 2 items 2.6–2.7). The
+ * `docs/settlement-sharing-architecture.md` §7.4 / §10 Phase 2 items 2.6–2.7). The
  * profile map is fetched alongside the main query via the
  * `get_settlement_member_usernames` SECURITY DEFINER RPC.
  *

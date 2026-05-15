@@ -40,7 +40,7 @@ export async function getSettlementQuarries(
     throw new Error(`Error Fetching Settlement Quarries: ${error.message}`)
 
   // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
-  // docs/sharing-architecture.md — transitive visibility gap).
+  // docs/settlement-sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
       const rawQuarry = item.quarry as unknown as

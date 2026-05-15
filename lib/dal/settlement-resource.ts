@@ -41,7 +41,7 @@ export async function getSettlementResources(
     throw new Error(`Error Fetching Settlement Resources: ${error.message}`)
 
   // Skip rows whose embedded catalog row is invisible under RLS (see EC-6 in
-  // docs/sharing-architecture.md — transitive visibility gap).
+  // docs/settlement-sharing-architecture.md — transitive visibility gap).
   return (
     data?.flatMap((item) => {
       const resource = item.resource as unknown as

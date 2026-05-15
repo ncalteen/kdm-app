@@ -380,7 +380,8 @@ export async function renameUsername(
  * The RPC enforces a 30-lookups-per-rolling-60s rate limit per caller and
  * deliberately collapses both "rate-limited" and "not-found" into a NULL
  * return so callers cannot distinguish the two cases — closing the
- * enumeration side channel documented in `docs/sharing-architecture.md` §4 P9.
+ * enumeration side channel documented in
+ * `docs/settlement-sharing-architecture.md` §4 P9.
  *
  * @param username Exact Username
  * @returns User ID, or null if no match (or the caller is over budget)
