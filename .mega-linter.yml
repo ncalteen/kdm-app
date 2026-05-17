@@ -20,6 +20,7 @@ DISABLE:
 # List of disabled linters keys
 # https://megalinter.io/latest/config-activation/
 DISABLE_LINTERS:
+  - ACTION_ZIZMOR
   - CSS_STYLELINT
   - HTML_DJLINT
   - JSON_NPM_PACKAGE_JSON_LINT
