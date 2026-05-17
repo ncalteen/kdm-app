@@ -121,8 +121,14 @@ describe('RPC: rename_username', () => {
       new_username: 'phantom_user'
     })
 
+    // EXECUTE on this SECURITY DEFINER RPC is revoked from anon (and PUBLIC)
+    // by migration 20260529000000, so an unauthenticated call is denied by
+    // Postgres before the function body's `auth.uid()` check ever runs. The
+    // function body's `raise exception 'not-authenticated'` therefore remains
+    // a fallback for authenticated-but-session-less calls only.
     expect(data).toBeNull()
-    expect(error?.message).toBe('not-authenticated')
+    expect(error?.code).toBe('42501')
+    expect(error?.message).toContain('permission denied for function')
   })
 
   it('creates a settings row when none exists for the caller', async () => {
