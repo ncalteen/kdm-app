@@ -20,7 +20,9 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import { FREE_TIER_SETTLEMENT_LIMIT } from '@/lib/common'
 import { CampaignType } from '@/lib/enums'
+import { FREE_TIER_SETTLEMENT_LIMIT_MESSAGE } from '@/lib/messages'
 import { SettlementDetail, SettlementListEntry } from '@/lib/types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
 import { ComponentProps, ReactElement } from 'react'
@@ -106,6 +108,16 @@ export function SettlementSwitcher({
     setSelectedSettlementId(settlementId)
   }
 
+  // Free-tier ownership cap. Collaborator rows are excluded so users who
+  // accept shares are not punished for it. The DAL enforces the same cap on
+  // submit; the UI gate keeps the affordance honest before the user invests
+  // time in the create form.
+  const ownedSettlementCount = settlementList.filter(
+    (s) => s.role === 'owner'
+  ).length
+  const hasReachedSettlementLimit =
+    ownedSettlementCount >= FREE_TIER_SETTLEMENT_LIMIT
+
   if (isSettlementListLoading)
     return (
       <SidebarMenu>
@@ -165,20 +177,48 @@ export function SettlementSwitcher({
             className="w-(--radix-dropdown-menu-trigger-width)"
             align="start">
             {/* Create settlement option */}
-            <DropdownMenuItem
-              onSelect={() => {
-                setIsCreatingNewSettlement(true)
-                setSelectedHuntId(null)
-                setSelectedSettlementId(null)
-                setSelectedSettlementPhaseId(null)
-                setSelectedShowdownId(null)
-                setSelectedSurvivorId(null)
-              }}>
-              <div className="flex items-center">
-                <Plus className="mr-2 h-4 w-4" />
-                <span>Found a settlement</span>
-              </div>
-            </DropdownMenuItem>
+            {hasReachedSettlementLimit ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {/*
+                    Wrap the disabled item in a span so the tooltip trigger
+                    can receive pointer events. `DropdownMenuItem` applies
+                    `data-[disabled]:pointer-events-none`, which would
+                    otherwise swallow the hover that opens the tooltip.
+                  */}
+                  <span tabIndex={0} className="block">
+                    <DropdownMenuItem
+                      disabled
+                      onSelect={(e) => e.preventDefault()}>
+                      <div className="flex items-center">
+                        <Plus className="mr-2 h-4 w-4" />
+                        <span>Found a settlement</span>
+                      </div>
+                    </DropdownMenuItem>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs">
+                  {FREE_TIER_SETTLEMENT_LIMIT_MESSAGE(
+                    FREE_TIER_SETTLEMENT_LIMIT
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <DropdownMenuItem
+                onSelect={() => {
+                  setIsCreatingNewSettlement(true)
+                  setSelectedHuntId(null)
+                  setSelectedSettlementId(null)
+                  setSelectedSettlementPhaseId(null)
+                  setSelectedShowdownId(null)
+                  setSelectedSurvivorId(null)
+                }}>
+                <div className="flex items-center">
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span>Found a settlement</span>
+                </div>
+              </DropdownMenuItem>
+            )}
 
             <DropdownMenuSeparator />
 

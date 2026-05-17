@@ -37,6 +37,20 @@ export const SUPPORT_EMAIL = 'ncalteen@archivist.monster'
 export const MARKDOWN_SYNTAX_URL = 'https://www.markdownguide.org/basic-syntax/'
 
 /**
+ * Free-Tier Settlement Limit
+ *
+ * Maximum number of settlements a free-tier user may own. Settlements that a
+ * user only collaborates on (via the sharing flow) do not count toward this
+ * cap — only rows in `settlement` whose `user_id` matches the caller are
+ * included. The limit is enforced in the application layer (the
+ * `createSettlement` DAL) rather than at the database so that direct
+ * admin / service-role traffic — Supabase Studio, integration tests, ad-hoc
+ * SQL — naturally bypasses it for testing purposes. Paid tiers that lift or
+ * remove this cap are not yet implemented.
+ */
+export const FREE_TIER_SETTLEMENT_LIMIT = 5
+
+/**
  * Basic Hunt Board Configuration
  */
 export const basicHuntBoard = {
