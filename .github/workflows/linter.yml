@@ -20,13 +20,13 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
         id: setup-node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version-file: .node-version
           cache: npm
@@ -37,6 +37,6 @@ jobs:
 
       - name: Lint Codebase
         id: lint
-        uses: oxsecurity/megalinter/flavors/javascript@v9
+        uses: oxsecurity/megalinter/flavors/javascript@0e3ce9b9c8c10effb9b269509cc47ca17cae31c7 # v9.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
