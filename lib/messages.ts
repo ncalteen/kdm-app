@@ -1456,6 +1456,21 @@ export const SETTLEMENT_CREATED_MESSAGE = () =>
   'A lantern pierces the darkness. A new settlement is born.'
 
 /**
+ * Free-Tier Settlement Limit Reached
+ *
+ * Surfaced both as a tooltip on the "Found a settlement" affordance and as a
+ * toast on the rare race where a user submits the form while already at the
+ * cap. Paid tiers that lift this cap are still in progress, so the copy
+ * explicitly calls that out and reminds the user that shared settlements
+ * remain unlimited.
+ *
+ * @param limit Maximum Settlements Allowed On The Free Tier
+ * @returns Free-Tier Settlement Limit Message
+ */
+export const FREE_TIER_SETTLEMENT_LIMIT_MESSAGE = (limit: number) =>
+  `The lantern hoard is full — free survivors may keep watch over ${limit} settlements. Paid tiers are still being forged. Settlements shared with you remain unlimited.`
+
+/**
  * Settlement Deleted
  *
  * @param settlementName Name of the settlement

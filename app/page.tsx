@@ -165,6 +165,7 @@ function MainPage(): ReactElement {
             selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
             selectedSurvivor={selectedSurvivor}
             selectedTab={selectedTab}
+            settlementList={settlementList}
             setIsCreatingNewSettlement={setIsCreatingNewSettlement}
             setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
             setPendingSpecialShowdown={setPendingSpecialShowdown}

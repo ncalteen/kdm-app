@@ -144,8 +144,8 @@ export function CreateSettlementCard({
    * @param values Form Values on Submit
    */
   function onSubmit(values: NewSettlementInput) {
-    try {
-      createSettlement(values).then((settlementId) => {
+    createSettlement(values)
+      .then((settlementId) => {
         setIsCreatingNewSettlement(false)
         setSelectedHuntId(null)
         setSelectedHuntMonsterIndex(0)
@@ -178,10 +178,17 @@ export function CreateSettlementCard({
         // Show success message
         toast.success(SETTLEMENT_CREATED_MESSAGE())
       })
-    } catch (error) {
-      console.error('Settlement Create Error:', error)
-      toast.error(ERROR_MESSAGE())
-    }
+      .catch((error: unknown) => {
+        console.error('Settlement Create Error:', error)
+        // Surface the DAL error message (e.g. the free-tier cap) when it is
+        // available so the user gets actionable feedback instead of the
+        // generic darkness fallback.
+        const message =
+          error instanceof Error && error.message
+            ? error.message
+            : ERROR_MESSAGE()
+        toast.error(message)
+      })
   }
 
   return (

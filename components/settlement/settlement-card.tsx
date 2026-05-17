@@ -40,8 +40,14 @@ import {
   EmptyHeader,
   EmptyTitle
 } from '@/components/ui/empty'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/components/ui/tooltip'
 import { UserCard } from '@/components/user/user-card'
 import { LocalStateType } from '@/contexts/local-context'
+import { FREE_TIER_SETTLEMENT_LIMIT } from '@/lib/common'
 import { updateSettlement } from '@/lib/dal/settlement'
 import {
   CampaignType,
@@ -51,10 +57,12 @@ import {
   SurvivorType,
   TabType
 } from '@/lib/enums'
+import { FREE_TIER_SETTLEMENT_LIMIT_MESSAGE } from '@/lib/messages'
 import {
   HuntDetail,
   HuntStateSetter,
   SettlementDetail,
+  SettlementListEntry,
   SettlementPhaseDetail,
   SettlementStateSetter,
   ShowdownDetail,
@@ -100,6 +108,8 @@ interface SettlementCardProps {
   selectedSurvivor: SurvivorDetail | null
   /** Selected Tab */
   selectedTab: TabType
+  /** Settlement List (owned + shared, sourced from LocalContext) */
+  settlementList: SettlementListEntry[]
   /** Set Is Creating New Settlement */
   setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set New Survivor Being Created */
@@ -165,6 +175,7 @@ export function SettlementCard({
   selectedShowdownMonsterIndex,
   selectedSurvivor,
   selectedTab,
+  settlementList,
   setIsCreatingNewSettlement,
   setIsCreatingNewSurvivor,
   setPendingSpecialShowdown,
@@ -236,7 +247,16 @@ export function SettlementCard({
       />
     )
 
-  if (!selectedSettlement)
+  if (!selectedSettlement) {
+    // Mirror the SettlementSwitcher's free-tier ownership cap so the
+    // empty-state "Found a settlement" affordance can't lure the user into a
+    // form that the DAL will refuse to submit.
+    const ownedSettlementCount = settlementList.filter(
+      (s) => s.role === 'owner'
+    ).length
+    const hasReachedSettlementLimit =
+      ownedSettlementCount >= FREE_TIER_SETTLEMENT_LIMIT
+
     return (
       <Empty className="mx-auto mt-8 max-w-xl border bg-card/40">
         <EmptyHeader>
@@ -250,15 +270,32 @@ export function SettlementCard({
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button
-            onClick={() => setIsCreatingNewSettlement(true)}
-            className="w-full">
-            <PlusIcon className="h-4 w-4" />
-            Found a settlement
-          </Button>
+          {hasReachedSettlementLimit ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="w-full">
+                  <Button disabled className="w-full">
+                    <PlusIcon className="h-4 w-4" />
+                    Found a settlement
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                {FREE_TIER_SETTLEMENT_LIMIT_MESSAGE(FREE_TIER_SETTLEMENT_LIMIT)}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              onClick={() => setIsCreatingNewSettlement(true)}
+              className="w-full">
+              <PlusIcon className="h-4 w-4" />
+              Found a settlement
+            </Button>
+          )}
         </EmptyContent>
       </Empty>
     )
+  }
 
   return (
     <div className="pt-(--header-height)">

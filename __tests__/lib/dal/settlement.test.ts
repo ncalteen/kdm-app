@@ -75,10 +75,14 @@ vi.mock('@/lib/dal/neurosis', () => ({
 const {
   getSettlement,
   getLostSettlementCount,
+  getOwnedSettlementCount,
+  createSettlement,
   updateSettlement,
   removeSettlement
 } = await import('@/lib/dal/settlement')
 const { getUserId } = await import('@/lib/dal/user')
+const { FREE_TIER_SETTLEMENT_LIMIT } = await import('@/lib/common')
+const { FREE_TIER_SETTLEMENT_LIMIT_MESSAGE } = await import('@/lib/messages')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -332,5 +336,117 @@ describe('removeSettlement', () => {
     await expect(removeSettlement('s1')).rejects.toThrow(
       'Error Removing Settlement: fail'
     )
+  })
+})
+
+describe('getOwnedSettlementCount', () => {
+  it('returns the count scoped to the authenticated user', async () => {
+    vi.mocked(getUserId).mockResolvedValue('user-1')
+
+    const eq = vi.fn().mockResolvedValue({ count: 3, error: null })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockSupabase.from.mockReturnValue({ select })
+
+    expect(await getOwnedSettlementCount()).toBe(3)
+    expect(mockSupabase.from).toHaveBeenCalledWith('settlement')
+    expect(select).toHaveBeenCalledWith('id', { count: 'exact', head: true })
+    expect(eq).toHaveBeenCalledWith('user_id', 'user-1')
+  })
+
+  it('treats a null count as zero', async () => {
+    vi.mocked(getUserId).mockResolvedValue('user-1')
+
+    const eq = vi.fn().mockResolvedValue({ count: null, error: null })
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({ eq })
+    })
+
+    expect(await getOwnedSettlementCount()).toBe(0)
+  })
+
+  it('throws on query error', async () => {
+    vi.mocked(getUserId).mockResolvedValue('user-1')
+
+    const eq = vi
+      .fn()
+      .mockResolvedValue({ count: null, error: { message: 'DB' } })
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({ eq })
+    })
+
+    await expect(getOwnedSettlementCount()).rejects.toThrow(
+      'Error Fetching Owned Settlement Count: DB'
+    )
+  })
+})
+
+describe('createSettlement (free-tier ownership cap)', () => {
+  /**
+   * Minimal `NewSettlementInput` payload. The cap check runs before any
+   * template / campaign work, so the rest of the fields are irrelevant to
+   * this test path — we only need a value the function can destructure.
+   */
+  const baseInput = {
+    campaignType: 'PEOPLE_OF_THE_LANTERN',
+    settlementName: 'Doomed',
+    survivorType: 'CORE',
+    usesScouts: false,
+    monsterIds: {
+      NQ1: [],
+      NQ2: [],
+      NQ3: [],
+      NQ4: [],
+      NN1: [],
+      NN2: [],
+      NN3: [],
+      CO: [],
+      FI: []
+    },
+    wandererIds: []
+    // Cast at the call site to avoid pulling enum mocks into this test.
+  } as unknown as Parameters<typeof createSettlement>[0]
+
+  it('throws the free-tier cap message when the user is at the limit', async () => {
+    vi.mocked(getUserId).mockResolvedValue('user-1')
+
+    // Count query → at-the-cap. createSettlement must short-circuit before
+    // it ever calls `.insert(...)`, so we only stage the count response.
+    const insert = vi.fn()
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          count: FREE_TIER_SETTLEMENT_LIMIT,
+          error: null
+        })
+      }),
+      insert
+    })
+
+    await expect(createSettlement(baseInput)).rejects.toThrow(
+      FREE_TIER_SETTLEMENT_LIMIT_MESSAGE(FREE_TIER_SETTLEMENT_LIMIT)
+    )
+
+    // Defense-in-depth: no insert should fire when the cap is reached.
+    expect(insert).not.toHaveBeenCalled()
+  })
+
+  it('throws the free-tier cap message when the user is over the limit', async () => {
+    vi.mocked(getUserId).mockResolvedValue('user-1')
+
+    const insert = vi.fn()
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          count: FREE_TIER_SETTLEMENT_LIMIT + 7,
+          error: null
+        })
+      }),
+      insert
+    })
+
+    await expect(createSettlement(baseInput)).rejects.toThrow(
+      FREE_TIER_SETTLEMENT_LIMIT_MESSAGE(FREE_TIER_SETTLEMENT_LIMIT)
+    )
+    expect(insert).not.toHaveBeenCalled()
   })
 })

@@ -4,6 +4,7 @@ import { getPeopleOfTheLanternTemplate } from '@/lib/campaigns/potl'
 import { getPeopleOfTheStarsTemplate } from '@/lib/campaigns/potstars'
 import { getPeopleOfTheSunTemplate } from '@/lib/campaigns/potsun'
 import { getSquiresOfTheCitadelTemplate } from '@/lib/campaigns/squires'
+import { FREE_TIER_SETTLEMENT_LIMIT } from '@/lib/common'
 import { getLocationIds } from '@/lib/dal/location'
 import { getNemesisLocationIds } from '@/lib/dal/nemesis-location'
 import { getNemesisTimelineYears } from '@/lib/dal/nemesis-timeline-year'
@@ -60,9 +61,36 @@ import {
   DatabaseSurvivorType,
   SurvivorType
 } from '@/lib/enums'
+import { FREE_TIER_SETTLEMENT_LIMIT_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementTimelineYearDetail } from '@/lib/types'
 import { NewSettlementInput } from '@/schemas/new-settlement-input'
+
+/**
+ * Get Owned Settlement Count
+ *
+ * Returns the number of settlements whose `user_id` matches the authenticated
+ * caller. Used to enforce the free-tier ownership cap from
+ * `createSettlement`; collaborator-only settlements (rows the caller only
+ * sees through `settlement_shared_user`) are intentionally excluded so the
+ * cap does not punish users who simply accept shares.
+ *
+ * @returns Owned Settlement Count
+ */
+export async function getOwnedSettlementCount(): Promise<number> {
+  const userId = await getUserId()
+  const supabase = createClient()
+
+  const { count, error } = await supabase
+    .from('settlement')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+
+  if (error)
+    throw new Error(`Error Fetching Owned Settlement Count: ${error.message}`)
+
+  return count ?? 0
+}
 
 /**
  * Create Settlement
@@ -76,6 +104,11 @@ import { NewSettlementInput } from '@/schemas/new-settlement-input'
  * locations / timeline / CC-reward data is then committed in one final
  * parallel batch.
  *
+ * Enforces the free-tier ownership cap before any inserts run. The check is
+ * application-layer only — admins driving the database directly
+ * (Supabase Studio, integration tests via service role, etc.) bypass it
+ * naturally because they never enter this code path.
+ *
  * @param options Settlement Input Data
  * @returns Settlement ID
  */
@@ -84,6 +117,14 @@ export async function createSettlement(
 ): Promise<string> {
   const userId = await getUserId()
   const supabase = createClient()
+
+  // Free-tier ownership cap. Counted up-front so we fail fast before any of
+  // the template fan-out work runs.
+  const ownedCount = await getOwnedSettlementCount()
+  if (ownedCount >= FREE_TIER_SETTLEMENT_LIMIT)
+    throw new Error(
+      FREE_TIER_SETTLEMENT_LIMIT_MESSAGE(FREE_TIER_SETTLEMENT_LIMIT)
+    )
 
   const template = await {
     [CampaignType.CUSTOM]: getCustomCampaignTemplate,
