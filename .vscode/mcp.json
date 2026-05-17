@@ -6,15 +6,6 @@
       "headers": {
         "Authorization": "Bearer ${input:github_pat}"
       }
-    },
-    "kdm-postgres": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-postgres",
-        "postgresql://postgres:postgres@127.0.0.1:54322/postgres?sslmode=disable"
-      ]
     }
   },
   "inputs": [
