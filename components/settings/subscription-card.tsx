@@ -60,9 +60,9 @@ const PLAN_METADATA: Record<PlanSlug, PlanMetadata> = {
   lantern_hoard: {
     name: 'Lantern Hoard',
     price: '$5 / month',
-    tagline: 'Share the watch.',
+    tagline: 'Survivors gather. Their stories intertwine.',
     description:
-      'Everything in Lantern, plus share your settlements with other survivors. Their journey unlocks with yours — collaborators do not need their own subscription to view or edit a shared settlement.'
+      'You may create an unlimited number of settlements. You may share settlement(s) with other survivors. Collaborators do not need their own subscription to view or edit a settlement you share with them.'
   }
 }
 
@@ -147,11 +147,13 @@ function resolveCurrentPlan(
   subscription: UserSubscriptionDetail | null
 ): PlanSlug {
   if (subscription === null) return 'free'
+
   if (
     subscription.plan_id === 'lantern' ||
     subscription.plan_id === 'lantern_hoard'
   )
     return subscription.plan_id
+
   return 'free'
 }
 
@@ -277,7 +279,7 @@ function resolveStatusNote(
     return 'Your payment did not clear. Tend to it before the darkness closes in.'
 
   if (status === 'incomplete')
-    return 'The initial payment did not finalize. Finish it to claim your lantern.'
+    return 'The initial payment did not finalize. Finish it to claim your settlement.'
 
   if (status === 'canceled')
     return periodEnd
