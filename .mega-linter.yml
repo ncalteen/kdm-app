@@ -130,6 +130,8 @@ REPORTERS_MARKDOWN_TYPE: advanced
 # Additional list of secured environment variables to hide when calling linters.
 # SECURED_ENV_VARIABLES: []
 
+SECURITY_SUGGESTIONS: false
+
 # Displays elapsed time in reports
 SHOW_ELAPSED_TIME: true
 
