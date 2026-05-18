@@ -29,8 +29,8 @@ Try it out here: [`https://archivist.monster`](https://archivist.monster)
 
 ## Support
 
-This project is open source and free to use. _It is maintained on a best-effort
-basis, with no guarantees._
+This project is open source and free to use for solo play. _It is maintained on
+a best-effort basis, with no guarantees._
 
 If you have any questions, suggestions, or problems, please feel free to
 [open an issue](https://github.com/ncalteen/kdm-app/issues).

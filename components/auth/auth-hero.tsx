@@ -77,8 +77,8 @@ export function AuthHero(): ReactElement {
       </ul>
 
       <p className="text-xs text-muted-foreground/70 leading-relaxed">
-        Free, unofficial fan project. Not affiliated with, endorsed by, or
-        sponsored by Adam Poots Games.
+        Unofficial fan project. Not affiliated with, endorsed by, or sponsored
+        by Adam Poots Games.
       </p>
     </div>
   )
