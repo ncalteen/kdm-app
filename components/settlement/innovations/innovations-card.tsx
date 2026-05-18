@@ -415,7 +415,8 @@ export function InnovationsCard({
                       .map((innovation) => (
                         <CommandItem
                           key={innovation.id}
-                          value={innovation.innovation_name}
+                          value={innovation.id}
+                          keywords={[innovation.innovation_name]}
                           onSelect={() => handleAdd(innovation.id)}>
                           {innovation.innovation_name}
                           {innovation.custom && (

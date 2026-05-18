@@ -380,7 +380,8 @@ export function SeedPatternDialog({
                       {sortedGear.map((g) => (
                         <CommandItem
                           key={g.id}
-                          value={g.gear_name}
+                          value={g.id}
+                          keywords={[g.gear_name]}
                           onSelect={() => {
                             setCraftedGearId(g.id)
                             setGearOpen(false)
@@ -468,7 +469,8 @@ export function SeedPatternDialog({
                                 {sortedGear.map((g) => (
                                   <CommandItem
                                     key={g.id}
-                                    value={g.gear_name}
+                                    value={g.id}
+                                    keywords={[g.gear_name]}
                                     onSelect={() => {
                                       setGearCosts((prev) =>
                                         prev.map((c, i) =>

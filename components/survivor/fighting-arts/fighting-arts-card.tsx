@@ -735,7 +735,8 @@ export function FightingArtsCard({
                       {selectableRegularArts.map((art) => (
                         <CommandItem
                           key={art.id}
-                          value={art.fighting_art_name}
+                          value={art.id}
+                          keywords={[art.fighting_art_name]}
                           onSelect={() => handleAdd(art.id, false)}>
                           {art.fighting_art_name}
                           {art.custom && (
@@ -766,7 +767,8 @@ export function FightingArtsCard({
                       {selectableSecretArts.map((art) => (
                         <CommandItem
                           key={art.id}
-                          value={art.secret_fighting_art_name}
+                          value={art.id}
+                          keywords={[art.secret_fighting_art_name]}
                           onSelect={() => handleAdd(art.id, true)}>
                           {art.secret_fighting_art_name}
                           {art.custom && (

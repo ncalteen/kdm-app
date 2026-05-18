@@ -855,7 +855,8 @@ export function MonsterForm({
                       {selectableLocations.map((loc) => (
                         <CommandItem
                           key={loc.id}
-                          value={loc.location_name}
+                          value={loc.id}
+                          keywords={[loc.location_name]}
                           onSelect={() => {
                             setLocations((prev) => [...prev, loc])
                             setLocationAddOpen(false)
@@ -1059,7 +1060,8 @@ export function MonsterForm({
                           {selectableCCRewards.map((ccr) => (
                             <CommandItem
                               key={ccr.id}
-                              value={ccr.reward_name}
+                              value={ccr.id}
+                              keywords={[ccr.reward_name]}
                               onSelect={() => {
                                 setCCRewards((prev) => [...prev, ccr])
                                 setCCRewardAddOpen(false)
@@ -1431,7 +1433,10 @@ export function MonsterForm({
                                                   .map((trait) => (
                                                     <CommandItem
                                                       key={trait.id}
-                                                      value={trait.trait_name}
+                                                      value={trait.id}
+                                                      keywords={[
+                                                        trait.trait_name
+                                                      ]}
                                                       onSelect={() => {
                                                         updateSubMonster(
                                                           levelNum,
@@ -1541,7 +1546,10 @@ export function MonsterForm({
                                                   .map((mood) => (
                                                     <CommandItem
                                                       key={mood.id}
-                                                      value={mood.mood_name}
+                                                      value={mood.id}
+                                                      keywords={[
+                                                        mood.mood_name
+                                                      ]}
                                                       onSelect={() => {
                                                         updateSubMonster(
                                                           levelNum,
@@ -1655,9 +1663,10 @@ export function MonsterForm({
                                                   .map((status) => (
                                                     <CommandItem
                                                       key={status.id}
-                                                      value={
+                                                      value={status.id}
+                                                      keywords={[
                                                         status.survivor_status_name
-                                                      }
+                                                      ]}
                                                       onSelect={() => {
                                                         updateSubMonster(
                                                           levelNum,

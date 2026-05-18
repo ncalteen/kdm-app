@@ -883,7 +883,8 @@ export function GearDialog({
                         {sortedLocations.map((l) => (
                           <CommandItem
                             key={l.id}
-                            value={l.location_name}
+                            value={l.id}
+                            keywords={[l.location_name]}
                             onSelect={() => {
                               setLocationId(l.id)
                               setLocationOpen(false)
@@ -1181,7 +1182,8 @@ export function GearDialog({
                         {sortedWeaponTypes.map((w) => (
                           <CommandItem
                             key={w.id}
-                            value={w.weapon_type_name}
+                            value={w.id}
+                            keywords={[w.weapon_type_name]}
                             onSelect={() => {
                               setWeaponTypeId(w.id)
                               setWeaponTypeOpen(false)
@@ -1274,7 +1276,8 @@ export function GearDialog({
                                 {sortedGear.map((g) => (
                                   <CommandItem
                                     key={g.id}
-                                    value={g.gear_name}
+                                    value={g.id}
+                                    keywords={[g.gear_name]}
                                     onSelect={() => {
                                       setGearCosts((prev) =>
                                         prev.map((c, i) =>
@@ -1402,7 +1405,8 @@ export function GearDialog({
                                 {sortedResources.map((r) => (
                                   <CommandItem
                                     key={r.id}
-                                    value={r.resource_name}
+                                    value={r.id}
+                                    keywords={[r.resource_name]}
                                     onSelect={() => {
                                       setResourceCosts((prev) =>
                                         prev.map((c, i) =>

@@ -257,7 +257,8 @@ export function CursedGearCard({
                     {selectableGear.map((gear) => (
                       <CommandItem
                         key={gear.gear_id}
-                        value={gear.gear_name}
+                        value={gear.gear_id}
+                        keywords={[gear.gear_name]}
                         onSelect={() => handleAdd(gear.gear_id)}>
                         {gear.gear_name}
                         {gear.custom && (

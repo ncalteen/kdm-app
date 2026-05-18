@@ -356,7 +356,8 @@ export function AbilitiesAndImpairmentsCard({
                       .map((item) => (
                         <CommandItem
                           key={item.id}
-                          value={item.ability_impairment_name}
+                          value={item.id}
+                          keywords={[item.ability_impairment_name]}
                           onSelect={() => handleAdd(item.id)}>
                           {item.ability_impairment_name}
                           {item.custom && (

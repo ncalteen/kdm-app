@@ -149,7 +149,8 @@ export function CreateCustomKnowledgeDialog({
                       {Object.values(philosophies).map((phil) => (
                         <CommandItem
                           key={phil.id}
-                          value={phil.philosophy_name}
+                          value={phil.id}
+                          keywords={[phil.philosophy_name]}
                           onSelect={() => {
                             setPhilosophyId(phil.id)
                             setPhilosophyOpen(false)

@@ -132,7 +132,8 @@ export function GearGridPickerDialog({
               return (
                 <CommandItem
                   key={candidate.gear_id}
-                  value={candidate.gear_name}
+                  value={candidate.gear_id}
+                  keywords={[candidate.gear_name]}
                   disabled={exhausted}
                   onSelect={() => setPreviewGearId(candidate.gear_id)}
                   className={cn(

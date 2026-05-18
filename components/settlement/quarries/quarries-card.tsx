@@ -511,7 +511,8 @@ export function QuarriesCard({
                     {selectableQuarries.map((quarry) => (
                       <CommandItem
                         key={quarry.id}
-                        value={quarry.monster_name}
+                        value={quarry.id}
+                        keywords={[quarry.monster_name]}
                         onSelect={() => handleAdd(quarry.id)}>
                         {quarry.monster_name}
                         {quarry.custom && (

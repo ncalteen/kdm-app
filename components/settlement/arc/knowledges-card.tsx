@@ -417,7 +417,8 @@ export function KnowledgesCard({
                       .map((knowledge) => (
                         <CommandItem
                           key={knowledge.id}
-                          value={knowledge.knowledge_name}
+                          value={knowledge.id}
+                          keywords={[knowledge.knowledge_name]}
                           onSelect={() => handleAdd(knowledge.id)}>
                           {knowledge.knowledge_name}
                           {knowledge.custom && (

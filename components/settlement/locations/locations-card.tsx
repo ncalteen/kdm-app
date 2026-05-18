@@ -450,7 +450,8 @@ export function LocationsCard({
                     {selectableLocations.map((location) => (
                       <CommandItem
                         key={location.id}
-                        value={location.location_name}
+                        value={location.id}
+                        keywords={[location.location_name]}
                         onSelect={() => handleAdd(location.id)}>
                         {location.location_name}
                         {location.custom && (

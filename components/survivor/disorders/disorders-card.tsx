@@ -314,7 +314,8 @@ export function DisordersCard({
                       .map((disorder) => (
                         <CommandItem
                           key={disorder.id}
-                          value={disorder.disorder_name}
+                          value={disorder.id}
+                          keywords={[disorder.disorder_name]}
                           onSelect={() => handleAdd(disorder.id)}>
                           {disorder.disorder_name}
                           {disorder.custom && (

@@ -429,7 +429,8 @@ export function MilestonesCard({
                     {selectableMilestones.map((milestone) => (
                       <CommandItem
                         key={milestone.id}
-                        value={milestone.milestone_name}
+                        value={milestone.id}
+                        keywords={[milestone.milestone_name]}
                         onSelect={() => handleAdd(milestone.id)}>
                         {milestone.milestone_name}
                         {milestone.custom && (

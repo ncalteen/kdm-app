@@ -523,7 +523,8 @@ export function NemesesCard({
                     {selectableNemeses.map((nemesis) => (
                       <CommandItem
                         key={nemesis.id}
-                        value={nemesis.monster_name}
+                        value={nemesis.id}
+                        keywords={[nemesis.monster_name]}
                         onSelect={() => handleAdd(nemesis.id)}>
                         {nemesis.monster_name}
                         {nemesis.custom && (

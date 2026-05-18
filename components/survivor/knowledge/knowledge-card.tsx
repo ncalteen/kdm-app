@@ -121,7 +121,8 @@ function KnowledgeSelect({
                 .map((k) => (
                   <CommandItem
                     key={k.knowledge_id}
-                    value={k.knowledge_name}
+                    value={k.knowledge_id}
+                    keywords={[k.knowledge_name]}
                     onSelect={() => {
                       onChange(k.knowledge_id === value ? '' : k.knowledge_id)
                       setOpen(false)

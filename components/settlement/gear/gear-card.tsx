@@ -325,7 +325,8 @@ export function GearCard({
                     {selectableGear.map((gear) => (
                       <CommandItem
                         key={gear.id}
-                        value={gear.gear_name}
+                        value={gear.id}
+                        keywords={[gear.gear_name]}
                         onSelect={() => handleAdd(gear.id)}>
                         {gear.gear_name}
                         {gear.custom && (

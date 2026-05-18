@@ -363,7 +363,8 @@ export function SeedPatternsCard({
                     {selectableSeedPatterns.map((sp) => (
                       <CommandItem
                         key={sp.id}
-                        value={sp.seed_pattern_name}
+                        value={sp.id}
+                        keywords={[sp.seed_pattern_name]}
                         onSelect={() => handleAdd(sp.id)}>
                         {sp.seed_pattern_name}
                         {sp.custom && (

@@ -79,7 +79,8 @@ export function MultiSelectDropdown({
               {items.map((item) => (
                 <CommandItem
                   key={item.id}
-                  value={item.name}
+                  value={item.id}
+                  keywords={[item.name]}
                   onSelect={() => onToggle(item.id)}>
                   <Check
                     className={cn(

@@ -411,7 +411,8 @@ export function ResourcesCard({
                     {selectableResources.map((resource) => (
                       <CommandItem
                         key={resource.id}
-                        value={resource.resource_name}
+                        value={resource.id}
+                        keywords={[resource.resource_name]}
                         onSelect={() => handleAdd(resource.id)}>
                         {resource.resource_name}
                         {resource.custom && (

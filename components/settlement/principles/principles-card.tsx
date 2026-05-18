@@ -475,7 +475,8 @@ export function PrinciplesCard({
                     {selectablePrinciples.map((principle) => (
                       <CommandItem
                         key={principle.id}
-                        value={principle.principle_name}
+                        value={principle.id}
+                        keywords={[principle.principle_name]}
                         onSelect={() => handleAdd(principle.id)}>
                         {principle.principle_name}
                         {principle.custom && (

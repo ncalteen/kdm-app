@@ -164,7 +164,8 @@ export function TraitsMoods({
                     {selectableTraits.map((trait) => (
                       <CommandItem
                         key={trait.id}
-                        value={trait.trait_name}
+                        value={trait.id}
+                        keywords={[trait.trait_name]}
                         onSelect={() => {
                           onTraitsChange([
                             ...monster.traits,
@@ -251,7 +252,8 @@ export function TraitsMoods({
                     {selectableMoods.map((mood) => (
                       <CommandItem
                         key={mood.id}
-                        value={mood.mood_name}
+                        value={mood.id}
+                        keywords={[mood.mood_name]}
                         onSelect={() => {
                           onMoodsChange([
                             ...monster.moods,
@@ -338,7 +340,8 @@ export function TraitsMoods({
                     {selectableStatuses.map((status) => (
                       <CommandItem
                         key={status.id}
-                        value={status.survivor_status_name}
+                        value={status.id}
+                        keywords={[status.survivor_status_name]}
                         onSelect={() => {
                           onSurvivorStatusesChange([
                             ...monster.survivor_statuses,

@@ -484,7 +484,8 @@ export function CollectiveCognitionRewardsCard({
                       .map((reward) => (
                         <CommandItem
                           key={reward.id}
-                          value={reward.reward_name}
+                          value={reward.id}
+                          keywords={[reward.reward_name]}
                           onSelect={() => handleAdd(reward.id)}>
                           {reward.reward_name}
                           {reward.custom && (

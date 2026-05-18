@@ -384,7 +384,8 @@ export function PatternsCard({
                     {selectablePatterns.map((pattern) => (
                       <CommandItem
                         key={pattern.id}
-                        value={pattern.pattern_name}
+                        value={pattern.id}
+                        keywords={[pattern.pattern_name]}
                         onSelect={() => handleAdd(pattern.id)}>
                         {pattern.pattern_name}
                         {pattern.custom && (

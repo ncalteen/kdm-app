@@ -270,7 +270,8 @@ export function PhilosophiesCard({
                       .map((philosophy) => (
                         <CommandItem
                           key={philosophy.id}
-                          value={philosophy.philosophy_name}
+                          value={philosophy.id}
+                          keywords={[philosophy.philosophy_name]}
                           onSelect={() => handleAdd(philosophy.id)}>
                           {philosophy.philosophy_name}
                           {philosophy.custom && (

@@ -365,7 +365,8 @@ export function PatternDialog({
                       {sortedGear.map((g) => (
                         <CommandItem
                           key={g.id}
-                          value={g.gear_name}
+                          value={g.id}
+                          keywords={[g.gear_name]}
                           onSelect={() => {
                             setCraftedGearId(g.id)
                             setCraftedGearOpen(false)
@@ -453,7 +454,8 @@ export function PatternDialog({
                                 {sortedGear.map((g) => (
                                   <CommandItem
                                     key={g.id}
-                                    value={g.gear_name}
+                                    value={g.id}
+                                    keywords={[g.gear_name]}
                                     onSelect={() => {
                                       setGearCosts((prev) =>
                                         prev.map((c, i) =>
@@ -581,7 +583,8 @@ export function PatternDialog({
                                 {sortedResources.map((r) => (
                                   <CommandItem
                                     key={r.id}
-                                    value={r.resource_name}
+                                    value={r.id}
+                                    keywords={[r.resource_name]}
                                     onSelect={() => {
                                       setResourceCosts((prev) =>
                                         prev.map((c, i) =>
@@ -775,7 +778,8 @@ export function PatternDialog({
                         return (
                           <CommandItem
                             key={innovation.id}
-                            value={innovation.innovation_name}
+                            value={innovation.id}
+                            keywords={[innovation.innovation_name]}
                             onSelect={() => toggleInnovation(innovation.id)}>
                             <Check
                               className={cn(

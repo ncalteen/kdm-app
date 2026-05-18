@@ -318,7 +318,8 @@ export function ResourceDialog({
                         {sortedQuarries.map((q) => (
                           <CommandItem
                             key={q.id}
-                            value={q.monster_name}
+                            value={q.id}
+                            keywords={[q.monster_name]}
                             onSelect={() => {
                               setQuarryId(q.id)
                               setQuarryOpen(false)
@@ -445,7 +446,8 @@ export function ResourceDialog({
                       {sortedPatterns.map((p) => (
                         <CommandItem
                           key={p.id}
-                          value={p.pattern_name}
+                          value={p.id}
+                          keywords={[p.pattern_name]}
                           onSelect={() => {
                             setPatternId(p.id)
                             setPatternOpen(false)
