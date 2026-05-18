@@ -163,6 +163,8 @@ import {
   STRAIN_MILESTONE_CREATED_MESSAGE,
   STRAIN_MILESTONE_REMOVED_MESSAGE,
   STRAIN_MILESTONE_UPDATED_MESSAGE,
+  STRIPE_CHECKOUT_CANCELLED_MESSAGE,
+  STRIPE_CHECKOUT_SUCCESS_MESSAGE,
   SURVIVAL_LIMIT_EXCEEDED_ERROR_MESSAGE,
   SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE,
   SURVIVAL_LIMIT_UPDATED_MESSAGE,
@@ -1895,6 +1897,22 @@ describe('SQUIRE_SUSPICION_UPDATED_MESSAGE', () => {
   it('returns message with squire name', () => {
     expect(SQUIRE_SUSPICION_UPDATED_MESSAGE('Cain')).toBe(
       "Cain's doubt grows deeper."
+    )
+  })
+})
+
+describe('STRIPE_CHECKOUT_SUCCESS_MESSAGE', () => {
+  it('returns the lantern-bright success message', () => {
+    expect(STRIPE_CHECKOUT_SUCCESS_MESSAGE()).toBe(
+      'The lantern burns brighter. Your watch begins anew.'
+    )
+  })
+})
+
+describe('STRIPE_CHECKOUT_CANCELLED_MESSAGE', () => {
+  it('returns the step-back-from-the-merchant cancellation message', () => {
+    expect(STRIPE_CHECKOUT_CANCELLED_MESSAGE()).toBe(
+      'You step back from the merchant. The lantern waits.'
     )
   })
 })
