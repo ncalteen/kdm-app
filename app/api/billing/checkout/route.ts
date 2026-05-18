@@ -1,4 +1,4 @@
-'server-only'
+import 'server-only'
 
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { createAdminClient } from '@/lib/supabase/admin'
