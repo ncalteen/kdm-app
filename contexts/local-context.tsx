@@ -12,6 +12,7 @@ import { getSettlementPhase } from '@/lib/dal/settlement-phase'
 import { getShowdown } from '@/lib/dal/showdown'
 import { getSurvivor, getSurvivors } from '@/lib/dal/survivor'
 import { getSettlementForUser, getUserSettings } from '@/lib/dal/user'
+import { getUserSubscription } from '@/lib/dal/user-subscription'
 import { TabType } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
@@ -27,7 +28,8 @@ import {
   SurvivorDetail,
   SurvivorsStateSetter,
   SurvivorStateSetter,
-  UserSettingsDetail
+  UserSettingsDetail,
+  UserSubscriptionDetail
 } from '@/lib/types'
 import { saveToLocalStorage } from '@/lib/utils'
 import {
@@ -187,6 +189,28 @@ interface LocalContextType {
   setUserSettings: (settings: UserSettingsDetail | null) => void
 
   /**
+   * User Subscription
+   *
+   * Cached result of `getUserSubscription`. `null` while the initial fetch
+   * is in flight or when the caller has no `user_subscription` row yet
+   * (e.g. a brand-new user racing the sign-up trigger). Consumers should
+   * read `canShare` rather than re-deriving from `plan_id` so the gate
+   * tracks the Postgres `user_can_share()` predicate that RLS already
+   * enforces.
+   */
+  userSubscription: UserSubscriptionDetail | null
+  /** Set User Subscription */
+  setUserSubscription: (subscription: UserSubscriptionDetail | null) => void
+  /**
+   * Whether The User May Create New Shares
+   *
+   * Convenience derivation of `userSubscription?.can_share`. `false`
+   * whenever the subscription is missing, on the free plan, or in a
+   * non-entitling status (`past_due`, `canceled`, `incomplete`).
+   */
+  canShare: boolean
+
+  /**
    * Settlement List
    *
    * Cached result of `getSettlementForUser`. Refreshed automatically when
@@ -276,6 +300,12 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   // User Settings
   const [userSettings, setUserSettingsState] =
     useState<UserSettingsDetail | null>(null)
+
+  // User Subscription — paid-feature gating snapshot. Refreshed alongside
+  // user settings whenever authentication transitions to true. `canShare`
+  // is derived from this in the memoized context value.
+  const [userSubscription, setUserSubscriptionState] =
+    useState<UserSubscriptionDetail | null>(null)
 
   const [isCreatingNewHunt, setIsCreatingNewHunt] = useState<boolean>(false)
   const [isCreatingNewSettlement, setIsCreatingNewSettlement] =
@@ -1150,6 +1180,52 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   }, [isAuthenticated])
 
   /**
+   * Fetch User Subscription Data
+   *
+   * Mirrors the user-settings effect. The cleanup callback clears
+   * `userSubscription` whenever `isAuthenticated` transitions (or the
+   * provider unmounts) so paid-gating state can never survive a logout or
+   * user-switch in memory — `canShare` always falls back to `false` until
+   * the next fetch resolves. Failures inside the fetch likewise reset to
+   * `null` so a stale `true` cannot leak across an error.
+   */
+  useEffect(() => {
+    console.debug('Fetching User Subscription Data')
+
+    let isCancelled = false
+
+    if (!isAuthenticated)
+      return () => {
+        isCancelled = true
+      }
+
+    getUserSubscription()
+      .then((subscription) => {
+        if (isCancelled) return
+
+        console.debug('User Subscription:', subscription)
+
+        setUserSubscriptionState(subscription)
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('User Subscription Fetch Error:', err)
+
+        setUserSubscriptionState(null)
+      })
+
+    return () => {
+      isCancelled = true
+      // Clear the cached subscription on auth-flip (true → false) or
+      // unmount. Calling `setState` from the cleanup callback is the
+      // documented safe pattern — the synchronous-setState-in-effect-body
+      // lint rule targets the initial render path, not teardown.
+      setUserSubscriptionState(null)
+    }
+  }, [isAuthenticated])
+
+  /**
    * Set Selected Hunt
    *
    * @param huntOrUpdater Selected Hunt or functional updater receiving the
@@ -1456,6 +1532,18 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   }, [])
 
   /**
+   * Set User Subscription
+   *
+   * @param subscription User Subscription
+   */
+  const setUserSubscription = useCallback(
+    (subscription: UserSubscriptionDetail | null) => {
+      setUserSubscriptionState(subscription)
+    },
+    []
+  )
+
+  /**
    * Update Local State
    *
    * @param next Updated Local Data
@@ -1522,6 +1610,10 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       userSettings,
       setUserSettings,
 
+      userSubscription,
+      setUserSubscription,
+      canShare: userSubscription?.can_share === true,
+
       settlementList,
       isSettlementListLoading
     }),
@@ -1548,6 +1640,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       survivors,
       local,
       userSettings,
+      userSubscription,
       settlementList,
       isSettlementListLoading,
       setSelectedHunt,
@@ -1564,6 +1657,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       setSelectedSurvivorId,
       setSelectedTab,
       setUserSettings,
+      setUserSubscription,
       updateLocal
     ]
   )

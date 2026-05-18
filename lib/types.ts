@@ -1624,6 +1624,33 @@ export type UserSettingsDetail = Omit<
 >
 
 /**
+ * User Subscription Detail
+ *
+ * Client-side projection of the authenticated user's row in
+ * `user_subscription`, combined with the `user_can_share()` entitlement
+ * flag. Returned by `getUserSubscription()` in
+ * `lib/dal/user-subscription.ts` and surfaced on `LocalContext` so any
+ * component can read the active plan and share entitlement without
+ * re-querying. The same Postgres predicate that decides `can_share` here
+ * also gates RLS on `settlement_shared_user.INSERT`.
+ */
+export interface UserSubscriptionDetail {
+  /** Active Plan ID */
+  plan_id: 'free' | 'lantern' | 'lantern_hoard'
+  /** Subscription Status (e.g. `active`, `past_due`, `canceled`) */
+  status: string
+  /** Current Period End (ISO timestamp; null on the free plan) */
+  current_period_end: string | null
+  /**
+   * Whether The User May Create New Shares
+   *
+   * Mirrors the `user_can_share()` Postgres predicate consulted by RLS on
+   * `settlement_shared_user.INSERT`.
+   */
+  can_share: boolean
+}
+
+/**
  * Wanderer Detail
  *
  * Used throughout the app to represent the currently selected wanderer.
