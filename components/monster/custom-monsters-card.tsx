@@ -96,9 +96,42 @@ export function CustomMonstersCard({
     }
   }, [toast])
 
+  // Load monsters on mount. `loadMonsters` remains for non-effect callers
+  // (e.g., `handleMonsterSaved`).
   useEffect(() => {
-    loadMonsters()
-  }, [loadMonsters])
+    let cancelled = false
+
+    Promise.all([getUserCustomQuarries(), getUserCustomNemeses()])
+      .then(([quarries, nemeses]) => {
+        if (cancelled) return
+
+        const entries: MonsterEntry[] = []
+
+        for (const [id, detail] of Object.entries(quarries))
+          entries.push({ id, detail, type: MonsterType.QUARRY })
+
+        for (const [id, detail] of Object.entries(nemeses))
+          entries.push({ id, detail, type: MonsterType.NEMESIS })
+
+        entries.sort((a, b) =>
+          a.detail.monster_name.localeCompare(b.detail.monster_name)
+        )
+
+        setMonsters(entries)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Monsters Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [toast])
 
   /**
    * Handle Delete Monster

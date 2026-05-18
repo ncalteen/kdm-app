@@ -75,25 +75,29 @@ export function CustomSurvivorStatusesCard({
     []
   )
 
-  /** Load custom survivor statuses */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom survivor statuses on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const statusData = await getUserCustomSurvivorStatuses()
+    getUserCustomSurvivorStatuses()
+      .then((data) => {
+        if (cancelled) return
 
-      setItems(sortItems(Object.values(statusData)))
-    } catch (err: unknown) {
-      console.error('Load Survivor Statuses Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+        setItems(sortItems(Object.values(data)))
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Survivor Statuses Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Handle Create Survivor Status

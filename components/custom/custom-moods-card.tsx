@@ -69,25 +69,29 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
     []
   )
 
-  /** Load custom moods */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom moods on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const moodData = await getUserCustomMoods()
+    getUserCustomMoods()
+      .then((data) => {
+        if (cancelled) return
 
-      setItems(sortItems(Object.values(moodData)))
-    } catch (err: unknown) {
-      console.error('Load Moods Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+        setItems(sortItems(Object.values(data)))
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Moods Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Handle Create Mood

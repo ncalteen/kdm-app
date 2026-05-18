@@ -82,31 +82,31 @@ export function CustomResourcesCard({
     []
   )
 
-  /** Load custom resources, quarries, and patterns from the database */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom resources (and supporting catalogs) on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const [resourceData, quarryData, patternData] = await Promise.all([
-        getUserCustomResources(),
-        getQuarries(),
-        getPatterns()
-      ])
+    Promise.all([getUserCustomResources(), getQuarries(), getPatterns()])
+      .then(([resourceData, quarryData, patternData]) => {
+        if (cancelled) return
 
-      setItems(sortItems(Object.values(resourceData)))
-      setQuarries(quarryData)
-      setPatterns(patternData)
-    } catch (err: unknown) {
-      console.error('Load Resources Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+        setItems(sortItems(Object.values(resourceData)))
+        setQuarries(quarryData)
+        setPatterns(patternData)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Resources Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /** Format a category DB key for display */
   const formatCategory = useCallback(

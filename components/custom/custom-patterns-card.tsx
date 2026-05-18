@@ -95,34 +95,37 @@ export function CustomPatternsCard({
     []
   )
 
-  /** Load custom patterns and supporting data from the database */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom patterns (and supporting catalogs) on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const [patternData, gearData, resourceData, innovationData] =
-        await Promise.all([
-          getUserCustomPatterns(),
-          getGear(),
-          getResources(),
-          getInnovations()
-        ])
+    Promise.all([
+      getUserCustomPatterns(),
+      getGear(),
+      getResources(),
+      getInnovations()
+    ])
+      .then(([patternData, gearData, resourceData, innovationData]) => {
+        if (cancelled) return
 
-      setItems(sortItems(Object.values(patternData)))
-      setGear(gearData)
-      setResources(resourceData)
-      setInnovations(innovationData)
-    } catch (err: unknown) {
-      console.error('Load Patterns Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+        setItems(sortItems(Object.values(patternData)))
+        setGear(gearData)
+        setResources(resourceData)
+        setInnovations(innovationData)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Patterns Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Persist pattern junction tables (gear costs, resource costs, resource

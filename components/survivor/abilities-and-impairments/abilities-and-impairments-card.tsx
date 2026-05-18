@@ -98,7 +98,7 @@ export function AbilitiesAndImpairmentsCard({
 
   if (prevSurvivor !== selectedSurvivor) {
     setPrevSurvivor(selectedSurvivor)
-    setItems([])
+    setItems(selectedSurvivor?.abilities_impairments ?? [])
     setSkipNextHunt(selectedSurvivor?.skip_next_hunt ?? false)
   }
 
@@ -111,12 +111,6 @@ export function AbilitiesAndImpairmentsCard({
       })
       .finally(() => setHasFetched(true))
   }, [])
-
-  // Update the items when the selected survivor changes
-  useEffect(
-    () => setItems(selectedSurvivor?.abilities_impairments ?? []),
-    [selectedSurvivor]
-  )
 
   /**
    * Handle Add Ability/Impairment

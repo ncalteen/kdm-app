@@ -76,24 +76,29 @@ export function CustomStrainMilestonesCard({
     []
   )
 
-  /** Load custom strain milestones from the database */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom strain milestones on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const data = await getUserCustomStrainMilestones()
-      setItems(sortItems(Object.values(data)))
-    } catch (err: unknown) {
-      console.error('Load Strain Milestones Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+    getUserCustomStrainMilestones()
+      .then((data) => {
+        if (cancelled) return
+
+        setItems(sortItems(Object.values(data)))
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Strain Milestones Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Handle Create Strain Milestone

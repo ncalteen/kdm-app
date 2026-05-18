@@ -75,24 +75,29 @@ export function CustomCollectiveCognitionRewardsCard({
     []
   )
 
-  /** Load custom rewards from the database */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom collective cognition rewards on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const data = await getUserCustomCollectiveCognitionRewards()
-      setItems(sortItems(Object.values(data)))
-    } catch (err: unknown) {
-      console.error('Load Collective Cognition Rewards Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+    getUserCustomCollectiveCognitionRewards()
+      .then((data) => {
+        if (cancelled) return
+
+        setItems(sortItems(Object.values(data)))
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Collective Cognition Rewards Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Handle Create Reward

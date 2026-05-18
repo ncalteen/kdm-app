@@ -90,34 +90,37 @@ export function CustomSeedPatternsCard({
     []
   )
 
-  /** Load custom seed patterns and gear from the database */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom seed patterns (and supporting catalogs) on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const [seedPatternData, gearData, quarryData, nemesisData] =
-        await Promise.all([
-          getUserCustomSeedPatterns(),
-          getGear(),
-          getQuarries(),
-          getNemeses()
-        ])
+    Promise.all([
+      getUserCustomSeedPatterns(),
+      getGear(),
+      getQuarries(),
+      getNemeses()
+    ])
+      .then(([seedPatternData, gearData, quarryData, nemesisData]) => {
+        if (cancelled) return
 
-      setItems(sortItems(Object.values(seedPatternData)))
-      setGear(gearData)
-      setQuarries(quarryData)
-      setNemeses(nemesisData)
-    } catch (err: unknown) {
-      console.error('Load Seed Patterns Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+        setItems(sortItems(Object.values(seedPatternData)))
+        setGear(gearData)
+        setQuarries(quarryData)
+        setNemeses(nemesisData)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Seed Patterns Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Handle Create Seed Pattern

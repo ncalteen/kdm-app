@@ -60,6 +60,43 @@ type AvailabilityState =
   | 'invalid-format'
 
 /**
+ * Probe Outcome
+ *
+ * Result of a completed `check_username_available` probe (or a forced result
+ * from a failed `rename_username` RPC). `unknown` signals that the probe ran
+ * but the RPC errored, so we surface `idle` to the UI and let the user attempt
+ * the submit anyway.
+ */
+type ProbeOutcome = 'available' | 'taken' | 'invalid-format' | 'unknown'
+
+/**
+ * Keyed Probe State
+ *
+ * Bound to the exact `username` it was produced for so stale results from an
+ * earlier debounce can be ignored at the derivation site without needing to
+ * clear state on every keystroke.
+ */
+interface ProbeState {
+  /** Username this probe outcome corresponds to */
+  username: string
+  /** Outcome of the probe (server validation result) */
+  outcome: ProbeOutcome
+}
+
+/**
+ * Keyed Submit Error
+ *
+ * Bound to the username that produced the error so the alert only renders when
+ * it still pertains to the current input.
+ */
+interface SubmitError {
+  /** Username this error corresponds to */
+  username: string
+  /** Error message to display */
+  message: string
+}
+
+/**
  * Update Username Form
  *
  * Lets the authenticated user rename their handle. OAuth-derived placeholder
@@ -84,48 +121,64 @@ export function UpdateUsernameForm({
   const { toast } = useToast(local)
   const currentUsername = userSettings?.username ?? ''
   const [username, setUsername] = useState(currentUsername)
-  const [availability, setAvailability] = useState<AvailabilityState>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const [probe, setProbe] = useState<ProbeState | null>(null)
+  const [submitError, setSubmitError] = useState<SubmitError | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Sync the input back to the latest user-settings handle whenever it
-  // changes (e.g. after a successful rename or a sign-in elsewhere).
-  useEffect(() => {
+  // Sync the input when the external `currentUsername` prop changes (e.g.
+  // after a successful rename or a sign-in elsewhere).
+  const [prevExternalUsername, setPrevExternalUsername] =
+    useState(currentUsername)
+
+  if (prevExternalUsername !== currentUsername) {
+    setPrevExternalUsername(currentUsername)
     setUsername(currentUsername)
-  }, [currentUsername])
+  }
+
+  // Pure derivation: availability is a function of the input plus the latest
+  // probe outcome. The probe is keyed by username so stale results from an
+  // earlier debounce are naturally ignored when the user keeps typing.
+  const availability: AvailabilityState =
+    username === currentUsername || username.length === 0
+      ? 'idle'
+      : !USERNAME_PATTERN.test(username)
+        ? 'invalid-format'
+        : probe?.username === username
+          ? probe.outcome === 'unknown'
+            ? 'idle'
+            : probe.outcome
+          : 'checking'
+
+  // Only surface the submit error when it still pertains to the current
+  // input. Keying the error means we don't need to clear it on every
+  // keystroke from inside an effect.
+  const error = submitError?.username === username ? submitError.message : null
 
   // Debounced availability probe. `check_username_available` is the same RPC
-  // sign-up uses; reusing it keeps the two flows consistent. The probe is
-  // skipped when the input matches the current handle (no-op rename).
+  // sign-up uses; reusing it keeps the two flows consistent. The setState
+  // runs inside the `setTimeout` callback (after an asynchronous boundary),
+  // which the `react-hooks/set-state-in-effect` rule allows.
   useEffect(() => {
-    setError(null)
-
-    if (username === currentUsername) {
-      setAvailability('idle')
-      return
-    }
-
-    if (!USERNAME_PATTERN.test(username)) {
-      setAvailability(username.length === 0 ? 'idle' : 'invalid-format')
-      return
-    }
-
-    setAvailability('checking')
+    if (username === currentUsername || username.length === 0) return
+    if (!USERNAME_PATTERN.test(username)) return
 
     let cancelled = false
+
     const handle = setTimeout(async () => {
       const supabase = createClient()
+
       const { data, error: rpcError } = await supabase.rpc(
         'check_username_available',
         { desired_username: username }
       )
+
       if (cancelled) return
       if (rpcError) {
         console.error('Username Availability Check Error:', rpcError)
-        setAvailability('idle')
-        return
+        return setProbe({ username, outcome: 'unknown' })
       }
-      setAvailability(data ? 'available' : 'taken')
+
+      setProbe({ username, outcome: data ? 'available' : 'taken' })
     }, 300)
 
     return () => {
@@ -146,7 +199,7 @@ export function UpdateUsernameForm({
     if (username === currentUsername) return
 
     setIsSaving(true)
-    setError(null)
+    setSubmitError(null)
 
     try {
       const result = await renameUsername(username)
@@ -158,7 +211,7 @@ export function UpdateUsernameForm({
       }
 
       if (result === 'collision') {
-        setAvailability('taken')
+        setProbe({ username, outcome: 'taken' })
         toast.error(USERNAME_RENAME_COLLISION_MESSAGE())
         return
       }
@@ -169,8 +222,8 @@ export function UpdateUsernameForm({
       }
 
       // invalid-format
-      setAvailability('invalid-format')
-      setError(USERNAME_INVALID_FORMAT_MESSAGE())
+      setProbe({ username, outcome: 'invalid-format' })
+      setSubmitError({ username, message: USERNAME_INVALID_FORMAT_MESSAGE() })
       toast.error(USERNAME_INVALID_FORMAT_MESSAGE())
     } catch (err: unknown) {
       console.error('Username Rename Error:', err)

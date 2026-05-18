@@ -73,24 +73,29 @@ export function CustomFightingArtsCard({
     []
   )
 
-  /** Load custom fighting arts from the database */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom fighting arts on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const data = await getUserCustomFightingArts()
-      setItems(sortItems(Object.values(data)))
-    } catch (err: unknown) {
-      console.error('Load Fighting Arts Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+    getUserCustomFightingArts()
+      .then((data) => {
+        if (cancelled) return
+
+        setItems(sortItems(Object.values(data)))
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Fighting Arts Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Handle Create Fighting Art

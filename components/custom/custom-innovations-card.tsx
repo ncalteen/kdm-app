@@ -74,24 +74,29 @@ export function CustomInnovationsCard({
     []
   )
 
-  /** Load custom innovations from the database */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom innovations on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const data = await getUserCustomInnovations()
-      setItems(sortItems(Object.values(data)))
-    } catch (err: unknown) {
-      console.error('Load Innovations Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+    getUserCustomInnovations()
+      .then((data) => {
+        if (cancelled) return
+
+        setItems(sortItems(Object.values(data)))
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Innovations Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Handle Create Innovation

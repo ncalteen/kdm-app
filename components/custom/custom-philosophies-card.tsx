@@ -96,31 +96,31 @@ export function CustomPhilosophiesCard({
     []
   )
 
-  /** Load custom philosophies, knowledges, and neuroses */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom philosophies (and supporting catalogs) on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const [philosophyData, knowledgeData, neurosisData] = await Promise.all([
-        getUserCustomPhilosophies(),
-        getKnowledges(),
-        getNeuroses()
-      ])
+    Promise.all([getUserCustomPhilosophies(), getKnowledges(), getNeuroses()])
+      .then(([philosophyData, knowledgeData, neurosisData]) => {
+        if (cancelled) return
 
-      setItems(sortItems(Object.values(philosophyData)))
-      setAvailableKnowledges(knowledgeData)
-      setAvailableNeuroses(neurosisData)
-    } catch (err: unknown) {
-      console.error('Load Philosophies Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+        setItems(sortItems(Object.values(philosophyData)))
+        setAvailableKnowledges(knowledgeData)
+        setAvailableNeuroses(neurosisData)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Philosophies Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Handle Create Philosophy

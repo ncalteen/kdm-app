@@ -74,24 +74,30 @@ export function CustomAbilityImpairmentsCard({
     []
   )
 
-  /** Load custom abilities/impairments from the database */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom abilities/impairments on mount. `setState` calls run inside
+  // resolved `Promise` callbacks.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const data = await getUserCustomAbilityImpairments()
-      setItems(sortItems(Object.values(data)))
-    } catch (err: unknown) {
-      console.error('Load Abilities/Impairments Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+    getUserCustomAbilityImpairments()
+      .then((data) => {
+        if (cancelled) return
+
+        setItems(sortItems(Object.values(data)))
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Abilities/Impairments Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Handle Create Ability/Impairment

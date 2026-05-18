@@ -74,24 +74,29 @@ export function CustomSecretFightingArtsCard({
     []
   )
 
-  /** Load custom secret fighting arts from the database */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom secret fighting arts on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const data = await getUserCustomSecretFightingArts()
-      setItems(sortItems(Object.values(data)))
-    } catch (err: unknown) {
-      console.error('Load Secret Fighting Arts Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+    getUserCustomSecretFightingArts()
+      .then((data) => {
+        if (cancelled) return
+
+        setItems(sortItems(Object.values(data)))
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Secret Fighting Arts Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Handle Create Secret Fighting Art

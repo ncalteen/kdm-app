@@ -101,9 +101,44 @@ export function CustomWanderersCard({
     }
   }, [toast])
 
+  // Load wanderers and reference data on mount. `loadData` remains for
+  // non-effect callers (e.g., `handleDone`).
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    let cancelled = false
+
+    Promise.all([
+      getCustomWanderers(),
+      getFightingArts(),
+      getGear(),
+      getAbilityImpairments()
+    ])
+      .then(
+        ([wandererData, fightingArtData, gearData, abilityImpairmentData]) => {
+          if (cancelled) return
+
+          setWanderers(
+            Object.values(wandererData).sort((a, b) =>
+              a.wanderer_name.localeCompare(b.wanderer_name)
+            )
+          )
+          setAvailableFightingArts(fightingArtData)
+          setAvailableGear(gearData)
+          setAvailableAbilityImpairments(abilityImpairmentData)
+        }
+      )
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Wanderers Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [toast])
 
   /** Handle Delete Wanderer */
   const handleDelete = useCallback(

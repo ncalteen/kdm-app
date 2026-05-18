@@ -98,41 +98,47 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
     []
   )
 
-  /** Load custom gear and supporting data from the database */
-  const loadItems = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom gear (and supporting catalogs) on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const [
-        gearData,
-        allGearData,
-        locationData,
-        resourceData,
-        weaponTypeData
-      ] = await Promise.all([
-        getUserCustomGear(),
-        getGear(),
-        getLocations(),
-        getResources(),
-        getWeaponTypes()
-      ])
+    Promise.all([
+      getUserCustomGear(),
+      getGear(),
+      getLocations(),
+      getResources(),
+      getWeaponTypes()
+    ])
+      .then(
+        ([
+          gearData,
+          allGearData,
+          locationData,
+          resourceData,
+          weaponTypeData
+        ]) => {
+          if (cancelled) return
 
-      setItems(sortItems(Object.values(gearData)))
-      setAllGear(allGearData)
-      setLocations(locationData)
-      setResources(resourceData)
-      setWeaponTypes(weaponTypeData)
-    } catch (err: unknown) {
-      console.error('Load Gear Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+          setItems(sortItems(Object.values(gearData)))
+          setAllGear(allGearData)
+          setLocations(locationData)
+          setResources(resourceData)
+          setWeaponTypes(weaponTypeData)
+        }
+      )
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Gear Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortItems, toast])
-
-  useEffect(() => {
-    loadItems()
-  }, [loadItems])
 
   /**
    * Persist gear junction tables (gear costs, resource costs, resource type

@@ -177,10 +177,30 @@ function CollaboratorsPanelContent({
     }
   }, [settlementId, toast])
 
+  // Initial collaborator fetch. The fetch is inlined inside the effect.
+  // `refresh` remains for non-effect callers (invite and revoke handlers).
   useEffect(() => {
-    setIsLoading(true)
-    void refresh()
-  }, [refresh])
+    let cancelled = false
+
+    getSettlementSharedUsers(settlementId)
+      .then((data) => {
+        if (cancelled) return
+
+        setCollaborators(data)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Settlement Collaborators Fetch Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [settlementId, toast])
 
   /**
    * Handle Invite Form Submission

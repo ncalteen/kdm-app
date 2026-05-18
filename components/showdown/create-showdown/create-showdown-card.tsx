@@ -56,7 +56,7 @@ import {
   UserSettingsDetail
 } from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 
 /** Vignette monster names that require user setting unlocks */
 const VIGNETTE_UNLOCK_MAP: Record<string, string> = {
@@ -123,14 +123,6 @@ export function CreateShowdownCard({
 }: CreateShowdownCardProps): ReactElement {
   const { toast } = useToast(local)
 
-  // Consume the pending special showdown flag after render
-  useEffect(() => {
-    if (pendingSpecialShowdown) {
-      setIsSpecialShowdown(true)
-      setPendingSpecialShowdown(false)
-    }
-  }, [pendingSpecialShowdown, setPendingSpecialShowdown])
-
   // Monster selection state
   const [monsterSource, setMonsterSource] = useState<MonsterSource | null>(null)
   const [selectedMonsterId, setSelectedMonsterId] = useState<string | null>(
@@ -173,6 +165,22 @@ export function CreateShowdownCard({
   // Survivor selection state
   const [selectedSurvivors, setSelectedSurvivors] = useState<string[]>([])
   const [selectedScout, setSelectedScout] = useState<string | null>(null)
+
+  // Consume the pending special showdown flag from the parent. The handoff
+  // is performed at render time (via a render-time prev check) so the
+  // setState cascade isn't synchronous inside a `useEffect`.
+  const [prevPendingSpecial, setPrevPendingSpecial] = useState(
+    pendingSpecialShowdown
+  )
+
+  if (prevPendingSpecial !== pendingSpecialShowdown) {
+    setPrevPendingSpecial(pendingSpecialShowdown)
+
+    if (pendingSpecialShowdown) {
+      setIsSpecialShowdown(true)
+      setPendingSpecialShowdown(false)
+    }
+  }
 
   /** Available survivors (excluding dead/retired/skip next hunt) */
   const availableSurvivors = useMemo(

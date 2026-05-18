@@ -74,25 +74,29 @@ export function CustomCharactersCard({
     []
   )
 
-  /** Load custom characters from the database */
-  const loadCharacters = useCallback(async () => {
-    setIsLoading(true)
+  // Load custom characters on mount.
+  useEffect(() => {
+    let cancelled = false
 
-    try {
-      const data = await getUserCustomCharacters()
+    getUserCustomCharacters()
+      .then((data) => {
+        if (cancelled) return
 
-      setCharacters(sortCharacters(Object.values(data)))
-    } catch (err: unknown) {
-      console.error('Load Characters Error:', err)
-      toast.error(ERROR_MESSAGE())
-    } finally {
-      setIsLoading(false)
+        setCharacters(sortCharacters(Object.values(data)))
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+
+        console.error('Load Characters Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [sortCharacters, toast])
-
-  useEffect(() => {
-    loadCharacters()
-  }, [loadCharacters])
 
   /**
    * Handle Create Character
