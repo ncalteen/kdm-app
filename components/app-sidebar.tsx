@@ -20,6 +20,7 @@ import {
 import { SettlementDetail, SettlementListEntry } from '@/lib/types'
 import {
   CircleQuestionMarkIcon,
+  CreditCardIcon,
   HourglassIcon,
   LightbulbIcon,
   NotebookPenIcon,
@@ -167,6 +168,11 @@ const navSettings = [
     title: 'Settings',
     tab: TabType.SETTINGS,
     icon: SettingsIcon
+  },
+  {
+    title: 'Subscription',
+    tab: TabType.SUBSCRIPTION,
+    icon: CreditCardIcon
   },
   {
     title: 'Help',

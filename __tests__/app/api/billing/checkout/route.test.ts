@@ -209,8 +209,8 @@ describe('POST /api/billing/checkout', () => {
     expect(args.subscription_data).toEqual({
       metadata: { user_id: 'user-1' }
     })
-    expect(args.success_url).toContain('/settings/subscription?status=success')
-    expect(args.cancel_url).toContain('/settings/subscription?status=cancelled')
+    expect(args.success_url).toContain('/?status=success')
+    expect(args.cancel_url).toContain('/?status=cancelled')
   })
 
   it('reuses an existing Stripe customer for the Lantern Hoard plan', async () => {

@@ -1621,6 +1621,18 @@ export const SQUIRE_SUSPICION_UPDATED_MESSAGE = (squireName: string) =>
   `${squireName}'s doubt grows deeper.`
 
 /**
+ * Stripe Redirect
+ *
+ * Shown right before the browser hands off to Stripe's hosted Checkout or
+ * Customer Portal so the user understands the loader / navigation that
+ * follows is intentional.
+ *
+ * @returns Stripe Redirect Message
+ */
+export const STRIPE_REDIRECT_MESSAGE = () =>
+  "Stepping into the merchant's tent..."
+
+/**
  * Survival Limit Exceeded Error
  *
  * @param survivalLimit Survival Limit

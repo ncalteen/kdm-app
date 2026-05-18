@@ -176,8 +176,13 @@ export async function POST(request: NextRequest) {
         metadata: { user_id: user.id }
       },
       allow_promotion_codes: false,
-      success_url: `${origin}/settings/subscription?status=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/settings/subscription?status=cancelled`
+      // The app is a SPA: the user only launches Checkout from the
+      // Subscription tab, and `selectedTab` is persisted in localStorage, so
+      // Stripe's return URL just lands them back at the app root and the
+      // SPA restores the Subscription tab automatically. The `status` and
+      // `session_id` query params are kept for audit / future telemetry use.
+      success_url: `${origin}/?status=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/?status=cancelled`
     })
 
     if (!session.url) {

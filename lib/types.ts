@@ -670,6 +670,15 @@ export type PhilosophyRankDetail = Omit<
 >
 
 /**
+ * Plan Slug
+ *
+ * Mirrors the seeded `subscription_plan.plan_id` values used by both the
+ * server-side checkout / portal routes and the `user_subscription` row.
+ * Each slug maps to a Stripe Price and a presentation block below.
+ */
+export type PlanSlug = 'free' | 'lantern' | 'lantern_hoard'
+
+/**
  * Principle Detail
  *
  * Used throughout the app to represent a principle.

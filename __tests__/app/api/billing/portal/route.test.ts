@@ -188,7 +188,7 @@ describe('POST /api/billing/portal', () => {
     expect(mockBillingPortalSessionsCreate).toHaveBeenCalledTimes(1)
     const args = mockBillingPortalSessionsCreate.mock.calls[0][0]
     expect(args.customer).toBe('cus_existing')
-    expect(args.return_url).toBe('https://archivist.test/settings/subscription')
+    expect(args.return_url).toBe('https://archivist.test/')
   })
 
   it('returns 500 when Stripe rejects the portal session creation request', async () => {
@@ -231,9 +231,7 @@ describe('POST /api/billing/portal', () => {
     await POST(buildRequest())
 
     const args = mockBillingPortalSessionsCreate.mock.calls[0][0]
-    expect(args.return_url).toBe(
-      'https://archivist.example.com/settings/subscription'
-    )
+    expect(args.return_url).toBe('https://archivist.example.com/')
   })
 
   it('ignores spoofed x-forwarded-host header and falls back to request URL', async () => {

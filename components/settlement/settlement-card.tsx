@@ -5,6 +5,7 @@ import { ListCard } from '@/components/generic/list-card'
 import { HelpCard } from '@/components/help/help-card'
 import { HuntCard } from '@/components/hunt/hunt-card'
 import { SettingsCard } from '@/components/settings/settings-card'
+import { SubscriptionCard } from '@/components/settings/subscription-card'
 import { SettlementPhaseCard } from '@/components/settlement-phase/settlement-phase-card'
 import { CollectiveCognitionRewardsCard } from '@/components/settlement/arc/collective-cognition-rewards-card'
 import { CollectiveCognitionVictoriesCard } from '@/components/settlement/arc/collective-cognition-victories-card'
@@ -228,6 +229,11 @@ export function SettlementCard({
         userSettings={userSettings}
       />
     )
+
+  // Subscription tab is always accessible, regardless of settlement state.
+  // Billing surfaces live entirely on Stripe-hosted pages; this card only
+  // renders the user's current plan and the CTAs that hand off to them.
+  if (selectedTab === TabType.SUBSCRIPTION) return <SubscriptionCard />
 
   // Help tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.HELP) return <HelpCard />

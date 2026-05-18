@@ -83,6 +83,8 @@ export enum TabType {
   SHARING = 'sharing',
   /** Showdown */
   SHOWDOWN = 'showdown',
+  /** Subscription */
+  SUBSCRIPTION = 'subscription',
   /** Society */
   SOCIETY = 'society',
   /** Squires */

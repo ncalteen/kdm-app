@@ -87,7 +87,12 @@ export async function POST(request: NextRequest) {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: subscription.stripe_customer_id,
-      return_url: `${origin}/settings/subscription`
+      // The app is a SPA — the Customer Portal is always launched from the
+      // Subscription tab, and `selectedTab` is persisted in localStorage, so
+      // Stripe's return URL just drops the user back at the app root and the
+      // SPA restores the Subscription tab automatically. Mirrors the
+      // checkout route's redirect contract.
+      return_url: `${origin}/`
     })
 
     if (!session.url) {
