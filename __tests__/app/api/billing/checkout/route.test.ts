@@ -139,11 +139,27 @@ describe('POST /api/billing/checkout', () => {
 
     expect(response.status).toBe(400)
     expect(json.error).toMatch(/lantern/i)
-    // Auth check is skipped on validation failure.
-    expect(mockGetUser).not.toHaveBeenCalled()
+    // Auth runs first — confirm we authenticated before surfacing the
+    // validation error so unauthenticated callers can't probe the schema.
+    expect(mockGetUser).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns 401 (not 400) when an unauthenticated caller posts a malformed body', async () => {
+    // 401 must take precedence over 400; otherwise an attacker could probe
+    // the request schema via lantern-themed Zod messages without ever
+    // signing in.
+    setupAuth({ user: null })
+
+    const response = await POST(buildRequest({ planId: 'free' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(401)
+    expect(json.error).toBe('Not Authenticated')
   })
 
   it('returns 400 when the body is not valid JSON', async () => {
+    setupAuth({ user: { id: 'user-1', email: 'a@b.test' } })
+
     const request = new NextRequest(
       'https://archivist.test/api/billing/checkout',
       {

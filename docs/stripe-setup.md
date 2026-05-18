@@ -163,7 +163,11 @@ Developers → Webhooks → **Add endpoint**:
   - `checkout.session.completed`
   - `customer.subscription.updated`
   - `customer.subscription.deleted`
-- **API version:** leave at the account default.
+- **API version:** leave the webhook endpoint at the account default. The
+  checkout route pins its own request version (`2026-04-22.dahlia`) in code
+  so the contract does not depend on Dashboard state. When intentionally
+  upgrading, update the `STRIPE_API_VERSION` constant in
+  `app/api/billing/checkout/route.ts` and this doc together.
 - Save the endpoint. Reveal the **Signing secret** (starts with `whsec_`) — this
   is the value you paste into `STRIPE_WEBHOOK_SECRET`.
 

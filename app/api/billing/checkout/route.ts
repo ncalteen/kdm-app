@@ -82,6 +82,15 @@ function resolveOrigin(request: NextRequest): string {
 }
 
 /**
+ * Stripe API Version
+ *
+ * Pinned in code so that the route's contract with Stripe does not silently
+ * change when the account's Dashboard-pinned version is rolled. Update this
+ * constant + `docs/stripe-setup.md` together when intentionally upgrading.
+ */
+const STRIPE_API_VERSION = '2026-04-22.dahlia' as const
+
+/**
  * Create Stripe Checkout Session
  *
  * POST handler for `/api/billing/checkout`. Authenticated callers receive a
@@ -91,7 +100,8 @@ function resolveOrigin(request: NextRequest): string {
  * Request body: `{ planId: 'lantern' | 'lantern_hoard' }`.
  *
  * Behavior:
- *   - Returns 401 when the caller is not signed in.
+ *   - Returns 401 when the caller is not signed in (checked before any body
+ *     parsing so the request schema is not leaked to unauthenticated callers).
  *   - Returns 400 when the body fails Zod validation.
  *   - Looks up the caller's `user_subscription` row; if it lacks a
  *     `stripe_customer_id`, creates a Stripe Customer keyed by the Supabase
@@ -104,7 +114,19 @@ function resolveOrigin(request: NextRequest): string {
  * @returns JSON Response Containing The Checkout Session URL
  */
 export async function POST(request: NextRequest) {
-  // 1. Parse + validate body.
+  // 1. Authenticate the caller first — unauthenticated requests must not be
+  //    able to probe the request schema via 400 responses.
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: authError
+  } = await supabase.auth.getUser()
+
+  if (authError || !user)
+    return NextResponse.json({ error: 'Not Authenticated' }, { status: 401 })
+
+  // 2. Parse + validate body.
   let planId: BillingPlanId
 
   try {
@@ -122,17 +144,6 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     )
   }
-
-  // 2. Authenticate the caller.
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-    error: authError
-  } = await supabase.auth.getUser()
-
-  if (authError || !user)
-    return NextResponse.json({ error: 'Not Authenticated' }, { status: 401 })
 
   // 3. Look up the caller's subscription row. The default `free` row is
   //    provisioned by sign-up triggers (see migration 20260527000001), so a
@@ -167,7 +178,9 @@ export async function POST(request: NextRequest) {
   // 4. Create + persist a Stripe Customer if this is the user's first paid
   //    session. The service-role client bypasses the owner-only INSERT/UPDATE
   //    policy on `user_subscription`.
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: STRIPE_API_VERSION
+  })
 
   let customerId = subscription.stripe_customer_id
 
