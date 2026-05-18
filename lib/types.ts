@@ -1651,6 +1651,17 @@ export interface UserSubscriptionDetail {
   /** Current Period End (ISO timestamp; null on the free plan) */
   current_period_end: string | null
   /**
+   * Cancellation Pending At Period End
+   *
+   * `true` when the subscriber has cancelled through the Stripe Customer
+   * Portal but the subscription is still entitled until
+   * `current_period_end`. Stripe holds the row at `status = 'active'` (or
+   * `'trialing'`) during this window and only transitions to `'canceled'`
+   * when the period actually expires. The SubscriptionCard reads this flag
+   * to swap the renewal copy for a "watch ends on …" treatment.
+   */
+  cancel_at_period_end: boolean
+  /**
    * Whether The User May Create New Shares
    *
    * Mirrors the `user_can_share()` Postgres predicate consulted by RLS on

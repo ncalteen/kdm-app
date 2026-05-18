@@ -4789,6 +4789,7 @@ export type Database = {
       }
       user_subscription: {
         Row: {
+          cancel_at_period_end: boolean
           current_period_end: string | null
           plan_id: string
           status: string
@@ -4798,6 +4799,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancel_at_period_end?: boolean
           current_period_end?: string | null
           plan_id: string
           status?: string
@@ -4807,6 +4809,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancel_at_period_end?: boolean
           current_period_end?: string | null
           plan_id?: string
           status?: string

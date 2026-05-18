@@ -1,0 +1,25 @@
+--------------------------------------------------------------------------------
+-- User Subscription — Pending Cancellation
+--
+-- Stripe's Customer Portal lets subscribers cancel without ending the
+-- subscription immediately: the row stays `active` until `current_period_end`
+-- and then transitions to `canceled`. Stripe surfaces this on the Subscription
+-- payload as `cancel_at_period_end: true`.
+--
+-- The original `user_subscription` table (20260527000001) tracked `status` and
+-- `current_period_end` but had no field for the pending-cancellation flag, so
+-- the UI rendered a "Next renewal: ..." line on a subscription that was
+-- actually winding down. This migration adds the missing flag so the
+-- webhook can persist it and the SubscriptionCard can surface a "Your watch
+-- ends on ..." treatment for users mid-cancellation.
+--
+-- All existing rows default to `false` (no cancellation queued). The webhook
+-- handler (`customer.subscription.updated`) refreshes the value on every
+-- update event, so the column converges with Stripe within one webhook
+-- delivery.
+--
+-- See GitHub issue #170 (subscription page) and the follow-up discussion on
+-- the pending-cancellation surface.
+--------------------------------------------------------------------------------
+alter table user_subscription
+add column cancel_at_period_end boolean not null default false;

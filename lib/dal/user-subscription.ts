@@ -31,7 +31,7 @@ export async function getUserSubscription(): Promise<UserSubscriptionDetail | nu
   const [subscriptionResult, canShareResult] = await Promise.all([
     supabase
       .from('user_subscription')
-      .select('plan_id, status, current_period_end')
+      .select('plan_id, status, current_period_end, cancel_at_period_end')
       .eq('user_id', userId)
       .maybeSingle(),
     supabase.rpc('user_can_share')
@@ -53,6 +53,11 @@ export async function getUserSubscription(): Promise<UserSubscriptionDetail | nu
     plan_id: subscriptionResult.data.plan_id,
     status: subscriptionResult.data.status,
     current_period_end: subscriptionResult.data.current_period_end,
+    // The column is `not null default false`, but older rows surfaced via
+    // the Stripe webhook before this column existed can briefly look like
+    // `null` if reads race a missed migration; coerce defensively so the
+    // boolean type contract holds for callers.
+    cancel_at_period_end: subscriptionResult.data.cancel_at_period_end === true,
     can_share: canShareResult.data === true
   }
 }

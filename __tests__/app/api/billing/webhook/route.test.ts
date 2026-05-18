@@ -91,11 +91,13 @@ function buildSubscription(options: {
   priceId?: string
   currentPeriodEnd?: number
   userId?: string | null
+  cancelAtPeriodEnd?: boolean
 }) {
   return {
     id: options.id ?? 'sub_test',
     customer: options.customer ?? 'cus_test',
     status: options.status ?? 'active',
+    cancel_at_period_end: options.cancelAtPeriodEnd ?? false,
     metadata:
       options.userId === null ? {} : { user_id: options.userId ?? 'user-1' },
     items: {
@@ -228,6 +230,7 @@ describe('POST /api/billing/webhook', () => {
         user_id: 'user-1',
         plan_id: 'lantern',
         status: 'active',
+        cancel_at_period_end: false,
         stripe_customer_id: 'cus_test',
         stripe_subscription_id: 'sub_test'
       })
@@ -417,6 +420,7 @@ describe('POST /api/billing/webhook', () => {
       expect(updatePayload).toMatchObject({
         plan_id: 'lantern',
         status: 'active',
+        cancel_at_period_end: false,
         stripe_subscription_id: 'sub_test'
       })
       expect(updatePayload.current_period_end).toBe(
@@ -424,6 +428,54 @@ describe('POST /api/billing/webhook', () => {
       )
       expect(admin.updateEq).toHaveBeenCalledWith('user_id', 'user-1')
       expect(admin.upsert).not.toHaveBeenCalled()
+    })
+
+    it('mirrors cancel_at_period_end so the UI can surface pending cancellation', async () => {
+      // The Customer Portal lets a subscriber schedule a cancellation that
+      // takes effect at `current_period_end` without ending entitlement
+      // immediately. Stripe keeps `status: 'active'` and only flips
+      // `cancel_at_period_end: true`. The webhook must persist the flag so
+      // the SubscriptionCard can swap the renewal copy for a "watch ends
+      // on …" treatment instead of implying the subscription is healthy.
+      const admin = setupAdmin()
+      mockWebhooksConstructEvent.mockReturnValue({
+        type: 'customer.subscription.updated',
+        data: {
+          object: buildSubscription({
+            id: 'sub_test',
+            status: 'active',
+            priceId: 'price_lantern',
+            cancelAtPeriodEnd: true
+          })
+        }
+      })
+
+      const response = await POST(buildRequest())
+
+      expect(response.status).toBe(200)
+      expect(admin.update.mock.calls[0][0].cancel_at_period_end).toBe(true)
+    })
+
+    it('clears cancel_at_period_end when the subscriber resumes before the period ends', async () => {
+      // Stripe emits a second `subscription.updated` event when the user
+      // clicks "Renew subscription" in the Portal. The flag flips back to
+      // false on the same row.
+      const admin = setupAdmin()
+      mockWebhooksConstructEvent.mockReturnValue({
+        type: 'customer.subscription.updated',
+        data: {
+          object: buildSubscription({
+            id: 'sub_test',
+            status: 'active',
+            priceId: 'price_lantern',
+            cancelAtPeriodEnd: false
+          })
+        }
+      })
+
+      await POST(buildRequest())
+
+      expect(admin.update.mock.calls[0][0].cancel_at_period_end).toBe(false)
     })
 
     it('switches plan_id when the active price moves between Lantern and Lantern Hoard', async () => {
@@ -573,7 +625,8 @@ describe('POST /api/billing/webhook', () => {
       const payload = admin.update.mock.calls[0][0]
       expect(payload).toMatchObject({
         plan_id: 'free',
-        status: 'canceled'
+        status: 'canceled',
+        cancel_at_period_end: false
       })
       expect(admin.updateEq).toHaveBeenCalledWith('user_id', 'user-1')
     })

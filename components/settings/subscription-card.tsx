@@ -183,21 +183,32 @@ interface PlanCta {
  * @param plan Target Plan
  * @param currentPlan User Current Plan
  * @param status User Current Subscription Status
+ * @param cancelAtPeriodEnd Pending Cancellation Flag
  * @returns Plan CTA
  */
 function resolvePlanCta(
   plan: PlanSlug,
   currentPlan: PlanSlug,
-  status: UserSubscriptionDetail['status'] | null
+  status: UserSubscriptionDetail['status'] | null,
+  cancelAtPeriodEnd: boolean
 ): PlanCta {
   const isCurrent = plan === currentPlan
   const isWarning = status !== null && WARNING_STATUSES.includes(status)
   const isActive = status !== null && ACTIVE_STATUSES.includes(status)
+  const isPendingCancellation =
+    cancelAtPeriodEnd && currentPlan !== 'free' && isActive
 
   if (isCurrent) {
     // Free has no manage / restore surface — the user must take a positive
     // action to leave it via one of the paid offers.
     if (currentPlan === 'free') return { label: null, action: 'portal' }
+
+    // Pending cancellation pre-empts the regular Manage CTA: surface a
+    // dedicated resume action so users can undo the cancel without hunting
+    // through the Portal. The action still routes to the Portal — Stripe's
+    // "Renew subscription" button is the canonical way to clear the flag.
+    if (isPendingCancellation)
+      return { label: 'Rekindle the lantern', action: 'portal' }
 
     if (isWarning)
       // Canceled subscriptions need a fresh Checkout against the same tier
@@ -221,6 +232,12 @@ function resolvePlanCta(
     // Free isn't a Checkout target. Downgrades / cancellation happen via
     // the Portal, which the current paid card already surfaces.
     return { label: null, action: 'portal' }
+
+  // While a paid subscription is pending cancellation we keep the focus on
+  // the current card's Rekindle CTA. Hiding the tier-switch CTA avoids
+  // muddying the choice; the user must either resume their existing tier
+  // or let it lapse and re-subscribe fresh once it does.
+  if (isPendingCancellation) return { label: null, action: 'portal' }
 
   if (currentPlan === 'free')
     // Fresh upgrade from the free tier → Checkout.
@@ -258,6 +275,7 @@ function resolvePlanCta(
  * @param plan Plan Slug Being Rendered
  * @param currentPlan User Current Plan
  * @param status User Current Subscription Status
+ * @param cancelAtPeriodEnd Pending Cancellation Flag
  * @param periodEnd Formatted Period End (or null)
  * @returns Status Note, or null when none should render.
  */
@@ -265,10 +283,19 @@ function resolveStatusNote(
   plan: PlanSlug,
   currentPlan: PlanSlug,
   status: UserSubscriptionDetail['status'] | null,
+  cancelAtPeriodEnd: boolean,
   periodEnd: string | null
 ): string | null {
   if (plan !== currentPlan || currentPlan === 'free' || status === null)
     return null
+
+  // Pending cancellation pre-empts the trial / renewal copy: the user is
+  // still entitled but the watch is winding down, so we surface the
+  // end-date instead of an implied next renewal.
+  if (cancelAtPeriodEnd && (status === 'active' || status === 'trialing'))
+    return periodEnd
+      ? `Your watch ends on ${periodEnd}. Rekindle the lantern to keep it lit.`
+      : 'Cancellation pending. Rekindle the lantern to keep it lit.'
 
   if (status === 'trialing' && periodEnd)
     return `Your trial renews on ${periodEnd}.`
@@ -307,6 +334,10 @@ function resolveStatusNote(
  * - Active paid users see a "Manage subscription" button on their current
  *   tier (→ Portal) and a "Switch / Upgrade" button on the other paid tier
  *   (also → Portal — Stripe owns the plan-change UX).
+ * - Subscribers who have cancelled but are still mid-period (`status ===
+ *   'active'` AND `cancel_at_period_end === true`) see an "Ending" badge,
+ *   an end-date status note, and a "Rekindle the lantern" CTA that routes
+ *   to the Portal so they can resume before their watch lapses.
  * - Past-due / canceled / incomplete users see a "Restore the lantern"
  *   button on their current tier; other tiers stay quiet until the user is
  *   back in good standing.
@@ -360,11 +391,21 @@ export function SubscriptionCard(): ReactElement {
 
   const currentPlan = resolveCurrentPlan(userSubscription)
   const currentStatus = userSubscription?.status ?? null
+  const cancelAtPeriodEnd = userSubscription?.cancel_at_period_end === true
   const periodEnd = formatPeriodEnd(
     userSubscription?.current_period_end ?? null
   )
   const isWarning =
     currentStatus !== null && WARNING_STATUSES.includes(currentStatus)
+  // Subscribers who have cancelled through the Portal are still entitled
+  // (status stays `active` / `trialing`) until `current_period_end`. Treat
+  // the state as "pending cancellation" so the badge / note / CTA all
+  // surface the impending end rather than implying the renewal is healthy.
+  const isPendingCancellation =
+    cancelAtPeriodEnd &&
+    currentPlan !== 'free' &&
+    currentStatus !== null &&
+    ACTIVE_STATUSES.includes(currentStatus)
 
   return (
     <div className="flex flex-col gap-2 pt-12 px-2">
@@ -372,24 +413,34 @@ export function SubscriptionCard(): ReactElement {
         {PLAN_ORDER.map((plan) => {
           const meta = PLAN_METADATA[plan]
           const isCurrent = plan === currentPlan
-          const cta = resolvePlanCta(plan, currentPlan, currentStatus)
+          const cta = resolvePlanCta(
+            plan,
+            currentPlan,
+            currentStatus,
+            cancelAtPeriodEnd
+          )
           const statusNote = resolveStatusNote(
             plan,
             currentPlan,
             currentStatus,
+            cancelAtPeriodEnd,
             periodEnd
           )
 
           // Current-plan badge swaps the price for the live status label
           // (Active / Trial / Past Due / etc.) on paid plans, and keeps the
           // "Free" label on the Wanderer card. Non-current plans always
-          // show their price.
+          // show their price. Pending cancellation overrides the
+          // STATUS_DISPLAY_NAMES value so subscribers see "Ending" instead
+          // of "Active" while their watch winds down.
           const badgeLabel = isCurrent
             ? currentPlan === 'free'
               ? meta.price
-              : (STATUS_DISPLAY_NAMES[currentStatus ?? 'active'] ??
-                currentStatus ??
-                'Active')
+              : isPendingCancellation
+                ? 'Ending'
+                : (STATUS_DISPLAY_NAMES[currentStatus ?? 'active'] ??
+                  currentStatus ??
+                  'Active')
             : meta.price
 
           return (
@@ -400,10 +451,11 @@ export function SubscriptionCard(): ReactElement {
               className={cn(
                 'p-0 flex flex-col h-full',
                 isCurrent &&
-                  isWarning &&
+                  (isWarning || isPendingCancellation) &&
                   'border-destructive/60 ring-2 ring-destructive/30',
                 isCurrent &&
                   !isWarning &&
+                  !isPendingCancellation &&
                   'border-amber-400/60 ring-2 ring-amber-400/30'
               )}>
               <CardHeader className="px-4 pt-3 pb-1">
@@ -416,7 +468,7 @@ export function SubscriptionCard(): ReactElement {
                   <Badge
                     variant={
                       isCurrent
-                        ? isWarning
+                        ? isWarning || isPendingCancellation
                           ? 'destructive'
                           : 'default'
                         : 'secondary'
@@ -443,7 +495,11 @@ export function SubscriptionCard(): ReactElement {
                   <Button
                     onClick={() => handleRedirect(cta.action, cta.planId)}
                     disabled={isRedirecting}
-                    variant={isCurrent && !isWarning ? 'outline' : 'default'}
+                    variant={
+                      isCurrent && !isWarning && !isPendingCancellation
+                        ? 'outline'
+                        : 'default'
+                    }
                     className="w-fit mt-auto">
                     {isRedirecting ? (
                       <Loader2

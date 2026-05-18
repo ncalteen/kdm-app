@@ -99,6 +99,7 @@ describe('SubscriptionCard — free / missing state', () => {
       plan_id: 'free',
       status: 'active',
       current_period_end: null,
+      cancel_at_period_end: false,
       can_share: false
     })
 
@@ -117,6 +118,7 @@ describe('SubscriptionCard — active paid state', () => {
       plan_id: 'lantern_hoard',
       status: 'active',
       current_period_end: '2027-03-12T00:00:00.000Z',
+      cancel_at_period_end: false,
       can_share: true
     })
 
@@ -145,6 +147,7 @@ describe('SubscriptionCard — active paid state', () => {
       plan_id: 'lantern',
       status: 'active',
       current_period_end: '2027-03-12T00:00:00.000Z',
+      cancel_at_period_end: false,
       can_share: false
     })
 
@@ -168,6 +171,7 @@ describe('SubscriptionCard — active paid state', () => {
       plan_id: 'lantern_hoard',
       status: 'trialing',
       current_period_end: '2027-03-12T00:00:00.000Z',
+      cancel_at_period_end: false,
       can_share: true
     })
 
@@ -182,6 +186,7 @@ describe('SubscriptionCard — active paid state', () => {
       plan_id: 'lantern_hoard',
       status: 'active',
       current_period_end: null,
+      cancel_at_period_end: false,
       can_share: true
     })
 
@@ -196,6 +201,7 @@ describe('SubscriptionCard — active paid state', () => {
       plan_id: 'lantern_hoard',
       status: 'active',
       current_period_end: 'not-a-real-date',
+      cancel_at_period_end: false,
       can_share: true
     })
 
@@ -212,6 +218,7 @@ describe('SubscriptionCard — warning state', () => {
       plan_id: 'lantern_hoard',
       status: 'past_due',
       current_period_end: '2027-03-12T00:00:00.000Z',
+      cancel_at_period_end: false,
       can_share: false
     })
 
@@ -233,6 +240,7 @@ describe('SubscriptionCard — warning state', () => {
       plan_id: 'lantern_hoard',
       status: 'canceled',
       current_period_end: '2027-03-12T00:00:00.000Z',
+      cancel_at_period_end: false,
       can_share: false
     })
 
@@ -248,6 +256,7 @@ describe('SubscriptionCard — warning state', () => {
       plan_id: 'lantern_hoard',
       status: 'canceled',
       current_period_end: null,
+      cancel_at_period_end: false,
       can_share: false
     })
 
@@ -263,6 +272,7 @@ describe('SubscriptionCard — warning state', () => {
       plan_id: 'lantern_hoard',
       status: 'incomplete',
       current_period_end: null,
+      cancel_at_period_end: false,
       can_share: false
     })
 
@@ -277,6 +287,7 @@ describe('SubscriptionCard — warning state', () => {
       plan_id: 'lantern',
       status: 'canceled',
       current_period_end: null,
+      cancel_at_period_end: false,
       can_share: false
     })
 
@@ -286,5 +297,92 @@ describe('SubscriptionCard — warning state', () => {
 
     expect(html).toContain('Canceled')
     expect(html).toContain('Restore the lantern')
+  })
+})
+
+describe('SubscriptionCard — pending cancellation', () => {
+  it('surfaces the Ending badge, end-date note, and Rekindle CTA when an active subscription is cancelling at period end', () => {
+    // Stripe holds `status: 'active'` until the period actually expires
+    // but flips `cancel_at_period_end: true` the moment the user clicks
+    // "Cancel subscription" in the Portal. The UI must communicate that
+    // the watch is winding down even though the row still looks active.
+    const html = renderWith({
+      plan_id: 'lantern',
+      status: 'active',
+      current_period_end: '2027-03-12T00:00:00.000Z',
+      cancel_at_period_end: true,
+      can_share: false
+    })
+
+    expect(html).toMatch(currentPlanRegex('lantern'))
+
+    // Badge swaps to the explicit "Ending" label so the user does not
+    // mistake the still-active status for a healthy renewal.
+    expect(html).toContain('Ending')
+    expect(html).not.toContain('>Active<')
+
+    // The renewal line is replaced with the end-of-watch copy.
+    expect(html).toContain('Your watch ends on')
+    expect(html).toContain('2027')
+    expect(html).not.toContain('Next renewal:')
+
+    // CTA pivots to the resume action that routes through the Portal.
+    expect(html).toContain('Rekindle the lantern')
+    expect(html).not.toContain('Manage subscription')
+
+    // Other paid tiers stay quiet — the only action the user should take
+    // is resuming their current subscription.
+    expect(html).not.toContain('Upgrade to Lantern Hoard')
+    expect(html).not.toContain('Switch to Lantern')
+  })
+
+  it('treats pending cancellation during a trial the same way (Ending badge + Rekindle CTA)', () => {
+    const html = renderWith({
+      plan_id: 'lantern_hoard',
+      status: 'trialing',
+      current_period_end: '2027-03-12T00:00:00.000Z',
+      cancel_at_period_end: true,
+      can_share: true
+    })
+
+    expect(html).toMatch(currentPlanRegex('lantern_hoard'))
+    expect(html).toContain('Ending')
+    expect(html).toContain('Your watch ends on')
+    expect(html).toContain('Rekindle the lantern')
+    expect(html).not.toContain('Your trial renews on')
+    expect(html).not.toContain('Trial')
+  })
+
+  it('falls back to the generic pending-cancel copy when current_period_end is missing', () => {
+    const html = renderWith({
+      plan_id: 'lantern',
+      status: 'active',
+      current_period_end: null,
+      cancel_at_period_end: true,
+      can_share: false
+    })
+
+    expect(html).toContain('Ending')
+    expect(html).toContain('Cancellation pending')
+    expect(html).not.toContain('Your watch ends on')
+    expect(html).toContain('Rekindle the lantern')
+  })
+
+  it('ignores cancel_at_period_end on the free tier so Wanderer users still see Checkout CTAs', () => {
+    // Free users cannot have a real Stripe cancellation queued, but a
+    // stale row could carry a `true` flag. Defense in depth: free tier
+    // never adopts the pending-cancel treatment.
+    const html = renderWith({
+      plan_id: 'free',
+      status: 'active',
+      current_period_end: null,
+      cancel_at_period_end: true,
+      can_share: false
+    })
+
+    expect(html).toMatch(currentPlanRegex('free'))
+    expect(html).not.toContain('Ending')
+    expect(html).not.toContain('Rekindle the lantern')
+    expect(html).toContain('Light a Lantern — $1 / month')
   })
 })

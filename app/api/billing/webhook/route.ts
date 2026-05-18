@@ -210,6 +210,7 @@ async function handleCheckoutSessionCompleted(
       user_id: userId,
       plan_id: planId,
       status: 'active',
+      cancel_at_period_end: subscription.cancel_at_period_end === true,
       current_period_end: extractCurrentPeriodEnd(subscription),
       stripe_customer_id: customerId,
       stripe_subscription_id: subscription.id,
@@ -225,7 +226,7 @@ async function handleCheckoutSessionCompleted(
  * Handle Subscription Updated
  *
  * Reflects in-flight subscription changes back into `user_subscription`.
- * Covers three flavors of update:
+ * Covers four flavors of update:
  *
  *   - **Status transitions** — renewals, failed payments, reactivations
  *     after past-due. Maps Stripe's status to the column's accepted values.
@@ -235,6 +236,13 @@ async function handleCheckoutSessionCompleted(
  *     on every update so the column doesn't drift after a switch.
  *   - **Period renewals** — `current_period_end` advances each billing
  *     cycle.
+ *   - **Pending cancellation** — when a subscriber cancels via the Portal,
+ *     Stripe flips `cancel_at_period_end: true` and keeps the row at
+ *     `status = 'active'` until the period actually expires. We mirror the
+ *     flag so the UI can surface a "watch ends on …" treatment while the
+ *     user is still entitled. The flag is set back to `false` if the user
+ *     resumes the subscription before it expires (Stripe also emits an
+ *     `updated` event in that case).
  *
  * Falls back to a `stripe_customer_id` lookup when the subscription's
  * `metadata.user_id` is unset (Customer Portal-initiated updates can drop
@@ -292,6 +300,7 @@ async function handleSubscriptionUpdated(
     .update({
       plan_id: planId,
       status,
+      cancel_at_period_end: subscription.cancel_at_period_end === true,
       current_period_end: extractCurrentPeriodEnd(subscription),
       stripe_subscription_id: subscription.id,
       updated_at: new Date().toISOString()
@@ -338,6 +347,7 @@ async function handleSubscriptionDeleted(
     .update({
       plan_id: 'free',
       status: 'canceled',
+      cancel_at_period_end: false,
       updated_at: new Date().toISOString()
     })
     .eq('user_id', userId)

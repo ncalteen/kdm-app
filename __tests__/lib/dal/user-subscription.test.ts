@@ -39,6 +39,7 @@ function configureSubscriptionMock(opts: {
     plan_id: string
     status: string
     current_period_end: string | null
+    cancel_at_period_end?: boolean | null
   } | null
   subscriptionError?: { message: string } | null
   canShare?: boolean
@@ -86,7 +87,8 @@ describe('getUserSubscription', () => {
       subscriptionRow: {
         plan_id: 'free',
         status: 'active',
-        current_period_end: null
+        current_period_end: null,
+        cancel_at_period_end: false
       },
       canShare: false
     })
@@ -94,7 +96,7 @@ describe('getUserSubscription', () => {
     const result = await getUserSubscription()
 
     expect(mockSelect).toHaveBeenCalledWith(
-      'plan_id, status, current_period_end'
+      'plan_id, status, current_period_end, cancel_at_period_end'
     )
     expect(mockEq).toHaveBeenCalledWith('user_id', 'user-1')
     expect(mockMaybeSingle).toHaveBeenCalledOnce()
@@ -103,6 +105,7 @@ describe('getUserSubscription', () => {
       plan_id: 'free',
       status: 'active',
       current_period_end: null,
+      cancel_at_period_end: false,
       can_share: false
     })
   })
@@ -112,7 +115,8 @@ describe('getUserSubscription', () => {
       subscriptionRow: {
         plan_id: 'lantern_hoard',
         status: 'active',
-        current_period_end: '2027-01-01T00:00:00Z'
+        current_period_end: '2027-01-01T00:00:00Z',
+        cancel_at_period_end: false
       },
       canShare: true
     })
@@ -123,8 +127,55 @@ describe('getUserSubscription', () => {
       plan_id: 'lantern_hoard',
       status: 'active',
       current_period_end: '2027-01-01T00:00:00Z',
+      cancel_at_period_end: false,
       can_share: true
     })
+  })
+
+  it('returns cancel_at_period_end = true when the subscriber has cancelled via the Portal', async () => {
+    // Stripe holds the row at `active` until the period actually ends but
+    // sets `cancel_at_period_end: true` in the meantime. The DAL must
+    // forward the flag so the SubscriptionCard can swap the renewal copy
+    // for a "watch ends on …" treatment.
+    configureSubscriptionMock({
+      subscriptionRow: {
+        plan_id: 'lantern',
+        status: 'active',
+        current_period_end: '2027-01-01T00:00:00Z',
+        cancel_at_period_end: true
+      },
+      canShare: true
+    })
+
+    const result = await getUserSubscription()
+
+    expect(result).toEqual({
+      plan_id: 'lantern',
+      status: 'active',
+      current_period_end: '2027-01-01T00:00:00Z',
+      cancel_at_period_end: true,
+      can_share: true
+    })
+  })
+
+  it('defaults cancel_at_period_end to false when the column is missing on legacy rows', async () => {
+    // Defense in depth: rows seeded before the pending-cancellation
+    // migration may surface a `null` payload value if the read races a
+    // missed migration. The DAL must coerce so the boolean type contract
+    // holds for callers.
+    configureSubscriptionMock({
+      subscriptionRow: {
+        plan_id: 'lantern',
+        status: 'active',
+        current_period_end: '2027-01-01T00:00:00Z',
+        cancel_at_period_end: null
+      },
+      canShare: true
+    })
+
+    const result = await getUserSubscription()
+
+    expect(result?.cancel_at_period_end).toBe(false)
   })
 
   it('returns can_share = false for a canceled lantern subscription', async () => {
@@ -135,7 +186,8 @@ describe('getUserSubscription', () => {
       subscriptionRow: {
         plan_id: 'lantern',
         status: 'canceled',
-        current_period_end: '2027-01-01T00:00:00Z'
+        current_period_end: '2027-01-01T00:00:00Z',
+        cancel_at_period_end: false
       },
       canShare: false
     })
@@ -146,6 +198,7 @@ describe('getUserSubscription', () => {
       plan_id: 'lantern',
       status: 'canceled',
       current_period_end: '2027-01-01T00:00:00Z',
+      cancel_at_period_end: false,
       can_share: false
     })
   })
@@ -173,7 +226,8 @@ describe('getUserSubscription', () => {
       subscriptionRow: {
         plan_id: 'lantern',
         status: 'active',
-        current_period_end: '2027-01-01T00:00:00Z'
+        current_period_end: '2027-01-01T00:00:00Z',
+        cancel_at_period_end: false
       },
       rpcError: { message: 'rpc unavailable' }
     })
@@ -190,7 +244,8 @@ describe('getUserSubscription', () => {
       subscriptionRow: {
         plan_id: 'lantern_hoard',
         status: 'active',
-        current_period_end: '2027-01-01T00:00:00Z'
+        current_period_end: '2027-01-01T00:00:00Z',
+        cancel_at_period_end: false
       },
       canShare: null as unknown as boolean
     })
