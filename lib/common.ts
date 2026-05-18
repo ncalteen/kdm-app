@@ -51,6 +51,16 @@ export const MARKDOWN_SYNTAX_URL = 'https://www.markdownguide.org/basic-syntax/'
 export const FREE_TIER_SETTLEMENT_LIMIT = 5
 
 /**
+ * Stripe API Version
+ *
+ * Pinned in code so that the route's contract with Stripe does not silently
+ * change when the account's Dashboard-pinned version is rolled. Keep in sync
+ * with the checkout + webhook handlers; update them together when intentionally
+ * upgrading.
+ */
+export const STRIPE_API_VERSION = '2026-04-22.dahlia'
+
+/**
  * Basic Hunt Board Configuration
  */
 export const basicHuntBoard = {
