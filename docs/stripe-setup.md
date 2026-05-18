@@ -49,7 +49,7 @@ initial work in **Test mode** and promote afterwards.
   - Public business name: `Archivist`
   - Statement descriptor: `ARCHIVIST` (≤ 22 chars, no special characters)
   - Support email and support URL set to the project's contact channels.
-- [ ] **Branding** — Settings → Branding
+- [x] **Branding** — Settings → Branding
   - Logo and icon uploaded (use `public/` assets).
   - Brand color set to match the app's primary accent.
 - [x] **Payout details** — Settings → Payouts
@@ -142,11 +142,11 @@ Settings → Billing → **Customer portal**:
   - [ ] **Pause subscriptions** — **off** unless you explicitly want to support
         pauses. Pauses produce `customer.subscription.paused` events that the
         webhook does not yet handle.
-- [ ] **Business information**
+- [x] **Business information**
   - Headline: `Manage your Archivist subscription`.
   - Terms of service URL and privacy policy URL set to the published app URLs.
-- [ ] **Branding** — inherits from §1.
-- [ ] Save and publish the portal configuration.
+- [x] **Branding** — inherits from §1.
+- [x] Save and publish the portal configuration.
 
 ## 4. Create The Webhook Endpoint
 

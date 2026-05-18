@@ -103,3 +103,104 @@ to the database schema, please follow these steps:
    # If you want to generate types from your local database
    npx supabase gen types typescript --local > lib/database.types.ts
    ```
+
+## Stripe Integration
+
+To test the Stripe integration locally you need three things: the project's
+test-mode `STRIPE_*` env vars, the Stripe CLI installed on your machine, and a
+running `stripe listen` process forwarding webhook events into the dev server.
+
+See [Stripe Setup](./docs/stripe-setup.md) for the one-time account / product /
+env-var configuration. The steps below cover the contributor-side workflow.
+
+### 1. Install the Stripe CLI
+
+The [Stripe CLI](https://docs.stripe.com/stripe-cli) is required to forward
+test-mode webhook events to your local dev server.
+
+```bash
+brew install stripe/stripe-cli/stripe
+```
+
+Verify the install:
+
+```bash
+stripe --version
+```
+
+> [!NOTE]
+>
+> The full install matrix (Docker image, additional Linux distros, ARM builds)
+> is documented at <https://docs.stripe.com/stripe-cli/install>.
+
+### 2. Authenticate the CLI
+
+Run this once per machine. The CLI will open a browser and pair against the
+Stripe account it should manage in test mode:
+
+```bash
+stripe login
+```
+
+Press Enter at the pairing-code prompt to launch the browser, then approve the
+request in the Stripe Dashboard. The CLI stores its credentials in
+`~/.config/stripe/config.toml`; no Stripe keys need to be added to your shell
+environment for the CLI itself.
+
+> [!IMPORTANT]
+>
+> Always authenticate against a **test-mode** Stripe account — never live. The
+> dev server's webhook handler verifies signatures against
+> `STRIPE_WEBHOOK_SECRET`, and the secret printed by `stripe listen` is only
+> valid for the test-mode events forwarded during that session.
+
+### 3. Forward Webhooks To Your Local Dev Server
+
+In one terminal, start the dev server:
+
+```bash
+npm run dev
+```
+
+In a second terminal, start the webhook forwarder:
+
+```bash
+stripe listen --forward-to localhost:3000/api/billing/webhook
+```
+
+On startup the CLI prints a line like:
+
+```text
+Ready! Your webhook signing secret is whsec_xxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Copy that value into `STRIPE_WEBHOOK_SECRET` in your `.env.local` and restart
+`npm run dev` so the handler picks it up. The signing secret is **distinct
+from** the dashboard webhook's signing secret and is valid only while
+`stripe listen` is running — closing the process invalidates it.
+
+You can scope forwarding to just the events the app handles to keep the output
+readable:
+
+```bash
+stripe listen \
+  --events checkout.session.completed,customer.subscription.updated,customer.subscription.deleted \
+  --forward-to localhost:3000/api/billing/webhook
+```
+
+### 4. Trigger Test Events
+
+With `stripe listen` running, use `stripe trigger` from a third terminal to
+replay specific events end-to-end without clicking through Checkout:
+
+```bash
+stripe trigger checkout.session.completed
+stripe trigger customer.subscription.updated
+stripe trigger customer.subscription.deleted
+```
+
+Each trigger appears in the `stripe listen` output with its forwarded response
+code; the handler logs are visible in the `npm run dev` terminal. For full
+end-to-end testing (real Checkout flow, Customer Portal plan switching, real
+card numbers), follow the smoke test in
+[docs/stripe-setup.md §7](./docs/stripe-setup.md#7-smoke-test).
