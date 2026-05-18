@@ -102,6 +102,19 @@ To get started, simply follow the below steps:
 1. Open your browser and navigate to
    [`http://localhost:3000`](http://localhost:3000)
 
+### Documentation
+
+In-depth documentation lives under [`docs/`](./docs):
+
+- [Settlement Sharing Architecture](./docs/settlement-sharing-architecture.md) —
+  How multiplayer sharing, custom-content visibility, and paid-feature gating
+  work end-to-end.
+- [Stripe Setup](./docs/stripe-setup.md) — Operations guide for configuring the
+  Stripe account, Lantern and Lantern Hoard products, Customer Portal, webhooks,
+  and the `STRIPE_*` environment variables.
+- [Integration Tests](./docs/integration-tests.md) — Running the Supabase- and
+  Stripe-backed integration suite locally.
+
 ## Disclaimer
 
 This project is not affiliated with or endorsed by Kingdom Death: Monster or any

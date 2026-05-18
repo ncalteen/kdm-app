@@ -27,6 +27,22 @@ against the local Supabase CLI stack. They do **not** mock `@/lib/supabase/*`.
    > The service-role key is used **only** for fixture setup/teardown (creating
    > throwaway users, seeding rows). It is never imported from application code.
 
+1. Export the Stripe test-mode keys used by the billing-webhook integration
+   suite (see [E3.12]). These are read by `__tests__/integration/billing/*` and
+   by the Next.js dev server when `stripe listen` is forwarding events:
+
+   ```bash
+   export STRIPE_SECRET_KEY=sk_test_...
+   export STRIPE_WEBHOOK_SECRET=whsec_...           # value printed by `stripe listen`
+   export STRIPE_PRICE_ID_LANTERN=price_...         # Lantern test-mode price id
+   export STRIPE_PRICE_ID_LANTERN_HOARD=price_...   # Lantern Hoard test-mode price id
+   export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+   ```
+
+   See [stripe-setup.md](./stripe-setup.md) for how to obtain each value. The
+   billing tests are skipped when `STRIPE_SECRET_KEY` is unset so the suite
+   still runs on machines without Stripe configured.
+
 ## Run
 
 ```bash
