@@ -78,35 +78,35 @@ Repeat the steps below once per product.
 ### 2.1 Lantern — $1 / mo
 
 1. Products → **Add product**.
-2. Product details:
+1. Product details:
    - **Name:** `Lantern`
    - **Description:**
      `Carry your own lantern. Track unlimited settlements without sharing.`
    - **Image:** optional; the in-app upsell does not pull from Stripe.
-3. Pricing:
+1. Pricing:
    - **Pricing model:** Standard pricing.
    - **Price:** `$1.00 USD`.
    - **Billing period:** `Monthly`.
    - **Usage is metered:** off.
    - **Include tax in price:** leave off unless Stripe Tax is configured.
-4. Save the product. Copy the generated **Price ID** — it starts with `price_`
+1. Save the product. Copy the generated **Price ID** — it starts with `price_`
    and is the value you will paste into `STRIPE_PRICE_ID_LANTERN`.
 
 ### 2.2 Lantern Hoard — $5 / mo
 
 1. Products → **Add product**.
-2. Product details:
+1. Product details:
    - **Name:** `Lantern Hoard`
    - **Description:**
      `Light another lantern. Share your settlement with a fellow survivor.`
    - **Image:** optional.
-3. Pricing:
+1. Pricing:
    - **Pricing model:** Standard pricing.
    - **Price:** `$5.00 USD`.
    - **Billing period:** `Monthly`.
    - **Usage is metered:** off.
    - **Include tax in price:** leave off unless Stripe Tax is configured.
-4. Save the product. Copy the generated **Price ID** into
+1. Save the product. Copy the generated **Price ID** into
    `STRIPE_PRICE_ID_LANTERN_HOARD`.
 
 > [!IMPORTANT] Test mode and Live mode each have their own price IDs. Capture
@@ -218,21 +218,21 @@ internet.
 
 1. Install the CLI: `brew install stripe/stripe-cli/stripe` (macOS) or follow
    <https://stripe.com/docs/stripe-cli> for other platforms.
-2. Authenticate once per machine: `stripe login`. This opens a browser to link
+1. Authenticate once per machine: `stripe login`. This opens a browser to link
    the CLI to your Stripe account.
-3. Start the dev server in another terminal: `npm run dev`.
-4. Start the forwarder:
+1. Start the dev server in another terminal: `npm run dev`.
+1. Start the forwarder:
 
    ```bash
    stripe listen --forward-to localhost:3000/api/billing/webhook
    ```
 
-5. The CLI prints a webhook signing secret on startup, e.g.
+1. The CLI prints a webhook signing secret on startup, e.g.
    `Ready! Your webhook signing secret is whsec_…`. **Copy this value into
    `STRIPE_WEBHOOK_SECRET` in `.env.local`** and restart `npm run dev` so the
    handler picks it up. This secret is distinct from the dashboard webhook's
    signing secret and is valid only while `stripe listen` is running.
-6. To replay events for development, use `stripe trigger`, e.g.:
+1. To replay events for development, use `stripe trigger`, e.g.:
 
    ```bash
    stripe trigger checkout.session.completed
@@ -250,21 +250,21 @@ the Lantern flow first; then upgrade to Lantern Hoard from the Customer Portal
 so both paths exercise the webhook handler.
 
 1. Open the deployed (or local) app and sign in as a user with no subscription.
-2. Trigger the **Lantern** upgrade flow (e.g. "Unlock unlimited settlements").
-3. Complete checkout with Stripe's test card `4242 4242 4242 4242`, any future
+1. Trigger the **Lantern** upgrade flow (e.g. "Unlock unlimited settlements").
+1. Complete checkout with Stripe's test card `4242 4242 4242 4242`, any future
    expiry, any CVC, any ZIP.
-4. Confirm in the Stripe Dashboard that:
+1. Confirm in the Stripe Dashboard that:
    - A new Customer was created.
    - A subscription on the **Lantern** price is `active`.
    - The webhook endpoint shows `200` responses for `checkout.session.completed`
      and `customer.subscription.updated`.
-5. Confirm in the app's database that the user's `user_subscription` row now has
+1. Confirm in the app's database that the user's `user_subscription` row now has
    `plan_id = 'lantern'`, `status = 'active'`, and populated
    `stripe_customer_id` / `stripe_subscription_id`.
-6. Open the Customer Portal from the app and **switch plan** to Lantern Hoard.
+1. Open the Customer Portal from the app and **switch plan** to Lantern Hoard.
    Confirm the resulting `customer.subscription.updated` event is delivered
    `200` and the database row updates to `plan_id = 'lantern_hoard'`.
-7. From the Customer Portal, cancel the subscription. Confirm the
+1. From the Customer Portal, cancel the subscription. Confirm the
    `customer.subscription.deleted` (or `.updated` with
    `cancel_at_period_end = true`) event is delivered and the database row
    reflects the new status.
