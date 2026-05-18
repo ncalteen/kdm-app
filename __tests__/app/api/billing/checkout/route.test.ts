@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+// Stub `server-only`. Its real module body throws when loaded outside the
+// React Server Component bundle, which would block Vitest from importing the
+// route under test.
+vi.mock('server-only', () => ({}))
+
 // Hoisted mocks must be declared before any imports that wire them up.
 const { mockGetUser, mockFromSelect, mockFromUpdate, mockCreateClient } =
   vi.hoisted(() => ({
@@ -103,6 +108,7 @@ describe('POST /api/billing/checkout', () => {
     process.env.STRIPE_PRICE_ID_LANTERN_HOARD = 'price_lantern_hoard'
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:54321'
     process.env.SUPABASE_SECRET_KEY = 'service-role-key'
+    delete process.env.NEXT_PUBLIC_SITE_URL
   })
 
   it('returns 401 when the caller is not authenticated', async () => {
@@ -229,6 +235,23 @@ describe('POST /api/billing/checkout', () => {
     expect(mockCheckoutSessionsCreate).not.toHaveBeenCalled()
   })
 
+  it('returns 500 when no user_subscription row exists for the user', async () => {
+    // The default `free` row is auto-provisioned at sign-up; absence here
+    // signals a corrupted account. The route must refuse to proceed,
+    // otherwise the admin UPDATE below would silently match zero rows and
+    // strand a Stripe customer that the webhook cannot correlate back.
+    setupAuth({
+      user: { id: 'user-1', email: 'a@b.test' },
+      subscription: null
+    })
+
+    const response = await POST(buildRequest({ planId: 'lantern' }))
+
+    expect(response.status).toBe(500)
+    expect(mockCustomersCreate).not.toHaveBeenCalled()
+    expect(mockCheckoutSessionsCreate).not.toHaveBeenCalled()
+  })
+
   it('returns 500 when persisting the new Stripe customer fails', async () => {
     setupAuth({
       user: { id: 'user-1', email: 'a@b.test' },
@@ -285,7 +308,30 @@ describe('POST /api/billing/checkout', () => {
     expect(mockCheckoutSessionsCreate).not.toHaveBeenCalled()
   })
 
-  it('honours the x-forwarded-host header for redirect origins', async () => {
+  it('uses NEXT_PUBLIC_SITE_URL as the canonical redirect origin when set', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://archivist.example.com'
+
+    setupAuth({
+      user: { id: 'user-1', email: 'a@b.test' },
+      subscription: { stripe_customer_id: 'cus_existing' }
+    })
+    setupAdminWriter()
+    mockCheckoutSessionsCreate.mockResolvedValue({
+      url: 'https://stripe.test/session'
+    })
+
+    await POST(buildRequest({ planId: 'lantern' }))
+
+    const args = mockCheckoutSessionsCreate.mock.calls[0][0]
+    expect(args.success_url).toMatch(/^https:\/\/archivist\.example\.com\//)
+    expect(args.cancel_url).toMatch(/^https:\/\/archivist\.example\.com\//)
+  })
+
+  it('ignores spoofed x-forwarded-host header and falls back to request URL', async () => {
+    // Stripe Checkout success_url is attacker-influenceable if the route
+    // trusts forwarded-host headers on direct ingress. The hardened
+    // resolveOrigin must NOT honor them — only NEXT_PUBLIC_SITE_URL or the
+    // request URL parsed from the Host header are allowed.
     setupAuth({
       user: { id: 'user-1', email: 'a@b.test' },
       subscription: { stripe_customer_id: 'cus_existing' }
@@ -299,14 +345,34 @@ describe('POST /api/billing/checkout', () => {
       buildRequest(
         { planId: 'lantern' },
         {
-          'x-forwarded-host': 'archivist.example.com',
+          'x-forwarded-host': 'evil.example.com',
           'x-forwarded-proto': 'https'
         }
       )
     )
 
     const args = mockCheckoutSessionsCreate.mock.calls[0][0]
-    expect(args.success_url).toMatch(/^https:\/\/archivist\.example\.com\//)
-    expect(args.cancel_url).toMatch(/^https:\/\/archivist\.example\.com\//)
+    expect(args.success_url).toMatch(/^https:\/\/archivist\.test\//)
+    expect(args.cancel_url).toMatch(/^https:\/\/archivist\.test\//)
+    expect(args.success_url).not.toContain('evil.example.com')
+    expect(args.cancel_url).not.toContain('evil.example.com')
+  })
+
+  it('falls back to the request URL when NEXT_PUBLIC_SITE_URL is malformed', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'not-a-url'
+
+    setupAuth({
+      user: { id: 'user-1', email: 'a@b.test' },
+      subscription: { stripe_customer_id: 'cus_existing' }
+    })
+    setupAdminWriter()
+    mockCheckoutSessionsCreate.mockResolvedValue({
+      url: 'https://stripe.test/session'
+    })
+
+    await POST(buildRequest({ planId: 'lantern' }))
+
+    const args = mockCheckoutSessionsCreate.mock.calls[0][0]
+    expect(args.success_url).toMatch(/^https:\/\/archivist\.test\//)
   })
 })

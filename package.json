@@ -85,6 +85,7 @@
     "react-window": "^2.2.6",
     "recharts": "^2.15.4",
     "rehype-sanitize": "^6.0.0",
+    "server-only": "^0.0.1",
     "sonner": "^2.0.7",
     "stripe": "^22.1.1",
     "supabase": "^2.98.2",

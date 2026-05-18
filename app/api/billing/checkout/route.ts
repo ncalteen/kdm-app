@@ -48,19 +48,35 @@ function resolvePriceId(planId: BillingPlanId): string {
 /**
  * Resolve Origin For Redirects
  *
- * Stripe Checkout requires absolute `success_url` and `cancel_url`. Derives
- * the canonical site origin from the incoming request so deployments behind
- * different domains (preview environments, custom domains, localhost) all
- * produce correct redirects without requiring an extra env var.
+ * Stripe Checkout requires absolute `success_url` and `cancel_url`. To
+ * eliminate the open-redirect class of bugs where an attacker spoofs `Host` or
+ * `x-forwarded-host` to redirect a paying user to an attacker-controlled domain
+ * after checkout (carrying `session_id`), production deployments MUST set
+ * `NEXT_PUBLIC_SITE_URL` to the canonical site origin. When set, that value is
+ * the sole source of truth.
+ *
+ * For local development the env var can be omitted and the route falls back to
+ * the request's parsed URL. The fallback is intentionally limited to
+ * `request.url` (parsed from `Host`); forwarded-host headers are NOT honored.
  *
  * @param request Next Request
  * @returns Origin Including Scheme
  */
 function resolveOrigin(request: NextRequest): string {
-  const forwardedHost = request.headers.get('x-forwarded-host')
-  const forwardedProto = request.headers.get('x-forwarded-proto')
+  const configured = process.env.NEXT_PUBLIC_SITE_URL
 
-  if (forwardedHost) return `${forwardedProto ?? 'https'}://${forwardedHost}`
+  if (configured) {
+    try {
+      return new URL(configured).origin
+    } catch {
+      // Malformed env var — fall through to request-derived origin so a typo
+      // doesn't produce an unbreakable 500.
+      console.error(
+        'Stripe Checkout Origin Error: malformed NEXT_PUBLIC_SITE_URL',
+        configured
+      )
+    }
+  }
 
   return new URL(request.url).origin
 }
@@ -120,8 +136,10 @@ export async function POST(request: NextRequest) {
 
   // 3. Look up the caller's subscription row. The default `free` row is
   //    provisioned by sign-up triggers (see migration 20260527000001), so a
-  //    missing row indicates a corrupted account that the user should
-  //    re-establish before being charged.
+  //    missing row indicates a corrupted account that must be repaired before
+  //    the user can be charged. We refuse to proceed in that case — otherwise
+  //    the admin `UPDATE` below would silently match zero rows, creating an
+  //    orphaned Stripe customer the webhook cannot correlate.
   const { data: subscription, error: subscriptionError } = await supabase
     .from('user_subscription')
     .select('stripe_customer_id')
@@ -137,12 +155,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: ERROR_MESSAGE() }, { status: 500 })
   }
 
+  if (!subscription) {
+    console.error(
+      'Stripe Checkout Subscription Missing Error: no user_subscription row for user',
+      user.id
+    )
+
+    return NextResponse.json({ error: ERROR_MESSAGE() }, { status: 500 })
+  }
+
   // 4. Create + persist a Stripe Customer if this is the user's first paid
   //    session. The service-role client bypasses the owner-only INSERT/UPDATE
   //    policy on `user_subscription`.
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
-  let customerId = subscription?.stripe_customer_id ?? null
+  let customerId = subscription.stripe_customer_id
 
   try {
     if (!customerId) {
