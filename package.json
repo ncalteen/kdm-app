@@ -76,7 +76,7 @@
     "lucide-react": "^1.14.0",
     "memoize-one": "^6.0.0",
     "mermaid": "^11.15.0",
-    "next": "^16.2.4",
+    "next": "^16.2.6",
     "next-themes": "^0.4.6",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
@@ -107,12 +107,14 @@
     "eslint-config-next": "^16.2.6",
     "eslint-plugin-jsdoc": "^62.9.0",
     "make-coverage-badge": "^1.2.0",
-    "postcss": "^8",
     "prettier": "^3",
     "tailwindcss": "^4.1.16",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^6",
     "vite": "^8.0.10",
     "vitest": "^4.0.15"
+  },
+  "overrides": {
+    "postcss": "8.5.10"
   }
 }
