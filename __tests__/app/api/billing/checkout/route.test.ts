@@ -391,4 +391,32 @@ describe('POST /api/billing/checkout', () => {
     const args = mockCheckoutSessionsCreate.mock.calls[0][0]
     expect(args.success_url).toMatch(/^https:\/\/archivist\.test\//)
   })
+
+  it('fails closed with a 500 in production when NEXT_PUBLIC_SITE_URL is malformed', async () => {
+    // PR #242 review comment r3262472051: production must not silently
+    // degrade to the Host-derived request URL when the canonical origin is
+    // malformed. Verify the helper's throw is caught by the route's outer
+    // try/catch and surfaces as a generic 500 — Stripe must NOT be called.
+    const originalNodeEnv = process.env.NODE_ENV
+    ;(process.env as Record<string, string | undefined>).NODE_ENV = 'production'
+    process.env.NEXT_PUBLIC_SITE_URL = 'https//archivist.monster'
+
+    try {
+      setupAuth({
+        user: { id: 'user-1', email: 'a@b.test' },
+        subscription: { stripe_customer_id: 'cus_existing' }
+      })
+      setupAdminWriter()
+
+      const response = await POST(buildRequest({ planId: 'lantern' }))
+      const json = await response.json()
+
+      expect(response.status).toBe(500)
+      expect(json.error).toMatch(/darkness/i)
+      expect(mockCheckoutSessionsCreate).not.toHaveBeenCalled()
+    } finally {
+      ;(process.env as Record<string, string | undefined>).NODE_ENV =
+        originalNodeEnv
+    }
+  })
 })

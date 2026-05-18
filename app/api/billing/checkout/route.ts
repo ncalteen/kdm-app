@@ -1,6 +1,8 @@
 import 'server-only'
 
+import { STRIPE_API_VERSION } from '@/lib/common'
 import { ERROR_MESSAGE } from '@/lib/messages'
+import { resolveOrigin } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
@@ -44,51 +46,6 @@ function resolvePriceId(planId: BillingPlanId): string {
 
   return priceId
 }
-
-/**
- * Resolve Origin For Redirects
- *
- * Stripe Checkout requires absolute `success_url` and `cancel_url`. To
- * eliminate the open-redirect class of bugs where an attacker spoofs `Host` or
- * `x-forwarded-host` to redirect a paying user to an attacker-controlled domain
- * after checkout (carrying `session_id`), production deployments MUST set
- * `NEXT_PUBLIC_SITE_URL` to the canonical site origin. When set, that value is
- * the sole source of truth.
- *
- * For local development the env var can be omitted and the route falls back to
- * the request's parsed URL. The fallback is intentionally limited to
- * `request.url` (parsed from `Host`); forwarded-host headers are NOT honored.
- *
- * @param request Next Request
- * @returns Origin Including Scheme
- */
-function resolveOrigin(request: NextRequest): string {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL
-
-  if (configured) {
-    try {
-      return new URL(configured).origin
-    } catch {
-      // Malformed env var — fall through to request-derived origin so a typo
-      // doesn't produce an unbreakable 500.
-      console.error(
-        'Stripe Checkout Origin Error: malformed NEXT_PUBLIC_SITE_URL',
-        configured
-      )
-    }
-  }
-
-  return new URL(request.url).origin
-}
-
-/**
- * Stripe API Version
- *
- * Pinned in code so that the route's contract with Stripe does not silently
- * change when the account's Dashboard-pinned version is rolled. Update this
- * constant + `docs/stripe-setup.md` together when intentionally upgrading.
- */
-const STRIPE_API_VERSION = '2026-04-22.dahlia' as const
 
 /**
  * Create Stripe Checkout Session
