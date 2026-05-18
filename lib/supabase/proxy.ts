@@ -69,9 +69,26 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname !== '/' &&
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
+    !request.nextUrl.pathname.startsWith('/auth') &&
+    !request.nextUrl.pathname.startsWith('/api')
   ) {
-    // no user, potentially respond by redirecting the user to the login page
+    // No user — redirect HTML navigations to the login page. API routes
+    // are intentionally excluded:
+    //
+    //   - `/api/billing/webhook` authenticates via the Stripe-Signature
+    //     header, never via a Supabase session cookie. Stripe does NOT
+    //     follow 3xx responses; a redirect would cause every webhook
+    //     delivery to be recorded as a non-2xx failure and retried with
+    //     exponential backoff until it gave up. The webhook would
+    //     effectively never run.
+    //   - `/api/billing/checkout` and `/api/billing/portal` issue their
+    //     own `401 { error: 'Not Authenticated' }` JSON responses, which
+    //     is what their fetch-based callers expect. Returning a 307 to
+    //     an HTML login page would corrupt the client contract.
+    //
+    // Any future `/api/*` route should follow the same pattern: enforce
+    // its own auth and return JSON status codes rather than relying on
+    // the middleware redirect.
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     const redirectResponse = NextResponse.redirect(url)
