@@ -45,20 +45,20 @@ Complete these steps in the Stripe Dashboard before creating products or keys.
 The Stripe account must be in **Live mode** for production traffic; do all
 initial work in **Test mode** and promote afterwards.
 
-- [ ] **Business profile** — Settings → Business → Public details
+- [x] **Business profile** — Settings → Business → Public details
   - Public business name: `Archivist`
   - Statement descriptor: `ARCHIVIST` (≤ 22 chars, no special characters)
   - Support email and support URL set to the project's contact channels.
 - [ ] **Branding** — Settings → Branding
   - Logo and icon uploaded (use `public/` assets).
   - Brand color set to match the app's primary accent.
-- [ ] **Payout details** — Settings → Payouts
+- [x] **Payout details** — Settings → Payouts
   - Bank account verified.
   - Payout schedule chosen (Stripe default daily is fine).
-- [ ] **Tax** — Settings → Tax (optional)
+- [x] **Tax** — Settings → Tax (optional)
   - Stripe Tax can be enabled later. Both plans are flat-rate digital
     subscriptions; consult your accountant before toggling.
-- [ ] **Team access** — Settings → Team
+- [x] **Team access** — Settings → Team
   - Add at least one additional admin with `Developer` or `Administrator` role
     so the account is not single-keyholder.
 
