@@ -163,7 +163,11 @@ Developers → Webhooks → **Add endpoint**:
   - `checkout.session.completed`
   - `customer.subscription.updated`
   - `customer.subscription.deleted`
-- **API version:** leave at the account default.
+- **API version:** leave the webhook endpoint at the account default. The
+  checkout route pins its own request version (`2026-04-22.dahlia`) in code so
+  the contract does not depend on Dashboard state. When intentionally upgrading,
+  update the `STRIPE_API_VERSION` constant in
+  `app/api/billing/checkout/route.ts` and this doc together.
 - Save the endpoint. Reveal the **Signing secret** (starts with `whsec_`) — this
   is the value you paste into `STRIPE_WEBHOOK_SECRET`.
 
@@ -174,7 +178,7 @@ Developers → Webhooks → **Add endpoint**:
 
 ## 5. Required Environment Variables
 
-The app reads five env vars at runtime. Add them to `.env.local` for local
+The app reads six env vars at runtime. Add them to `.env.local` for local
 development and to the matching Vercel project (Production, Preview, and
 Development) for deployed environments.
 
@@ -185,6 +189,7 @@ Development) for deployed environments.
 | `STRIPE_PRICE_ID_LANTERN`            | Products → Lantern → **Price ID** (`price_…`)                            | Server only      | Distinct values for test and live modes. Maps to `plan_id = 'lantern'`.         |
 | `STRIPE_PRICE_ID_LANTERN_HOARD`      | Products → Lantern Hoard → **Price ID** (`price_…`)                      | Server only      | Distinct values for test and live modes. Maps to `plan_id = 'lantern_hoard'`.   |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Developers → API keys → **Publishable key** (`pk_test_…` or `pk_live_…`) | Server + browser | Safe to expose; this is what Stripe.js loads with on the client.                |
+| `NEXT_PUBLIC_SITE_URL`               | Canonical site origin (e.g. `https://archivist.example.com`)             | Server + browser | **Required in production.** Builds absolute Stripe Checkout redirect URLs.      |
 
 `.env.local` template:
 
@@ -195,6 +200,7 @@ STRIPE_WEBHOOK_SECRET=whsec_replace_me
 STRIPE_PRICE_ID_LANTERN=price_replace_me
 STRIPE_PRICE_ID_LANTERN_HOARD=price_replace_me
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_replace_me
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 Vercel project settings (Settings → Environment Variables):

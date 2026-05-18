@@ -5119,6 +5119,7 @@ export type Database = {
         Args: { p_armor_set_id: string; p_survivor_id: string }
         Returns: boolean
       }
+      user_can_share: { Args: never; Returns: boolean }
     }
     Enums: {
       aenas_state: "Content" | "Hungry"
