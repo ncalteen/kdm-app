@@ -164,10 +164,10 @@ Developers → Webhooks → **Add endpoint**:
   - `customer.subscription.updated`
   - `customer.subscription.deleted`
 - **API version:** leave the webhook endpoint at the account default. The
-  checkout route pins its own request version (`2026-04-22.dahlia`) in code so
-  the contract does not depend on Dashboard state. When intentionally upgrading,
-  update the `STRIPE_API_VERSION` constant in
-  `app/api/billing/checkout/route.ts` and this doc together.
+  checkout, portal, and webhook routes pin their own request version
+  (`2026-04-22.dahlia`) in code so the contract does not depend on Dashboard
+  state. When intentionally upgrading, update the `STRIPE_API_VERSION` constant
+  in `lib/common.ts` and this doc together.
 - Save the endpoint. Reveal the **Signing secret** (starts with `whsec_`) — this
   is the value you paste into `STRIPE_WEBHOOK_SECRET`.
 
@@ -238,10 +238,14 @@ internet.
    `STRIPE_WEBHOOK_SECRET` in `.env.local`** and restart `npm run dev` so the
    handler picks it up. This secret is distinct from the dashboard webhook's
    signing secret and is valid only while `stripe listen` is running.
-1. To replay events for development, use `stripe trigger`, e.g.:
+1. To replay events for development, use `stripe trigger`. The webhook resolves
+   the target user via `metadata.user_id` first, with a fallback to the row
+   keyed by `stripe_customer_id`. For synthetic events, pass an `--override` so
+   the metadata reaches the handler:
 
    ```bash
-   stripe trigger checkout.session.completed
+   stripe trigger checkout.session.completed \
+     --override "checkout_session:metadata[user_id]=<supabase-user-id>"
    stripe trigger customer.subscription.updated
    stripe trigger customer.subscription.deleted
    ```
