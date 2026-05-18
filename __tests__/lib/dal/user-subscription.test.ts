@@ -200,17 +200,16 @@ describe('getUserSubscription', () => {
     expect(result?.can_share).toBe(false)
   })
 
-  it('does not query user_can_share when there is no subscription row', async () => {
-    // Skipping the RPC keeps brand-new (unprovisioned) accounts from
-    // hitting the database for an answer that is unambiguously `false`.
+  it('still issues the user_can_share RPC in parallel and ignores its result when the row is missing', async () => {
+    // Both reads run in parallel (Promise.all), so the RPC is already in
+    // flight by the time we discover the row is missing. We assert it was
+    // wired up so a future refactor to sequential reads gets caught — but
+    // the helper short-circuits to null without consuming the result.
     configureSubscriptionMock({ subscriptionRow: null })
 
     const result = await getUserSubscription()
 
     expect(result).toBeNull()
-    // Both reads were issued in parallel, but the RPC outcome is discarded
-    // when the row is missing. We still verify the RPC was wired up so
-    // tests catch accidental sequential refactors.
     expect(mockSupabase.rpc).toHaveBeenCalledWith('user_can_share')
   })
 })

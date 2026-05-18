@@ -1182,8 +1182,12 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
   /**
    * Fetch User Subscription Data
    *
-   * Mirrors the user-settings effect. Failures reset to `null` so
-   * `canShare` falls back to `false` rather than a stale `true`.
+   * Mirrors the user-settings effect. The cleanup callback clears
+   * `userSubscription` whenever `isAuthenticated` transitions (or the
+   * provider unmounts) so paid-gating state can never survive a logout or
+   * user-switch in memory — `canShare` always falls back to `false` until
+   * the next fetch resolves. Failures inside the fetch likewise reset to
+   * `null` so a stale `true` cannot leak across an error.
    */
   useEffect(() => {
     console.debug('Fetching User Subscription Data')
@@ -1213,6 +1217,11 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
 
     return () => {
       isCancelled = true
+      // Clear the cached subscription on auth-flip (true → false) or
+      // unmount. Calling `setState` from the cleanup callback is the
+      // documented safe pattern — the synchronous-setState-in-effect-body
+      // lint rule targets the initial render path, not teardown.
+      setUserSubscriptionState(null)
     }
   }, [isAuthenticated])
 
