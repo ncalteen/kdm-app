@@ -115,6 +115,33 @@ In-depth documentation lives under [`docs/`](./docs):
 - [Integration Tests](./docs/integration-tests.md) — Running the Supabase- and
   Stripe-backed integration suite locally.
 
+### Feature Flags
+
+Billing surfaces (the Subscription tab, the Sharing tab, and the
+`/api/billing/checkout` + `/api/billing/portal` route handlers) are gated behind
+the `subscription-management` Vercel feature flag during the early-access
+rollout. The Stripe webhook is intentionally NOT gated so existing subscriptions
+keep syncing even when a tester is removed from the allowlist.
+
+The flag is defined in [`lib/flags.ts`](./lib/flags.ts) using the
+[Vercel Flags SDK](https://vercel.com/docs/feature-flags). Its allowlist lives
+in Vercel Edge Config under the `subscriptionAllowlist` key — a `string[]` of
+Supabase user IDs, lowercased email addresses, or the literal `"*"` wildcard
+(which opens the flag to every authenticated user).
+
+To enable a tester:
+
+1. Open the Vercel dashboard → Project → Storage → Edge Config →
+   `subscription-management`.
+1. Edit the `subscriptionAllowlist` array and append the tester's Supabase user
+   ID (preferred) or lowercased email.
+1. Save. Edge Config propagates within seconds — no redeploy needed.
+
+For local development without the Edge Config integration, set
+`SUBSCRIPTION_ALLOWLIST` in `.env.local` to a comma-separated list. The Vercel
+Toolbar can also override the flag per-session — the discovery endpoint at
+`/.well-known/vercel/flags` is signed with the `FLAGS_SECRET` env var.
+
 ## Disclaimer
 
 This project is not affiliated with or endorsed by Kingdom Death: Monster or any

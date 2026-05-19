@@ -1621,6 +1621,42 @@ export const SQUIRE_SUSPICION_UPDATED_MESSAGE = (squireName: string) =>
   `${squireName}'s doubt grows deeper.`
 
 /**
+ * Stripe Redirect
+ *
+ * Shown right before the browser hands off to Stripe's hosted Checkout or
+ * Customer Portal so the user understands the loader / navigation that
+ * follows is intentional.
+ *
+ * @returns Stripe Redirect Message
+ */
+export const STRIPE_REDIRECT_MESSAGE = () =>
+  "Stepping into the merchant's tent..."
+
+/**
+ * Stripe Checkout Success
+ *
+ * Shown after Stripe redirects the user back to the SPA following a
+ * successful Checkout. Confirms the tier change in thematic copy without
+ * waiting for the webhook-driven cache refresh to fully reflect — the
+ * `useStripeReturn` hook fires the refetch in parallel.
+ *
+ * @returns Stripe Checkout Success Message
+ */
+export const STRIPE_CHECKOUT_SUCCESS_MESSAGE = () =>
+  'The lantern burns brighter. Your watch begins anew.'
+
+/**
+ * Stripe Checkout Cancelled
+ *
+ * Shown after Stripe redirects the user back to the SPA following a
+ * cancelled Checkout. Acknowledges the step-back without scolding.
+ *
+ * @returns Stripe Checkout Cancelled Message
+ */
+export const STRIPE_CHECKOUT_CANCELLED_MESSAGE = () =>
+  'You step back from the merchant. The lantern waits.'
+
+/**
  * Survival Limit Exceeded Error
  *
  * @param survivalLimit Survival Limit

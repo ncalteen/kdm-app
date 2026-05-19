@@ -1,5 +1,5 @@
 import { HuntEventType, SettlementPhaseStep } from '@/lib/enums'
-import { MonsterLevelData } from '@/lib/types'
+import { MonsterLevelData, PlanSlug } from '@/lib/types'
 import {
   BanIcon,
   LuggageIcon,
@@ -15,28 +15,6 @@ import {
 } from 'lucide-react'
 
 /**
- * Local Storage Key
- */
-export const LOCAL_STORAGE_KEY = 'kdm-archivist-local'
-
-/**
- * GitHub Issues URL for the Application
- */
-export const GITHUB_ISSUES_URL = 'https://github.com/ncalteen/kdm-app/issues'
-
-/**
- * Support Email Address
- */
-export const SUPPORT_EMAIL = 'ncalteen@archivist.monster'
-
-/**
- * Markdown Syntax Reference URL
- *
- * Linked beneath every markdown editor as a quick reference for users.
- */
-export const MARKDOWN_SYNTAX_URL = 'https://www.markdownguide.org/basic-syntax/'
-
-/**
  * Free-Tier Settlement Limit
  *
  * Maximum number of settlements a free-tier user may own. Settlements that a
@@ -49,6 +27,40 @@ export const MARKDOWN_SYNTAX_URL = 'https://www.markdownguide.org/basic-syntax/'
  * remove this cap are not yet implemented.
  */
 export const FREE_TIER_SETTLEMENT_LIMIT = 5
+
+/**
+ * GitHub Issues URL for the Application
+ */
+export const GITHUB_ISSUES_URL = 'https://github.com/ncalteen/kdm-app/issues'
+
+/**
+ * Local Storage Key
+ */
+export const LOCAL_STORAGE_KEY = 'kdm-archivist-local'
+
+/**
+ * Markdown Syntax Reference URL
+ *
+ * Linked beneath every markdown editor as a quick reference for users.
+ */
+export const MARKDOWN_SYNTAX_URL = 'https://www.markdownguide.org/basic-syntax/'
+
+/**
+ * Plan Order
+ *
+ * Rendering order for the plan grid. Free is shown first as a reference
+ * baseline; the paid tiers ascend by price.
+ */
+export const PLAN_ORDER: ReadonlyArray<PlanSlug> = [
+  'free',
+  'lantern',
+  'lantern_hoard'
+]
+
+/**
+ * Support Email Address
+ */
+export const SUPPORT_EMAIL = 'ncalteen@archivist.monster'
 
 /**
  * Stripe API Version

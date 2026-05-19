@@ -274,7 +274,6 @@ export function CreateSurvivorForm({
    * @param values Form Values
    */
   function onSubmit(values: NewSurvivorInput) {
-    console.log('Form Values:', values)
     const originalSurvivors = [...survivors]
 
     // Optimistic placeholder row (uses a temporary ID).
@@ -288,8 +287,6 @@ export function CreateSurvivorForm({
       dead: false,
       embarked: false
     } as SurvivorDetail
-
-    console.log('Optimistic Survivor:', optimisticSurvivor)
 
     setSurvivors([...survivors, optimisticSurvivor])
 

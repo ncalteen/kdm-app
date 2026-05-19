@@ -5,6 +5,7 @@ import { ListCard } from '@/components/generic/list-card'
 import { HelpCard } from '@/components/help/help-card'
 import { HuntCard } from '@/components/hunt/hunt-card'
 import { SettingsCard } from '@/components/settings/settings-card'
+import { SubscriptionCard } from '@/components/settings/subscription-card'
 import { SettlementPhaseCard } from '@/components/settlement-phase/settlement-phase-card'
 import { CollectiveCognitionRewardsCard } from '@/components/settlement/arc/collective-cognition-rewards-card'
 import { CollectiveCognitionVictoriesCard } from '@/components/settlement/arc/collective-cognition-victories-card'
@@ -46,7 +47,7 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip'
 import { UserCard } from '@/components/user/user-card'
-import { LocalStateType } from '@/contexts/local-context'
+import { LocalStateType, useLocal } from '@/contexts/local-context'
 import { FREE_TIER_SETTLEMENT_LIMIT } from '@/lib/common'
 import { updateSettlement } from '@/lib/dal/settlement'
 import {
@@ -198,6 +199,14 @@ export function SettlementCard({
   updateLocal,
   userSettings
 }: SettlementCardProps): ReactElement {
+  // Defense-in-depth: the Subscription tab is gated by the
+  // `subscription-management` feature flag in both the sidebar (which can
+  // never select it when the flag is off) and `useStripeReturn` (which
+  // skips the post-checkout tab switch). This local check protects against
+  // a stale `selectedTab` value persisted to localStorage from a previous
+  // session when the user was on the allowlist but has since been removed.
+  const { subscriptionManagementEnabled } = useLocal()
+
   // Settings tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.SETTINGS)
     return (
@@ -228,6 +237,15 @@ export function SettlementCard({
         userSettings={userSettings}
       />
     )
+
+  // Subscription tab is always accessible, regardless of settlement state.
+  // Billing surfaces live entirely on Stripe-hosted pages; this card only
+  // renders the user's current plan and the CTAs that hand off to them.
+  // Off-allowlist users (flag disabled) fall through to the default
+  // settlement-empty UI rather than seeing the card, even if a stale
+  // `selectedTab=subscription` value rehydrated from localStorage.
+  if (selectedTab === TabType.SUBSCRIPTION && subscriptionManagementEnabled)
+    return <SubscriptionCard />
 
   // Help tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.HELP) return <HelpCard />

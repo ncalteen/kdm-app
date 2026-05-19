@@ -16,6 +16,10 @@ const { mockAdminFrom, mockCreateAdminClient } = vi.hoisted(() => ({
   mockCreateAdminClient: vi.fn()
 }))
 
+const { mockSubscriptionManagementFlag } = vi.hoisted(() => ({
+  mockSubscriptionManagementFlag: vi.fn()
+}))
+
 const { mockBillingPortalSessionsCreate, MockStripe } = vi.hoisted(() => {
   const portalSessionsCreate = vi.fn()
   class Stripe {
@@ -37,6 +41,10 @@ vi.mock('@/lib/supabase/admin', () => ({
 
 vi.mock('stripe', () => ({
   default: MockStripe
+}))
+
+vi.mock('@/lib/flags', () => ({
+  subscriptionManagementFlag: mockSubscriptionManagementFlag
 }))
 
 import { NextRequest } from 'next/server'
@@ -99,6 +107,10 @@ describe('POST /api/billing/portal', () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:54321'
     process.env.SUPABASE_SECRET_KEY = 'service-role-key'
     delete process.env.NEXT_PUBLIC_SITE_URL
+    // Default the feature flag to ON so existing tests exercise the
+    // post-gate behavior unchanged. Tests in the dedicated flag-gate
+    // describe override this explicitly.
+    mockSubscriptionManagementFlag.mockResolvedValue(true)
   })
 
   it('returns 401 when the caller is not authenticated', async () => {
@@ -188,7 +200,7 @@ describe('POST /api/billing/portal', () => {
     expect(mockBillingPortalSessionsCreate).toHaveBeenCalledTimes(1)
     const args = mockBillingPortalSessionsCreate.mock.calls[0][0]
     expect(args.customer).toBe('cus_existing')
-    expect(args.return_url).toBe('https://archivist.test/settings/subscription')
+    expect(args.return_url).toBe('https://archivist.test/')
   })
 
   it('returns 500 when Stripe rejects the portal session creation request', async () => {
@@ -231,9 +243,7 @@ describe('POST /api/billing/portal', () => {
     await POST(buildRequest())
 
     const args = mockBillingPortalSessionsCreate.mock.calls[0][0]
-    expect(args.return_url).toBe(
-      'https://archivist.example.com/settings/subscription'
-    )
+    expect(args.return_url).toBe('https://archivist.example.com/')
   })
 
   it('ignores spoofed x-forwarded-host header and falls back to request URL', async () => {
@@ -302,5 +312,42 @@ describe('POST /api/billing/portal', () => {
       ;(process.env as Record<string, string | undefined>).NODE_ENV =
         originalNodeEnv
     }
+  })
+})
+
+describe('POST /api/billing/portal — subscription-management flag gate', () => {
+  // Mirror the contract in `/api/billing/checkout` — the flag is a hard
+  // outer gate that runs before auth + Supabase + Stripe, so off-allowlist
+  // callers see a 404 indistinguishable from a missing route.
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123'
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:54321'
+    process.env.SUPABASE_SECRET_KEY = 'service-role-key'
+  })
+
+  it('returns 404 when the flag is off, even for authenticated callers', async () => {
+    mockSubscriptionManagementFlag.mockResolvedValue(false)
+    setupAuth({ user: { id: 'user-1', email: 'survivor@kdm.test' } })
+
+    const response = await POST(buildRequest())
+    const json = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(json.error).toBe('Not Found')
+    expect(mockGetUser).not.toHaveBeenCalled()
+    expect(mockCreateAdminClient).not.toHaveBeenCalled()
+    expect(mockBillingPortalSessionsCreate).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when the flag is off, even for unauthenticated callers', async () => {
+    mockSubscriptionManagementFlag.mockResolvedValue(false)
+    setupAuth({ user: null })
+
+    const response = await POST(buildRequest())
+    const json = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(json.error).toBe('Not Found')
   })
 })

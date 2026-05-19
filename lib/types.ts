@@ -670,6 +670,15 @@ export type PhilosophyRankDetail = Omit<
 >
 
 /**
+ * Plan Slug
+ *
+ * Mirrors the seeded `subscription_plan.plan_id` values used by both the
+ * server-side checkout / portal routes and the `user_subscription` row.
+ * Each slug maps to a Stripe Price and a presentation block below.
+ */
+export type PlanSlug = 'free' | 'lantern' | 'lantern_hoard'
+
+/**
  * Principle Detail
  *
  * Used throughout the app to represent a principle.
@@ -1641,6 +1650,17 @@ export interface UserSubscriptionDetail {
   status: string
   /** Current Period End (ISO timestamp; null on the free plan) */
   current_period_end: string | null
+  /**
+   * Cancellation Pending At Period End
+   *
+   * `true` when the subscriber has cancelled through the Stripe Customer
+   * Portal but the subscription is still entitled until
+   * `current_period_end`. Stripe holds the row at `status = 'active'` (or
+   * `'trialing'`) during this window and only transitions to `'canceled'`
+   * when the period actually expires. The SubscriptionCard reads this flag
+   * to swap the renewal copy for a "watch ends on …" treatment.
+   */
+  cancel_at_period_end: boolean
   /**
    * Whether The User May Create New Shares
    *

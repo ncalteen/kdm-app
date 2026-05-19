@@ -211,6 +211,19 @@ interface LocalContextType {
   canShare: boolean
 
   /**
+   * Subscription Management Flag
+   *
+   * Mirrors the `subscription-management` Vercel feature flag for the
+   * current request. Resolved server-side in `app/layout.tsx` and
+   * threaded through this provider so client components can gate UI
+   * surfaces (Subscription tab, Sharing tab, useStripeReturn fallback)
+   * without re-fetching the flag. `false` is the safe direction — the
+   * flag closes when Edge Config is unreachable or the caller is not
+   * on the allowlist.
+   */
+  subscriptionManagementEnabled: boolean
+
+  /**
    * Settlement List
    *
    * Cached result of `getSettlementForUser`. Refreshed automatically when
@@ -228,6 +241,17 @@ interface LocalContextType {
 interface LocalProviderProps {
   /** Children */
   children: ReactNode
+  /**
+   * Subscription Management Flag
+   *
+   * Pre-resolved server-side via `subscriptionManagementFlag()` in
+   * `app/layout.tsx`. Defaults to `false` when omitted so unit tests
+   * and Storybook stories can wrap components in `<LocalProvider>`
+   * without resolving Vercel Flags. Server-side resolution avoids
+   * client-side flag evaluation, which would require a round-trip to
+   * Edge Config from the browser.
+   */
+  subscriptionManagementEnabled?: boolean
 }
 
 /**
@@ -241,7 +265,10 @@ const LocalContext = createContext<LocalContextType | undefined>(undefined)
  * @param props Local Provider Properties
  * @returns Local Context Provider Component
  */
-export function LocalProvider({ children }: LocalProviderProps): ReactElement {
+export function LocalProvider({
+  children,
+  subscriptionManagementEnabled = false
+}: LocalProviderProps): ReactElement {
   // Get the local state information from local storage, or set to default if
   // not present.
   const [local, setLocalState] = useState<LocalStateType>(() =>
@@ -751,10 +778,72 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     }
   }, [])
 
+  /**
+   * Handle Subscription Change
+   *
+   * Re-fetches the cached `user_subscription` row whenever the Stripe
+   * webhook commits a change (plan switch, status transition, renewal,
+   * pending cancellation, or resume). Without this listener the SPA only
+   * picks up new state on re-mount, which races the webhook delivery
+   * after a Customer Portal trip. Failures are logged but never reset
+   * the cache to `null` — a transient realtime hiccup should leave the
+   * prior good state in place rather than collapse the user to free.
+   */
+  const handleSubscriptionChange = useCallback(() => {
+    getUserSubscription()
+      .then((subscription) => {
+        setUserSubscriptionState(subscription)
+      })
+      .catch((err: unknown) => {
+        console.error('Realtime User Subscription Refetch Error:', err)
+      })
+  }, [])
+
+  // Coalesces bursty INSERT / DELETE events on `settlement` (e.g. the
+  // seed-data generator dropping a handful of settlements in quick
+  // succession) into a single refetch of the cached list. Matches the
+  // debounce on `handleShareChange` so the two listeners behave
+  // consistently when both fire for the same gesture (creating a
+  // settlement and sharing it in one motion is not currently a flow, but
+  // future product shapes may combine them).
+  const ownedSettlementRefetchTimerRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
+
+  /**
+   * Handle Owned Settlement Change
+   *
+   * Re-fetches the cached `settlementList` whenever an owned settlement
+   * row is inserted or deleted for the current user. Without this listener
+   * the dropdown stays stale until the next full reload, which lets a
+   * free-tier user open the "Found a settlement" form even after they
+   * have already hit the cap (the count derives from the cached list, and
+   * the cap check guards both the dropdown affordance and the embedded
+   * create card on the settlements page).
+   */
+  const handleOwnedSettlementChange = useCallback(() => {
+    if (ownedSettlementRefetchTimerRef.current)
+      clearTimeout(ownedSettlementRefetchTimerRef.current)
+
+    ownedSettlementRefetchTimerRef.current = setTimeout(() => {
+      ownedSettlementRefetchTimerRef.current = null
+      refetchSettlementList()
+    }, 300)
+  }, [refetchSettlementList])
+
+  useEffect(() => {
+    return () => {
+      if (ownedSettlementRefetchTimerRef.current)
+        clearTimeout(ownedSettlementRefetchTimerRef.current)
+    }
+  }, [])
+
   useUserRealtimeSubscriptions({
     enabled: isAuthenticated === true,
     userId,
-    onShareChange: handleShareChange
+    onShareChange: handleShareChange,
+    onSubscriptionChange: handleSubscriptionChange,
+    onOwnedSettlementChange: handleOwnedSettlementChange
   })
 
   /**
@@ -1613,6 +1702,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       userSubscription,
       setUserSubscription,
       canShare: userSubscription?.can_share === true,
+      subscriptionManagementEnabled,
 
       settlementList,
       isSettlementListLoading
@@ -1641,6 +1731,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       local,
       userSettings,
       userSubscription,
+      subscriptionManagementEnabled,
       settlementList,
       isSettlementListLoading,
       setSelectedHunt,

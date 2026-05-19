@@ -18,6 +18,10 @@ const { mockCreateAdminClient } = vi.hoisted(() => ({
   mockCreateAdminClient: vi.fn()
 }))
 
+const { mockSubscriptionManagementFlag } = vi.hoisted(() => ({
+  mockSubscriptionManagementFlag: vi.fn()
+}))
+
 const { mockCustomersCreate, mockCheckoutSessionsCreate, MockStripe } =
   vi.hoisted(() => {
     const customersCreate = vi.fn()
@@ -43,6 +47,10 @@ vi.mock('@/lib/supabase/admin', () => ({
 
 vi.mock('stripe', () => ({
   default: MockStripe
+}))
+
+vi.mock('@/lib/flags', () => ({
+  subscriptionManagementFlag: mockSubscriptionManagementFlag
 }))
 
 import { NextRequest } from 'next/server'
@@ -90,14 +98,22 @@ function setupAuth(options: {
 
 /**
  * Wire the service-role Supabase admin client to capture writes to
- * `user_subscription`.
+ * `user_subscription`. Supports both the customer-persist `UPDATE` path
+ * and the missing-row `UPSERT` auto-provision path; either side can be
+ * forced into an error to exercise the corresponding 500 branches.
  */
-function setupAdminWriter(error: { message: string } | null = null) {
-  const eq = vi.fn().mockResolvedValue({ error })
+function setupAdminWriter(
+  opts: {
+    updateError?: { message: string } | null
+    upsertError?: { message: string } | null
+  } = {}
+) {
+  const eq = vi.fn().mockResolvedValue({ error: opts.updateError ?? null })
   const update = vi.fn().mockReturnValue({ eq })
-  mockFromUpdate.mockReturnValue({ update })
+  const upsert = vi.fn().mockResolvedValue({ error: opts.upsertError ?? null })
+  mockFromUpdate.mockReturnValue({ update, upsert })
   mockCreateAdminClient.mockReturnValue({ from: mockFromUpdate })
-  return { update, eq }
+  return { update, eq, upsert }
 }
 
 describe('POST /api/billing/checkout', () => {
@@ -109,6 +125,10 @@ describe('POST /api/billing/checkout', () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:54321'
     process.env.SUPABASE_SECRET_KEY = 'service-role-key'
     delete process.env.NEXT_PUBLIC_SITE_URL
+    // Default the feature flag to ON so existing tests continue to exercise
+    // the post-gate behavior unchanged. Tests that need the gate closed
+    // override the mock explicitly.
+    mockSubscriptionManagementFlag.mockResolvedValue(true)
   })
 
   it('returns 401 when the caller is not authenticated', async () => {
@@ -209,8 +229,8 @@ describe('POST /api/billing/checkout', () => {
     expect(args.subscription_data).toEqual({
       metadata: { user_id: 'user-1' }
     })
-    expect(args.success_url).toContain('/settings/subscription?status=success')
-    expect(args.cancel_url).toContain('/settings/subscription?status=cancelled')
+    expect(args.success_url).toContain('/?status=success')
+    expect(args.cancel_url).toContain('/?status=cancelled')
   })
 
   it('reuses an existing Stripe customer for the Lantern Hoard plan', async () => {
@@ -251,15 +271,48 @@ describe('POST /api/billing/checkout', () => {
     expect(mockCheckoutSessionsCreate).not.toHaveBeenCalled()
   })
 
-  it('returns 500 when no user_subscription row exists for the user', async () => {
-    // The default `free` row is auto-provisioned at sign-up; absence here
-    // signals a corrupted account. The route must refuse to proceed,
-    // otherwise the admin UPDATE below would silently match zero rows and
-    // strand a Stripe customer that the webhook cannot correlate back.
+  it('auto-provisions the default subscription row when none exists and continues with checkout', async () => {
+    // The sign-up trigger normally seeds a `free` row, but a user created
+    // via the GoTrue admin endpoint can bypass that path. The route should
+    // self-heal via an admin UPSERT and continue, not refuse the charge.
+    setupAuth({
+      user: { id: 'user-1', email: 'survivor@kdm.test' },
+      subscription: null
+    })
+    const { upsert, update } = setupAdminWriter()
+
+    mockCustomersCreate.mockResolvedValue({ id: 'cus_new' })
+    mockCheckoutSessionsCreate.mockResolvedValue({
+      url: 'https://checkout.stripe.test/session/cs_test_heal'
+    })
+
+    const response = await POST(buildRequest({ planId: 'lantern' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(json.url).toBe('https://checkout.stripe.test/session/cs_test_heal')
+
+    // Default row was upserted with `ignoreDuplicates` semantics so a racing
+    // sign-up trigger that wins the insert is harmless.
+    expect(upsert).toHaveBeenCalledWith(
+      { user_id: 'user-1', plan_id: 'free' },
+      { onConflict: 'user_id', ignoreDuplicates: true }
+    )
+
+    // Customer creation + persist still run because the freshly-provisioned
+    // row has no `stripe_customer_id`.
+    expect(mockCustomersCreate).toHaveBeenCalledTimes(1)
+    expect(update).toHaveBeenCalledWith({ stripe_customer_id: 'cus_new' })
+
+    expect(mockCheckoutSessionsCreate).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns 500 when auto-provisioning the missing subscription row fails', async () => {
     setupAuth({
       user: { id: 'user-1', email: 'a@b.test' },
       subscription: null
     })
+    setupAdminWriter({ upsertError: { message: 'rls write blocked' } })
 
     const response = await POST(buildRequest({ planId: 'lantern' }))
 
@@ -273,7 +326,7 @@ describe('POST /api/billing/checkout', () => {
       user: { id: 'user-1', email: 'a@b.test' },
       subscription: { stripe_customer_id: null }
     })
-    setupAdminWriter({ message: 'rls write blocked' })
+    setupAdminWriter({ updateError: { message: 'rls write blocked' } })
     mockCustomersCreate.mockResolvedValue({ id: 'cus_new' })
 
     const response = await POST(buildRequest({ planId: 'lantern' }))
@@ -418,5 +471,62 @@ describe('POST /api/billing/checkout', () => {
       ;(process.env as Record<string, string | undefined>).NODE_ENV =
         originalNodeEnv
     }
+  })
+})
+
+describe('POST /api/billing/checkout — subscription-management flag gate', () => {
+  // The route MUST treat the flag as a hard outer gate. Off-allowlist
+  // callers should never be able to probe the route's existence via 401
+  // (auth) or 400 (validation) — both leak that the endpoint is wired up
+  // and would let an attacker discover billing surfaces before they ship.
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123'
+    process.env.STRIPE_PRICE_ID_LANTERN = 'price_lantern'
+    process.env.STRIPE_PRICE_ID_LANTERN_HOARD = 'price_lantern_hoard'
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:54321'
+    process.env.SUPABASE_SECRET_KEY = 'service-role-key'
+  })
+
+  it('returns 404 when the flag is off, even for authenticated callers', async () => {
+    mockSubscriptionManagementFlag.mockResolvedValue(false)
+    setupAuth({
+      user: { id: 'user-1', email: 'survivor@kdm.test' },
+      subscription: { stripe_customer_id: null }
+    })
+
+    const response = await POST(buildRequest({ planId: 'lantern' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(json.error).toBe('Not Found')
+    // Hard gate: the route must short-circuit before any Supabase or
+    // Stripe work. Verifying these were never called catches accidental
+    // reordering that would leak the flag gate's existence.
+    expect(mockGetUser).not.toHaveBeenCalled()
+    expect(mockCustomersCreate).not.toHaveBeenCalled()
+    expect(mockCheckoutSessionsCreate).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when the flag is off, even for unauthenticated callers', async () => {
+    // Identical surface to the authenticated case — the flag gate runs
+    // before auth, so the response must be indistinguishable.
+    mockSubscriptionManagementFlag.mockResolvedValue(false)
+    setupAuth({ user: null })
+
+    const response = await POST(buildRequest({ planId: 'lantern' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(json.error).toBe('Not Found')
+  })
+
+  it('resolves the flag exactly once per request', async () => {
+    mockSubscriptionManagementFlag.mockResolvedValue(false)
+    setupAuth({ user: null })
+
+    await POST(buildRequest({ planId: 'lantern' }))
+
+    expect(mockSubscriptionManagementFlag).toHaveBeenCalledTimes(1)
   })
 })

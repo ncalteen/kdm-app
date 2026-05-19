@@ -7,6 +7,7 @@ import { SettlementCard } from '@/components/settlement/settlement-card'
 import { SiteHeader } from '@/components/side-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
+import { useStripeReturn } from '@/hooks/use-stripe-return'
 import { useRouter } from 'next/navigation'
 import { ReactElement, Suspense, useEffect } from 'react'
 
@@ -72,6 +73,12 @@ function MainPageContent(): ReactElement {
  * @returns Main Page Component
  */
 function MainPage(): ReactElement {
+  // Translate Stripe's `?status=success|cancelled` redirect contract into
+  // SPA state — toast, tab switch, subscription refetch, URL cleanup —
+  // before destructuring `useLocal` so the hook owns its own dependency
+  // resolution and the rest of `MainPage` doesn't need to know about it.
+  useStripeReturn()
+
   const {
     // isCreatingNewHunt,
     isCreatingNewSettlement,

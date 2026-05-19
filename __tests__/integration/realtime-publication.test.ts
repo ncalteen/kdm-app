@@ -199,6 +199,20 @@ describe('Realtime publication membership', () => {
     expect(matches).toHaveLength(1)
   })
 
+  // Issue #170 acceptance: `user_subscription` is added to the publication
+  // by `20260602000000_user_subscription_realtime_publication.sql` so the
+  // SPA can refresh its cached entitlement state as soon as the Stripe
+  // webhook commits, without waiting for the user to round-trip through
+  // the Customer Portal and re-mount on return.
+  it('includes `user_subscription` in `supabase_realtime` (issue #170)', async () => {
+    const { data, error } = await admin.rpc('realtime_publication_tables')
+
+    expect(error).toBeNull()
+    const rows = (data ?? []) as { tablename: string }[]
+    const matches = rows.filter((r) => r.tablename === 'user_subscription')
+    expect(matches).toHaveLength(1)
+  })
+
   // [E2.4] acceptance: every catalog table covered by E2.1.a/b/c is in
   // the publication so collaborators receive rules-text edits live.
   it('includes every catalog table in `supabase_realtime` ([E2.4])', async () => {

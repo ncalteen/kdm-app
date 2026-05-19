@@ -2,6 +2,7 @@ import '@/app/globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { LocalProvider } from '@/contexts/local-context'
+import { subscriptionManagementFlag } from '@/lib/flags'
 import { Analytics } from '@vercel/analytics/next'
 import { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
@@ -41,6 +42,16 @@ export default async function RootLayout({
 }>): Promise<ReactElement> {
   const nonce = (await headers()).get('x-nonce') ?? undefined
 
+  // Resolve the subscription-management feature flag server-side and thread
+  // it through `LocalProvider` so client components (sidebar, settlement
+  // card, useStripeReturn hook) can gate billing surfaces without paying
+  // the cost of a client-side flag round-trip. The flag is allowlist-gated
+  // via Edge Config and defaults to `false` on any error path — see
+  // `lib/flags.ts`. Reading `x-nonce` above already opts the route into
+  // dynamic rendering, so this per-request flag evaluation does not
+  // regress static optimization.
+  const subscriptionManagementEnabled = await subscriptionManagementFlag()
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -52,7 +63,10 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
           nonce={nonce}>
-          <LocalProvider>{children}</LocalProvider>
+          <LocalProvider
+            subscriptionManagementEnabled={subscriptionManagementEnabled}>
+            {children}
+          </LocalProvider>
           <Toaster />
         </ThemeProvider>
       </body>

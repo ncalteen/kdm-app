@@ -117,6 +117,47 @@ function extractRelationId(
 }
 
 /**
+ * Subscription Pending Cancellation
+ *
+ * Stripe represents "the subscriber has scheduled a cancellation that has
+ * not yet executed" with TWO different field combinations depending on
+ * which Customer Portal flow was used:
+ *
+ *   - **"Cancel at period end"** toggle (default Portal config) sets
+ *     `cancel_at_period_end: true` and leaves `cancel_at` null.
+ *   - **"Cancel on date"** picker (or any cancellation scheduled via the
+ *     Stripe API with an explicit `cancel_at`) sets `cancel_at` to a future
+ *     Unix timestamp while leaving `cancel_at_period_end: false` and
+ *     `canceled_at: null`. The example payload in issue thread shows this:
+ *     `{ cancel_at: 1781829472, cancel_at_period_end: false, canceled_at: null,
+ *        status: 'active' }`.
+ *
+ * In both cases the subscription stays at `status: 'active'` until the
+ * cancellation actually fires, so we treat them uniformly and store a
+ * single derived boolean on `user_subscription.cancel_at_period_end` —
+ * which the SubscriptionCard reads to render the "Ending" badge and the
+ * "Your watch ends on …" copy.
+ *
+ * Note: when `canceled_at` is non-null the cancellation has already
+ * executed and Stripe will emit `customer.subscription.deleted` separately
+ * (handled by `handleSubscriptionDeleted`). We treat that intermediate
+ * state as NOT pending so we don't flash the "Ending" badge on a row that
+ * is about to be reset to the free tier.
+ *
+ * @param subscription Stripe Subscription
+ * @returns True When A Cancellation Is Scheduled But Not Yet Executed
+ */
+function isSubscriptionPendingCancellation(
+  subscription: Stripe.Subscription
+): boolean {
+  if (subscription.canceled_at != null) return false
+
+  if (subscription.cancel_at_period_end === true) return true
+
+  return subscription.cancel_at != null
+}
+
+/**
  * Resolve User ID From Stripe Customer
  *
  * Subscription events do not always carry the `user_id` metadata set by the
@@ -210,6 +251,7 @@ async function handleCheckoutSessionCompleted(
       user_id: userId,
       plan_id: planId,
       status: 'active',
+      cancel_at_period_end: isSubscriptionPendingCancellation(subscription),
       current_period_end: extractCurrentPeriodEnd(subscription),
       stripe_customer_id: customerId,
       stripe_subscription_id: subscription.id,
@@ -225,7 +267,7 @@ async function handleCheckoutSessionCompleted(
  * Handle Subscription Updated
  *
  * Reflects in-flight subscription changes back into `user_subscription`.
- * Covers three flavors of update:
+ * Covers four flavors of update:
  *
  *   - **Status transitions** — renewals, failed payments, reactivations
  *     after past-due. Maps Stripe's status to the column's accepted values.
@@ -235,6 +277,17 @@ async function handleCheckoutSessionCompleted(
  *     on every update so the column doesn't drift after a switch.
  *   - **Period renewals** — `current_period_end` advances each billing
  *     cycle.
+ *   - **Pending cancellation** — when a subscriber cancels via the Portal,
+ *     Stripe keeps the row at `status = 'active'` until the period actually
+ *     expires and signals the pending state in one of two ways depending
+ *     on the Portal flow: `cancel_at_period_end: true`, or `cancel_at` set
+ *     to a future timestamp with `cancel_at_period_end: false` and
+ *     `canceled_at: null`. We mirror either signal into our column so the
+ *     UI can surface a "watch ends on …" treatment while the user is still
+ *     entitled. The flag is cleared back to `false` if the user resumes
+ *     the subscription before it expires (Stripe also emits an `updated`
+ *     event in that case). See `isSubscriptionPendingCancellation` for the
+ *     full derivation.
  *
  * Falls back to a `stripe_customer_id` lookup when the subscription's
  * `metadata.user_id` is unset (Customer Portal-initiated updates can drop
@@ -292,6 +345,7 @@ async function handleSubscriptionUpdated(
     .update({
       plan_id: planId,
       status,
+      cancel_at_period_end: isSubscriptionPendingCancellation(subscription),
       current_period_end: extractCurrentPeriodEnd(subscription),
       stripe_subscription_id: subscription.id,
       updated_at: new Date().toISOString()
@@ -338,6 +392,7 @@ async function handleSubscriptionDeleted(
     .update({
       plan_id: 'free',
       status: 'canceled',
+      cancel_at_period_end: false,
       updated_at: new Date().toISOString()
     })
     .eq('user_id', userId)

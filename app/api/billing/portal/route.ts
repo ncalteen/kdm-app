@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { STRIPE_API_VERSION } from '@/lib/common'
+import { subscriptionManagementFlag } from '@/lib/flags'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { resolveOrigin } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -42,6 +43,13 @@ export const runtime = 'nodejs'
  * @returns JSON Response Containing The Portal Session URL
  */
 export async function POST(request: NextRequest) {
+  // 0. Gate the entire surface behind the `subscription-management` feature
+  //    flag. Mirrors `/api/billing/checkout` — off-allowlist callers receive
+  //    a 404 so the route is not advertised while the rollout is in
+  //    progress. See `lib/flags.ts` for the allowlist contract.
+  if (!(await subscriptionManagementFlag()))
+    return NextResponse.json({ error: 'Not Found' }, { status: 404 })
+
   // 1. Authenticate the caller. The portal is account-scoped — unauthenticated
   //    requests must never reach Stripe.
   const supabase = await createClient()
@@ -87,7 +95,12 @@ export async function POST(request: NextRequest) {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: subscription.stripe_customer_id,
-      return_url: `${origin}/settings/subscription`
+      // The app is a SPA — the Customer Portal is always launched from the
+      // Subscription tab, and `selectedTab` is persisted in localStorage, so
+      // Stripe's return URL just drops the user back at the app root and the
+      // SPA restores the Subscription tab automatically. Mirrors the
+      // checkout route's redirect contract.
+      return_url: `${origin}/`
     })
 
     if (!session.url) {
