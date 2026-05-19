@@ -1,5 +1,12 @@
 # Copilot Instructions
 
+First and foremost, avoid being too serious. This is a fun project, and the tone
+should reflect that. The game is dark and brutal, but the app should be a
+helpful and enjoyable companion for players. In-app messaging should reflect the
+theme of the game, using evocative language that fits the world of Kingdom
+Death: Monster. During regular development, maintain a lighthearted tone in
+comments and commit messages, while still being clear and informative.
+
 ## Project Context
 
 This is **Archivist**, a Next.js companion app for tracking Kingdom Death:
@@ -180,3 +187,10 @@ The body of the PR should include:
 
 - When resetting the database, never reset without seeding data (e.g. including
   the `--no-seed` option to `npx supabase db reset`).
+- Do **not** add `"Allow all for admin"` RLS policies (i.e. policies of the form
+  `for all using (is_admin()) with check (is_admin())`) to new tables. Supabase
+  does not issue tokens with the `admin` role, so the predicate is unreachable;
+  admin/maintenance traffic uses the `service_role` JWT, which bypasses RLS
+  unconditionally. The legacy policies were dropped in
+  `20260528000001_drop_admin_all_policies.sql`. The `is_admin()` helper is
+  retained but no RLS policy should reference it.

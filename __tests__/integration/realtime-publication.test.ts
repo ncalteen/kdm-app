@@ -213,6 +213,19 @@ describe('Realtime publication membership', () => {
     expect(matches).toHaveLength(1)
   })
 
+  // [E4.3] acceptance: `notification` is added to the publication by
+  // `20260604000000_notification.sql` so the in-app bell pushes new
+  // notifications to recipients live (no polling). The table's "Allow
+  // select own" RLS policy is honored by the secure broadcast channel.
+  it('includes `notification` in `supabase_realtime` ([E4.3])', async () => {
+    const { data, error } = await admin.rpc('realtime_publication_tables')
+
+    expect(error).toBeNull()
+    const rows = (data ?? []) as { tablename: string }[]
+    const matches = rows.filter((r) => r.tablename === 'notification')
+    expect(matches).toHaveLength(1)
+  })
+
   // [E2.4] acceptance: every catalog table covered by E2.1.a/b/c is in
   // the publication so collaborators receive rules-text edits live.
   it('includes every catalog table in `supabase_realtime` ([E2.4])', async () => {
