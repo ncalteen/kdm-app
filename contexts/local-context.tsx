@@ -211,6 +211,19 @@ interface LocalContextType {
   canShare: boolean
 
   /**
+   * Subscription Management Flag
+   *
+   * Mirrors the `subscription-management` Vercel feature flag for the
+   * current request. Resolved server-side in `app/layout.tsx` and
+   * threaded through this provider so client components can gate UI
+   * surfaces (Subscription tab, Sharing tab, useStripeReturn fallback)
+   * without re-fetching the flag. `false` is the safe direction — the
+   * flag closes when Edge Config is unreachable or the caller is not
+   * on the allowlist.
+   */
+  subscriptionManagementEnabled: boolean
+
+  /**
    * Settlement List
    *
    * Cached result of `getSettlementForUser`. Refreshed automatically when
@@ -228,6 +241,17 @@ interface LocalContextType {
 interface LocalProviderProps {
   /** Children */
   children: ReactNode
+  /**
+   * Subscription Management Flag
+   *
+   * Pre-resolved server-side via `subscriptionManagementFlag()` in
+   * `app/layout.tsx`. Defaults to `false` when omitted so unit tests
+   * and Storybook stories can wrap components in `<LocalProvider>`
+   * without resolving Vercel Flags. Server-side resolution avoids
+   * client-side flag evaluation, which would require a round-trip to
+   * Edge Config from the browser.
+   */
+  subscriptionManagementEnabled?: boolean
 }
 
 /**
@@ -241,7 +265,10 @@ const LocalContext = createContext<LocalContextType | undefined>(undefined)
  * @param props Local Provider Properties
  * @returns Local Context Provider Component
  */
-export function LocalProvider({ children }: LocalProviderProps): ReactElement {
+export function LocalProvider({
+  children,
+  subscriptionManagementEnabled = false
+}: LocalProviderProps): ReactElement {
   // Get the local state information from local storage, or set to default if
   // not present.
   const [local, setLocalState] = useState<LocalStateType>(() =>
@@ -1635,6 +1662,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       userSubscription,
       setUserSubscription,
       canShare: userSubscription?.can_share === true,
+      subscriptionManagementEnabled,
 
       settlementList,
       isSettlementListLoading
@@ -1663,6 +1691,7 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
       local,
       userSettings,
       userSubscription,
+      subscriptionManagementEnabled,
       settlementList,
       isSettlementListLoading,
       setSelectedHunt,

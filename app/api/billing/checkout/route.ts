@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { STRIPE_API_VERSION } from '@/lib/common'
+import { subscriptionManagementFlag } from '@/lib/flags'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { resolveOrigin } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -71,6 +72,18 @@ function resolvePriceId(planId: BillingPlanId): string {
  * @returns JSON Response Containing The Checkout Session URL
  */
 export async function POST(request: NextRequest) {
+  // 0. Gate the entire surface behind the `subscription-management` feature
+  //    flag. The early-access allowlist lives in Vercel Edge Config. Off-
+  //    allowlist callers receive a 404 — not a 401 or 403 — so the route's
+  //    existence is not advertised to unprivileged users while the rollout
+  //    is in progress. Defense-in-depth: the Subscription tab in the UI is
+  //    gated by the same flag, but a determined caller could hit this
+  //    endpoint directly. The webhook (`/api/billing/webhook`) is NOT gated
+  //    so Stripe can keep syncing existing subscriptions even if a tester
+  //    is later removed from the allowlist.
+  if (!(await subscriptionManagementFlag()))
+    return NextResponse.json({ error: 'Not Found' }, { status: 404 })
+
   // 1. Authenticate the caller first — unauthenticated requests must not be
   //    able to probe the request schema via 400 responses.
   const supabase = await createClient()

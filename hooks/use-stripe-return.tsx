@@ -70,7 +70,8 @@ function isStripeReturnStatus(
 export function useStripeReturn(): void {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { setSelectedTab, setUserSubscription } = useLocal()
+  const { setSelectedTab, setUserSubscription, subscriptionManagementEnabled } =
+    useLocal()
   const handledRef = useRef(false)
 
   useEffect(() => {
@@ -82,7 +83,13 @@ export function useStripeReturn(): void {
     handledRef.current = true
 
     if (status === 'success') {
-      setSelectedTab(TabType.SUBSCRIPTION)
+      // Defense-in-depth: a user removed from the
+      // `subscription-management` allowlist mid-checkout could still
+      // bounce back here with `?status=success` — skip the tab switch in
+      // that case so they don't land on a Subscription tab that the
+      // sidebar no longer exposes and `SettlementCard` no longer
+      // renders.
+      if (subscriptionManagementEnabled) setSelectedTab(TabType.SUBSCRIPTION)
       toast.success(STRIPE_CHECKOUT_SUCCESS_MESSAGE())
 
       // Refresh the cached subscription so the new plan highlight
@@ -100,5 +107,11 @@ export function useStripeReturn(): void {
     }
 
     router.replace('/')
-  }, [searchParams, router, setSelectedTab, setUserSubscription])
+  }, [
+    searchParams,
+    router,
+    setSelectedTab,
+    setUserSubscription,
+    subscriptionManagementEnabled
+  ])
 }

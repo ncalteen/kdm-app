@@ -10,6 +10,7 @@ import {
   SidebarHeader,
   SidebarRail
 } from '@/components/ui/sidebar'
+import { useLocal } from '@/contexts/local-context'
 import {
   CampaignType,
   DatabaseCampaignType,
@@ -39,6 +40,10 @@ import { ComponentProps, ReactElement, useMemo } from 'react'
 
 /**
  * Primary Navigation Items
+ *
+ * The Sharing entry is appended at runtime inside `AppSidebar` so the
+ * `subscription-management` feature flag can gate it — see the
+ * `useMemo`-derived `navItems` below.
  */
 const baseNavPrimary = [
   {
@@ -70,20 +75,14 @@ const baseNavPrimary = [
     title: 'Notes',
     tab: TabType.NOTES,
     icon: NotebookPenIcon
-  },
-  ...(process.env.NODE_ENV === 'development'
-    ? [
-        {
-          title: 'Sharing',
-          tab: TabType.SHARING,
-          icon: Share2Icon
-        }
-      ]
-    : [])
+  }
 ]
 
 /**
  * Squires of the Citadel Navigation Items
+ *
+ * Same Sharing-gating contract as `baseNavPrimary` — the entry is
+ * appended in `navItems` when the feature flag resolves true.
  */
 const navSquires = [
   {
@@ -115,17 +114,22 @@ const navSquires = [
     title: 'Notes',
     tab: TabType.NOTES,
     icon: NotebookPenIcon
-  },
-  ...(process.env.NODE_ENV === 'development'
-    ? [
-        {
-          title: 'Sharing',
-          tab: TabType.SHARING,
-          icon: Share2Icon
-        }
-      ]
-    : [])
+  }
 ]
+
+/**
+ * Sharing Navigation Entry
+ *
+ * Shared between the Primary and Squires settlement variants. Gated
+ * behind the `subscription-management` feature flag — the entry is
+ * spliced into the per-campaign nav list at runtime so off-allowlist
+ * users never see the tab.
+ */
+const navSharingEntry = {
+  title: 'Sharing',
+  tab: TabType.SHARING,
+  icon: Share2Icon
+}
 
 /**
  * Embark Navigation Items
@@ -149,16 +153,25 @@ const navEmbark = [
 ]
 
 /**
- * Settings Navigation Items
+ * Subscription Navigation Entry
  *
- * The Sharing entry is gated to development builds only because the
- * `docs/settlement-sharing-architecture.md` §9 entitlement plumbing (Stripe +
- * the `user_subscription` / `subscription_plan` tables and the
- * `user_can_share()` predicate) does not exist yet. Once paid gating
- * lands, replace the `NODE_ENV` check with the entitlement check so the
- * tab appears for all eligible subscribers in production.
+ * Gated behind the `subscription-management` feature flag at runtime in
+ * `AppSidebar`'s `navSettings` memo. Off-allowlist users never see the
+ * tab; on-allowlist users see it in production.
  */
-const navSettings = [
+const navSubscriptionEntry = {
+  title: 'Subscription',
+  tab: TabType.SUBSCRIPTION,
+  icon: CreditCardIcon
+}
+
+/**
+ * Settings Navigation Items (Always Visible)
+ *
+ * The Subscription entry is appended at runtime by the `navSettings`
+ * memo so the `subscription-management` feature flag can gate it.
+ */
+const baseNavSettings = [
   {
     title: 'User Content',
     tab: TabType.USER,
@@ -168,11 +181,6 @@ const navSettings = [
     title: 'Settings',
     tab: TabType.SETTINGS,
     icon: SettingsIcon
-  },
-  {
-    title: 'Subscription',
-    tab: TabType.SUBSCRIPTION,
-    icon: CreditCardIcon
   },
   {
     title: 'Help',
@@ -244,6 +252,13 @@ export function AppSidebar({
   setSelectedTab,
   ...props
 }: AppSidebarProps): ReactElement {
+  // The `subscription-management` feature flag gates BOTH the Subscription
+  // tab (billing surface) and the Sharing tab (the paid feature) behind a
+  // single early-access allowlist. When the rollout opens to everyone, the
+  // Sharing entry should be re-gated on `canShare` so non-subscribers stop
+  // seeing it; see `docs/settlement-sharing-architecture.md` §9.
+  const { subscriptionManagementEnabled } = useLocal()
+
   const navItems = useMemo(() => {
     const items =
       selectedSettlement?.campaign_type ===
@@ -267,8 +282,32 @@ export function AppSidebar({
       }
     }
 
+    // Append Sharing only when the user is in the subscription-management
+    // early-access cohort. Off-allowlist users never see the entry.
+    if (subscriptionManagementEnabled) items.push(navSharingEntry)
+
     return items
-  }, [selectedSettlement?.campaign_type, selectedSettlement?.survivor_type])
+  }, [
+    selectedSettlement?.campaign_type,
+    selectedSettlement?.survivor_type,
+    subscriptionManagementEnabled
+  ])
+
+  // Splice the Subscription entry between Settings and Help so the
+  // Configuration group reads User Content / Settings / Subscription /
+  // Help in the order the existing UI established. Off-allowlist users
+  // see User Content / Settings / Help with no gap.
+  const navSettings = useMemo(() => {
+    if (!subscriptionManagementEnabled) return baseNavSettings
+
+    const items = [...baseNavSettings]
+    const helpIndex = items.findIndex((item) => item.tab === TabType.HELP)
+
+    if (helpIndex === -1) items.push(navSubscriptionEntry)
+    else items.splice(helpIndex, 0, navSubscriptionEntry)
+
+    return items
+  }, [subscriptionManagementEnabled])
 
   return (
     <Sidebar

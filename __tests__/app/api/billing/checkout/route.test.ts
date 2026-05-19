@@ -18,6 +18,10 @@ const { mockCreateAdminClient } = vi.hoisted(() => ({
   mockCreateAdminClient: vi.fn()
 }))
 
+const { mockSubscriptionManagementFlag } = vi.hoisted(() => ({
+  mockSubscriptionManagementFlag: vi.fn()
+}))
+
 const { mockCustomersCreate, mockCheckoutSessionsCreate, MockStripe } =
   vi.hoisted(() => {
     const customersCreate = vi.fn()
@@ -43,6 +47,10 @@ vi.mock('@/lib/supabase/admin', () => ({
 
 vi.mock('stripe', () => ({
   default: MockStripe
+}))
+
+vi.mock('@/lib/flags', () => ({
+  subscriptionManagementFlag: mockSubscriptionManagementFlag
 }))
 
 import { NextRequest } from 'next/server'
@@ -109,6 +117,10 @@ describe('POST /api/billing/checkout', () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:54321'
     process.env.SUPABASE_SECRET_KEY = 'service-role-key'
     delete process.env.NEXT_PUBLIC_SITE_URL
+    // Default the feature flag to ON so existing tests continue to exercise
+    // the post-gate behavior unchanged. Tests that need the gate closed
+    // override the mock explicitly.
+    mockSubscriptionManagementFlag.mockResolvedValue(true)
   })
 
   it('returns 401 when the caller is not authenticated', async () => {
@@ -418,5 +430,62 @@ describe('POST /api/billing/checkout', () => {
       ;(process.env as Record<string, string | undefined>).NODE_ENV =
         originalNodeEnv
     }
+  })
+})
+
+describe('POST /api/billing/checkout — subscription-management flag gate', () => {
+  // The route MUST treat the flag as a hard outer gate. Off-allowlist
+  // callers should never be able to probe the route's existence via 401
+  // (auth) or 400 (validation) — both leak that the endpoint is wired up
+  // and would let an attacker discover billing surfaces before they ship.
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123'
+    process.env.STRIPE_PRICE_ID_LANTERN = 'price_lantern'
+    process.env.STRIPE_PRICE_ID_LANTERN_HOARD = 'price_lantern_hoard'
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:54321'
+    process.env.SUPABASE_SECRET_KEY = 'service-role-key'
+  })
+
+  it('returns 404 when the flag is off, even for authenticated callers', async () => {
+    mockSubscriptionManagementFlag.mockResolvedValue(false)
+    setupAuth({
+      user: { id: 'user-1', email: 'survivor@kdm.test' },
+      subscription: { stripe_customer_id: null }
+    })
+
+    const response = await POST(buildRequest({ planId: 'lantern' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(json.error).toBe('Not Found')
+    // Hard gate: the route must short-circuit before any Supabase or
+    // Stripe work. Verifying these were never called catches accidental
+    // reordering that would leak the flag gate's existence.
+    expect(mockGetUser).not.toHaveBeenCalled()
+    expect(mockCustomersCreate).not.toHaveBeenCalled()
+    expect(mockCheckoutSessionsCreate).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when the flag is off, even for unauthenticated callers', async () => {
+    // Identical surface to the authenticated case — the flag gate runs
+    // before auth, so the response must be indistinguishable.
+    mockSubscriptionManagementFlag.mockResolvedValue(false)
+    setupAuth({ user: null })
+
+    const response = await POST(buildRequest({ planId: 'lantern' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(json.error).toBe('Not Found')
+  })
+
+  it('resolves the flag exactly once per request', async () => {
+    mockSubscriptionManagementFlag.mockResolvedValue(false)
+    setupAuth({ user: null })
+
+    await POST(buildRequest({ planId: 'lantern' }))
+
+    expect(mockSubscriptionManagementFlag).toHaveBeenCalledTimes(1)
   })
 })

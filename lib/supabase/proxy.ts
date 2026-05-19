@@ -70,10 +70,11 @@ export async function updateSession(request: NextRequest) {
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/api')
+    !request.nextUrl.pathname.startsWith('/api') &&
+    !request.nextUrl.pathname.startsWith('/.well-known')
   ) {
     // No user — redirect HTML navigations to the login page. API routes
-    // are intentionally excluded:
+    // and the `.well-known` namespace are intentionally excluded:
     //
     //   - `/api/billing/webhook` authenticates via the Stripe-Signature
     //     header, never via a Supabase session cookie. Stripe does NOT
@@ -85,6 +86,11 @@ export async function updateSession(request: NextRequest) {
     //     own `401 { error: 'Not Authenticated' }` JSON responses, which
     //     is what their fetch-based callers expect. Returning a 307 to
     //     an HTML login page would corrupt the client contract.
+    //   - `/.well-known/vercel/flags` is the Vercel Toolbar flag-
+    //     discovery endpoint, signed via `FLAGS_SECRET` instead of the
+    //     Supabase session. Redirecting it would break toolbar overrides
+    //     for unauthenticated reviewers (e.g. previewing a deployment
+    //     before signing in).
     //
     // Any future `/api/*` route should follow the same pattern: enforce
     // its own auth and return JSON status codes rather than relying on

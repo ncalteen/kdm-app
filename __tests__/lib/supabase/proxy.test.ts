@@ -156,4 +156,20 @@ describe('updateSession — API routes are exempt from the redirect', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('location')).toBeNull()
   })
+
+  it('does not redirect the Vercel Flags discovery endpoint when unauthenticated', async () => {
+    // The `/.well-known/vercel/flags` endpoint is signed via the
+    // `FLAGS_SECRET` env var rather than a Supabase session cookie. The
+    // Vercel Toolbar must be able to reach it from preview deployments and
+    // unauthenticated reviewer browsers; a redirect would break override
+    // discovery for the feature flag system.
+    primeSupabase()
+
+    const response = await updateSession(
+      buildRequest('/.well-known/vercel/flags')
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('location')).toBeNull()
+  })
 })
