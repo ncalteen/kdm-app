@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { TriangleAlertIcon } from 'lucide-react'
@@ -90,33 +91,48 @@ export function SignUpForm({
         return
       }
 
-      // Sign up the user with Supabase Auth
+      // Sign up the user with Supabase Auth. The username is stashed in
+      // `raw_user_meta_data` so the email-confirmation route can provision
+      // settings as a backstop if this client-side flow doesn't surface a
+      // usable `data.user` (e.g., supabase-js parsing quirks for
+      // confirmation-required signups, or a 4xx from GoTrue after the auth
+      // row commits).
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/confirm`
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
+          data: { username }
         }
       })
       if (signUpError) throw signUpError
-      if (!data.user) throw new Error('User creation failed')
 
-      // Initialize user settings via RPC. The user is not yet authenticated
-      // (email confirmation pending), so a direct insert would be blocked by
-      // RLS. The SECURITY DEFINER function handles this safely.
-      const { error: settingsError } = await supabase.rpc(
-        'initialize_user_settings',
-        { p_user_id: data.user.id, p_username: username }
-      )
-
-      if (settingsError)
-        router.push(
-          `/auth/error?error=${encodeURIComponent(settingsError.message)}`
+      // Best-effort: provision settings inline so the row exists before the
+      // user confirms their email. If `data.user` is absent (some
+      // supabase-js versions return `null` for confirmation-required
+      // signups — see https://github.com/supabase/auth-js v2.106 regression
+      // in `_sessionResponse`), the SECURITY DEFINER backstop in
+      // `/auth/confirm` reads `raw_user_meta_data` and calls the same RPC
+      // after the PKCE exchange.
+      if (data?.user?.id) {
+        const { error: settingsError } = await supabase.rpc(
+          'initialize_user_settings',
+          { p_user_id: data.user.id, p_username: username }
         )
+
+        if (settingsError) {
+          console.error('Initialize User Settings Error:', settingsError)
+          router.push(
+            `/auth/error?error=${encodeURIComponent(settingsError.message)}`
+          )
+          return
+        }
+      }
 
       router.push('/auth/sign-up-success')
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
+      console.error('Sign Up Error:', error)
+      setError(error instanceof Error ? error.message : ERROR_MESSAGE())
     } finally {
       setIsLoading(false)
     }
