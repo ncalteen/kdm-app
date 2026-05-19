@@ -151,7 +151,7 @@ export function UpsellModal({
             reads as the source of light, not the rim of it. */}
         <div className="relative flex justify-center pt-2 pb-1">
           <div
-            className="absolute inset-x-0 top-1/2 h-32 -translate-y-1/2 bg-[radial-gradient(closest-side,var(--color-amber-500),transparent_70%)]/25"
+            className="absolute inset-x-0 top-1/2 h-32 -translate-y-1/2 bg-[radial-gradient(closest-side,var(--color-amber-500),transparent_70%)] opacity-25"
             aria-hidden="true"
           />
           <div className="relative flex h-16 w-16 items-center justify-center">
@@ -172,11 +172,15 @@ export function UpsellModal({
             Light another lantern
           </DialogTitle>
           <DialogDescription className="text-center text-sm">
-            Subscribe for{' '}
-            <span className="font-medium text-foreground">$5 a month</span> to
-            share settlements with your full hunting party.
+            Sharing this settlement requires lighting a new lantern.
           </DialogDescription>
         </DialogHeader>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Subscribe for{' '}
+          <span className="font-medium text-foreground">$5 a month</span> to
+          share the watch with up to your full hunting party.
+        </p>
 
         <ul className="space-y-3 rounded-md border border-border/60 bg-muted/40 p-4">
           <UpsellBullet

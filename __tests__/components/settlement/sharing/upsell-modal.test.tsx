@@ -60,9 +60,23 @@ describe('UpsellModal', () => {
   it('renders the spec-required copy when open', () => {
     const html = renderToStaticMarkup(<UpsellModal {...baseProps} />)
 
-    // Title and body copy from the issue spec.
+    // Title from the issue spec.
     expect(html).toContain('Light another lantern')
+
+    // The description sentence must appear verbatim so copy regressions
+    // (or spec drift) fail in CI.
+    expect(html).toContain(
+      'Sharing this settlement requires lighting a new lantern.'
+    )
+
+    // The second sentence wraps the price in an inline <span>, so we
+    // assert both halves bracketing the styled fragment plus the price
+    // itself — together they pin the full required sentence in order.
+    expect(html).toContain('Subscribe for ')
     expect(html).toContain('$5 a month')
+    expect(html).toContain(
+      ' to share the watch with up to your full hunting party.'
+    )
 
     // Primary and secondary CTAs.
     expect(html).toContain('Subscribe')
