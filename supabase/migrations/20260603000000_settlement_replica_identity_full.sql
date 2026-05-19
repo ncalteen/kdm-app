@@ -1,0 +1,28 @@
+--------------------------------------------------------------------------------
+-- Settlement Replica Identity (Full)
+--
+-- Supabase Realtime evaluates channel filters against the row payload it
+-- ships to subscribers. For INSERT and UPDATE events the payload always
+-- contains every column, so column-level filters (`user_id=eq.<uuid>`)
+-- behave the way callers expect. For DELETE events the payload is built
+-- from the table's REPLICA IDENTITY, which defaults to the primary key
+-- columns only. `settlement` uses `id` as its sole PK, so a DELETE event
+-- arrives at Realtime without `user_id`, the filter cannot match, and the
+-- event is silently dropped.
+--
+-- That silent drop showed up in the SPA as: deleting a settlement did not
+-- refresh the settlement selector / free-tier ownership counter without a
+-- full page reload, even though the corresponding INSERT path worked. The
+-- companion `settlement_shared_user` listener kept working only because
+-- that table's composite PK already includes the filter column
+-- (`shared_user_id`), so the default replica identity was sufficient.
+--
+-- Setting REPLICA IDENTITY FULL writes every column of the OLD row into
+-- WAL on DELETE/UPDATE, which lets Realtime evaluate `user_id=eq.<uuid>`
+-- (and any future column-level filters) for DELETE events. The WAL
+-- overhead is negligible here — `settlement` has roughly a dozen short
+-- columns and a small row count per user (the free tier caps owners at
+-- five) — and the table is already in the `supabase_realtime` publication
+-- from `20260327000000_enable_realtime_gameplay_tables.sql`.
+--------------------------------------------------------------------------------
+alter table settlement replica identity full;

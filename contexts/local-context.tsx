@@ -799,11 +799,51 @@ export function LocalProvider({
       })
   }, [])
 
+  // Coalesces bursty INSERT / DELETE events on `settlement` (e.g. the
+  // seed-data generator dropping a handful of settlements in quick
+  // succession) into a single refetch of the cached list. Matches the
+  // debounce on `handleShareChange` so the two listeners behave
+  // consistently when both fire for the same gesture (creating a
+  // settlement and sharing it in one motion is not currently a flow, but
+  // future product shapes may combine them).
+  const ownedSettlementRefetchTimerRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
+
+  /**
+   * Handle Owned Settlement Change
+   *
+   * Re-fetches the cached `settlementList` whenever an owned settlement
+   * row is inserted or deleted for the current user. Without this listener
+   * the dropdown stays stale until the next full reload, which lets a
+   * free-tier user open the "Found a settlement" form even after they
+   * have already hit the cap (the count derives from the cached list, and
+   * the cap check guards both the dropdown affordance and the embedded
+   * create card on the settlements page).
+   */
+  const handleOwnedSettlementChange = useCallback(() => {
+    if (ownedSettlementRefetchTimerRef.current)
+      clearTimeout(ownedSettlementRefetchTimerRef.current)
+
+    ownedSettlementRefetchTimerRef.current = setTimeout(() => {
+      ownedSettlementRefetchTimerRef.current = null
+      refetchSettlementList()
+    }, 300)
+  }, [refetchSettlementList])
+
+  useEffect(() => {
+    return () => {
+      if (ownedSettlementRefetchTimerRef.current)
+        clearTimeout(ownedSettlementRefetchTimerRef.current)
+    }
+  }, [])
+
   useUserRealtimeSubscriptions({
     enabled: isAuthenticated === true,
     userId,
     onShareChange: handleShareChange,
-    onSubscriptionChange: handleSubscriptionChange
+    onSubscriptionChange: handleSubscriptionChange,
+    onOwnedSettlementChange: handleOwnedSettlementChange
   })
 
   /**

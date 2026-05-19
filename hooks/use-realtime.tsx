@@ -442,6 +442,19 @@ interface UseUserRealtimeSubscriptionsOptions {
    * not care about subscription state can omit it.
    */
   onSubscriptionChange?: () => void
+  /**
+   * Called when the current user inserts or deletes a row in `settlement`
+   * (i.e. an owned settlement appears or disappears). Powers the cached
+   * `settlementList` in `LocalContext` so the sidebar settlement switcher
+   * — and the free-tier ownership cap that gates the "Found a settlement"
+   * action — stays consistent with the database without a manual reload.
+   *
+   * Fires for INSERT and DELETE events filtered on `user_id`. Share-side
+   * changes (a collaborator gaining or losing access to someone else's
+   * settlement) flow through `onShareChange` instead. Optional so callers
+   * that do not care about settlement-list churn can omit it.
+   */
+  onOwnedSettlementChange?: () => void
 }
 
 /**
@@ -459,8 +472,13 @@ interface UseUserRealtimeSubscriptionsOptions {
  *     cancellation flip. Closes the timing window where the user returns
  *     from the Customer Portal before the webhook has processed. See
  *     issue #170.
+ *   - `settlement` — INSERT / DELETE where `user_id = userId`, so the
+ *     cached `settlementList` in `LocalContext` (and therefore the
+ *     sidebar settlement switcher + free-tier ownership cap on the
+ *     "Found a settlement" action) stays consistent with the database
+ *     after a settlement is created or deleted in any tab.
  *
- * Both subscriptions share a single `user-${userId}` channel so the
+ * All subscriptions share a single `user-${userId}` channel so the
  * realtime socket connection cost is amortized. Events are delivered
  * one-for-one to the matching callback; callers are responsible for any
  * debouncing or state cascades (e.g. clearing the active settlement
@@ -473,10 +491,12 @@ export function useUserRealtimeSubscriptions(
 ) {
   const shareCallbackRef = useRef(options.onShareChange)
   const subscriptionCallbackRef = useRef(options.onSubscriptionChange)
+  const ownedSettlementCallbackRef = useRef(options.onOwnedSettlementChange)
 
   useEffect(() => {
     shareCallbackRef.current = options.onShareChange
     subscriptionCallbackRef.current = options.onSubscriptionChange
+    ownedSettlementCallbackRef.current = options.onOwnedSettlementChange
   })
 
   useEffect(() => {
@@ -544,6 +564,42 @@ export function useUserRealtimeSubscriptions(
           // delegate refresh entirely to the caller instead of
           // hand-rolling a partial reconstruction here.
           subscriptionCallbackRef.current?.()
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          // INSERT on `settlement` for this user — a new owned settlement
+          // appeared (e.g. the user submitted the "Found a settlement"
+          // form in another tab, or the seed-data generator just ran).
+          // The callback is responsible for refetching the cached list;
+          // we don't try to merge the new row in-place because
+          // `getSettlementForUser` joins additional metadata (role,
+          // shared-with markers) that the raw `settlement` payload
+          // doesn't carry.
+          event: 'INSERT',
+          schema: 'public',
+          table: 'settlement',
+          filter: `user_id=eq.${userId}`
+        },
+        () => {
+          ownedSettlementCallbackRef.current?.()
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          // DELETE on `settlement` for this user — an owned settlement
+          // was removed (Settings → Delete settlement, or admin cleanup).
+          // Refresh so the dropdown stops listing the dead entry and the
+          // free-tier ownership counter relaxes back below the cap.
+          event: 'DELETE',
+          schema: 'public',
+          table: 'settlement',
+          filter: `user_id=eq.${userId}`
+        },
+        () => {
+          ownedSettlementCallbackRef.current?.()
         }
       )
       .subscribe((status) => {
