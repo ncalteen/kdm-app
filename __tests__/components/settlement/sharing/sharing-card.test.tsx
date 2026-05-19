@@ -25,6 +25,11 @@ vi.mock('@/lib/dal/user', () => ({
   lookupUserByUsername: vi.fn()
 }))
 
+vi.mock('@/lib/dal/user-subscription', () => ({
+  startCheckout: vi.fn(),
+  openPortal: vi.fn()
+}))
+
 vi.mock('@/components/generic/user-avatar', () => ({
   UserAvatar: ({ username }: { username: string }) => (
     <span data-avatar={username} />
@@ -47,7 +52,8 @@ describe('SharingCard', () => {
   it('renders the share-management panel for the owner', () => {
     useLocalMock.mockReturnValue({
       selectedSettlementId: 'settlement-1',
-      selectedSettlement: { id: 'settlement-1', role: 'owner' }
+      selectedSettlement: { id: 'settlement-1', role: 'owner' },
+      canShare: true
     })
 
     const html = renderToStaticMarkup(<SharingCard {...baseProps} />)
@@ -59,7 +65,8 @@ describe('SharingCard', () => {
   it('renders no panel content when no settlement is selected', () => {
     useLocalMock.mockReturnValue({
       selectedSettlementId: null,
-      selectedSettlement: null
+      selectedSettlement: null,
+      canShare: true
     })
 
     const html = renderToStaticMarkup(<SharingCard {...baseProps} />)
