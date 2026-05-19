@@ -62,11 +62,12 @@ export const securityHeaders: SecurityHeader[] = [
   },
   // Cross-Origin isolation — same-origin is safe for an app that does not need
   // to embed cross-origin resources requiring credentials. COEP is
-  // intentionally omitted as it would break third-party images/iframes that
-  // don't send Cross-Origin-Resource-Policy.
+  // intentionally omitted as `require-corp` would block third-party images
+  // (e.g. Discord/Google OAuth avatars on `cdn.discordapp.com`) that don't
+  // send `Cross-Origin-Resource-Policy`, surfacing as
+  // `ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep`.
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
-  { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' }
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' }
 ]
 
 /**
