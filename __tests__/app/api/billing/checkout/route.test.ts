@@ -98,14 +98,22 @@ function setupAuth(options: {
 
 /**
  * Wire the service-role Supabase admin client to capture writes to
- * `user_subscription`.
+ * `user_subscription`. Supports both the customer-persist `UPDATE` path
+ * and the missing-row `UPSERT` auto-provision path; either side can be
+ * forced into an error to exercise the corresponding 500 branches.
  */
-function setupAdminWriter(error: { message: string } | null = null) {
-  const eq = vi.fn().mockResolvedValue({ error })
+function setupAdminWriter(
+  opts: {
+    updateError?: { message: string } | null
+    upsertError?: { message: string } | null
+  } = {}
+) {
+  const eq = vi.fn().mockResolvedValue({ error: opts.updateError ?? null })
   const update = vi.fn().mockReturnValue({ eq })
-  mockFromUpdate.mockReturnValue({ update })
+  const upsert = vi.fn().mockResolvedValue({ error: opts.upsertError ?? null })
+  mockFromUpdate.mockReturnValue({ update, upsert })
   mockCreateAdminClient.mockReturnValue({ from: mockFromUpdate })
-  return { update, eq }
+  return { update, eq, upsert }
 }
 
 describe('POST /api/billing/checkout', () => {
@@ -263,15 +271,48 @@ describe('POST /api/billing/checkout', () => {
     expect(mockCheckoutSessionsCreate).not.toHaveBeenCalled()
   })
 
-  it('returns 500 when no user_subscription row exists for the user', async () => {
-    // The default `free` row is auto-provisioned at sign-up; absence here
-    // signals a corrupted account. The route must refuse to proceed,
-    // otherwise the admin UPDATE below would silently match zero rows and
-    // strand a Stripe customer that the webhook cannot correlate back.
+  it('auto-provisions the default subscription row when none exists and continues with checkout', async () => {
+    // The sign-up trigger normally seeds a `free` row, but a user created
+    // via the GoTrue admin endpoint can bypass that path. The route should
+    // self-heal via an admin UPSERT and continue, not refuse the charge.
+    setupAuth({
+      user: { id: 'user-1', email: 'survivor@kdm.test' },
+      subscription: null
+    })
+    const { upsert, update } = setupAdminWriter()
+
+    mockCustomersCreate.mockResolvedValue({ id: 'cus_new' })
+    mockCheckoutSessionsCreate.mockResolvedValue({
+      url: 'https://checkout.stripe.test/session/cs_test_heal'
+    })
+
+    const response = await POST(buildRequest({ planId: 'lantern' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(json.url).toBe('https://checkout.stripe.test/session/cs_test_heal')
+
+    // Default row was upserted with `ignoreDuplicates` semantics so a racing
+    // sign-up trigger that wins the insert is harmless.
+    expect(upsert).toHaveBeenCalledWith(
+      { user_id: 'user-1', plan_id: 'free' },
+      { onConflict: 'user_id', ignoreDuplicates: true }
+    )
+
+    // Customer creation + persist still run because the freshly-provisioned
+    // row has no `stripe_customer_id`.
+    expect(mockCustomersCreate).toHaveBeenCalledTimes(1)
+    expect(update).toHaveBeenCalledWith({ stripe_customer_id: 'cus_new' })
+
+    expect(mockCheckoutSessionsCreate).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns 500 when auto-provisioning the missing subscription row fails', async () => {
     setupAuth({
       user: { id: 'user-1', email: 'a@b.test' },
       subscription: null
     })
+    setupAdminWriter({ upsertError: { message: 'rls write blocked' } })
 
     const response = await POST(buildRequest({ planId: 'lantern' }))
 
@@ -285,7 +326,7 @@ describe('POST /api/billing/checkout', () => {
       user: { id: 'user-1', email: 'a@b.test' },
       subscription: { stripe_customer_id: null }
     })
-    setupAdminWriter({ message: 'rls write blocked' })
+    setupAdminWriter({ updateError: { message: 'rls write blocked' } })
     mockCustomersCreate.mockResolvedValue({ id: 'cus_new' })
 
     const response = await POST(buildRequest({ planId: 'lantern' }))
