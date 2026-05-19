@@ -67,7 +67,6 @@ describe('CollaboratorsPanel', () => {
     const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
 
     expect(html).toContain('Light another lantern')
-    expect(html).toContain('Invite a survivor to share this settlement')
     expect(html).toContain('Shared lanterns')
     expect(html).toContain('placeholder="Username…"')
     expect(html).toContain('Invite')
@@ -110,12 +109,10 @@ describe('CollaboratorsPanel', () => {
 
     const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
 
-    // Header stays the same so a downgraded user still sees a familiar
-    // panel — the description switches to the gating copy.
+    // Header copy stays the same so a downgraded user still sees a
+    // familiar panel — the inline upsell trigger handles the gating
+    // narrative.
     expect(html).toContain('Light another lantern')
-    expect(html).toContain(
-      'Sharing this settlement requires lighting a new lantern.'
-    )
 
     // The invite input is gone for free users.
     expect(html).not.toContain('placeholder="Username…"')
@@ -124,7 +121,8 @@ describe('CollaboratorsPanel', () => {
     // The paywall trigger surfaces the price and the owner-only nuance.
     expect(html).toContain('Your lantern burns alone.')
     expect(html).toContain('$5 a month')
-    expect(html).toContain('Only you, the keeper of the lantern')
+    expect(html).toContain('Only you')
+    expect(html).toContain('need a subscription')
 
     // Loading copy is still shown on the initial render (the static
     // markup is captured before the fetch resolves) — but the "invite
