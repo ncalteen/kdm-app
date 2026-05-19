@@ -180,3 +180,10 @@ The body of the PR should include:
 
 - When resetting the database, never reset without seeding data (e.g. including
   the `--no-seed` option to `npx supabase db reset`).
+- Do **not** add `"Allow all for admin"` RLS policies (i.e. policies of the form
+  `for all using (is_admin()) with check (is_admin())`) to new tables. Supabase
+  does not issue tokens with the `admin` role, so the predicate is unreachable;
+  admin/maintenance traffic uses the `service_role` JWT, which bypasses RLS
+  unconditionally. The legacy policies were dropped in
+  `20260528000001_drop_admin_all_policies.sql`. The `is_admin()` helper is
+  retained but no RLS policy should reference it.
