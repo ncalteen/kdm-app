@@ -395,8 +395,20 @@ export function SubscriptionCard(): ReactElement {
   const periodEnd = formatPeriodEnd(
     userSubscription?.current_period_end ?? null
   )
+  // Post-churn convergence: after the webhook's delete handler runs, the
+  // row keeps the historical `status` (`canceled`) but flips `plan_id` →
+  // `'free'`. `resolveStatusNote` / `resolvePlanCta` already short-circuit
+  // on `currentPlan === 'free'`; mirror that here so the Wanderer card
+  // doesn't pick up the destructive ring + badge treatment for a row that
+  // is otherwise rendered identically to a fresh free user. This also
+  // eliminates the amber → red flash on page load: before LocalContext
+  // hydrates, `userSubscription` is `null` and the Wanderer card renders
+  // amber; once the post-churn row arrives, the warning gate keeps it
+  // amber instead of swapping to destructive.
   const isWarning =
-    currentStatus !== null && WARNING_STATUSES.includes(currentStatus)
+    currentPlan !== 'free' &&
+    currentStatus !== null &&
+    WARNING_STATUSES.includes(currentStatus)
   // Subscribers who have cancelled through the Portal are still entitled
   // (status stays `active` / `trialing`) until `current_period_end`. Treat
   // the state as "pending cancellation" so the badge / note / CTA all

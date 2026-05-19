@@ -486,5 +486,26 @@ describe('SubscriptionCard — warning state + cancel_at_period_end interaction'
     expect(html).not.toContain('Your watch has ended.')
     expect(html).not.toContain('Restore the lantern')
     expect(html).not.toContain('Canceled')
+
+    // Visual convergence: the Wanderer card must keep the amber "healthy
+    // current plan" ring instead of swapping to the destructive ring,
+    // because `isWarning` is gated on `currentPlan !== 'free'`. Locks
+    // out the regression where the card flashed amber → red on page
+    // load (issue #170: post-churn users saw the Wanderer card briefly
+    // styled as a fresh free user, then re-render as warning). The
+    // shadcn Card emits its own `class` before the spread `data-plan`
+    // attribute, so the regex matches in that order.
+    expect(html).toMatch(
+      /class="[^"]*ring-amber-400\/30[^"]*"[^>]*data-plan="free"/
+    )
+    expect(html).not.toMatch(
+      /class="[^"]*ring-destructive\/30[^"]*"[^>]*data-plan="free"/
+    )
+
+    // Badge variant on the Wanderer card stays `default` (Free) instead
+    // of flipping to `destructive` for the stale canceled status.
+    expect(html).not.toMatch(
+      /data-plan="free"[^>]*<[^>]*data-slot="badge"[^>]*destructive/
+    )
   })
 })
