@@ -119,7 +119,7 @@ In-depth documentation lives under [`docs/`](./docs):
 
 Billing surfaces (the Subscription tab, the Sharing tab, and the
 `/api/billing/checkout` + `/api/billing/portal` route handlers) are gated behind
-the `subscription-management` Vercel feature flag during the early- access
+the `subscription-management` Vercel feature flag during the early-access
 rollout. The Stripe webhook is intentionally NOT gated so existing subscriptions
 keep syncing even when a tester is removed from the allowlist.
 

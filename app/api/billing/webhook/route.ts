@@ -231,8 +231,6 @@ async function handleCheckoutSessionCompleted(
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId)
 
-  console.log('subscription', subscription)
-
   const priceId = subscription.items.data[0]?.price?.id ?? null
   const planId = priceId ? resolvePlanFromPriceId(priceId) : null
 
@@ -374,8 +372,6 @@ async function handleSubscriptionDeleted(
   subscription: Stripe.Subscription,
   admin: AdminClient
 ): Promise<void> {
-  console.log('subscription', subscription)
-
   const customerId = extractRelationId(subscription.customer)
   let userId: string | null = subscription.metadata?.user_id ?? null
 
@@ -391,7 +387,6 @@ async function handleSubscriptionDeleted(
     return
   }
 
-  console.log('Resolved user ID for subscription.deleted:', userId)
   const { error } = await admin
     .from('user_subscription')
     .update({
@@ -463,8 +458,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid Signature' }, { status: 400 })
   }
-
-  console.log('event', event)
 
   try {
     const admin = createAdminClient()
