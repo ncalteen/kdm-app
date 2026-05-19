@@ -3,14 +3,9 @@
 import { OwnerOnly } from '@/components/generic/owner-only'
 import { UserAvatar } from '@/components/generic/user-avatar'
 import { UnshareBlockersDialog } from '@/components/settlement/sharing/unshare-blockers-dialog'
+import { UpsellModal } from '@/components/settlement/sharing/upsell-modal'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LocalStateType, useLocal } from '@/contexts/local-context'
@@ -32,6 +27,7 @@ import {
   ERROR_MESSAGE,
   SETTLEMENT_SHARE_ALREADY_SHARED_MESSAGE,
   SETTLEMENT_SHARE_INVITE_SUCCESS_MESSAGE,
+  SETTLEMENT_SHARE_PAYWALL_MESSAGE,
   SETTLEMENT_SHARE_REVOKE_BLOCKED_MESSAGE,
   SETTLEMENT_SHARE_REVOKE_SUCCESS_MESSAGE,
   SETTLEMENT_SHARE_SELF_INVITE_MESSAGE,
@@ -40,7 +36,7 @@ import {
 } from '@/lib/messages'
 import { SettlementDetail } from '@/lib/types'
 import { formatJoinedTimeAgo } from '@/lib/utils'
-import { Loader2, UserPlusIcon, XIcon } from 'lucide-react'
+import { Loader2, LockIcon, UserPlusIcon, XIcon } from 'lucide-react'
 import {
   FormEvent,
   ReactElement,
@@ -79,6 +75,15 @@ interface CollaboratorsPanelProps {
  *     "actually missing" and "rate-limited" cases so the caller cannot
  *     fingerprint registered handles.
  *
+ * Paid-feature gating (#166):
+ *   - The owner's share-creation entitlement is read from `useLocal().canShare`,
+ *     which mirrors the Postgres `user_can_share()` predicate enforced by the
+ *     RLS policy on `settlement_shared_user.INSERT`. When `canShare === false`
+ *     the invite form is replaced by an upsell trigger that opens the
+ *     {@link UpsellModal} (Stripe Checkout for the Lantern Hoard plan), and
+ *     any existing collaborator rows continue to render read-only so a
+ *     downgraded owner can see what carries over.
+ *
  * Wired to the realtime share-channel (see contexts/local-context.tsx) by
  * way of the existing settlement-list refetch: when the owner invites or
  * revokes, the corresponding INSERT/DELETE on `settlement_shared_user` is
@@ -92,7 +97,7 @@ interface CollaboratorsPanelProps {
 export function CollaboratorsPanel({
   local
 }: CollaboratorsPanelProps): ReactElement | null {
-  const { selectedSettlement } = useLocal()
+  const { selectedSettlement, canShare } = useLocal()
 
   return (
     <OwnerOnly>
@@ -100,6 +105,7 @@ export function CollaboratorsPanel({
         <CollaboratorsPanelContent
           local={local}
           selectedSettlement={selectedSettlement}
+          canShare={canShare}
         />
       ) : null}
     </OwnerOnly>
@@ -119,6 +125,15 @@ interface CollaboratorsPanelContentProps {
   local: LocalStateType
   /** Selected Settlement (guaranteed non-null here) */
   selectedSettlement: SettlementDetail
+  /**
+   * Share-Creation Entitlement
+   *
+   * `true` when the owner's subscription grants paid-tier sharing (mirrors
+   * the Postgres `user_can_share()` predicate). When `false`, the invite
+   * form is swapped for the {@link UpsellModal} trigger and the existing
+   * collaborator list is rendered read-only.
+   */
+  canShare: boolean
 }
 
 /**
@@ -129,7 +144,8 @@ interface CollaboratorsPanelContentProps {
  */
 function CollaboratorsPanelContent({
   local,
-  selectedSettlement
+  selectedSettlement,
+  canShare
 }: CollaboratorsPanelContentProps): ReactElement {
   const { toast } = useToast(local)
   const [collaborators, setCollaborators] = useState<
@@ -156,6 +172,11 @@ function CollaboratorsPanelContent({
     username: string
     blockers: UnshareBlockerDetail[]
   }>({ open: false, username: '', blockers: [] })
+
+  // Upsell modal state. Controlled here so the trigger button on the
+  // paywalled invite affordance and the modal share a single open flag.
+  // The modal owns its own redirect / loading state internally.
+  const [isUpsellOpen, setIsUpsellOpen] = useState<boolean>(false)
 
   const settlementId = selectedSettlement.id
 
@@ -214,6 +235,17 @@ function CollaboratorsPanelContent({
   const handleInvite = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
+
+      // Defensive paywall check. The form is normally swapped out for the
+      // upsell trigger when `canShare === false`, but if a race or stale
+      // render lets a free user reach this handler we surface the themed
+      // paywall toast and open the upsell modal instead of attempting the
+      // insert (which would be RLS-denied with a generic error).
+      if (!canShare) {
+        toast.error(SETTLEMENT_SHARE_PAYWALL_MESSAGE())
+        setIsUpsellOpen(true)
+        return
+      }
 
       const trimmed = username.trim()
       if (trimmed.length === 0) return
@@ -282,7 +314,7 @@ function CollaboratorsPanelContent({
         setIsInviting(false)
       }
     },
-    [collaborators, refresh, settlementId, toast, username]
+    [canShare, collaborators, refresh, settlementId, toast, username]
   )
 
   /**
@@ -386,45 +418,85 @@ function CollaboratorsPanelContent({
     <Card className="p-0">
       <CardHeader className="px-4 pt-3 pb-0">
         <CardTitle className="text-lg">Light another lantern</CardTitle>
-        <CardDescription className="text-sm">
-          Invite a survivor to share this settlement.
-        </CardDescription>
       </CardHeader>
-      <CardContent className="p-4 pt-3 space-y-4">
-        <form onSubmit={handleInvite}>
-          <div className="grid gap-2">
-            <Label htmlFor="invite-username" className="sr-only">
-              Username
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="invite-username"
-                type="text"
-                inputMode="text"
-                autoComplete="off"
-                spellCheck={false}
-                placeholder="Username…"
-                pattern="[a-zA-Z0-9_]{3,20}"
-                minLength={3}
-                maxLength={20}
-                disabled={isInviting}
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-              <Button type="submit" disabled={submitDisabled}>
-                {isInviting ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <UserPlusIcon className="h-4 w-4 mr-2" />
-                )}
+      <CardContent className="p-4 pt-0 space-y-4">
+        {canShare ? (
+          <form onSubmit={handleInvite}>
+            <div className="grid gap-2">
+              <Label htmlFor="invite-username" className="sr-only">
+                Username
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="invite-username"
+                  type="text"
+                  inputMode="text"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="Username…"
+                  pattern="[a-zA-Z0-9_]{3,20}"
+                  minLength={3}
+                  maxLength={20}
+                  disabled={isInviting}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+                <Button type="submit" disabled={submitDisabled}>
+                  {isInviting ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <UserPlusIcon className="h-4 w-4 mr-2" />
+                  )}
+                  Invite
+                </Button>
+              </div>
+            </div>
+          </form>
+        ) : (
+          // Paywall affordance for free-tier owners (#166). The invite
+          // form is intentionally absent — the only way to add a new
+          // collaborator from this state is to subscribe via the upsell
+          // modal. Any existing collaborator rows below remain visible
+          // (read-only) so a downgraded owner can see what carries over.
+          <div className="relative overflow-hidden rounded-md border border-amber-500/30 bg-linear-to-b from-amber-500/5 to-transparent p-4">
+            <div
+              className="pointer-events-none absolute -top-12 left-1/2 h-32 w-32 -translate-x-1/2 rounded-full bg-amber-500/15 blur-2xl"
+              aria-hidden="true"
+            />
+            <div className="relative flex flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:text-left">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/15 ring-1 ring-amber-500/30">
+                <LockIcon
+                  className="h-5 w-5 text-amber-500"
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <div className="text-sm font-medium">
+                  Your lantern burns alone.
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Subscribe for{' '}
+                  <span className="font-medium text-foreground">
+                    $5 a month
+                  </span>{' '}
+                  to share this settlement with your hunting party. Only you
+                  need a subscription.
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                className="shrink-0"
+                onClick={() => setIsUpsellOpen(true)}>
+                <UserPlusIcon className="h-4 w-4 mr-2" />
                 Invite
               </Button>
             </div>
           </div>
-        </form>
+        )}
 
         <div className="space-y-2">
-          <div className="text-sm font-medium">Lanterns shared with</div>
+          <div className="text-sm font-medium">Shared lanterns</div>
 
           {isLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
@@ -433,7 +505,9 @@ function CollaboratorsPanelContent({
             </div>
           ) : collaborators.length === 0 ? (
             <div className="text-sm text-muted-foreground py-2">
-              No one keeps watch with you yet. Invite a survivor above.
+              {canShare
+                ? 'No one keeps watch with you yet. Invite a survivor above.'
+                : 'No one keeps watch with you yet.'}
             </div>
           ) : (
             <ul className="divide-y divide-border rounded-md border">
@@ -456,19 +530,33 @@ function CollaboratorsPanelContent({
                       </span>
                     </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Revoke share with @${c.username || 'this collaborator'}`}
-                    disabled={revokingUserIds.has(c.shared_user_id)}
-                    onClick={() => handleRevoke(c.shared_user_id)}>
-                    {revokingUserIds.has(c.shared_user_id) ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <XIcon className="h-4 w-4" />
-                    )}
-                  </Button>
+                  {canShare ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Revoke share with @${c.username || 'this collaborator'}`}
+                      disabled={revokingUserIds.has(c.shared_user_id)}
+                      onClick={() => handleRevoke(c.shared_user_id)}>
+                      {revokingUserIds.has(c.shared_user_id) ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <XIcon className="h-4 w-4" />
+                      )}
+                    </Button>
+                  ) : (
+                    // Read-only mode for paywalled owners (#166). The
+                    // collaborator row stays visible so the owner sees
+                    // who carries over, but the revoke control is
+                    // replaced with a non-interactive lock chip so the
+                    // gating reason is legible at a glance.
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground"
+                      aria-label="Sharing is locked — subscribe to manage collaborators">
+                      <LockIcon className="h-3 w-3" aria-hidden="true" />
+                      Locked
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -482,6 +570,11 @@ function CollaboratorsPanelContent({
         }
         username={blockersDialog.username}
         blockers={blockersDialog.blockers}
+      />
+      <UpsellModal
+        open={isUpsellOpen}
+        onOpenChange={setIsUpsellOpen}
+        local={local}
       />
     </Card>
   )

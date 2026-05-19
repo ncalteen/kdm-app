@@ -25,6 +25,11 @@ vi.mock('@/lib/dal/user', () => ({
   lookupUserByUsername: vi.fn()
 }))
 
+vi.mock('@/lib/dal/user-subscription', () => ({
+  startCheckout: vi.fn(),
+  openPortal: vi.fn()
+}))
+
 vi.mock('@/components/generic/user-avatar', () => ({
   UserAvatar: ({ username }: { username: string }) => (
     <span data-avatar={username} />
@@ -41,7 +46,14 @@ const baseProps: CollaboratorsPanelProps = {
 
 const ownerContext = {
   selectedSettlementId: 'settlement-1',
-  selectedSettlement: { id: 'settlement-1', role: 'owner' }
+  selectedSettlement: { id: 'settlement-1', role: 'owner' },
+  canShare: true
+}
+
+const freeOwnerContext = {
+  selectedSettlementId: 'settlement-1',
+  selectedSettlement: { id: 'settlement-1', role: 'owner' },
+  canShare: false
 }
 
 afterEach(() => {
@@ -55,8 +67,7 @@ describe('CollaboratorsPanel', () => {
     const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
 
     expect(html).toContain('Light another lantern')
-    expect(html).toContain('Invite a survivor to share this settlement')
-    expect(html).toContain('Lanterns shared with')
+    expect(html).toContain('Shared lanterns')
     expect(html).toContain('placeholder="Username…"')
     expect(html).toContain('Invite')
   })
@@ -64,7 +75,8 @@ describe('CollaboratorsPanel', () => {
   it('renders nothing when no settlement is selected', () => {
     useLocalMock.mockReturnValue({
       selectedSettlementId: null,
-      selectedSettlement: null
+      selectedSettlement: null,
+      canShare: true
     })
 
     const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
@@ -75,7 +87,8 @@ describe('CollaboratorsPanel', () => {
   it('renders nothing when the caller is a collaborator (non-owner)', () => {
     useLocalMock.mockReturnValue({
       selectedSettlementId: 'settlement-1',
-      selectedSettlement: { id: 'settlement-1', role: 'collaborator' }
+      selectedSettlement: { id: 'settlement-1', role: 'collaborator' },
+      canShare: true
     })
 
     const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
@@ -89,5 +102,32 @@ describe('CollaboratorsPanel', () => {
     const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
 
     expect(html).toContain('Gathering the watch')
+  })
+
+  it('swaps the invite form for the paywall upsell trigger when canShare is false', () => {
+    useLocalMock.mockReturnValue(freeOwnerContext)
+
+    const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
+
+    // Header copy stays the same so a downgraded user still sees a
+    // familiar panel — the inline upsell trigger handles the gating
+    // narrative.
+    expect(html).toContain('Light another lantern')
+
+    // The invite input is gone for free users.
+    expect(html).not.toContain('placeholder="Username…"')
+    expect(html).not.toContain('id="invite-username"')
+
+    // The paywall trigger surfaces the price and the owner-only nuance.
+    expect(html).toContain('Your lantern burns alone.')
+    expect(html).toContain('$5 a month')
+    expect(html).toContain('Only you')
+    expect(html).toContain('need a subscription')
+
+    // Loading copy is still shown on the initial render (the static
+    // markup is captured before the fetch resolves) — but the "invite
+    // above" hint must never appear in the paywalled view, even after
+    // the collaborator list loads.
+    expect(html).not.toContain('Invite a survivor above.')
   })
 })

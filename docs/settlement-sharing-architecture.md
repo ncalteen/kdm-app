@@ -602,7 +602,7 @@ Add a **Settlement → Settings → Collaborators** panel (only visible when
 │ │ Username…              ▾│  [ Invite ]             │
 │ └─────────────────────────┘                         │
 │                                                     │
-│ Lanterns shared with:                               │
+│ Shared lanterns:                                    │
 │ • @ashen.veil       Removed: 2 days ago     [×]     │
 │ • @stone-faced      Joined: 14 days ago     [×]     │
 └─────────────────────────────────────────────────────┘

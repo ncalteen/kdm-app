@@ -2709,3 +2709,19 @@ export const SETTLEMENT_SHARE_REVOKE_SUCCESS_MESSAGE = () =>
  */
 export const SETTLEMENT_SHARE_REVOKE_BLOCKED_MESSAGE = () =>
   'They have left their light here. Gather it before they walk in darkness.'
+
+/**
+ * Settlement Share Paywall Encountered
+ *
+ * Shown to a free-tier settlement owner when a share-creation attempt is
+ * refused by the entitlement gate. The free-tier UI normally swaps the
+ * invite form for the {@link UpsellModal} trigger entirely, but this
+ * message remains the canonical phrasing for the "paywall encountered"
+ * event per `docs/settlement-sharing-architecture.md` §7.5 — used as a
+ * defensive fallback if a stale render or race lets a free user reach the
+ * invite handler.
+ *
+ * @returns Settlement Share Paywall Encountered Message
+ */
+export const SETTLEMENT_SHARE_PAYWALL_MESSAGE = () =>
+  'This lantern needs more oil. Restock to continue.'
