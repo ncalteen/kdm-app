@@ -92,12 +92,16 @@ function buildSubscription(options: {
   currentPeriodEnd?: number
   userId?: string | null
   cancelAtPeriodEnd?: boolean
+  cancelAt?: number | null
+  canceledAt?: number | null
 }) {
   return {
     id: options.id ?? 'sub_test',
     customer: options.customer ?? 'cus_test',
     status: options.status ?? 'active',
     cancel_at_period_end: options.cancelAtPeriodEnd ?? false,
+    cancel_at: options.cancelAt ?? null,
+    canceled_at: options.canceledAt ?? null,
     metadata:
       options.userId === null ? {} : { user_id: options.userId ?? 'user-1' },
     items: {
@@ -501,6 +505,61 @@ describe('POST /api/billing/webhook', () => {
             status: 'active',
             priceId: 'price_lantern',
             cancelAtPeriodEnd: false
+          })
+        }
+      })
+
+      await POST(buildRequest())
+
+      expect(admin.update.mock.calls[0][0].cancel_at_period_end).toBe(false)
+    })
+
+    it('treats a future cancel_at as pending cancellation even when cancel_at_period_end is false', async () => {
+      // The Customer Portal "Cancel on this date" picker (and any API-driven
+      // cancellation scheduled with an explicit `cancel_at`) leaves the
+      // boolean false and instead sets `cancel_at` to a future timestamp.
+      // The webhook must treat both flavors uniformly so the SubscriptionCard
+      // can render the "Ending" badge regardless of which Portal flow the
+      // subscriber used.
+      const admin = setupAdmin()
+      mockWebhooksConstructEvent.mockReturnValue({
+        type: 'customer.subscription.updated',
+        data: {
+          object: buildSubscription({
+            id: 'sub_test',
+            status: 'active',
+            priceId: 'price_lantern',
+            cancelAtPeriodEnd: false,
+            cancelAt: 1_781_829_472,
+            canceledAt: null
+          })
+        }
+      })
+
+      const response = await POST(buildRequest())
+
+      expect(response.status).toBe(200)
+      expect(admin.update.mock.calls[0][0].cancel_at_period_end).toBe(true)
+    })
+
+    it('treats a fired cancellation (canceled_at set) as no longer pending', async () => {
+      // Once the scheduled cancellation actually executes, Stripe sets
+      // `canceled_at` alongside the existing `cancel_at`. At that point the
+      // row should NOT carry the pending flag — a `subscription.deleted`
+      // event is in flight to reset the row to the free tier, and showing
+      // the "Ending" treatment during the brief intermediate state would
+      // flicker.
+      const admin = setupAdmin()
+      mockWebhooksConstructEvent.mockReturnValue({
+        type: 'customer.subscription.updated',
+        data: {
+          object: buildSubscription({
+            id: 'sub_test',
+            status: 'active',
+            priceId: 'price_lantern',
+            cancelAtPeriodEnd: false,
+            cancelAt: 1_781_829_472,
+            canceledAt: 1_781_829_472
           })
         }
       })
