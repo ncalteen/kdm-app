@@ -117,4 +117,41 @@ describe('PresenceStack', () => {
     expect(html).not.toContain('ring-amber-400')
     expect(html).toContain('ring-background')
   })
+
+  it('renders avatar triggers as focusable buttons with aria-labels', () => {
+    // Spans aren't reachable via keyboard navigation; both the avatar
+    // triggers and the overflow badge must be `<button>` elements with
+    // descriptive `aria-label`s so keyboard users can read the
+    // presence list on focus.
+    const users = Array.from({ length: 7 }, (_, i) =>
+      buildUser(String(i + 1), { username: `survivor${i + 1}` })
+    )
+    const html = renderToStaticMarkup(
+      <PresenceStack users={users} currentUserId="1" />
+    )
+
+    // Each visible avatar renders a button with aria-label matching
+    // the tooltip copy.
+    expect(html).toContain(
+      '<button type="button" aria-label="@survivor1 (you)"'
+    )
+    expect(html).toContain(
+      '<button type="button" aria-label="@survivor2 keeps watch"'
+    )
+
+    // The overflow badge is also a focusable button.
+    expect(html).toContain(
+      '<button type="button" aria-label="2 more survivors keeping watch"'
+    )
+  })
+
+  it('uses singular copy on the overflow badge when only one user is hidden', () => {
+    const users = Array.from({ length: 6 }, (_, i) =>
+      buildUser(String(i + 1), { username: `survivor${i + 1}` })
+    )
+    const html = renderToStaticMarkup(<PresenceStack users={users} />)
+
+    expect(html).toContain('1 more survivor keeping watch')
+    expect(html).not.toContain('1 more survivors keeping watch')
+  })
 })

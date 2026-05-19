@@ -198,6 +198,20 @@ export function usePresence({
   // effect can call `track()` without recreating the channel.
   const channelRef = useRef<RealtimeChannel | null>(null)
 
+  // Track whether the active channel has reached the SUBSCRIBED state.
+  // The identity-re-broadcast effect refuses to call `channel.track()`
+  // until this flips true — `track()` on a non-subscribed channel either
+  // throws or silently no-ops depending on the realtime version, and
+  // both outcomes leak unhandled rejections into the console.
+  const subscribedRef = useRef<boolean>(false)
+
+  // Preserve the original `online_at` for this client across identity
+  // re-broadcasts. The reducer uses `online_at` to order the avatar
+  // stack, so re-stamping it on every username/avatar change would shove
+  // the caller to a different slot in the stack on each rename. The ref
+  // is cleared on settlement change so the next channel resets the clock.
+  const initialOnlineAtRef = useRef<string | null>(null)
+
   useEffect(() => {
     if (!settlementId) {
       // No active settlement — fall through without touching state.
@@ -222,6 +236,8 @@ export function usePresence({
     })
 
     channelRef.current = channel
+    subscribedRef.current = false
+    initialOnlineAtRef.current = null
 
     /**
      * Refresh Local Presence List From The Channel's Server State
@@ -246,15 +262,31 @@ export function usePresence({
       .subscribe(async (status) => {
         if (status !== 'SUBSCRIBED') return
 
+        subscribedRef.current = true
+
         const me = currentUserRef.current
         if (!me) return
 
-        await channel.track({
-          user_id: me.user_id,
-          username: me.username,
-          avatar_url: me.avatar_url,
-          online_at: new Date().toISOString()
-        })
+        // Stamp the first `online_at` on initial subscribe and keep it
+        // for the lifetime of this channel so later identity updates
+        // don't shift the caller's slot in the avatar stack ordering.
+        if (initialOnlineAtRef.current === null) {
+          initialOnlineAtRef.current = new Date().toISOString()
+        }
+
+        try {
+          await channel.track({
+            user_id: me.user_id,
+            username: me.username,
+            avatar_url: me.avatar_url,
+            online_at: initialOnlineAtRef.current
+          })
+        } catch (error) {
+          // `track()` rejects when the realtime server refuses the
+          // payload (rare — usually a malformed config). Logging keeps
+          // the failure visible in dev tools without disturbing the UI.
+          console.error('Presence Track Error:', error)
+        }
       })
 
     return () => {
@@ -263,6 +295,8 @@ export function usePresence({
       // remaining subscribers shortly after the underlying transport
       // tears down.
       channelRef.current = null
+      subscribedRef.current = false
+      initialOnlineAtRef.current = null
       supabase.removeChannel(channel)
       setPresenceUsers([])
     }
@@ -272,17 +306,28 @@ export function usePresence({
   // after the initial SUBSCRIBED handshake (e.g. username rename or
   // avatar refresh). The realtime server treats successive `track()`
   // calls on the same key as updates, so this does not produce extra
-  // join/leave noise.
+  // join/leave noise. We gate on `subscribedRef` so an identity change
+  // that arrives before the initial handshake doesn't fire `track()`
+  // against a still-subscribing channel (the subscribe callback will
+  // pick the latest identity off `currentUserRef` itself).
   useEffect(() => {
     const channel = channelRef.current
-    if (!channel || !currentUser) return
+    if (!channel || !currentUser || !subscribedRef.current) return
 
-    void channel.track({
-      user_id: currentUser.user_id,
-      username: currentUser.username,
-      avatar_url: currentUser.avatar_url,
-      online_at: new Date().toISOString()
-    })
+    const onlineAt = initialOnlineAtRef.current ?? new Date().toISOString()
+
+    void (async () => {
+      try {
+        await channel.track({
+          user_id: currentUser.user_id,
+          username: currentUser.username,
+          avatar_url: currentUser.avatar_url,
+          online_at: onlineAt
+        })
+      } catch (error) {
+        console.error('Presence Track Error:', error)
+      }
+    })()
   }, [currentUser])
 
   return { presenceUsers }

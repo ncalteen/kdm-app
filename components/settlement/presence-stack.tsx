@@ -89,10 +89,20 @@ export function PresenceStack({
         {visible.map((user, index) => {
           const isSelf =
             currentUserId !== null && user.user_id === currentUserId
+          const tooltipLabel = isSelf
+            ? `@${user.username} (you)`
+            : `@${user.username} keeps watch`
           return (
             <Tooltip key={user.user_id}>
               <TooltipTrigger asChild>
-                <span
+                <button
+                  type="button"
+                  // Buttons here are intentionally non-interactive — the
+                  // tooltip is the entire payload. Surfacing them as
+                  // `<button>` (rather than the prior `<span>`) puts
+                  // them in the tab order so keyboard users can reach
+                  // the presence info on focus, not just on hover.
+                  aria-label={tooltipLabel}
                   className={cn(
                     'relative inline-flex transition-transform',
                     // Stack overlap. The first avatar sits flush; every
@@ -107,7 +117,14 @@ export function PresenceStack({
                       : 'ring-2 ring-background rounded-full',
                     // Lift on hover so the focused avatar visually
                     // separates from the stack without breaking layout.
-                    'hover:z-10 hover:-translate-y-0.5'
+                    'hover:z-10 hover:-translate-y-0.5',
+                    // Keyboard focus indicator — matches the lift on
+                    // hover plus a focus ring inherited from the global
+                    // shadcn styling.
+                    'focus-visible:z-10 focus-visible:-translate-y-0.5',
+                    'focus-visible:outline-none focus-visible:ring-2',
+                    'focus-visible:ring-ring focus-visible:ring-offset-2',
+                    'focus-visible:ring-offset-background'
                   )}
                   style={{ zIndex: visible.length - index }}>
                   <UserAvatar
@@ -116,12 +133,10 @@ export function PresenceStack({
                     userId={user.user_id}
                     className="size-6"
                   />
-                </span>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
-                {isSelf
-                  ? `@${user.username} (you)`
-                  : `@${user.username} keeps watch`}
+                {tooltipLabel}
               </TooltipContent>
             </Tooltip>
           )
@@ -130,16 +145,25 @@ export function PresenceStack({
         {overflow.length > 0 ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span
+              <button
+                type="button"
+                aria-label={`${overflow.length} more survivor${overflow.length === 1 ? '' : 's'} keeping watch`}
                 className={cn(
                   'relative -ml-2 inline-flex h-6 min-w-6 items-center justify-center',
                   'rounded-full bg-muted px-1.5 text-[10px] font-semibold',
                   'ring-2 ring-background',
-                  'hover:z-10 hover:-translate-y-0.5 transition-transform'
+                  'hover:z-10 hover:-translate-y-0.5 transition-transform',
+                  // Keyboard focus indicator (mirrors the avatar
+                  // triggers so the whole stack behaves consistently
+                  // on tab).
+                  'focus-visible:z-10 focus-visible:-translate-y-0.5',
+                  'focus-visible:outline-none focus-visible:ring-2',
+                  'focus-visible:ring-ring focus-visible:ring-offset-2',
+                  'focus-visible:ring-offset-background'
                 )}
                 style={{ zIndex: 0 }}>
                 +{overflow.length}
-              </span>
+              </button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-xs">
               <div className="flex flex-col gap-0.5">
