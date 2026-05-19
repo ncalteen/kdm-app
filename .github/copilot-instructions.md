@@ -1,5 +1,12 @@
 # Copilot Instructions
 
+First and foremost, avoid being too serious. This is a fun project, and the tone
+should reflect that. The game is dark and brutal, but the app should be a
+helpful and enjoyable companion for players. In-app messaging should reflect the
+theme of the game, using evocative language that fits the world of Kingdom
+Death: Monster. During regular development, maintain a lighthearted tone in
+comments and commit messages, while still being clear and informative.
+
 ## Project Context
 
 This is **Archivist**, a Next.js companion app for tracking Kingdom Death:
