@@ -290,6 +290,38 @@ describe('POST /api/billing/webhook', () => {
       expect(admin.upsert.mock.calls[0][0].plan_id).toBe('lantern_hoard')
     })
 
+    it('mirrors cancel_at_period_end when the Checkout subscription already carries the flag', async () => {
+      // Unusual but valid edge case: a Stripe Checkout-completed event can
+      // arrive on a subscription that already has `cancel_at_period_end: true`
+      // (e.g. an admin staged a cancellation on the Dashboard before the
+      // webhook fired, or the API consumer scheduled it as part of the
+      // subscription_data). The upsert must persist the incoming value so
+      // the UI does not show a healthy renewal on a sub that is already
+      // winding down.
+      const admin = setupAdmin()
+      mockWebhooksConstructEvent.mockReturnValue({
+        type: 'checkout.session.completed',
+        data: {
+          object: {
+            id: 'cs_test',
+            metadata: { user_id: 'user-1' },
+            client_reference_id: null,
+            subscription: 'sub_test'
+          }
+        }
+      })
+      mockSubscriptionsRetrieve.mockResolvedValue(
+        buildSubscription({
+          priceId: 'price_lantern',
+          cancelAtPeriodEnd: true
+        })
+      )
+
+      await POST(buildRequest())
+
+      expect(admin.upsert.mock.calls[0][0].cancel_at_period_end).toBe(true)
+    })
+
     it('skips the write and returns 200 when user_id cannot be resolved', async () => {
       const admin = setupAdmin()
       mockWebhooksConstructEvent.mockReturnValue({
@@ -629,6 +661,30 @@ describe('POST /api/billing/webhook', () => {
         cancel_at_period_end: false
       })
       expect(admin.updateEq).toHaveBeenCalledWith('user_id', 'user-1')
+    })
+
+    it('resets cancel_at_period_end to false even when the incoming subscription still carries true', async () => {
+      // When a pending cancellation reaches its `current_period_end`,
+      // Stripe transitions the subscription to `canceled` and emits
+      // `customer.subscription.deleted`. The incoming payload may still
+      // carry `cancel_at_period_end: true` (it was true right up to the
+      // moment of deletion). The handler must hardcode `false` so the
+      // free-tier row that replaces the paid one does not carry a stale
+      // pending-cancel flag that the UI would misinterpret.
+      const admin = setupAdmin()
+      mockWebhooksConstructEvent.mockReturnValue({
+        type: 'customer.subscription.deleted',
+        data: {
+          object: buildSubscription({
+            status: 'canceled',
+            cancelAtPeriodEnd: true
+          })
+        }
+      })
+
+      await POST(buildRequest())
+
+      expect(admin.update.mock.calls[0][0].cancel_at_period_end).toBe(false)
     })
 
     it('resolves user_id via stripe_customer_id when metadata is absent', async () => {

@@ -386,3 +386,105 @@ describe('SubscriptionCard — pending cancellation', () => {
     expect(html).toContain('Light a Lantern — $1 / month')
   })
 })
+
+describe('SubscriptionCard — warning state + cancel_at_period_end interaction', () => {
+  // The pending-cancellation treatment is intentionally gated on
+  // active / trialing statuses only. A subscriber whose payment has
+  // failed (past_due) or whose subscription has already ended (canceled
+  // / incomplete) is not "ending" — they are already in trouble. The
+  // warning copy + Restore CTA must take precedence over any stale
+  // `cancel_at_period_end` flag that might still be set on those rows.
+
+  it('keeps the past-due warning treatment when cancel_at_period_end is also true', () => {
+    const html = renderWith({
+      plan_id: 'lantern_hoard',
+      status: 'past_due',
+      current_period_end: '2027-03-12T00:00:00.000Z',
+      cancel_at_period_end: true,
+      can_share: false
+    })
+
+    expect(html).toMatch(currentPlanRegex('lantern_hoard'))
+    expect(html).toContain('Payment Past Due')
+    expect(html).toContain('Your payment did not clear.')
+    expect(html).toContain('Restore the lantern')
+
+    // Must not adopt the pending-cancel surface.
+    expect(html).not.toContain('Ending')
+    expect(html).not.toContain('Rekindle the lantern')
+    expect(html).not.toContain('Your watch ends on')
+  })
+
+  it('keeps the canceled warning treatment when cancel_at_period_end is also true', () => {
+    // Once `status === 'canceled'`, the watch has already ended.
+    // `cancel_at_period_end` is now meaningless, and the row should
+    // surface the Restore CTA, not the Rekindle one. Note that the
+    // canceled status copy itself uses the phrase "Rekindle the lantern"
+    // as a thematic verb ("Rekindle the lantern to push past the
+    // boundary again."), so we assert on the button label rather than
+    // the substring to avoid colliding with the warning copy.
+    const html = renderWith({
+      plan_id: 'lantern',
+      status: 'canceled',
+      current_period_end: '2027-03-12T00:00:00.000Z',
+      cancel_at_period_end: true,
+      can_share: false
+    })
+
+    expect(html).toMatch(currentPlanRegex('lantern'))
+    expect(html).toContain('Canceled')
+    // CTA button is the Restore variant, not the Rekindle one.
+    expect(html).toMatch(/<button[^>]*>Restore the lantern<\/button>/)
+    expect(html).not.toMatch(/<button[^>]*>Rekindle the lantern<\/button>/)
+
+    expect(html).not.toContain('Ending')
+    expect(html).not.toContain('Your watch ends on')
+  })
+
+  it('keeps the incomplete warning treatment when cancel_at_period_end is also true', () => {
+    const html = renderWith({
+      plan_id: 'lantern',
+      status: 'incomplete',
+      current_period_end: null,
+      cancel_at_period_end: true,
+      can_share: false
+    })
+
+    expect(html).toMatch(currentPlanRegex('lantern'))
+    expect(html).toContain('Incomplete')
+    expect(html).toContain('initial payment did not finalize')
+    expect(html).toContain('Restore the lantern')
+
+    expect(html).not.toContain('Ending')
+    expect(html).not.toContain('Rekindle the lantern')
+  })
+
+  it('treats a free row carrying status=canceled the same as a fresh free user (post-churn convergence)', () => {
+    // After the webhook's delete handler runs, the row keeps the
+    // historical `stripe_customer_id` and `stripe_subscription_id` but
+    // flips `plan_id` → 'free' and `status` → 'canceled'. The
+    // SubscriptionCard must collapse this to the same surface as a
+    // brand-new free user (no status note, both paid CTAs available)
+    // so the user can resubscribe without UX friction.
+    const html = renderWith({
+      plan_id: 'free',
+      status: 'canceled',
+      current_period_end: '2027-03-12T00:00:00.000Z',
+      cancel_at_period_end: false,
+      can_share: false
+    })
+
+    expect(html).toMatch(currentPlanRegex('free'))
+
+    // Both paid CTAs are surfaced for re-subscription.
+    expect(html).toContain('Light a Lantern — $1 / month')
+    expect(html).toContain('Light a Lantern Hoard — $5 / month')
+
+    // No status note bleeds through from the canceled status — the
+    // helper short-circuits when `currentPlan === 'free'`.
+    expect(html).not.toContain('Your watch ended on')
+    expect(html).not.toContain('Your watch has ended.')
+    expect(html).not.toContain('Restore the lantern')
+    expect(html).not.toContain('Canceled')
+  })
+})

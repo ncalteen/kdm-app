@@ -751,10 +751,32 @@ export function LocalProvider({ children }: LocalProviderProps): ReactElement {
     }
   }, [])
 
+  /**
+   * Handle Subscription Change
+   *
+   * Re-fetches the cached `user_subscription` row whenever the Stripe
+   * webhook commits a change (plan switch, status transition, renewal,
+   * pending cancellation, or resume). Without this listener the SPA only
+   * picks up new state on re-mount, which races the webhook delivery
+   * after a Customer Portal trip. Failures are logged but never reset
+   * the cache to `null` — a transient realtime hiccup should leave the
+   * prior good state in place rather than collapse the user to free.
+   */
+  const handleSubscriptionChange = useCallback(() => {
+    getUserSubscription()
+      .then((subscription) => {
+        setUserSubscriptionState(subscription)
+      })
+      .catch((err: unknown) => {
+        console.error('Realtime User Subscription Refetch Error:', err)
+      })
+  }, [])
+
   useUserRealtimeSubscriptions({
     enabled: isAuthenticated === true,
     userId,
-    onShareChange: handleShareChange
+    onShareChange: handleShareChange,
+    onSubscriptionChange: handleSubscriptionChange
   })
 
   /**

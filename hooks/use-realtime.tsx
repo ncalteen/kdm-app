@@ -433,31 +433,50 @@ interface UseUserRealtimeSubscriptionsOptions {
   userId: string | null
   /** Called when a share is granted to or revoked from the current user */
   onShareChange: (event: ShareChangeEvent) => void
+  /**
+   * Called when the current user's `user_subscription` row changes. Fires
+   * on UPDATE events only — the row is seeded at sign-up and never
+   * inserted or deleted at runtime, so the Stripe webhook always issues
+   * an UPDATE (or, for first-time checkout, an UPSERT that lands as an
+   * UPDATE against the seeded `free` row). Optional so callers that do
+   * not care about subscription state can omit it.
+   */
+  onSubscriptionChange?: () => void
 }
 
 /**
  * User Realtime Subscriptions Hook
  *
- * Subscribes a per-user channel to INSERT / DELETE events on
- * `settlement_shared_user` filtered to rows where
- * `shared_user_id = userId`. Pairs with the per-settlement channel from
- * `useRealtimeSubscriptions` to deliver share-grant / share-revoke
- * notifications to the recipient without a manual reload (Phase 1.5 of
- * the sharing architecture rollout — see issue #144).
+ * Subscribes a per-user channel to row-level events on:
  *
- * Events are delivered one-for-one to `onShareChange`; the caller is
- * responsible for any debouncing or state cascades (e.g. clearing the
- * active settlement selection on revoke).
+ *   - `settlement_shared_user` — INSERT / DELETE where
+ *     `shared_user_id = userId`, delivering share-grant / share-revoke
+ *     notifications to the recipient without a manual reload (Phase 1.5
+ *     of the sharing architecture rollout — see issue #144).
+ *   - `user_subscription` — UPDATE where `user_id = userId`, so the SPA
+ *     can refresh its cached entitlement state as soon as the Stripe
+ *     webhook commits a plan change, cancellation, renewal, or pending
+ *     cancellation flip. Closes the timing window where the user returns
+ *     from the Customer Portal before the webhook has processed. See
+ *     issue #170.
+ *
+ * Both subscriptions share a single `user-${userId}` channel so the
+ * realtime socket connection cost is amortized. Events are delivered
+ * one-for-one to the matching callback; callers are responsible for any
+ * debouncing or state cascades (e.g. clearing the active settlement
+ * selection on share revoke).
  *
  * @param options Subscription configuration
  */
 export function useUserRealtimeSubscriptions(
   options: UseUserRealtimeSubscriptionsOptions
 ) {
-  const callbackRef = useRef(options.onShareChange)
+  const shareCallbackRef = useRef(options.onShareChange)
+  const subscriptionCallbackRef = useRef(options.onSubscriptionChange)
 
   useEffect(() => {
-    callbackRef.current = options.onShareChange
+    shareCallbackRef.current = options.onShareChange
+    subscriptionCallbackRef.current = options.onSubscriptionChange
   })
 
   useEffect(() => {
@@ -479,7 +498,7 @@ export function useUserRealtimeSubscriptions(
         (payload) => {
           const row = payload.new as { settlement_id?: string } | undefined
           if (!row?.settlement_id) return
-          callbackRef.current({
+          shareCallbackRef.current({
             event: 'INSERT',
             settlementId: row.settlement_id
           })
@@ -496,10 +515,35 @@ export function useUserRealtimeSubscriptions(
         (payload) => {
           const row = payload.old as { settlement_id?: string } | undefined
           if (!row?.settlement_id) return
-          callbackRef.current({
+          shareCallbackRef.current({
             event: 'DELETE',
             settlementId: row.settlement_id
           })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          // UPDATE only — `user_subscription` rows are seeded at sign-up
+          // by `initialize_user_settings` / `provision_user_settings_for_oauth`
+          // and never inserted or deleted at runtime. The Stripe webhook's
+          // `upsert` on `checkout.session.completed` lands as an UPDATE
+          // against the pre-existing seeded row, and the delete handler
+          // also writes via UPDATE (we keep the historical row for
+          // continuity rather than removing it). A separate event filter
+          // for INSERT / DELETE would only fire on admin recovery paths
+          // and isn't worth the socket cost.
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_subscription',
+          filter: `user_id=eq.${userId}`
+        },
+        () => {
+          // The payload carries the new row, but the SPA already has a
+          // DAL helper that re-derives `can_share` from the RPC, so we
+          // delegate refresh entirely to the caller instead of
+          // hand-rolling a partial reconstruction here.
+          subscriptionCallbackRef.current?.()
         }
       )
       .subscribe((status) => {
