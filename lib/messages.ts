@@ -1657,6 +1657,21 @@ export const STRIPE_CHECKOUT_CANCELLED_MESSAGE = () =>
   'You step back from the merchant. The lantern waits.'
 
 /**
+ * Stripe Checkout Already Subscribed Error
+ *
+ * Shown when the checkout route refuses to open a Checkout session because
+ * the caller already holds a paid subscription. Tier switches must flow
+ * through the Customer Portal so Stripe modifies the existing
+ * Subscription in place — opening a second Checkout session would create
+ * a parallel Subscription on the same Stripe Customer and silently
+ * double-bill the user.
+ *
+ * @returns Stripe Checkout Already Subscribed Error Message
+ */
+export const STRIPE_CHECKOUT_ALREADY_SUBSCRIBED_ERROR_MESSAGE = () =>
+  "A lantern already burns in your name. Visit the merchant's tent to change tiers."
+
+/**
  * Survival Limit Exceeded Error
  *
  * @param survivalLimit Survival Limit

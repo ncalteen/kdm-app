@@ -70,11 +70,22 @@ function buildRequest(body: unknown, headers: Record<string, string> = {}) {
 
 /**
  * Wire the user-scoped Supabase client mock with the supplied auth + row state.
+ *
+ * The test fixture mirrors the columns the route actually reads —
+ * `plan_id`, `stripe_customer_id`, `stripe_subscription_id` — and fills
+ * in safe defaults (`plan_id: 'free'`, `stripe_subscription_id: null`)
+ * when a test only cares about the customer ID. Tests exercising the
+ * 409 "already subscribed" branch override `plan_id` and
+ * `stripe_subscription_id` explicitly.
  */
 function setupAuth(options: {
   user: { id: string; email: string | null } | null
   authError?: { message: string } | null
-  subscription?: { stripe_customer_id: string | null } | null
+  subscription?: {
+    plan_id?: string
+    stripe_customer_id: string | null
+    stripe_subscription_id?: string | null
+  } | null
   subscriptionError?: { message: string } | null
 }) {
   mockGetUser.mockResolvedValue({
@@ -82,8 +93,17 @@ function setupAuth(options: {
     error: options.authError ?? null
   })
 
+  const subscriptionRow = options.subscription
+    ? {
+        plan_id: options.subscription.plan_id ?? 'free',
+        stripe_customer_id: options.subscription.stripe_customer_id,
+        stripe_subscription_id:
+          options.subscription.stripe_subscription_id ?? null
+      }
+    : null
+
   const maybeSingle = vi.fn().mockResolvedValue({
-    data: options.subscription ?? null,
+    data: subscriptionRow,
     error: options.subscriptionError ?? null
   })
   const eq = vi.fn().mockReturnValue({ maybeSingle })
@@ -257,6 +277,76 @@ describe('POST /api/billing/checkout', () => {
     expect(args.line_items).toEqual([
       { price: 'price_lantern_hoard', quantity: 1 }
     ])
+  })
+
+  it('returns 409 without contacting Stripe when the caller already holds a paid subscription', async () => {
+    // A determined caller bypassing the UI could POST here while already
+    // on a paid plan. Without the server-side guard, the second Checkout
+    // would create a *parallel* Stripe Subscription on the same Customer
+    // and the webhook would overwrite our row with the new
+    // `stripe_subscription_id`, leaving the original Subscription
+    // orphaned in Stripe and continuing to bill the user. The Customer
+    // Portal is the only supported path for tier switches.
+    setupAuth({
+      user: { id: 'user-1', email: 'patron@kdm.test' },
+      subscription: {
+        plan_id: 'lantern',
+        stripe_customer_id: 'cus_existing',
+        stripe_subscription_id: 'sub_existing'
+      }
+    })
+    const { upsert, update } = setupAdminWriter()
+
+    const response = await POST(buildRequest({ planId: 'lantern_hoard' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(409)
+    expect(json.error).toMatch(/lantern already burns/i)
+
+    // No Stripe traffic — the guard must short-circuit before any
+    // billable side effect.
+    expect(mockCustomersCreate).not.toHaveBeenCalled()
+    expect(mockCheckoutSessionsCreate).not.toHaveBeenCalled()
+
+    // No DB writes either — the row already reflects the active
+    // subscription and Stripe remains the source of truth for tier
+    // changes via the Portal.
+    expect(upsert).not.toHaveBeenCalled()
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it('allows re-subscribe when plan_id is back to free even if historical Stripe IDs are retained', async () => {
+    // Post-churn convergence: the webhook delete handler flips plan_id
+    // back to `free` while keeping the historical
+    // `stripe_subscription_id` for audit continuity. The guard's
+    // free-plan short-circuit must let these users open Checkout again
+    // — otherwise canceled users are permanently locked out.
+    setupAuth({
+      user: { id: 'user-1', email: 'returning@kdm.test' },
+      subscription: {
+        plan_id: 'free',
+        stripe_customer_id: 'cus_existing',
+        stripe_subscription_id: 'sub_canceled'
+      }
+    })
+    setupAdminWriter()
+    mockCheckoutSessionsCreate.mockResolvedValue({
+      url: 'https://checkout.stripe.test/session/cs_test_rekindle'
+    })
+
+    const response = await POST(buildRequest({ planId: 'lantern' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(json.url).toBe(
+      'https://checkout.stripe.test/session/cs_test_rekindle'
+    )
+
+    // Reuses the prior Stripe Customer — no fresh customer creation.
+    expect(mockCustomersCreate).not.toHaveBeenCalled()
+    expect(mockCheckoutSessionsCreate).toHaveBeenCalledTimes(1)
+    const args = mockCheckoutSessionsCreate.mock.calls[0][0]
+    expect(args.customer).toBe('cus_existing')
   })
 
   it('returns 500 when the subscription lookup fails', async () => {

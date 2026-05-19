@@ -2,7 +2,10 @@ import 'server-only'
 
 import { STRIPE_API_VERSION } from '@/lib/common'
 import { subscriptionManagementFlag } from '@/lib/flags'
-import { ERROR_MESSAGE } from '@/lib/messages'
+import {
+  ERROR_MESSAGE,
+  STRIPE_CHECKOUT_ALREADY_SUBSCRIBED_ERROR_MESSAGE
+} from '@/lib/messages'
 import { resolveOrigin } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -123,9 +126,14 @@ export async function POST(request: NextRequest) {
   //    and we self-heal in step 3a below rather than refusing to charge the
   //    user. Reading via the user-scoped client is sufficient: the
   //    "Allow select own" policy already grants read access to the owner.
+  //
+  //    We also pull `plan_id` and `stripe_subscription_id` so step 3b can
+  //    refuse Checkout for users who already hold a paid subscription —
+  //    see the comment block on the guard for the double-bill scenario it
+  //    closes.
   const { data: subscription, error: subscriptionError } = await supabase
     .from('user_subscription')
-    .select('stripe_customer_id')
+    .select('plan_id, stripe_customer_id, stripe_subscription_id')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -169,6 +177,46 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ error: ERROR_MESSAGE() }, { status: 500 })
     }
+  }
+
+  // 3b. Refuse Checkout when the caller already holds a paid subscription.
+  //     The Subscription tab routes tier switches through the Customer
+  //     Portal — Stripe modifies the existing Subscription in place and
+  //     fires `customer.subscription.updated`, leaving exactly one
+  //     Subscription on the Customer. But a determined caller could
+  //     bypass the UI (curl, devtools, replay of a captured request) and
+  //     POST here while already on a paid plan. Without this guard,
+  //     completing the second Checkout creates a *parallel* Subscription
+  //     on the same Customer (Stripe does not deduplicate by price), the
+  //     `checkout.session.completed` webhook overwrites the row's
+  //     `stripe_subscription_id` with the new one, and the original
+  //     Subscription becomes orphaned in Stripe but continues to bill —
+  //     silently double-charging the user.
+  //
+  //     The guard fires only when `plan_id !== 'free'` AND
+  //     `stripe_subscription_id !== null`. Requiring both signals to
+  //     match keeps the canceled-user re-subscribe path open: the
+  //     webhook delete handler flips `plan_id` back to 'free' while
+  //     retaining the historical `stripe_subscription_id` for audit
+  //     continuity, so those rows fail the first clause and Checkout
+  //     proceeds normally. A freshly self-healed row from step 3a has
+  //     `plan_id = 'free'` and `stripe_subscription_id = null`, so it
+  //     also trivially passes the guard.
+  if (
+    subscription &&
+    subscription.plan_id !== 'free' &&
+    subscription.stripe_subscription_id !== null
+  ) {
+    console.warn(
+      'Stripe Checkout Refused: user already on paid plan',
+      user.id,
+      subscription.plan_id
+    )
+
+    return NextResponse.json(
+      { error: STRIPE_CHECKOUT_ALREADY_SUBSCRIBED_ERROR_MESSAGE() },
+      { status: 409 }
+    )
   }
 
   // 4. Create + persist a Stripe Customer if this is the user's first paid
