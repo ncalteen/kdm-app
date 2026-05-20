@@ -27,7 +27,6 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { PHILOSOPHY_RANK_MINIMUM_ERROR_MESSAGE } from '@/lib/messages'
@@ -45,8 +44,6 @@ import { toast } from 'sonner'
  * Philosophy Card Properties
  */
 interface PhilosophyCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -152,7 +149,6 @@ function TenetKnowledgeSelect({
  * @returns Philosophy Card Component
  */
 export function PhilosophyCard({
-  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,

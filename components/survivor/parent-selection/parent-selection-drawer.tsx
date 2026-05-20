@@ -13,7 +13,6 @@ import {
   DrawerTitle,
   DrawerTrigger
 } from '@/components/ui/drawer'
-import { LocalStateType } from '@/contexts/local-context'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { SurvivorDetail } from '@/lib/types'
 import { UserIcon, UserXIcon } from 'lucide-react'
@@ -37,8 +36,6 @@ interface ParentSelectionDrawerProps {
    * Shown when no parent is selected.
    */
   emptyLabel?: string
-  /** Local State */
-  local: LocalStateType
   /** Callback for Selection Change */
   onSelectionChange: (survivorId: string | null) => void
   /** Currently Selected Parent ID */
@@ -63,7 +60,6 @@ export function ParentSelectionDrawer({
   description,
   disabledSurvivorIds = [],
   emptyLabel = 'Select parent...',
-  local,
   onSelectionChange,
   selectedSurvivorId,
   survivors,

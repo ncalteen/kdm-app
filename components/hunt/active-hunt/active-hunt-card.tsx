@@ -19,7 +19,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { removeHunt, updateHunt } from '@/lib/dal/hunt'
 import { updateHuntHuntBoard } from '@/lib/dal/hunt-hunt-board'
 import { copyMonsterJunctions } from '@/lib/dal/monster-trait-mood'
@@ -60,8 +59,6 @@ import { toast } from 'sonner'
  * Active Hunt Card Properties
  */
 interface ActiveHuntCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
@@ -99,7 +96,6 @@ interface ActiveHuntCardProps {
  * @returns Active Hunt Card Component
  */
 export function ActiveHuntCard({
-  local,
   selectedHunt,
   selectedHuntMonsterIndex,
   selectedSettlement,
@@ -615,7 +611,6 @@ export function ActiveHuntCard({
 
       {/* Hunt Party Survivors */}
       <HuntSurvivorsCard
-        local={local}
         selectedHunt={selectedHunt}
         selectedSettlement={selectedSettlement}
         selectedSurvivor={selectedSurvivor}

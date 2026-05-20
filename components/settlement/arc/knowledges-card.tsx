@@ -18,7 +18,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { addKnowledge, getKnowledges } from '@/lib/dal/knowledge'
@@ -42,8 +41,6 @@ import { toast } from 'sonner'
  * Knowledges Card Properties
  */
 interface KnowledgesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -61,7 +58,6 @@ interface KnowledgesCardProps {
  * @returns Knowledges Card Component
  */
 export function KnowledgesCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: KnowledgesCardProps): ReactElement {

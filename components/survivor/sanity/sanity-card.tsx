@@ -4,7 +4,6 @@ import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
@@ -39,8 +38,6 @@ interface SanityCardProps {
   displayText: boolean
   /** Display Torment Input */
   displayTormentInput: boolean
-  /** Local State */
-  local: LocalStateType
   /** Mode */
   mode: SurvivorCardMode
   /** Selected Hunt */
@@ -72,7 +69,6 @@ interface SanityCardProps {
 export function SanityCard({
   displayText,
   displayTormentInput,
-  local,
   mode,
   selectedHunt,
   selectedSettlement,

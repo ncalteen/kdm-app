@@ -15,7 +15,6 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { LocalStateType } from '@/contexts/local-context'
 import { vignetteUnlockMap } from '@/lib/common'
 import { addHunt } from '@/lib/dal/hunt'
 import { addHuntAIDeck } from '@/lib/dal/hunt-ai-deck'
@@ -63,8 +62,6 @@ import { toast } from 'sonner'
  * Create Hunt Card Properties
  */
 interface CreateHuntCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Showdown */
@@ -91,7 +88,6 @@ interface CreateHuntCardProps {
  * @returns Create Hunt Card Component
  */
 export function CreateHuntCard({
-  local,
   selectedSettlement,
   selectedShowdown,
   setSelectedHunt,
@@ -936,7 +932,6 @@ export function CreateHuntCard({
 
         {selectedSettlement?.uses_scouts && (
           <ScoutSelectionDrawer
-            local={local}
             title="Select Scout"
             description="Choose a single scout. Their skills will help navigate the dangers ahead."
             survivors={availableSurvivors}

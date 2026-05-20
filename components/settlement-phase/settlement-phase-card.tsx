@@ -26,7 +26,6 @@ import {
   EmptyTitle
 } from '@/components/ui/empty'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LocalStateType } from '@/contexts/local-context'
 import { settlementPhaseSteps } from '@/lib/common'
 import { updateSettlement } from '@/lib/dal/settlement'
 import { updateSettlementPhase } from '@/lib/dal/settlement-phase'
@@ -56,8 +55,6 @@ import { toast } from 'sonner'
  * Settlement Phase Card Properties
  */
 interface SettlementPhaseCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
@@ -91,7 +88,6 @@ interface SettlementPhaseCardProps {
  * @returns Settlement Phase Card Component
  */
 export function SettlementPhaseCard({
-  local,
   selectedSettlement,
   selectedSettlementPhase,
   selectedSurvivor,
@@ -227,7 +223,6 @@ export function SettlementPhaseCard({
           />
 
           <PrinciplesCard
-            local={local}
             selectedSettlement={selectedSettlement}
             setSelectedSettlement={setSelectedSettlement}
           />
@@ -237,7 +232,6 @@ export function SettlementPhaseCard({
       {/* Gain Endeavors */}
       {currentStep === SettlementPhaseStep.GAIN_ENDEAVORS && (
         <PrinciplesCard
-          local={local}
           selectedSettlement={selectedSettlement}
           setSelectedSettlement={setSelectedSettlement}
         />
@@ -246,7 +240,6 @@ export function SettlementPhaseCard({
       {/* Update Timeline */}
       {currentStep === SettlementPhaseStep.UPDATE_TIMELINE && (
         <TimelineCard
-          local={local}
           selectedSettlement={selectedSettlement}
           setSelectedSettlement={setSelectedSettlement}
         />
@@ -262,7 +255,6 @@ export function SettlementPhaseCard({
       {/* Check Milestones */}
       {currentStep === SettlementPhaseStep.CHECK_MILESTONES && (
         <MilestonesCard
-          local={local}
           selectedSettlement={selectedSettlement}
           setSelectedSettlement={setSelectedSettlement}
         />
@@ -285,12 +277,10 @@ export function SettlementPhaseCard({
               <div className="flex flex-col gap-2">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                   <InnovationsCard
-                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
                   <LocationsCard
-                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
@@ -301,7 +291,6 @@ export function SettlementPhaseCard({
             <TabsContent value="craft" className="mt-2">
               <div className="flex flex-col gap-2">
                 <ResourcesCard
-                  local={local}
                   selectedSettlement={selectedSettlement}
                   setSelectedSettlement={setSelectedSettlement}
                 />
@@ -339,19 +328,16 @@ export function SettlementPhaseCard({
                     setSelectedSettlement={setSelectedSettlement}
                   />
                   <CollectiveCognitionRewardsCard
-                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                   <PhilosophiesCard
-                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
                   <KnowledgesCard
-                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
@@ -379,7 +365,6 @@ export function SettlementPhaseCard({
       {/* Record and Archive Resources */}
       {currentStep === SettlementPhaseStep.RECORD_AND_ARCHIVE_RESOURCES && (
         <ResourcesCard
-          local={local}
           selectedSettlement={selectedSettlement}
           setSelectedSettlement={setSelectedSettlement}
         />
@@ -402,7 +387,6 @@ export function SettlementPhaseCard({
           />
 
           <PrinciplesCard
-            local={local}
             selectedSettlement={selectedSettlement}
             setSelectedSettlement={setSelectedSettlement}
           />
@@ -418,7 +402,6 @@ export function SettlementPhaseCard({
           SettlementPhaseStep.CHECK_MILESTONES
         ].includes(currentStep) && (
           <SettlementPhaseSurvivorsCard
-            local={local}
             selectedSettlement={selectedSettlement}
             selectedSettlementPhase={selectedSettlementPhase}
             selectedSurvivor={selectedSurvivor}

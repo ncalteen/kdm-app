@@ -125,7 +125,7 @@ function MainPage(): ReactElement {
     setSurvivors,
     survivors,
 
-    local,
+    // local,
     // updateLocal,
 
     userSettings,
@@ -162,7 +162,6 @@ function MainPage(): ReactElement {
           <SettlementCard
             isCreatingNewSettlement={isCreatingNewSettlement}
             isCreatingNewSurvivor={isCreatingNewSurvivor}
-            local={local}
             pendingSpecialShowdown={pendingSpecialShowdown}
             selectedHunt={selectedHunt}
             selectedHuntMonsterIndex={selectedHuntMonsterIndex}

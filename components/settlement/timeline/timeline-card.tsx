@@ -3,7 +3,6 @@
 import { TimelineContent } from '@/components/settlement/timeline/timeline-content'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import {
   addSettlementTimelineYear,
@@ -36,8 +35,6 @@ import { toast } from 'sonner'
  * Timeline Card Properties
  */
 interface TimelineCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -55,7 +52,6 @@ interface TimelineCardProps {
  * @returns Timeline Card Component
  */
 export function TimelineCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: TimelineCardProps): ReactElement {

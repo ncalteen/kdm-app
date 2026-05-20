@@ -20,7 +20,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import {
   addAbilityImpairment,
@@ -45,8 +44,6 @@ import { toast } from 'sonner'
  * Abilities and Impairments Card Properties
  */
 interface AbilitiesAndImpairmentsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -64,7 +61,6 @@ interface AbilitiesAndImpairmentsCardProps {
  * @returns Abilities and Impairments Card Component
  */
 export function AbilitiesAndImpairmentsCard({
-  local,
   selectedSurvivor,
   setSurvivors
 }: AbilitiesAndImpairmentsCardProps): ReactElement {

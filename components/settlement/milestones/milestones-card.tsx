@@ -18,7 +18,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { addMilestone, getMilestones } from '@/lib/dal/milestone'
@@ -41,8 +40,6 @@ import { toast } from 'sonner'
  * Milestones Card Properties
  */
 interface MilestonesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -60,7 +57,6 @@ interface MilestonesCardProps {
  * @returns Milestones Card Component
  */
 export function MilestonesCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: MilestonesCardProps): ReactElement {

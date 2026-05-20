@@ -17,7 +17,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { getPhilosophies } from '@/lib/dal/philosophy'
@@ -39,8 +38,6 @@ import { toast } from 'sonner'
  * Philosophies Card Properties
  */
 interface PhilosophiesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -58,7 +55,6 @@ interface PhilosophiesCardProps {
  * @returns Philosophies Card Component
  */
 export function PhilosophiesCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: PhilosophiesCardProps): ReactElement {

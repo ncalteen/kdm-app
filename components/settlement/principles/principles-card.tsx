@@ -19,7 +19,6 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { addPrinciple, getPrinciples } from '@/lib/dal/principle'
@@ -42,8 +41,6 @@ import { toast } from 'sonner'
  * Principles Card Properties
  */
 interface PrinciplesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -61,7 +58,6 @@ interface PrinciplesCardProps {
  * @returns Principles Card Component
  */
 export function PrinciplesCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: PrinciplesCardProps): ReactElement {

@@ -21,7 +21,6 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
@@ -37,8 +36,6 @@ import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
  * Knowledge Card Properties
  */
 interface KnowledgeCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -147,7 +144,6 @@ function KnowledgeSelect({
  * @returns Knowledge Card Component
  */
 export function KnowledgeCard({
-  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,

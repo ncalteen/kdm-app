@@ -14,7 +14,6 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { LocalStateType } from '@/contexts/local-context'
 import {
   addSettlementPhase,
   updateSettlementPhase
@@ -39,8 +38,6 @@ import { toast } from 'sonner'
  * Active Showdown Card Properties
  */
 interface ActiveShowdownCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement Phase */
   selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Showdown */
@@ -80,7 +77,6 @@ interface ActiveShowdownCardProps {
  * @returns Active Showdown Card Component
  */
 export function ActiveShowdownCard({
-  local,
   selectedSettlementPhase,
   selectedShowdown,
   selectedShowdownMonsterIndex,
@@ -283,7 +279,6 @@ export function ActiveShowdownCard({
         </div>
 
         <ShowdownSurvivorsCard
-          local={local}
           selectedShowdown={selectedShowdown}
           selectedSettlement={selectedSettlement}
           selectedSurvivor={selectedSurvivor}

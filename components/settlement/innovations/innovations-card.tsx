@@ -18,7 +18,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { addInnovation, getInnovations } from '@/lib/dal/innovation'
 import {
@@ -42,8 +41,6 @@ type InnovationItem = SettlementDetail['innovations'][0]
  * Innovations Card Properties
  */
 interface InnovationsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -60,7 +57,6 @@ interface InnovationsCardProps {
  * @returns Innovations Card Component
  */
 export function InnovationsCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: InnovationsCardProps): ReactElement {

@@ -17,7 +17,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { getQuarries } from '@/lib/dal/quarry'
@@ -51,8 +50,6 @@ import { toast } from 'sonner'
  * Quarries Card Properties
  */
 interface QuarriesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -70,7 +67,6 @@ interface QuarriesCardProps {
  * @returns Quarries Card Component
  */
 export function QuarriesCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: QuarriesCardProps): ReactElement {

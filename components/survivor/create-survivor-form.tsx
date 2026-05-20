@@ -15,7 +15,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { createSurvivor } from '@/lib/dal/survivor'
 import { getWanderers } from '@/lib/dal/wanderer'
@@ -54,8 +53,6 @@ import { toast } from 'sonner'
  * Create Survivor Form Properties
  */
 interface CreateSurvivorFormProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Is Creating New Survivor */
@@ -81,7 +78,6 @@ interface CreateSurvivorFormProps {
  * @returns Create Survivor Form
  */
 export function CreateSurvivorForm({
-  local,
   selectedSettlement,
   setIsCreatingNewSurvivor,
   setSelectedSurvivorId,
@@ -336,7 +332,6 @@ export function CreateSurvivorForm({
                 </FormLabel>
                 <div className="w-[75%]">
                   <ParentSelectionDrawer
-                    local={local}
                     title="Select Parent 1"
                     description="Choose a survivor from your settlement to record as a parent."
                     emptyLabel="No parent selected"
@@ -368,7 +363,6 @@ export function CreateSurvivorForm({
                 </FormLabel>
                 <div className="w-[75%]">
                   <ParentSelectionDrawer
-                    local={local}
                     title="Select Parent 2"
                     description="Choose a second survivor from your settlement to record as a parent."
                     emptyLabel="No parent selected"

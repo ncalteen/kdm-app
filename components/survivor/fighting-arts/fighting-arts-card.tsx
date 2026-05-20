@@ -21,7 +21,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { addFightingArt, getFightingArts } from '@/lib/dal/fighting-art'
 import {
@@ -54,8 +53,6 @@ import { toast } from 'sonner'
  * Fighting Arts Card Properties
  */
 interface FightingArtsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -73,7 +70,6 @@ interface FightingArtsCardProps {
  * @returns Fighting Arts Card Component
  */
 export function FightingArtsCard({
-  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,

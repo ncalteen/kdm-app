@@ -2,7 +2,6 @@
 
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import {
@@ -16,8 +15,6 @@ import { ReactElement } from 'react'
  * Bleeding Card Properties
  */
 interface BleedingCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Selected Survivor */
@@ -35,7 +32,6 @@ interface BleedingCardProps {
  * @returns Bleeding Card Component
  */
 export function BleedingCard({
-  local,
   selectedShowdown,
   selectedSurvivor,
   setSelectedShowdown

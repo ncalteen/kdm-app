@@ -16,7 +16,6 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { LocalStateType } from '@/contexts/local-context'
 import {
   syncMonsterMoods,
   syncMonsterSurvivorStatuses,
@@ -78,8 +77,6 @@ enum MonsterVersion {
  * Create Showdown Card Properties
  */
 interface CreateShowdownCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Pending Special Showdown */
   pendingSpecialShowdown: boolean
   /** Selected Hunt */
@@ -110,7 +107,6 @@ interface CreateShowdownCardProps {
  * @returns Create Showdown Card Component
  */
 export function CreateShowdownCard({
-  local,
   pendingSpecialShowdown,
   selectedHunt,
   selectedSettlement,
@@ -1019,7 +1015,6 @@ export function CreateShowdownCard({
 
         {selectedSettlement?.uses_scouts && (
           <ScoutSelectionDrawer
-            local={local}
             title="Select Scout"
             description="Choose a single scout. Their skills will help navigate the dangers ahead."
             survivors={availableSurvivors}

@@ -17,7 +17,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { getNemeses } from '@/lib/dal/nemesis'
@@ -49,8 +48,6 @@ import { toast } from 'sonner'
  * Nemeses Card Properties
  */
 interface NemesesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -69,7 +66,6 @@ interface NemesesCardProps {
  * @returns Nemeses Card Component
  */
 export function NemesesCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: NemesesCardProps): ReactElement {

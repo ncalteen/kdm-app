@@ -5,7 +5,6 @@ import { FacesInTheSky } from '@/components/survivor/courage-understanding/faces
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { LocalStateType } from '@/contexts/local-context'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import {
@@ -21,8 +20,6 @@ import { toast } from 'sonner'
  * Courage Understanding Card Properties
  */
 interface CourageUnderstandingCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -44,7 +41,6 @@ interface CourageUnderstandingCardProps {
  * @returns Courage and Understanding Card Component
  */
 export function CourageUnderstandingCard({
-  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,

@@ -18,7 +18,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { addDisorder, getDisorders } from '@/lib/dal/disorder'
 import {
@@ -40,8 +39,6 @@ const MAX_DISORDERS = 3
  * Disorders Card Properties
  */
 interface DisordersCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
 }
@@ -53,7 +50,6 @@ interface DisordersCardProps {
  * @returns Disorders Card Component
  */
 export function DisordersCard({
-  local,
   selectedSurvivor
 }: DisordersCardProps): ReactElement {
   const mutate = useOptimisticMutation()
