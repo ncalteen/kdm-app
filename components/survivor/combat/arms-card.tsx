@@ -5,10 +5,12 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { updateSurvivor } from '@/lib/dal/survivor'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { HandMetalIcon, Shield } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Arms Card Properties
@@ -98,6 +100,7 @@ export function ArmsCard({
           setter(oldValue)
           setSurvivors(oldSurvivors)
           console.error('Error Updating Arms:', error)
+          toast.error(ERROR_MESSAGE())
         }
       )
     },
