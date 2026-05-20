@@ -79,8 +79,22 @@ const newLocal: LocalStateType = {
 }
 
 const NOTIFICATION_INSERT_COALESCE_MS = 250
+const SUPABASE_ADMIN_AUTH_ROLE = 'admin'
 
 type NotificationInsertListener = () => void
+
+/**
+ * Is Supabase Admin Role
+ *
+ * Mirrors the database-side `is_admin()` helper, which checks
+ * `auth.role() = 'admin'`.
+ *
+ * @param role Supabase Auth user role
+ * @returns Whether the role is the Supabase admin role
+ */
+function isSupabaseAdminRole(role: string | null | undefined): boolean {
+  return role === SUPABASE_ADMIN_AUTH_ROLE
+}
 
 /**
  * Local Context Type
@@ -96,6 +110,8 @@ interface LocalContextType {
    * out" (e.g. before redirecting to the login page).
    */
   isAuthenticated: boolean | null
+  /** Whether the verified Supabase Auth user has the admin role */
+  isAdmin: boolean
   /** Is Creating New Hunt */
   isCreatingNewHunt: boolean
   /** Is Creating New Settlement */
@@ -356,6 +372,7 @@ export function LocalProvider({
   // distinguish "still checking" from "definitely signed out" without
   // issuing a redundant `auth.getUser()` call.
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [isAdmin, setIsAdmin] = useState<boolean>(false)
 
   // Authenticated user ID — drives the per-user realtime channel that
   // delivers share grant / revoke notifications. Mirrors the lifecycle of
@@ -389,9 +406,11 @@ export function LocalProvider({
 
     supabase.auth.getUser().then(({ data, error }) => {
       if (isCancelled) return
-      const authedUserId = !error ? (data?.user?.id ?? null) : null
-      setIsAuthenticated(!error && !!data?.user)
+      const authedUser = !error ? (data?.user ?? null) : null
+      const authedUserId = authedUser?.id ?? null
+      setIsAuthenticated(!!authedUser)
       setUserId(authedUserId)
+      setIsAdmin(isSupabaseAdminRole(authedUser?.role))
     })
 
     // Re-evaluate when the auth state changes (e.g. login/logout).
@@ -405,6 +424,7 @@ export function LocalProvider({
       if (!session?.user) {
         setIsAuthenticated(false)
         setUserId(null)
+        setIsAdmin(false)
         return
       }
 
@@ -416,11 +436,13 @@ export function LocalProvider({
           supabase.auth.signOut()
           setIsAuthenticated(false)
           setUserId(null)
+          setIsAdmin(false)
           return
         }
 
         setIsAuthenticated(true)
         setUserId(data.user.id)
+        setIsAdmin(isSupabaseAdminRole(data.user.role))
       })
     })
 
@@ -1697,6 +1719,7 @@ export function LocalProvider({
   const value = useMemo<LocalContextType>(
     () => ({
       isAuthenticated,
+      isAdmin,
       isCreatingNewHunt,
       isCreatingNewSettlement,
       isCreatingNewShowdown,
@@ -1759,6 +1782,7 @@ export function LocalProvider({
     }),
     [
       isAuthenticated,
+      isAdmin,
       isCreatingNewHunt,
       isCreatingNewSettlement,
       isCreatingNewShowdown,

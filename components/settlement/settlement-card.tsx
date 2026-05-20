@@ -4,8 +4,10 @@ import { LanternMark } from '@/components/generic/lantern-mark'
 import { ListCard } from '@/components/generic/list-card'
 import { HelpCard } from '@/components/help/help-card'
 import { HuntCard } from '@/components/hunt/hunt-card'
-import { SettingsCard } from '@/components/settings/settings-card'
+import { AdminSettingsCard } from '@/components/settings/admin-settings-card'
+import { SettlementSettingsCard } from '@/components/settings/settlement-settings-card'
 import { SubscriptionCard } from '@/components/settings/subscription-card'
+import { UserSettingsCard } from '@/components/settings/user-settings-card'
 import { SettlementPhaseCard } from '@/components/settlement-phase/settlement-phase-card'
 import { CollectiveCognitionRewardsCard } from '@/components/settlement/arc/collective-cognition-rewards-card'
 import { CollectiveCognitionVictoriesCard } from '@/components/settlement/arc/collective-cognition-victories-card'
@@ -203,24 +205,37 @@ export function SettlementCard({
   // skips the post-checkout tab switch). This local check protects against
   // a stale `selectedTab` value persisted to localStorage from a previous
   // session when the user was on the allowlist but has since been removed.
-  const { subscriptionManagementEnabled, userSubscription } = useLocal()
+  const { isAdmin, subscriptionManagementEnabled, userSubscription } =
+    useLocal()
 
-  // Settings tab is always accessible, regardless of settlement state.
+  // User settings are always accessible, regardless of settlement state.
   if (selectedTab === TabType.SETTINGS)
     return (
-      <SettingsCard
+      <UserSettingsCard
+        setUserSettings={setUserSettings}
+        userSettings={userSettings}
+      />
+    )
+
+  // Settlement settings are settlement-scoped. The component still handles a
+  // missing selected settlement so a stale persisted tab does not explode in
+  // the darkness.
+  if (selectedTab === TabType.SETTLEMENT_SETTINGS)
+    return (
+      <SettlementSettingsCard
         selectedHunt={selectedHunt}
         selectedSettlement={selectedSettlement}
+        selectedSettlementPhase={selectedSettlementPhase}
         selectedShowdown={selectedShowdown}
         setSelectedHunt={setSelectedHunt}
         setSelectedHuntId={setSelectedHuntId}
         setSelectedSettlement={setSelectedSettlement}
         setSelectedSettlementId={setSelectedSettlementId}
+        setSelectedSettlementPhase={setSelectedSettlementPhase}
+        setSelectedSettlementPhaseId={setSelectedSettlementPhaseId}
         setSelectedShowdown={setSelectedShowdown}
         setSelectedShowdownId={setSelectedShowdownId}
         setSelectedSurvivorId={setSelectedSurvivorId}
-        setUserSettings={setUserSettings}
-        userSettings={userSettings}
       />
     )
 
@@ -238,6 +253,12 @@ export function SettlementCard({
   // `selectedTab=subscription` value rehydrated from localStorage.
   if (selectedTab === TabType.SUBSCRIPTION && subscriptionManagementEnabled)
     return <SubscriptionCard />
+
+  // Defense-in-depth for stale localStorage or manual tab switching attempts:
+  // the sidebar hides this entry from non-admin users, and the route refuses
+  // to render it unless Supabase Auth verified the `admin` role.
+  if (selectedTab === TabType.ADMIN_SETTINGS && isAdmin)
+    return <AdminSettingsCard />
 
   // Help tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.HELP) return <HelpCard />

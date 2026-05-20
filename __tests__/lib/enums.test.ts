@@ -73,6 +73,7 @@ describe('DatabaseSurvivorType', () => {
 
 describe('TabType', () => {
   it('has correct values', () => {
+    expect(TabType.ADMIN_SETTINGS).toBe('adminSettings')
     expect(TabType.ARC).toBe('arc')
     expect(TabType.CRAFTING).toBe('crafting')
     expect(TabType.HUNT).toBe('hunt')
@@ -80,6 +81,7 @@ describe('TabType', () => {
     expect(TabType.NOTES).toBe('notes')
     expect(TabType.SETTINGS).toBe('settings')
     expect(TabType.SETTLEMENT_PHASE).toBe('settlementPhase')
+    expect(TabType.SETTLEMENT_SETTINGS).toBe('settlementSettings')
     expect(TabType.SHOWDOWN).toBe('showdown')
     expect(TabType.SOCIETY).toBe('society')
     expect(TabType.SQUIRES).toBe('squires')
