@@ -201,6 +201,8 @@ interface LocalContextType {
   userSubscription: UserSubscriptionDetail | null
   /** Set User Subscription */
   setUserSubscription: (subscription: UserSubscriptionDetail | null) => void
+  /** Notification Refresh Token */
+  notificationRefreshToken: number
   /**
    * Whether The User May Create New Shares
    *
@@ -357,6 +359,11 @@ export function LocalProvider({
   // `isAuthenticated` and is captured from the same `auth.getUser()` call
   // to avoid a redundant round trip.
   const [userId, setUserId] = useState<string | null>(null)
+
+  // Incremented by the per-user realtime channel whenever a notification row
+  // is inserted for this user. Consumers use it as a refetch signal without
+  // needing their own Supabase channel.
+  const [notificationRefreshToken, setNotificationRefreshToken] = useState(0)
 
   // Settlement list shown in the switcher. Held at the context layer so the
   // user-level realtime channel can refresh it from a single source of
@@ -799,6 +806,16 @@ export function LocalProvider({
       })
   }, [])
 
+  /**
+   * Handle Notification Insert
+   *
+   * Signals notification consumers to refetch their cached list/count when the
+   * per-user realtime channel receives a new inbox row.
+   */
+  const handleNotificationInsert = useCallback(() => {
+    setNotificationRefreshToken((prev) => prev + 1)
+  }, [])
+
   // Coalesces bursty INSERT / DELETE events on `settlement` (e.g. the
   // seed-data generator dropping a handful of settlements in quick
   // succession) into a single refetch of the cached list. Matches the
@@ -843,6 +860,7 @@ export function LocalProvider({
     userId,
     onShareChange: handleShareChange,
     onSubscriptionChange: handleSubscriptionChange,
+    onNotificationInsert: handleNotificationInsert,
     onOwnedSettlementChange: handleOwnedSettlementChange
   })
 
@@ -1701,6 +1719,7 @@ export function LocalProvider({
 
       userSubscription,
       setUserSubscription,
+      notificationRefreshToken,
       canShare: userSubscription?.can_share === true,
       subscriptionManagementEnabled,
 
@@ -1731,6 +1750,7 @@ export function LocalProvider({
       local,
       userSettings,
       userSubscription,
+      notificationRefreshToken,
       subscriptionManagementEnabled,
       settlementList,
       isSettlementListLoading,

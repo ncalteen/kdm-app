@@ -442,6 +442,8 @@ interface UseUserRealtimeSubscriptionsOptions {
    * not care about subscription state can omit it.
    */
   onSubscriptionChange?: () => void
+  /** Called when a notification row is inserted for the current user */
+  onNotificationInsert?: () => void
   /**
    * Called when the current user inserts or deletes a row in `settlement`
    * (i.e. an owned settlement appears or disappears). Powers the cached
@@ -472,6 +474,8 @@ interface UseUserRealtimeSubscriptionsOptions {
  *     cancellation flip. Closes the timing window where the user returns
  *     from the Customer Portal before the webhook has processed. See
  *     issue #170.
+ *   - `notification` — INSERT where `recipient_user_id = userId`, so the
+ *     bell badge and popover can refetch without polling. See issue #182.
  *   - `settlement` — INSERT / DELETE where `user_id = userId`, so the
  *     cached `settlementList` in `LocalContext` (and therefore the
  *     sidebar settlement switcher + free-tier ownership cap on the
@@ -491,11 +495,13 @@ export function useUserRealtimeSubscriptions(
 ) {
   const shareCallbackRef = useRef(options.onShareChange)
   const subscriptionCallbackRef = useRef(options.onSubscriptionChange)
+  const notificationCallbackRef = useRef(options.onNotificationInsert)
   const ownedSettlementCallbackRef = useRef(options.onOwnedSettlementChange)
 
   useEffect(() => {
     shareCallbackRef.current = options.onShareChange
     subscriptionCallbackRef.current = options.onSubscriptionChange
+    notificationCallbackRef.current = options.onNotificationInsert
     ownedSettlementCallbackRef.current = options.onOwnedSettlementChange
   })
 
@@ -564,6 +570,18 @@ export function useUserRealtimeSubscriptions(
           // delegate refresh entirely to the caller instead of
           // hand-rolling a partial reconstruction here.
           subscriptionCallbackRef.current?.()
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notification',
+          filter: `recipient_user_id=eq.${userId}`
+        },
+        () => {
+          notificationCallbackRef.current?.()
         }
       )
       .on(

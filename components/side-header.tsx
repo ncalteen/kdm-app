@@ -1,7 +1,7 @@
 'use client'
 
-import { LanternMark } from '@/components/generic/lantern-mark'
 import { ModeToggle } from '@/components/menu/mode-toggle'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 import { PresenceStack } from '@/components/settlement/presence-stack'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -56,10 +56,7 @@ export function SiteHeader(): ReactElement {
         <ModeToggle />
 
         <div className="flex items-center gap-2 pl-1">
-          <LanternMark
-            className="h-4 w-4 text-amber-400/90"
-            aria-hidden="true"
-          />
+          <NotificationBell />
           <h1 className="text-xs sm:text-sm whitespace-nowrap leading-none">
             <span className="text-muted-foreground">
               Kingdom Death: Monster
