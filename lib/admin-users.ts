@@ -14,6 +14,8 @@ export interface AdminUserListEntry {
   phone: string | null
   /** Auth Role */
   role: string | null
+  /** Application Role */
+  app_role: string | null
   /** Auth Providers */
   providers: string[]
   /** Created At */

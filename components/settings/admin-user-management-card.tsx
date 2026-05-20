@@ -216,7 +216,8 @@ export function AdminUserManagementCard(): ReactElement {
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>App Role</TableHead>
+                  <TableHead>Auth Role</TableHead>
                   <TableHead>Providers</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Last Sign-In</TableHead>
@@ -236,6 +237,7 @@ export function AdminUserManagementCard(): ReactElement {
                         </span>
                       </div>
                     </TableCell>
+                    <TableCell>{user.app_role ?? 'user'}</TableCell>
                     <TableCell>{user.role ?? 'unknown'}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">

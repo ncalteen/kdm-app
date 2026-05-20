@@ -4852,6 +4852,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          app_role: string
           avatar_url: string | null
           created_at: string
           id: string
@@ -4864,6 +4865,7 @@ export type Database = {
           username_renamed_at: string | null
         }
         Insert: {
+          app_role?: string
           avatar_url?: string | null
           created_at?: string
           id?: string
@@ -4876,6 +4878,7 @@ export type Database = {
           username_renamed_at?: string | null
         }
         Update: {
+          app_role?: string
           avatar_url?: string | null
           created_at?: string
           id?: string

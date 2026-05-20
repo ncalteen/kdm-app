@@ -39,14 +39,19 @@ function readAuthProviders(user: User): string[] {
  * Converts a Supabase Auth user into the client-safe user management shape.
  *
  * @param user Supabase Auth User
+ * @param appRole Application Role
  * @returns Admin User List Entry
  */
-function mapAuthUser(user: User): AdminUserListEntry {
+function mapAuthUser(
+  user: User,
+  appRole: string | null | undefined
+): AdminUserListEntry {
   return {
     id: user.id,
     email: user.email ?? null,
     phone: user.phone ?? null,
     role: user.role ?? null,
+    app_role: appRole ?? null,
     providers: readAuthProviders(user),
     created_at: user.created_at ?? null,
     last_sign_in_at: user.last_sign_in_at ?? null,
@@ -80,5 +85,29 @@ export async function GET() {
     return NextResponse.json({ error: ERROR_MESSAGE() }, { status: 500 })
   }
 
-  return NextResponse.json({ users: data.users.map(mapAuthUser) })
+  const userIds = data.users.map((user) => user.id)
+
+  if (userIds.length === 0) return NextResponse.json({ users: [] })
+
+  const { data: settingsRows, error: settingsError } = await admin
+    .from('user_settings')
+    .select('user_id, app_role')
+    .in('user_id', userIds)
+
+  if (settingsError) {
+    console.error('Admin User Settings Role Fetch Error:', settingsError)
+
+    return NextResponse.json({ error: ERROR_MESSAGE() }, { status: 500 })
+  }
+
+  const appRoles = new Map(
+    (settingsRows ?? []).map((settings) => [
+      settings.user_id,
+      settings.app_role
+    ])
+  )
+
+  return NextResponse.json({
+    users: data.users.map((user) => mapAuthUser(user, appRoles.get(user.id)))
+  })
 }

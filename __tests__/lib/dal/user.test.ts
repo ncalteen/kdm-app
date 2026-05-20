@@ -35,6 +35,7 @@ describe('getUserSettings', () => {
   const mockSettings = {
     id: 'settings-1',
     user_id: 'user-1',
+    app_role: 'user',
     unlocked_killenium_butcher: false,
     unlocked_screaming_nukalope: true,
     unlocked_white_gigalion: false
@@ -58,7 +59,7 @@ describe('getUserSettings', () => {
 
     expect(mockSupabase.from).toHaveBeenCalledWith('user_settings')
     expect(mockSelect).toHaveBeenCalledWith(
-      'avatar_url, id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
+      'app_role, avatar_url, id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
     )
     expect(mockEq).toHaveBeenCalledWith('user_id', mockUser.id)
     expect(mockMaybeSingle).toHaveBeenCalledOnce()

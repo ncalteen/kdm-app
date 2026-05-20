@@ -157,7 +157,7 @@ export async function getUserSettings(): Promise<UserSettingsDetail | null> {
   const { data, error } = await supabase
     .from('user_settings')
     .select(
-      'avatar_url, id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
+      'app_role, avatar_url, id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
     )
     .eq('user_id', userId)
     .maybeSingle()
@@ -250,7 +250,7 @@ export async function getSettlementForUser(): Promise<SettlementListEntry[]> {
 export async function addUserSettings(
   userSettings: Omit<
     TablesInsert<'user_settings'>,
-    'id' | 'created_at' | 'updated_at'
+    'app_role' | 'id' | 'created_at' | 'updated_at'
   >
 ): Promise<UserSettingsDetail> {
   const supabase = createClient()
@@ -259,7 +259,7 @@ export async function addUserSettings(
     .from('user_settings')
     .insert(userSettings)
     .select(
-      'avatar_url, id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
+      'app_role, avatar_url, id, unlocked_killenium_butcher, unlocked_screaming_nukalope, unlocked_white_gigalion, user_id, username, username_renamed_at'
     )
     .single()
 
@@ -281,7 +281,7 @@ export async function updateUserSettings(
   id: string,
   userSettings: Omit<
     TablesUpdate<'user_settings'>,
-    'id' | 'created_at' | 'updated_at'
+    'app_role' | 'id' | 'created_at' | 'updated_at'
   >
 ): Promise<void> {
   const supabase = createClient()

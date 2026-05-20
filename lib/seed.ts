@@ -268,8 +268,8 @@ export async function generateSeedData() {
     throw error
   }
 
-  // Only allow authenticated, admin users
-  // if (!data.user || data.user.role !== 'admin')
+  // Only allow authenticated users with user_settings.app_role = 'admin'
+  // if (!data.user || userSettings?.app_role !== 'admin')
   //   return toast.error('Unauthorized')
 
   // Delete all existing resources for the user to start with a clean slate

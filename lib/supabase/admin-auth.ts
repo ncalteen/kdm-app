@@ -1,10 +1,9 @@
 import 'server-only'
 
+import { isUserSettingsAdmin } from '@/lib/supabase/admin-role'
 import { createClient } from '@/lib/supabase/server'
 import { User } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-
-const SUPABASE_ADMIN_AUTH_ROLE = 'admin'
 
 /**
  * Admin Auth Result
@@ -27,7 +26,8 @@ type AdminAuthResult =
  * Require Supabase Admin User
  *
  * Authenticates the request with the cookie-backed Supabase client and verifies
- * that the caller's Supabase Auth role is `admin`.
+ * that the caller has Archivist's application admin role on their
+ * `user_settings` row.
  *
  * @returns Verified admin user or an HTTP response blocking the request
  */
@@ -47,7 +47,24 @@ export async function requireSupabaseAdminUser(): Promise<AdminAuthResult> {
       )
     }
 
-  if (user.role !== SUPABASE_ADMIN_AUTH_ROLE)
+  const { data: settings, error: settingsError } = await supabase
+    .from('user_settings')
+    .select('app_role')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (settingsError) {
+    console.error('Admin Auth Role Fetch Error:', settingsError)
+
+    return {
+      response: NextResponse.json(
+        { error: 'Unable to verify admin access' },
+        { status: 500 }
+      )
+    }
+  }
+
+  if (!isUserSettingsAdmin(settings))
     return {
       response: NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

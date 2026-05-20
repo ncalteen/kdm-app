@@ -5,22 +5,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 // route under test.
 vi.mock('server-only', () => ({}))
 
-const { mockGetUser, mockCreateClient } = vi.hoisted(() => ({
-  mockGetUser: vi.fn(),
-  mockCreateClient: vi.fn()
-}))
+const { mockGetUser, mockUserSettingsMaybeSingle, mockCreateClient } =
+  vi.hoisted(() => ({
+    mockGetUser: vi.fn(),
+    mockUserSettingsMaybeSingle: vi.fn(),
+    mockCreateClient: vi.fn()
+  }))
 
 const {
   mockListUsers,
   mockDeleteUser,
   mockGetUserById,
   mockResetPasswordForEmail,
+  mockAdminSettingsIn,
   mockCreateAdminClient
 } = vi.hoisted(() => ({
   mockListUsers: vi.fn(),
   mockDeleteUser: vi.fn(),
   mockGetUserById: vi.fn(),
   mockResetPasswordForEmail: vi.fn(),
+  mockAdminSettingsIn: vi.fn(),
   mockCreateAdminClient: vi.fn()
 }))
 
@@ -67,16 +71,34 @@ function buildContext(userId: string) {
  * Wire the user-scoped Supabase client mock with the supplied auth state.
  */
 function setupAuth(options: {
-  user: { id: string; role: string } | null
+  user: {
+    id: string
+    role?: string
+    app_metadata?: Record<string, unknown>
+  } | null
+  appRole?: string | null
   authError?: { message: string } | null
+  settingsError?: { message: string } | null
 }) {
   mockGetUser.mockResolvedValue({
     data: { user: options.user },
     error: options.authError ?? null
   })
 
+  mockUserSettingsMaybeSingle.mockResolvedValue({
+    data: options.appRole === undefined ? null : { app_role: options.appRole },
+    error: options.settingsError ?? null
+  })
+
   mockCreateClient.mockResolvedValue({
-    auth: { getUser: mockGetUser }
+    auth: { getUser: mockGetUser },
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: mockUserSettingsMaybeSingle
+        }))
+      }))
+    }))
   })
 }
 
@@ -84,6 +106,8 @@ function setupAuth(options: {
  * Wire the service-role Auth Admin mock.
  */
 function setupAdminClient() {
+  mockAdminSettingsIn.mockResolvedValue({ data: [], error: null })
+
   mockCreateAdminClient.mockReturnValue({
     auth: {
       admin: {
@@ -92,7 +116,12 @@ function setupAdminClient() {
         getUserById: mockGetUserById
       },
       resetPasswordForEmail: mockResetPasswordForEmail
-    }
+    },
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        in: mockAdminSettingsIn
+      }))
+    }))
   })
 }
 
@@ -104,7 +133,19 @@ describe('admin users API routes', () => {
   })
 
   it('blocks non-admin callers from listing users', async () => {
-    setupAuth({ user: { id: targetUserId, role: 'authenticated' } })
+    setupAuth({ user: { id: targetUserId } })
+
+    const response = await usersRoute.GET()
+    const json = await response.json()
+
+    expect(response.status).toBe(403)
+    expect(json.error).toBe('Forbidden')
+    expect(mockCreateAdminClient).not.toHaveBeenCalled()
+    expect(mockListUsers).not.toHaveBeenCalled()
+  })
+
+  it('does not treat the Supabase database role as app admin access', async () => {
+    setupAuth({ user: { id: adminUserId, role: 'admin' } })
 
     const response = await usersRoute.GET()
     const json = await response.json()
@@ -116,7 +157,7 @@ describe('admin users API routes', () => {
   })
 
   it('lists Auth users for admin callers', async () => {
-    setupAuth({ user: { id: adminUserId, role: 'admin' } })
+    setupAuth({ user: { id: adminUserId }, appRole: 'admin' })
     mockListUsers.mockResolvedValue({
       data: {
         users: [
@@ -135,6 +176,10 @@ describe('admin users API routes', () => {
       },
       error: null
     })
+    mockAdminSettingsIn.mockResolvedValue({
+      data: [{ user_id: targetUserId, app_role: 'admin' }],
+      error: null
+    })
 
     const response = await usersRoute.GET()
     const json = await response.json()
@@ -146,6 +191,7 @@ describe('admin users API routes', () => {
         email: 'survivor@archivist.test',
         phone: null,
         role: 'authenticated',
+        app_role: 'admin',
         providers: ['email'],
         created_at: '2026-05-20T00:00:00.000Z',
         last_sign_in_at: '2026-05-20T01:00:00.000Z',
@@ -154,10 +200,11 @@ describe('admin users API routes', () => {
       }
     ])
     expect(mockListUsers).toHaveBeenCalledWith({ page: 1, perPage: 1000 })
+    expect(mockAdminSettingsIn).toHaveBeenCalledWith('user_id', [targetUserId])
   })
 
   it('refuses to delete the current admin user', async () => {
-    setupAuth({ user: { id: adminUserId, role: 'admin' } })
+    setupAuth({ user: { id: adminUserId }, appRole: 'admin' })
 
     const response = await deleteUserRoute.DELETE(
       buildRequest(`/api/admin/users/${adminUserId}`, 'DELETE'),
@@ -171,7 +218,7 @@ describe('admin users API routes', () => {
   })
 
   it('deletes another Auth user for admin callers', async () => {
-    setupAuth({ user: { id: adminUserId, role: 'admin' } })
+    setupAuth({ user: { id: adminUserId }, appRole: 'admin' })
     mockDeleteUser.mockResolvedValue({ data: { user: {} }, error: null })
 
     const response = await deleteUserRoute.DELETE(
@@ -186,7 +233,7 @@ describe('admin users API routes', () => {
   })
 
   it('sends password reset email for another Auth user', async () => {
-    setupAuth({ user: { id: adminUserId, role: 'admin' } })
+    setupAuth({ user: { id: adminUserId }, appRole: 'admin' })
     mockGetUserById.mockResolvedValue({
       data: { user: { id: targetUserId, email: 'survivor@archivist.test' } },
       error: null

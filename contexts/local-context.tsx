@@ -15,6 +15,7 @@ import { getSettlementForUser, getUserSettings } from '@/lib/dal/user'
 import { getUserSubscription } from '@/lib/dal/user-subscription'
 import { TabType } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
+import { isUserSettingsAdmin } from '@/lib/supabase/admin-role'
 import { createClient } from '@/lib/supabase/client'
 import {
   HuntDetail,
@@ -79,22 +80,8 @@ const newLocal: LocalStateType = {
 }
 
 const NOTIFICATION_INSERT_COALESCE_MS = 250
-const SUPABASE_ADMIN_AUTH_ROLE = 'admin'
 
 type NotificationInsertListener = () => void
-
-/**
- * Is Supabase Admin Role
- *
- * Mirrors the database-side `is_admin()` helper, which checks
- * `auth.role() = 'admin'`.
- *
- * @param role Supabase Auth user role
- * @returns Whether the role is the Supabase admin role
- */
-function isSupabaseAdminRole(role: string | null | undefined): boolean {
-  return role === SUPABASE_ADMIN_AUTH_ROLE
-}
 
 /**
  * Local Context Type
@@ -110,7 +97,7 @@ interface LocalContextType {
    * out" (e.g. before redirecting to the login page).
    */
   isAuthenticated: boolean | null
-  /** Whether the verified Supabase Auth user has the admin role */
+  /** Whether the verified Supabase Auth user has the app admin role */
   isAdmin: boolean
   /** Is Creating New Hunt */
   isCreatingNewHunt: boolean
@@ -410,7 +397,7 @@ export function LocalProvider({
       const authedUserId = authedUser?.id ?? null
       setIsAuthenticated(!!authedUser)
       setUserId(authedUserId)
-      setIsAdmin(isSupabaseAdminRole(authedUser?.role))
+      setIsAdmin(false)
     })
 
     // Re-evaluate when the auth state changes (e.g. login/logout).
@@ -442,7 +429,7 @@ export function LocalProvider({
 
         setIsAuthenticated(true)
         setUserId(data.user.id)
-        setIsAdmin(isSupabaseAdminRole(data.user.role))
+        setIsAdmin(false)
       })
     })
 
@@ -1325,6 +1312,7 @@ export function LocalProvider({
         console.debug('User Settings:', userSettingsData)
 
         setUserSettingsState(userSettingsData)
+        setIsAdmin(isUserSettingsAdmin(userSettingsData))
       })
       .catch((err: unknown) => {
         if (isCancelled) return
@@ -1332,10 +1320,12 @@ export function LocalProvider({
         console.error('User Settings Fetch Error:', err)
 
         setUserSettingsState(null)
+        setIsAdmin(false)
       })
 
     return () => {
       isCancelled = true
+      setIsAdmin(false)
     }
   }, [isAuthenticated])
 
@@ -1689,6 +1679,7 @@ export function LocalProvider({
    */
   const setUserSettings = useCallback((settings: UserSettingsDetail | null) => {
     setUserSettingsState(settings)
+    setIsAdmin(isUserSettingsAdmin(settings))
   }, [])
 
   /**
