@@ -136,7 +136,8 @@ describe('markRead', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-05-20T12:34:56.000Z'))
 
-    const inFilter = vi.fn().mockResolvedValue({ error: null })
+    const is = vi.fn().mockResolvedValue({ error: null })
+    const inFilter = vi.fn().mockReturnValue({ is })
     const eq = vi.fn().mockReturnValue({ in: inFilter })
     const update = vi.fn().mockReturnValue({ eq })
     mockSupabase.from.mockReturnValue({ update })
@@ -152,12 +153,14 @@ describe('markRead', () => {
       'notification-1',
       'notification-2'
     ])
+    expect(is).toHaveBeenCalledWith('read_at', null)
   })
 
   it('throws when marking notifications read fails', async () => {
-    const inFilter = vi
+    const is = vi
       .fn()
       .mockResolvedValue({ error: { message: 'update failed' } })
+    const inFilter = vi.fn().mockReturnValue({ is })
     const eq = vi.fn().mockReturnValue({ in: inFilter })
     const update = vi.fn().mockReturnValue({ eq })
     mockSupabase.from.mockReturnValue({ update })
