@@ -4,6 +4,8 @@ import { saveToLocalStorage } from '@/lib/utils'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 
+const APP_ROLE_ADMIN = 'admin'
+
 /**
  * Link Level Survivor Statuses
  *
@@ -268,9 +270,20 @@ export async function generateSeedData() {
     throw error
   }
 
-  // Only allow authenticated users with user_settings.app_role = 'admin'
-  // if (!data.user || userSettings?.app_role !== 'admin')
-  //   return toast.error('Unauthorized')
+  if (!data.user) return toast.error('Unauthorized')
+
+  const { data: settings, error: settingsError } = await supabase
+    .from('user_settings')
+    .select('app_role')
+    .eq('user_id', data.user.id)
+    .maybeSingle()
+
+  if (settingsError) {
+    console.error('Seed Data Admin Role Fetch Error:', settingsError)
+    throw settingsError
+  }
+
+  if (settings?.app_role !== APP_ROLE_ADMIN) return toast.error('Unauthorized')
 
   // Delete all existing resources for the user to start with a clean slate
   await deleteUserData(supabase, data.user.id)

@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 
 const USERS_PER_PAGE = 1000
+const USER_SETTINGS_BATCH_SIZE = 1000
 
 /**
  * Read Auth Providers
@@ -73,41 +74,56 @@ export async function GET() {
   if (auth.response) return auth.response
 
   const admin = createAdminClient()
+  const users: User[] = []
+  let page = 1
 
-  const { data, error } = await admin.auth.admin.listUsers({
-    page: 1,
-    perPage: USERS_PER_PAGE
-  })
+  while (true) {
+    const { data, error } = await admin.auth.admin.listUsers({
+      page,
+      perPage: USERS_PER_PAGE
+    })
 
-  if (error) {
-    console.error('Admin Users Fetch Error:', error)
+    if (error) {
+      console.error('Admin Users Fetch Error:', error)
 
-    return NextResponse.json({ error: ERROR_MESSAGE() }, { status: 500 })
+      return NextResponse.json({ error: ERROR_MESSAGE() }, { status: 500 })
+    }
+
+    users.push(...data.users)
+
+    if (data.users.length < USERS_PER_PAGE) break
+
+    page += 1
   }
 
-  const userIds = data.users.map((user) => user.id)
+  const userIds = users.map((user) => user.id)
 
   if (userIds.length === 0) return NextResponse.json({ users: [] })
 
-  const { data: settingsRows, error: settingsError } = await admin
-    .from('user_settings')
-    .select('user_id, app_role')
-    .in('user_id', userIds)
+  const appRoles = new Map<string, string | null>()
 
-  if (settingsError) {
-    console.error('Admin User Settings Role Fetch Error:', settingsError)
+  for (
+    let index = 0;
+    index < userIds.length;
+    index += USER_SETTINGS_BATCH_SIZE
+  ) {
+    const batchUserIds = userIds.slice(index, index + USER_SETTINGS_BATCH_SIZE)
+    const { data: settingsRows, error: settingsError } = await admin
+      .from('user_settings')
+      .select('user_id, app_role')
+      .in('user_id', batchUserIds)
 
-    return NextResponse.json({ error: ERROR_MESSAGE() }, { status: 500 })
+    if (settingsError) {
+      console.error('Admin User Settings Role Fetch Error:', settingsError)
+
+      return NextResponse.json({ error: ERROR_MESSAGE() }, { status: 500 })
+    }
+
+    for (const settings of settingsRows ?? [])
+      appRoles.set(settings.user_id, settings.app_role)
   }
 
-  const appRoles = new Map(
-    (settingsRows ?? []).map((settings) => [
-      settings.user_id,
-      settings.app_role
-    ])
-  )
-
   return NextResponse.json({
-    users: data.users.map((user) => mapAuthUser(user, appRoles.get(user.id)))
+    users: users.map((user) => mapAuthUser(user, appRoles.get(user.id)))
   })
 }

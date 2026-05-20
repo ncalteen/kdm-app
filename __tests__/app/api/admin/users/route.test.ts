@@ -208,6 +208,72 @@ describe('admin users API routes', () => {
     expect(mockAdminSettingsIn).toHaveBeenCalledWith('user_id', [targetUserId])
   })
 
+  it('paginates Auth users for admin callers', async () => {
+    setupAuth({ user: { id: adminUserId }, appRole: 'admin' })
+    const firstPageUsers = Array.from({ length: 1000 }, (_, index) => ({
+      id: `page-1-user-${index}`,
+      email: `page-1-user-${index}@archivist.test`,
+      phone: null,
+      role: 'authenticated',
+      app_metadata: { providers: ['email'] },
+      created_at: '2026-05-20T00:00:00.000Z',
+      last_sign_in_at: null,
+      email_confirmed_at: null,
+      banned_until: null
+    }))
+    const secondPageUser = {
+      id: targetUserId,
+      email: 'last-survivor@archivist.test',
+      phone: null,
+      role: 'authenticated',
+      app_metadata: { provider: 'github' },
+      created_at: '2026-05-20T00:00:00.000Z',
+      last_sign_in_at: null,
+      email_confirmed_at: null,
+      banned_until: null
+    }
+
+    mockListUsers
+      .mockResolvedValueOnce({ data: { users: firstPageUsers }, error: null })
+      .mockResolvedValueOnce({
+        data: { users: [secondPageUser] },
+        error: null
+      })
+    mockAdminSettingsIn
+      .mockResolvedValueOnce({
+        data: [{ user_id: firstPageUsers[0].id, app_role: 'admin' }],
+        error: null
+      })
+      .mockResolvedValueOnce({
+        data: [{ user_id: secondPageUser.id, app_role: 'user' }],
+        error: null
+      })
+
+    const response = await usersRoute.GET()
+    const json = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(json.users).toHaveLength(1001)
+    expect(json.users[0].app_role).toBe('admin')
+    expect(json.users[1000].providers).toEqual(['github'])
+    expect(mockListUsers).toHaveBeenNthCalledWith(1, {
+      page: 1,
+      perPage: 1000
+    })
+    expect(mockListUsers).toHaveBeenNthCalledWith(2, {
+      page: 2,
+      perPage: 1000
+    })
+    expect(mockAdminSettingsIn).toHaveBeenNthCalledWith(
+      1,
+      'user_id',
+      firstPageUsers.map((user) => user.id)
+    )
+    expect(mockAdminSettingsIn).toHaveBeenNthCalledWith(2, 'user_id', [
+      secondPageUser.id
+    ])
+  })
+
   it('refuses to delete the current admin user', async () => {
     setupAuth({ user: { id: adminUserId }, appRole: 'admin' })
 
