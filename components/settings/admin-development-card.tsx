@@ -17,7 +17,7 @@ import { useLocal } from '@/contexts/local-context'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { generateSeedData } from '@/lib/seed'
 import { DatabaseIcon, Loader2 } from 'lucide-react'
-import { ReactElement, useEffect, useState, useTransition } from 'react'
+import { ReactElement, useSyncExternalStore, useTransition } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -35,6 +35,31 @@ function isLocalDevelopmentHost(): boolean {
 }
 
 /**
+ * Subscribe To Local Development Host Changes
+ *
+ * The browser host is stable for the lifetime of the page. This no-op
+ * subscription lets `useSyncExternalStore` provide distinct server/client
+ * snapshots without an effect-driven state update.
+ *
+ * @returns Unsubscribe Callback
+ */
+function subscribeToLocalDevelopmentHostChanges(): () => void {
+  return () => undefined
+}
+
+/**
+ * Get Server Local Development Host Snapshot
+ *
+ * The server has no browser host, so local development-only actions are hidden
+ * until the client snapshot is available.
+ *
+ * @returns Server Snapshot
+ */
+function getServerLocalDevelopmentHostSnapshot(): boolean {
+  return false
+}
+
+/**
  * Admin Development Card Component
  *
  * Hosts privileged development-only maintenance actions. Visibility is guarded
@@ -45,12 +70,12 @@ function isLocalDevelopmentHost(): boolean {
  */
 export function AdminDevelopmentCard(): ReactElement {
   const { isAdmin } = useLocal()
-  const [isLocalDevelopment, setIsLocalDevelopment] = useState<boolean>(false)
+  const isLocalDevelopment = useSyncExternalStore(
+    subscribeToLocalDevelopmentHostChanges,
+    isLocalDevelopmentHost,
+    getServerLocalDevelopmentHostSnapshot
+  )
   const [isSeeding, startSeedTransition] = useTransition()
-
-  useEffect(() => {
-    setIsLocalDevelopment(isLocalDevelopmentHost())
-  }, [])
 
   if (!isAdmin) return <></>
 

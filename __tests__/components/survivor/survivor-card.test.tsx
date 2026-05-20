@@ -71,9 +71,6 @@ vi.mock(
 vi.mock('@/components/survivor/philosophy/philosophy-card', () => ({
   PhilosophyCard: mockCard('PhilosophyCard')
 }))
-vi.mock('@/components/survivor/sanity/sanity-card', () => ({
-  SanityCard: mockCard('SanityCard')
-}))
 vi.mock('@/components/survivor/status/status-card', () => ({
   StatusCard: mockCard('StatusCard')
 }))

@@ -5,6 +5,7 @@ import { ListCard } from '@/components/generic/list-card'
 import { HelpCard } from '@/components/help/help-card'
 import { HuntCard } from '@/components/hunt/hunt-card'
 import { AdminDevelopmentCard } from '@/components/settings/admin-development-card'
+import { AdminUserManagementCard } from '@/components/settings/admin-user-management-card'
 import { SettlementSettingsCard } from '@/components/settings/settlement-settings-card'
 import { SubscriptionCard } from '@/components/settings/subscription-card'
 import { UserSettingsCard } from '@/components/settings/user-settings-card'
@@ -256,6 +257,9 @@ export function SettlementCard({
   // to render it unless Supabase Auth verified the `admin` role.
   if (selectedTab === TabType.ADMIN_DEVELOPMENT && isAdmin)
     return <AdminDevelopmentCard />
+
+  if (selectedTab === TabType.ADMIN_USER_MANAGEMENT && isAdmin)
+    return <AdminUserManagementCard />
 
   // Help tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.HELP) return <HelpCard />

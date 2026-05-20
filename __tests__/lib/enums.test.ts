@@ -74,6 +74,7 @@ describe('DatabaseSurvivorType', () => {
 describe('TabType', () => {
   it('has correct values', () => {
     expect(TabType.ADMIN_DEVELOPMENT).toBe('adminDevelopment')
+    expect(TabType.ADMIN_USER_MANAGEMENT).toBe('adminUserManagement')
     expect(TabType.ARC).toBe('arc')
     expect(TabType.CRAFTING).toBe('crafting')
     expect(TabType.HUNT).toBe('hunt')

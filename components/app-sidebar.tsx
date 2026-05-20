@@ -185,6 +185,11 @@ const navAdmin = [
     title: 'Development',
     tab: TabType.ADMIN_DEVELOPMENT,
     icon: DatabaseIcon
+  },
+  {
+    title: 'User Management',
+    tab: TabType.ADMIN_USER_MANAGEMENT,
+    icon: UsersIcon
   }
 ]
 
