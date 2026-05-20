@@ -73,6 +73,7 @@ export async function markRead(ids: string[]): Promise<void> {
     .update({ read_at: readAt })
     .eq('recipient_user_id', userId)
     .in('id', ids)
+    .is('read_at', null)
 
   if (error)
     throw new Error(`Error Marking Notifications Read: ${error.message}`)
