@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
@@ -80,7 +81,7 @@ export async function getUserCustomQuarries(): Promise<{
   const { data, error } = await supabase
     .from('quarry')
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
+      'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome, archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -88,7 +89,7 @@ export async function getUserCustomQuarries(): Promise<{
   if (error) throw new Error(`Error Fetching Custom Quarries: ${error.message}`)
 
   const quarryMap: { [key: string]: QuarryDetail } = {}
-  for (const q of data ?? []) quarryMap[q.id] = q
+  for (const q of data ?? []) if (!q.archived_at) quarryMap[q.id] = q
 
   return quarryMap
 }
@@ -245,9 +246,5 @@ export async function updateQuarry(
  * @param id Quarry ID
  */
 export async function removeQuarry(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('quarry').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Quarry: ${error.message}`)
+  await removeCatalogRow('quarry', id, 'Quarry')
 }

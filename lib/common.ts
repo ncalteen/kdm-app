@@ -23,8 +23,8 @@ import {
  * included. The limit is enforced in the application layer (the
  * `createSettlement` DAL) rather than at the database so that direct
  * admin / service-role traffic — Supabase Studio, integration tests, ad-hoc
- * SQL — naturally bypasses it for testing purposes. Paid tiers that lift or
- * remove this cap are not yet implemented.
+ * SQL — naturally bypasses it for testing purposes. Active paid settlement
+ * tiers skip this cap via `canCreateUnlimitedSettlements`.
  */
 export const FREE_TIER_SETTLEMENT_LIMIT = 5
 

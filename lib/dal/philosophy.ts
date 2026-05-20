@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -51,7 +52,7 @@ export async function getUserCustomPhilosophies(): Promise<{
   const { data, error } = await supabase
     .from('philosophy')
     .select(
-      'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id'
+      'id, custom, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier, neurosis_id, archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -60,7 +61,7 @@ export async function getUserCustomPhilosophies(): Promise<{
     throw new Error(`Error Fetching Custom Philosophies: ${error.message}`)
 
   const philosophyMap: { [key: string]: PhilosophyDetail } = {}
-  for (const p of data ?? []) philosophyMap[p.id] = p
+  for (const p of data ?? []) if (!p.archived_at) philosophyMap[p.id] = p
 
   return philosophyMap
 }
@@ -141,9 +142,5 @@ export async function updatePhilosophy(
  * @param id Philosophy ID
  */
 export async function removePhilosophy(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('philosophy').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Philosophy: ${error.message}`)
+  await removeCatalogRow('philosophy', id, 'Philosophy')
 }

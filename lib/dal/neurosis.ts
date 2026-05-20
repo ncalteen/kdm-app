@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -48,14 +49,14 @@ export async function getUserCustomNeuroses(): Promise<{
 
   const { data, error } = await supabase
     .from('neurosis')
-    .select('id, custom, neurosis_name, rules')
+    .select('id, custom, neurosis_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
   if (error) throw new Error(`Error Fetching Custom Neuroses: ${error.message}`)
 
   const neurosisMap: { [key: string]: NeurosisDetail } = {}
-  for (const n of data ?? []) neurosisMap[n.id] = n
+  for (const n of data ?? []) if (!n.archived_at) neurosisMap[n.id] = n
 
   return neurosisMap
 }
@@ -124,9 +125,5 @@ export async function updateNeurosis(
  * @param id Neurosis ID
  */
 export async function removeNeurosis(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('neurosis').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Neurosis: ${error.message}`)
+  await removeCatalogRow('neurosis', id, 'Neurosis')
 }

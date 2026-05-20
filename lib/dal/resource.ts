@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -77,7 +78,7 @@ export async function getUserCustomResources(): Promise<{
   const { data, error } = await supabase
     .from('resource')
     .select(
-      'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'
+      'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node), archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -109,7 +110,8 @@ export async function getUserCustomResources(): Promise<{
     }
   }
 
-  for (const r of data ?? []) resourceMap[r.id] = toDetail(r)
+  for (const r of data ?? [])
+    if (!r.archived_at) resourceMap[r.id] = toDetail(r)
 
   return resourceMap
 }
@@ -198,9 +200,5 @@ export async function updateResource(
  * @param id Resource ID
  */
 export async function removeResource(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('resource').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Resource: ${error.message}`)
+  await removeCatalogRow('resource', id, 'Resource')
 }

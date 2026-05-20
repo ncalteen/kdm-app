@@ -434,37 +434,45 @@ describe('RLS: catalog transitive visibility (EC-2..EC-8)', () => {
 
   // ---------------------------------------------------------------------------
   // EC-8: (EC-6) + B tries to delete D while D is attached to A's
-  //       settlement → BEFORE DELETE trigger raises with code 0A000 and a
-  //       friendly message naming the blocking settlement.
+  //       settlement → the delete guard archives D and keeps the row
+  //       readable through the settlement attachment.
   // ---------------------------------------------------------------------------
-  it("EC-8: author cannot delete a custom disorder while it is still attached to another user's settlement", async () => {
+  it("EC-8: author delete archives a custom disorder while it is still attached to another user's settlement", async () => {
     const survivorId = await seedSurvivor(settlementId)
-    const { id: disorderId } = await seedDisorder(userB.id, 'EC-8')
+    const { id: disorderId, rules } = await seedDisorder(userB.id, 'EC-8')
 
     const { error: attachErr } = await admin
       .from('survivor_disorder')
       .insert({ survivor_id: survivorId, disorder_id: disorderId })
     if (attachErr) throw new Error(`attach disorder: ${attachErr.message}`)
 
-    // B (author) attempts to delete D. The BEFORE DELETE guard must
-    // raise because A's settlement still references D via the survivor.
+    // B (author) attempts to delete D. The BEFORE DELETE guard archives
+    // the row because A's settlement still references D via the survivor.
     const { error } = await userB.client
       .from('disorder')
       .delete()
       .eq('id', disorderId)
 
-    expect(error).not.toBeNull()
-    expect(error?.code).toBe('0A000')
-    expect(error?.message).toMatch(/unmake what others rely upon/i)
-    expect(error?.message).toContain('EC-2..EC-8 Test Settlement')
+    expect(error).toBeNull()
 
-    // The disorder row must still exist.
-    const { data: still } = await admin
+    // The disorder row must still exist, now marked archived.
+    const { data: archived, error: archivedErr } = await admin
       .from('disorder')
-      .select('id')
+      .select('id, archived_at')
       .eq('id', disorderId)
       .maybeSingle()
-    expect(still).not.toBeNull()
+    expect(archivedErr).toBeNull()
+    expect(archived?.archived_at).toEqual(expect.any(String))
+
+    // A can still read the rules text through the settlement attachment.
+    const { data: visible, error: visibleErr } = await userA.client
+      .from('disorder')
+      .select('id, rules, archived_at')
+      .eq('id', disorderId)
+      .maybeSingle()
+    expect(visibleErr).toBeNull()
+    expect(visible?.rules).toBe(rules)
+    expect(visible?.archived_at).toEqual(expect.any(String))
   })
 
   // ---------------------------------------------------------------------------

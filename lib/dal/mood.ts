@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 import { MoodDetail } from '@/lib/types'
@@ -45,14 +46,14 @@ export async function getUserCustomMoods(): Promise<{
 
   const { data, error } = await supabase
     .from('mood')
-    .select('id, custom, mood_name, rules')
+    .select('id, custom, mood_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
   if (error) throw new Error(`Error Fetching Custom Moods: ${error.message}`)
 
   const map: { [key: string]: MoodDetail } = {}
-  for (const m of data ?? []) map[m.id] = m
+  for (const m of data ?? []) if (!m.archived_at) map[m.id] = m
 
   return map
 }
@@ -116,11 +117,7 @@ export async function updateMood(
  * @param id Mood ID
  */
 export async function removeMood(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('mood').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Mood: ${error.message}`)
+  await removeCatalogRow('mood', id, 'Mood')
 }
 
 /**

@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -97,7 +98,7 @@ export async function getUserCustomPatterns(): Promise<{
   const { data, error } = await supabase
     .from('pattern')
     .select(
-      'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(cost_gear_id, quantity), pattern_resource_cost(resource_id, quantity), pattern_resource_type_cost(resource_type, quantity), pattern_innovation_requirement(innovation_id)'
+      'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(cost_gear_id, quantity), pattern_resource_cost(resource_id, quantity), pattern_resource_type_cost(resource_type, quantity), pattern_innovation_requirement(innovation_id), archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -105,7 +106,8 @@ export async function getUserCustomPatterns(): Promise<{
   if (error) throw new Error(`Error Fetching Custom Patterns: ${error.message}`)
 
   const patternMap: { [key: string]: PatternDetail } = {}
-  for (const p of data ?? []) patternMap[p.id] = toPatternDetail(p)
+  for (const p of data ?? [])
+    if (!p.archived_at) patternMap[p.id] = toPatternDetail(p)
 
   return patternMap
 }
@@ -181,11 +183,7 @@ export async function updatePattern(
  * @param id Pattern ID
  */
 export async function removePattern(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('pattern').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Pattern: ${error.message}`)
+  await removeCatalogRow('pattern', id, 'Pattern')
 }
 
 /**

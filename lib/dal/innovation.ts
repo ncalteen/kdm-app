@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -49,7 +50,9 @@ export async function getUserCustomInnovations(): Promise<{
 
   const { data, error } = await supabase
     .from('innovation')
-    .select('id, custom, innovation_name, rules, consequences, benefits')
+    .select(
+      'id, custom, innovation_name, rules, consequences, benefits, archived_at'
+    )
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -57,7 +60,7 @@ export async function getUserCustomInnovations(): Promise<{
     throw new Error(`Error Fetching Custom Innovations: ${error.message}`)
 
   const innovationMap: { [key: string]: InnovationDetail } = {}
-  for (const i of data ?? []) innovationMap[i.id] = i
+  for (const i of data ?? []) if (!i.archived_at) innovationMap[i.id] = i
 
   return innovationMap
 }
@@ -168,9 +171,5 @@ export async function updateInnovation(
  * @param id Innovation ID
  */
 export async function removeInnovation(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('innovation').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Innovation: ${error.message}`)
+  await removeCatalogRow('innovation', id, 'Innovation')
 }

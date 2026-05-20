@@ -8,23 +8,25 @@ import {
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 /**
- * RLS — Catalog Hard-Delete Guard ([E2.3])
+ * RLS — Catalog Archive Guard ([E4.7])
  *
- * Locks in the `enforce_catalog_delete_guard` BEFORE DELETE trigger added
- * in `20260518000000_catalog_delete_guard_trigger.sql`. Rules:
+ * Locks in the `archived_at` behavior added in
+ * `20260606000000_catalog_archived_at.sql`. Rules:
  *
  *  * Authors may hard-delete a custom catalog row only if every settlement
  *    that currently references it belongs to them.
- *  * If any non-self settlement references the row, the delete is rejected
- *    with a friendly error naming up to three blocking settlements.
+ *  * If any non-self settlement references the row, the delete archives the
+ *    row and skips the hard delete.
+ *  * Archived rows remain visible through existing settlement attachments so
+ *    collaborators can keep reading the rules text already in use.
  *  * The service role (admin / fixture teardown) bypasses the guard so
  *    test fixtures and auth.users cascade-deletes keep working.
  *
- * Architecture references: #122 Epic E2 Phase 2, #153 this issue,
+ * Architecture references: #122 Epic E2 Phase 2, #153, #181,
  * Appendix B EC-5 (author hard-deletes a referenced custom row), EC-8
  * (author hard-deletes their own unattached / self-only row).
  */
-describe('RLS: catalog delete guard ([E2.3])', () => {
+describe('RLS: catalog archive guard ([E4.7])', () => {
   let author: TestUser
   let otherOwner: TestUser
   let authorSettlementId: string
@@ -42,12 +44,34 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
       otherOwner.id,
       'Delete Guard — Other Settlement'
     )
+
+    const { error: shareErr } = await admin
+      .from('settlement_shared_user')
+      .insert({
+        settlement_id: otherSettlementId,
+        shared_user_id: author.id,
+        user_id: otherOwner.id
+      })
+    if (shareErr) throw new Error(`share settlement: ${shareErr.message}`)
   })
 
   afterAll(async () => {
     await deleteTestUser(author.id)
     await deleteTestUser(otherOwner.id)
   })
+
+  async function expectArchived(table: string, id: string): Promise<string> {
+    const { data, error } = await admin
+      .from(table)
+      .select('archived_at')
+      .eq('id', id)
+      .maybeSingle()
+
+    expect(error).toBeNull()
+    expect(data?.archived_at).toEqual(expect.any(String))
+
+    return data?.archived_at ?? ''
+  }
 
   // ---------------------------------------------------------------------------
   // EC-8 — author can hard-delete an unattached / self-only custom row.
@@ -115,18 +139,20 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // EC-5 — author cannot hard-delete when a non-self settlement references
-  // the row. Same shape repeated across reference paths so the dispatch
-  // catches each branch.
+  // EC-5 — author DELETE archives when a non-self settlement references the
+  // row. Same shape repeated across reference paths so the dispatch catches
+  // each branch.
   // ---------------------------------------------------------------------------
-  describe('EC-5: delete blocked when a non-self settlement references the row', () => {
-    it('settlement_<x> direct junction blocks (knowledge via settlement_knowledge)', async () => {
+  describe('EC-5: delete archives when a non-self settlement references the row', () => {
+    it('settlement_<x> direct junction archives and preserves transitive visibility', async () => {
+      const rulesText = `Archived Knowledge Rules ${Date.now()}-${Math.random()}`
       const { data: k, error: kErr } = await admin
         .from('knowledge')
         .insert({
           knowledge_name: `Knowledge Blocked ${Date.now()}-${Math.random()}`,
           custom: true,
-          user_id: author.id
+          user_id: author.id,
+          rules: rulesText
         })
         .select('id')
         .single()
@@ -145,21 +171,114 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         .from('knowledge')
         .delete()
         .eq('id', k.id)
-      expect(error).not.toBeNull()
-      expect(error?.code).toBe('0A000')
-      expect(error?.message).toMatch(/unmake what others rely upon/i)
-      expect(error?.message).toContain('Delete Guard — Other Settlement')
+      expect(error).toBeNull()
 
-      // Row must still exist (verified via admin to bypass RLS).
-      const { data: still } = await admin
+      await expectArchived('knowledge', k.id)
+
+      const { data: visible, error: visibleErr } = await otherOwner.client
+        .from('knowledge')
+        .select('id, rules, archived_at')
+        .eq('id', k.id)
+        .maybeSingle()
+      expect(visibleErr).toBeNull()
+      expect(visible?.rules).toBe(rulesText)
+      expect(visible?.archived_at).toEqual(expect.any(String))
+
+      const { error: restoreErr } = await author.client
+        .from('knowledge')
+        .update({ archived_at: null })
+        .eq('id', k.id)
+      expect(restoreErr).toBeNull()
+
+      const { data: restored, error: restoredErr } = await admin
+        .from('knowledge')
+        .select('archived_at')
+        .eq('id', k.id)
+        .maybeSingle()
+      expect(restoredErr).toBeNull()
+      expect(restored?.archived_at).toBeNull()
+    })
+
+    it('blocks permanent deletion while an archived row is still attached to any settlement', async () => {
+      const { data: k, error: kErr } = await admin
+        .from('knowledge')
+        .insert({
+          knowledge_name: `Permanent Delete Guard ${Date.now()}-${Math.random()}`,
+          custom: true,
+          user_id: author.id
+        })
+        .select('id')
+        .single()
+      if (kErr || !k) throw new Error(`seed knowledge: ${kErr?.message}`)
+
+      const { error: attachOtherErr } = await admin
+        .from('settlement_knowledge')
+        .insert({
+          settlement_id: otherSettlementId,
+          knowledge_id: k.id
+        })
+      if (attachOtherErr)
+        throw new Error(`attach other knowledge: ${attachOtherErr.message}`)
+
+      const { error: archiveErr } = await author.client
+        .from('knowledge')
+        .delete()
+        .eq('id', k.id)
+      expect(archiveErr).toBeNull()
+      const archivedAt = await expectArchived('knowledge', k.id)
+
+      const { error: detachOtherErr } = await admin
+        .from('settlement_knowledge')
+        .delete()
+        .eq('settlement_id', otherSettlementId)
+        .eq('knowledge_id', k.id)
+      if (detachOtherErr)
+        throw new Error(`detach other knowledge: ${detachOtherErr.message}`)
+
+      const { error: attachAuthorErr } = await admin
+        .from('settlement_knowledge')
+        .insert({
+          settlement_id: authorSettlementId,
+          knowledge_id: k.id
+        })
+      if (attachAuthorErr)
+        throw new Error(`attach author knowledge: ${attachAuthorErr.message}`)
+
+      const { data: blockedDelete, error: blockedDeleteErr } =
+        await author.client
+          .from('knowledge')
+          .delete()
+          .eq('id', k.id)
+          .select('id')
+      expect(blockedDeleteErr).toBeNull()
+      expect(blockedDelete).toEqual([])
+      await expect(expectArchived('knowledge', k.id)).resolves.toBe(archivedAt)
+
+      const { error: detachAuthorErr } = await admin
+        .from('settlement_knowledge')
+        .delete()
+        .eq('settlement_id', authorSettlementId)
+        .eq('knowledge_id', k.id)
+      if (detachAuthorErr)
+        throw new Error(`detach author knowledge: ${detachAuthorErr.message}`)
+
+      const { data: deleted, error: deleteErr } = await author.client
+        .from('knowledge')
+        .delete()
+        .eq('id', k.id)
+        .select('id')
+      expect(deleteErr).toBeNull()
+      expect(deleted).toEqual([{ id: k.id }])
+
+      const { data: gone } = await admin
         .from('knowledge')
         .select('id')
         .eq('id', k.id)
         .maybeSingle()
-      expect(still).not.toBeNull()
+      expect(gone).toBeNull()
     })
 
-    it('survivor_<x> junction blocks (disorder via survivor_disorder on a non-self settlement)', async () => {
+    it('survivor_<x> junction archives (disorder via survivor_disorder on a non-self settlement)', async () => {
       const { data: sv, error: svErr } = await admin
         .from('survivor')
         .insert({
@@ -191,13 +310,12 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         .from('disorder')
         .delete()
         .eq('id', d.id)
-      expect(error).not.toBeNull()
-      expect(error?.code).toBe('0A000')
-      expect(error?.message).toMatch(/unmake what others rely upon/i)
-      expect(error?.message).toContain('Delete Guard — Other Settlement')
+      expect(error).toBeNull()
+
+      await expectArchived('disorder', d.id)
     })
 
-    it('survivor direct column blocks (philosophy via survivor.philosophy_id)', async () => {
+    it('survivor direct column archives (philosophy via survivor.philosophy_id)', async () => {
       const { data: p, error: pErr } = await admin
         .from('philosophy')
         .insert({
@@ -221,12 +339,12 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         .from('philosophy')
         .delete()
         .eq('id', p.id)
-      expect(error).not.toBeNull()
-      expect(error?.code).toBe('0A000')
-      expect(error?.message).toMatch(/unmake what others rely upon/i)
+      expect(error).toBeNull()
+
+      await expectArchived('philosophy', p.id)
     })
 
-    it("hunt_monster_trait junction blocks (trait via another owner's hunt)", async () => {
+    it("hunt_monster_trait junction archives (trait via another owner's hunt)", async () => {
       const { data: t, error: tErr } = await admin
         .from('trait')
         .insert({
@@ -272,13 +390,12 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         .from('trait')
         .delete()
         .eq('id', t.id)
-      expect(error).not.toBeNull()
-      expect(error?.code).toBe('0A000')
-      expect(error?.message).toMatch(/unmake what others rely upon/i)
-      expect(error?.message).toContain('Delete Guard — Other Settlement')
+      expect(error).toBeNull()
+
+      await expectArchived('trait', t.id)
     })
 
-    it('gear_grid selected_armor_set_id blocks (armor_set via gear_grid -> survivor)', async () => {
+    it('gear_grid selected_armor_set_id archives (armor_set via gear_grid -> survivor)', async () => {
       const { data: sv, error: svErr } = await admin
         .from('survivor')
         .insert({
@@ -311,15 +428,12 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         .from('armor_set')
         .delete()
         .eq('id', as_.id)
-      expect(error).not.toBeNull()
-      expect(error?.code).toBe('0A000')
-      expect(error?.message).toMatch(/unmake what others rely upon/i)
+      expect(error).toBeNull()
+
+      await expectArchived('armor_set', as_.id)
     })
 
-    it('counts and names up to 3 blocking settlements (sorted)', async () => {
-      // Three additional settlements for otherOwner, plus the existing
-      // one (= 4 total). The friendly message must list 3 of them and
-      // report the total count = 4.
+    it('archives once when multiple non-self settlements reference the row', async () => {
       const s2 = await seedSettlement(otherOwner.id, 'Delete Guard — Beta')
       const s3 = await seedSettlement(otherOwner.id, 'Delete Guard — Gamma')
       const s4 = await seedSettlement(otherOwner.id, 'Delete Guard — Delta')
@@ -347,17 +461,9 @@ describe('RLS: catalog delete guard ([E2.3])', () => {
         .from('knowledge')
         .delete()
         .eq('id', k.id)
-      expect(error).not.toBeNull()
-      expect(error?.code).toBe('0A000')
-      // Count of 4 blocking settlements.
-      expect(error?.message).toMatch(/4 settlement\(s\)/)
-      // Listed names are alphabetically sorted, first 3 only.
-      expect(error?.message).toContain('Delete Guard — Beta')
-      expect(error?.message).toContain('Delete Guard — Delta')
-      expect(error?.message).toContain('Delete Guard — Gamma')
-      // The "Other Settlement" sorts AFTER "Delta" / "Gamma" alphabetically
-      // and so should NOT appear in the trimmed 3-name list.
-      expect(error?.message).not.toContain('Delete Guard — Other Settlement')
+      expect(error).toBeNull()
+
+      await expectArchived('knowledge', k.id)
     })
   })
 

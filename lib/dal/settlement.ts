@@ -53,6 +53,7 @@ import {
 } from '@/lib/dal/settlement-timeline-year'
 import { addSquiresOfTheCitadelSurvivors } from '@/lib/dal/survivor'
 import { getUserId } from '@/lib/dal/user'
+import { getUserSubscription } from '@/lib/dal/user-subscription'
 import { getWandererTimelineYears } from '@/lib/dal/wanderer-timeline-year'
 import { Tables } from '@/lib/database.types'
 import {
@@ -62,6 +63,7 @@ import {
   SurvivorType
 } from '@/lib/enums'
 import { FREE_TIER_SETTLEMENT_LIMIT_MESSAGE } from '@/lib/messages'
+import { canCreateUnlimitedSettlements } from '@/lib/subscription-entitlements'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementTimelineYearDetail } from '@/lib/types'
 import { NewSettlementInput } from '@/schemas/new-settlement-input'
@@ -104,10 +106,11 @@ export async function getOwnedSettlementCount(): Promise<number> {
  * locations / timeline / CC-reward data is then committed in one final
  * parallel batch.
  *
- * Enforces the free-tier ownership cap before any inserts run. The check is
- * application-layer only — admins driving the database directly
- * (Supabase Studio, integration tests via service role, etc.) bypass it
- * naturally because they never enter this code path.
+ * Enforces the free-tier ownership cap before any inserts run. Active paid
+ * settlement tiers skip the cap. The check is application-layer only — admins
+ * driving the database directly (Supabase Studio, integration tests via
+ * service role, etc.) bypass it naturally because they never enter this code
+ * path.
  *
  * @param options Settlement Input Data
  * @returns Settlement ID
@@ -118,13 +121,24 @@ export async function createSettlement(
   const userId = await getUserId()
   const supabase = createClient()
 
-  // Free-tier ownership cap. Counted up-front so we fail fast before any of
-  // the template fan-out work runs.
-  const ownedCount = await getOwnedSettlementCount()
-  if (ownedCount >= FREE_TIER_SETTLEMENT_LIMIT)
-    throw new Error(
-      FREE_TIER_SETTLEMENT_LIMIT_MESSAGE(FREE_TIER_SETTLEMENT_LIMIT)
-    )
+  // Free-tier ownership cap. Paid settlement tiers skip the count entirely;
+  // free/missing/non-entitling subscriptions fail fast before any template
+  // fan-out work runs. If the entitlement lookup fails, fall back to the
+  // free-tier cap so billing/RPC hiccups do not block under-cap users.
+  let userSubscription: Awaited<ReturnType<typeof getUserSubscription>> = null
+  try {
+    userSubscription = await getUserSubscription()
+  } catch (error) {
+    console.error('Settlement Subscription Entitlement Error:', error)
+  }
+
+  if (!canCreateUnlimitedSettlements(userSubscription)) {
+    const ownedCount = await getOwnedSettlementCount()
+    if (ownedCount >= FREE_TIER_SETTLEMENT_LIMIT)
+      throw new Error(
+        FREE_TIER_SETTLEMENT_LIMIT_MESSAGE(FREE_TIER_SETTLEMENT_LIMIT)
+      )
+  }
 
   const template = await {
     [CampaignType.CUSTOM]: getCustomCampaignTemplate,

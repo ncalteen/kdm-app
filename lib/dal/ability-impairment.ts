@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 import { AbilityImpairmentDetail } from '@/lib/types'
@@ -52,7 +53,7 @@ export async function getUserCustomAbilityImpairments(): Promise<{
 
   const { data, error } = await supabase
     .from('ability_impairment')
-    .select('id, custom, ability_impairment_name, rules')
+    .select('id, custom, ability_impairment_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -62,7 +63,7 @@ export async function getUserCustomAbilityImpairments(): Promise<{
     )
 
   const map: { [key: string]: AbilityImpairmentDetail } = {}
-  for (const a of data ?? []) map[a.id] = a
+  for (const a of data ?? []) if (!a.archived_at) map[a.id] = a
 
   return map
 }
@@ -134,13 +135,5 @@ export async function updateAbilityImpairment(
  * @param id Ability/Impairment ID
  */
 export async function removeAbilityImpairment(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('ability_impairment')
-    .delete()
-    .eq('id', id)
-
-  if (error)
-    throw new Error(`Error Removing Ability/Impairment: ${error.message}`)
+  await removeCatalogRow('ability_impairment', id, 'Ability/Impairment')
 }

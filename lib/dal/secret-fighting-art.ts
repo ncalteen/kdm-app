@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -53,7 +54,7 @@ export async function getUserCustomSecretFightingArts(): Promise<{
 
   const { data, error } = await supabase
     .from('secret_fighting_art')
-    .select('id, custom, secret_fighting_art_name, rules')
+    .select('id, custom, secret_fighting_art_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -63,7 +64,7 @@ export async function getUserCustomSecretFightingArts(): Promise<{
     )
 
   const secretFightingArtMap: { [key: string]: SecretFightingArtDetail } = {}
-  for (const s of data ?? []) secretFightingArtMap[s.id] = s
+  for (const s of data ?? []) if (!s.archived_at) secretFightingArtMap[s.id] = s
 
   return secretFightingArtMap
 }
@@ -137,13 +138,5 @@ export async function updateSecretFightingArt(
  * @param id Secret Fighting Art ID
  */
 export async function removeSecretFightingArt(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('secret_fighting_art')
-    .delete()
-    .eq('id', id)
-
-  if (error)
-    throw new Error(`Error Removing Secret Fighting Art: ${error.message}`)
+  await removeCatalogRow('secret_fighting_art', id, 'Secret Fighting Art')
 }

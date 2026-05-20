@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -52,7 +53,7 @@ export async function getUserCustomKnowledges(): Promise<{
   const { data, error } = await supabase
     .from('knowledge')
     .select(
-      'id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone'
+      'id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone, archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -61,7 +62,7 @@ export async function getUserCustomKnowledges(): Promise<{
     throw new Error(`Error Fetching Custom Knowledges: ${error.message}`)
 
   const knowledgeMap: { [key: string]: KnowledgeDetail } = {}
-  for (const k of data ?? []) knowledgeMap[k.id] = k
+  for (const k of data ?? []) if (!k.archived_at) knowledgeMap[k.id] = k
 
   return knowledgeMap
 }
@@ -132,9 +133,5 @@ export async function updateKnowledge(
  * @param id Knowledge ID
  */
 export async function removeKnowledge(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('knowledge').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Knowledge: ${error.message}`)
+  await removeCatalogRow('knowledge', id, 'Knowledge')
 }

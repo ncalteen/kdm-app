@@ -37,6 +37,7 @@ export type Database = {
       ability_impairment: {
         Row: {
           ability_impairment_name: string
+          archived_at: string | null
           created_at: string
           custom: boolean
           id: string
@@ -46,6 +47,7 @@ export type Database = {
         }
         Insert: {
           ability_impairment_name: string
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -55,6 +57,7 @@ export type Database = {
         }
         Update: {
           ability_impairment_name?: string
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -66,6 +69,7 @@ export type Database = {
       }
       armor_set: {
         Row: {
+          archived_at: string | null
           armor_set_name: string
           bonuses: string | null
           created_at: string
@@ -75,6 +79,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           armor_set_name: string
           bonuses?: string | null
           created_at?: string
@@ -84,6 +89,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           armor_set_name?: string
           bonuses?: string | null
           created_at?: string
@@ -164,6 +170,7 @@ export type Database = {
       }
       character: {
         Row: {
+          archived_at: string | null
           character_name: string
           created_at: string
           custom: boolean
@@ -173,6 +180,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           character_name: string
           created_at?: string
           custom?: boolean
@@ -182,6 +190,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           character_name?: string
           created_at?: string
           custom?: boolean
@@ -194,6 +203,7 @@ export type Database = {
       }
       collective_cognition_reward: {
         Row: {
+          archived_at: string | null
           collective_cognition: number
           created_at: string
           custom: boolean
@@ -204,6 +214,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           collective_cognition?: number
           created_at?: string
           custom?: boolean
@@ -214,6 +225,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           collective_cognition?: number
           created_at?: string
           custom?: boolean
@@ -227,6 +239,7 @@ export type Database = {
       }
       constellation: {
         Row: {
+          archived_at: string | null
           constellation_name: string
           created_at: string
           custom: boolean
@@ -236,6 +249,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           constellation_name: string
           created_at?: string
           custom?: boolean
@@ -245,6 +259,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           constellation_name?: string
           created_at?: string
           custom?: boolean
@@ -257,6 +272,7 @@ export type Database = {
       }
       disorder: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           disorder_name: string
@@ -266,6 +282,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           disorder_name: string
@@ -275,6 +292,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           disorder_name?: string
@@ -287,6 +305,7 @@ export type Database = {
       }
       fighting_art: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           fighting_art_name: string
@@ -296,6 +315,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           fighting_art_name: string
@@ -305,6 +325,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           fighting_art_name?: string
@@ -325,6 +346,7 @@ export type Database = {
           affinity_left: Database["public"]["Enums"]["affinity"] | null
           affinity_right: Database["public"]["Enums"]["affinity"] | null
           affinity_top: Database["public"]["Enums"]["affinity"] | null
+          archived_at: string | null
           armor_location: Database["public"]["Enums"]["armor_location"] | null
           armor_points: number | null
           created_at: string
@@ -349,6 +371,7 @@ export type Database = {
           affinity_left?: Database["public"]["Enums"]["affinity"] | null
           affinity_right?: Database["public"]["Enums"]["affinity"] | null
           affinity_top?: Database["public"]["Enums"]["affinity"] | null
+          archived_at?: string | null
           armor_location?: Database["public"]["Enums"]["armor_location"] | null
           armor_points?: number | null
           created_at?: string
@@ -373,6 +396,7 @@ export type Database = {
           affinity_left?: Database["public"]["Enums"]["affinity"] | null
           affinity_right?: Database["public"]["Enums"]["affinity"] | null
           affinity_top?: Database["public"]["Enums"]["affinity"] | null
+          archived_at?: string | null
           armor_location?: Database["public"]["Enums"]["armor_location"] | null
           armor_points?: number | null
           created_at?: string
@@ -1120,6 +1144,7 @@ export type Database = {
       }
       innovation: {
         Row: {
+          archived_at: string | null
           benefits: string | null
           consequences: string | null
           created_at: string
@@ -1131,6 +1156,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           benefits?: string | null
           consequences?: string | null
           created_at?: string
@@ -1142,6 +1168,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           benefits?: string | null
           consequences?: string | null
           created_at?: string
@@ -1156,6 +1183,7 @@ export type Database = {
       }
       knowledge: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           id: string
@@ -1168,6 +1196,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -1180,6 +1209,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -1203,6 +1233,7 @@ export type Database = {
       }
       location: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           id: string
@@ -1212,6 +1243,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -1221,6 +1253,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -1248,6 +1281,7 @@ export type Database = {
       }
       milestone: {
         Row: {
+          archived_at: string | null
           campaign_types: Database["public"]["Enums"]["campaign_type"][]
           created_at: string
           custom: boolean
@@ -1260,6 +1294,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           campaign_types?: Database["public"]["Enums"]["campaign_type"][]
           created_at?: string
           custom?: boolean
@@ -1272,6 +1307,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           campaign_types?: Database["public"]["Enums"]["campaign_type"][]
           created_at?: string
           custom?: boolean
@@ -1287,6 +1323,7 @@ export type Database = {
       }
       mood: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           id: string
@@ -1296,6 +1333,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -1305,6 +1343,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -1318,6 +1357,7 @@ export type Database = {
       nemesis: {
         Row: {
           alternate_id: string | null
+          archived_at: string | null
           basic_action: string | null
           blind_spot: string | null
           created_at: string
@@ -1336,6 +1376,7 @@ export type Database = {
         }
         Insert: {
           alternate_id?: string | null
+          archived_at?: string | null
           basic_action?: string | null
           blind_spot?: string | null
           created_at?: string
@@ -1354,6 +1395,7 @@ export type Database = {
         }
         Update: {
           alternate_id?: string | null
+          archived_at?: string | null
           basic_action?: string | null
           blind_spot?: string | null
           created_at?: string
@@ -1684,6 +1726,7 @@ export type Database = {
       }
       neurosis: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           id: string
@@ -1693,6 +1736,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -1702,6 +1746,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -1712,8 +1757,36 @@ export type Database = {
         }
         Relationships: []
       }
+      notification: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          payload: Json
+          read_at: string | null
+          recipient_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          payload?: Json
+          read_at?: string | null
+          recipient_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          payload?: Json
+          read_at?: string | null
+          recipient_user_id?: string
+        }
+        Relationships: []
+      }
       pattern: {
         Row: {
+          archived_at: string | null
           crafted_gear_id: string | null
           crafting_limit: number | null
           created_at: string
@@ -1725,6 +1798,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           crafted_gear_id?: string | null
           crafting_limit?: number | null
           created_at?: string
@@ -1736,6 +1810,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           crafted_gear_id?: string | null
           crafting_limit?: number | null
           created_at?: string
@@ -1880,6 +1955,7 @@ export type Database = {
       }
       philosophy: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           hunt_xp_milestones: number[] | null
@@ -1892,6 +1968,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           hunt_xp_milestones?: number[] | null
@@ -1904,6 +1981,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           hunt_xp_milestones?: number[] | null
@@ -1969,6 +2047,7 @@ export type Database = {
       }
       principle: {
         Row: {
+          archived_at: string | null
           campaign_types: Database["public"]["Enums"]["campaign_type"][]
           created_at: string
           custom: boolean
@@ -1982,6 +2061,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           campaign_types?: Database["public"]["Enums"]["campaign_type"][]
           created_at?: string
           custom?: boolean
@@ -1995,6 +2075,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           campaign_types?: Database["public"]["Enums"]["campaign_type"][]
           created_at?: string
           custom?: boolean
@@ -2012,6 +2093,7 @@ export type Database = {
       quarry: {
         Row: {
           alternate_id: string | null
+          archived_at: string | null
           basic_action: string | null
           blind_spot: string | null
           created_at: string
@@ -2031,6 +2113,7 @@ export type Database = {
         }
         Insert: {
           alternate_id?: string | null
+          archived_at?: string | null
           basic_action?: string | null
           blind_spot?: string | null
           created_at?: string
@@ -2050,6 +2133,7 @@ export type Database = {
         }
         Update: {
           alternate_id?: string | null
+          archived_at?: string | null
           basic_action?: string | null
           blind_spot?: string | null
           created_at?: string
@@ -2514,6 +2598,7 @@ export type Database = {
       }
       resource: {
         Row: {
+          archived_at: string | null
           category: Database["public"]["Enums"]["resource_category"]
           created_at: string
           custom: boolean
@@ -2528,6 +2613,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           category: Database["public"]["Enums"]["resource_category"]
           created_at?: string
           custom?: boolean
@@ -2542,6 +2628,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           category?: Database["public"]["Enums"]["resource_category"]
           created_at?: string
           custom?: boolean
@@ -2581,6 +2668,7 @@ export type Database = {
       }
       secret_fighting_art: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           id: string
@@ -2590,6 +2678,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -2599,6 +2688,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -2611,6 +2701,7 @@ export type Database = {
       }
       seed_pattern: {
         Row: {
+          archived_at: string | null
           crafted_gear_id: string | null
           crafting_limit: number | null
           crafting_steps: string | null
@@ -2626,6 +2717,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           crafted_gear_id?: string | null
           crafting_limit?: number | null
           crafting_steps?: string | null
@@ -2641,6 +2733,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           crafted_gear_id?: string | null
           crafting_limit?: number | null
           crafting_steps?: string | null
@@ -3990,6 +4083,7 @@ export type Database = {
       }
       strain_milestone: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           id: string
@@ -4000,6 +4094,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -4010,6 +4105,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -4690,6 +4786,7 @@ export type Database = {
       }
       survivor_status: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           id: string
@@ -4699,6 +4796,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -4708,6 +4806,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -4720,6 +4819,7 @@ export type Database = {
       }
       trait: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           id: string
@@ -4729,6 +4829,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -4738,6 +4839,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -4832,6 +4934,7 @@ export type Database = {
         Row: {
           accuracy: number
           arc: boolean
+          archived_at: string | null
           courage: number
           created_at: string
           custom: boolean
@@ -4861,6 +4964,7 @@ export type Database = {
         Insert: {
           accuracy?: number
           arc?: boolean
+          archived_at?: string | null
           courage?: number
           created_at?: string
           custom?: boolean
@@ -4890,6 +4994,7 @@ export type Database = {
         Update: {
           accuracy?: number
           arc?: boolean
+          archived_at?: string | null
           courage?: number
           created_at?: string
           custom?: boolean
@@ -4994,6 +5099,7 @@ export type Database = {
       }
       weapon_type: {
         Row: {
+          archived_at: string | null
           created_at: string
           custom: boolean
           id: string
@@ -5004,6 +5110,7 @@ export type Database = {
           weapon_type_name: string
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
@@ -5014,6 +5121,7 @@ export type Database = {
           weapon_type_name: string
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           custom?: boolean
           id?: string
