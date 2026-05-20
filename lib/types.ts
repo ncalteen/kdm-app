@@ -1,4 +1,4 @@
-import { Database, Tables } from '@/lib/database.types'
+import { Database, Json, Tables } from '@/lib/database.types'
 import { DatabaseCampaignType, HuntEventType } from '@/lib/enums'
 
 /**
@@ -1621,6 +1621,39 @@ export type SurvivorsStateSetter = (
     | SurvivorDetail[]
     | ((prev: SurvivorDetail[]) => SurvivorDetail[])
 ) => void
+
+/**
+ * Notification Kind
+ *
+ * Discriminator for in-app notification rows. Trigger producers write these
+ * values into `notification.kind`; UI renderers can switch on them to choose
+ * copy and destination links.
+ */
+export type NotificationKind =
+  | 'settlement_shared_with_you'
+  | 'removed_from_settlement'
+
+/**
+ * Notification Row
+ *
+ * Client-side row shape for the `notification` table. Kept explicit because
+ * the generated Supabase database types do not include the pending
+ * notification migration yet.
+ */
+export interface NotificationRow {
+  /** Notification ID */
+  id: string
+  /** Recipient User ID */
+  recipient_user_id: string
+  /** Notification Kind */
+  kind: NotificationKind
+  /** Notification Payload */
+  payload: Json
+  /** Read Timestamp */
+  read_at: string | null
+  /** Created Timestamp */
+  created_at: string
+}
 
 /**
  * User Settings Detail
