@@ -4,6 +4,7 @@ import { LanternMark } from '@/components/generic/lantern-mark'
 import { ListCard } from '@/components/generic/list-card'
 import { HelpCard } from '@/components/help/help-card'
 import { HuntCard } from '@/components/hunt/hunt-card'
+import { AdminAdoptionCard } from '@/components/settings/admin-adoption-card'
 import { AdminDevelopmentCard } from '@/components/settings/admin-development-card'
 import { AdminUserManagementCard } from '@/components/settings/admin-user-management-card'
 import { SettlementSettingsCard } from '@/components/settings/settlement-settings-card'
@@ -255,6 +256,9 @@ export function SettlementCard({
   // Defense-in-depth for stale localStorage or manual tab switching attempts:
   // the sidebar hides this entry from non-admin users, and the route refuses
   // to render it unless Supabase Auth verified the `admin` role.
+  if (selectedTab === TabType.ADMIN_ADOPTION && isAdmin)
+    return <AdminAdoptionCard />
+
   if (selectedTab === TabType.ADMIN_DEVELOPMENT && isAdmin)
     return <AdminDevelopmentCard />
 

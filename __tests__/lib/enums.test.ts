@@ -73,6 +73,7 @@ describe('DatabaseSurvivorType', () => {
 
 describe('TabType', () => {
   it('has correct values', () => {
+    expect(TabType.ADMIN_ADOPTION).toBe('adminAdoption')
     expect(TabType.ADMIN_DEVELOPMENT).toBe('adminDevelopment')
     expect(TabType.ADMIN_USER_MANAGEMENT).toBe('adminUserManagement')
     expect(TabType.ARC).toBe('arc')

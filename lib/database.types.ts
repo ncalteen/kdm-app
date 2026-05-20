@@ -5149,6 +5149,7 @@ export type Database = {
         Args: { desired_username: string }
         Returns: boolean
       }
+      get_admin_adoption_metrics: { Args: never; Returns: Json }
       get_settlement_collaborators: {
         Args: { target_settlement: string }
         Returns: {

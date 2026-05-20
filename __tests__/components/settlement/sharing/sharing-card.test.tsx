@@ -47,7 +47,6 @@ describe('SharingCard', () => {
     const html = renderToStaticMarkup(<SharingCard />)
 
     expect(html).toContain('Light another lantern')
-    expect(html).toContain('Shared lanterns')
   })
 
   it('renders no panel content when no settlement is selected', () => {

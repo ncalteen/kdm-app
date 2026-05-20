@@ -20,6 +20,7 @@ import {
 } from '@/lib/enums'
 import { SettlementDetail, SettlementListEntry } from '@/lib/types'
 import {
+  ChartBarIcon,
   CircleQuestionMarkIcon,
   CreditCardIcon,
   DatabaseIcon,
@@ -181,6 +182,11 @@ const navSubscriptionEntry = {
  * Rendered only when Supabase Auth reports the verified user role is `admin`.
  */
 const navAdmin = [
+  {
+    title: 'Adoption',
+    tab: TabType.ADMIN_ADOPTION,
+    icon: ChartBarIcon
+  },
   {
     title: 'Development',
     tab: TabType.ADMIN_DEVELOPMENT,

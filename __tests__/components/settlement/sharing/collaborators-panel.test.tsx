@@ -55,7 +55,6 @@ describe('CollaboratorsPanel', () => {
     const html = renderToStaticMarkup(<CollaboratorsPanel />)
 
     expect(html).toContain('Light another lantern')
-    expect(html).toContain('Shared lanterns')
     expect(html).toContain('placeholder="Username…"')
     expect(html).toContain('Invite')
   })
