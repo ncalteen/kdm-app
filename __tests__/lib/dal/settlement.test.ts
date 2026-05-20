@@ -517,4 +517,56 @@ describe('createSettlement (free-tier ownership cap)', () => {
     expect(countSelect).not.toHaveBeenCalled()
     expect(settlementInsert).toHaveBeenCalledOnce()
   })
+
+  it('falls back to the free-tier cap when the subscription lookup fails', async () => {
+    vi.mocked(getUserId).mockResolvedValue('user-1')
+    vi.mocked(getUserSubscription).mockRejectedValue(
+      new Error('rpc unavailable')
+    )
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined)
+
+    const countEq = vi.fn().mockResolvedValue({ count: 0, error: null })
+    const countSelect = vi.fn().mockReturnValue({ eq: countEq })
+    const settlementInsert = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'insert reached' }
+        })
+      })
+    })
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'settlement') {
+        return {
+          select: countSelect,
+          insert: settlementInsert
+        }
+      }
+
+      return {
+        select: vi.fn(),
+        insert: vi.fn()
+      }
+    })
+
+    await expect(createSettlement(baseInput)).rejects.toThrow(
+      'Error Creating Settlement: insert reached'
+    )
+
+    expect(countSelect).toHaveBeenCalledWith('id', {
+      count: 'exact',
+      head: true
+    })
+    expect(countEq).toHaveBeenCalledWith('user_id', 'user-1')
+    expect(settlementInsert).toHaveBeenCalledOnce()
+    expect(consoleError).toHaveBeenCalledWith(
+      'Settlement Subscription Entitlement Error:',
+      expect.any(Error)
+    )
+
+    consoleError.mockRestore()
+  })
 })

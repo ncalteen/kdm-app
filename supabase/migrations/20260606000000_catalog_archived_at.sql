@@ -728,7 +728,7 @@ end case
 -- For archived rows, they count any settlement reference so permanent deletion
 -- only succeeds after the item is fully detached.
 if blocking_count > 0 then execute format(
-  'update public.%I set archived_at = now() where id = $1',
+  'update public.%I set archived_at = coalesce(archived_at, now()) where id = $1',
   tg_table_name
 ) using old.id;
 return null;

@@ -60,7 +60,7 @@ describe('RLS: catalog archive guard ([E4.7])', () => {
     await deleteTestUser(otherOwner.id)
   })
 
-  async function expectArchived(table: string, id: string): Promise<void> {
+  async function expectArchived(table: string, id: string): Promise<string> {
     const { data, error } = await admin
       .from(table)
       .select('archived_at')
@@ -69,6 +69,8 @@ describe('RLS: catalog archive guard ([E4.7])', () => {
 
     expect(error).toBeNull()
     expect(data?.archived_at).toEqual(expect.any(String))
+
+    return data?.archived_at ?? ''
   }
 
   // ---------------------------------------------------------------------------
@@ -223,7 +225,7 @@ describe('RLS: catalog archive guard ([E4.7])', () => {
         .delete()
         .eq('id', k.id)
       expect(archiveErr).toBeNull()
-      await expectArchived('knowledge', k.id)
+      const archivedAt = await expectArchived('knowledge', k.id)
 
       const { error: detachOtherErr } = await admin
         .from('settlement_knowledge')
@@ -250,7 +252,7 @@ describe('RLS: catalog archive guard ([E4.7])', () => {
           .select('id')
       expect(blockedDeleteErr).toBeNull()
       expect(blockedDelete).toEqual([])
-      await expectArchived('knowledge', k.id)
+      await expect(expectArchived('knowledge', k.id)).resolves.toBe(archivedAt)
 
       const { error: detachAuthorErr } = await admin
         .from('settlement_knowledge')

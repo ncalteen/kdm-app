@@ -123,8 +123,15 @@ export async function createSettlement(
 
   // Free-tier ownership cap. Paid settlement tiers skip the count entirely;
   // free/missing/non-entitling subscriptions fail fast before any template
-  // fan-out work runs.
-  const userSubscription = await getUserSubscription()
+  // fan-out work runs. If the entitlement lookup fails, fall back to the
+  // free-tier cap so billing/RPC hiccups do not block under-cap users.
+  let userSubscription: Awaited<ReturnType<typeof getUserSubscription>> = null
+  try {
+    userSubscription = await getUserSubscription()
+  } catch (error) {
+    console.error('Settlement Subscription Entitlement Error:', error)
+  }
+
   if (!canCreateUnlimitedSettlements(userSubscription)) {
     const ownedCount = await getOwnedSettlementCount()
     if (ownedCount >= FREE_TIER_SETTLEMENT_LIMIT)
