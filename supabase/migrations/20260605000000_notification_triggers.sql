@@ -61,6 +61,12 @@ end if;
 return null;
 end;
 $$;
+-- Trigger firing does not require runtime EXECUTE on the function. Revoke the
+-- default RPC surface so this SECURITY DEFINER producer is not anon-callable.
+revoke execute on function public.write_settlement_share_notification()
+from public;
+revoke execute on function public.write_settlement_share_notification()
+from anon;
 drop trigger if exists notify_settlement_shared_user_insert on public.settlement_shared_user;
 create trigger notify_settlement_shared_user_insert
 after

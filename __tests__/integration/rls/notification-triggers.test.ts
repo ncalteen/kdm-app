@@ -116,6 +116,22 @@ describe('RLS: notification triggers', () => {
     expect(unshareError).toBeNull()
     expect(deletedShare?.shared_user_id).toBe(collaborator.id)
 
+    const { data: inaccessibleSettlement, error: inaccessibleSettlementError } =
+      await collaborator.client
+        .from('settlement')
+        .select('id')
+        .eq('id', settlementId)
+    expect(inaccessibleSettlementError).toBeNull()
+    expect(inaccessibleSettlement ?? []).toEqual([])
+
+    const { data: inaccessibleShare, error: inaccessibleShareError } =
+      await collaborator.client
+        .from('settlement_shared_user')
+        .select('shared_user_id')
+        .eq('settlement_id', settlementId)
+    expect(inaccessibleShareError).toBeNull()
+    expect(inaccessibleShare ?? []).toEqual([])
+
     const afterUnshare = await getCollaboratorNotifications()
     expect(afterUnshare).toHaveLength(2)
     expect(afterUnshare[1]).toEqual({
