@@ -102,7 +102,7 @@ export function formatNotificationCopy(
   const settlementName = readPayloadString(
     notification.payload,
     ['settlement_name', 'settlementName'],
-    'settlement'
+    'a settlement'
   )
 
   switch (notification.kind) {
@@ -113,7 +113,7 @@ export function formatNotificationCopy(
         'Someone'
       )
 
-      return `${owner} extended a hand. The ${settlementName} watches with you.`
+      return `${owner} has invited you to ${settlementName}.`
     }
     case 'removed_from_settlement':
       return `Your watch on ${settlementName} ends.`

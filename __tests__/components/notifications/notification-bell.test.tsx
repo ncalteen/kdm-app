@@ -24,7 +24,7 @@ describe('formatNotificationCopy', () => {
           settlement_name: 'Lantern Hold'
         }
       })
-    ).toBe('Nick extended a hand. The Lantern Hold watches with you.')
+    ).toBe('Nick has invited you to Lantern Hold.')
   })
 
   it('supports camelCase payload fields for settlement share notifications', () => {
@@ -36,7 +36,7 @@ describe('formatNotificationCopy', () => {
           settlementName: 'Stone Face'
         }
       })
-    ).toBe('Archivist extended a hand. The Stone Face watches with you.')
+    ).toBe('Archivist has invited you to Stone Face.')
   })
 
   it('formats settlement removal notifications', () => {
@@ -51,7 +51,7 @@ describe('formatNotificationCopy', () => {
 
   it('falls back gracefully when payload copy fields are missing', () => {
     expect(formatNotificationCopy(baseNotification)).toBe(
-      'Someone extended a hand. The settlement watches with you.'
+      'Someone has invited you to a settlement.'
     )
   })
 })

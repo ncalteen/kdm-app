@@ -58,7 +58,8 @@ export function SiteHeader(): ReactElement {
         <div className="flex items-center gap-2 pl-1">
           <NotificationBell />
           <h1 className="text-xs sm:text-sm whitespace-nowrap leading-none">
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground md:hidden">KD:M</span>
+            <span className="text-muted-foreground hidden md:inline">
               Kingdom Death: Monster
             </span>
             <span className="mx-1 text-muted-foreground/60">/</span>
