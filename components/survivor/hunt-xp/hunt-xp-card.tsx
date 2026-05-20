@@ -5,16 +5,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { FormItem } from '@/components/ui/form'
 import { Label } from '@/components/ui/label'
 import { LongPressCheckbox } from '@/components/ui/long-press-checkbox'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { DatabaseSurvivorType, SurvivorType } from '@/lib/enums'
-import {
-  HUNT_XP_RANK_UP_ACHIEVED_MESSAGE,
-  HUNT_XP_RANK_UP_MILESTONE_ADDED_MESSAGE,
-  HUNT_XP_RANK_UP_MILESTONE_REMOVED_MESSAGE,
-  HUNT_XP_UPDATED_MESSAGE
-} from '@/lib/messages'
 import {
   SettlementDetail,
   SurvivorDetail,
@@ -28,8 +20,6 @@ import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
  * Hunt XP Card Properties
  */
 interface HuntXPCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlemenet */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -51,14 +41,11 @@ interface HuntXPCardProps {
  * @returns Hunt XP Card Component
  */
 export function HuntXPCard({
-  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: HuntXPCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [huntXP, setHuntXP] = useState<number>(selectedSurvivor?.hunt_xp ?? 0)
@@ -100,19 +87,15 @@ export function HuntXPCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { hunt_xp: newHuntXP })
-        .then(() =>
-          checked && huntXPRankUp.includes(index)
-            ? toast.success(HUNT_XP_RANK_UP_ACHIEVED_MESSAGE())
-            : toast.success(HUNT_XP_UPDATED_MESSAGE())
-        )
-        .catch((error) => {
+      updateSurvivor(selectedSurvivor?.id, { hunt_xp: newHuntXP }).catch(
+        (error) => {
           console.error('Hunt XP Update Error:', error)
           setHuntXP(oldHuntXP)
           setSurvivors(oldSurvivors)
-        })
+        }
+      )
     },
-    [huntXP, huntXPRankUp, selectedSurvivor?.id, survivors, setSurvivors, toast]
+    [huntXP, selectedSurvivor?.id, survivors, setSurvivors]
   )
 
   /**
@@ -140,18 +123,14 @@ export function HuntXPCard({
 
         updateSurvivor(selectedSurvivor?.id, {
           hunt_xp_rank_up: currentRankUps
-        })
-          .then(() =>
-            toast.success(HUNT_XP_RANK_UP_MILESTONE_REMOVED_MESSAGE())
+        }).catch((error) => {
+          console.error(
+            `Error Removing Hunt XP Rank Up Milestone: ${error.message}`
           )
-          .catch((error) => {
-            console.error(
-              `Error Removing Hunt XP Rank Up Milestone: ${error.message}`
-            )
-            huntXPRankUpRef.current = [...currentRankUps, index]
-            setHuntXPRankUp([...currentRankUps, index])
-            setSurvivors(oldSurvivors)
-          })
+          huntXPRankUpRef.current = [...currentRankUps, index]
+          setHuntXPRankUp([...currentRankUps, index])
+          setSurvivors(oldSurvivors)
+        })
       } else {
         currentRankUps.push(index)
         currentRankUps.sort((a, b) => a - b)
@@ -167,20 +146,18 @@ export function HuntXPCard({
 
         updateSurvivor(selectedSurvivor?.id, {
           hunt_xp_rank_up: currentRankUps
+        }).catch((error) => {
+          console.error(
+            `Error Adding Hunt XP Rank Up Milestone: ${error.message}`
+          )
+          const reverted = currentRankUps.filter((i) => i !== index)
+          huntXPRankUpRef.current = reverted
+          setHuntXPRankUp(reverted)
+          setSurvivors(oldSurvivors)
         })
-          .then(() => toast.success(HUNT_XP_RANK_UP_MILESTONE_ADDED_MESSAGE()))
-          .catch((error) => {
-            console.error(
-              `Error Adding Hunt XP Rank Up Milestone: ${error.message}`
-            )
-            const reverted = currentRankUps.filter((i) => i !== index)
-            huntXPRankUpRef.current = reverted
-            setHuntXPRankUp(reverted)
-            setSurvivors(oldSurvivors)
-          })
       }
     },
-    [selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   /**

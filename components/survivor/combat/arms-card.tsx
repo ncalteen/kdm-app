@@ -4,21 +4,18 @@ import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { COMBAT_ARMS_UPDATED_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { HandMetalIcon, Shield } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Arms Card Properties
  */
 interface ArmsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -37,13 +34,10 @@ interface ArmsCardProps {
  * @returns Arms Card Component
  */
 export function ArmsCard({
-  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: ArmsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [armArmor, setArmArmor] = useState(selectedSurvivor?.arm_armor ?? 0)
   const [armBroken, setArmBroken] = useState(selectedSurvivor?.arm_broken ?? 0)
@@ -101,15 +95,16 @@ export function ArmsCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { [field]: value })
-        .then(() => toast.success(COMBAT_ARMS_UPDATED_MESSAGE()))
-        .catch((error) => {
+      updateSurvivor(selectedSurvivor?.id, { [field]: value }).catch(
+        (error) => {
           setter(oldValue)
           setSurvivors(oldSurvivors)
           console.error('Error Updating Arms:', error)
-        })
+          toast.error(ERROR_MESSAGE())
+        }
+      )
     },
-    [selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   return (

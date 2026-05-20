@@ -3,7 +3,6 @@
 import { ShowdownSurvivorCard } from '@/components/showdown/showdown-survivors/showdown-survivor-card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { LocalStateType } from '@/contexts/local-context'
 import {
   SettlementDetail,
   ShowdownDetail,
@@ -19,8 +18,6 @@ import { ReactElement, useEffect, useMemo, useState } from 'react'
  * Showdown Survivors Card Properties
  */
 interface ShowdownSurvivorsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Selected Settlement */
@@ -46,7 +43,6 @@ interface ShowdownSurvivorsCardProps {
  * @returns Showdown Survivors Card Component
  */
 export function ShowdownSurvivorsCard({
-  local,
   selectedShowdown,
   selectedSettlement,
   selectedSurvivor,
@@ -147,7 +143,6 @@ export function ShowdownSurvivorsCard({
         </div>
       </div>
       <ShowdownSurvivorCard
-        local={local}
         selectedShowdown={selectedShowdown}
         selectedSettlement={selectedSettlement}
         selectedSurvivor={displayedSurvivor}

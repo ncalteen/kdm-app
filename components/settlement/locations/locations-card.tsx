@@ -18,23 +18,15 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { addLocation, getLocations } from '@/lib/dal/location'
 import {
   addSettlementLocations,
   removeSettlementLocation,
   updateSettlementLocation
 } from '@/lib/dal/settlement-location'
-import {
-  ERROR_MESSAGE,
-  LOCATION_CREATED_MESSAGE,
-  LOCATION_REMOVED_MESSAGE,
-  LOCATION_UNLOCKED_MESSAGE,
-  LOCATION_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   LocationDetail,
   SettlementDetail,
@@ -42,13 +34,12 @@ import {
 } from '@/lib/types'
 import { HouseIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Locations Card Properties
  */
 interface LocationsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -66,12 +57,10 @@ interface LocationsCardProps {
  * @returns Locations Card Component
  */
 export function LocationsCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: LocationsCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -196,8 +185,7 @@ export function LocationsCard({
                 }
               : null
           )
-        },
-        successMessage: LOCATION_UPDATED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, availableLocations, setSelectedSettlement, mutate]
@@ -235,8 +223,7 @@ export function LocationsCard({
               return prev
             return { ...prev, locations: [...prev.locations, removed] }
           })
-        },
-        successMessage: LOCATION_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -280,8 +267,7 @@ export function LocationsCard({
                 }
               : null
           )
-        },
-        successMessage: LOCATION_UNLOCKED_MESSAGE(unlocked)
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -335,7 +321,6 @@ export function LocationsCard({
 
         setSearch('')
         setCreateDialogOpen(false)
-        toast.success(LOCATION_CREATED_MESSAGE())
 
         // Add to settlement immediately
         const tempId = `temp-${crypto.randomUUID()}`
@@ -387,8 +372,7 @@ export function LocationsCard({
                   }
                 : null
             )
-          },
-          successMessage: LOCATION_UPDATED_MESSAGE()
+          }
         })
       } catch (error) {
         console.error('Location Create Error:', error)
@@ -401,7 +385,6 @@ export function LocationsCard({
       creating,
       selectedSettlement,
       setSelectedSettlement,
-      toast,
       mutate,
       setAvailableLocations
     ]

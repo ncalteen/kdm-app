@@ -1,17 +1,11 @@
 'use client'
 
 import { CollaboratorsPanel } from '@/components/settlement/sharing/collaborators-panel'
-import { LocalStateType } from '@/contexts/local-context'
 import { ReactElement } from 'react'
 
 /**
  * Sharing Card Properties
  */
-interface SharingCardProps {
-  /** Local State */
-  local: LocalStateType
-}
-
 /**
  * Sharing Card Component
  *
@@ -29,13 +23,12 @@ interface SharingCardProps {
  * {@link CollaboratorsPanel}, so this card no longer needs to plumb it
  * through props (single source of truth — see panel docs).
  *
- * @param props Sharing Card Properties
  * @returns Sharing Card Component
  */
-export function SharingCard({ local }: SharingCardProps): ReactElement {
+export function SharingCard(): ReactElement {
   return (
     <div className="flex flex-col gap-4 px-2">
-      <CollaboratorsPanel local={local} />
+      <CollaboratorsPanel />
     </div>
   )
 }

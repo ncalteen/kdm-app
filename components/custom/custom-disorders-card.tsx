@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addDisorder,
   getUserCustomDisorders,
   removeDisorder,
   updateDisorder
 } from '@/lib/dal/disorder'
-import {
-  DISORDER_CREATED_MESSAGE,
-  DISORDER_REMOVED_MESSAGE,
-  DISORDER_UPDATED_MESSAGE,
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { DisorderDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Disorders Card Component Properties
- */
-interface CustomDisordersCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Disorders Card Component
@@ -46,14 +31,9 @@ interface CustomDisordersCardProps {
  * Entries are displayed alphabetically. Name and rules are entered via a
  * dialog. UI updates are optimistic and roll back on database failure.
  *
- * @param props Custom Disorders Card Properties
  * @returns Custom Disorders Card Component
  */
-export function CustomDisordersCard({
-  local
-}: CustomDisordersCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomDisordersCard(): ReactElement {
   const [items, setItems] = useState<DisorderDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -93,7 +73,7 @@ export function CustomDisordersCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Disorder
@@ -131,8 +111,6 @@ export function CustomDisordersCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(DISORDER_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Disorder Error:', err)
@@ -141,7 +119,7 @@ export function CustomDisordersCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -178,8 +156,6 @@ export function CustomDisordersCard({
           disorder_name: data.name,
           rules: data.rules || null
         })
-
-        toast.success(DISORDER_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Disorder Error:', err)
@@ -188,7 +164,7 @@ export function CustomDisordersCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -202,16 +178,14 @@ export function CustomDisordersCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeDisorder(item.id)
-        .then(() => toast.success(DISORDER_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Disorder Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeDisorder(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Disorder Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

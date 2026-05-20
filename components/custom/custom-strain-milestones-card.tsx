@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addStrainMilestone,
   getUserCustomStrainMilestones,
   removeStrainMilestone,
   updateStrainMilestone
 } from '@/lib/dal/strain-milestone'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  STRAIN_MILESTONE_CREATED_MESSAGE,
-  STRAIN_MILESTONE_REMOVED_MESSAGE,
-  STRAIN_MILESTONE_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { StrainMilestoneDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Strain Milestones Card Component Properties
- */
-interface CustomStrainMilestonesCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Strain Milestones Card Component
@@ -47,14 +32,9 @@ interface CustomStrainMilestonesCardProps {
  * condition, and permanent effect. Entries are displayed alphabetically. UI
  * updates are optimistic and roll back on database failure.
  *
- * @param props Custom Strain Milestones Card Properties
  * @returns Custom Strain Milestones Card Component
  */
-export function CustomStrainMilestonesCard({
-  local
-}: CustomStrainMilestonesCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomStrainMilestonesCard(): ReactElement {
   const [items, setItems] = useState<StrainMilestoneDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -98,7 +78,7 @@ export function CustomStrainMilestonesCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Strain Milestone
@@ -142,8 +122,6 @@ export function CustomStrainMilestonesCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(STRAIN_MILESTONE_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Strain Milestone Error:', err)
@@ -152,7 +130,7 @@ export function CustomStrainMilestonesCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -199,8 +177,6 @@ export function CustomStrainMilestonesCard({
           milestone_condition: data.milestone_condition || null,
           permanent_effect: data.permanent_effect || null
         })
-
-        toast.success(STRAIN_MILESTONE_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Strain Milestone Error:', err)
@@ -209,7 +185,7 @@ export function CustomStrainMilestonesCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -223,16 +199,14 @@ export function CustomStrainMilestonesCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeStrainMilestone(item.id)
-        .then(() => toast.success(STRAIN_MILESTONE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Strain Milestone Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeStrainMilestone(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Strain Milestone Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

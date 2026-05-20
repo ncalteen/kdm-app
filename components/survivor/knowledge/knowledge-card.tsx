@@ -21,18 +21,8 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import {
-  SURVIVOR_CAN_USE_FIGHTING_ARTS_OR_KNOWLEDGES_UPDATED_MESSAGE,
-  SURVIVOR_KNOWLEDGE_OBSERVATION_CONDITIONS_UPDATED_MESSAGE,
-  SURVIVOR_KNOWLEDGE_OBSERVATION_RANK_UPDATED_MESSAGE,
-  SURVIVOR_KNOWLEDGE_RANK_UP_UPDATED_MESSAGE,
-  SURVIVOR_KNOWLEDGE_RULES_UPDATED_MESSAGE,
-  SURVIVOR_KNOWLEDGE_UPDATED_MESSAGE
-} from '@/lib/messages'
 import {
   SettlementDetail,
   SurvivorDetail,
@@ -46,8 +36,6 @@ import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
  * Knowledge Card Properties
  */
 interface KnowledgeCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -156,14 +144,12 @@ function KnowledgeSelect({
  * @returns Knowledge Card Component
  */
 export function KnowledgeCard({
-  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: KnowledgeCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
@@ -277,8 +263,7 @@ export function KnowledgeCard({
               s.id === selectedSurvivor?.id ? { ...s, [fieldName]: oldRank } : s
             )
           )
-        },
-        successMessage: SURVIVOR_KNOWLEDGE_OBSERVATION_RANK_UPDATED_MESSAGE()
+        }
       })
     },
     [knowledge1, knowledge2, selectedSurvivor?.id, setSurvivors, mutate]
@@ -316,9 +301,7 @@ export function KnowledgeCard({
                 : s
             )
           )
-        },
-        successMessage:
-          SURVIVOR_CAN_USE_FIGHTING_ARTS_OR_KNOWLEDGES_UPDATED_MESSAGE(newValue)
+        }
       })
     },
     [canUseFightingArtsKnowledges, selectedSurvivor?.id, setSurvivors, mutate]
@@ -413,10 +396,7 @@ export function KnowledgeCard({
               : s
           )
         )
-      },
-      successMessage: SURVIVOR_KNOWLEDGE_UPDATED_MESSAGE(
-        knowledgeDetail?.knowledge_name ?? ''
-      )
+      }
     })
   }
 
@@ -473,10 +453,7 @@ export function KnowledgeCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_KNOWLEDGE_RANK_UP_UPDATED_MESSAGE(
-          newRankUp ?? undefined
-        )
+        }
       })
     },
     [selectedSurvivor?.id, setSurvivors, mutate]
@@ -505,10 +482,6 @@ export function KnowledgeCard({
       context: 'Knowledge Rules Update',
       persist: () =>
         updateSurvivor(selectedSurvivor?.id, { knowledge_1_rules: value }),
-      onSuccess: () => {
-        if (value.trim())
-          toast.success(SURVIVOR_KNOWLEDGE_RULES_UPDATED_MESSAGE())
-      },
       rollback: () => {
         setKnowledge1({
           ...knowledge1,
@@ -555,12 +528,6 @@ export function KnowledgeCard({
         updateSurvivor(selectedSurvivor?.id, {
           knowledge_1_observation_conditions: value
         }),
-      onSuccess: () => {
-        if (value.trim())
-          toast.success(
-            SURVIVOR_KNOWLEDGE_OBSERVATION_CONDITIONS_UPDATED_MESSAGE()
-          )
-      },
       rollback: () => {
         setKnowledge1({
           ...knowledge1,
@@ -670,10 +637,7 @@ export function KnowledgeCard({
               : s
           )
         )
-      },
-      successMessage: SURVIVOR_KNOWLEDGE_UPDATED_MESSAGE(
-        knowledgeDetail?.knowledge_name ?? ''
-      )
+      }
     })
   }
 
@@ -730,10 +694,7 @@ export function KnowledgeCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_KNOWLEDGE_RANK_UP_UPDATED_MESSAGE(
-          newRankUp ?? undefined
-        )
+        }
       })
     },
     [selectedSurvivor?.id, setSurvivors, mutate]
@@ -762,10 +723,6 @@ export function KnowledgeCard({
       context: 'Knowledge Rules Update',
       persist: () =>
         updateSurvivor(selectedSurvivor?.id, { knowledge_2_rules: value }),
-      onSuccess: () => {
-        if (value.trim())
-          toast.success(SURVIVOR_KNOWLEDGE_RULES_UPDATED_MESSAGE())
-      },
       rollback: () => {
         setKnowledge2({
           ...knowledge2,
@@ -812,12 +769,6 @@ export function KnowledgeCard({
         updateSurvivor(selectedSurvivor?.id, {
           knowledge_2_observation_conditions: value
         }),
-      onSuccess: () => {
-        if (value.trim())
-          toast.success(
-            SURVIVOR_KNOWLEDGE_OBSERVATION_CONDITIONS_UPDATED_MESSAGE()
-          )
-      },
       rollback: () => {
         setKnowledge2({
           ...knowledge2,

@@ -10,29 +10,19 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { ColorChoice, DatabaseGender, Gender } from '@/lib/enums'
-import {
-  ERROR_MESSAGE,
-  SURVIVOR_COLOR_CHANGED_MESSAGE,
-  SURVIVOR_DEAD_STATUS_UPDATED_MESSAGE,
-  SURVIVOR_GENDER_UPDATED_MESSAGE,
-  SURVIVOR_NAME_UPDATED_MESSAGE,
-  SURVIVOR_RETIRED_STATUS_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { getCardColorStyles, getColorStyle } from '@/lib/utils'
 import { SkullIcon, UserXIcon } from 'lucide-react'
 import { KeyboardEvent, ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Status Card Props
  */
 interface StatusCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -53,13 +43,10 @@ interface StatusCardProps {
  * @returns Status Card Component
  */
 export function StatusCard({
-  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: StatusCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [survivorName, setSurvivorName] = useState(
@@ -116,14 +103,14 @@ export function StatusCard({
         ) ?? []
       )
 
-      updateSurvivor(selectedSurvivor?.id, { survivor_name: value })
-        .then(() => toast.success(SURVIVOR_NAME_UPDATED_MESSAGE()))
-        .catch((error: unknown) => {
+      updateSurvivor(selectedSurvivor?.id, { survivor_name: value }).catch(
+        (error: unknown) => {
           setSurvivorName(oldName)
           setSurvivors(oldSurvivors)
           console.error('Survivor Name Update Error:', error)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     }
   }
 
@@ -145,16 +132,16 @@ export function StatusCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { gender: dbGender })
-        .then(() => toast.success(SURVIVOR_GENDER_UPDATED_MESSAGE()))
-        .catch((error: unknown) => {
+      updateSurvivor(selectedSurvivor?.id, { gender: dbGender }).catch(
+        (error: unknown) => {
           setSurvivorGender(oldGender)
           setSurvivors(oldSurvivors)
           console.error('Survivor Gender Update Error:', error)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [selectedSurvivor?.id, survivorGender, survivors, setSurvivors, toast]
+    [selectedSurvivor?.id, survivorGender, survivors, setSurvivors]
   )
 
   /**
@@ -174,18 +161,16 @@ export function StatusCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { dead: checked })
-        .then(() =>
-          toast.success(SURVIVOR_DEAD_STATUS_UPDATED_MESSAGE(checked))
-        )
-        .catch((error: unknown) => {
+      updateSurvivor(selectedSurvivor?.id, { dead: checked }).catch(
+        (error: unknown) => {
           setSurvivorDead(oldDead)
           setSurvivors(oldSurvivors)
           console.error('Survivor Dead Status Update Error:', error)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [selectedSurvivor?.id, survivorDead, survivors, setSurvivors, toast]
+    [selectedSurvivor?.id, survivorDead, survivors, setSurvivors]
   )
 
   /**
@@ -205,18 +190,16 @@ export function StatusCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { retired: checked })
-        .then(() =>
-          toast.success(SURVIVOR_RETIRED_STATUS_UPDATED_MESSAGE(checked))
-        )
-        .catch((error: unknown) => {
+      updateSurvivor(selectedSurvivor?.id, { retired: checked }).catch(
+        (error: unknown) => {
           setSurvivorRetired(oldRetired)
           setSurvivors(oldSurvivors)
           console.error('Survivor Retired Status Update Error:', error)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [selectedSurvivor?.id, survivorRetired, survivors, setSurvivors, toast]
+    [selectedSurvivor?.id, survivorRetired, survivors, setSurvivors]
   )
 
   /**
@@ -237,16 +220,16 @@ export function StatusCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { color })
-        .then(() => toast.success(SURVIVOR_COLOR_CHANGED_MESSAGE(color)))
-        .catch((error: unknown) => {
+      updateSurvivor(selectedSurvivor?.id, { color }).catch(
+        (error: unknown) => {
           setSurvivorColor(oldColor)
           setSurvivors(oldSurvivors)
           console.error('Survivor Color Update Error:', error)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [selectedSurvivor?.id, survivorColor, survivors, setSurvivors, toast]
+    [selectedSurvivor?.id, survivorColor, survivors, setSurvivors]
   )
 
   return (

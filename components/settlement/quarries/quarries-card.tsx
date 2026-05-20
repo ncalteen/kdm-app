@@ -17,10 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { getQuarries } from '@/lib/dal/quarry'
 import { getQuarryCollectiveCognitionRewardIds } from '@/lib/dal/quarry-collective-cognition-reward'
 import { getQuarryLocationIds } from '@/lib/dal/quarry-location'
@@ -37,12 +35,7 @@ import {
   saveSettlementTimelineYearEntry
 } from '@/lib/dal/settlement-timeline-year'
 import { CampaignType, MonsterNode } from '@/lib/enums'
-import {
-  ERROR_MESSAGE,
-  QUARRY_ADDED_MESSAGE,
-  QUARRY_REMOVED_MESSAGE,
-  QUARRY_UNLOCKED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { sortQuarries } from '@/lib/settlement/quarries'
 import {
   QuarryDetail,
@@ -51,13 +44,12 @@ import {
 } from '@/lib/types'
 import { PlusIcon, SwordIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Quarries Card Properties
  */
 interface QuarriesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -75,12 +67,10 @@ interface QuarriesCardProps {
  * @returns Quarries Card Component
  */
 export function QuarriesCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: QuarriesCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
 
@@ -384,8 +374,7 @@ export function QuarriesCard({
                 }
               : null
           )
-        },
-        successMessage: QUARRY_ADDED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, availableQuarries, setSelectedSettlement, mutate]
@@ -423,8 +412,7 @@ export function QuarriesCard({
               quarries: sortQuarries([...prev.quarries, removed])
             }
           })
-        },
-        successMessage: QUARRY_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -467,8 +455,7 @@ export function QuarriesCard({
                 }
               : null
           )
-        },
-        successMessage: QUARRY_UNLOCKED_MESSAGE(target.monster_name, unlocked)
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]

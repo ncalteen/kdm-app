@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addMood,
   getUserCustomMoods,
   removeMood,
   updateMood
 } from '@/lib/dal/mood'
-import {
-  ERROR_MESSAGE,
-  MOOD_CREATED_MESSAGE,
-  MOOD_REMOVED_MESSAGE,
-  MOOD_UPDATED_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { MoodDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Moods Card Component Properties
- */
-interface CustomMoodsCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Moods Card Component
@@ -46,12 +31,9 @@ interface CustomMoodsCardProps {
  * Entries are displayed alphabetically. UI updates are optimistic and roll back
  * on database failure.
  *
- * @param props Custom Moods Card Properties
  * @returns Custom Moods Card Component
  */
-export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomMoodsCard(): ReactElement {
   const [items, setItems] = useState<MoodDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -91,7 +73,7 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Mood
@@ -129,8 +111,6 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(MOOD_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Mood Error:', err)
@@ -139,7 +119,7 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -180,8 +160,6 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
           mood_name: data.name,
           rules: data.rules || null
         })
-
-        toast.success(MOOD_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Mood Error:', err)
@@ -190,7 +168,7 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -204,16 +182,14 @@ export function CustomMoodsCard({ local }: CustomMoodsCardProps): ReactElement {
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeMood(item.id)
-        .then(() => toast.success(MOOD_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Mood Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeMood(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Mood Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

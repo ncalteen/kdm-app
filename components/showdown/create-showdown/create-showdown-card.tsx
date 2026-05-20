@@ -16,8 +16,6 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   syncMonsterMoods,
   syncMonsterSurvivorStatuses,
@@ -31,15 +29,14 @@ import { addShowdown } from '@/lib/dal/showdown'
 import { addShowdownAIDeck } from '@/lib/dal/showdown-ai-deck'
 import { addShowdownMonster } from '@/lib/dal/showdown-monster'
 import { addShowdownSurvivor } from '@/lib/dal/showdown-survivor'
-import { AmbushType, MonsterType, TurnType } from '@/lib/enums'
+import { AmbushType, TurnType } from '@/lib/enums'
 import { computeEmbarkGearShortages } from '@/lib/gear-grid'
 import {
   EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE,
   ERROR_MESSAGE,
   HUNT_ALREADY_ACTIVE_ERROR_MESSAGE,
   SCOUT_CONFLICT_MESSAGE,
-  SCOUT_REQUIRED_MESSAGE,
-  SHOWDOWN_CREATED_MESSAGE
+  SCOUT_REQUIRED_MESSAGE
 } from '@/lib/messages'
 import {
   HuntDetail,
@@ -57,6 +54,7 @@ import {
 } from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /** Vignette monster names that require user setting unlocks */
 const VIGNETTE_UNLOCK_MAP: Record<string, string> = {
@@ -79,8 +77,6 @@ enum MonsterVersion {
  * Create Showdown Card Properties
  */
 interface CreateShowdownCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Pending Special Showdown */
   pendingSpecialShowdown: boolean
   /** Selected Hunt */
@@ -111,7 +107,6 @@ interface CreateShowdownCardProps {
  * @returns Create Showdown Card Component
  */
 export function CreateShowdownCard({
-  local,
   pendingSpecialShowdown,
   selectedHunt,
   selectedSettlement,
@@ -121,10 +116,7 @@ export function CreateShowdownCard({
   survivors,
   userSettings
 }: CreateShowdownCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   // Monster selection state
-  const [monsterSource, setMonsterSource] = useState<MonsterSource | null>(null)
   const [selectedMonsterId, setSelectedMonsterId] = useState<string | null>(
     null
   )
@@ -314,7 +306,6 @@ export function CreateShowdownCard({
   const handleMonsterSelection = useCallback(
     async (monsterId: string, source: MonsterSource) => {
       setSelectedMonsterId(monsterId)
-      setMonsterSource(source)
       setSelectedLevelNumber(1)
       setMonsterLevels([])
       setSelectedVersion(MonsterVersion.ORIGINAL)
@@ -356,7 +347,7 @@ export function CreateShowdownCard({
         toast.error(ERROR_MESSAGE())
       }
     },
-    [fetchDetail, fetchLevels, toast]
+    [fetchDetail, fetchLevels]
   )
 
   /** Handle Level Selection */
@@ -462,8 +453,6 @@ export function CreateShowdownCard({
     const baseMonsterName =
       quarryMatch?.monster_name ?? nemesisMatch?.monster_name
     if (!baseMonsterName) return toast.error(ERROR_MESSAGE())
-
-    const isNemesis = monsterSource === 'nemesis'
 
     setIsCreating(true)
 
@@ -695,7 +684,6 @@ export function CreateShowdownCard({
 
       // Reset form
       setSelectedMonsterId(null)
-      setMonsterSource(null)
       setMonsterDetail(null)
       setMonsterLevels([])
       setSelectedLevelNumber(1)
@@ -710,13 +698,6 @@ export function CreateShowdownCard({
       setStartingTurn(TurnType.MONSTER)
       setSelectedSurvivors([])
       setSelectedScout(null)
-
-      toast.success(
-        SHOWDOWN_CREATED_MESSAGE(
-          baseMonsterName,
-          isNemesis ? MonsterType.NEMESIS : MonsterType.QUARRY
-        )
-      )
     } catch (error) {
       console.error('Showdown Creation Error:', error)
       toast.error(ERROR_MESSAGE())
@@ -730,7 +711,6 @@ export function CreateShowdownCard({
     availableQuarries,
     displayedLevel,
     isSpecialShowdown,
-    monsterSource,
     selectedHunt,
     selectedLevelNumber,
     selectedLevels,
@@ -739,8 +719,7 @@ export function CreateShowdownCard({
     selectedSettlement,
     selectedSurvivors,
     setSelectedShowdown,
-    survivors,
-    toast
+    survivors
   ])
 
   return (
@@ -1025,7 +1004,6 @@ export function CreateShowdownCard({
         </div>
 
         <SurvivorSelectionDrawer
-          local={local}
           title="Select Showdown Party"
           description="Up to 4 survivors may embark on a showdown."
           survivors={availableSurvivors}
@@ -1037,7 +1015,6 @@ export function CreateShowdownCard({
 
         {selectedSettlement?.uses_scouts && (
           <ScoutSelectionDrawer
-            local={local}
             title="Select Scout"
             description="Choose a single scout. Their skills will help navigate the dangers ahead."
             survivors={availableSurvivors}

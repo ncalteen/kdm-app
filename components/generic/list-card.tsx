@@ -3,8 +3,6 @@
 import { ListItem, NewListItem } from '@/components/generic/list-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { SettlementDetail } from '@/lib/types'
 import {
@@ -24,6 +22,7 @@ import {
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * List Card Properties
@@ -35,8 +34,6 @@ interface ListCardProps {
   initialItems: string[]
   /** Item Name */
   itemName: string
-  /** Local State */
-  local: LocalStateType
   /** Placeholder */
   placeholder: string
   /** Save List */
@@ -58,13 +55,10 @@ export function ListCard({
   icon,
   initialItems,
   itemName,
-  local,
   placeholder,
   saveList,
   selectedSettlement
 }: ListCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [editingIndices, setEditingIndices] = useState<Set<number>>(new Set())
   const [items, setItems] = useState<string[]>(initialItems)
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false)
@@ -143,7 +137,7 @@ export function ListCard({
         toast.error(ERROR_MESSAGE())
       })
     },
-    [initialItems, items, saveList, toast]
+    [initialItems, items, saveList]
   )
 
   /**
@@ -185,7 +179,7 @@ export function ListCard({
         toast.error(ERROR_MESSAGE())
       })
     },
-    [initialItems, items, itemName, saveList, toast]
+    [initialItems, items, itemName, saveList]
   )
 
   /**
@@ -258,7 +252,7 @@ export function ListCard({
         })
       }
     },
-    [initialItems, items, saveList, toast]
+    [initialItems, items, saveList]
   )
 
   return (

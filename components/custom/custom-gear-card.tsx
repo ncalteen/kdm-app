@@ -15,8 +15,6 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addGear,
   getGear,
@@ -30,13 +28,7 @@ import {
 import { getLocations } from '@/lib/dal/location'
 import { getResources } from '@/lib/dal/resource'
 import { getWeaponTypes } from '@/lib/dal/weapon-type'
-import {
-  ERROR_MESSAGE,
-  GEAR_CREATED_MESSAGE,
-  GEAR_REMOVED_MESSAGE,
-  GEAR_UPDATED_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import {
   GearDetail,
   LocationDetail,
@@ -46,14 +38,7 @@ import {
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Gear Card Component Properties
- */
-interface CustomGearCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Gear Card Component
@@ -65,12 +50,9 @@ interface CustomGearCardProps {
  * resource type). Entries are displayed alphabetically. UI updates are
  * optimistic and roll back on database failure.
  *
- * @param props Custom Gear Card Properties
  * @returns Custom Gear Card Component
  */
-export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomGearCard(): ReactElement {
   const [items, setItems] = useState<GearDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [allGear, setAllGear] = useState<{ [key: string]: GearDetail }>({})
@@ -138,7 +120,7 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Persist gear junction tables (gear costs, resource costs, resource type
@@ -234,8 +216,6 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
           sortItems(prev.map((i) => (i.id === tempId ? finalItem : i)))
         )
         setAllGear((prev) => ({ ...prev, [created.id]: finalItem }))
-
-        toast.success(GEAR_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Gear Error:', err)
@@ -244,7 +224,7 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
         setSaving(false)
       }
     },
-    [items, persistJunctions, saving, sortItems, toast]
+    [items, persistJunctions, saving, sortItems]
   )
 
   /**
@@ -318,8 +298,6 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
         })
 
         await persistJunctions(editingId, data)
-
-        toast.success(GEAR_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Gear Error:', err)
@@ -328,7 +306,7 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
         setSaving(false)
       }
     },
-    [items, editingItem, persistJunctions, saving, sortItems, toast]
+    [items, editingItem, persistJunctions, saving, sortItems]
   )
 
   /**
@@ -351,7 +329,6 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
             delete next[item.id]
             return next
           })
-          toast.success(GEAR_REMOVED_MESSAGE())
         })
         .catch((err: unknown) => {
           setItems(previous)
@@ -360,7 +337,7 @@ export function CustomGearCard({ local }: CustomGearCardProps): ReactElement {
           toast.error(guard ?? ERROR_MESSAGE())
         })
     },
-    [items, toast]
+    [items]
   )
 
   /**

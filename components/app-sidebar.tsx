@@ -20,8 +20,10 @@ import {
 } from '@/lib/enums'
 import { SettlementDetail, SettlementListEntry } from '@/lib/types'
 import {
+  ChartBarIcon,
   CircleQuestionMarkIcon,
   CreditCardIcon,
+  DatabaseIcon,
   HourglassIcon,
   LightbulbIcon,
   NotebookPenIcon,
@@ -132,6 +134,15 @@ const navSharingEntry = {
 }
 
 /**
+ * Settlement Settings Navigation Entry
+ */
+const navSettlementSettingsEntry = {
+  title: 'Settlement Settings',
+  tab: TabType.SETTLEMENT_SETTINGS,
+  icon: SettingsIcon
+}
+
+/**
  * Embark Navigation Items
  */
 const navEmbark = [
@@ -166,10 +177,33 @@ const navSubscriptionEntry = {
 }
 
 /**
+ * Admin Navigation Items
+ *
+ * Rendered only when Supabase Auth reports the verified user role is `admin`.
+ */
+const navAdmin = [
+  {
+    title: 'Adoption',
+    tab: TabType.ADMIN_ADOPTION,
+    icon: ChartBarIcon
+  },
+  {
+    title: 'Development',
+    tab: TabType.ADMIN_DEVELOPMENT,
+    icon: DatabaseIcon
+  },
+  {
+    title: 'User Management',
+    tab: TabType.ADMIN_USER_MANAGEMENT,
+    icon: UsersIcon
+  }
+]
+
+/**
  * Settings Navigation Items (Always Visible)
  *
  * The Subscription entry is appended at runtime by the `navSettings`
- * memo so the `subscription-management` feature flag can gate it.
+ * memo so the feature gate can control it.
  */
 const baseNavSettings = [
   {
@@ -178,7 +212,7 @@ const baseNavSettings = [
     icon: UserIcon
   },
   {
-    title: 'Settings',
+    title: 'User Settings',
     tab: TabType.SETTINGS,
     icon: SettingsIcon
   },
@@ -257,7 +291,8 @@ export function AppSidebar({
   // single early-access allowlist. When the rollout opens to everyone, the
   // Sharing entry should be re-gated on `canShare` so non-subscribers stop
   // seeing it; see `docs/settlement-sharing-architecture.md` §9.
-  const { subscriptionManagementEnabled, userSubscription } = useLocal()
+  const { isAdmin, subscriptionManagementEnabled, userSubscription } =
+    useLocal()
 
   const navItems = useMemo(() => {
     const items =
@@ -286,6 +321,8 @@ export function AppSidebar({
     // early-access cohort. Off-allowlist users never see the entry.
     if (subscriptionManagementEnabled) items.push(navSharingEntry)
 
+    items.push(navSettlementSettingsEntry)
+
     return items
   }, [
     selectedSettlement?.campaign_type,
@@ -293,19 +330,18 @@ export function AppSidebar({
     subscriptionManagementEnabled
   ])
 
-  // Splice the Subscription entry between Settings and Help so the
-  // Configuration group reads User Content / Settings / Subscription /
-  // Help in the order the existing UI established. Off-allowlist users
-  // see User Content / Settings / Help with no gap.
+  // Splice gated settings entries before Help so the Configuration group keeps
+  // Help as the last stop.
   const navSettings = useMemo(() => {
-    if (!subscriptionManagementEnabled) return baseNavSettings
-
     const items = [...baseNavSettings]
-    const helpIndex = items.findIndex((item) => item.tab === TabType.HELP)
+    const insertBeforeHelp = (entry: (typeof items)[number]) => {
+      const helpIndex = items.findIndex((item) => item.tab === TabType.HELP)
 
-    if (helpIndex === -1) items.push(navSubscriptionEntry)
-    else items.splice(helpIndex, 0, navSubscriptionEntry)
+      if (helpIndex === -1) items.push(entry)
+      else items.splice(helpIndex, 0, entry)
+    }
 
+    if (subscriptionManagementEnabled) insertBeforeHelp(navSubscriptionEntry)
     return items
   }, [subscriptionManagementEnabled])
 
@@ -361,6 +397,17 @@ export function AppSidebar({
             setSelectedTab={setSelectedTab}
           />
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <NavMain
+              items={navAdmin}
+              selectedTab={selectedTab}
+              setSelectedTab={setSelectedTab}
+            />
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

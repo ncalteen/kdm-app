@@ -17,10 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { getNemeses } from '@/lib/dal/nemesis'
 import { getNemesisLocationIds } from '@/lib/dal/nemesis-location'
 import { getNemesisTimelineYears } from '@/lib/dal/nemesis-timeline-year'
@@ -35,13 +33,7 @@ import {
   saveSettlementTimelineYearEntry
 } from '@/lib/dal/settlement-timeline-year'
 import { CampaignType, MonsterNode } from '@/lib/enums'
-import {
-  ERROR_MESSAGE,
-  NEMESIS_ADDED_MESSAGE,
-  NEMESIS_DEFEATED_MESSAGE,
-  NEMESIS_REMOVED_MESSAGE,
-  NEMESIS_UNLOCKED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { sortNemeses } from '@/lib/settlement/nemeses'
 import {
   NemesisDetail,
@@ -50,13 +42,12 @@ import {
 } from '@/lib/types'
 import { PlusIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Nemeses Card Properties
  */
 interface NemesesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -75,12 +66,10 @@ interface NemesesCardProps {
  * @returns Nemeses Card Component
  */
 export function NemesesCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: NemesesCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
 
@@ -343,8 +332,7 @@ export function NemesesCard({
                 }
               : null
           )
-        },
-        successMessage: NEMESIS_ADDED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, availableNemeses, setSelectedSettlement, mutate]
@@ -382,8 +370,7 @@ export function NemesesCard({
               nemeses: sortNemeses([...prev.nemeses, removed])
             }
           })
-        },
-        successMessage: NEMESIS_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -426,8 +413,7 @@ export function NemesesCard({
                 }
               : null
           )
-        },
-        successMessage: NEMESIS_UNLOCKED_MESSAGE(target.monster_name, unlocked)
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -479,8 +465,7 @@ export function NemesesCard({
                 }
               : null
           )
-        },
-        successMessage: NEMESIS_DEFEATED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]

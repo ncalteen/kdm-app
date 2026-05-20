@@ -10,35 +10,22 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateHuntMonster } from '@/lib/dal/hunt-monster'
 import {
   syncMonsterMoods,
   syncMonsterSurvivorStatuses,
   syncMonsterTraits
 } from '@/lib/dal/monster-trait-mood'
-import {
-  ERROR_MESSAGE,
-  HUNT_NOTES_SAVED_MESSAGE,
-  MONSTER_STARTS_SHOWDOWN_KNOCKED_DOWN_MESSAGE,
-  MOOD_REMOVED_MESSAGE,
-  MOOD_UPDATED_MESSAGE,
-  SURVIVOR_STATUS_REMOVED_MESSAGE,
-  SURVIVOR_STATUS_UPDATED_MESSAGE,
-  TRAIT_REMOVED_MESSAGE,
-  TRAIT_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { HuntDetail, HuntMonsterDetail, HuntStateSetter } from '@/lib/types'
 import { CheckIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Hunt Monster Card Component Properties
  */
 interface HuntMonsterCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
@@ -58,13 +45,10 @@ interface HuntMonsterCardProps {
  * @returns Hunt Monster Card Component
  */
 export function HuntMonsterCard({
-  local,
   selectedHunt,
   selectedHuntMonsterIndex,
   setSelectedHunt
 }: HuntMonsterCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   /** Monster IDs as an ordered array */
   const monsterIds = useMemo(
     () => Object.keys(selectedHunt?.hunt_monsters ?? {}),
@@ -175,7 +159,7 @@ export function HuntMonsterCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [selectedHunt, currentMonsterId, monster, setSelectedHunt, toast]
+    [selectedHunt, currentMonsterId, monster, setSelectedHunt]
   )
 
   /**
@@ -185,14 +169,9 @@ export function HuntMonsterCard({
    */
   const onTraitsChange = useCallback(
     (traits: HuntMonsterDetail['traits']) => {
-      const prevTraits = monster?.traits ?? []
-      const successMsg =
-        traits.length > prevTraits.length
-          ? TRAIT_UPDATED_MESSAGE()
-          : TRAIT_REMOVED_MESSAGE()
-      saveMonsterData({ traits }, successMsg)
+      saveMonsterData({ traits })
     },
-    [monster?.traits, saveMonsterData]
+    [saveMonsterData]
   )
 
   /**
@@ -202,14 +181,9 @@ export function HuntMonsterCard({
    */
   const onMoodsChange = useCallback(
     (moods: HuntMonsterDetail['moods']) => {
-      const prevMoods = monster?.moods ?? []
-      const successMsg =
-        moods.length > prevMoods.length
-          ? MOOD_UPDATED_MESSAGE()
-          : MOOD_REMOVED_MESSAGE()
-      saveMonsterData({ moods }, successMsg)
+      saveMonsterData({ moods })
     },
-    [monster?.moods, saveMonsterData]
+    [saveMonsterData]
   )
 
   /**
@@ -219,14 +193,9 @@ export function HuntMonsterCard({
    */
   const onSurvivorStatusesChange = useCallback(
     (survivor_statuses: HuntMonsterDetail['survivor_statuses']) => {
-      const prevStatuses = monster?.survivor_statuses ?? []
-      const successMsg =
-        survivor_statuses.length > prevStatuses.length
-          ? SURVIVOR_STATUS_UPDATED_MESSAGE()
-          : SURVIVOR_STATUS_REMOVED_MESSAGE()
-      saveMonsterData({ survivor_statuses }, successMsg)
+      saveMonsterData({ survivor_statuses })
     },
-    [monster?.survivor_statuses, saveMonsterData]
+    [saveMonsterData]
   )
 
   /**
@@ -235,7 +204,7 @@ export function HuntMonsterCard({
   const handleSaveNotes = useCallback(() => {
     if (!monster) return
     setIsNotesDirty(false)
-    saveMonsterData({ notes: notesDraft }, HUNT_NOTES_SAVED_MESSAGE())
+    saveMonsterData({ notes: notesDraft })
   }, [monster, notesDraft, saveMonsterData])
 
   if (!selectedHunt || !monster) return <></>
@@ -263,10 +232,7 @@ export function HuntMonsterCard({
               id="knocked-down"
               checked={monster.knocked_down}
               onCheckedChange={(checked) =>
-                saveMonsterData(
-                  { knocked_down: !!checked },
-                  MONSTER_STARTS_SHOWDOWN_KNOCKED_DOWN_MESSAGE(!!checked)
-                )
+                saveMonsterData({ knocked_down: !!checked })
               }
               className="h-4 w-4"
             />

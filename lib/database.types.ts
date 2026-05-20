@@ -4852,6 +4852,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          app_role: string
           avatar_url: string | null
           created_at: string
           id: string
@@ -4864,6 +4865,7 @@ export type Database = {
           username_renamed_at: string | null
         }
         Insert: {
+          app_role?: string
           avatar_url?: string | null
           created_at?: string
           id?: string
@@ -4876,6 +4878,7 @@ export type Database = {
           username_renamed_at?: string | null
         }
         Update: {
+          app_role?: string
           avatar_url?: string | null
           created_at?: string
           id?: string
@@ -5146,6 +5149,7 @@ export type Database = {
         Args: { desired_username: string }
         Returns: boolean
       }
+      get_admin_adoption_metrics: { Args: never; Returns: Json }
       get_settlement_collaborators: {
         Args: { target_settlement: string }
         Returns: {
@@ -5181,6 +5185,10 @@ export type Database = {
       initialize_user_settings: {
         Args: { p_user_id: string; p_username: string }
         Returns: undefined
+      }
+      invalidate_auth_sessions_for_user: {
+        Args: { target_user_id: string }
+        Returns: number
       }
       is_admin: { Args: never; Returns: boolean }
       is_armor_set_owner: { Args: { record_id: string }; Returns: boolean }

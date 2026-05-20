@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addSecretFightingArt,
   getUserCustomSecretFightingArts,
   removeSecretFightingArt,
   updateSecretFightingArt
 } from '@/lib/dal/secret-fighting-art'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  SECRET_FIGHTING_ART_CREATED_MESSAGE,
-  SECRET_FIGHTING_ART_REMOVED_MESSAGE,
-  SECRET_FIGHTING_ART_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { SecretFightingArtDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Secret Fighting Arts Card Component Properties
- */
-interface CustomSecretFightingArtsCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Secret Fighting Arts Card Component
@@ -46,14 +31,9 @@ interface CustomSecretFightingArtsCardProps {
  * delete. Entries are displayed alphabetically. Name and rules are entered via
  * a dialog. UI updates are optimistic and roll back on database failure.
  *
- * @param props Custom Secret Fighting Arts Card Properties
  * @returns Custom Secret Fighting Arts Card Component
  */
-export function CustomSecretFightingArtsCard({
-  local
-}: CustomSecretFightingArtsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomSecretFightingArtsCard(): ReactElement {
   const [items, setItems] = useState<SecretFightingArtDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -96,7 +76,7 @@ export function CustomSecretFightingArtsCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Secret Fighting Art
@@ -134,8 +114,6 @@ export function CustomSecretFightingArtsCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(SECRET_FIGHTING_ART_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Secret Fighting Art Error:', err)
@@ -144,7 +122,7 @@ export function CustomSecretFightingArtsCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -185,8 +163,6 @@ export function CustomSecretFightingArtsCard({
           secret_fighting_art_name: data.name,
           rules: data.rules || null
         })
-
-        toast.success(SECRET_FIGHTING_ART_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Secret Fighting Art Error:', err)
@@ -195,7 +171,7 @@ export function CustomSecretFightingArtsCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -209,16 +185,14 @@ export function CustomSecretFightingArtsCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeSecretFightingArt(item.id)
-        .then(() => toast.success(SECRET_FIGHTING_ART_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Secret Fighting Art Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeSecretFightingArt(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Secret Fighting Art Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

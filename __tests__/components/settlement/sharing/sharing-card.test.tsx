@@ -7,12 +7,6 @@ vi.mock('@/contexts/local-context', () => ({
   useLocal: () => useLocalMock()
 }))
 
-vi.mock('@/hooks/use-toast', () => ({
-  useToast: () => ({
-    toast: { success: vi.fn(), info: vi.fn(), error: vi.fn() }
-  })
-}))
-
 vi.mock('@/lib/dal/settlement-shared-user', () => ({
   getSettlementSharedUsers: vi.fn().mockResolvedValue([]),
   addSettlementSharedUsers: vi.fn(),
@@ -38,12 +32,6 @@ vi.mock('@/components/generic/user-avatar', () => ({
 
 import { SharingCard } from '@/components/settlement/sharing/sharing-card'
 
-type SharingCardProps = Parameters<typeof SharingCard>[0]
-
-const baseProps: SharingCardProps = {
-  local: {} as SharingCardProps['local']
-}
-
 afterEach(() => {
   useLocalMock.mockReset()
 })
@@ -56,10 +44,9 @@ describe('SharingCard', () => {
       canShare: true
     })
 
-    const html = renderToStaticMarkup(<SharingCard {...baseProps} />)
+    const html = renderToStaticMarkup(<SharingCard />)
 
     expect(html).toContain('Light another lantern')
-    expect(html).toContain('Shared lanterns')
   })
 
   it('renders no panel content when no settlement is selected', () => {
@@ -69,7 +56,7 @@ describe('SharingCard', () => {
       canShare: true
     })
 
-    const html = renderToStaticMarkup(<SharingCard {...baseProps} />)
+    const html = renderToStaticMarkup(<SharingCard />)
 
     // The wrapper div is still emitted, but the inner panel short-circuits
     // because `selectedSettlement` is null.

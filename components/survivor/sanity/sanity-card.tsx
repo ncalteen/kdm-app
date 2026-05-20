@@ -4,9 +4,7 @@ import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -17,10 +15,6 @@ import {
 } from '@/lib/enums'
 import {
   INSANITY_MINIMUM_ERROR_MESSAGE,
-  SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE,
-  SURVIVOR_BRAIN_LIGHT_DAMAGE_UPDATED_MESSAGE,
-  SURVIVOR_INSANITY_UPDATED_MESSAGE,
-  SURVIVOR_TORMENT_UPDATED_MESSAGE,
   TORMENT_MINIMUM_ERROR_MESSAGE
 } from '@/lib/messages'
 import {
@@ -34,6 +28,7 @@ import {
 } from '@/lib/types'
 import { BrainIcon, Shield } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Sanity Card Properties
@@ -43,8 +38,6 @@ interface SanityCardProps {
   displayText: boolean
   /** Display Torment Input */
   displayTormentInput: boolean
-  /** Local State */
-  local: LocalStateType
   /** Mode */
   mode: SurvivorCardMode
   /** Selected Hunt */
@@ -76,7 +69,6 @@ interface SanityCardProps {
 export function SanityCard({
   displayText,
   displayTormentInput,
-  local,
   mode,
   selectedHunt,
   selectedSettlement,
@@ -86,8 +78,7 @@ export function SanityCard({
   setSelectedShowdown,
   setSurvivors
 }: SanityCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [insanity, setInsanity] = useState(selectedSurvivor?.insanity ?? 0)
@@ -179,8 +170,7 @@ export function SanityCard({
                 }
               }
             })
-          },
-          successMessage: SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('insanity')
+          }
         })
       } else if (
         mode === SurvivorCardMode.SHOWDOWN_CARD &&
@@ -220,8 +210,7 @@ export function SanityCard({
                 }
               }
             })
-          },
-          successMessage: SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('insanity')
+          }
         })
       }
     },
@@ -267,11 +256,10 @@ export function SanityCard({
               s.id === selectedSurvivor?.id ? { ...s, insanity: old } : s
             )
           )
-        },
-        successMessage: SURVIVOR_INSANITY_UPDATED_MESSAGE(old, value)
+        }
       })
     },
-    [insanity, selectedSurvivor?.id, setSurvivors, toast, mutate]
+    [insanity, selectedSurvivor?.id, setSurvivors, mutate]
   )
 
   /**
@@ -307,8 +295,7 @@ export function SanityCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_BRAIN_LIGHT_DAMAGE_UPDATED_MESSAGE(!!checked)
+        }
       })
     },
     [brainLightDamage, selectedSurvivor?.id, setSurvivors, mutate]
@@ -342,11 +329,10 @@ export function SanityCard({
               s.id === selectedSurvivor?.id ? { ...s, torment: old } : s
             )
           )
-        },
-        successMessage: SURVIVOR_TORMENT_UPDATED_MESSAGE()
+        }
       })
     },
-    [torment, selectedSurvivor?.id, setSurvivors, toast, mutate]
+    [torment, selectedSurvivor?.id, setSurvivors, mutate]
   )
 
   return (

@@ -18,20 +18,13 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { addInnovation, getInnovations } from '@/lib/dal/innovation'
 import {
   addSettlementInnovations,
   removeSettlementInnovation
 } from '@/lib/dal/settlement-innovation'
-import {
-  ERROR_MESSAGE,
-  INNOVATION_CREATED_MESSAGE,
-  INNOVATION_REMOVED_MESSAGE,
-  INNOVATION_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   InnovationDetail,
   SettlementDetail,
@@ -39,6 +32,7 @@ import {
 } from '@/lib/types'
 import { LightbulbIcon, Plus, PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /** Settlement innovation item with junction table and innovation details */
 type InnovationItem = SettlementDetail['innovations'][0]
@@ -47,8 +41,6 @@ type InnovationItem = SettlementDetail['innovations'][0]
  * Innovations Card Properties
  */
 interface InnovationsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -65,12 +57,10 @@ interface InnovationsCardProps {
  * @returns Innovations Card Component
  */
 export function InnovationsCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: InnovationsCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [prevSettlement, setPrevSettlement] = useState(selectedSettlement)
 
@@ -184,8 +174,7 @@ export function InnovationsCard({
         },
         rollback: () => {
           setInnovations(oldInnovations)
-        },
-        successMessage: INNOVATION_UPDATED_MESSAGE()
+        }
       })
     },
     [
@@ -233,8 +222,7 @@ export function InnovationsCard({
         },
         rollback: () => {
           setInnovations(oldInnovations)
-        },
-        successMessage: INNOVATION_REMOVED_MESSAGE()
+        }
       })
     },
     [innovations, selectedSettlement, setSelectedSettlement, mutate]
@@ -292,7 +280,6 @@ export function InnovationsCard({
 
         setSearch('')
         setCreateDialogOpen(false)
-        toast.success(INNOVATION_CREATED_MESSAGE())
 
         // Add to settlement immediately
         const optimisticItem: InnovationItem = {
@@ -341,8 +328,7 @@ export function InnovationsCard({
           },
           rollback: () => {
             setInnovations(oldInnovations)
-          },
-          successMessage: INNOVATION_UPDATED_MESSAGE()
+          }
         })
       } catch (error) {
         console.error('Innovation Create Error:', error)
@@ -351,14 +337,7 @@ export function InnovationsCard({
         setCreating(false)
       }
     },
-    [
-      creating,
-      innovations,
-      selectedSettlement,
-      setSelectedSettlement,
-      toast,
-      mutate
-    ]
+    [creating, innovations, selectedSettlement, setSelectedSettlement, mutate]
   )
 
   return (

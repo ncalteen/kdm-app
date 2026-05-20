@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addCharacter,
   getUserCustomCharacters,
   removeCharacter,
   updateCharacter
 } from '@/lib/dal/character'
-import {
-  CHARACTER_CREATED_MESSAGE,
-  CHARACTER_DELETED_MESSAGE,
-  CHARACTER_UPDATED_MESSAGE,
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { CharacterDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Characters Card Component Properties
- */
-interface CustomCharactersCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Characters Card Component
@@ -46,14 +31,9 @@ interface CustomCharactersCardProps {
  * Entries are displayed alphabetically. Character name and rules are entered
  * via a dialog. UI updates are optimistic and roll back on database failure.
  *
- * @param props Custom Characters Card Properties
  * @returns Custom Characters Card Component
  */
-export function CustomCharactersCard({
-  local
-}: CustomCharactersCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomCharactersCard(): ReactElement {
   const [characters, setCharacters] = useState<CharacterDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -96,7 +76,7 @@ export function CustomCharactersCard({
     return () => {
       cancelled = true
     }
-  }, [sortCharacters, toast])
+  }, [sortCharacters])
 
   /**
    * Handle Create Character
@@ -138,8 +118,6 @@ export function CustomCharactersCard({
         setCharacters((prev) =>
           sortCharacters(prev.map((c) => (c.id === tempId ? created : c)))
         )
-
-        toast.success(CHARACTER_CREATED_MESSAGE())
       } catch (err: unknown) {
         setCharacters(previousCharacters)
         console.error('Add Character Error:', err)
@@ -148,7 +126,7 @@ export function CustomCharactersCard({
         setSaving(false)
       }
     },
-    [characters, saving, sortCharacters, toast]
+    [characters, saving, sortCharacters]
   )
 
   /**
@@ -191,8 +169,6 @@ export function CustomCharactersCard({
           character_name: data.name,
           rules: data.rules || null
         })
-
-        toast.success(CHARACTER_UPDATED_MESSAGE(data.name))
       } catch (err: unknown) {
         setCharacters(previousCharacters)
         console.error('Update Character Error:', err)
@@ -201,7 +177,7 @@ export function CustomCharactersCard({
         setSaving(false)
       }
     },
-    [characters, editingCharacter, saving, sortCharacters, toast]
+    [characters, editingCharacter, saving, sortCharacters]
   )
 
   /**
@@ -217,18 +193,14 @@ export function CustomCharactersCard({
       const previousCharacters = [...characters]
       setCharacters(characters.filter((c) => c.id !== character.id))
 
-      removeCharacter(character.id)
-        .then(() =>
-          toast.success(CHARACTER_DELETED_MESSAGE(character.character_name))
-        )
-        .catch((err: unknown) => {
-          setCharacters(previousCharacters)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Character Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeCharacter(character.id).catch((err: unknown) => {
+        setCharacters(previousCharacters)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Character Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [characters, toast]
+    [characters]
   )
 
   /** Open the create dialog with a fresh key to reset state */

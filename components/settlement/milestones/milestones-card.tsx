@@ -18,23 +18,15 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { addMilestone, getMilestones } from '@/lib/dal/milestone'
 import {
   addSettlementMilestones,
   removeSettlementMilestone,
   updateSettlementMilestone
 } from '@/lib/dal/settlement-milestone'
-import {
-  ERROR_MESSAGE,
-  MILESTONE_COMPLETED_MESSAGE,
-  MILESTONE_CREATED_MESSAGE,
-  MILESTONE_REMOVED_MESSAGE,
-  MILESTONE_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   MilestoneDetail,
   SettlementDetail,
@@ -42,13 +34,12 @@ import {
 } from '@/lib/types'
 import { BadgeCheckIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Milestones Card Properties
  */
 interface MilestonesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -66,12 +57,10 @@ interface MilestonesCardProps {
  * @returns Milestones Card Component
  */
 export function MilestonesCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: MilestonesCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -180,8 +169,7 @@ export function MilestonesCard({
                 }
               : null
           )
-        },
-        successMessage: MILESTONE_UPDATED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, availableMilestones, setSelectedSettlement, mutate]
@@ -218,8 +206,7 @@ export function MilestonesCard({
               return prev
             return { ...prev, milestones: [...prev.milestones, removed] }
           })
-        },
-        successMessage: MILESTONE_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -262,8 +249,7 @@ export function MilestonesCard({
                 }
               : null
           )
-        },
-        successMessage: MILESTONE_COMPLETED_MESSAGE(complete)
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -308,7 +294,6 @@ export function MilestonesCard({
         setCreateDialogOpen(false)
         setSearch('')
         setAddOpen(false)
-        toast.success(MILESTONE_CREATED_MESSAGE())
 
         // Add to settlement immediately.
         const tempId = `temp-${crypto.randomUUID()}`
@@ -376,7 +361,6 @@ export function MilestonesCard({
       creating,
       selectedSettlement,
       setSelectedSettlement,
-      toast,
       mutate,
       setAvailableMilestones
     ]

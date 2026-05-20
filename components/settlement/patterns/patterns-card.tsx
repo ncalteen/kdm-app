@@ -18,11 +18,9 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useCraftGearPersistence } from '@/hooks/use-craft-gear-persistence'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import {
   CraftingAllocation,
   CraftingCostsSpec,
@@ -37,13 +35,7 @@ import {
   addSettlementPatterns,
   removeSettlementPattern
 } from '@/lib/dal/settlement-pattern'
-import {
-  ERROR_MESSAGE,
-  GEAR_UPDATED_MESSAGE,
-  PATTERN_CRAFTED_MESSAGE,
-  PATTERN_REMOVED_MESSAGE,
-  PATTERN_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   GearDetail,
   PatternDetail,
@@ -54,13 +46,12 @@ import {
 } from '@/lib/types'
 import { PlusIcon, ScissorsLineDashedIcon } from 'lucide-react'
 import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Patterns Card Properties
  */
 interface PatternsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -84,14 +75,12 @@ interface PatternsCardProps {
  * @returns Patterns Card Component
  */
 export function PatternsCard({
-  local,
   selectedSettlement,
   setSelectedSettlement,
   selectedSettlementPhase,
   setSelectedSettlementPhase
 }: PatternsCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -131,7 +120,6 @@ export function PatternsCard({
   })
 
   const { persistGearAddition } = useCraftGearPersistence({
-    local,
     selectedSettlement,
     setSelectedSettlement,
     selectedSettlementPhase,
@@ -232,8 +220,7 @@ export function PatternsCard({
                 }
               : null
           )
-        },
-        successMessage: PATTERN_UPDATED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, availablePatterns, setSelectedSettlement, mutate]
@@ -269,8 +256,7 @@ export function PatternsCard({
               return prev
             return { ...prev, patterns: [...prev.patterns, removed] }
           })
-        },
-        successMessage: PATTERN_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -314,7 +300,6 @@ export function PatternsCard({
    */
   const handleCraftConfirm = useCallback(
     ({
-      deductCosts,
       allocation
     }: {
       deductCosts: boolean
@@ -324,11 +309,7 @@ export function PatternsCard({
 
       setCraftDialogOpen(false)
 
-      const successMessage = deductCosts
-        ? PATTERN_CRAFTED_MESSAGE()
-        : GEAR_UPDATED_MESSAGE()
-
-      persistGearAddition(pendingCraftGear, allocation, successMessage)
+      persistGearAddition(pendingCraftGear, allocation)
       setPendingCraftPattern(null)
       setPendingCraftGear(null)
       setPendingCraftCosts(emptyCraftingCosts())

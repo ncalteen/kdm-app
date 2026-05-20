@@ -41,10 +41,29 @@ describe('RLS: user_settings', () => {
   it('owner can SELECT their own settings', async () => {
     const { data, error } = await owner.client
       .from('user_settings')
-      .select('id, unlocked_killenium_butcher')
+      .select('app_role, id, unlocked_killenium_butcher')
       .eq('id', ownerSettingsId)
     expect(error).toBeNull()
     expect(data).toHaveLength(1)
+    expect(data?.[0]?.app_role).toBe('user')
+  })
+
+  it('owner cannot promote themselves to admin', async () => {
+    const { data, error } = await owner.client
+      .from('user_settings')
+      .update({ app_role: 'admin' })
+      .eq('id', ownerSettingsId)
+      .select('app_role')
+
+    expect(data ?? []).toEqual([])
+    expect(error?.code).toBe('42501')
+
+    const { data: check } = await admin
+      .from('user_settings')
+      .select('app_role')
+      .eq('id', ownerSettingsId)
+      .single()
+    expect(check?.app_role).toBe('user')
   })
 
   it('attacker cannot SELECT another user settings', async () => {

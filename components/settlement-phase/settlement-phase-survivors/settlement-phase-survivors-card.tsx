@@ -3,7 +3,6 @@
 import { SettlementPhaseSurvivorCard } from '@/components/settlement-phase/settlement-phase-survivors/settlement-phase-survivor-card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { LocalStateType } from '@/contexts/local-context'
 import {
   SettlementDetail,
   SettlementPhaseDetail,
@@ -18,8 +17,6 @@ import { ReactElement, useEffect, useMemo, useState } from 'react'
  * Settlement Phase Survivors Card Properties
  */
 interface SettlementPhaseSurvivorsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
@@ -43,7 +40,6 @@ interface SettlementPhaseSurvivorsCardProps {
  * @returns Settlement Phase Survivors Card Component
  */
 export function SettlementPhaseSurvivorsCard({
-  local,
   selectedSettlement,
   selectedSettlementPhase,
   selectedSurvivor,
@@ -149,7 +145,6 @@ export function SettlementPhaseSurvivorsCard({
 
       <SettlementPhaseSurvivorCard
         key={displayedSurvivor?.id}
-        local={local}
         selectedSettlement={selectedSettlement}
         selectedSurvivor={displayedSurvivor}
         setSurvivors={setSurvivors}

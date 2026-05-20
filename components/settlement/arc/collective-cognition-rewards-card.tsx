@@ -18,10 +18,8 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import {
   addCollectiveCognitionReward,
   getCollectiveCognitionRewards
@@ -31,13 +29,7 @@ import {
   removeSettlementCollectiveCognitionReward,
   updateSettlementCollectiveCognitionReward
 } from '@/lib/dal/settlement-collective-cognition-reward'
-import {
-  COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE,
-  COLLECTIVE_COGNITION_REWARD_REMOVED_MESSAGE,
-  COLLECTIVE_COGNITION_REWARD_SAVED_MESSAGE,
-  COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE,
-  ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   CollectiveCognitionRewardDetail,
   SettlementDetail,
@@ -46,13 +38,12 @@ import {
 import { calculateSettlementCollectiveCognition } from '@/lib/utils'
 import { BrainIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Collective Cognition Rewards Card Properties
  */
 interface CollectiveCognitionRewardsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -71,12 +62,10 @@ interface CollectiveCognitionRewardsCardProps {
  * @returns Collective Cognition Rewards Card Component
  */
 export function CollectiveCognitionRewardsCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: CollectiveCognitionRewardsCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -201,8 +190,7 @@ export function CollectiveCognitionRewardsCard({
                 }
               : null
           )
-        },
-        successMessage: COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, availableRewards, setSelectedSettlement, mutate]
@@ -252,8 +240,7 @@ export function CollectiveCognitionRewardsCard({
               ]
             }
           })
-        },
-        successMessage: COLLECTIVE_COGNITION_REWARD_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -299,8 +286,7 @@ export function CollectiveCognitionRewardsCard({
                 }
               : null
           )
-        },
-        successMessage: COLLECTIVE_COGNITION_REWARD_SAVED_MESSAGE(unlocked)
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -342,7 +328,6 @@ export function CollectiveCognitionRewardsCard({
         setCreateDialogOpen(false)
         setSearch('')
         setAddOpen(false)
-        toast.success(COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE())
 
         // Add to settlement immediately.
         const tempId = `temp-${crypto.randomUUID()}`
@@ -417,7 +402,6 @@ export function CollectiveCognitionRewardsCard({
       creating,
       selectedSettlement,
       setSelectedSettlement,
-      toast,
       mutate,
       setAvailableRewards
     ]

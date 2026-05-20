@@ -17,17 +17,11 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addSurvivorCursedGear,
   removeSurvivorCursedGear
 } from '@/lib/dal/survivor-cursed-gear'
-import {
-  ERROR_MESSAGE,
-  SURVIVOR_CURSED_GEAR_REMOVED_MESSAGE,
-  SURVIVOR_CURSED_GEAR_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   SettlementDetail,
   SurvivorDetail,
@@ -35,6 +29,7 @@ import {
 } from '@/lib/types'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /** Cursed gear item shape matching SurvivorDetail['cursed_gear'][0] */
 type CursedGearRow = SurvivorDetail['cursed_gear'][number]
@@ -43,8 +38,6 @@ type CursedGearRow = SurvivorDetail['cursed_gear'][number]
  * Cursed Gear Card Properties
  */
 interface CursedGearCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -65,13 +58,10 @@ interface CursedGearCardProps {
  * @returns Cursed Gear Card Component
  */
 export function CursedGearCard({
-  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors
 }: CursedGearCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [cursedGear, setCursedGear] = useState<CursedGearRow[]>(
@@ -154,16 +144,8 @@ export function CursedGearCard({
         )
       )
 
-      addSurvivorCursedGear(selectedSurvivor.id, gearId)
-        .then(() =>
-          toast.success(
-            SURVIVOR_CURSED_GEAR_UPDATED_MESSAGE(
-              selectedSurvivor.survivor_name ?? 'Survivor',
-              true
-            )
-          )
-        )
-        .catch((error: unknown) => {
+      addSurvivorCursedGear(selectedSurvivor.id, gearId).catch(
+        (error: unknown) => {
           setCursedGear(oldCursedGear)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -175,9 +157,10 @@ export function CursedGearCard({
 
           console.error('Cursed Gear Add Error:', error)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [cursedGear, selectedSettlement, selectedSurvivor, setSurvivors, toast]
+    [cursedGear, selectedSettlement, selectedSurvivor, setSurvivors]
   )
 
   /**
@@ -207,15 +190,8 @@ export function CursedGearCard({
         )
       )
 
-      removeSurvivorCursedGear(selectedSurvivor.id, removed.id)
-        .then(() =>
-          toast.success(
-            SURVIVOR_CURSED_GEAR_REMOVED_MESSAGE(
-              selectedSurvivor.survivor_name ?? 'Survivor'
-            )
-          )
-        )
-        .catch((error: unknown) => {
+      removeSurvivorCursedGear(selectedSurvivor.id, removed.id).catch(
+        (error: unknown) => {
           setCursedGear(oldCursedGear)
           setSurvivors((prev) =>
             prev.map((s) =>
@@ -227,9 +203,10 @@ export function CursedGearCard({
 
           console.error('Cursed Gear Remove Error:', error)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [cursedGear, selectedSurvivor, setSurvivors, toast]
+    [cursedGear, selectedSurvivor, setSurvivors]
   )
 
   return (

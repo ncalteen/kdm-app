@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addCollectiveCognitionReward,
   getUserCustomCollectiveCognitionRewards,
   removeCollectiveCognitionReward,
   updateCollectiveCognitionReward
 } from '@/lib/dal/collective-cognition-reward'
-import {
-  COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE,
-  COLLECTIVE_COGNITION_REWARD_REMOVED_MESSAGE,
-  COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE,
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { CollectiveCognitionRewardDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Collective Cognition Rewards Card Component Properties
- */
-interface CustomCollectiveCognitionRewardsCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Collective Cognition Rewards Card Component
@@ -47,14 +32,9 @@ interface CustomCollectiveCognitionRewardsCardProps {
  * rules. Entries are displayed alphabetically. Create and edit are handled
  * via a dialog. UI updates are optimistic and roll back on database failure.
  *
- * @param props Custom Collective Cognition Rewards Card Properties
  * @returns Custom Collective Cognition Rewards Card Component
  */
-export function CustomCollectiveCognitionRewardsCard({
-  local
-}: CustomCollectiveCognitionRewardsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomCollectiveCognitionRewardsCard(): ReactElement {
   const [items, setItems] = useState<CollectiveCognitionRewardDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -97,7 +77,7 @@ export function CustomCollectiveCognitionRewardsCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Reward
@@ -141,8 +121,6 @@ export function CustomCollectiveCognitionRewardsCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(COLLECTIVE_COGNITION_REWARD_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Collective Cognition Reward Error:', err)
@@ -151,7 +129,7 @@ export function CustomCollectiveCognitionRewardsCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -198,8 +176,6 @@ export function CustomCollectiveCognitionRewardsCard({
           collective_cognition: data.collective_cognition,
           rules: data.rules || null
         })
-
-        toast.success(COLLECTIVE_COGNITION_REWARD_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Collective Cognition Reward Error:', err)
@@ -208,7 +184,7 @@ export function CustomCollectiveCognitionRewardsCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -222,19 +198,15 @@ export function CustomCollectiveCognitionRewardsCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeCollectiveCognitionReward(item.id)
-        .then(() =>
-          toast.success(COLLECTIVE_COGNITION_REWARD_REMOVED_MESSAGE())
-        )
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard)
-            console.error('Delete Collective Cognition Reward Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeCollectiveCognitionReward(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard)
+          console.error('Delete Collective Cognition Reward Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /** Open the create dialog with a fresh key to reset state */

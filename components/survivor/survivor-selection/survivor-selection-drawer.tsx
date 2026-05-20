@@ -13,7 +13,6 @@ import {
   DrawerTitle,
   DrawerTrigger
 } from '@/components/ui/drawer'
-import { LocalStateType } from '@/contexts/local-context'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { SurvivorDetail } from '@/lib/types'
 import { UsersIcon } from 'lucide-react'
@@ -25,8 +24,6 @@ import { ReactElement, useState } from 'react'
 interface SurvivorSelectionDrawerProps {
   /** Drawer Description */
   description: string
-  /** Local State */
-  local: LocalStateType
   /** Maximum Survivors */
   maxSelection: number
   /** Callback for Selection Change */
@@ -49,7 +46,6 @@ interface SurvivorSelectionDrawerProps {
  */
 export function SurvivorSelectionDrawer({
   description,
-  local,
   maxSelection,
   onSelectionChange,
   selectedScout,
@@ -160,7 +156,6 @@ export function SurvivorSelectionDrawer({
           {!isMobile && (
             <div className="w-112.5">
               <SurvivorDetailsPanel
-                local={local}
                 survivor={hoveredSurvivor ?? lastHoveredSurvivor}
                 survivors={survivors}
               />

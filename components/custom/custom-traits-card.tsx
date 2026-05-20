@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addTrait,
   getUserCustomTraits,
   removeTrait,
   updateTrait
 } from '@/lib/dal/trait'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  TRAIT_CREATED_MESSAGE,
-  TRAIT_REMOVED_MESSAGE,
-  TRAIT_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { TraitDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Traits Card Component Properties
- */
-interface CustomTraitsCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Traits Card Component
@@ -46,14 +31,9 @@ interface CustomTraitsCardProps {
  * Entries are displayed alphabetically. UI updates are optimistic and roll back
  * on database failure.
  *
- * @param props Custom Traits Card Properties
  * @returns Custom Traits Card Component
  */
-export function CustomTraitsCard({
-  local
-}: CustomTraitsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomTraitsCard(): ReactElement {
   const [items, setItems] = useState<TraitDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -93,7 +73,7 @@ export function CustomTraitsCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Trait
@@ -131,8 +111,6 @@ export function CustomTraitsCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(TRAIT_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Trait Error:', err)
@@ -141,7 +119,7 @@ export function CustomTraitsCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -182,8 +160,6 @@ export function CustomTraitsCard({
           trait_name: data.name,
           rules: data.rules || null
         })
-
-        toast.success(TRAIT_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Trait Error:', err)
@@ -192,7 +168,7 @@ export function CustomTraitsCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -206,16 +182,14 @@ export function CustomTraitsCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeTrait(item.id)
-        .then(() => toast.success(TRAIT_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Trait Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeTrait(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Trait Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

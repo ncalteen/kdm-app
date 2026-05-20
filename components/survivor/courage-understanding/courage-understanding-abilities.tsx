@@ -7,22 +7,16 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import {
-  ERROR_MESSAGE,
-  SURVIVOR_COURAGE_UNDERSTANDING_ABILITY_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Courage Understanding Abilities Properties
  */
 interface CourageUnderstandingAbilitiesProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -41,13 +35,10 @@ interface CourageUnderstandingAbilitiesProps {
  * @returns Courage/Understanding Abilities Component
  */
 export function CourageUnderstandingAbilities({
-  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: CourageUnderstandingAbilitiesProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [courageAbility, setCourageAbility] = useState(
@@ -128,41 +119,29 @@ export function CourageUnderstandingAbilities({
           s.id === selectedSurvivor?.id ? { ...s, ...updates } : s
         )
       )
-      updateSurvivor(selectedSurvivor?.id, updates)
-        .then(() =>
-          toast.success(
-            SURVIVOR_COURAGE_UNDERSTANDING_ABILITY_UPDATED_MESSAGE()
+      updateSurvivor(selectedSurvivor?.id, updates).catch((error) => {
+        console.error('Courage/Understanding Ability Update Error:', error)
+        setCourageAbility(oldCourageAbility)
+        setUnderstandingAbility(oldUnderstandingAbility)
+        setSurvivors((prev) =>
+          prev.map((s) =>
+            s.id === selectedSurvivor?.id
+              ? {
+                  ...s,
+                  has_stalwart: oldCourageAbility === 'stalwart',
+                  has_prepared: oldCourageAbility === 'prepared',
+                  has_matchmaker: oldCourageAbility === 'matchmaker',
+                  has_analyze: oldUnderstandingAbility === 'analyze',
+                  has_explore: oldUnderstandingAbility === 'explore',
+                  has_tinker: oldUnderstandingAbility === 'tinker'
+                }
+              : s
           )
         )
-        .catch((error) => {
-          console.error('Courage/Understanding Ability Update Error:', error)
-          setCourageAbility(oldCourageAbility)
-          setUnderstandingAbility(oldUnderstandingAbility)
-          setSurvivors((prev) =>
-            prev.map((s) =>
-              s.id === selectedSurvivor?.id
-                ? {
-                    ...s,
-                    has_stalwart: oldCourageAbility === 'stalwart',
-                    has_prepared: oldCourageAbility === 'prepared',
-                    has_matchmaker: oldCourageAbility === 'matchmaker',
-                    has_analyze: oldUnderstandingAbility === 'analyze',
-                    has_explore: oldUnderstandingAbility === 'explore',
-                    has_tinker: oldUnderstandingAbility === 'tinker'
-                  }
-                : s
-            )
-          )
-          toast.error(ERROR_MESSAGE())
-        })
+        toast.error(ERROR_MESSAGE())
+      })
     },
-    [
-      courageAbility,
-      understandingAbility,
-      selectedSurvivor?.id,
-      setSurvivors,
-      toast
-    ]
+    [courageAbility, understandingAbility, selectedSurvivor?.id, setSurvivors]
   )
 
   // Ability descriptions

@@ -20,8 +20,6 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { deleteSurvivor } from '@/lib/dal/survivor'
 import { DatabaseSurvivorType, SurvivorType } from '@/lib/enums'
 import { ERROR_MESSAGE, SURVIVOR_REMOVED_MESSAGE } from '@/lib/messages'
@@ -33,13 +31,12 @@ import {
 } from '@/lib/types'
 import { GitBranchIcon, PlusIcon, TableIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Settlement Survivors Card Properties
  */
 interface SettlementSurvivorsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /* Selected Survivor */
@@ -66,7 +63,6 @@ interface SettlementSurvivorsCardProps {
  * @returns Settlement Survivors Card Component
  */
 export function SettlementSurvivorsCard({
-  local,
   selectedSettlement,
   selectedSurvivor,
   setIsCreatingNewSurvivor,
@@ -74,8 +70,6 @@ export function SettlementSurvivorsCard({
   setSurvivors,
   survivors
 }: SettlementSurvivorsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [deleteId, setDeleteId] = useState<string | undefined>(undefined)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('table')
@@ -150,8 +144,7 @@ export function SettlementSurvivorsCard({
       selectedSettlement?.id,
       selectedSurvivor?.id,
       setSelectedSurvivor,
-      setSurvivors,
-      toast
+      setSurvivors
     ]
   )
 

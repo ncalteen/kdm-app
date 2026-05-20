@@ -63,16 +63,20 @@ export function UserAvatar({
   const altText = alt ?? username ?? 'User avatar'
 
   return (
-    <Avatar className={cn('size-8', className)} {...props}>
+    <Avatar className={cn('size-8 bg-black', className)} {...props}>
       {avatarUrl ? (
         <AvatarImage
           src={avatarUrl}
           alt={altText}
           referrerPolicy="no-referrer"
+          className="bg-black"
         />
       ) : null}
       <AvatarFallback
-        className={cn('text-xs font-semibold text-white', fallbackColor)}>
+        className={cn(
+          'text-xs font-semibold text-white bg-black',
+          fallbackColor
+        )}>
         {initials}
       </AvatarFallback>
     </Avatar>

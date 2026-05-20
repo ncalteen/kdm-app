@@ -15,8 +15,6 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { getKnowledges } from '@/lib/dal/knowledge'
 import { getNeuroses } from '@/lib/dal/neurosis'
 import {
@@ -31,24 +29,17 @@ import {
   removePhilosophyRank,
   updatePhilosophyRank
 } from '@/lib/dal/philosophy-rank'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  PHILOSOPHY_CREATED_MESSAGE,
-  PHILOSOPHY_REMOVED_MESSAGE,
-  PHILOSOPHY_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { KnowledgeDetail, NeurosisDetail, PhilosophyDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Custom Philosophies Card Component Properties
  */
 interface CustomPhilosophiesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Callback when philosophies are created, edited, or deleted */
   onPhilosophiesChange?: () => void
 }
@@ -65,11 +56,8 @@ interface CustomPhilosophiesCardProps {
  * @returns Custom Philosophies Card Component
  */
 export function CustomPhilosophiesCard({
-  local,
   onPhilosophiesChange
 }: CustomPhilosophiesCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [items, setItems] = useState<PhilosophyDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [availableKnowledges, setAvailableKnowledges] = useState<{
@@ -120,7 +108,7 @@ export function CustomPhilosophiesCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Philosophy
@@ -178,7 +166,6 @@ export function CustomPhilosophiesCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-        toast.success(PHILOSOPHY_CREATED_MESSAGE())
         onPhilosophiesChange?.()
       } catch (err: unknown) {
         setItems(previous)
@@ -195,7 +182,7 @@ export function CustomPhilosophiesCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast, onPhilosophiesChange]
+    [items, saving, sortItems, onPhilosophiesChange]
   )
 
   /**
@@ -272,7 +259,6 @@ export function CustomPhilosophiesCard({
           }
         }
 
-        toast.success(PHILOSOPHY_UPDATED_MESSAGE())
         onPhilosophiesChange?.()
       } catch (err: unknown) {
         setItems(previous)
@@ -282,15 +268,7 @@ export function CustomPhilosophiesCard({
         setSaving(false)
       }
     },
-    [
-      items,
-      editingItem,
-      editingRanks,
-      saving,
-      sortItems,
-      toast,
-      onPhilosophiesChange
-    ]
+    [items, editingItem, editingRanks, saving, sortItems, onPhilosophiesChange]
   )
 
   /**
@@ -306,7 +284,6 @@ export function CustomPhilosophiesCard({
 
       removePhilosophy(item.id)
         .then(() => {
-          toast.success(PHILOSOPHY_REMOVED_MESSAGE())
           onPhilosophiesChange?.()
         })
         .catch((err: unknown) => {
@@ -316,7 +293,7 @@ export function CustomPhilosophiesCard({
           toast.error(guard ?? ERROR_MESSAGE())
         })
     },
-    [items, toast, onPhilosophiesChange]
+    [items, onPhilosophiesChange]
   )
 
   /**
@@ -337,29 +314,26 @@ export function CustomPhilosophiesCard({
    * render them as tabs. Falls back to an empty rank list on fetch failure
    * so the user can still edit the top-level fields.
    */
-  const openEditDialog = useCallback(
-    async (item: PhilosophyDetail) => {
-      try {
-        const ranks = await getPhilosophyRanks(item.id)
-        setEditingRanks(
-          ranks.map((r) => ({
-            id: r.id,
-            rank_number: r.rank_number,
-            rules: r.rules ?? ''
-          }))
-        )
-      } catch (err: unknown) {
-        console.error('Load Philosophy Ranks Error:', err)
-        toast.error(ERROR_MESSAGE())
-        setEditingRanks([])
-      }
+  const openEditDialog = useCallback(async (item: PhilosophyDetail) => {
+    try {
+      const ranks = await getPhilosophyRanks(item.id)
+      setEditingRanks(
+        ranks.map((r) => ({
+          id: r.id,
+          rank_number: r.rank_number,
+          rules: r.rules ?? ''
+        }))
+      )
+    } catch (err: unknown) {
+      console.error('Load Philosophy Ranks Error:', err)
+      toast.error(ERROR_MESSAGE())
+      setEditingRanks([])
+    }
 
-      setDialogKey((k) => k + 1)
-      setEditingItem(item)
-      setEditDialogOpen(true)
-    },
-    [toast]
-  )
+    setDialogKey((k) => k + 1)
+    setEditingItem(item)
+    setEditDialogOpen(true)
+  }, [])
 
   return (
     <Card className="p-0 border gap-0">

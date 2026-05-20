@@ -1,6 +1,5 @@
 'use client'
 
-import { LanternMark } from '@/components/generic/lantern-mark'
 import { OwnerOnly } from '@/components/generic/owner-only'
 import {
   AlertDialog,
@@ -17,50 +16,38 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { UpdatePasswordForm } from '@/components/update-password-form'
-import { UpdateUsernameForm } from '@/components/update-username-form'
-import { LocalStateType } from '@/contexts/local-context'
 import { removeHunt } from '@/lib/dal/hunt'
 import { removeSettlement, updateSettlement } from '@/lib/dal/settlement'
+import { removeSettlementPhase } from '@/lib/dal/settlement-phase'
 import { removeShowdown } from '@/lib/dal/showdown'
 import {
-  DISABLE_TOASTS_SETTING_UPDATED_MESSAGE,
   ERROR_MESSAGE,
-  HUNT_DELETED_MESSAGE,
   SETTLEMENT_DELETED_MESSAGE,
-  SETTLEMENT_USES_SCOUTS_SETTING_UPDATED_MESSAGE,
-  SHOWDOWN_DELETED_MESSAGE
+  SETTLEMENT_USES_SCOUTS_SETTING_UPDATED_MESSAGE
 } from '@/lib/messages'
-import { generateSeedData } from '@/lib/seed'
 import {
   HuntDetail,
   HuntStateSetter,
   SettlementDetail,
+  SettlementPhaseDetail,
   SettlementStateSetter,
   ShowdownDetail,
-  ShowdownStateSetter,
-  UserSettingsDetail
+  ShowdownStateSetter
 } from '@/lib/types'
-import {
-  DatabaseIcon,
-  Loader2,
-  SkullIcon,
-  Trash2Icon,
-  XIcon
-} from 'lucide-react'
-import { ReactElement, useCallback, useState, useTransition } from 'react'
+import { SkullIcon, Trash2Icon, XIcon } from 'lucide-react'
+import { ReactElement, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
- * Settings Card Properties
+ * Settlement Settings Card Properties
  */
-interface SettingsCardProps {
-  /** Local State */
-  local: LocalStateType
+interface SettlementSettingsCardProps {
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
+  /** Selected Settlement Phase */
+  selectedSettlementPhase: SettlementPhaseDetail | null
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Set Selected Hunt */
@@ -71,72 +58,45 @@ interface SettingsCardProps {
   setSelectedSettlement: SettlementStateSetter
   /** Set Selected Settlement ID */
   setSelectedSettlementId: (settlementId: string | null) => void
+  /** Set Selected Settlement Phase */
+  setSelectedSettlementPhase: (
+    settlementPhase: SettlementPhaseDetail | null
+  ) => void
+  /** Set Selected Settlement Phase ID */
+  setSelectedSettlementPhaseId: (settlementPhaseId: string | null) => void
   /** Set Selected Showdown */
   setSelectedShowdown: ShowdownStateSetter
   /** Set Selected Showdown ID */
   setSelectedShowdownId: (showdownId: string | null) => void
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
-  /** Set User Settings */
-  setUserSettings: (settings: UserSettingsDetail | null) => void
-  /** Update Local State */
-  updateLocal: (local: LocalStateType) => void
-  /** User Settings */
-  userSettings: UserSettingsDetail | null
 }
 
 /**
- * Settings Card Component
+ * Settlement Settings Card Component
  *
- * Displays settlement settings, delete actions for the current hunt/showdown/
- * settlement, and development tools for generating seed data. All mutations
- * use optimistic updates with rollback on failure.
+ * Hosts settlement-level settings and destructive actions for the active
+ * settlement, hunt, and showdown.
  *
- * @param props Settings Card Properties
- * @returns Settings Card Component
+ * @param props Settlement Settings Card Properties
+ * @returns Settlement Settings Card Component
  */
-export function SettingsCard({
-  local,
+export function SettlementSettingsCard({
   selectedHunt,
   selectedSettlement,
+  selectedSettlementPhase,
   selectedShowdown,
   setSelectedHunt,
   setSelectedHuntId,
   setSelectedSettlement,
   setSelectedSettlementId,
+  setSelectedSettlementPhase,
+  setSelectedSettlementPhaseId,
   setSelectedShowdown,
   setSelectedShowdownId,
-  setSelectedSurvivorId,
-  setUserSettings,
-  updateLocal,
-  userSettings
-}: SettingsCardProps): ReactElement {
+  setSelectedSurvivorId
+}: SettlementSettingsCardProps): ReactElement {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
-  const [isSeeding, startSeedTransition] = useTransition()
-  const [disableToasts, setDisableToasts] = useState<boolean>(
-    local.disableToasts ?? false
-  )
-
-  /**
-   * Handle Disable Toasts Setting
-   *
-   * @param newDisableToasts New Value
-   */
-  const handleDisableToastsChange = (newDisableToasts: boolean) => {
-    try {
-      updateLocal({
-        ...local,
-        disableToasts: newDisableToasts
-      })
-      setDisableToasts(newDisableToasts)
-
-      // Always show this toast so user knows the setting was changed
-      toast.success(DISABLE_TOASTS_SETTING_UPDATED_MESSAGE(newDisableToasts))
-    } catch (error) {
-      console.error('Disable Toasts Update Error:', error)
-      toast.error(ERROR_MESSAGE())
-    }
-  }
 
   /**
    * Handle Uses Scouts Setting Change
@@ -152,7 +112,6 @@ export function SettingsCard({
 
       const previousValue = selectedSettlement.uses_scouts
 
-      // Optimistic update.
       setSelectedSettlement({
         ...selectedSettlement,
         uses_scouts: usesScouts
@@ -165,7 +124,6 @@ export function SettingsCard({
           )
         )
         .catch((err: unknown) => {
-          // Revert the optimistic update.
           setSelectedSettlement((prev) =>
             prev ? { ...prev, uses_scouts: previousValue } : null
           )
@@ -189,7 +147,6 @@ export function SettingsCard({
       .then(() => {
         setSelectedHunt(null)
         setSelectedHuntId(null)
-        toast.success(HUNT_DELETED_MESSAGE())
       })
       .catch((err: unknown) => {
         console.error('Delete Hunt Error:', err)
@@ -210,13 +167,36 @@ export function SettingsCard({
       .then(() => {
         setSelectedShowdown(null)
         setSelectedShowdownId(null)
-        toast.success(SHOWDOWN_DELETED_MESSAGE())
       })
       .catch((err: unknown) => {
         console.error('Delete Showdown Error:', err)
         toast.error(ERROR_MESSAGE())
       })
   }, [selectedShowdown, setSelectedShowdown, setSelectedShowdownId])
+
+  /**
+   * Delete the Selected Settlement Phase
+   *
+   * Removes the current settlement phase from the DB and clears the selected
+   * settlement phase state.
+   */
+  const handleDeleteSettlementPhase = useCallback(() => {
+    if (!selectedSettlementPhase?.id) return
+
+    removeSettlementPhase(selectedSettlementPhase.id)
+      .then(() => {
+        setSelectedSettlementPhase(null)
+        setSelectedSettlementPhaseId(null)
+      })
+      .catch((err: unknown) => {
+        console.error('Delete Settlement Phase Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+  }, [
+    selectedSettlementPhase,
+    setSelectedSettlementPhase,
+    setSelectedSettlementPhaseId
+  ])
 
   /**
    * Delete the Settlement
@@ -235,6 +215,8 @@ export function SettingsCard({
         setSelectedHuntId(null)
         setSelectedSettlement(null)
         setSelectedSettlementId(null)
+        setSelectedSettlementPhase(null)
+        setSelectedSettlementPhaseId(null)
         setSelectedShowdown(null)
         setSelectedShowdownId(null)
         setSelectedSurvivorId(null)
@@ -253,127 +235,34 @@ export function SettingsCard({
     setSelectedHuntId,
     setSelectedSettlement,
     setSelectedSettlementId,
+    setSelectedSettlementPhase,
+    setSelectedSettlementPhaseId,
     setSelectedShowdown,
     setSelectedShowdownId,
     setSelectedSurvivorId
   ])
 
-  /**
-   * Handle Generating Seed Data
-   *
-   * Only available in development mode. Deletes all existing data for the
-   * user and creates comprehensive test settlements.
-   */
-  const handleGenerateSeedData = () => {
-    startSeedTransition(async () => {
-      try {
-        await generateSeedData()
-      } catch (err) {
-        console.error('Seed Data Error:', err)
-        toast.error(ERROR_MESSAGE())
-      }
-    })
-  }
-
-  const isDevelopment = process.env.NODE_ENV === 'development'
+  const hasAnySettings =
+    selectedSettlement ||
+    selectedHunt ||
+    selectedSettlementPhase ||
+    selectedShowdown
 
   return (
     <div className="flex flex-col gap-4 pt-12 px-2">
-      {/* Account: Username + Password */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UpdateUsernameForm
-          local={local}
-          setUserSettings={setUserSettings}
-          userSettings={userSettings}
-          className="h-full"
-        />
-        <UpdatePasswordForm className="h-full" />
-      </div>
-
-      {/* Global Settings */}
-      <Card className="p-0">
-        <CardHeader className="px-4 pt-3 pb-0">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <LanternMark className="h-5 w-5 text-amber-400/90" />
-            Global Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="disable-toasts" className="font-medium text-sm">
-                Disable Notifications
-              </Label>
-              <div className="text-sm text-muted-foreground">
-                Silences success messages. Errors will always be shown.
-              </div>
-            </div>
-            <Switch
-              id="disable-toasts"
-              checked={disableToasts}
-              onCheckedChange={handleDisableToastsChange}
-              aria-label="Disable Notifications"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Development Tools */}
-      {isDevelopment && (
-        <Card className="p-0 border-blue-500">
+      {!hasAnySettings && (
+        <Card className="p-0">
           <CardHeader className="px-4 pt-3 pb-0">
-            <CardTitle className="text-lg text-blue-600">
-              Development Tools
-            </CardTitle>
+            <CardTitle className="text-lg">No Settlement Selected</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-sm">Generate Seed Data</div>
-                <div className="text-sm text-muted-foreground">
-                  Creates multiple test settlements with survivors, hunts, and
-                  showdowns. This will replace all existing data.
-                </div>
-              </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={isSeeding}>
-                    {isSeeding ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <DatabaseIcon className="h-4 w-4 mr-2" />
-                    )}
-                    {isSeeding ? 'Generating...' : 'Seed Data'}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Generate Seed Data</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will replace all existing settlements, survivors,
-                      hunts, and showdowns with comprehensive test data. This
-                      action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleGenerateSeedData}
-                      className="bg-blue-600 text-white hover:bg-blue-700">
-                      Generate Seed Data
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+          <CardContent className="p-4 pt-0">
+            <p className="text-sm text-muted-foreground">
+              Select a settlement before tending its lantern.
+            </p>
           </CardContent>
         </Card>
       )}
 
-      {/* Settlement Settings — owner only. Wrapped in <OwnerOnly> so
-          collaborators never see the destructive metadata-mutating affordance
-          (uses_scouts is one of the [E1.3] owner-only columns; the RLS layer
-          rejects collaborator UPDATEs on it). */}
       <OwnerOnly>
         {selectedSettlement && (
           <Card className="p-0">
@@ -381,7 +270,7 @@ export function SettingsCard({
               <CardTitle className="text-lg">Settlement Settings</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <div>
                   <Label htmlFor="uses-scouts" className="font-medium text-sm">
                     Uses Scouts
@@ -402,7 +291,6 @@ export function SettingsCard({
         )}
       </OwnerOnly>
 
-      {/* Delete Selected Hunt */}
       {selectedHunt && (
         <Card className="p-0 border-yellow-500">
           <CardHeader className="px-4 pt-3 pb-0">
@@ -411,7 +299,7 @@ export function SettingsCard({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="font-medium text-sm">Delete Current Hunt</div>
                 <div className="text-sm text-muted-foreground">
@@ -427,7 +315,6 @@ export function SettingsCard({
         </Card>
       )}
 
-      {/* Delete Selected Showdown */}
       {selectedShowdown && (
         <Card className="p-0 border-yellow-500">
           <CardHeader className="px-4 pt-3 pb-0">
@@ -436,7 +323,7 @@ export function SettingsCard({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="font-medium text-sm">
                   Delete Current Showdown
@@ -457,9 +344,36 @@ export function SettingsCard({
         </Card>
       )}
 
-      {/* Danger Zone — owner only. Wrapped in <OwnerOnly> so collaborators
-          never see the destructive affordance (RLS rejects settlement DELETE
-          for non-owners). */}
+      {selectedSettlementPhase && (
+        <Card className="p-0 border-yellow-500">
+          <CardHeader className="px-4 pt-3 pb-0">
+            <CardTitle className="text-lg text-yellow-600">
+              Active Settlement Phase
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="font-medium text-sm">
+                  Delete Current Settlement Phase
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  End the settlement phase and return survivors to the
+                  settlement.
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDeleteSettlementPhase}>
+                <XIcon className="h-4 w-4 mr-2" />
+                Delete Settlement Phase
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <OwnerOnly>
         {selectedSettlement && (
           <Card className="p-0 border-destructive">
@@ -470,7 +384,7 @@ export function SettingsCard({
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="font-medium text-sm">
                     Permanently delete this settlement

@@ -3,9 +3,7 @@
 import { TimelineContent } from '@/components/settlement/timeline/timeline-content'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import {
   addSettlementTimelineYear,
   removeSettlementTimelineYearEntry,
@@ -15,11 +13,7 @@ import {
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import {
   TIMELINE_EVENT_EMPTY_ERROR_MESSAGE,
-  TIMELINE_EVENT_EMPTY_WARNING_MESSAGE,
-  TIMELINE_EVENT_REMOVED_MESSAGE,
-  TIMELINE_EVENT_SAVED_MESSAGE,
-  TIMELINE_YEAR_ADDED_MESSAGE,
-  TIMELINE_YEAR_COMPLETED_MESSAGE
+  TIMELINE_EVENT_EMPTY_WARNING_MESSAGE
 } from '@/lib/messages'
 import {
   showStoryEventIcon,
@@ -35,13 +29,12 @@ import {
   useRef,
   useState
 } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Timeline Card Properties
  */
 interface TimelineCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -59,12 +52,10 @@ interface TimelineCardProps {
  * @returns Timeline Card Component
  */
 export function TimelineCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: TimelineCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [editingEvents, setEditingEvents] = useState<{
     [key: string]: boolean
@@ -124,7 +115,7 @@ export function TimelineCard({
         [`${yearNumber}-${newEntryIndex}`]: true
       }))
     },
-    [editingEvents, selectedSettlement?.timeline, toast]
+    [editingEvents, selectedSettlement?.timeline]
   )
 
   /**
@@ -202,8 +193,7 @@ export function TimelineCard({
             ...prev,
             [inputKey]: true
           }))
-        },
-        successMessage: TIMELINE_EVENT_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -286,11 +276,10 @@ export function TimelineCard({
             ...prev,
             [inputKey]: true
           }))
-        },
-        successMessage: TIMELINE_EVENT_SAVED_MESSAGE()
+        }
       })
     },
-    [inputRefs, selectedSettlement, setSelectedSettlement, toast, mutate]
+    [inputRefs, selectedSettlement, setSelectedSettlement, mutate]
   )
 
   /**
@@ -345,8 +334,7 @@ export function TimelineCard({
                 }
               : null
           )
-        },
-        successMessage: TIMELINE_YEAR_COMPLETED_MESSAGE(completed)
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -392,8 +380,7 @@ export function TimelineCard({
           delete newTimeline[yearNumber]
           return { ...prev, timeline: newTimeline }
         })
-      },
-      successMessage: TIMELINE_YEAR_ADDED_MESSAGE()
+      }
     })
   }, [selectedSettlement, setSelectedSettlement, mutate])
 

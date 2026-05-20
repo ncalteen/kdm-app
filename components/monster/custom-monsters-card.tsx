@@ -12,16 +12,15 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { getUserCustomNemeses, removeNemesis } from '@/lib/dal/nemesis'
 import { getUserCustomQuarries, removeQuarry } from '@/lib/dal/quarry'
 import { MonsterType } from '@/lib/enums'
-import { CUSTOM_MONSTER_DELETED_MESSAGE, ERROR_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { NemesisDetail, QuarryDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 /** Combined monster entry for display */
 interface MonsterEntry {
@@ -36,11 +35,6 @@ interface MonsterEntry {
 /**
  * Custom Monsters Card Component Properties
  */
-interface CustomMonstersCardProps {
-  /** Local State */
-  local: LocalStateType
-}
-
 /**
  * Custom Monsters Card Component
  *
@@ -49,11 +43,7 @@ interface CustomMonstersCardProps {
  *
  * @returns Custom Monsters Card Component
  */
-export function CustomMonstersCard({
-  local
-}: CustomMonstersCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomMonstersCard(): ReactElement {
   const [monsters, setMonsters] = useState<MonsterEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
@@ -94,7 +84,7 @@ export function CustomMonstersCard({
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [])
 
   // Load monsters on mount. `loadMonsters` remains for non-effect callers
   // (e.g., `handleMonsterSaved`).
@@ -131,7 +121,7 @@ export function CustomMonstersCard({
     return () => {
       cancelled = true
     }
-  }, [toast])
+  }, [])
 
   /**
    * Handle Delete Monster
@@ -152,21 +142,15 @@ export function CustomMonstersCard({
           ? removeQuarry(entry.id)
           : removeNemesis(entry.id)
 
-      deletePromise
-        .then(() =>
-          toast.success(
-            CUSTOM_MONSTER_DELETED_MESSAGE(entry.detail.monster_name)
-          )
-        )
-        .catch((err: unknown) => {
-          // Rollback
-          setMonsters(previousMonsters)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Monster Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      deletePromise.catch((err: unknown) => {
+        // Rollback
+        setMonsters(previousMonsters)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Monster Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [monsters, toast]
+    [monsters]
   )
 
   /**
@@ -202,7 +186,6 @@ export function CustomMonstersCard({
   if (isCreating)
     return (
       <CreateMonsterCard
-        local={local}
         onCancel={handleCancel}
         onMonsterCreated={handleMonsterSaved}
       />
@@ -212,7 +195,6 @@ export function CustomMonstersCard({
   if (editingMonsterId && editingMonsterType)
     return (
       <EditMonsterCard
-        local={local}
         monsterId={editingMonsterId}
         monsterType={editingMonsterType}
         onCancel={handleCancel}

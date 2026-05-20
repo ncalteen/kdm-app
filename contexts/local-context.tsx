@@ -15,6 +15,7 @@ import { getSettlementForUser, getUserSettings } from '@/lib/dal/user'
 import { getUserSubscription } from '@/lib/dal/user-subscription'
 import { TabType } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
+import { isUserSettingsAdmin } from '@/lib/supabase/admin-role'
 import { createClient } from '@/lib/supabase/client'
 import {
   HuntDetail,
@@ -49,8 +50,6 @@ import { toast as sonnerToast } from 'sonner'
  * Local State Type
  */
 export interface LocalStateType {
-  /** Disable Toast Notifications */
-  disableToasts: boolean
   /** Selected Hunt ID */
   selectedHuntId: string | null
   /** Selected Hunt Monster Index */
@@ -70,7 +69,6 @@ export interface LocalStateType {
 }
 
 const newLocal: LocalStateType = {
-  disableToasts: false,
   selectedHuntId: null,
   selectedHuntMonsterIndex: 0,
   selectedSettlementId: null,
@@ -99,6 +97,8 @@ interface LocalContextType {
    * out" (e.g. before redirecting to the login page).
    */
   isAuthenticated: boolean | null
+  /** Whether the verified Supabase Auth user has the app admin role */
+  isAdmin: boolean
   /** Is Creating New Hunt */
   isCreatingNewHunt: boolean
   /** Is Creating New Settlement */
@@ -359,6 +359,7 @@ export function LocalProvider({
   // distinguish "still checking" from "definitely signed out" without
   // issuing a redundant `auth.getUser()` call.
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [isAdmin, setIsAdmin] = useState<boolean>(false)
 
   // Authenticated user ID — drives the per-user realtime channel that
   // delivers share grant / revoke notifications. Mirrors the lifecycle of
@@ -385,13 +386,6 @@ export function LocalProvider({
   const [isSettlementListLoading, setIsSettlementListLoading] =
     useState<boolean>(true)
 
-  // Toast helpers used by the share-change handler. Sonner is imported
-  // directly here (rather than via `useToast`) to avoid a circular import
-  // — `hooks/use-toast.tsx` already imports `LocalStateType` from this
-  // module. The `disableToasts` gating from `useToast` is reproduced inline
-  // for success / info events; errors are always shown.
-  const disableToasts = local.disableToasts === true
-
   useEffect(() => {
     let isCancelled = false
 
@@ -399,9 +393,11 @@ export function LocalProvider({
 
     supabase.auth.getUser().then(({ data, error }) => {
       if (isCancelled) return
-      const authedUserId = !error ? (data?.user?.id ?? null) : null
-      setIsAuthenticated(!error && !!data?.user)
+      const authedUser = !error ? (data?.user ?? null) : null
+      const authedUserId = authedUser?.id ?? null
+      setIsAuthenticated(!!authedUser)
       setUserId(authedUserId)
+      setIsAdmin(false)
     })
 
     // Re-evaluate when the auth state changes (e.g. login/logout).
@@ -415,6 +411,7 @@ export function LocalProvider({
       if (!session?.user) {
         setIsAuthenticated(false)
         setUserId(null)
+        setIsAdmin(false)
         return
       }
 
@@ -426,11 +423,13 @@ export function LocalProvider({
           supabase.auth.signOut()
           setIsAuthenticated(false)
           setUserId(null)
+          setIsAdmin(false)
           return
         }
 
         setIsAuthenticated(true)
         setUserId(data.user.id)
+        setIsAdmin(false)
       })
     })
 
@@ -732,12 +731,7 @@ export function LocalProvider({
 
   const handleShareChange = useCallback(
     (event: ShareChangeEvent) => {
-      if (event.event === 'INSERT') {
-        if (!disableToasts)
-          sonnerToast.success('A new lantern joins the watch.')
-      } else {
-        if (!disableToasts) sonnerToast.info('A lantern dims. Its watch ends.')
-
+      if (event.event !== 'INSERT') {
         // If the active settlement is the one being revoked, force a
         // fresh fetch so the existing onSettlementChange cascade clears
         // derived state. RLS will return null post-revoke.
@@ -785,7 +779,7 @@ export function LocalProvider({
         refetchSettlementList()
       }, 300)
     },
-    [disableToasts, refetchSettlementList, selectedSettlementId]
+    [refetchSettlementList, selectedSettlementId]
   )
 
   useEffect(() => {
@@ -1318,6 +1312,7 @@ export function LocalProvider({
         console.debug('User Settings:', userSettingsData)
 
         setUserSettingsState(userSettingsData)
+        setIsAdmin(isUserSettingsAdmin(userSettingsData))
       })
       .catch((err: unknown) => {
         if (isCancelled) return
@@ -1325,10 +1320,12 @@ export function LocalProvider({
         console.error('User Settings Fetch Error:', err)
 
         setUserSettingsState(null)
+        setIsAdmin(false)
       })
 
     return () => {
       isCancelled = true
+      setIsAdmin(false)
     }
   }, [isAuthenticated])
 
@@ -1682,6 +1679,7 @@ export function LocalProvider({
    */
   const setUserSettings = useCallback((settings: UserSettingsDetail | null) => {
     setUserSettingsState(settings)
+    setIsAdmin(isUserSettingsAdmin(settings))
   }, [])
 
   /**
@@ -1712,6 +1710,7 @@ export function LocalProvider({
   const value = useMemo<LocalContextType>(
     () => ({
       isAuthenticated,
+      isAdmin,
       isCreatingNewHunt,
       isCreatingNewSettlement,
       isCreatingNewShowdown,
@@ -1774,6 +1773,7 @@ export function LocalProvider({
     }),
     [
       isAuthenticated,
+      isAdmin,
       isCreatingNewHunt,
       isCreatingNewSettlement,
       isCreatingNewShowdown,

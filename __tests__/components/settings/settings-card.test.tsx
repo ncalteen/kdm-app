@@ -16,12 +16,12 @@ vi.mock('@/lib/dal/settlement', () => ({
   updateSettlement: vi.fn()
 }))
 
-vi.mock('@/lib/dal/showdown', () => ({
-  removeShowdown: vi.fn()
+vi.mock('@/lib/dal/settlement-phase', () => ({
+  removeSettlementPhase: vi.fn()
 }))
 
-vi.mock('@/lib/seed', () => ({
-  generateSeedData: vi.fn()
+vi.mock('@/lib/dal/showdown', () => ({
+  removeShowdown: vi.fn()
 }))
 
 vi.mock('@/components/update-password-form', () => ({
@@ -32,35 +32,52 @@ vi.mock('@/components/update-username-form', () => ({
   UpdateUsernameForm: () => <div data-test="update-username-form" />
 }))
 
-import { SettingsCard } from '@/components/settings/settings-card'
+import { SettlementSettingsCard } from '@/components/settings/settlement-settings-card'
+import { UserSettingsCard } from '@/components/settings/user-settings-card'
 
-type SettingsCardProps = Parameters<typeof SettingsCard>[0]
+type SettlementSettingsCardProps = Parameters<typeof SettlementSettingsCard>[0]
+type UserSettingsCardProps = Parameters<typeof UserSettingsCard>[0]
 
 /**
- * Build Base Props
+ * Build Settlement Settings Props
  *
- * Produces a settings-card prop bag with all required setters as no-ops and
+ * Produces a settlement-settings prop bag with all required setters as no-ops and
  * the supplied {@link selectedSettlement} / {@link selectedHunt} /
- * {@link selectedShowdown}. Tests vary the local-context return value via
- * {@link useLocalMock} to drive the `<OwnerOnly>` gate.
+ * {@link selectedSettlementPhase} / {@link selectedShowdown}. Tests vary the
+ * local-context return value via {@link useLocalMock} to drive the
+ * `<OwnerOnly>` gate.
  */
-function buildBaseProps(
-  overrides?: Partial<SettingsCardProps>
-): SettingsCardProps {
+function buildSettlementSettingsProps(
+  overrides?: Partial<SettlementSettingsCardProps>
+): SettlementSettingsCardProps {
   return {
-    local: { disableToasts: false } as SettingsCardProps['local'],
     selectedHunt: null,
     selectedSettlement: null,
+    selectedSettlementPhase: null,
     selectedShowdown: null,
     setSelectedHunt: vi.fn(),
     setSelectedHuntId: vi.fn(),
     setSelectedSettlement: vi.fn(),
     setSelectedSettlementId: vi.fn(),
+    setSelectedSettlementPhase: vi.fn(),
+    setSelectedSettlementPhaseId: vi.fn(),
     setSelectedShowdown: vi.fn(),
     setSelectedShowdownId: vi.fn(),
     setSelectedSurvivorId: vi.fn(),
+    ...overrides
+  }
+}
+
+/**
+ * Build User Settings Props
+ *
+ * Produces a user-settings prop bag with no-op setters.
+ */
+function buildUserSettingsProps(
+  overrides?: Partial<UserSettingsCardProps>
+): UserSettingsCardProps {
+  return {
     setUserSettings: vi.fn(),
-    updateLocal: vi.fn(),
     userSettings: null,
     ...overrides
   }
@@ -71,20 +88,29 @@ const ownerSettlement = {
   role: 'owner',
   settlement_name: 'Lantern Hold',
   uses_scouts: false
-} as unknown as SettingsCardProps['selectedSettlement']
+} as unknown as SettlementSettingsCardProps['selectedSettlement']
 
 const collaboratorSettlement = {
   id: 'settlement-1',
   role: 'collaborator',
   settlement_name: 'Lantern Hold',
   uses_scouts: false
-} as unknown as SettingsCardProps['selectedSettlement']
+} as unknown as SettlementSettingsCardProps['selectedSettlement']
+
+const selectedSettlementPhase = {
+  id: 'settlement-phase-1',
+  endeavors: 1,
+  returning_scout_id: null,
+  returning_survivor_ids: [],
+  settlement_id: 'settlement-1',
+  step: 1
+} as unknown as SettlementSettingsCardProps['selectedSettlementPhase']
 
 afterEach(() => {
   useLocalMock.mockReset()
 })
 
-describe('SettingsCard owner-only gating', () => {
+describe('SettlementSettingsCard owner-only gating', () => {
   it('renders the Settlement Settings (Uses Scouts) and Danger Zone cards for the owner', () => {
     useLocalMock.mockReturnValue({
       selectedSettlementId: 'settlement-1',
@@ -92,8 +118,10 @@ describe('SettingsCard owner-only gating', () => {
     })
 
     const html = renderToStaticMarkup(
-      <SettingsCard
-        {...buildBaseProps({ selectedSettlement: ownerSettlement })}
+      <SettlementSettingsCard
+        {...buildSettlementSettingsProps({
+          selectedSettlement: ownerSettlement
+        })}
       />
     )
 
@@ -111,8 +139,10 @@ describe('SettingsCard owner-only gating', () => {
     })
 
     const html = renderToStaticMarkup(
-      <SettingsCard
-        {...buildBaseProps({ selectedSettlement: collaboratorSettlement })}
+      <SettlementSettingsCard
+        {...buildSettlementSettingsProps({
+          selectedSettlement: collaboratorSettlement
+        })}
       />
     )
 
@@ -123,21 +153,23 @@ describe('SettingsCard owner-only gating', () => {
     expect(html).not.toContain('Delete Lantern Hold')
   })
 
-  it('still renders the user-account section (username, password, notifications) for collaborators', () => {
+  it('renders the active settlement phase delete action when a phase exists', () => {
     useLocalMock.mockReturnValue({
       selectedSettlementId: 'settlement-1',
       selectedSettlement: collaboratorSettlement
     })
 
     const html = renderToStaticMarkup(
-      <SettingsCard
-        {...buildBaseProps({ selectedSettlement: collaboratorSettlement })}
+      <SettlementSettingsCard
+        {...buildSettlementSettingsProps({
+          selectedSettlementPhase
+        })}
       />
     )
 
-    expect(html).toContain('update-username-form')
-    expect(html).toContain('update-password-form')
-    expect(html).toContain('Disable Notifications')
+    expect(html).toContain('Active Settlement Phase')
+    expect(html).toContain('Delete Current Settlement Phase')
+    expect(html).toContain('Delete Settlement Phase')
   })
 
   it('hides Settlement Settings and Danger Zone while the selected settlement is still loading (id but no settlement object)', () => {
@@ -152,7 +184,9 @@ describe('SettingsCard owner-only gating', () => {
     })
 
     const html = renderToStaticMarkup(
-      <SettingsCard {...buildBaseProps({ selectedSettlement: null })} />
+      <SettlementSettingsCard
+        {...buildSettlementSettingsProps({ selectedSettlement: null })}
+      />
     )
 
     expect(html).not.toContain('Settlement Settings')
@@ -169,11 +203,26 @@ describe('SettingsCard owner-only gating', () => {
     })
 
     const html = renderToStaticMarkup(
-      <SettingsCard
-        {...buildBaseProps({ selectedSettlement: ownerSettlement })}
+      <SettlementSettingsCard
+        {...buildSettlementSettingsProps({
+          selectedSettlement: ownerSettlement
+        })}
       />
     )
 
+    expect(html).not.toContain('Settlement Settings')
+    expect(html).not.toContain('Danger Zone')
+  })
+})
+
+describe('UserSettingsCard', () => {
+  it('renders account settings without settlement settings', () => {
+    const html = renderToStaticMarkup(
+      <UserSettingsCard {...buildUserSettingsProps()} />
+    )
+
+    expect(html).toContain('update-username-form')
+    expect(html).toContain('update-password-form')
     expect(html).not.toContain('Settlement Settings')
     expect(html).not.toContain('Danger Zone')
   })

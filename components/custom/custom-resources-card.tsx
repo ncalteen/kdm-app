@@ -12,8 +12,6 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { getPatterns } from '@/lib/dal/pattern'
 import { getQuarries } from '@/lib/dal/quarry'
 import {
@@ -23,28 +21,15 @@ import {
   updateResource
 } from '@/lib/dal/resource'
 import { Database } from '@/lib/database.types'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  RESOURCE_CREATED_MESSAGE,
-  RESOURCE_REMOVED_MESSAGE,
-  RESOURCE_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { PatternDetail, QuarryDetail, ResourceDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 /** Database types */
 type DbResourceCategory = Database['public']['Enums']['resource_category']
-
-/**
- * Custom Resources Card Component Properties
- */
-interface CustomResourcesCardProps {
-  /** Local State */
-  local: LocalStateType
-}
 
 /**
  * Custom Resources Card Component
@@ -55,14 +40,9 @@ interface CustomResourcesCardProps {
  * displayed alphabetically. UI updates are optimistic and roll back on
  * database failure.
  *
- * @param props Custom Resources Card Properties
  * @returns Custom Resources Card Component
  */
-export function CustomResourcesCard({
-  local
-}: CustomResourcesCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomResourcesCard(): ReactElement {
   const [items, setItems] = useState<ResourceDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [quarries, setQuarries] = useState<{ [key: string]: QuarryDetail }>({})
@@ -106,7 +86,7 @@ export function CustomResourcesCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /** Format a category DB key for display */
   const formatCategory = useCallback(
@@ -177,8 +157,6 @@ export function CustomResourcesCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(RESOURCE_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Resource Error:', err)
@@ -187,7 +165,7 @@ export function CustomResourcesCard({
         setSaving(false)
       }
     },
-    [items, quarries, saving, sortItems, toast]
+    [items, quarries, saving, sortItems]
   )
 
   /**
@@ -252,8 +230,6 @@ export function CustomResourcesCard({
           pattern_id: data.pattern_id,
           rules: data.rules
         })
-
-        toast.success(RESOURCE_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Resource Error:', err)
@@ -262,7 +238,7 @@ export function CustomResourcesCard({
         setSaving(false)
       }
     },
-    [items, editingItem, quarries, saving, sortItems, toast]
+    [items, editingItem, quarries, saving, sortItems]
   )
 
   /**
@@ -278,16 +254,14 @@ export function CustomResourcesCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeResource(item.id)
-        .then(() => toast.success(RESOURCE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Resource Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeResource(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Resource Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

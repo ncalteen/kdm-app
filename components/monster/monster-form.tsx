@@ -31,8 +31,6 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { baseMonsterLevelData, monsterAttributeTokenMap } from '@/lib/common'
 import { getCollectiveCognitionRewards } from '@/lib/dal/collective-cognition-reward'
 import { getLocations } from '@/lib/dal/location'
@@ -64,6 +62,7 @@ import {
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Monster Level Draft
@@ -231,8 +230,6 @@ export interface MonsterFormPayload {
  * Monster Form Properties
  */
 export interface MonsterFormProps {
-  /** Local State */
-  local: LocalStateType
   /** Form Mode */
   mode: 'create' | 'edit'
   /** Card Title */
@@ -276,7 +273,6 @@ const aiDeckCards = [
  * @returns Monster Form Component
  */
 export function MonsterForm({
-  local,
   mode,
   title,
   submitLabel,
@@ -286,7 +282,6 @@ export function MonsterForm({
   onCancel,
   onSubmit
 }: MonsterFormProps): ReactElement {
-  const { toast } = useToast(local)
   const { resolvedTheme } = useTheme()
 
   // Basic Info
@@ -395,7 +390,7 @@ export function MonsterForm({
         console.error('Fetch Options Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [toast])
+  }, [])
 
   /** Locations not yet selected */
   const selectableLocations = useMemo(() => {
@@ -600,7 +595,6 @@ export function MonsterForm({
     onSubmit,
     prologue,
     timelineEvents,
-    toast,
     victoryOutcome
   ])
 

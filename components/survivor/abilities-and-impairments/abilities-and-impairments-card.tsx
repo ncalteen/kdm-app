@@ -20,9 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import {
   addAbilityImpairment,
   getAbilityImpairments
@@ -32,13 +30,7 @@ import {
   addSurvivorAbilityImpairment,
   removeSurvivorAbilityImpairment
 } from '@/lib/dal/survivor-ability-impairment'
-import {
-  ABILITY_IMPAIRMENT_CREATED_MESSAGE,
-  ABILITY_IMPAIRMENT_REMOVED_MESSAGE,
-  ABILITY_IMPAIRMENT_UPDATED_MESSAGE,
-  ERROR_MESSAGE,
-  SURVIVOR_SKIP_NEXT_HUNT_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   AbilityImpairmentDetail,
   SurvivorDetail,
@@ -46,13 +38,12 @@ import {
 } from '@/lib/types'
 import { Plus, PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Abilities and Impairments Card Properties
  */
 interface AbilitiesAndImpairmentsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -70,12 +61,10 @@ interface AbilitiesAndImpairmentsCardProps {
  * @returns Abilities and Impairments Card Component
  */
 export function AbilitiesAndImpairmentsCard({
-  local,
   selectedSurvivor,
   setSurvivors
 }: AbilitiesAndImpairmentsCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
@@ -148,8 +137,7 @@ export function AbilitiesAndImpairmentsCard({
           addSurvivorAbilityImpairment(selectedSurvivor.id, itemId),
         rollback: () => {
           setItems(oldItems)
-        },
-        successMessage: ABILITY_IMPAIRMENT_UPDATED_MESSAGE(true)
+        }
       })
     },
     [availableItems, items, selectedSurvivor, mutate]
@@ -178,8 +166,7 @@ export function AbilitiesAndImpairmentsCard({
           removeSurvivorAbilityImpairment(selectedSurvivor.id, removed.id),
         rollback: () => {
           setItems(oldItems)
-        },
-        successMessage: ABILITY_IMPAIRMENT_REMOVED_MESSAGE()
+        }
       })
     },
     [items, selectedSurvivor, mutate]
@@ -235,7 +222,6 @@ export function AbilitiesAndImpairmentsCard({
 
         setSearch('')
         setCreateDialogOpen(false)
-        toast.success(ABILITY_IMPAIRMENT_CREATED_MESSAGE())
 
         // Add to survivor immediately
         const optimisticItem: SurvivorDetail['abilities_impairments'][number] =
@@ -258,8 +244,7 @@ export function AbilitiesAndImpairmentsCard({
             addSurvivorAbilityImpairment(selectedSurvivor.id, newItem.id),
           rollback: () => {
             setItems(oldItems)
-          },
-          successMessage: ABILITY_IMPAIRMENT_UPDATED_MESSAGE(true)
+          }
         })
       } catch (error) {
         console.error('Ability/Impairment Create Error:', error)
@@ -268,7 +253,7 @@ export function AbilitiesAndImpairmentsCard({
         setCreating(false)
       }
     },
-    [creating, selectedSurvivor, items, toast, mutate]
+    [creating, selectedSurvivor, items, mutate]
   )
 
   /**
@@ -297,8 +282,7 @@ export function AbilitiesAndImpairmentsCard({
               s.id === selectedSurvivor?.id ? { ...s, skip_next_hunt: old } : s
             )
           )
-        },
-        successMessage: SURVIVOR_SKIP_NEXT_HUNT_UPDATED_MESSAGE(checked)
+        }
       })
     },
     [skipNextHunt, selectedSurvivor?.id, setSurvivors, mutate]

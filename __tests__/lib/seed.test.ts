@@ -9,6 +9,7 @@ const mockDelete = vi.fn().mockReturnValue({
 const mockSettlementDelete = vi.fn().mockReturnValue({
   eq: vi.fn().mockResolvedValue({ data: null, error: null })
 })
+const mockUserSettingsMaybeSingle = vi.fn()
 
 const mockFrom = vi.fn((table: string) => {
   if (table === 'settlement') {
@@ -24,6 +25,15 @@ const mockFrom = vi.fn((table: string) => {
             },
             error: null
           })
+        })
+      })
+    }
+  }
+  if (table === 'user_settings') {
+    return {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: mockUserSettingsMaybeSingle
         })
       })
     }
@@ -76,6 +86,10 @@ const { generateSeedData } = await import('@/lib/seed')
 describe('generateSeedData', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockUserSettingsMaybeSingle.mockResolvedValue({
+      data: { app_role: 'admin' },
+      error: null
+    })
   })
 
   it('shows error toast when not in development mode', async () => {
@@ -106,6 +120,25 @@ describe('generateSeedData', () => {
     })
 
     await expect(generateSeedData()).rejects.toThrow('Auth failed')
+
+    vi.unstubAllEnvs()
+  })
+
+  it('shows unauthorized toast when a development user is not an app admin', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    mockAuth.getUser.mockResolvedValue({
+      data: { user: { id: 'user-1' } },
+      error: null
+    })
+    mockUserSettingsMaybeSingle.mockResolvedValue({
+      data: { app_role: 'user' },
+      error: null
+    })
+
+    await generateSeedData()
+
+    expect(mockToast.error).toHaveBeenCalledWith('Unauthorized')
+    expect(mockSettlementDelete).not.toHaveBeenCalled()
 
     vi.unstubAllEnvs()
   })

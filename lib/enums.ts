@@ -63,6 +63,12 @@ export enum DatabaseSurvivorType {
  * Tab Type
  */
 export enum TabType {
+  /** Admin Adoption */
+  ADMIN_ADOPTION = 'adminAdoption',
+  /** Admin Development */
+  ADMIN_DEVELOPMENT = 'adminDevelopment',
+  /** Admin User Management */
+  ADMIN_USER_MANAGEMENT = 'adminUserManagement',
   /** Arc Survivors */
   ARC = 'arc',
   /** Crafting */
@@ -79,6 +85,8 @@ export enum TabType {
   SETTINGS = 'settings',
   /** Settlement Phase */
   SETTLEMENT_PHASE = 'settlementPhase',
+  /** Settlement Settings */
+  SETTLEMENT_SETTINGS = 'settlementSettings',
   /** Sharing */
   SHARING = 'sharing',
   /** Showdown */

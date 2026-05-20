@@ -18,11 +18,9 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useCraftGearPersistence } from '@/hooks/use-craft-gear-persistence'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import {
   CraftingAllocation,
   CraftingCostsSpec,
@@ -37,13 +35,7 @@ import {
   addSettlementSeedPatterns,
   removeSettlementSeedPattern
 } from '@/lib/dal/settlement-seed-pattern'
-import {
-  ERROR_MESSAGE,
-  GEAR_UPDATED_MESSAGE,
-  SEED_PATTERN_CRAFTED_MESSAGE,
-  SEED_PATTERN_REMOVED_MESSAGE,
-  SEED_PATTERN_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   GearDetail,
   ResourceDetail,
@@ -54,13 +46,12 @@ import {
 } from '@/lib/types'
 import { BeanIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Seed Patterns Card Properties
  */
 interface SeedPatternsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -84,14 +75,12 @@ interface SeedPatternsCardProps {
  * @returns Seed Patterns Card Component
  */
 export function SeedPatternsCard({
-  local,
   selectedSettlement,
   setSelectedSettlement,
   selectedSettlementPhase,
   setSelectedSettlementPhase
 }: SeedPatternsCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -132,7 +121,6 @@ export function SeedPatternsCard({
   })
 
   const { persistGearAddition } = useCraftGearPersistence({
-    local,
     selectedSettlement,
     setSelectedSettlement,
     selectedSettlementPhase,
@@ -225,8 +213,7 @@ export function SeedPatternsCard({
                 }
               : null
           )
-        },
-        successMessage: SEED_PATTERN_UPDATED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, availableSeedPatterns, setSelectedSettlement, mutate]
@@ -266,8 +253,7 @@ export function SeedPatternsCard({
               seed_patterns: [...prev.seed_patterns, removed]
             }
           })
-        },
-        successMessage: SEED_PATTERN_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -310,19 +296,10 @@ export function SeedPatternsCard({
    * adds the produced gear to the settlement.
    */
   const handleCraftConfirm = useCallback(
-    ({
-      deductCosts,
-      allocation
-    }: {
-      deductCosts: boolean
-      allocation: CraftingAllocation
-    }) => {
+    ({ allocation }: { allocation: CraftingAllocation }) => {
       if (!pendingCraftGear) return
       setCraftDialogOpen(false)
-      const successMessage = deductCosts
-        ? SEED_PATTERN_CRAFTED_MESSAGE()
-        : GEAR_UPDATED_MESSAGE()
-      persistGearAddition(pendingCraftGear, allocation, successMessage)
+      persistGearAddition(pendingCraftGear, allocation)
       setPendingCraftSeedPattern(null)
       setPendingCraftGear(null)
       setPendingCraftCosts(emptyCraftingCosts())

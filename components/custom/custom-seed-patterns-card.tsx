@@ -14,8 +14,6 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { getGear } from '@/lib/dal/gear'
 import { getNemeses } from '@/lib/dal/nemesis'
 import { getQuarries } from '@/lib/dal/quarry'
@@ -26,13 +24,7 @@ import {
   replaceSeedPatternGearCosts,
   updateSeedPattern
 } from '@/lib/dal/seed-pattern'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  SEED_PATTERN_CREATED_MESSAGE,
-  SEED_PATTERN_REMOVED_MESSAGE,
-  SEED_PATTERN_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import {
   GearDetail,
   NemesisDetail,
@@ -42,14 +34,7 @@ import {
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Seed Patterns Card Component Properties
- */
-interface CustomSeedPatternsCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Seed Patterns Card Component
@@ -60,14 +45,9 @@ interface CustomSeedPatternsCardProps {
  * pattern number, and gear costs. Entries are displayed alphabetically. UI
  * updates are optimistic and roll back on database failure.
  *
- * @param props Custom Seed Patterns Card Properties
  * @returns Custom Seed Patterns Card Component
  */
-export function CustomSeedPatternsCard({
-  local
-}: CustomSeedPatternsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomSeedPatternsCard(): ReactElement {
   const [items, setItems] = useState<SeedPatternDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [gear, setGear] = useState<{ [key: string]: GearDetail }>({})
@@ -120,7 +100,7 @@ export function CustomSeedPatternsCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Seed Pattern
@@ -179,8 +159,6 @@ export function CustomSeedPatternsCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? finalItem : i)))
         )
-
-        toast.success(SEED_PATTERN_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Seed Pattern Error:', err)
@@ -189,7 +167,7 @@ export function CustomSeedPatternsCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -246,8 +224,6 @@ export function CustomSeedPatternsCard({
         })
 
         await replaceSeedPatternGearCosts(editingId, data.gear_costs)
-
-        toast.success(SEED_PATTERN_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Seed Pattern Error:', err)
@@ -256,7 +232,7 @@ export function CustomSeedPatternsCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -272,16 +248,14 @@ export function CustomSeedPatternsCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeSeedPattern(item.id)
-        .then(() => toast.success(SEED_PATTERN_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Seed Pattern Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeSeedPattern(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Seed Pattern Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

@@ -19,8 +19,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { removeHunt, updateHunt } from '@/lib/dal/hunt'
 import { updateHuntHuntBoard } from '@/lib/dal/hunt-hunt-board'
 import { copyMonsterJunctions } from '@/lib/dal/monster-trait-mood'
@@ -32,18 +30,13 @@ import {
   DatabaseSurvivorType,
   HuntEventCount,
   HuntEventType,
-  MonsterType,
   SurvivorType,
   TabType
 } from '@/lib/enums'
 import { computeEmbarkGearShortages } from '@/lib/gear-grid'
 import {
   EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE,
-  ERROR_MESSAGE,
-  HUNT_DELETED_MESSAGE,
-  MONSTER_MOVED_MESSAGE,
-  SHOWDOWN_CREATED_MESSAGE,
-  SURVIVORS_MOVED_MESSAGE
+  ERROR_MESSAGE
 } from '@/lib/messages'
 import {
   HuntDetail,
@@ -60,13 +53,12 @@ import {
 } from '@/lib/types'
 import { ChevronRightIcon, DicesIcon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Active Hunt Card Properties
  */
 interface ActiveHuntCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
@@ -104,7 +96,6 @@ interface ActiveHuntCardProps {
  * @returns Active Hunt Card Component
  */
 export function ActiveHuntCard({
-  local,
   selectedHunt,
   selectedHuntMonsterIndex,
   selectedSettlement,
@@ -118,8 +109,6 @@ export function ActiveHuntCard({
   setSurvivors,
   survivors
 }: ActiveHuntCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState<boolean>(false)
   const [isShowdownDialogOpen, setIsShowdownDialogOpen] =
     useState<boolean>(false)
@@ -133,21 +122,18 @@ export function ActiveHuntCard({
    *
    * @param eventType Event Type
    */
-  const rollHuntEvent = useCallback(
-    (eventType: HuntEventType) => {
-      const maxValue =
-        eventType === HuntEventType.BASIC || eventType === HuntEventType.MONSTER
-          ? HuntEventCount.BASIC
-          : HuntEventCount.ARC_SCOUT
-      const randomEvent = Math.floor(Math.random() * maxValue) + 1
+  const rollHuntEvent = useCallback((eventType: HuntEventType) => {
+    const maxValue =
+      eventType === HuntEventType.BASIC || eventType === HuntEventType.MONSTER
+        ? HuntEventCount.BASIC
+        : HuntEventCount.ARC_SCOUT
+    const randomEvent = Math.floor(Math.random() * maxValue) + 1
 
-      toast.success(
-        `${eventType === HuntEventType.BASIC ? 'Basic' : eventType === HuntEventType.ARC ? 'Arc' : eventType === HuntEventType.SCOUT ? 'Scout' : 'Monster'} Hunt Event: ${randomEvent}`
-      )
-      setHuntEventPopoverOpen(false)
-    },
-    [toast]
-  )
+    toast.success(
+      `${eventType === HuntEventType.BASIC ? 'Basic' : eventType === HuntEventType.ARC ? 'Arc' : eventType === HuntEventType.SCOUT ? 'Scout' : 'Monster'} Hunt Event: ${randomEvent}`
+    )
+    setHuntEventPopoverOpen(false)
+  }, [])
 
   /**
    * Handle Position Update
@@ -175,31 +161,23 @@ export function ActiveHuntCard({
       updateHunt(selectedHunt.id, {
         survivor_position: survivorPosition,
         monster_position: monsterPosition
-      })
-        .then(() =>
-          toast.success(
-            survivorPosition !== previousSurvivorPos
-              ? SURVIVORS_MOVED_MESSAGE()
-              : MONSTER_MOVED_MESSAGE()
-          )
+      }).catch((err: unknown) => {
+        // Rollback
+        setSelectedHunt((prev) =>
+          prev
+            ? {
+                ...prev,
+                survivor_position: previousSurvivorPos,
+                monster_position: previousMonsterPos
+              }
+            : null
         )
-        .catch((err: unknown) => {
-          // Rollback
-          setSelectedHunt((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  survivor_position: previousSurvivorPos,
-                  monster_position: previousMonsterPos
-                }
-              : null
-          )
 
-          console.error('Position Update Error:', err)
-          toast.error(ERROR_MESSAGE())
-        })
+        console.error('Position Update Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
     },
-    [selectedHunt, setSelectedHunt, toast]
+    [selectedHunt, setSelectedHunt]
   )
 
   /**
@@ -250,7 +228,7 @@ export function ActiveHuntCard({
         toast.error(ERROR_MESSAGE())
       })
     },
-    [selectedHunt, setSelectedHunt, toast]
+    [selectedHunt, setSelectedHunt]
   )
 
   /**
@@ -273,14 +251,12 @@ export function ActiveHuntCard({
         setSelectedHunt(null)
         setSelectedHuntMonsterIndex(0)
         setIsCancelDialogOpen(false)
-
-        toast.success(HUNT_DELETED_MESSAGE())
       })
       .catch((err: unknown) => {
         console.error('Delete Hunt Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [selectedHunt, setSelectedHunt, setSelectedHuntMonsterIndex, toast])
+  }, [selectedHunt, setSelectedHunt, setSelectedHuntMonsterIndex])
 
   /**
    * Handle Showdown (open confirmation dialog)
@@ -520,15 +496,6 @@ export function ActiveHuntCard({
       setSelectedTab(TabType.SHOWDOWN)
 
       setIsShowdownDialogOpen(false)
-
-      // Get the first monster name for the toast message
-      const firstMonster = Object.values(showdownMonsters)[0]
-      toast.success(
-        SHOWDOWN_CREATED_MESSAGE(
-          firstMonster?.monster_name ?? 'Unknown Monster',
-          MonsterType.QUARRY
-        )
-      )
     } catch (error: unknown) {
       console.error('Proceed to Showdown Error:', error)
       toast.error(ERROR_MESSAGE())
@@ -543,8 +510,7 @@ export function ActiveHuntCard({
     setSelectedShowdown,
     setSelectedShowdownMonsterIndex,
     setSelectedTab,
-    survivors,
-    toast
+    survivors
   ])
 
   return (
@@ -637,7 +603,6 @@ export function ActiveHuntCard({
 
       {/* Monster(s) Card */}
       <HuntMonstersCard
-        local={local}
         selectedHunt={selectedHunt}
         selectedHuntMonsterIndex={selectedHuntMonsterIndex}
         setSelectedHunt={setSelectedHunt}
@@ -646,7 +611,6 @@ export function ActiveHuntCard({
 
       {/* Hunt Party Survivors */}
       <HuntSurvivorsCard
-        local={local}
         selectedHunt={selectedHunt}
         selectedSettlement={selectedSettlement}
         selectedSurvivor={selectedSurvivor}

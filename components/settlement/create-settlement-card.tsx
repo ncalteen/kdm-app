@@ -16,8 +16,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { fetchTemplate } from '@/lib/campaigns'
 import { createSettlement } from '@/lib/dal/settlement'
 import { CampaignType, MonsterNode, SurvivorType } from '@/lib/enums'
@@ -29,13 +27,12 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ReactElement, useEffect } from 'react'
 import { Resolver, useForm, useWatch } from 'react-hook-form'
+import { toast } from 'sonner'
 
 /**
  * Create Settlement Card Properties
  */
 interface CreateSettlementCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Set Is Creating New Settlement */
   setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set Selected Hunt ID */
@@ -65,7 +62,6 @@ interface CreateSettlementCardProps {
  * @returns Create Settlement Card Component
  */
 export function CreateSettlementCard({
-  local,
   setIsCreatingNewSettlement,
   setSelectedHuntId,
   setSelectedHuntMonsterIndex,
@@ -75,8 +71,6 @@ export function CreateSettlementCard({
   setSelectedShowdownMonsterIndex,
   setSelectedSurvivorId
 }: CreateSettlementCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const form = useForm<NewSettlementInput>({
     resolver: zodResolver(
       NewSettlementInputSchema

@@ -15,8 +15,6 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { vignetteUnlockMap } from '@/lib/common'
 import { addHunt } from '@/lib/dal/hunt'
 import { addHuntAIDeck } from '@/lib/dal/hunt-ai-deck'
@@ -36,7 +34,6 @@ import { computeEmbarkGearShortages } from '@/lib/gear-grid'
 import {
   EMBARK_GEAR_SHORTAGE_ERROR_MESSAGE,
   ERROR_MESSAGE,
-  HUNT_BEGINS_MESSAGE,
   SCOUT_CONFLICT_MESSAGE,
   SCOUT_REQUIRED_MESSAGE,
   SHOWDOWN_ALREADY_ACTIVE_ERROR_MESSAGE
@@ -59,13 +56,12 @@ import {
   SkullIcon
 } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Create Hunt Card Properties
  */
 interface CreateHuntCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Showdown */
@@ -92,15 +88,12 @@ interface CreateHuntCardProps {
  * @returns Create Hunt Card Component
  */
 export function CreateHuntCard({
-  local,
   selectedSettlement,
   selectedShowdown,
   setSelectedHunt,
   survivors,
   userSettings
 }: CreateHuntCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   // Quarry and level selection state
   const [selectedQuarryId, setSelectedQuarryId] = useState<string | null>(null)
   const [quarryDetail, setQuarryDetail] = useState<QuarryDetail | null>(null)
@@ -256,55 +249,52 @@ export function CreateHuntCard({
    *
    * @param quarryId Quarry ID
    */
-  const handleQuarrySelection = useCallback(
-    async (quarryId: string) => {
-      setSelectedQuarryId(quarryId)
-      setSelectedLevelNumber(1)
-      setQuarryLevels([])
-      setSelectedVersion(MonsterVersion.ORIGINAL)
-      setAlternateDetail(null)
-      setAlternateLevels([])
-      setVignetteDetail(null)
-      setVignetteLevels([])
-      setSelectedMonsterIndex(0)
+  const handleQuarrySelection = useCallback(async (quarryId: string) => {
+    setSelectedQuarryId(quarryId)
+    setSelectedLevelNumber(1)
+    setQuarryLevels([])
+    setSelectedVersion(MonsterVersion.ORIGINAL)
+    setAlternateDetail(null)
+    setAlternateLevels([])
+    setVignetteDetail(null)
+    setVignetteLevels([])
+    setSelectedMonsterIndex(0)
 
-      try {
-        // Fetch the full quarry detail and levels in parallel
-        const [detail, levels] = await Promise.all([
-          getQuarry(quarryId),
-          getQuarryLevels(quarryId)
+    try {
+      // Fetch the full quarry detail and levels in parallel
+      const [detail, levels] = await Promise.all([
+        getQuarry(quarryId),
+        getQuarryLevels(quarryId)
+      ])
+
+      setQuarryDetail(detail)
+      setQuarryLevels(levels)
+      if (levels.length > 0) setSelectedLevelNumber(levels[0].level_number)
+
+      // Fetch alternate data if available
+      if (detail?.alternate_id) {
+        const [altDetail, altLevels] = await Promise.all([
+          getQuarry(detail.alternate_id),
+          getQuarryLevels(detail.alternate_id)
         ])
-
-        setQuarryDetail(detail)
-        setQuarryLevels(levels)
-        if (levels.length > 0) setSelectedLevelNumber(levels[0].level_number)
-
-        // Fetch alternate data if available
-        if (detail?.alternate_id) {
-          const [altDetail, altLevels] = await Promise.all([
-            getQuarry(detail.alternate_id),
-            getQuarryLevels(detail.alternate_id)
-          ])
-          setAlternateDetail(altDetail)
-          setAlternateLevels(altLevels)
-        }
-
-        // Fetch vignette data if available
-        if (detail?.vignette_id) {
-          const [vigDetail, vigLevels] = await Promise.all([
-            getQuarry(detail.vignette_id),
-            getQuarryLevels(detail.vignette_id)
-          ])
-          setVignetteDetail(vigDetail)
-          setVignetteLevels(vigLevels)
-        }
-      } catch (err: unknown) {
-        console.error('Quarry Data Fetch Error:', err)
-        toast.error(ERROR_MESSAGE())
+        setAlternateDetail(altDetail)
+        setAlternateLevels(altLevels)
       }
-    },
-    [toast]
-  )
+
+      // Fetch vignette data if available
+      if (detail?.vignette_id) {
+        const [vigDetail, vigLevels] = await Promise.all([
+          getQuarry(detail.vignette_id),
+          getQuarryLevels(detail.vignette_id)
+        ])
+        setVignetteDetail(vigDetail)
+        setVignetteLevels(vigLevels)
+      }
+    } catch (err: unknown) {
+      console.error('Quarry Data Fetch Error:', err)
+      toast.error(ERROR_MESSAGE())
+    }
+  }, [])
 
   /**
    * Handle Level Selection
@@ -650,8 +640,6 @@ export function CreateHuntCard({
       setSelectedMonsterIndex(0)
       setSelectedSurvivors([])
       setSelectedScout(null)
-
-      toast.success(HUNT_BEGINS_MESSAGE(quarry.monster_name))
     } catch (error) {
       console.error('Hunt Creation Error:', error)
       toast.error(ERROR_MESSAGE())
@@ -671,8 +659,7 @@ export function CreateHuntCard({
     selectedShowdown,
     selectedSurvivors,
     setSelectedHunt,
-    survivors,
-    toast
+    survivors
   ])
 
   return (
@@ -934,7 +921,6 @@ export function CreateHuntCard({
         </div>
 
         <SurvivorSelectionDrawer
-          local={local}
           title="Select Hunt Party"
           description="Up to 4 survivors may embark on a hunt."
           survivors={availableSurvivors}
@@ -946,7 +932,6 @@ export function CreateHuntCard({
 
         {selectedSettlement?.uses_scouts && (
           <ScoutSelectionDrawer
-            local={local}
             title="Select Scout"
             description="Choose a single scout. Their skills will help navigate the dangers ahead."
             survivors={availableSurvivors}

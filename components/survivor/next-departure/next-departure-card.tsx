@@ -6,15 +6,8 @@ import {
 } from '@/components/survivor/next-departure/next-departure-item'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  SURVIVOR_NEXT_DEPARTURE_BONUS_REMOVED_MESSAGE,
-  SURVIVOR_NEXT_DEPARTURE_BONUS_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import {
   closestCenter,
@@ -33,13 +26,12 @@ import {
 } from '@dnd-kit/sortable'
 import { PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Next Departure Card Properties
  */
 interface NextDepartureCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -53,12 +45,9 @@ interface NextDepartureCardProps {
  * @returns Next Departure Card Component
  */
 export function NextDepartureCard({
-  local,
   selectedSurvivor,
   setSurvivors
 }: NextDepartureCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [disabledInputs, setDisabledInputs] = useState<{
@@ -122,11 +111,8 @@ export function NextDepartureCard({
         return next
       })
 
-      updateSurvivor(selectedSurvivor?.id, { next_departure: updated })
-        .then(() =>
-          toast.success(SURVIVOR_NEXT_DEPARTURE_BONUS_REMOVED_MESSAGE())
-        )
-        .catch((error) => {
+      updateSurvivor(selectedSurvivor?.id, { next_departure: updated }).catch(
+        (error) => {
           console.error('Next Departure Remove Error:', error)
           setNextDeparture(oldNextDeparture)
           setSurvivors((prev) =>
@@ -137,9 +123,10 @@ export function NextDepartureCard({
             )
           )
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [nextDeparture, selectedSurvivor?.id, setSurvivors, toast]
+    [nextDeparture, selectedSurvivor?.id, setSurvivors]
   )
 
   /**
@@ -184,13 +171,8 @@ export function NextDepartureCard({
 
       setIsAddingNew(false)
 
-      updateSurvivor(selectedSurvivor?.id, { next_departure: updated })
-        .then(() =>
-          toast.success(
-            SURVIVOR_NEXT_DEPARTURE_BONUS_UPDATED_MESSAGE(i === undefined)
-          )
-        )
-        .catch((error) => {
+      updateSurvivor(selectedSurvivor?.id, { next_departure: updated }).catch(
+        (error) => {
           console.error('Next Departure Save Error:', error)
           setNextDeparture(oldNextDeparture)
           setSurvivors((prev) =>
@@ -201,9 +183,10 @@ export function NextDepartureCard({
             )
           )
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [nextDeparture, selectedSurvivor?.id, setSurvivors, toast]
+    [nextDeparture, selectedSurvivor?.id, setSurvivors]
   )
 
   /**
@@ -263,7 +246,7 @@ export function NextDepartureCard({
         })
       }
     },
-    [nextDeparture, selectedSurvivor?.id, setSurvivors, toast]
+    [nextDeparture, selectedSurvivor?.id, setSurvivors]
   )
 
   return (

@@ -4,10 +4,7 @@ import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { COMBAT_WAIST_UPDATED_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { RibbonIcon, Shield } from 'lucide-react'
@@ -17,8 +14,6 @@ import { ReactElement, useCallback, useState } from 'react'
  * Waist Card Properties
  */
 interface WaistCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -37,13 +32,10 @@ interface WaistCardProps {
  * @returns Waist Card Component
  */
 export function WaistCard({
-  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: WaistCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [waistArmor, setWaistArmor] = useState(
     selectedSurvivor?.waist_armor ?? 0
@@ -109,15 +101,15 @@ export function WaistCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { [field]: value })
-        .then(() => toast.success(COMBAT_WAIST_UPDATED_MESSAGE()))
-        .catch((error) => {
+      updateSurvivor(selectedSurvivor?.id, { [field]: value }).catch(
+        (error) => {
           setter(oldValue)
           setSurvivors(oldSurvivors)
           console.error('Error Updating Waist:', error)
-        })
+        }
+      )
     },
-    [selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   return (

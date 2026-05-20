@@ -21,9 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { addFightingArt, getFightingArts } from '@/lib/dal/fighting-art'
 import {
   addSecretFightingArt,
@@ -38,14 +36,7 @@ import {
   addSurvivorSecretFightingArt,
   removeSurvivorSecretFightingArt
 } from '@/lib/dal/survivor-secret-fighting-art'
-import {
-  ERROR_MESSAGE,
-  FIGHTING_ART_CREATED_MESSAGE,
-  SECRET_FIGHTING_ART_CREATED_MESSAGE,
-  SURVIVOR_CAN_USE_FIGHTING_ARTS_UPDATED_MESSAGE,
-  SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE,
-  SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   FightingArtDetail,
   SecretFightingArtDetail,
@@ -56,13 +47,12 @@ import {
 import { cn } from '@/lib/utils'
 import { Plus, PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Fighting Arts Card Properties
  */
 interface FightingArtsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -80,14 +70,12 @@ interface FightingArtsCardProps {
  * @returns Fighting Arts Card Component
  */
 export function FightingArtsCard({
-  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: FightingArtsCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
@@ -231,8 +219,7 @@ export function FightingArtsCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true)
+        }
       })
     },
     [
@@ -299,8 +286,7 @@ export function FightingArtsCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true)
+        }
       })
     },
     [
@@ -364,8 +350,7 @@ export function FightingArtsCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(false)
+        }
       })
     },
     [fightingArts, selectedSurvivor, setSurvivors, mutate]
@@ -408,8 +393,7 @@ export function FightingArtsCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_FIGHTING_ART_REMOVED_MESSAGE(true)
+        }
       })
     },
     [secretFightingArts, selectedSurvivor, setSurvivors, mutate]
@@ -447,8 +431,7 @@ export function FightingArtsCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_CAN_USE_FIGHTING_ARTS_UPDATED_MESSAGE(newValue)
+        }
       })
     },
     [canUseFightingArtsKnowledges, selectedSurvivor?.id, setSurvivors, mutate]
@@ -488,7 +471,6 @@ export function FightingArtsCard({
         setAvailableFightingArts((prev) => ({ ...prev, [newArt.id]: newArt }))
         setSearch('')
         setCreateDialogOpen(false)
-        toast.success(FIGHTING_ART_CREATED_MESSAGE())
 
         // Add to survivor immediately
         const optimisticItem: SurvivorDetail['fighting_arts'][number] = {
@@ -524,8 +506,7 @@ export function FightingArtsCard({
                   : s
               )
             )
-          },
-          successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(false, true)
+          }
         })
       } catch (error) {
         console.error('Fighting Art Create Error:', error)
@@ -534,14 +515,7 @@ export function FightingArtsCard({
         setCreatingRegular(false)
       }
     },
-    [
-      creatingRegular,
-      selectedSurvivor,
-      fightingArts,
-      setSurvivors,
-      toast,
-      mutate
-    ]
+    [creatingRegular, selectedSurvivor, fightingArts, setSurvivors, mutate]
   )
 
   /**
@@ -570,7 +544,6 @@ export function FightingArtsCard({
         }))
         setSearch('')
         setCreateDialogOpen(false)
-        toast.success(SECRET_FIGHTING_ART_CREATED_MESSAGE())
 
         // Add to survivor immediately
         const optimisticItem: SurvivorDetail['secret_fighting_arts'][number] = {
@@ -613,8 +586,7 @@ export function FightingArtsCard({
                   : s
               )
             )
-          },
-          successMessage: SURVIVOR_FIGHTING_ART_UPDATED_MESSAGE(true, true)
+          }
         })
       } catch (error) {
         console.error('Secret Fighting Art Create Error:', error)
@@ -623,14 +595,7 @@ export function FightingArtsCard({
         setCreatingSecret(false)
       }
     },
-    [
-      creatingSecret,
-      selectedSurvivor,
-      secretFightingArts,
-      setSurvivors,
-      toast,
-      mutate
-    ]
+    [creatingSecret, selectedSurvivor, secretFightingArts, setSurvivors, mutate]
   )
 
   /**

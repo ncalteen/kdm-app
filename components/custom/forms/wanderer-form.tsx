@@ -16,8 +16,6 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addWanderer,
   getCustomWanderers,
@@ -31,12 +29,7 @@ import {
   updateWandererTimelineYear
 } from '@/lib/dal/wanderer-timeline-year'
 import { Enums } from '@/lib/database.types'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  WANDERER_CREATED_MESSAGE,
-  WANDERER_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import {
   AbilityImpairmentDetail,
   FightingArtDetail,
@@ -52,6 +45,7 @@ import {
   useRef,
   useState
 } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Attribute Field Definition
@@ -99,8 +93,6 @@ const SECONDARY_ATTRIBUTES: StatField[] = [
  * Wanderer Form Component Properties
  */
 interface WandererFormProps {
-  /** Local State */
-  local: LocalStateType
   /** Form Mode */
   mode: 'create' | 'edit'
   /** Wanderer ID (Edit Only) */
@@ -129,7 +121,6 @@ interface WandererFormProps {
  * @returns Wanderer Form Component
  */
 export function WandererForm({
-  local,
   mode,
   wandererId,
   availableFightingArts,
@@ -138,7 +129,6 @@ export function WandererForm({
   onDone,
   onCancel
 }: WandererFormProps): ReactElement {
-  const { toast } = useToast(local)
   const [isSaving, setIsSaving] = useState(false)
   const [isLoadingEdit, setIsLoadingEdit] = useState(mode === 'edit')
 
@@ -269,7 +259,7 @@ export function WandererForm({
     return () => {
       cancelled = true
     }
-  }, [mode, wandererId, toast, onCancel])
+  }, [mode, wandererId, onCancel])
 
   useEffect(() => {
     if (!isLoadingEdit && mode === 'create') nameInputRef.current?.focus()
@@ -401,8 +391,6 @@ export function WandererForm({
             entries: validEntries
           })
         }
-
-        toast.success(WANDERER_CREATED_MESSAGE())
       } else if (wandererId) {
         await updateWanderer(wandererId, wandererData)
 
@@ -433,8 +421,6 @@ export function WandererForm({
             })
           }
         }
-
-        toast.success(WANDERER_UPDATED_MESSAGE())
       }
 
       onDone()
@@ -457,7 +443,6 @@ export function WandererForm({
     deletedTimelineIds,
     mode,
     wandererId,
-    toast,
     onDone
   ])
 

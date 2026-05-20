@@ -11,8 +11,6 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addMilestone,
   getUserCustomMilestones,
@@ -21,24 +19,14 @@ import {
 } from '@/lib/dal/milestone'
 import {
   ERROR_MESSAGE,
-  MILESTONE_CREATED_MESSAGE,
-  MILESTONE_MISSING_EVENT_ERROR,
-  MILESTONE_REMOVED_MESSAGE,
-  MILESTONE_UPDATED_MESSAGE,
+  MILESTONE_MISSING_EVENT_ERROR_MESSAGE,
   NAMELESS_OBJECT_ERROR_MESSAGE
 } from '@/lib/messages'
 import { MilestoneDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Milestones Card Component Properties
- */
-interface CustomMilestonesCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Milestones Card Component
@@ -48,14 +36,9 @@ interface CustomMilestonesCardProps {
  * are displayed alphabetically. UI updates are optimistic and roll back on
  * database failure.
  *
- * @param props Custom Milestones Card Properties
  * @returns Custom Milestones Card Component
  */
-export function CustomMilestonesCard({
-  local
-}: CustomMilestonesCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomMilestonesCard(): ReactElement {
   const [items, setItems] = useState<MilestoneDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -97,7 +80,7 @@ export function CustomMilestonesCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Milestone
@@ -116,7 +99,7 @@ export function CustomMilestonesCard({
       if (!data.milestone_name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('milestone'))
       if (!data.event_name.trim())
-        return toast.error(MILESTONE_MISSING_EVENT_ERROR())
+        return toast.error(MILESTONE_MISSING_EVENT_ERROR_MESSAGE())
 
       setSaving(true)
 
@@ -148,8 +131,6 @@ export function CustomMilestonesCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(MILESTONE_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Milestone Error:', err)
@@ -158,7 +139,7 @@ export function CustomMilestonesCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -178,7 +159,7 @@ export function CustomMilestonesCard({
       if (!data.milestone_name.trim())
         return toast.error(NAMELESS_OBJECT_ERROR_MESSAGE('milestone'))
       if (!data.event_name.trim())
-        return toast.error(MILESTONE_MISSING_EVENT_ERROR())
+        return toast.error(MILESTONE_MISSING_EVENT_ERROR_MESSAGE())
 
       setSaving(true)
 
@@ -210,8 +191,6 @@ export function CustomMilestonesCard({
           requirements: data.requirements || null,
           rules: data.rules || null
         })
-
-        toast.success(MILESTONE_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Milestone Error:', err)
@@ -220,7 +199,7 @@ export function CustomMilestonesCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -234,16 +213,14 @@ export function CustomMilestonesCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeMilestone(item.id)
-        .then(() => toast.success(MILESTONE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Milestone Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeMilestone(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Milestone Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

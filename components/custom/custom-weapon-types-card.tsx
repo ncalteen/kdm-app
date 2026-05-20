@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addWeaponType,
   getUserCustomWeaponTypes,
   removeWeaponType,
   updateWeaponType
 } from '@/lib/dal/weapon-type'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  WEAPON_TYPE_CREATED_MESSAGE,
-  WEAPON_TYPE_REMOVED_MESSAGE,
-  WEAPON_TYPE_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { WeaponTypeDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Weapon Types Card Component Properties
- */
-interface CustomWeaponTypesCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Weapon Types Card Component
@@ -47,14 +32,9 @@ interface CustomWeaponTypesCardProps {
  * and master proficiency rules are entered via a tabbed dialog. UI updates
  * are optimistic and roll back on database failure.
  *
- * @param props Custom Weapon Types Card Properties
  * @returns Custom Weapon Types Card Component
  */
-export function CustomWeaponTypesCard({
-  local
-}: CustomWeaponTypesCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomWeaponTypesCard(): ReactElement {
   const [items, setItems] = useState<WeaponTypeDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -96,7 +76,7 @@ export function CustomWeaponTypesCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Weapon Type
@@ -141,8 +121,6 @@ export function CustomWeaponTypesCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(WEAPON_TYPE_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Weapon Type Error:', err)
@@ -151,7 +129,7 @@ export function CustomWeaponTypesCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -201,8 +179,6 @@ export function CustomWeaponTypesCard({
             data.specialist_proficiency_rules || null,
           master_proficiency_rules: data.master_proficiency_rules || null
         })
-
-        toast.success(WEAPON_TYPE_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Weapon Type Error:', err)
@@ -211,7 +187,7 @@ export function CustomWeaponTypesCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -225,16 +201,14 @@ export function CustomWeaponTypesCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeWeaponType(item.id)
-        .then(() => toast.success(WEAPON_TYPE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Weapon Type Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeWeaponType(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Weapon Type Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

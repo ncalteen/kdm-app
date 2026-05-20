@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addInnovation,
   getUserCustomInnovations,
   removeInnovation,
   updateInnovation
 } from '@/lib/dal/innovation'
-import {
-  ERROR_MESSAGE,
-  INNOVATION_CREATED_MESSAGE,
-  INNOVATION_REMOVED_MESSAGE,
-  INNOVATION_UPDATED_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { InnovationDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Innovations Card Component Properties
- */
-interface CustomInnovationsCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Innovations Card Component
@@ -47,14 +32,9 @@ interface CustomInnovationsCardProps {
  * benefits are entered via a tabbed dialog. UI updates are optimistic and
  * roll back on database failure.
  *
- * @param props Custom Innovations Card Properties
  * @returns Custom Innovations Card Component
  */
-export function CustomInnovationsCard({
-  local
-}: CustomInnovationsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomInnovationsCard(): ReactElement {
   const [items, setItems] = useState<InnovationDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -96,7 +76,7 @@ export function CustomInnovationsCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Innovation
@@ -143,8 +123,6 @@ export function CustomInnovationsCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(INNOVATION_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Innovation Error:', err)
@@ -153,7 +131,7 @@ export function CustomInnovationsCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -203,8 +181,6 @@ export function CustomInnovationsCard({
           consequences: data.consequences || null,
           benefits: data.benefits || null
         })
-
-        toast.success(INNOVATION_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Innovation Error:', err)
@@ -213,7 +189,7 @@ export function CustomInnovationsCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -227,16 +203,14 @@ export function CustomInnovationsCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeInnovation(item.id)
-        .then(() => toast.success(INNOVATION_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Innovation Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeInnovation(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Innovation Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

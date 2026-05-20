@@ -11,24 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSettlementNemesis } from '@/lib/dal/settlement-nemesis'
 import { updateSettlementQuarry } from '@/lib/dal/settlement-quarry'
-import {
-  COLLECTIVE_COGNITION_VICTORY_SAVED_MESSAGE,
-  ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { SettlementDetail, SettlementStateSetter } from '@/lib/types'
 import { TrophyIcon } from 'lucide-react'
 import { ReactElement, useCallback } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Collective Cognition Victories Card Properties
  */
 interface CollectiveCognitionVictoriesCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -45,12 +39,9 @@ interface CollectiveCognitionVictoriesCardProps {
  * @returns Collective Cognition Victories Card Component
  */
 export function CollectiveCognitionVictoriesCard({
-  local,
   selectedSettlement,
   setSelectedSettlement
 }: CollectiveCognitionVictoriesCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   /**
    * Handle Quarry Collective Cognition Toggle
    *
@@ -111,11 +102,8 @@ export function CollectiveCognitionVictoriesCard({
         quarries: updatedQuarries
       })
 
-      updateSettlementQuarry(quarry.id, { [field]: updatedValue })
-        .then(() =>
-          toast.success(COLLECTIVE_COGNITION_VICTORY_SAVED_MESSAGE(checked))
-        )
-        .catch((err: unknown) => {
+      updateSettlementQuarry(quarry.id, { [field]: updatedValue }).catch(
+        (err: unknown) => {
           // Revert the optimistic update.
           setSelectedSettlement((prev) =>
             prev
@@ -130,9 +118,10 @@ export function CollectiveCognitionVictoriesCard({
 
           console.error('Quarry Collective Cognition Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement]
   )
 
   /**
@@ -169,11 +158,8 @@ export function CollectiveCognitionVictoriesCard({
         nemeses: updatedNemeses
       })
 
-      updateSettlementNemesis(nemesis.id, { [field]: checked })
-        .then(() =>
-          toast.success(COLLECTIVE_COGNITION_VICTORY_SAVED_MESSAGE(checked))
-        )
-        .catch((err: unknown) => {
+      updateSettlementNemesis(nemesis.id, { [field]: checked }).catch(
+        (err: unknown) => {
           // Revert the optimistic update.
           setSelectedSettlement((prev) =>
             prev
@@ -188,9 +174,10 @@ export function CollectiveCognitionVictoriesCard({
 
           console.error('Nemesis Collective Cognition Toggle Error:', err)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement]
   )
 
   return (

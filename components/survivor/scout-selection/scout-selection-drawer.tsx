@@ -13,7 +13,6 @@ import {
   DrawerTitle,
   DrawerTrigger
 } from '@/components/ui/drawer'
-import { LocalStateType } from '@/contexts/local-context'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { SurvivorDetail } from '@/lib/types'
 import { UserSearchIcon } from 'lucide-react'
@@ -25,8 +24,6 @@ import { ReactElement, useState } from 'react'
 interface ScoutSelectionDrawerProps {
   /** Drawer Description */
   description: string
-  /** Local State */
-  local: LocalStateType
   /** Callback for Selection Change */
   onSelectionChange: (scoutId: string | null) => void
   /** Currently Selected Scout */
@@ -52,7 +49,6 @@ interface ScoutSelectionDrawerProps {
  */
 export function ScoutSelectionDrawer({
   description,
-  local,
   onSelectionChange,
   selectedScout,
   selectedSurvivors = [],
@@ -152,7 +148,6 @@ export function ScoutSelectionDrawer({
           {!isMobile && (
             <div className="w-112.5">
               <SurvivorDetailsPanel
-                local={local}
                 survivor={hoveredSurvivor ?? lastHoveredSurvivor}
                 survivors={survivors}
               />

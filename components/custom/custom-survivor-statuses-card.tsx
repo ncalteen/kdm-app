@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addSurvivorStatus,
   getUserCustomSurvivorStatuses,
   removeSurvivorStatus,
   updateSurvivorStatus
 } from '@/lib/dal/survivor-status'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  SURVIVOR_STATUS_CREATED_MESSAGE,
-  SURVIVOR_STATUS_REMOVED_MESSAGE,
-  SURVIVOR_STATUS_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { SurvivorStatusDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Survivor Statuses Card Component Properties
- */
-interface CustomSurvivorStatusesCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Survivor Statuses Card Component
@@ -46,14 +31,9 @@ interface CustomSurvivorStatusesCardProps {
  * delete. Entries are displayed alphabetically. UI updates are optimistic and
  * roll back on database failure.
  *
- * @param props Custom Survivor Statuses Card Properties
  * @returns Custom Survivor Statuses Card Component
  */
-export function CustomSurvivorStatusesCard({
-  local
-}: CustomSurvivorStatusesCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomSurvivorStatusesCard(): ReactElement {
   const [items, setItems] = useState<SurvivorStatusDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -97,7 +77,7 @@ export function CustomSurvivorStatusesCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Survivor Status
@@ -135,8 +115,6 @@ export function CustomSurvivorStatusesCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(SURVIVOR_STATUS_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Survivor Status Error:', err)
@@ -145,7 +123,7 @@ export function CustomSurvivorStatusesCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -186,8 +164,6 @@ export function CustomSurvivorStatusesCard({
           survivor_status_name: data.name,
           rules: data.rules || null
         })
-
-        toast.success(SURVIVOR_STATUS_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Survivor Status Error:', err)
@@ -196,7 +172,7 @@ export function CustomSurvivorStatusesCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -210,16 +186,14 @@ export function CustomSurvivorStatusesCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeSurvivorStatus(item.id)
-        .then(() => toast.success(SURVIVOR_STATUS_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Survivor Status Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeSurvivorStatus(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Survivor Status Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**
