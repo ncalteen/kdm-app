@@ -138,7 +138,7 @@ export function formatUnreadBadgeCount(unreadCount: number): string {
  * @returns Notification bell with unread badge and notification popover.
  */
 export function NotificationBell(): ReactElement {
-  const { isAuthenticated, notificationRefreshToken } = useLocal()
+  const { isAuthenticated, subscribeToNotificationInserts } = useLocal()
   const [notifications, setNotifications] = useState<NotificationRow[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false)
@@ -167,24 +167,31 @@ export function NotificationBell(): ReactElement {
 
     let isCancelled = false
 
-    fetchNotificationSnapshot()
-      .then((snapshot) => {
-        if (isCancelled) return
+    const handleSnapshot = (snapshot: NotificationSnapshot) => {
+      if (isCancelled) return
 
-        setNotifications(snapshot.notifications)
-        setUnreadCount(snapshot.unreadCount)
-      })
-      .catch((error: unknown) => {
-        if (isCancelled) return
+      setNotifications(snapshot.notifications)
+      setUnreadCount(snapshot.unreadCount)
+    }
 
-        console.error('Notification Fetch Error:', error)
-        toast.error(ERROR_MESSAGE())
-      })
+    const handleFetchError = (error: unknown) => {
+      if (isCancelled) return
+
+      console.error('Notification Fetch Error:', error)
+      toast.error(ERROR_MESSAGE())
+    }
+
+    fetchNotificationSnapshot().then(handleSnapshot).catch(handleFetchError)
+
+    const unsubscribe = subscribeToNotificationInserts(() => {
+      fetchNotificationSnapshot().then(handleSnapshot).catch(handleFetchError)
+    })
 
     return () => {
       isCancelled = true
+      unsubscribe()
     }
-  }, [isAuthenticated, notificationRefreshToken])
+  }, [isAuthenticated, subscribeToNotificationInserts])
 
   const handleMarkRead = async (notification: NotificationRow) => {
     if (notification.read_at) return

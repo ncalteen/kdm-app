@@ -81,6 +81,10 @@ const newLocal: LocalStateType = {
   selectedTab: null
 }
 
+const NOTIFICATION_INSERT_COALESCE_MS = 250
+
+type NotificationInsertListener = () => void
+
 /**
  * Local Context Type
  */
@@ -201,8 +205,10 @@ interface LocalContextType {
   userSubscription: UserSubscriptionDetail | null
   /** Set User Subscription */
   setUserSubscription: (subscription: UserSubscriptionDetail | null) => void
-  /** Notification Refresh Token */
-  notificationRefreshToken: number
+  /** Subscribe To Notification Inserts */
+  subscribeToNotificationInserts: (
+    listener: NotificationInsertListener
+  ) => () => void
   /**
    * Whether The User May Create New Shares
    *
@@ -360,10 +366,14 @@ export function LocalProvider({
   // to avoid a redundant round trip.
   const [userId, setUserId] = useState<string | null>(null)
 
-  // Incremented by the per-user realtime channel whenever a notification row
-  // is inserted for this user. Consumers use it as a refetch signal without
-  // needing their own Supabase channel.
-  const [notificationRefreshToken, setNotificationRefreshToken] = useState(0)
+  // Notification insert listeners hang off refs so realtime inbox events do not
+  // mutate the global context value and re-render unrelated consumers.
+  const notificationInsertListenersRef = useRef(
+    new Set<NotificationInsertListener>()
+  )
+  const notificationInsertTimerRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
 
   // Settlement list shown in the switcher. Held at the context layer so the
   // user-level realtime channel can refresh it from a single source of
@@ -807,13 +817,49 @@ export function LocalProvider({
   }, [])
 
   /**
+   * Subscribe To Notification Inserts
+   *
+   * Registers a lightweight listener for notification INSERT events without
+   * storing notification churn in the global context value.
+   *
+   * @param listener Notification Insert Listener
+   * @returns Unsubscribe Function
+   */
+  const subscribeToNotificationInserts = useCallback(
+    (listener: NotificationInsertListener) => {
+      notificationInsertListenersRef.current.add(listener)
+
+      return () => {
+        notificationInsertListenersRef.current.delete(listener)
+      }
+    },
+    []
+  )
+
+  /**
    * Handle Notification Insert
    *
-   * Signals notification consumers to refetch their cached list/count when the
-   * per-user realtime channel receives a new inbox row.
+   * Coalesces bursty inbox INSERT events before notifying subscribers, keeping
+   * the bell fresh without causing one list/count refetch per row.
    */
   const handleNotificationInsert = useCallback(() => {
-    setNotificationRefreshToken((prev) => prev + 1)
+    if (notificationInsertTimerRef.current)
+      clearTimeout(notificationInsertTimerRef.current)
+
+    notificationInsertTimerRef.current = setTimeout(() => {
+      notificationInsertTimerRef.current = null
+
+      notificationInsertListenersRef.current.forEach((listener) => {
+        listener()
+      })
+    }, NOTIFICATION_INSERT_COALESCE_MS)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (notificationInsertTimerRef.current)
+        clearTimeout(notificationInsertTimerRef.current)
+    }
   }, [])
 
   // Coalesces bursty INSERT / DELETE events on `settlement` (e.g. the
@@ -1719,7 +1765,7 @@ export function LocalProvider({
 
       userSubscription,
       setUserSubscription,
-      notificationRefreshToken,
+      subscribeToNotificationInserts,
       canShare: userSubscription?.can_share === true,
       subscriptionManagementEnabled,
 
@@ -1750,7 +1796,7 @@ export function LocalProvider({
       local,
       userSettings,
       userSubscription,
-      notificationRefreshToken,
+      subscribeToNotificationInserts,
       subscriptionManagementEnabled,
       settlementList,
       isSettlementListLoading,
