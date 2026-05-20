@@ -1,3 +1,4 @@
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Stub `server-only`. Its real module body throws when loaded outside the
@@ -17,6 +18,7 @@ const {
   mockDeleteUser,
   mockGetUserById,
   mockResetPasswordForEmail,
+  mockInvalidateAuthSessionsRpc,
   mockAdminSettingsIn,
   mockCreateAdminClient
 } = vi.hoisted(() => ({
@@ -24,6 +26,7 @@ const {
   mockDeleteUser: vi.fn(),
   mockGetUserById: vi.fn(),
   mockResetPasswordForEmail: vi.fn(),
+  mockInvalidateAuthSessionsRpc: vi.fn(),
   mockAdminSettingsIn: vi.fn(),
   mockCreateAdminClient: vi.fn()
 }))
@@ -107,6 +110,7 @@ function setupAuth(options: {
  */
 function setupAdminClient() {
   mockAdminSettingsIn.mockResolvedValue({ data: [], error: null })
+  mockInvalidateAuthSessionsRpc.mockResolvedValue({ data: 0, error: null })
 
   mockCreateAdminClient.mockReturnValue({
     auth: {
@@ -121,7 +125,8 @@ function setupAdminClient() {
       select: vi.fn(() => ({
         in: mockAdminSettingsIn
       }))
-    }))
+    })),
+    rpc: mockInvalidateAuthSessionsRpc
   })
 }
 
@@ -249,9 +254,39 @@ describe('admin users API routes', () => {
     expect(response.status).toBe(200)
     expect(json.ok).toBe(true)
     expect(mockGetUserById).toHaveBeenCalledWith(targetUserId)
+    expect(mockInvalidateAuthSessionsRpc).toHaveBeenCalledWith(
+      'invalidate_auth_sessions_for_user',
+      { target_user_id: targetUserId }
+    )
     expect(mockResetPasswordForEmail).toHaveBeenCalledWith(
       'survivor@archivist.test',
       { redirectTo: 'https://archivist.test/auth/update-password' }
     )
+  })
+
+  it('does not send password reset email when session sign out fails', async () => {
+    setupAuth({ user: { id: adminUserId }, appRole: 'admin' })
+    mockGetUserById.mockResolvedValue({
+      data: { user: { id: targetUserId, email: 'survivor@archivist.test' } },
+      error: null
+    })
+    mockInvalidateAuthSessionsRpc.mockResolvedValue({
+      data: null,
+      error: { message: 'could not revoke sessions' }
+    })
+
+    const response = await passwordResetRoute.POST(
+      buildRequest(`/api/admin/users/${targetUserId}/password-reset`, 'POST'),
+      buildContext(targetUserId)
+    )
+    const json = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(json.error).toBe(ERROR_MESSAGE())
+    expect(mockInvalidateAuthSessionsRpc).toHaveBeenCalledWith(
+      'invalidate_auth_sessions_for_user',
+      { target_user_id: targetUserId }
+    )
+    expect(mockResetPasswordForEmail).not.toHaveBeenCalled()
   })
 })

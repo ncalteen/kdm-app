@@ -5185,6 +5185,10 @@ export type Database = {
         Args: { p_user_id: string; p_username: string }
         Returns: undefined
       }
+      invalidate_auth_sessions_for_user: {
+        Args: { target_user_id: string }
+        Returns: number
+      }
       is_admin: { Args: never; Returns: boolean }
       is_armor_set_owner: { Args: { record_id: string }; Returns: boolean }
       is_collective_cognition_reward_visible_via_quarry_reference: {

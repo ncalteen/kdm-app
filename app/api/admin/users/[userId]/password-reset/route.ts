@@ -63,6 +63,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
       { status: 400 }
     )
 
+  const { error: signOutError } = await admin.rpc(
+    'invalidate_auth_sessions_for_user',
+    { target_user_id: userId }
+  )
+
+  if (signOutError) {
+    console.error('Admin Password Reset Session Sign Out Error:', signOutError)
+
+    return NextResponse.json({ error: ERROR_MESSAGE() }, { status: 500 })
+  }
+
   const { error } = await admin.auth.resetPasswordForEmail(user.email, {
     redirectTo: `${resolveOrigin(request)}/auth/update-password`
   })

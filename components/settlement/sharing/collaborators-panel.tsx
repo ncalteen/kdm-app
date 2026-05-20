@@ -477,8 +477,6 @@ function CollaboratorsPanelContent({
         )}
 
         <div className="space-y-2">
-          <div className="text-sm font-medium">Shared lanterns</div>
-
           {isLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
