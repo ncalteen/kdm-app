@@ -22,6 +22,7 @@ import { SettlementDetail, SettlementListEntry } from '@/lib/types'
 import {
   CircleQuestionMarkIcon,
   CreditCardIcon,
+  DatabaseIcon,
   HourglassIcon,
   LightbulbIcon,
   NotebookPenIcon,
@@ -30,7 +31,6 @@ import {
   SchoolIcon,
   SettingsIcon,
   Share2Icon,
-  ShieldCheckIcon,
   SkullIcon,
   SwordsIcon,
   UserIcon,
@@ -176,21 +176,23 @@ const navSubscriptionEntry = {
 }
 
 /**
- * Admin Settings Navigation Entry
+ * Admin Navigation Items
  *
- * Added only when Supabase Auth reports the verified user role is `admin`.
+ * Rendered only when Supabase Auth reports the verified user role is `admin`.
  */
-const navAdminSettingsEntry = {
-  title: 'Admin Settings',
-  tab: TabType.ADMIN_SETTINGS,
-  icon: ShieldCheckIcon
-}
+const navAdmin = [
+  {
+    title: 'Development',
+    tab: TabType.ADMIN_DEVELOPMENT,
+    icon: DatabaseIcon
+  }
+]
 
 /**
  * Settings Navigation Items (Always Visible)
  *
- * Subscription and Admin entries are appended at runtime by the `navSettings`
- * memo so feature and auth gates can control them.
+ * The Subscription entry is appended at runtime by the `navSettings`
+ * memo so the feature gate can control it.
  */
 const baseNavSettings = [
   {
@@ -318,7 +320,7 @@ export function AppSidebar({
   ])
 
   // Splice gated settings entries before Help so the Configuration group keeps
-  // Help as the last stop while hiding admin controls from non-admin users.
+  // Help as the last stop.
   const navSettings = useMemo(() => {
     const items = [...baseNavSettings]
     const insertBeforeHelp = (entry: (typeof items)[number]) => {
@@ -329,10 +331,8 @@ export function AppSidebar({
     }
 
     if (subscriptionManagementEnabled) insertBeforeHelp(navSubscriptionEntry)
-    if (isAdmin) insertBeforeHelp(navAdminSettingsEntry)
-
     return items
-  }, [isAdmin, subscriptionManagementEnabled])
+  }, [subscriptionManagementEnabled])
 
   return (
     <Sidebar
@@ -386,6 +386,17 @@ export function AppSidebar({
             setSelectedTab={setSelectedTab}
           />
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <NavMain
+              items={navAdmin}
+              selectedTab={selectedTab}
+              setSelectedTab={setSelectedTab}
+            />
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

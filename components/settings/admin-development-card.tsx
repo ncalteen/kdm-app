@@ -16,32 +16,56 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLocal } from '@/contexts/local-context'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { generateSeedData } from '@/lib/seed'
-import { DatabaseIcon, Loader2, ShieldCheckIcon } from 'lucide-react'
-import { ReactElement, useTransition } from 'react'
+import { DatabaseIcon, Loader2 } from 'lucide-react'
+import { ReactElement, useEffect, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
 /**
- * Admin Settings Card Component
+ * Is Local Development Host
  *
- * Hosts privileged maintenance actions. Visibility is guarded both by the
- * sidebar and by this component using the verified Supabase Auth role stored in
- * local context.
+ * Seed-data generation is intentionally limited to local development.
  *
- * @returns Admin Settings Card Component
+ * @returns Whether the current browser host is local development
  */
-export function AdminSettingsCard(): ReactElement {
+function isLocalDevelopmentHost(): boolean {
+  if (process.env.NODE_ENV !== 'development') return false
+  if (typeof window === 'undefined') return false
+
+  return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+}
+
+/**
+ * Admin Development Card Component
+ *
+ * Hosts privileged development-only maintenance actions. Visibility is guarded
+ * by the sidebar and by this component using the verified Supabase Auth role
+ * stored in local context.
+ *
+ * @returns Admin Development Card Component
+ */
+export function AdminDevelopmentCard(): ReactElement {
   const { isAdmin } = useLocal()
+  const [isLocalDevelopment, setIsLocalDevelopment] = useState<boolean>(false)
   const [isSeeding, startSeedTransition] = useTransition()
+
+  useEffect(() => {
+    setIsLocalDevelopment(isLocalDevelopmentHost())
+  }, [])
 
   if (!isAdmin) return <></>
 
   /**
    * Handle Generating Seed Data
    *
-   * Only available in development mode. Deletes all existing data for the
+   * Only available in local development mode. Deletes all existing data for the
    * user and creates comprehensive test settlements.
    */
   const handleGenerateSeedData = () => {
+    if (!isLocalDevelopment) {
+      toast.error('The seed ritual only answers beside a local lantern.')
+      return
+    }
+
     startSeedTransition(async () => {
       try {
         await generateSeedData()
@@ -52,19 +76,17 @@ export function AdminSettingsCard(): ReactElement {
     })
   }
 
-  const isDevelopment = process.env.NODE_ENV === 'development'
-
   return (
     <div className="flex flex-col gap-4 pt-12 px-2">
       <Card className="p-0">
         <CardHeader className="px-4 pt-3 pb-0">
           <CardTitle className="text-lg flex items-center gap-2">
-            <ShieldCheckIcon className="h-5 w-5 text-amber-400/90" />
-            Admin Settings
+            <DatabaseIcon className="h-5 w-5 text-amber-400/90" />
+            Development
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-4">
-          {isDevelopment ? (
+          {isLocalDevelopment ? (
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="font-medium text-sm">Generate Seed Data</div>
@@ -106,7 +128,7 @@ export function AdminSettingsCard(): ReactElement {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No admin actions are available outside the lantern-lit workshop.
+              Development tools are only available while running locally.
             </p>
           )}
         </CardContent>

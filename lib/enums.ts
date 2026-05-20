@@ -63,8 +63,8 @@ export enum DatabaseSurvivorType {
  * Tab Type
  */
 export enum TabType {
-  /** Admin Settings */
-  ADMIN_SETTINGS = 'adminSettings',
+  /** Admin Development */
+  ADMIN_DEVELOPMENT = 'adminDevelopment',
   /** Arc Survivors */
   ARC = 'arc',
   /** Crafting */
