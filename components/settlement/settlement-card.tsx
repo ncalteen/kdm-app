@@ -59,6 +59,7 @@ import {
   TabType
 } from '@/lib/enums'
 import { FREE_TIER_SETTLEMENT_LIMIT_MESSAGE } from '@/lib/messages'
+import { canCreateUnlimitedSettlements } from '@/lib/subscription-entitlements'
 import {
   HuntDetail,
   HuntStateSetter,
@@ -205,7 +206,7 @@ export function SettlementCard({
   // skips the post-checkout tab switch). This local check protects against
   // a stale `selectedTab` value persisted to localStorage from a previous
   // session when the user was on the allowlist but has since been removed.
-  const { subscriptionManagementEnabled } = useLocal()
+  const { subscriptionManagementEnabled, userSubscription } = useLocal()
 
   // Settings tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.SETTINGS)
@@ -268,11 +269,13 @@ export function SettlementCard({
   if (!selectedSettlement) {
     // Mirror the SettlementSwitcher's free-tier ownership cap so the
     // empty-state "Found a settlement" affordance can't lure the user into a
-    // form that the DAL will refuse to submit.
+    // form that the DAL will refuse to submit. Active paid settlement tiers
+    // skip the cap.
     const ownedSettlementCount = settlementList.filter(
       (s) => s.role === 'owner'
     ).length
     const hasReachedSettlementLimit =
+      !canCreateUnlimitedSettlements(userSubscription) &&
       ownedSettlementCount >= FREE_TIER_SETTLEMENT_LIMIT
 
     return (

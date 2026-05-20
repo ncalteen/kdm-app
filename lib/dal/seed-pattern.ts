@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -75,7 +76,7 @@ export async function getUserCustomSeedPatterns(): Promise<{
   const { data, error } = await supabase
     .from('seed_pattern')
     .select(
-      'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity)'
+      'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity), archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -84,7 +85,8 @@ export async function getUserCustomSeedPatterns(): Promise<{
     throw new Error(`Error Fetching Custom Seed Patterns: ${error.message}`)
 
   const seedPatternMap: { [key: string]: SeedPatternDetail } = {}
-  for (const s of data ?? []) seedPatternMap[s.id] = toSeedPatternDetail(s)
+  for (const s of data ?? [])
+    if (!s.archived_at) seedPatternMap[s.id] = toSeedPatternDetail(s)
 
   return seedPatternMap
 }
@@ -159,11 +161,7 @@ export async function updateSeedPattern(
  * @param id Seed Pattern ID
  */
 export async function removeSeedPattern(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('seed_pattern').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Seed Pattern: ${error.message}`)
+  await removeCatalogRow('seed_pattern', id, 'Seed Pattern')
 }
 
 /**

@@ -12,6 +12,23 @@ vi.mock('@/lib/dal/user', () => ({
   getUserId: vi.fn()
 }))
 
+vi.mock('@/lib/dal/user-subscription', () => ({
+  getUserSubscription: vi.fn()
+}))
+
+vi.mock('@/lib/campaigns/potl', () => ({
+  getPeopleOfTheLanternTemplate: vi.fn().mockResolvedValue({
+    collectiveCognitionRewardIds: [],
+    innovationIds: [],
+    locationIds: [],
+    milestoneIds: [],
+    nemesisIds: [],
+    principleIds: [],
+    quarryIds: [],
+    timeline: []
+  })
+}))
+
 // Mock all of the related DAL modules used by `getSettlement` so the test
 // file does not need to set up DB mocks for each one. These are used only
 // for verifying that `getSettlement` invokes them and aggregates results.
@@ -81,11 +98,20 @@ const {
   removeSettlement
 } = await import('@/lib/dal/settlement')
 const { getUserId } = await import('@/lib/dal/user')
+const { getUserSubscription } = await import('@/lib/dal/user-subscription')
 const { FREE_TIER_SETTLEMENT_LIMIT } = await import('@/lib/common')
+const { CampaignType, SurvivorType } = await import('@/lib/enums')
 const { FREE_TIER_SETTLEMENT_LIMIT_MESSAGE } = await import('@/lib/messages')
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.mocked(getUserSubscription).mockResolvedValue({
+    plan_id: 'free',
+    status: 'active',
+    current_period_end: null,
+    cancel_at_period_end: false,
+    can_share: false
+  })
 })
 
 describe('getSettlement', () => {
@@ -387,9 +413,9 @@ describe('createSettlement (free-tier ownership cap)', () => {
    * this test path — we only need a value the function can destructure.
    */
   const baseInput = {
-    campaignType: 'PEOPLE_OF_THE_LANTERN',
+    campaignType: CampaignType.PEOPLE_OF_THE_LANTERN,
     settlementName: 'Doomed',
-    survivorType: 'CORE',
+    survivorType: SurvivorType.CORE,
     usesScouts: false,
     monsterIds: {
       NQ1: [],
@@ -448,5 +474,47 @@ describe('createSettlement (free-tier ownership cap)', () => {
       FREE_TIER_SETTLEMENT_LIMIT_MESSAGE(FREE_TIER_SETTLEMENT_LIMIT)
     )
     expect(insert).not.toHaveBeenCalled()
+  })
+
+  it('does not enforce the free-tier cap for an active lantern subscriber', async () => {
+    vi.mocked(getUserId).mockResolvedValue('user-1')
+    vi.mocked(getUserSubscription).mockResolvedValue({
+      plan_id: 'lantern',
+      status: 'active',
+      current_period_end: '2027-01-01T00:00:00Z',
+      cancel_at_period_end: false,
+      can_share: false
+    })
+
+    const countSelect = vi.fn()
+    const settlementInsert = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'insert reached' }
+        })
+      })
+    })
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'settlement') {
+        return {
+          select: countSelect,
+          insert: settlementInsert
+        }
+      }
+
+      return {
+        select: vi.fn(),
+        insert: vi.fn()
+      }
+    })
+
+    await expect(createSettlement(baseInput)).rejects.toThrow(
+      'Error Creating Settlement: insert reached'
+    )
+
+    expect(countSelect).not.toHaveBeenCalled()
+    expect(settlementInsert).toHaveBeenCalledOnce()
   })
 })

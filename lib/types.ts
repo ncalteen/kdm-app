@@ -43,7 +43,7 @@ export type CampaignTemplate = {
  */
 export type AbilityImpairmentDetail = Omit<
   Tables<'ability_impairment'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {}
 
 /**
@@ -54,7 +54,7 @@ export type AbilityImpairmentDetail = Omit<
  */
 export type TraitDetail = Omit<
   Tables<'trait'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {}
 
 /**
@@ -65,7 +65,7 @@ export type TraitDetail = Omit<
  */
 export type MoodDetail = Omit<
   Tables<'mood'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {}
 
 /**
@@ -77,7 +77,7 @@ export type MoodDetail = Omit<
  */
 export type SurvivorStatusDetail = Omit<
   Tables<'survivor_status'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {}
 
 /**
@@ -88,7 +88,7 @@ export type SurvivorStatusDetail = Omit<
  */
 export type CharacterDetail = Omit<
   Tables<'character'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {}
 
 /**
@@ -98,7 +98,7 @@ export type CharacterDetail = Omit<
  */
 export type CollectiveCognitionRewardDetail = Omit<
   Tables<'collective_cognition_reward'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -108,7 +108,7 @@ export type CollectiveCognitionRewardDetail = Omit<
  */
 export type DisorderDetail = Omit<
   Tables<'disorder'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -118,7 +118,7 @@ export type DisorderDetail = Omit<
  */
 export type FightingArtDetail = Omit<
   Tables<'fighting_art'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -128,7 +128,7 @@ export type FightingArtDetail = Omit<
  */
 export type SecretFightingArtDetail = Omit<
   Tables<'secret_fighting_art'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -150,7 +150,7 @@ export type SeedPatternGearCostDetail = {
  */
 export type SeedPatternDetail = Omit<
   Tables<'seed_pattern'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {
   /** Gear Costs Required to Craft the Seed Pattern */
   gear_costs: SeedPatternGearCostDetail[]
@@ -213,7 +213,11 @@ export type GearResourceTypeCostDetail = {
  */
 export type GearDetail = Omit<
   Tables<'gear'>,
-  'created_at' | 'updated_at' | 'user_id' | 'affinity_bonus_requirements'
+  | 'created_at'
+  | 'updated_at'
+  | 'user_id'
+  | 'affinity_bonus_requirements'
+  | 'archived_at'
 > & {
   /** Affinity Bonus Requirements */
   affinity_bonus_requirements: GearAffinityRequirementDetail[]
@@ -253,7 +257,7 @@ export type ArmorSetSlotDetail = {
  */
 export type ArmorSetDetail = Omit<
   Tables<'armor_set'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {
   /** Slots Composing the Set */
   slots: ArmorSetSlotDetail[]
@@ -453,7 +457,7 @@ export type HuntSurvivorDetail = Omit<
  */
 export type InnovationDetail = Omit<
   Tables<'innovation'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -463,7 +467,7 @@ export type InnovationDetail = Omit<
  */
 export type KnowledgeDetail = Omit<
   Tables<'knowledge'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -473,7 +477,7 @@ export type KnowledgeDetail = Omit<
  */
 export type LocationDetail = Omit<
   Tables<'location'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -483,7 +487,7 @@ export type LocationDetail = Omit<
  */
 export type MilestoneDetail = Omit<
   Tables<'milestone'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -552,7 +556,7 @@ export type MonsterLevelData = {
  */
 export type NemesisDetail = Omit<
   Tables<'nemesis'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -590,7 +594,7 @@ export type NemesisTimelineDetail = Omit<
  */
 export type NeurosisDetail = Omit<
   Tables<'neurosis'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -637,7 +641,7 @@ export type PatternResourceTypeCostDetail = {
  */
 export type PatternDetail = Omit<
   Tables<'pattern'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {
   /** Gear Costs Required to Craft the Pattern */
   gear_costs: PatternGearCostDetail[]
@@ -656,7 +660,7 @@ export type PatternDetail = Omit<
  */
 export type PhilosophyDetail = Omit<
   Tables<'philosophy'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -685,7 +689,7 @@ export type PlanSlug = 'free' | 'lantern' | 'lantern_hoard'
  */
 export type PrincipleDetail = Omit<
   Tables<'principle'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -695,7 +699,7 @@ export type PrincipleDetail = Omit<
  */
 export type QuarryDetail = Omit<
   Tables<'quarry'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -757,7 +761,7 @@ export type QuarryTimelineDetail = Omit<
  */
 export type ResourceDetail = Omit<
   Tables<'resource'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {
   /** Quarry Monster Name (joined from quarry table) */
   quarry_monster_name: string | null
@@ -1334,7 +1338,7 @@ export type ShowdownSurvivorDetail = Omit<
  */
 export type StrainMilestoneDetail = Omit<
   Tables<'strain_milestone'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >
 
 /**
@@ -1711,7 +1715,7 @@ export interface UserSubscriptionDetail {
  */
 export type WandererDetail = Omit<
   Tables<'wanderer'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {
   /** Abilities and Impairments (resolved via junction table) */
   abilities_impairments: WandererAbilityImpairmentDetail[]
@@ -1744,5 +1748,5 @@ export type WandererTimelineYearDetail = Omit<
  */
 export type WeaponTypeDetail = Omit<
   Tables<'weapon_type'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 >

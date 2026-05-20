@@ -257,7 +257,7 @@ export function AppSidebar({
   // single early-access allowlist. When the rollout opens to everyone, the
   // Sharing entry should be re-gated on `canShare` so non-subscribers stop
   // seeing it; see `docs/settlement-sharing-architecture.md` §9.
-  const { subscriptionManagementEnabled } = useLocal()
+  const { subscriptionManagementEnabled, userSubscription } = useLocal()
 
   const navItems = useMemo(() => {
     const items =
@@ -324,6 +324,7 @@ export function AppSidebar({
           selectedSettlementPhaseId={selectedSettlementPhaseId}
           selectedShowdownId={selectedShowdownId}
           settlementList={settlementList}
+          userSubscription={userSubscription}
           setIsCreatingNewSettlement={setIsCreatingNewSettlement}
           setSelectedHuntId={setSelectedHuntId}
           setSelectedSettlementId={setSelectedSettlementId}

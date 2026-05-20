@@ -23,7 +23,12 @@ import {
 import { FREE_TIER_SETTLEMENT_LIMIT } from '@/lib/common'
 import { CampaignType } from '@/lib/enums'
 import { FREE_TIER_SETTLEMENT_LIMIT_MESSAGE } from '@/lib/messages'
-import { SettlementDetail, SettlementListEntry } from '@/lib/types'
+import { canCreateUnlimitedSettlements } from '@/lib/subscription-entitlements'
+import {
+  SettlementDetail,
+  SettlementListEntry,
+  UserSubscriptionDetail
+} from '@/lib/types'
 import { Check, ChevronsUpDown, House, Plus } from 'lucide-react'
 import { ComponentProps, ReactElement } from 'react'
 
@@ -57,6 +62,8 @@ interface SettlementSwitcherProps extends ComponentProps<typeof Sidebar> {
    * (#144 / E1.5) propagate without an extra fetch.
    */
   settlementList: SettlementListEntry[]
+  /** User Subscription */
+  userSubscription: UserSubscriptionDetail | null
   /** Set Is Creating New Settlement */
   setIsCreatingNewSettlement: (isCreating: boolean) => void
   /** Set Selected Hunt ID */
@@ -91,6 +98,7 @@ export function SettlementSwitcher({
   selectedSettlementPhaseId,
   selectedShowdownId,
   settlementList,
+  userSubscription,
   setIsCreatingNewSettlement,
   setSelectedHuntId,
   setSelectedSettlementId,
@@ -108,14 +116,15 @@ export function SettlementSwitcher({
     setSelectedSettlementId(settlementId)
   }
 
-  // Free-tier ownership cap. Collaborator rows are excluded so users who
-  // accept shares are not punished for it. The DAL enforces the same cap on
-  // submit; the UI gate keeps the affordance honest before the user invests
-  // time in the create form.
+  // Free-tier ownership cap. Paid settlement tiers skip it; collaborator rows
+  // are excluded so users who accept shares are not punished for it. The DAL
+  // enforces the same cap on submit; the UI gate keeps the affordance honest
+  // before the user invests time in the create form.
   const ownedSettlementCount = settlementList.filter(
     (s) => s.role === 'owner'
   ).length
   const hasReachedSettlementLimit =
+    !canCreateUnlimitedSettlements(userSubscription) &&
     ownedSettlementCount >= FREE_TIER_SETTLEMENT_LIMIT
 
   if (isSettlementListLoading)

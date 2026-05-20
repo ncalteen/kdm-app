@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -47,7 +48,7 @@ export async function getUserCustomCharacters(): Promise<{
 
   const { data, error } = await supabase
     .from('character')
-    .select('id, custom, character_name, rules')
+    .select('id, custom, character_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -55,7 +56,7 @@ export async function getUserCustomCharacters(): Promise<{
     throw new Error(`Error Fetching Custom Characters: ${error.message}`)
 
   const characterMap: { [key: string]: CharacterDetail } = {}
-  for (const c of data ?? []) characterMap[c.id] = c
+  for (const c of data ?? []) if (!c.archived_at) characterMap[c.id] = c
 
   return characterMap
 }
@@ -124,9 +125,5 @@ export async function updateCharacter(
  * @param id Character ID
  */
 export async function removeCharacter(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('character').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Character: ${error.message}`)
+  await removeCatalogRow('character', id, 'Character')
 }

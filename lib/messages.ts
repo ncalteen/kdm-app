@@ -261,6 +261,30 @@ export const CUSTOM_MONSTER_UPDATED_MESSAGE = (monsterType: MonsterType) =>
     : 'The quarry shifts in the darkness.'
 
 /**
+ * Catalog Restored
+ *
+ * @returns Catalog Restored Message
+ */
+export const CATALOG_RESTORED_MESSAGE = () =>
+  'The lantern finds what was nearly lost.'
+
+/**
+ * Catalog Permanently Deleted
+ *
+ * @returns Catalog Permanently Deleted Message
+ */
+export const CATALOG_PERMANENTLY_DELETED_MESSAGE = () =>
+  'The record is ash, and no settlement remembers it.'
+
+/**
+ * Catalog Permanent Delete Blocked
+ *
+ * @returns Catalog Permanent Delete Blocked Message
+ */
+export const CATALOG_PERMANENT_DELETE_BLOCKED_MESSAGE = () =>
+  'A settlement still clings to this memory. Remove it from every settlement before consigning it to the dark.'
+
+/**
  * Departing Bonus Removed
  *
  * @returns Departing Bonus Removed Message
@@ -1459,16 +1483,15 @@ export const SETTLEMENT_CREATED_MESSAGE = () =>
  * Free-Tier Settlement Limit Reached
  *
  * Surfaced both as a tooltip on the "Found a settlement" affordance and as a
- * toast on the rare race where a user submits the form while already at the
- * cap. Paid tiers that lift this cap are still in progress, so the copy
- * explicitly calls that out and reminds the user that shared settlements
- * remain unlimited.
+ * toast on the rare race where a free user submits the form while already at
+ * the cap. Paid settlement tiers can found beyond this limit; shared
+ * settlements remain unlimited.
  *
  * @param limit Maximum Settlements Allowed On The Free Tier
  * @returns Free-Tier Settlement Limit Message
  */
 export const FREE_TIER_SETTLEMENT_LIMIT_MESSAGE = (limit: number) =>
-  `The lantern hoard is full — free survivors may keep watch over ${limit} settlements. Paid tiers are still being forged. Settlements shared with you remain unlimited.`
+  `The lantern hoard is full — free survivors may keep watch over ${limit} settlements. Light a Lantern to found more. Settlements shared with you remain unlimited.`
 
 /**
  * Settlement Deleted

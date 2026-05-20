@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -50,7 +51,7 @@ export async function getUserCustomFightingArts(): Promise<{
 
   const { data, error } = await supabase
     .from('fighting_art')
-    .select('id, custom, fighting_art_name, rules')
+    .select('id, custom, fighting_art_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -58,7 +59,7 @@ export async function getUserCustomFightingArts(): Promise<{
     throw new Error(`Error Fetching Custom Fighting Arts: ${error.message}`)
 
   const fightingArtMap: { [key: string]: FightingArtDetail } = {}
-  for (const f of data ?? []) fightingArtMap[f.id] = f
+  for (const f of data ?? []) if (!f.archived_at) fightingArtMap[f.id] = f
 
   return fightingArtMap
 }
@@ -130,11 +131,7 @@ export async function updateFightingArt(
  * @param id Fighting Art ID
  */
 export async function removeFightingArt(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('fighting_art').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Fighting Art: ${error.message}`)
+  await removeCatalogRow('fighting_art', id, 'Fighting Art')
 }
 
 /**
@@ -152,7 +149,7 @@ export async function getCustomFightingArts(): Promise<{
 
   const { data, error } = await supabase
     .from('fighting_art')
-    .select('id, custom, fighting_art_name, rules')
+    .select('id, custom, fighting_art_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -160,7 +157,7 @@ export async function getCustomFightingArts(): Promise<{
     throw new Error(`Error Fetching Custom Fighting Arts: ${error.message}`)
 
   const fightingArtMap: { [key: string]: FightingArtDetail } = {}
-  for (const f of data ?? []) fightingArtMap[f.id] = f
+  for (const f of data ?? []) if (!f.archived_at) fightingArtMap[f.id] = f
 
   return fightingArtMap
 }

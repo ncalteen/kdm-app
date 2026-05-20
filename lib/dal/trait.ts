@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 import { TraitDetail } from '@/lib/types'
@@ -45,14 +46,14 @@ export async function getUserCustomTraits(): Promise<{
 
   const { data, error } = await supabase
     .from('trait')
-    .select('id, custom, trait_name, rules')
+    .select('id, custom, trait_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
   if (error) throw new Error(`Error Fetching Custom Traits: ${error.message}`)
 
   const map: { [key: string]: TraitDetail } = {}
-  for (const t of data ?? []) map[t.id] = t
+  for (const t of data ?? []) if (!t.archived_at) map[t.id] = t
 
   return map
 }
@@ -116,11 +117,7 @@ export async function updateTrait(
  * @param id Trait ID
  */
 export async function removeTrait(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('trait').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Trait: ${error.message}`)
+  await removeCatalogRow('trait', id, 'Trait')
 }
 
 /**

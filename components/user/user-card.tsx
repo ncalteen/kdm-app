@@ -1,5 +1,6 @@
 'use client'
 
+import { ArchivedCatalogCard } from '@/components/custom/archived-catalog-card'
 import { CustomAbilityImpairmentsCard } from '@/components/custom/custom-ability-impairments-card'
 import { CustomCharactersCard } from '@/components/custom/custom-characters-card'
 import { CustomCollectiveCognitionRewardsCard } from '@/components/custom/custom-collective-cognition-rewards-card'
@@ -280,6 +281,7 @@ export function UserCard({
               <SelectItem value="monsters">Monsters</SelectItem>
               <SelectItem value="wanderers">Wanderers</SelectItem>
               <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -293,6 +295,7 @@ export function UserCard({
           <TabsTrigger value="monsters">Monsters</TabsTrigger>
           <TabsTrigger value="wanderers">Wanderers</TabsTrigger>
           <TabsTrigger value="other">Other</TabsTrigger>
+          <TabsTrigger value="archived">Archived</TabsTrigger>
         </TabsList>
         <TabsContent value="society">
           <div className="grid grid-cols-1 gap-4">
@@ -363,6 +366,9 @@ export function UserCard({
               <CustomWeaponTypesCard local={local} />
             </div>
           </div>
+        </TabsContent>
+        <TabsContent value="archived">
+          <ArchivedCatalogCard local={local} />
         </TabsContent>
       </Tabs>
     </div>

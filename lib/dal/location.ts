@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -49,7 +50,7 @@ export async function getUserCustomLocations(): Promise<{
 
   const { data, error } = await supabase
     .from('location')
-    .select('id, custom, location_name, rules')
+    .select('id, custom, location_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -57,7 +58,7 @@ export async function getUserCustomLocations(): Promise<{
     throw new Error(`Error Fetching Custom Locations: ${error.message}`)
 
   const locationMap: { [key: string]: LocationDetail } = {}
-  for (const l of data ?? []) locationMap[l.id] = l
+  for (const l of data ?? []) if (!l.archived_at) locationMap[l.id] = l
 
   return locationMap
 }
@@ -164,9 +165,5 @@ export async function updateLocation(
  * @param id Location ID
  */
 export async function removeLocation(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('location').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Location: ${error.message}`)
+  await removeCatalogRow('location', id, 'Location')
 }

@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
@@ -53,7 +54,7 @@ export async function getUserCustomPrinciples(): Promise<{
   const { data, error } = await supabase
     .from('principle')
     .select(
-      'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
+      'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules, archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -62,7 +63,7 @@ export async function getUserCustomPrinciples(): Promise<{
     throw new Error(`Error Fetching Custom Principles: ${error.message}`)
 
   const principleMap: { [key: string]: PrincipleDetail } = {}
-  for (const p of data ?? []) principleMap[p.id] = p
+  for (const p of data ?? []) if (!p.archived_at) principleMap[p.id] = p
 
   return principleMap
 }
@@ -179,9 +180,5 @@ export async function updatePrinciple(
  * @param id Principle ID
  */
 export async function removePrinciple(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('principle').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Principle: ${error.message}`)
+  await removeCatalogRow('principle', id, 'Principle')
 }

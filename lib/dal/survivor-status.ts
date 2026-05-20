@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 import { SurvivorStatusDetail } from '@/lib/types'
@@ -49,7 +50,7 @@ export async function getUserCustomSurvivorStatuses(): Promise<{
 
   const { data, error } = await supabase
     .from('survivor_status')
-    .select('id, custom, survivor_status_name, rules')
+    .select('id, custom, survivor_status_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -57,7 +58,7 @@ export async function getUserCustomSurvivorStatuses(): Promise<{
     throw new Error(`Error Fetching Custom Survivor Statuses: ${error.message}`)
 
   const map: { [key: string]: SurvivorStatusDetail } = {}
-  for (const s of data ?? []) map[s.id] = s
+  for (const s of data ?? []) if (!s.archived_at) map[s.id] = s
 
   return map
 }
@@ -124,11 +125,7 @@ export async function updateSurvivorStatus(
  * @param id Survivor Status ID
  */
 export async function removeSurvivorStatus(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('survivor_status').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Survivor Status: ${error.message}`)
+  await removeCatalogRow('survivor_status', id, 'Survivor Status')
 }
 
 /**

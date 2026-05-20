@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -53,7 +54,7 @@ export async function getUserCustomCollectiveCognitionRewards(): Promise<{
 
   const { data, error } = await supabase
     .from('collective_cognition_reward')
-    .select('id, custom, reward_name, collective_cognition, rules')
+    .select('id, custom, reward_name, collective_cognition, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -63,7 +64,7 @@ export async function getUserCustomCollectiveCognitionRewards(): Promise<{
     )
 
   const rewardMap: { [key: string]: CollectiveCognitionRewardDetail } = {}
-  for (const r of data ?? []) rewardMap[r.id] = r
+  for (const r of data ?? []) if (!r.archived_at) rewardMap[r.id] = r
 
   return rewardMap
 }
@@ -185,15 +186,9 @@ export async function updateCollectiveCognitionReward(
 export async function removeCollectiveCognitionReward(
   id: string
 ): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('collective_cognition_reward')
-    .delete()
-    .eq('id', id)
-
-  if (error)
-    throw new Error(
-      `Error Removing Collective Cognition Reward: ${error.message}`
-    )
+  await removeCatalogRow(
+    'collective_cognition_reward',
+    id,
+    'Collective Cognition Reward'
+  )
 }

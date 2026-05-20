@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { Json, TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -100,7 +101,7 @@ export async function getUserCustomGear(): Promise<{
   const { data, error } = await supabase
     .from('gear')
     .select(
-      'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity)'
+      'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity), archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -108,7 +109,8 @@ export async function getUserCustomGear(): Promise<{
   if (error) throw new Error(`Error Fetching Custom Gear: ${error.message}`)
 
   const gearMap: { [key: string]: GearDetail } = {}
-  for (const g of data ?? []) gearMap[g.id] = toGearDetail(g)
+  for (const g of data ?? [])
+    if (!g.archived_at) gearMap[g.id] = toGearDetail(g)
 
   return gearMap
 }
@@ -178,11 +180,7 @@ export async function updateGear(
  * @param id Gear ID
  */
 export async function removeGear(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('gear').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Gear: ${error.message}`)
+  await removeCatalogRow('gear', id, 'Gear')
 }
 
 /**
@@ -201,7 +199,7 @@ export async function getCustomGear(): Promise<{
   const { data, error } = await supabase
     .from('gear')
     .select(
-      'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity)'
+      'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity), archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -209,7 +207,8 @@ export async function getCustomGear(): Promise<{
   if (error) throw new Error(`Error Fetching Custom Gear: ${error.message}`)
 
   const gearMap: { [key: string]: GearDetail } = {}
-  for (const g of data ?? []) gearMap[g.id] = toGearDetail(g)
+  for (const g of data ?? [])
+    if (!g.archived_at) gearMap[g.id] = toGearDetail(g)
 
   return gearMap
 }

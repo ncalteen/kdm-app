@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
@@ -53,7 +54,7 @@ export async function getUserCustomMilestones(): Promise<{
   const { data, error } = await supabase
     .from('milestone')
     .select(
-      'id, custom, milestone_name, event_name, campaign_types, requirements, rules'
+      'id, custom, milestone_name, event_name, campaign_types, requirements, rules, archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -62,7 +63,7 @@ export async function getUserCustomMilestones(): Promise<{
     throw new Error(`Error Fetching Custom Milestones: ${error.message}`)
 
   const milestoneMap: { [key: string]: MilestoneDetail } = {}
-  for (const m of data ?? []) milestoneMap[m.id] = m
+  for (const m of data ?? []) if (!m.archived_at) milestoneMap[m.id] = m
 
   return milestoneMap
 }
@@ -179,9 +180,5 @@ export async function updateMilestone(
  * @param id Milestone ID
  */
 export async function removeMilestone(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('milestone').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Milestone: ${error.message}`)
+  await removeCatalogRow('milestone', id, 'Milestone')
 }

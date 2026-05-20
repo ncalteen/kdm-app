@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
@@ -81,7 +82,7 @@ export async function getUserCustomNemeses(): Promise<{
   const { data, error } = await supabase
     .from('nemesis')
     .select(
-      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
+      'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome, archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -89,7 +90,7 @@ export async function getUserCustomNemeses(): Promise<{
   if (error) throw new Error(`Error Fetching Custom Nemeses: ${error.message}`)
 
   const nemesisMap: { [key: string]: NemesisDetail } = {}
-  for (const n of data ?? []) nemesisMap[n.id] = n
+  for (const n of data ?? []) if (!n.archived_at) nemesisMap[n.id] = n
 
   return nemesisMap
 }
@@ -248,9 +249,5 @@ export async function updateNemesis(
  * @param id Nemesis ID
  */
 export async function removeNemesis(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('nemesis').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Nemesis: ${error.message}`)
+  await removeCatalogRow('nemesis', id, 'Nemesis')
 }

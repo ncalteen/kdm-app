@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -52,7 +53,7 @@ export async function getUserCustomWeaponTypes(): Promise<{
   const { data, error } = await supabase
     .from('weapon_type')
     .select(
-      'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules'
+      'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules, archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -61,7 +62,7 @@ export async function getUserCustomWeaponTypes(): Promise<{
     throw new Error(`Error Fetching Custom Weapon Types: ${error.message}`)
 
   const weaponTypeMap: { [key: string]: WeaponTypeDetail } = {}
-  for (const w of data ?? []) weaponTypeMap[w.id] = w
+  for (const w of data ?? []) if (!w.archived_at) weaponTypeMap[w.id] = w
 
   return weaponTypeMap
 }
@@ -135,9 +136,5 @@ export async function updateWeaponType(
  * @param id Weapon Type ID
  */
 export async function removeWeaponType(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('weapon_type').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Weapon Type: ${error.message}`)
+  await removeCatalogRow('weapon_type', id, 'Weapon Type')
 }

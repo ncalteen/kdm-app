@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -171,11 +172,7 @@ export async function updateWanderer(
  * @param id Wanderer ID
  */
 export async function removeWanderer(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('wanderer').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Wanderer: ${error.message}`)
+  await removeCatalogRow('wanderer', id, 'Wanderer')
 }
 
 /**
@@ -194,7 +191,7 @@ export async function getCustomWanderers(): Promise<{
   const { data, error } = await supabase
     .from('wanderer')
     .select(
-      'id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules))'
+      'id, custom, accuracy, arc, courage, disposition, evasion, fighting_art_ids, gender, hunt_xp, hunt_xp_rank_up, insanity, luck, lumi, movement, wanderer_name, permanent_injuries, rare_gear_ids, speed, strength, survival, systemic_pressure, torment, understanding, abilities_impairments:wanderer_ability_impairment(ability_impairment(id, custom, ability_impairment_name, rules)), archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -204,7 +201,8 @@ export async function getCustomWanderers(): Promise<{
 
   const wandererMap: { [key: string]: WandererDetail } = {}
   for (const w of data ?? [])
-    wandererMap[w.id] = flattenWanderer(w as unknown as RawWandererRow)
+    if (!w.archived_at)
+      wandererMap[w.id] = flattenWanderer(w as unknown as RawWandererRow)
 
   return wandererMap
 }

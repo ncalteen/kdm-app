@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -54,7 +55,7 @@ export async function getUserCustomStrainMilestones(): Promise<{
   const { data, error } = await supabase
     .from('strain_milestone')
     .select(
-      'id, custom, strain_milestone_name, milestone_condition, permanent_effect'
+      'id, custom, strain_milestone_name, milestone_condition, permanent_effect, archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -63,7 +64,7 @@ export async function getUserCustomStrainMilestones(): Promise<{
     throw new Error(`Error Fetching Custom Strain Milestones: ${error.message}`)
 
   const strainMilestoneMap: { [key: string]: StrainMilestoneDetail } = {}
-  for (const s of data ?? []) strainMilestoneMap[s.id] = s
+  for (const s of data ?? []) if (!s.archived_at) strainMilestoneMap[s.id] = s
 
   return strainMilestoneMap
 }
@@ -138,13 +139,5 @@ export async function updateStrainMilestone(
  * @param id Strain Milestone ID
  */
 export async function removeStrainMilestone(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('strain_milestone')
-    .delete()
-    .eq('id', id)
-
-  if (error)
-    throw new Error(`Error Removing Strain Milestone: ${error.message}`)
+  await removeCatalogRow('strain_milestone', id, 'Strain Milestone')
 }

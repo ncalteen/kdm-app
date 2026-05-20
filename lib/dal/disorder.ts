@@ -1,3 +1,4 @@
+import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -52,7 +53,7 @@ export async function getUserCustomDisorders(): Promise<{
 
   const { data, error } = await supabase
     .from('disorder')
-    .select('id, custom, disorder_name, rules')
+    .select('id, custom, disorder_name, rules, archived_at')
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -60,7 +61,7 @@ export async function getUserCustomDisorders(): Promise<{
     throw new Error(`Error Fetching Custom Disorders: ${error.message}`)
 
   const disorderMap: { [key: string]: DisorderDetail } = {}
-  for (const d of data ?? []) disorderMap[d.id] = d
+  for (const d of data ?? []) if (!d.archived_at) disorderMap[d.id] = d
 
   return disorderMap
 }
@@ -128,9 +129,5 @@ export async function updateDisorder(
  * @param id Disorder ID
  */
 export async function removeDisorder(id: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from('disorder').delete().eq('id', id)
-
-  if (error) throw new Error(`Error Removing Disorder: ${error.message}`)
+  await removeCatalogRow('disorder', id, 'Disorder')
 }
