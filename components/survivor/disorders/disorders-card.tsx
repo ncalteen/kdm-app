@@ -20,22 +20,19 @@ import {
 } from '@/components/ui/popover'
 import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { addDisorder, getDisorders } from '@/lib/dal/disorder'
 import {
   addSurvivorDisorder,
   removeSurvivorDisorder
 } from '@/lib/dal/survivor-disorder'
 import {
-  DISORDER_CREATED_MESSAGE,
   ERROR_MESSAGE,
-  SURVIVOR_DISORDER_LIMIT_EXCEEDED_ERROR_MESSAGE,
-  SURVIVOR_DISORDER_REMOVED_MESSAGE,
-  SURVIVOR_DISORDER_UPDATED_MESSAGE
+  SURVIVOR_DISORDER_LIMIT_EXCEEDED_ERROR_MESSAGE
 } from '@/lib/messages'
 import { DisorderDetail, SurvivorDetail } from '@/lib/types'
 import { Plus, PlusIcon, TrashIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 const MAX_DISORDERS = 3
 
@@ -59,8 +56,7 @@ export function DisordersCard({
   local,
   selectedSurvivor
 }: DisordersCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
@@ -132,11 +128,10 @@ export function DisordersCard({
         persist: () => addSurvivorDisorder(selectedSurvivor.id, disorderId),
         rollback: () => {
           setDisorders(oldDisorders)
-        },
-        successMessage: SURVIVOR_DISORDER_UPDATED_MESSAGE(true)
+        }
       })
     },
-    [availableDisorders, disorders, selectedSurvivor, mutate, toast]
+    [availableDisorders, disorders, selectedSurvivor, mutate]
   )
 
   /**
@@ -161,8 +156,7 @@ export function DisordersCard({
         persist: () => removeSurvivorDisorder(selectedSurvivor.id, removed.id),
         rollback: () => {
           setDisorders(oldDisorders)
-        },
-        successMessage: SURVIVOR_DISORDER_REMOVED_MESSAGE()
+        }
       })
     },
     [disorders, selectedSurvivor, mutate]
@@ -192,7 +186,7 @@ export function DisordersCard({
     setCreateDialogKey((k) => k + 1)
     setAddOpen(false)
     setCreateDialogOpen(true)
-  }, [search, selectedSurvivor?.id, disorders.length, toast])
+  }, [search, selectedSurvivor?.id, disorders.length])
 
   /**
    * Handle Create Custom Disorder
@@ -227,7 +221,6 @@ export function DisordersCard({
 
         setSearch('')
         setCreateDialogOpen(false)
-        toast.success(DISORDER_CREATED_MESSAGE())
 
         // Add to survivor immediately with the data we already have
         const optimisticItem: SurvivorDetail['disorders'][number] = {
@@ -249,8 +242,7 @@ export function DisordersCard({
             addSurvivorDisorder(selectedSurvivor.id, newDisorder.id),
           rollback: () => {
             setDisorders(oldDisorders)
-          },
-          successMessage: SURVIVOR_DISORDER_UPDATED_MESSAGE(true)
+          }
         })
       } catch (error) {
         console.error('Disorder Create Error:', error)
@@ -259,7 +251,7 @@ export function DisordersCard({
         setCreating(false)
       }
     },
-    [creating, selectedSurvivor, disorders, toast, mutate]
+    [creating, selectedSurvivor, disorders, mutate]
   )
 
   return (

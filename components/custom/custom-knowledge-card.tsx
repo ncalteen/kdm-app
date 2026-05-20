@@ -11,8 +11,6 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addKnowledge,
   getUserCustomKnowledges,
@@ -20,24 +18,17 @@ import {
   updateKnowledge
 } from '@/lib/dal/knowledge'
 import { getPhilosophies } from '@/lib/dal/philosophy'
-import {
-  ERROR_MESSAGE,
-  KNOWLEDGE_CREATED_MESSAGE,
-  KNOWLEDGE_REMOVED_MESSAGE,
-  KNOWLEDGE_UPDATED_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { KnowledgeDetail, PhilosophyDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Custom Knowledge Card Component Properties
  */
 interface CustomKnowledgeCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Bumped when philosophies change externally */
   philosophyVersion?: number
 }
@@ -55,11 +46,8 @@ interface CustomKnowledgeCardProps {
  * @returns Custom Knowledge Card Component
  */
 export function CustomKnowledgeCard({
-  local,
   philosophyVersion
 }: CustomKnowledgeCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [items, setItems] = useState<KnowledgeDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [availablePhilosophies, setAvailablePhilosophies] = useState<{
@@ -105,7 +93,7 @@ export function CustomKnowledgeCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   // Re-fetch philosophies when they change externally
   useEffect(() => {
@@ -175,8 +163,6 @@ export function CustomKnowledgeCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(KNOWLEDGE_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Knowledge Error:', err)
@@ -185,7 +171,7 @@ export function CustomKnowledgeCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -239,8 +225,6 @@ export function CustomKnowledgeCard({
           observation_conditions: data.observation_conditions || null,
           observation_rank_up_milestone: data.observation_rank_up_milestone
         })
-
-        toast.success(KNOWLEDGE_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Knowledge Error:', err)
@@ -249,7 +233,7 @@ export function CustomKnowledgeCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -263,16 +247,14 @@ export function CustomKnowledgeCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeKnowledge(item.id)
-        .then(() => toast.success(KNOWLEDGE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Knowledge Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeKnowledge(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Knowledge Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

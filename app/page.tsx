@@ -126,7 +126,7 @@ function MainPage(): ReactElement {
     survivors,
 
     local,
-    updateLocal,
+    // updateLocal,
 
     userSettings,
     setUserSettings,
@@ -192,7 +192,6 @@ function MainPage(): ReactElement {
             setSurvivors={setSurvivors}
             setUserSettings={setUserSettings}
             survivors={survivors}
-            updateLocal={updateLocal}
             userSettings={userSettings}
           />
         </SidebarInset>

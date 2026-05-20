@@ -11,8 +11,6 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { renameUsername, USERNAME_PATTERN } from '@/lib/dal/user'
 import {
   ERROR_MESSAGE,
@@ -32,13 +30,12 @@ import {
   useEffect,
   useState
 } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Update Username Form Properties
  */
 interface UpdateUsernameFormProps extends ComponentPropsWithoutRef<'div'> {
-  /** Local State */
-  local: LocalStateType
   /** Set User Settings */
   setUserSettings: (settings: UserSettingsDetail | null) => void
   /** User Settings */
@@ -113,12 +110,10 @@ interface SubmitError {
  */
 export function UpdateUsernameForm({
   className,
-  local,
   setUserSettings,
   userSettings,
   ...props
 }: UpdateUsernameFormProps): ReactElement {
-  const { toast } = useToast(local)
   const currentUsername = userSettings?.username ?? ''
   const [username, setUsername] = useState(currentUsername)
   const [probe, setProbe] = useState<ProbeState | null>(null)

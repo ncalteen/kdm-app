@@ -4,8 +4,6 @@ import {
   MonsterForm,
   MonsterFormPayload
 } from '@/components/monster/monster-form'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   syncMonsterMoods,
   syncMonsterSurvivorStatuses,
@@ -23,15 +21,14 @@ import { addQuarryLevel } from '@/lib/dal/quarry-level'
 import { addQuarryLocation } from '@/lib/dal/quarry-location'
 import { addQuarryTimelineYear } from '@/lib/dal/quarry-timeline-year'
 import { MonsterType } from '@/lib/enums'
-import { CUSTOM_MONSTER_CREATED_MESSAGE, ERROR_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Create Monster Card Properties
  */
 interface CreateMonsterCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Cancel Callback */
   onCancel: () => void
   /** Monster Created Callback */
@@ -49,11 +46,9 @@ interface CreateMonsterCardProps {
  * @returns Create Monster Card Component
  */
 export function CreateMonsterCard({
-  local,
   onCancel,
   onMonsterCreated
 }: CreateMonsterCardProps): ReactElement {
-  const { toast } = useToast(local)
   const [isCreating, setIsCreating] = useState(false)
 
   /**
@@ -206,7 +201,6 @@ export function CreateMonsterCard({
           }
         }
 
-        toast.success(CUSTOM_MONSTER_CREATED_MESSAGE(payload.monsterType))
         onMonsterCreated()
       } catch (error) {
         console.error('Create Monster Error:', error)
@@ -215,12 +209,11 @@ export function CreateMonsterCard({
         setIsCreating(false)
       }
     },
-    [onMonsterCreated, toast]
+    [onMonsterCreated]
   )
 
   return (
     <MonsterForm
-      local={local}
       mode="create"
       title="Create Custom Monster"
       submitLabel="Create Monster"

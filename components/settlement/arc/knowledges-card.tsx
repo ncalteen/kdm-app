@@ -21,18 +21,13 @@ import {
 import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { addKnowledge, getKnowledges } from '@/lib/dal/knowledge'
 import { getPhilosophies } from '@/lib/dal/philosophy'
 import {
   addSettlementKnowledges,
   removeSettlementKnowledge
 } from '@/lib/dal/settlement-knowledge'
-import {
-  ERROR_MESSAGE,
-  KNOWLEDGE_CREATED_MESSAGE,
-  KNOWLEDGE_REMOVED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   KnowledgeDetail,
   PhilosophyDetail,
@@ -41,6 +36,7 @@ import {
 } from '@/lib/types'
 import { GraduationCapIcon, Plus, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Knowledges Card Properties
@@ -69,8 +65,7 @@ export function KnowledgesCard({
   selectedSettlement,
   setSelectedSettlement
 }: KnowledgesCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -192,8 +187,7 @@ export function KnowledgesCard({
                 }
               : null
           )
-        },
-        successMessage: KNOWLEDGE_CREATED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, availableKnowledges, setSelectedSettlement, mutate]
@@ -236,8 +230,7 @@ export function KnowledgesCard({
               knowledges: [...(prev.knowledges ?? []), removed]
             }
           })
-        },
-        successMessage: KNOWLEDGE_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -283,7 +276,6 @@ export function KnowledgesCard({
         setCreateDialogOpen(false)
         setSearch('')
         setAddOpen(false)
-        toast.success(KNOWLEDGE_CREATED_MESSAGE())
 
         // Add to settlement immediately.
         const tempId = `temp-${crypto.randomUUID()}`
@@ -354,7 +346,6 @@ export function KnowledgesCard({
       creating,
       selectedSettlement,
       setSelectedSettlement,
-      toast,
       mutate,
       setAvailableKnowledges
     ]

@@ -6,10 +6,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { SurvivorCardMode } from '@/lib/enums'
-import { ERROR_MESSAGE, HUNT_NOTES_SAVED_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   HuntDetail,
   HuntStateSetter,
@@ -20,6 +19,7 @@ import {
 } from '@/lib/types'
 import { CheckIcon } from 'lucide-react'
 import { ReactElement, useCallback, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Hunt Survivor Card Component Properties
@@ -59,8 +59,6 @@ export function HuntSurvivorCard({
   setSurvivors,
   survivors
 }: HuntSurvivorCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   /** Find the hunt survivor detail record for the current survivor */
   const huntSurvivorDetail = selectedHunt?.hunt_survivors
     ? Object.values(selectedHunt.hunt_survivors).find(
@@ -113,9 +111,8 @@ export function HuntSurvivorCard({
     })
     setIsNotesDirty(false)
 
-    updateHuntSurvivor(huntSurvivorDetail.id, { notes: notesDraft })
-      .then(() => toast.success(HUNT_NOTES_SAVED_MESSAGE()))
-      .catch((err: unknown) => {
+    updateHuntSurvivor(huntSurvivorDetail.id, { notes: notesDraft }).catch(
+      (err: unknown) => {
         // Rollback
         setSelectedHunt((prev) => {
           if (!prev?.hunt_survivors) return prev
@@ -132,14 +129,14 @@ export function HuntSurvivorCard({
 
         console.error('Hunt Survivor Notes Save Error:', err)
         toast.error(ERROR_MESSAGE())
-      })
+      }
+    )
   }, [
     selectedSurvivor?.id,
     selectedHunt,
     huntSurvivorDetail,
     notesDraft,
-    setSelectedHunt,
-    toast
+    setSelectedHunt
   ])
 
   if (!selectedSurvivor) return <></>

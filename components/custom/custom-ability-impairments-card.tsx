@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addAbilityImpairment,
   getUserCustomAbilityImpairments,
   removeAbilityImpairment,
   updateAbilityImpairment
 } from '@/lib/dal/ability-impairment'
-import {
-  ABILITY_IMPAIRMENT_CREATED_MESSAGE,
-  ABILITY_IMPAIRMENT_REMOVED_MESSAGE,
-  ABILITY_IMPAIRMENT_UPDATED_MESSAGE,
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { AbilityImpairmentDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Abilities & Impairments Card Component Properties
- */
-interface CustomAbilityImpairmentsCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Abilities & Impairments Card Component
@@ -46,14 +31,9 @@ interface CustomAbilityImpairmentsCardProps {
  * and delete. Entries are displayed alphabetically. Name and rules are entered
  * via a dialog. UI updates are optimistic and roll back on database failure.
  *
- * @param props Custom Abilities & Impairments Card Properties
  * @returns Custom Abilities & Impairments Card Component
  */
-export function CustomAbilityImpairmentsCard({
-  local
-}: CustomAbilityImpairmentsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomAbilityImpairmentsCard(): ReactElement {
   const [items, setItems] = useState<AbilityImpairmentDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -97,7 +77,7 @@ export function CustomAbilityImpairmentsCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Ability/Impairment
@@ -135,8 +115,6 @@ export function CustomAbilityImpairmentsCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(ABILITY_IMPAIRMENT_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Ability/Impairment Error:', err)
@@ -145,7 +123,7 @@ export function CustomAbilityImpairmentsCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -186,8 +164,6 @@ export function CustomAbilityImpairmentsCard({
           ability_impairment_name: data.name,
           rules: data.rules || null
         })
-
-        toast.success(ABILITY_IMPAIRMENT_UPDATED_MESSAGE(false))
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Ability/Impairment Error:', err)
@@ -196,7 +172,7 @@ export function CustomAbilityImpairmentsCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -210,16 +186,14 @@ export function CustomAbilityImpairmentsCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeAbilityImpairment(item.id)
-        .then(() => toast.success(ABILITY_IMPAIRMENT_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Ability/Impairment Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeAbilityImpairment(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Ability/Impairment Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

@@ -1,11 +1,6 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
-import {
-  MONSTER_AI_DECK_UPDATED_MESSAGE,
-  MONSTER_TOUGHNESS_UPDATED_MESSAGE,
-  MONSTER_WOUND_DECK_UPDATED_MESSAGE
-} from '@/lib/messages'
 import { ShowdownMonsterDetail } from '@/lib/types'
 import { ReactElement } from 'react'
 
@@ -41,12 +36,7 @@ export function ShowdownMonsterBaseStats({
         <NumericInput
           label="AI Deck Remaining"
           value={monster.ai_deck_remaining}
-          onChange={(value) =>
-            saveMonsterData(
-              { ai_deck_remaining: value },
-              MONSTER_AI_DECK_UPDATED_MESSAGE(monster.ai_deck_remaining, value)
-            )
-          }
+          onChange={(value) => saveMonsterData({ ai_deck_remaining: value })}
           min={0}
           className="border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
         />
@@ -56,12 +46,7 @@ export function ShowdownMonsterBaseStats({
         <NumericInput
           label="Wounds"
           value={monster.wounds}
-          onChange={(value) =>
-            saveMonsterData(
-              { wounds: value },
-              MONSTER_WOUND_DECK_UPDATED_MESSAGE(monster.wounds, value)
-            )
-          }
+          onChange={(value) => saveMonsterData({ wounds: value })}
           min={0}
           className="border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
         />
@@ -71,12 +56,7 @@ export function ShowdownMonsterBaseStats({
         <NumericInput
           label="Toughness"
           value={monster.toughness}
-          onChange={(value) =>
-            saveMonsterData(
-              { toughness: value },
-              MONSTER_TOUGHNESS_UPDATED_MESSAGE(monster.toughness, value)
-            )
-          }
+          onChange={(value) => saveMonsterData({ toughness: value })}
           min={0}
           className="border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
         />

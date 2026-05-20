@@ -12,10 +12,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { ERROR_MESSAGE, SQUIRE_SUSPICION_UPDATED_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   calculateSuspicionLevels,
   calculateTotalSuspicion
@@ -23,13 +21,12 @@ import {
 import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { EyeIcon } from 'lucide-react'
 import { ReactElement, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Squire Suspicions Card Properties
  */
 interface SquireSuspicionsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Set Survivors */
   setSurvivors: SurvivorsStateSetter
   /** Survivors */
@@ -43,12 +40,9 @@ interface SquireSuspicionsCardProps {
  * @returns Squire Suspicions Card Component
  */
 export function SquireSuspicionsCard({
-  local,
   setSurvivors,
   survivors
 }: SquireSuspicionsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [suspicion, setSuspicion] = useState<number>(
     calculateTotalSuspicion(survivors)
   )
@@ -82,20 +76,14 @@ export function SquireSuspicionsCard({
     setSuspicion(calculateTotalSuspicion(updatedSurvivors))
 
     // Persist the change to the database
-    updateSurvivor(survivorId, updatedLevels)
-      .then(() => {
-        toast.success(
-          SQUIRE_SUSPICION_UPDATED_MESSAGE(survivor.survivor_name ?? 'Squire')
-        )
-      })
-      .catch((error: unknown) => {
-        // Revert to previous state on error
-        setSurvivors(survivors)
-        setSuspicion(calculateTotalSuspicion(survivors))
+    updateSurvivor(survivorId, updatedLevels).catch((error: unknown) => {
+      // Revert to previous state on error
+      setSurvivors(survivors)
+      setSuspicion(calculateTotalSuspicion(survivors))
 
-        console.error('Update Squire Suspicion Error:', error)
-        toast.error(ERROR_MESSAGE())
-      })
+      console.error('Update Squire Suspicion Error:', error)
+      toast.error(ERROR_MESSAGE())
+    })
   }
 
   return (

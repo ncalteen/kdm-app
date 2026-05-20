@@ -49,8 +49,6 @@ import { toast as sonnerToast } from 'sonner'
  * Local State Type
  */
 export interface LocalStateType {
-  /** Disable Toast Notifications */
-  disableToasts: boolean
   /** Selected Hunt ID */
   selectedHuntId: string | null
   /** Selected Hunt Monster Index */
@@ -70,7 +68,6 @@ export interface LocalStateType {
 }
 
 const newLocal: LocalStateType = {
-  disableToasts: false,
   selectedHuntId: null,
   selectedHuntMonsterIndex: 0,
   selectedSettlementId: null,
@@ -384,13 +381,6 @@ export function LocalProvider({
   )
   const [isSettlementListLoading, setIsSettlementListLoading] =
     useState<boolean>(true)
-
-  // Toast helpers used by the share-change handler. Sonner is imported
-  // directly here (rather than via `useToast`) to avoid a circular import
-  // — `hooks/use-toast.tsx` already imports `LocalStateType` from this
-  // module. The `disableToasts` gating from `useToast` is reproduced inline
-  // for success / info events; errors are always shown.
-  const disableToasts = local.disableToasts === true
 
   useEffect(() => {
     let isCancelled = false
@@ -732,12 +722,7 @@ export function LocalProvider({
 
   const handleShareChange = useCallback(
     (event: ShareChangeEvent) => {
-      if (event.event === 'INSERT') {
-        if (!disableToasts)
-          sonnerToast.success('A new lantern joins the watch.')
-      } else {
-        if (!disableToasts) sonnerToast.info('A lantern dims. Its watch ends.')
-
+      if (event.event !== 'INSERT') {
         // If the active settlement is the one being revoked, force a
         // fresh fetch so the existing onSettlementChange cascade clears
         // derived state. RLS will return null post-revoke.
@@ -785,7 +770,7 @@ export function LocalProvider({
         refetchSettlementList()
       }, 300)
     },
-    [disableToasts, refetchSettlementList, selectedSettlementId]
+    [refetchSettlementList, selectedSettlementId]
   )
 
   useEffect(() => {

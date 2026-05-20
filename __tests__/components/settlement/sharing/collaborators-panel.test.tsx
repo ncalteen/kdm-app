@@ -7,12 +7,6 @@ vi.mock('@/contexts/local-context', () => ({
   useLocal: () => useLocalMock()
 }))
 
-vi.mock('@/hooks/use-toast', () => ({
-  useToast: () => ({
-    toast: { success: vi.fn(), info: vi.fn(), error: vi.fn() }
-  })
-}))
-
 vi.mock('@/lib/dal/settlement-shared-user', () => ({
   getSettlementSharedUsers: vi.fn().mockResolvedValue([]),
   addSettlementSharedUsers: vi.fn(),
@@ -38,12 +32,6 @@ vi.mock('@/components/generic/user-avatar', () => ({
 
 import { CollaboratorsPanel } from '@/components/settlement/sharing/collaborators-panel'
 
-type CollaboratorsPanelProps = Parameters<typeof CollaboratorsPanel>[0]
-
-const baseProps: CollaboratorsPanelProps = {
-  local: {} as CollaboratorsPanelProps['local']
-}
-
 const ownerContext = {
   selectedSettlementId: 'settlement-1',
   selectedSettlement: { id: 'settlement-1', role: 'owner' },
@@ -64,7 +52,7 @@ describe('CollaboratorsPanel', () => {
   it('renders the share form when the caller is the owner', () => {
     useLocalMock.mockReturnValue(ownerContext)
 
-    const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
+    const html = renderToStaticMarkup(<CollaboratorsPanel />)
 
     expect(html).toContain('Light another lantern')
     expect(html).toContain('Shared lanterns')
@@ -79,7 +67,7 @@ describe('CollaboratorsPanel', () => {
       canShare: true
     })
 
-    const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
+    const html = renderToStaticMarkup(<CollaboratorsPanel />)
 
     expect(html).toBe('')
   })
@@ -91,7 +79,7 @@ describe('CollaboratorsPanel', () => {
       canShare: true
     })
 
-    const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
+    const html = renderToStaticMarkup(<CollaboratorsPanel />)
 
     expect(html).toBe('')
   })
@@ -99,7 +87,7 @@ describe('CollaboratorsPanel', () => {
   it('shows the loading copy on the initial render before the fetch resolves', () => {
     useLocalMock.mockReturnValue(ownerContext)
 
-    const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
+    const html = renderToStaticMarkup(<CollaboratorsPanel />)
 
     expect(html).toContain('Gathering the watch')
   })
@@ -107,7 +95,7 @@ describe('CollaboratorsPanel', () => {
   it('swaps the invite form for the paywall upsell trigger when canShare is false', () => {
     useLocalMock.mockReturnValue(freeOwnerContext)
 
-    const html = renderToStaticMarkup(<CollaboratorsPanel {...baseProps} />)
+    const html = renderToStaticMarkup(<CollaboratorsPanel />)
 
     // Header copy stays the same so a downgraded user still sees a
     // familiar panel — the inline upsell trigger handles the gating

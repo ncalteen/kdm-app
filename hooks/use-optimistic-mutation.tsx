@@ -1,10 +1,9 @@
 'use client'
 
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { ERROR_MESSAGE, NOT_AUTHORIZED_MESSAGE } from '@/lib/messages'
 import { isAuthorizationError } from '@/lib/security/classify-mutation-error'
 import { useCallback } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Options Accepted by the Mutation Wrapper
@@ -42,9 +41,6 @@ export interface OptimisticMutationOptions<T> {
   /** Invoked on `persist()` rejection. Use to undo the optimistic update. */
   rollback?: (err: unknown) => void
 
-  /** Optional success toast message. Skipped when omitted. */
-  successMessage?: string
-
   /** Optional error toast override. Defaults to `ERROR_MESSAGE()`. */
   errorMessage?: string
 }
@@ -64,27 +60,16 @@ export interface OptimisticMutationOptions<T> {
  * those updates mutate per-domain context state (`selectedSettlement`,
  * `selectedSurvivor`, etc.) with shapes the hook cannot know about.
  *
- * @param local Local State (for toast suppression settings)
  * @returns Mutation Wrapper Function
  */
-export function useOptimisticMutation(local: LocalStateType) {
-  const { toast } = useToast(local)
-
+export function useOptimisticMutation() {
   return useCallback(
     async <T,>(options: OptimisticMutationOptions<T>): Promise<void> => {
-      const {
-        context,
-        persist,
-        onSuccess,
-        rollback,
-        successMessage,
-        errorMessage
-      } = options
+      const { context, persist, onSuccess, rollback, errorMessage } = options
 
       try {
         const result = await persist()
         if (onSuccess) await onSuccess(result)
-        if (successMessage) toast.success(successMessage)
       } catch (err) {
         if (rollback) rollback(err)
         console.error(`${context} Error:`, err)
@@ -97,6 +82,6 @@ export function useOptimisticMutation(local: LocalStateType) {
         }
       }
     },
-    [toast]
+    []
   )
 }

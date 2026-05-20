@@ -5,7 +5,6 @@ import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
-import { SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE } from '@/lib/messages'
 import {
   ShowdownDetail,
   ShowdownStateSetter,
@@ -41,7 +40,7 @@ export function BleedingCard({
   selectedSurvivor,
   setSelectedShowdown
 }: BleedingCardProps): ReactElement {
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const showdownSurvivorRecord =
     !selectedShowdown?.showdown_survivors || !selectedSurvivor?.id
@@ -92,8 +91,7 @@ export function BleedingCard({
               }
             }
           })
-        },
-        successMessage: SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE('bleeding')
+        }
       })
     }
   }

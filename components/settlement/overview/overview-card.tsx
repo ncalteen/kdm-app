@@ -6,8 +6,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { getLostSettlementCount, updateSettlement } from '@/lib/dal/settlement'
 import { updateSettlementPhase } from '@/lib/dal/settlement-phase'
 import {
@@ -18,12 +16,9 @@ import {
 } from '@/lib/enums'
 import {
   ENDEAVORS_MINIMUM_ERROR_MESSAGE,
-  ENDEAVORS_UPDATED_MESSAGE,
   ERROR_MESSAGE,
-  LANTERN_RESEARCH_LEVEL_MINIMUM_ERROR,
-  LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE,
-  SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE,
-  SURVIVAL_LIMIT_UPDATED_MESSAGE
+  LANTERN_RESEARCH_LEVEL_MINIMUM_ERROR_MESSAGE,
+  SURVIVAL_LIMIT_MINIMUM_ERROR_MESSAGE
 } from '@/lib/messages'
 import {
   SettlementDetail,
@@ -33,13 +28,12 @@ import {
 } from '@/lib/types'
 import { calculateSettlementCollectiveCognition } from '@/lib/utils'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Overview Card Properties
  */
 interface OverviewCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
@@ -63,15 +57,12 @@ interface OverviewCardProps {
  * @returns Overview Card Component
  */
 export function OverviewCard({
-  local,
   selectedSettlement,
   selectedSettlementPhase,
   setSelectedSettlement,
   setSelectedSettlementPhase,
   survivors
 }: OverviewCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [lostSettlementCount, setLostSettlementCount] = useState<number>(0)
   const [isLoadingLostCount, setIsLoadingLostCount] = useState<boolean>(true)
   const [prevSettlementId, setPrevSettlementId] = useState<string | undefined>(
@@ -140,7 +131,7 @@ export function OverviewCard({
     return () => {
       isCancelled = true
     }
-  }, [selectedSettlement?.id, toast])
+  }, [selectedSettlement?.id])
 
   /**
    * Handle Endeavors Change
@@ -168,19 +159,17 @@ export function OverviewCard({
 
       updateSettlementPhase(selectedSettlementPhase.id, {
         endeavors: value
-      })
-        .then(() => toast.success(ENDEAVORS_UPDATED_MESSAGE(previous, value)))
-        .catch((error: unknown) => {
-          // Rollback
-          setSelectedSettlementPhase({
-            ...selectedSettlementPhase,
-            endeavors: previous
-          })
-          console.error('Endeavors Update Error:', error)
-          toast.error(ERROR_MESSAGE())
+      }).catch((error: unknown) => {
+        // Rollback
+        setSelectedSettlementPhase({
+          ...selectedSettlementPhase,
+          endeavors: previous
         })
+        console.error('Endeavors Update Error:', error)
+        toast.error(ERROR_MESSAGE())
+      })
     },
-    [selectedSettlementPhase, setSelectedSettlementPhase, toast]
+    [selectedSettlementPhase, setSelectedSettlementPhase]
   )
 
   /**
@@ -197,7 +186,8 @@ export function OverviewCard({
       if (!selectedSettlement) return
       if (selectedSettlement.lantern_research === value) return
 
-      if (value < 0) return toast.error(LANTERN_RESEARCH_LEVEL_MINIMUM_ERROR())
+      if (value < 0)
+        return toast.error(LANTERN_RESEARCH_LEVEL_MINIMUM_ERROR_MESSAGE())
 
       const previous = selectedSettlement.lantern_research
 
@@ -207,20 +197,18 @@ export function OverviewCard({
         lantern_research: value
       })
 
-      updateSettlement(selectedSettlement.id, { lantern_research: value })
-        .then(() =>
-          toast.success(LANTERN_RESEARCH_LEVEL_UPDATED_MESSAGE(previous, value))
+      updateSettlement(selectedSettlement.id, {
+        lantern_research: value
+      }).catch((error: unknown) => {
+        // Rollback
+        setSelectedSettlement((prev) =>
+          prev ? { ...prev, lantern_research: previous } : null
         )
-        .catch((error: unknown) => {
-          // Rollback
-          setSelectedSettlement((prev) =>
-            prev ? { ...prev, lantern_research: previous } : null
-          )
-          console.error('Lantern Research Level Update Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        console.error('Lantern Research Level Update Error:', error)
+        toast.error(ERROR_MESSAGE())
+      })
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement]
   )
 
   /**
@@ -247,20 +235,18 @@ export function OverviewCard({
         survival_limit: value
       })
 
-      updateSettlement(selectedSettlement.id, { survival_limit: value })
-        .then(() =>
-          toast.success(SURVIVAL_LIMIT_UPDATED_MESSAGE(previous, value))
-        )
-        .catch((error: unknown) => {
+      updateSettlement(selectedSettlement.id, { survival_limit: value }).catch(
+        (error: unknown) => {
           // Rollback
           setSelectedSettlement((prev) =>
             prev ? { ...prev, survival_limit: previous } : null
           )
           console.error('Survival Limit Update Error:', error)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [selectedSettlement, setSelectedSettlement, toast]
+    [selectedSettlement, setSelectedSettlement]
   )
 
   return (

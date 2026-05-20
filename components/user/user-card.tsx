@@ -37,8 +37,6 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateUserSettings } from '@/lib/dal/user'
 import {
   CAMPAIGN_UNLOCK_KILLENIUM_BUTCHER_UPDATED_MESSAGE,
@@ -48,13 +46,12 @@ import {
 } from '@/lib/messages'
 import { UserSettingsDetail } from '@/lib/types'
 import { ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * User Card Properties
  */
 interface UserCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Set User Settings */
   setUserSettings: (settings: UserSettingsDetail | null) => void
   /** User Settings */
@@ -73,11 +70,9 @@ interface UserCardProps {
  * @returns User Card Component
  */
 export function UserCard({
-  local,
   setUserSettings,
   userSettings
 }: UserCardProps): ReactElement {
-  const { toast } = useToast(local)
   const [activeTab, setActiveTab] = useState('society')
   const [philosophyVersion, setPhilosophyVersion] = useState(0)
 
@@ -115,7 +110,7 @@ export function UserCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [userSettings, setUserSettings, toast]
+    [userSettings, setUserSettings]
   )
 
   /**
@@ -152,7 +147,7 @@ export function UserCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [userSettings, setUserSettings, toast]
+    [userSettings, setUserSettings]
   )
 
   /**
@@ -189,7 +184,7 @@ export function UserCard({
           toast.error(ERROR_MESSAGE())
         })
     },
-    [userSettings, setUserSettings, toast]
+    [userSettings, setUserSettings]
   )
 
   return (
@@ -300,75 +295,71 @@ export function UserCard({
         <TabsContent value="society">
           <div className="grid grid-cols-1 gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CustomMilestonesCard local={local} />
-              <CustomPrinciplesCard local={local} />
+              <CustomMilestonesCard />
+              <CustomPrinciplesCard />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CustomInnovationsCard local={local} />
-              <CustomLocationsCard local={local} />
+              <CustomInnovationsCard />
+              <CustomLocationsCard />
             </div>
           </div>
         </TabsContent>
         <TabsContent value="crafting">
           <div className="grid grid-cols-1 gap-4">
-            <CustomGearCard local={local} />
-            <CustomResourcesCard local={local} />
+            <CustomGearCard />
+            <CustomResourcesCard />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CustomPatternsCard local={local} />
-              <CustomSeedPatternsCard local={local} />
+              <CustomPatternsCard />
+              <CustomSeedPatternsCard />
             </div>
           </div>
         </TabsContent>
         <TabsContent value="arc">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <CustomCollectiveCognitionRewardsCard local={local} />
+            <CustomCollectiveCognitionRewardsCard />
             <CustomPhilosophiesCard
-              local={local}
               onPhilosophiesChange={() => setPhilosophyVersion((v) => v + 1)}
             />
-            <CustomKnowledgeCard
-              local={local}
-              philosophyVersion={philosophyVersion}
-            />
-            <CustomNeurosesCard local={local} />
+            <CustomKnowledgeCard philosophyVersion={philosophyVersion} />
+            <CustomNeurosesCard />
           </div>
         </TabsContent>
         <TabsContent value="survivors">
           <div className="grid grid-cols-1 gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CustomFightingArtsCard local={local} />
-              <CustomSecretFightingArtsCard local={local} />
+              <CustomFightingArtsCard />
+              <CustomSecretFightingArtsCard />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CustomDisordersCard local={local} />
-              <CustomAbilityImpairmentsCard local={local} />
+              <CustomDisordersCard />
+              <CustomAbilityImpairmentsCard />
             </div>
           </div>
         </TabsContent>
         <TabsContent value="monsters">
           <div className="grid grid-cols-1 gap-4">
-            <CustomMonstersCard local={local} />
+            <CustomMonstersCard />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CustomMoodsCard local={local} />
-              <CustomTraitsCard local={local} />
+              <CustomMoodsCard />
+              <CustomTraitsCard />
             </div>
-            <CustomSurvivorStatusesCard local={local} />
+            <CustomSurvivorStatusesCard />
           </div>
         </TabsContent>
         <TabsContent value="wanderers">
-          <CustomWanderersCard local={local} />
+          <CustomWanderersCard />
         </TabsContent>
         <TabsContent value="other">
           <div className="grid grid-cols-1 gap-4">
-            <CustomCharactersCard local={local} />
+            <CustomCharactersCard />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CustomStrainMilestonesCard local={local} />
-              <CustomWeaponTypesCard local={local} />
+              <CustomStrainMilestonesCard />
+              <CustomWeaponTypesCard />
             </div>
           </div>
         </TabsContent>
         <TabsContent value="archived">
-          <ArchivedCatalogCard local={local} />
+          <ArchivedCatalogCard />
         </TabsContent>
       </Tabs>
     </div>

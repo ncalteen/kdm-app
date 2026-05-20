@@ -18,11 +18,9 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useCraftGearPersistence } from '@/hooks/use-craft-gear-persistence'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import {
   CraftingAllocation,
   CraftingCostsSpec,
@@ -36,12 +34,7 @@ import {
   removeSettlementGear,
   updateSettlementGear
 } from '@/lib/dal/settlement-gear'
-import {
-  ERROR_MESSAGE,
-  GEAR_CRAFTED_MESSAGE,
-  GEAR_REMOVED_MESSAGE,
-  GEAR_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   GearDetail,
   ResourceDetail,
@@ -51,13 +44,12 @@ import {
 } from '@/lib/types'
 import { PlusIcon, WrenchIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Gear Card Properties
  */
 interface GearCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -81,14 +73,12 @@ interface GearCardProps {
  * @returns Gear Card Component
  */
 export function GearCard({
-  local,
   selectedSettlement,
   setSelectedSettlement,
   selectedSettlementPhase,
   setSelectedSettlementPhase
 }: GearCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -141,7 +131,6 @@ export function GearCard({
    * the supplied crafting allocation. State is rolled back on failure.
    */
   const { persistGearAddition } = useCraftGearPersistence({
-    local,
     selectedSettlement,
     setSelectedSettlement,
     selectedSettlementPhase,
@@ -175,15 +164,11 @@ export function GearCard({
         return
       }
 
-      persistGearAddition(
-        gearInfo,
-        {
-          gearDeductions: [],
-          resourceDeductions: [],
-          endeavorDeduction: 0
-        },
-        GEAR_UPDATED_MESSAGE()
-      )
+      persistGearAddition(gearInfo, {
+        gearDeductions: [],
+        resourceDeductions: [],
+        endeavorDeduction: 0
+      })
     },
     [selectedSettlement, availableGear, persistGearAddition]
   )
@@ -196,7 +181,6 @@ export function GearCard({
    */
   const handleCraftConfirm = useCallback(
     ({
-      deductCosts,
       allocation
     }: {
       deductCosts: boolean
@@ -204,10 +188,7 @@ export function GearCard({
     }) => {
       if (!pendingCraftGear) return
       setCraftDialogOpen(false)
-      const successMessage = deductCosts
-        ? GEAR_CRAFTED_MESSAGE()
-        : GEAR_UPDATED_MESSAGE()
-      persistGearAddition(pendingCraftGear, allocation, successMessage)
+      persistGearAddition(pendingCraftGear, allocation)
       setPendingCraftGear(null)
       setPendingCraftCosts(emptyCraftingCosts())
     },
@@ -242,8 +223,7 @@ export function GearCard({
             if (!prev || prev.gear.some((g) => g.id === removed.id)) return prev
             return { ...prev, gear: [...prev.gear, removed] }
           })
-        },
-        successMessage: GEAR_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -288,8 +268,7 @@ export function GearCard({
                 }
               : null
           )
-        },
-        successMessage: GEAR_UPDATED_MESSAGE(index)
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]

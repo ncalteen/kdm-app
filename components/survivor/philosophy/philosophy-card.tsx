@@ -29,19 +29,8 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import {
-  PHILOSOPHY_RANK_MINIMUM_ERROR,
-  SURVIVOR_NEUROSIS_UPDATED_MESSAGE,
-  SURVIVOR_PHILOSOPHY_RANK_UPDATED_MESSAGE,
-  SURVIVOR_PHILOSOPHY_SELECTED_MESSAGE,
-  SURVIVOR_TENET_KNOWLEDGE_OBSERVATION_CONDITIONS_UPDATED_MESSAGE,
-  SURVIVOR_TENET_KNOWLEDGE_OBSERVATION_RANK_UPDATED_MESSAGE,
-  SURVIVOR_TENET_KNOWLEDGE_RANK_UP_UPDATED_MESSAGE,
-  SURVIVOR_TENET_KNOWLEDGE_RULES_UPDATED_MESSAGE,
-  SURVIVOR_TENET_KNOWLEDGE_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { PHILOSOPHY_RANK_MINIMUM_ERROR_MESSAGE } from '@/lib/messages'
 import {
   SettlementDetail,
   SurvivorDetail,
@@ -50,6 +39,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Philosophy Card Properties
@@ -168,8 +158,7 @@ export function PhilosophyCard({
   setSurvivors,
   survivors
 }: PhilosophyCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
@@ -375,10 +364,7 @@ export function PhilosophyCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_PHILOSOPHY_SELECTED_MESSAGE(
-          philosophyDetail?.philosophy_name ?? ''
-        )
+        }
       })
     },
     [
@@ -443,10 +429,7 @@ export function PhilosophyCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_NEUROSIS_UPDATED_MESSAGE(
-          neurosisDetail?.neurosis_name ?? ''
-        )
+        }
       })
     },
     [neurosis, selectedSettlement, selectedSurvivor?.id, setSurvivors, mutate]
@@ -489,9 +472,7 @@ export function PhilosophyCard({
                 : s
             )
           )
-        },
-        successMessage:
-          SURVIVOR_TENET_KNOWLEDGE_RANK_UP_UPDATED_MESSAGE(newRankUp)
+        }
       })
     },
     [selectedSurvivor?.id, setSurvivors, mutate]
@@ -504,7 +485,7 @@ export function PhilosophyCard({
    */
   const updatePhilosophyRank = useCallback(
     (value: number) => {
-      if (value < 0) return toast.error(PHILOSOPHY_RANK_MINIMUM_ERROR())
+      if (value < 0) return toast.error(PHILOSOPHY_RANK_MINIMUM_ERROR_MESSAGE())
 
       const prevRank = philosophyRank
 
@@ -529,11 +510,10 @@ export function PhilosophyCard({
                 : s
             )
           )
-        },
-        successMessage: SURVIVOR_PHILOSOPHY_RANK_UPDATED_MESSAGE()
+        }
       })
     },
-    [philosophyRank, selectedSurvivor?.id, setSurvivors, toast, mutate]
+    [philosophyRank, selectedSurvivor?.id, setSurvivors, mutate]
   )
 
   /**
@@ -631,10 +611,7 @@ export function PhilosophyCard({
               : s
           )
         )
-      },
-      successMessage: SURVIVOR_TENET_KNOWLEDGE_UPDATED_MESSAGE(
-        knowledgeDetail?.knowledge_name ?? ''
-      )
+      }
     })
   }
 
@@ -657,7 +634,6 @@ export function PhilosophyCard({
     if (newRank === undefined) return
 
     const prevRank = tenetKnowledge.observation_rank
-    const isRankUp = checked && tenetKnowledge.rank_up === index
 
     setTenetKnowledge({ ...tenetKnowledge, observation_rank: newRank })
 
@@ -684,11 +660,7 @@ export function PhilosophyCard({
               : s
           )
         )
-      },
-      successMessage: SURVIVOR_TENET_KNOWLEDGE_OBSERVATION_RANK_UPDATED_MESSAGE(
-        isRankUp,
-        newRank
-      )
+      }
     })
   }
 
@@ -714,10 +686,6 @@ export function PhilosophyCard({
       context: 'Tenet Knowledge Rules Update',
       persist: () =>
         updateSurvivor(selectedSurvivor?.id, { tenet_knowledge_rules: value }),
-      onSuccess: () => {
-        if (value.trim())
-          toast.success(SURVIVOR_TENET_KNOWLEDGE_RULES_UPDATED_MESSAGE(value))
-      },
       rollback: () => {
         setTenetKnowledge({ ...tenetKnowledge, rules: oldRules })
         setSurvivors((prev) =>
@@ -759,14 +727,6 @@ export function PhilosophyCard({
         updateSurvivor(selectedSurvivor?.id, {
           tenet_knowledge_observation_conditions: value
         }),
-      onSuccess: () => {
-        if (value.trim())
-          toast.success(
-            SURVIVOR_TENET_KNOWLEDGE_OBSERVATION_CONDITIONS_UPDATED_MESSAGE(
-              value
-            )
-          )
-      },
       rollback: () => {
         setTenetKnowledge({
           ...tenetKnowledge,

@@ -36,12 +36,6 @@ vi.mock('@/components/ui/dialog', () => {
   }
 })
 
-vi.mock('@/hooks/use-toast', () => ({
-  useToast: () => ({
-    toast: { success: vi.fn(), info: vi.fn(), error: vi.fn() }
-  })
-}))
-
 vi.mock('@/lib/dal/user-subscription', () => ({
   startCheckout: vi.fn()
 }))
@@ -52,8 +46,7 @@ type UpsellModalProps = Parameters<typeof UpsellModal>[0]
 
 const baseProps: UpsellModalProps = {
   open: true,
-  onOpenChange: vi.fn(),
-  local: {} as UpsellModalProps['local']
+  onOpenChange: vi.fn()
 }
 
 describe('UpsellModal', () => {

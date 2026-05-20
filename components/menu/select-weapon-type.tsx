@@ -16,14 +16,13 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { addWeaponType, getWeaponTypes } from '@/lib/dal/weapon-type'
-import { ERROR_MESSAGE, WEAPON_TYPE_CREATED_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { WeaponTypeDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, Plus } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Select Weapon Type Component Properties
@@ -31,8 +30,6 @@ import { ReactElement, useCallback, useEffect, useState } from 'react'
 export interface SelectWeaponTypeProps {
   /** Disabled State */
   disabled?: boolean
-  /** Local State */
-  local?: LocalStateType
   /** OnChange Handler */
   onChange?: (value: string) => void
   /** Value */
@@ -51,14 +48,9 @@ export interface SelectWeaponTypeProps {
  */
 export function SelectWeaponType({
   disabled,
-  local,
   onChange,
   value
 }: SelectWeaponTypeProps): ReactElement {
-  const { toast } = useToast(
-    local ?? ({ disableToasts: false } as LocalStateType)
-  )
-
   const [weaponTypes, setWeaponTypes] = useState<{
     [key: string]: WeaponTypeDetail
   }>({})
@@ -141,7 +133,6 @@ export function SelectWeaponType({
         onChange?.(newType.id)
         setSearch('')
         setCreateDialogOpen(false)
-        toast.success(WEAPON_TYPE_CREATED_MESSAGE())
       } catch (error) {
         console.error('Weapon Type Create Error:', error)
         toast.error(ERROR_MESSAGE())
@@ -149,7 +140,7 @@ export function SelectWeaponType({
         setCreating(false)
       }
     },
-    [creating, onChange, toast]
+    [creating, onChange]
   )
 
   return (

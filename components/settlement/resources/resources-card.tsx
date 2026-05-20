@@ -20,7 +20,6 @@ import {
 import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { getPatterns } from '@/lib/dal/pattern'
 import { getResources } from '@/lib/dal/resource'
 import { addSettlementPatterns } from '@/lib/dal/settlement-pattern'
@@ -29,12 +28,7 @@ import {
   removeSettlementResource,
   updateSettlementResource
 } from '@/lib/dal/settlement-resource'
-import {
-  ERROR_MESSAGE,
-  PATTERN_UNLOCKED_FROM_RESOURCE_MESSAGE,
-  RESOURCE_REMOVED_MESSAGE,
-  RESOURCE_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   PatternDetail,
   ResourceDetail,
@@ -43,6 +37,7 @@ import {
 } from '@/lib/types'
 import { BeefIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Resources Card Properties
@@ -71,8 +66,7 @@ export function ResourcesCard({
   selectedSettlement,
   setSelectedSettlement
 }: ResourcesCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -249,11 +243,6 @@ export function ResourcesCard({
                   }
                 : null
             )
-            toast.success(
-              PATTERN_UNLOCKED_FROM_RESOURCE_MESSAGE(
-                unlockPatternInfo.pattern_name
-              )
-            )
           } catch (error) {
             console.error('Resource Pattern Unlock Error:', error)
             setSelectedSettlement((prev) =>
@@ -283,8 +272,7 @@ export function ResourcesCard({
                 }
               : null
           )
-        },
-        successMessage: RESOURCE_UPDATED_MESSAGE()
+        }
       })
     },
     [
@@ -292,8 +280,7 @@ export function ResourcesCard({
       availableResources,
       availablePatterns,
       setSelectedSettlement,
-      mutate,
-      toast
+      mutate
     ]
   )
 
@@ -328,8 +315,7 @@ export function ResourcesCard({
               return prev
             return { ...prev, resources: [...prev.resources, removed] }
           })
-        },
-        successMessage: RESOURCE_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -374,8 +360,7 @@ export function ResourcesCard({
                 }
               : null
           )
-        },
-        successMessage: RESOURCE_UPDATED_MESSAGE(index)
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]

@@ -10,13 +10,12 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { startCheckout } from '@/lib/dal/user-subscription'
 import { ERROR_MESSAGE, STRIPE_REDIRECT_MESSAGE } from '@/lib/messages'
 import { BillingPlanId } from '@/schemas/billing-checkout-input'
 import { Loader2, UsersIcon } from 'lucide-react'
 import { ReactElement, useState } from 'react'
+import { toast } from 'sonner'
 import { ZodError } from 'zod'
 
 /**
@@ -27,8 +26,6 @@ interface UpsellModalProps {
   open: boolean
   /** Dialog Open/Close Callback */
   onOpenChange: (open: boolean) => void
-  /** Local State (powers themed toasts) */
-  local: LocalStateType
 }
 
 /**
@@ -95,10 +92,8 @@ function UpsellBullet({ heading, body }: UpsellBulletProps): ReactElement {
  */
 export function UpsellModal({
   open,
-  onOpenChange,
-  local
+  onOpenChange
 }: UpsellModalProps): ReactElement {
-  const { toast } = useToast(local)
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false)
 
   /**

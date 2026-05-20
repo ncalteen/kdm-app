@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { LocalStateType, useLocal } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
+import { useLocal } from '@/contexts/local-context'
 import {
   addSettlementSharedUsers,
   getSettlementSharedUsers,
@@ -25,8 +24,6 @@ import {
 } from '@/lib/dal/user'
 import {
   ERROR_MESSAGE,
-  SETTLEMENT_SHARE_ALREADY_SHARED_MESSAGE,
-  SETTLEMENT_SHARE_INVITE_SUCCESS_MESSAGE,
   SETTLEMENT_SHARE_PAYWALL_MESSAGE,
   SETTLEMENT_SHARE_REVOKE_BLOCKED_MESSAGE,
   SETTLEMENT_SHARE_REVOKE_SUCCESS_MESSAGE,
@@ -44,15 +41,11 @@ import {
   useEffect,
   useState
 } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Collaborators Panel Properties
  */
-interface CollaboratorsPanelProps {
-  /** Local State (used to gate optional toasts) */
-  local: LocalStateType
-}
-
 /**
  * Collaborators Panel Component
  *
@@ -90,20 +83,16 @@ interface CollaboratorsPanelProps {
  * picked up by every recipient's per-user channel; the local list refresh
  * here is only needed to update the owner's own view.
  *
- * @param props Collaborators Panel Properties
  * @returns Collaborators Panel Component (or null when the caller is not
  *   the settlement owner)
  */
-export function CollaboratorsPanel({
-  local
-}: CollaboratorsPanelProps): ReactElement | null {
+export function CollaboratorsPanel(): ReactElement | null {
   const { selectedSettlement, canShare } = useLocal()
 
   return (
     <OwnerOnly>
       {selectedSettlement ? (
         <CollaboratorsPanelContent
-          local={local}
           selectedSettlement={selectedSettlement}
           canShare={canShare}
         />
@@ -121,8 +110,6 @@ export function CollaboratorsPanel({
  * collaborators).
  */
 interface CollaboratorsPanelContentProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement (guaranteed non-null here) */
   selectedSettlement: SettlementDetail
   /**
@@ -143,11 +130,9 @@ interface CollaboratorsPanelContentProps {
  * @returns Owner-Only Share Management Panel
  */
 function CollaboratorsPanelContent({
-  local,
   selectedSettlement,
   canShare
 }: CollaboratorsPanelContentProps): ReactElement {
-  const { toast } = useToast(local)
   const [collaborators, setCollaborators] = useState<
     SettlementCollaboratorDetail[]
   >([])
@@ -196,7 +181,7 @@ function CollaboratorsPanelContent({
     } finally {
       setIsLoading(false)
     }
-  }, [settlementId, toast])
+  }, [settlementId])
 
   // Initial collaborator fetch. The fetch is inlined inside the effect.
   // `refresh` remains for non-effect callers (invite and revoke handlers).
@@ -221,7 +206,7 @@ function CollaboratorsPanelContent({
     return () => {
       cancelled = true
     }
-  }, [settlementId, toast])
+  }, [settlementId])
 
   /**
    * Handle Invite Form Submission
@@ -274,10 +259,7 @@ function CollaboratorsPanelContent({
           return
         }
 
-        if (collaborators.some((c) => c.shared_user_id === targetUserId)) {
-          toast.error(SETTLEMENT_SHARE_ALREADY_SHARED_MESSAGE())
-          return
-        }
+        if (collaborators.some((c) => c.shared_user_id === targetUserId)) return
 
         // Optimistic insert. The real `created_at` comes from the server;
         // an optimistic `now()` is close enough for the "Joined: just now"
@@ -301,7 +283,6 @@ function CollaboratorsPanelContent({
           throw err
         }
 
-        toast.success(SETTLEMENT_SHARE_INVITE_SUCCESS_MESSAGE())
         setUsername('')
 
         // Reconcile against the server: pulls the canonical row including
@@ -314,7 +295,7 @@ function CollaboratorsPanelContent({
         setIsInviting(false)
       }
     },
-    [canShare, collaborators, refresh, settlementId, toast, username]
+    [canShare, collaborators, refresh, settlementId, username]
   )
 
   /**
@@ -405,7 +386,7 @@ function CollaboratorsPanelContent({
         })
       }
     },
-    [collaborators, refresh, revokingUserIds, settlementId, toast]
+    [collaborators, refresh, revokingUserIds, settlementId]
   )
 
   const trimmedUsername = username.trim()
@@ -571,11 +552,7 @@ function CollaboratorsPanelContent({
         username={blockersDialog.username}
         blockers={blockersDialog.blockers}
       />
-      <UpsellModal
-        open={isUpsellOpen}
-        onOpenChange={setIsUpsellOpen}
-        local={local}
-      />
+      <UpsellModal open={isUpsellOpen} onOpenChange={setIsUpsellOpen} />
     </Card>
   )
 }

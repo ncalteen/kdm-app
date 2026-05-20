@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addPrinciple,
   getUserCustomPrinciples,
   removePrinciple,
   updatePrinciple
 } from '@/lib/dal/principle'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  PRINCIPLE_CREATED_MESSAGE,
-  PRINCIPLE_REMOVED_MESSAGE,
-  PRINCIPLE_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { PrincipleDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Principles Card Component Properties
- */
-interface CustomPrinciplesCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Principles Card Component
@@ -47,14 +32,9 @@ interface CustomPrinciplesCardProps {
  * campaign type associations. Entries are displayed alphabetically. UI updates
  * are optimistic and roll back on database failure.
  *
- * @param props Custom Principles Card Properties
  * @returns Custom Principles Card Component
  */
-export function CustomPrinciplesCard({
-  local
-}: CustomPrinciplesCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomPrinciplesCard(): ReactElement {
   const [items, setItems] = useState<PrincipleDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -96,7 +76,7 @@ export function CustomPrinciplesCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Principle
@@ -150,8 +130,6 @@ export function CustomPrinciplesCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(PRINCIPLE_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Principle Error:', err)
@@ -160,7 +138,7 @@ export function CustomPrinciplesCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -215,8 +193,6 @@ export function CustomPrinciplesCard({
           option_1_rules: data.option_1_rules || null,
           option_2_rules: data.option_2_rules || null
         })
-
-        toast.success(PRINCIPLE_UPDATED_MESSAGE(false))
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Principle Error:', err)
@@ -225,7 +201,7 @@ export function CustomPrinciplesCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -239,16 +215,14 @@ export function CustomPrinciplesCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removePrinciple(item.id)
-        .then(() => toast.success(PRINCIPLE_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Principle Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removePrinciple(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Principle Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addLocation,
   getUserCustomLocations,
   removeLocation,
   updateLocation
 } from '@/lib/dal/location'
-import {
-  ERROR_MESSAGE,
-  LOCATION_CREATED_MESSAGE,
-  LOCATION_REMOVED_MESSAGE,
-  LOCATION_UPDATED_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { LocationDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Locations Card Component Properties
- */
-interface CustomLocationsCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Locations Card Component
@@ -46,14 +31,9 @@ interface CustomLocationsCardProps {
  * Entries are displayed alphabetically. Name and rules are entered via a
  * dialog. UI updates are optimistic and roll back on database failure.
  *
- * @param props Custom Locations Card Properties
  * @returns Custom Locations Card Component
  */
-export function CustomLocationsCard({
-  local
-}: CustomLocationsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomLocationsCard(): ReactElement {
   const [items, setItems] = useState<LocationDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -93,7 +73,7 @@ export function CustomLocationsCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Location
@@ -131,8 +111,6 @@ export function CustomLocationsCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(LOCATION_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Location Error:', err)
@@ -141,7 +119,7 @@ export function CustomLocationsCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -178,8 +156,6 @@ export function CustomLocationsCard({
           location_name: data.name,
           rules: data.rules || null
         })
-
-        toast.success(LOCATION_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Location Error:', err)
@@ -188,7 +164,7 @@ export function CustomLocationsCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -202,16 +178,14 @@ export function CustomLocationsCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeLocation(item.id)
-        .then(() => toast.success(LOCATION_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Location Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeLocation(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Location Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

@@ -16,9 +16,7 @@ import {
   SheetHeader,
   SheetTitle
 } from '@/components/ui/sheet'
-import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
-import { useToast } from '@/hooks/use-toast'
 import { getArmorSets } from '@/lib/dal/armor-set'
 import { getGear } from '@/lib/dal/gear'
 import {
@@ -41,11 +39,8 @@ import {
   GRID_POSITIONS
 } from '@/lib/gear-grid'
 import {
-  ARMOR_SET_SELECTED_MESSAGE,
   ERROR_MESSAGE,
-  GEAR_GRID_SETTLEMENT_REQUIRED_ERROR_MESSAGE,
-  GEAR_GRID_SLOT_CLEARED_MESSAGE,
-  GEAR_GRID_SLOT_EQUIPPED_MESSAGE
+  GEAR_GRID_SETTLEMENT_REQUIRED_ERROR_MESSAGE
 } from '@/lib/messages'
 import {
   ArmorSetDetail,
@@ -62,6 +57,7 @@ import {
 import { cn } from '@/lib/utils'
 import { CheckIcon, ShieldCheckIcon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /** Display label for each grid position. */
 const POSITION_LABELS: { [key in GearGridPosition]: string } = {
@@ -87,8 +83,6 @@ const AFFINITY_BG: { [key in Affinity]: string } = {
  * Gear Grid Card Component Properties
  */
 interface GearGridCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -115,14 +109,11 @@ interface GearGridCardProps {
  * @returns Gear Grid Card Component
  */
 export function GearGridCard({
-  local,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: GearGridCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [pickerSlot, setPickerSlot] = useState<GearGridPosition | null>(null)
   const [viewingSlot, setViewingSlot] = useState<GearGridPosition | null>(null)
   const [saving, setSaving] = useState(false)
@@ -295,16 +286,6 @@ export function GearGridCard({
             s.id === selectedSurvivor.id ? { ...s, gear_grid: persisted } : s
           )
         )
-
-        toast.success(
-          gearId
-            ? GEAR_GRID_SLOT_EQUIPPED_MESSAGE(
-                selectedSurvivor.survivor_name ?? undefined
-              )
-            : GEAR_GRID_SLOT_CLEARED_MESSAGE(
-                selectedSurvivor.survivor_name ?? undefined
-              )
-        )
       } catch (error) {
         applyOptimisticGrid(previous)
         console.error('Gear Grid Save Error:', error)
@@ -319,8 +300,7 @@ export function GearGridCard({
       saving,
       selectedSettlement,
       selectedSurvivor,
-      setSurvivors,
-      toast
+      setSurvivors
     ]
   )
 
@@ -364,13 +344,6 @@ export function GearGridCard({
             ? { ...current, selected: true }
             : current
         )
-
-        toast.success(
-          ARMOR_SET_SELECTED_MESSAGE(
-            armorSet.armor_set_name,
-            selectedSurvivor.survivor_name ?? undefined
-          )
-        )
       } catch (error) {
         applyOptimisticGrid(previous)
         console.error('Armor Set Selection Save Error:', error)
@@ -385,8 +358,7 @@ export function GearGridCard({
       saving,
       selectedSettlement,
       selectedSurvivor,
-      setSurvivors,
-      toast
+      setSurvivors
     ]
   )
 

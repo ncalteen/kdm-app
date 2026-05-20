@@ -48,7 +48,6 @@ function buildBaseProps(
   overrides?: Partial<SettingsCardProps>
 ): SettingsCardProps {
   return {
-    local: { disableToasts: false } as SettingsCardProps['local'],
     selectedHunt: null,
     selectedSettlement: null,
     selectedShowdown: null,
@@ -60,7 +59,6 @@ function buildBaseProps(
     setSelectedShowdownId: vi.fn(),
     setSelectedSurvivorId: vi.fn(),
     setUserSettings: vi.fn(),
-    updateLocal: vi.fn(),
     userSettings: null,
     ...overrides
   }
@@ -123,7 +121,7 @@ describe('SettingsCard owner-only gating', () => {
     expect(html).not.toContain('Delete Lantern Hold')
   })
 
-  it('still renders the user-account section (username, password, notifications) for collaborators', () => {
+  it('still renders the user-account and global settings sections for collaborators', () => {
     useLocalMock.mockReturnValue({
       selectedSettlementId: 'settlement-1',
       selectedSettlement: collaboratorSettlement
@@ -137,7 +135,7 @@ describe('SettingsCard owner-only gating', () => {
 
     expect(html).toContain('update-username-form')
     expect(html).toContain('update-password-form')
-    expect(html).toContain('Disable Notifications')
+    expect(html).toContain('Global Settings')
   })
 
   it('hides Settlement Settings and Danger Zone while the selected settlement is still loading (id but no settlement object)', () => {

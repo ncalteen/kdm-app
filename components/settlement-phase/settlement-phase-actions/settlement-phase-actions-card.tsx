@@ -2,8 +2,6 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { removeSettlementPhase } from '@/lib/dal/settlement-phase'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import {
@@ -11,11 +9,7 @@ import {
   SettlementPhaseStep,
   TabType
 } from '@/lib/enums'
-import {
-  ERROR_MESSAGE,
-  SETTLEMENT_PHASE_ENDED_MESSAGE,
-  SURVIVORS_HEALED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   SettlementDetail,
   SettlementPhaseDetail,
@@ -25,13 +19,12 @@ import {
 } from '@/lib/types'
 import { CircleXIcon, HeartPlusIcon, SwordsIcon } from 'lucide-react'
 import { ReactElement, useCallback } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Settlement Phase Actions Card Properties
  */
 interface SettlementPhaseActionsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Settlement Phase */
@@ -63,7 +56,6 @@ interface SettlementPhaseActionsCardProps {
  * @returns Settlement Phase Actions Card Component
  */
 export function SettlementPhaseActionsCard({
-  local,
   selectedSettlement,
   selectedSettlementPhase,
   selectedSurvivor,
@@ -74,8 +66,6 @@ export function SettlementPhaseActionsCard({
   setSurvivors,
   survivors
 }: SettlementPhaseActionsCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const currentStep = selectedSettlementPhase
     ? DatabaseSettlementPhaseStep[selectedSettlementPhase.step]
     : undefined
@@ -139,25 +129,24 @@ export function SettlementPhaseActionsCard({
     }
 
     // Persist each survivor update
-    Promise.all(aliveSurvivors.map((s) => updateSurvivor(s.id, healUpdates)))
-      .then(() => toast.success(SURVIVORS_HEALED_MESSAGE()))
-      .catch((err: unknown) => {
-        // Rollback
-        setSurvivors(previousSurvivors)
-        if (previousSelectedSurvivor)
-          setSelectedSurvivor(previousSelectedSurvivor)
+    Promise.all(
+      aliveSurvivors.map((s) => updateSurvivor(s.id, healUpdates))
+    ).catch((err: unknown) => {
+      // Rollback
+      setSurvivors(previousSurvivors)
+      if (previousSelectedSurvivor)
+        setSelectedSurvivor(previousSelectedSurvivor)
 
-        console.error('Heal Survivors Error:', err)
-        toast.error(ERROR_MESSAGE())
-      })
+      console.error('Heal Survivors Error:', err)
+      toast.error(ERROR_MESSAGE())
+    })
   }, [
     selectedSettlement,
     selectedSettlementPhase,
     selectedSurvivor,
     setSelectedSurvivor,
     survivors,
-    setSurvivors,
-    toast
+    setSurvivors
   ])
 
   /**
@@ -189,7 +178,6 @@ export function SettlementPhaseActionsCard({
       .then(() => {
         setSelectedSettlementPhase(null)
         setSelectedTab(TabType.TIMELINE)
-        toast.success(SETTLEMENT_PHASE_ENDED_MESSAGE())
       })
       .catch((err: unknown) => {
         console.error('End Settlement Phase Error:', err)
@@ -199,8 +187,7 @@ export function SettlementPhaseActionsCard({
     selectedSettlement,
     selectedSettlementPhase,
     setSelectedSettlementPhase,
-    setSelectedTab,
-    toast
+    setSelectedTab
   ])
 
   return (

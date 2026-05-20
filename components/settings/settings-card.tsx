@@ -19,17 +19,13 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { UpdatePasswordForm } from '@/components/update-password-form'
 import { UpdateUsernameForm } from '@/components/update-username-form'
-import { LocalStateType } from '@/contexts/local-context'
 import { removeHunt } from '@/lib/dal/hunt'
 import { removeSettlement, updateSettlement } from '@/lib/dal/settlement'
 import { removeShowdown } from '@/lib/dal/showdown'
 import {
-  DISABLE_TOASTS_SETTING_UPDATED_MESSAGE,
   ERROR_MESSAGE,
-  HUNT_DELETED_MESSAGE,
   SETTLEMENT_DELETED_MESSAGE,
-  SETTLEMENT_USES_SCOUTS_SETTING_UPDATED_MESSAGE,
-  SHOWDOWN_DELETED_MESSAGE
+  SETTLEMENT_USES_SCOUTS_SETTING_UPDATED_MESSAGE
 } from '@/lib/messages'
 import { generateSeedData } from '@/lib/seed'
 import {
@@ -55,8 +51,6 @@ import { toast } from 'sonner'
  * Settings Card Properties
  */
 interface SettingsCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Settlement */
@@ -79,8 +73,6 @@ interface SettingsCardProps {
   setSelectedSurvivorId: (survivorId: string | null) => void
   /** Set User Settings */
   setUserSettings: (settings: UserSettingsDetail | null) => void
-  /** Update Local State */
-  updateLocal: (local: LocalStateType) => void
   /** User Settings */
   userSettings: UserSettingsDetail | null
 }
@@ -96,7 +88,6 @@ interface SettingsCardProps {
  * @returns Settings Card Component
  */
 export function SettingsCard({
-  local,
   selectedHunt,
   selectedSettlement,
   selectedShowdown,
@@ -108,35 +99,10 @@ export function SettingsCard({
   setSelectedShowdownId,
   setSelectedSurvivorId,
   setUserSettings,
-  updateLocal,
   userSettings
 }: SettingsCardProps): ReactElement {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [isSeeding, startSeedTransition] = useTransition()
-  const [disableToasts, setDisableToasts] = useState<boolean>(
-    local.disableToasts ?? false
-  )
-
-  /**
-   * Handle Disable Toasts Setting
-   *
-   * @param newDisableToasts New Value
-   */
-  const handleDisableToastsChange = (newDisableToasts: boolean) => {
-    try {
-      updateLocal({
-        ...local,
-        disableToasts: newDisableToasts
-      })
-      setDisableToasts(newDisableToasts)
-
-      // Always show this toast so user knows the setting was changed
-      toast.success(DISABLE_TOASTS_SETTING_UPDATED_MESSAGE(newDisableToasts))
-    } catch (error) {
-      console.error('Disable Toasts Update Error:', error)
-      toast.error(ERROR_MESSAGE())
-    }
-  }
 
   /**
    * Handle Uses Scouts Setting Change
@@ -189,7 +155,6 @@ export function SettingsCard({
       .then(() => {
         setSelectedHunt(null)
         setSelectedHuntId(null)
-        toast.success(HUNT_DELETED_MESSAGE())
       })
       .catch((err: unknown) => {
         console.error('Delete Hunt Error:', err)
@@ -210,7 +175,6 @@ export function SettingsCard({
       .then(() => {
         setSelectedShowdown(null)
         setSelectedShowdownId(null)
-        toast.success(SHOWDOWN_DELETED_MESSAGE())
       })
       .catch((err: unknown) => {
         console.error('Delete Showdown Error:', err)
@@ -282,7 +246,6 @@ export function SettingsCard({
       {/* Account: Username + Password */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <UpdateUsernameForm
-          local={local}
           setUserSettings={setUserSettings}
           userSettings={userSettings}
           className="h-full"
@@ -298,24 +261,6 @@ export function SettingsCard({
             Global Settings
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="disable-toasts" className="font-medium text-sm">
-                Disable Notifications
-              </Label>
-              <div className="text-sm text-muted-foreground">
-                Silences success messages. Errors will always be shown.
-              </div>
-            </div>
-            <Switch
-              id="disable-toasts"
-              checked={disableToasts}
-              onCheckedChange={handleDisableToastsChange}
-              aria-label="Disable Notifications"
-            />
-          </div>
-        </CardContent>
       </Card>
 
       {/* Development Tools */}

@@ -1,6 +1,5 @@
 'use client'
 
-import { LocalStateType } from '@/contexts/local-context'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import {
   applyCraftingAllocationToSettlementState,
@@ -24,8 +23,6 @@ import { useCallback } from 'react'
  * Persist Crafted Gear Properties
  */
 export interface UseCraftGearPersistenceProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Set Selected Settlement */
@@ -54,7 +51,6 @@ export interface UseCraftGearPersistenceProps {
  * @returns Persist Gear Addition Callback
  */
 export function useCraftGearPersistence({
-  local,
   selectedSettlement,
   setSelectedSettlement,
   selectedSettlementPhase,
@@ -62,11 +58,10 @@ export function useCraftGearPersistence({
 }: UseCraftGearPersistenceProps): {
   persistGearAddition: (
     gearInfo: GearDetail,
-    allocation: CraftingAllocation,
-    successMessage: string
+    allocation: CraftingAllocation
   ) => void
 } {
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   /**
    * Persist Gear Addition
@@ -77,11 +72,7 @@ export function useCraftGearPersistence({
    * failure.
    */
   const persistGearAddition = useCallback(
-    (
-      gearInfo: GearDetail,
-      allocation: CraftingAllocation,
-      successMessage: string
-    ) => {
+    (gearInfo: GearDetail, allocation: CraftingAllocation) => {
       if (!selectedSettlement) return
 
       // Pre-deduction snapshot for rollback.
@@ -235,8 +226,7 @@ export function useCraftGearPersistence({
 
           if (endeavorDeduction > 0 && previousPhase)
             setSelectedSettlementPhase(previousPhase)
-        },
-        successMessage
+        }
       })
     },
     [

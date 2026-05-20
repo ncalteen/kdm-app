@@ -3,7 +3,6 @@
 import { HuntMonsterCard } from '@/components/hunt/hunt-monster/hunt-monster-card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { LocalStateType } from '@/contexts/local-context'
 import { HuntDetail, HuntStateSetter } from '@/lib/types'
 import { ArrowLeftIcon, ArrowRightIcon, SkullIcon } from 'lucide-react'
 import { ReactElement, useMemo } from 'react'
@@ -12,8 +11,6 @@ import { ReactElement, useMemo } from 'react'
  * Hunt Monsters Card Properties
  */
 interface HuntMonstersCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
@@ -33,7 +30,6 @@ interface HuntMonstersCardProps {
  * @returns Hunt Monsters Card Component
  */
 export function HuntMonstersCard({
-  local,
   selectedHunt,
   selectedHuntMonsterIndex,
   setSelectedHunt,
@@ -122,7 +118,6 @@ export function HuntMonstersCard({
       )}
 
       <HuntMonsterCard
-        local={local}
         selectedHunt={selectedHunt}
         selectedHuntMonsterIndex={selectedHuntMonsterIndex}
         setSelectedHunt={setSelectedHunt}

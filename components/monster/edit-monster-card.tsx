@@ -9,8 +9,6 @@ import {
   TimelineEventDraft
 } from '@/components/monster/monster-form'
 import { Card } from '@/components/ui/card'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   syncMonsterMoods,
   syncMonsterSurvivorStatuses,
@@ -71,16 +69,15 @@ import {
   updateQuarryTimelineYear
 } from '@/lib/dal/quarry-timeline-year'
 import { HuntEventType, MonsterNode, MonsterType } from '@/lib/enums'
-import { CUSTOM_MONSTER_UPDATED_MESSAGE, ERROR_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { QuarryDetail, QuarryHuntBoardDetail } from '@/lib/types'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Edit Monster Card Properties
  */
 interface EditMonsterCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Monster ID */
   monsterId: string
   /** Monster Type */
@@ -127,14 +124,11 @@ function toHuntBoardDraft(board: QuarryHuntBoardDetail): HuntBoardDraft {
  * @returns Edit Monster Card Component
  */
 export function EditMonsterCard({
-  local,
   monsterId,
   monsterType,
   onCancel,
   onMonsterUpdated
 }: EditMonsterCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [initialData, setInitialData] = useState<MonsterFormInitialData | null>(
@@ -264,7 +258,7 @@ export function EditMonsterCard({
     }
 
     load()
-  }, [monsterId, monsterType, toast])
+  }, [monsterId, monsterType])
 
   /**
    * Persist edits and reconcile every related table.
@@ -503,7 +497,6 @@ export function EditMonsterCard({
           }
         }
 
-        toast.success(CUSTOM_MONSTER_UPDATED_MESSAGE(payload.monsterType))
         onMonsterUpdated()
       } catch (error) {
         console.error('Update Monster Error:', error)
@@ -512,7 +505,7 @@ export function EditMonsterCard({
         setIsSaving(false)
       }
     },
-    [huntBoardId, levelPositionIds, monsterId, onMonsterUpdated, toast]
+    [huntBoardId, levelPositionIds, monsterId, onMonsterUpdated]
   )
 
   if (isLoading || !initialData)
@@ -524,7 +517,6 @@ export function EditMonsterCard({
 
   return (
     <MonsterForm
-      local={local}
       mode="edit"
       title="Edit Monster"
       submitLabel="Save Changes"

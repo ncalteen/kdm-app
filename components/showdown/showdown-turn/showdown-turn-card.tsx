@@ -14,13 +14,10 @@ import {
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Toggle } from '@/components/ui/toggle'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateShowdown } from '@/lib/dal/showdown'
 import { updateShowdownMonster } from '@/lib/dal/showdown-monster'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
-import { TurnType } from '@/lib/enums'
-import { ERROR_MESSAGE, SHOWDOWN_TURN_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   ShowdownDetail,
   ShowdownMonsterDetail,
@@ -30,13 +27,12 @@ import {
 } from '@/lib/types'
 import { CheckCircleIcon, SkullIcon, UsersIcon, ZapIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Turn Card Properties
  */
 interface TurnCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Showdown */
   selectedShowdown: ShowdownDetail | null
   /** Selected Showdown Monster Index */
@@ -62,14 +58,11 @@ interface TurnCardProps {
  * @returns Turn Card Component
  */
 export function TurnCard({
-  local,
   selectedShowdown,
   selectedShowdownMonsterIndex,
   selectedSurvivor,
   setSelectedShowdown
 }: TurnCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const isMonsterTurn = selectedShowdown?.turn === 'MONSTER'
 
   const monsterIds = useMemo(
@@ -160,12 +153,6 @@ export function TurnCard({
             console.error('Monster Reset Error:', err)
           )
         }
-
-        toast.success(
-          SHOWDOWN_TURN_MESSAGE(
-            nextTurn === 'MONSTER' ? TurnType.MONSTER : TurnType.SURVIVORS
-          )
-        )
       })
       .catch((err: unknown) => {
         // Rollback turn, survivors, and monsters to pre-optimistic state
@@ -182,7 +169,7 @@ export function TurnCard({
         console.error('Turn Switch Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [selectedShowdown, setSelectedShowdown, toast])
+  }, [selectedShowdown, setSelectedShowdown])
 
   /**
    * Update Survivor Turn State (movement_used or activation_used)
@@ -231,7 +218,7 @@ export function TurnCard({
         }
       )
     },
-    [selectedShowdown, setSelectedShowdown, toast]
+    [selectedShowdown, setSelectedShowdown]
   )
 
   /**
@@ -279,13 +266,7 @@ export function TurnCard({
         toast.error(ERROR_MESSAGE())
       })
     },
-    [
-      selectedShowdown,
-      currentMonsterId,
-      currentMonster,
-      setSelectedShowdown,
-      toast
-    ]
+    [selectedShowdown, currentMonsterId, currentMonster, setSelectedShowdown]
   )
 
   /** Get the survivor's display name */

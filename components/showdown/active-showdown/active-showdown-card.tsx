@@ -15,18 +15,13 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addSettlementPhase,
   updateSettlementPhase
 } from '@/lib/dal/settlement-phase'
 import { removeShowdown } from '@/lib/dal/showdown'
 import { TabType } from '@/lib/enums'
-import {
-  ERROR_MESSAGE,
-  SETTLEMENT_PHASE_STARTED_MESSAGE,
-  SHOWDOWN_DELETED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   SettlementDetail,
   SettlementPhaseDetail,
@@ -38,6 +33,7 @@ import {
 } from '@/lib/types'
 import { ChevronRightIcon, XIcon } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Active Showdown Card Properties
@@ -98,8 +94,6 @@ export function ActiveShowdownCard({
   setSurvivors,
   survivors
 }: ActiveShowdownCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState<boolean>(false)
   const [isSettlementPhaseDialogOpen, setIsSettlementPhaseDialogOpen] =
     useState<boolean>(false)
@@ -127,18 +121,12 @@ export function ActiveShowdownCard({
         setSelectedShowdown(null)
         setSelectedShowdownMonsterIndex(0)
         setIsCancelDialogOpen(false)
-        toast.success(SHOWDOWN_DELETED_MESSAGE())
       })
       .catch((err: unknown) => {
         console.error('Delete Showdown Error:', err)
         toast.error(ERROR_MESSAGE())
       })
-  }, [
-    selectedShowdown,
-    setSelectedShowdown,
-    setSelectedShowdownMonsterIndex,
-    toast
-  ])
+  }, [selectedShowdown, setSelectedShowdown, setSelectedShowdownMonsterIndex])
 
   /**
    * Handle Proceed to Settlement Phase (open confirmation dialog)
@@ -188,7 +176,6 @@ export function ActiveShowdownCard({
         setSelectedTab(TabType.SETTLEMENT_PHASE)
 
         setIsSettlementPhaseDialogOpen(false)
-        toast.success(SETTLEMENT_PHASE_STARTED_MESSAGE())
         return
       }
 
@@ -235,7 +222,6 @@ export function ActiveShowdownCard({
       setSelectedTab(TabType.SETTLEMENT_PHASE)
 
       setIsSettlementPhaseDialogOpen(false)
-      toast.success(SETTLEMENT_PHASE_STARTED_MESSAGE())
     } catch (error: unknown) {
       console.error('Proceed to Settlement Phase Error:', error)
       toast.error(ERROR_MESSAGE())
@@ -249,8 +235,7 @@ export function ActiveShowdownCard({
     setSelectedShowdown,
     setSelectedShowdownMonsterIndex,
     setSelectedSettlementPhase,
-    setSelectedTab,
-    toast
+    setSelectedTab
   ])
 
   return (
@@ -282,7 +267,6 @@ export function ActiveShowdownCard({
       <div className="flex flex-col gap-2">
         <div className="flex flex-col lg:flex-row gap-2">
           <ShowdownMonstersCard
-            local={local}
             selectedShowdown={selectedShowdown}
             selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
             setSelectedShowdown={setSelectedShowdown}
@@ -290,7 +274,6 @@ export function ActiveShowdownCard({
           />
 
           <TurnCard
-            local={local}
             selectedShowdown={selectedShowdown}
             selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
             selectedSurvivor={selectedSurvivor}

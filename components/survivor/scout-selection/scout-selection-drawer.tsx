@@ -152,7 +152,6 @@ export function ScoutSelectionDrawer({
           {!isMobile && (
             <div className="w-112.5">
               <SurvivorDetailsPanel
-                local={local}
                 survivor={hoveredSurvivor ?? lastHoveredSurvivor}
                 survivors={survivors}
               />

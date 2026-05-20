@@ -22,20 +22,13 @@ import { Separator } from '@/components/ui/separator'
 import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { addPrinciple, getPrinciples } from '@/lib/dal/principle'
 import {
   addSettlementPrinciples,
   removeSettlementPrinciple,
   updateSettlementPrinciple
 } from '@/lib/dal/settlement-principle'
-import {
-  ERROR_MESSAGE,
-  PRINCIPLE_CREATED_MESSAGE,
-  PRINCIPLE_OPTION_SELECTED_MESSAGE,
-  PRINCIPLE_REMOVED_MESSAGE,
-  PRINCIPLE_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   PrincipleDetail,
   SettlementDetail,
@@ -43,6 +36,7 @@ import {
 } from '@/lib/types'
 import { Plus, PlusIcon, StampIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Principles Card Properties
@@ -71,8 +65,7 @@ export function PrinciplesCard({
   selectedSettlement,
   setSelectedSettlement
 }: PrinciplesCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -202,8 +195,7 @@ export function PrinciplesCard({
                 }
               : null
           )
-        },
-        successMessage: PRINCIPLE_UPDATED_MESSAGE(false)
+        }
       })
     },
     [selectedSettlement, availablePrinciples, setSelectedSettlement, mutate]
@@ -240,8 +232,7 @@ export function PrinciplesCard({
               return prev
             return { ...prev, principles: [...prev.principles, removed] }
           })
-        },
-        successMessage: PRINCIPLE_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -279,9 +270,6 @@ export function PrinciplesCard({
         )
       })
 
-      const optionName =
-        option === 1 ? target.option_1_name : target.option_2_name
-
       void mutate({
         context: 'Principle Option Select',
         persist: () =>
@@ -307,8 +295,7 @@ export function PrinciplesCard({
                 }
               : null
           )
-        },
-        successMessage: PRINCIPLE_OPTION_SELECTED_MESSAGE(optionName)
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]
@@ -352,7 +339,6 @@ export function PrinciplesCard({
         setCreateDialogOpen(false)
         setSearch('')
         setAddOpen(false)
-        toast.success(PRINCIPLE_CREATED_MESSAGE())
 
         // Add to settlement immediately
         const tempId = `temp-${crypto.randomUUID()}`
@@ -408,8 +394,7 @@ export function PrinciplesCard({
                   }
                 : null
             )
-          },
-          successMessage: PRINCIPLE_UPDATED_MESSAGE(true)
+          }
         })
       } catch (error) {
         console.error('Principle Create Error:', error)
@@ -422,7 +407,6 @@ export function PrinciplesCard({
       creating,
       selectedSettlement,
       setSelectedSettlement,
-      toast,
       mutate,
       setAvailablePrinciples
     ]

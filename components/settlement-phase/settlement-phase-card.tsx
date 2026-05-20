@@ -27,7 +27,6 @@ import {
 } from '@/components/ui/empty'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { settlementPhaseSteps } from '@/lib/common'
 import { updateSettlement } from '@/lib/dal/settlement'
 import { updateSettlementPhase } from '@/lib/dal/settlement-phase'
@@ -40,10 +39,7 @@ import {
   SurvivorType,
   TabType
 } from '@/lib/enums'
-import {
-  ERROR_MESSAGE,
-  SETTLEMENT_PHASE_STEP_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   SettlementDetail,
   SettlementPhaseDetail,
@@ -54,6 +50,7 @@ import {
 } from '@/lib/types'
 import { CircleOffIcon, HousePlusIcon, MapPinPlusIcon } from 'lucide-react'
 import { ReactElement, useCallback } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Settlement Phase Card Properties
@@ -106,8 +103,6 @@ export function SettlementPhaseCard({
   setSurvivors,
   survivors
 }: SettlementPhaseCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   /** Current step as display-friendly enum value */
   const currentStep = selectedSettlementPhase
     ? DatabaseSettlementPhaseStep[selectedSettlementPhase.step]
@@ -144,21 +139,17 @@ export function SettlementPhaseCard({
 
       updateSettlementPhase(selectedSettlementPhase.id, {
         step: dbStepValue as SettlementPhaseDetail['step']
-      })
-        .then(() =>
-          toast.success(SETTLEMENT_PHASE_STEP_UPDATED_MESSAGE(newStep.step))
-        )
-        .catch((err: unknown) => {
-          // Rollback
-          setSelectedSettlementPhase({
-            ...selectedSettlementPhase,
-            step: previousStep
-          })
-          console.error('Settlement Phase Step Update Error:', err)
-          toast.error(ERROR_MESSAGE())
+      }).catch((err: unknown) => {
+        // Rollback
+        setSelectedSettlementPhase({
+          ...selectedSettlementPhase,
+          step: previousStep
         })
+        console.error('Settlement Phase Step Update Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
     },
-    [selectedSettlementPhase, setSelectedSettlementPhase, toast]
+    [selectedSettlementPhase, setSelectedSettlementPhase]
   )
 
   if (!selectedSettlementPhase)
@@ -199,7 +190,6 @@ export function SettlementPhaseCard({
         SettlementPhaseStep.END_SETTLEMENT_PHASE
       ].includes(currentStep as SettlementPhaseStep) && (
         <SettlementPhaseActionsCard
-          local={local}
           selectedSettlement={selectedSettlement}
           selectedSettlementPhase={selectedSettlementPhase}
           selectedSurvivor={selectedSurvivor}
@@ -227,7 +217,6 @@ export function SettlementPhaseCard({
             icon={<HousePlusIcon className="h-4 w-4" />}
             initialItems={selectedSettlement?.arrival_bonuses || []}
             itemName="Arrival Bonus"
-            local={local}
             placeholder="New arrival bonus..."
             saveList={(updateData) =>
               updateSettlement(selectedSettlement?.id, {
@@ -317,7 +306,6 @@ export function SettlementPhaseCard({
                   setSelectedSettlement={setSelectedSettlement}
                 />
                 <GearCard
-                  local={local}
                   selectedSettlement={selectedSettlement}
                   setSelectedSettlement={setSelectedSettlement}
                   selectedSettlementPhase={selectedSettlementPhase}
@@ -327,14 +315,12 @@ export function SettlementPhaseCard({
                   DatabaseCampaignType[CampaignType.SQUIRES_OF_THE_CITADEL] && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                     <PatternsCard
-                      local={local}
                       selectedSettlement={selectedSettlement}
                       setSelectedSettlement={setSelectedSettlement}
                       selectedSettlementPhase={selectedSettlementPhase}
                       setSelectedSettlementPhase={setSelectedSettlementPhase}
                     />
                     <SeedPatternsCard
-                      local={local}
                       selectedSettlement={selectedSettlement}
                       setSelectedSettlement={setSelectedSettlement}
                       selectedSettlementPhase={selectedSettlementPhase}
@@ -349,7 +335,6 @@ export function SettlementPhaseCard({
               <div className="flex flex-col gap-2">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                   <CollectiveCognitionVictoriesCard
-                    local={local}
                     selectedSettlement={selectedSettlement}
                     setSelectedSettlement={setSelectedSettlement}
                   />
@@ -407,7 +392,6 @@ export function SettlementPhaseCard({
             icon={<MapPinPlusIcon className="h-4 w-4" />}
             initialItems={selectedSettlement?.departing_bonuses || []}
             itemName="Departure Bonus"
-            local={local}
             placeholder="New departure bonus..."
             saveList={(updateData) =>
               updateSettlement(selectedSettlement?.id, {

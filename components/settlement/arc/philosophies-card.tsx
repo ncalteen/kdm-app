@@ -20,17 +20,12 @@ import {
 import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { useToast } from '@/hooks/use-toast'
 import { getPhilosophies } from '@/lib/dal/philosophy'
 import {
   addSettlementPhilosophies,
   removeSettlementPhilosophy
 } from '@/lib/dal/settlement-philosophy'
-import {
-  ERROR_MESSAGE,
-  PHILOSOPHY_CREATED_MESSAGE,
-  PHILOSOPHY_REMOVED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   PhilosophyDetail,
   SettlementDetail,
@@ -38,6 +33,7 @@ import {
 } from '@/lib/types'
 import { BrainCogIcon, PlusIcon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Philosophies Card Properties
@@ -66,8 +62,7 @@ export function PhilosophiesCard({
   selectedSettlement,
   setSelectedSettlement
 }: PhilosophiesCardProps): ReactElement {
-  const { toast } = useToast(local)
-  const mutate = useOptimisticMutation(local)
+  const mutate = useOptimisticMutation()
 
   const [addOpen, setAddOpen] = useState<boolean>(false)
   const [search, setSearch] = useState('')
@@ -180,8 +175,7 @@ export function PhilosophiesCard({
                 }
               : null
           )
-        },
-        successMessage: PHILOSOPHY_CREATED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, availablePhilosophies, setSelectedSettlement, mutate]
@@ -224,8 +218,7 @@ export function PhilosophiesCard({
               philosophies: [...(prev.philosophies ?? []), removed]
             }
           })
-        },
-        successMessage: PHILOSOPHY_REMOVED_MESSAGE()
+        }
       })
     },
     [selectedSettlement, setSelectedSettlement, mutate]

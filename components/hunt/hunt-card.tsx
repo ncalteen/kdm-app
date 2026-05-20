@@ -112,7 +112,6 @@ export function HuntCard({
       </div>
       <div className="w-full max-w-100 order-1 md:order-2">
         <ListCard
-          local={local}
           icon={<MapPinPlusIcon className="h-4 w-4" />}
           initialItems={selectedSettlement?.departing_bonuses || []}
           itemName="Departure Bonus"

@@ -11,33 +11,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   addNeurosis,
   getUserCustomNeuroses,
   removeNeurosis,
   updateNeurosis
 } from '@/lib/dal/neurosis'
-import {
-  ERROR_MESSAGE,
-  NAMELESS_OBJECT_ERROR_MESSAGE,
-  NEUROSIS_CREATED_MESSAGE,
-  NEUROSIS_REMOVED_MESSAGE,
-  NEUROSIS_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE, NAMELESS_OBJECT_ERROR_MESSAGE } from '@/lib/messages'
 import { NeurosisDetail } from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-
-/**
- * Custom Neuroses Card Component Properties
- */
-interface CustomNeurosesCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 /**
  * Custom Neuroses Card Component
@@ -46,14 +31,9 @@ interface CustomNeurosesCardProps {
  * Entries are displayed alphabetically. UI updates are optimistic and roll back
  * on database failure.
  *
- * @param props Custom Neuroses Card Properties
  * @returns Custom Neuroses Card Component
  */
-export function CustomNeurosesCard({
-  local
-}: CustomNeurosesCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomNeurosesCard(): ReactElement {
   const [items, setItems] = useState<NeurosisDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -93,7 +73,7 @@ export function CustomNeurosesCard({
     return () => {
       cancelled = true
     }
-  }, [sortItems, toast])
+  }, [sortItems])
 
   /**
    * Handle Create Neurosis
@@ -131,8 +111,6 @@ export function CustomNeurosesCard({
         setItems((prev) =>
           sortItems(prev.map((i) => (i.id === tempId ? created : i)))
         )
-
-        toast.success(NEUROSIS_CREATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Add Neurosis Error:', err)
@@ -141,7 +119,7 @@ export function CustomNeurosesCard({
         setSaving(false)
       }
     },
-    [items, saving, sortItems, toast]
+    [items, saving, sortItems]
   )
 
   /**
@@ -182,8 +160,6 @@ export function CustomNeurosesCard({
           neurosis_name: data.name,
           rules: data.rules || null
         })
-
-        toast.success(NEUROSIS_UPDATED_MESSAGE())
       } catch (err: unknown) {
         setItems(previous)
         console.error('Update Neurosis Error:', err)
@@ -192,7 +168,7 @@ export function CustomNeurosesCard({
         setSaving(false)
       }
     },
-    [items, editingItem, saving, sortItems, toast]
+    [items, editingItem, saving, sortItems]
   )
 
   /**
@@ -206,16 +182,14 @@ export function CustomNeurosesCard({
       const previous = [...items]
       setItems(items.filter((i) => i.id !== item.id))
 
-      removeNeurosis(item.id)
-        .then(() => toast.success(NEUROSIS_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setItems(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Neurosis Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeNeurosis(item.id).catch((err: unknown) => {
+        setItems(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Neurosis Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [items, toast]
+    [items]
   )
 
   /**

@@ -10,24 +10,17 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
 import { AenasState } from '@/lib/enums'
-import {
-  ERROR_MESSAGE,
-  SURVIVOR_DISPOSITION_UPDATED_MESSAGE,
-  SURVIVOR_STATE_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Wanderer Card Properties
  */
 interface WandererCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -47,13 +40,10 @@ interface WandererCardProps {
  * @returns Wanderer Card Component
  */
 export function WandererCard({
-  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: WandererCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [aenasState, setAenasState] = useState<string>(
     selectedSurvivor?.aenas_state ?? AenasState.HUNGRY
   )
@@ -99,29 +89,19 @@ export function WandererCard({
 
       updateSurvivor(selectedSurvivor?.id, {
         aenas_state: value as 'Content' | 'Hungry'
+      }).catch((error) => {
+        setAenasState(oldState)
+        setSurvivors(oldSurvivors)
+        console.error('Error Updating Survivor State:', error)
+        toast.error(ERROR_MESSAGE())
       })
-        .then(() =>
-          toast.success(
-            SURVIVOR_STATE_UPDATED_MESSAGE(
-              selectedSurvivor?.survivor_name ?? 'Aenas',
-              value
-            )
-          )
-        )
-        .catch((error) => {
-          setAenasState(oldState)
-          setSurvivors(oldSurvivors)
-          console.error('Error Updating Survivor State:', error)
-          toast.error(ERROR_MESSAGE())
-        })
     },
     [
       aenasState,
       selectedSurvivor?.survivor_name,
       selectedSurvivor?.id,
       setSurvivors,
-      survivors,
-      toast
+      survivors
     ]
   )
 
@@ -144,16 +124,16 @@ export function WandererCard({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { disposition: value })
-        .then(() => toast.success(SURVIVOR_DISPOSITION_UPDATED_MESSAGE()))
-        .catch((error) => {
+      updateSurvivor(selectedSurvivor?.id, { disposition: value }).catch(
+        (error) => {
           setDisposition(oldDisposition)
           setSurvivors(oldSurvivors)
           console.error('Error Updating Survivor Disposition:', error)
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [disposition, selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [disposition, selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   return (

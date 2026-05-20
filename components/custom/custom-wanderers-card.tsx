@@ -12,13 +12,11 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { getAbilityImpairments } from '@/lib/dal/ability-impairment'
 import { getFightingArts } from '@/lib/dal/fighting-art'
 import { getGear } from '@/lib/dal/gear'
 import { getCustomWanderers, removeWanderer } from '@/lib/dal/wanderer'
-import { ERROR_MESSAGE, WANDERER_REMOVED_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   AbilityImpairmentDetail,
   FightingArtDetail,
@@ -28,15 +26,11 @@ import {
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Custom Wanderers Card Component Properties
  */
-interface CustomWanderersCardProps {
-  /** Local State */
-  local: LocalStateType
-}
-
 /**
  * Custom Wanderers Card Component
  *
@@ -45,14 +39,9 @@ interface CustomWanderersCardProps {
  * rare gear, and timeline events. Uses a list/create/edit view pattern
  * similar to the custom monsters card.
  *
- * @param props Custom Wanderers Card Properties
  * @returns Custom Wanderers Card Component
  */
-export function CustomWanderersCard({
-  local
-}: CustomWanderersCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function CustomWanderersCard(): ReactElement {
   const [wanderers, setWanderers] = useState<WandererDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [mode, setMode] = useState<'list' | 'create' | 'edit'>('list')
@@ -99,7 +88,7 @@ export function CustomWanderersCard({
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [])
 
   // Load wanderers and reference data on mount. `loadData` remains for
   // non-effect callers (e.g., `handleDone`).
@@ -138,7 +127,7 @@ export function CustomWanderersCard({
     return () => {
       cancelled = true
     }
-  }, [toast])
+  }, [])
 
   /** Handle Delete Wanderer */
   const handleDelete = useCallback(
@@ -146,16 +135,14 @@ export function CustomWanderersCard({
       const previous = [...wanderers]
       setWanderers(wanderers.filter((w) => w.id !== wanderer.id))
 
-      removeWanderer(wanderer.id)
-        .then(() => toast.success(WANDERER_REMOVED_MESSAGE()))
-        .catch((err: unknown) => {
-          setWanderers(previous)
-          const guard = getCatalogDeleteGuardMessage(err)
-          if (!guard) console.error('Delete Wanderer Error:', err)
-          toast.error(guard ?? ERROR_MESSAGE())
-        })
+      removeWanderer(wanderer.id).catch((err: unknown) => {
+        setWanderers(previous)
+        const guard = getCatalogDeleteGuardMessage(err)
+        if (!guard) console.error('Delete Wanderer Error:', err)
+        toast.error(guard ?? ERROR_MESSAGE())
+      })
     },
-    [wanderers, toast]
+    [wanderers]
   )
 
   /** Enter create mode */
@@ -184,7 +171,6 @@ export function CustomWanderersCard({
   if (mode === 'create' || mode === 'edit') {
     return (
       <WandererForm
-        local={local}
         mode={mode}
         wandererId={editingWandererId}
         availableFightingArts={availableFightingArts}

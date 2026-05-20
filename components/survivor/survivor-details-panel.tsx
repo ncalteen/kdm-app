@@ -3,7 +3,6 @@
 import { AttributeCard } from '@/components/survivor/attributes/attribute-card'
 import { Avatar } from '@/components/ui/avatar'
 import { CardContent } from '@/components/ui/card'
-import { LocalStateType } from '@/contexts/local-context'
 import { SurvivorCardMode } from '@/lib/enums'
 import { SurvivorDetail } from '@/lib/types'
 import { AvatarFallback } from '@radix-ui/react-avatar'
@@ -13,8 +12,6 @@ import { ReactElement } from 'react'
  * Survivor Details Panel Props
  */
 interface SurvivorDetailsPanelProps {
-  /** Local State */
-  local: LocalStateType
   /** Survivor to Display */
   survivor: SurvivorDetail | null
   /** Survivors */
@@ -30,7 +27,6 @@ interface SurvivorDetailsPanelProps {
  * @returns Survivor Details Panel Component
  */
 export function SurvivorDetailsPanel({
-  local,
   survivor,
   survivors
 }: SurvivorDetailsPanelProps): ReactElement {
@@ -78,7 +74,6 @@ export function SurvivorDetailsPanel({
 
       <CardContent className="p-4 space-y-4 max-h-[calc(60vh-120px)] overflow-y-auto">
         <AttributeCard
-          local={local}
           mode={SurvivorCardMode.SURVIVOR_CARD}
           selectedHunt={null}
           selectedSettlement={null}

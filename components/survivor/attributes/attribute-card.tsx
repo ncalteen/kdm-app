@@ -3,8 +3,6 @@
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -13,17 +11,7 @@ import {
   SurvivorCardMode,
   SurvivorType
 } from '@/lib/enums'
-import {
-  ERROR_MESSAGE,
-  SURVIVOR_ACCURACY_UPDATED_MESSAGE,
-  SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE,
-  SURVIVOR_EVASION_UPDATED_MESSAGE,
-  SURVIVOR_LUCK_UPDATED_MESSAGE,
-  SURVIVOR_LUMI_UPDATED_MESSAGE,
-  SURVIVOR_MOVEMENT_UPDATED_MESSAGE,
-  SURVIVOR_SPEED_UPDATED_MESSAGE,
-  SURVIVOR_STRENGTH_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   HuntDetail,
   HuntStateSetter,
@@ -34,6 +22,7 @@ import {
   SurvivorsStateSetter
 } from '@/lib/types'
 import { ReactElement, useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 /** Token name mapping from UI names to DB field names */
 const TOKEN_FIELD_MAP: Record<string, string> = {
@@ -51,8 +40,6 @@ const TOKEN_FIELD_MAP: Record<string, string> = {
 interface AttributeCardProps {
   /** Disabled */
   disabled?: boolean
-  /** Local State */
-  local: LocalStateType
   /** Card Mode */
   mode: SurvivorCardMode
   /** Selected Hunt */
@@ -83,7 +70,6 @@ interface AttributeCardProps {
  */
 export function AttributeCard({
   disabled = false,
-  local,
   mode,
   selectedHunt,
   selectedSettlement,
@@ -93,8 +79,6 @@ export function AttributeCard({
   setSelectedShowdown,
   setSurvivors
 }: AttributeCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [movement, setMovement] = useState(selectedSurvivor?.movement ?? 1)
   const [accuracy, setAccuracy] = useState(selectedSurvivor?.accuracy ?? 0)
@@ -152,12 +136,6 @@ export function AttributeCard({
       const dbField = TOKEN_FIELD_MAP[tokenName]
       if (!dbField) return
 
-      const displayName = tokenName
-        .replace('Tokens', '')
-        .replace(/([A-Z])/g, ' $1')
-        .trim()
-        .toLowerCase()
-
       if (
         mode === SurvivorCardMode.HUNT_CARD &&
         huntSurvivorRecord &&
@@ -180,11 +158,8 @@ export function AttributeCard({
           }
         })
 
-        updateHuntSurvivor(huntSurvivorRecord.id, { [dbField]: value })
-          .then(() =>
-            toast.success(SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE(displayName))
-          )
-          .catch((error: unknown) => {
+        updateHuntSurvivor(huntSurvivorRecord.id, { [dbField]: value }).catch(
+          (error: unknown) => {
             // Rollback
             setSelectedHunt({
               ...selectedHunt,
@@ -195,7 +170,8 @@ export function AttributeCard({
             })
             console.error(`${tokenName} Update Error:`, error)
             toast.error(ERROR_MESSAGE())
-          })
+          }
+        )
       } else if (
         mode === SurvivorCardMode.SHOWDOWN_CARD &&
         showdownSurvivorRecord &&
@@ -218,22 +194,20 @@ export function AttributeCard({
           }
         })
 
-        updateShowdownSurvivor(showdownSurvivorRecord.id, { [dbField]: value })
-          .then(() =>
-            toast.success(SURVIVOR_ATTRIBUTE_TOKEN_UPDATED_MESSAGE(displayName))
-          )
-          .catch((error: unknown) => {
-            // Rollback
-            setSelectedShowdown({
-              ...selectedShowdown,
-              showdown_survivors: {
-                ...selectedShowdown.showdown_survivors,
-                [ssKey]: { ...showdownSurvivorRecord, [dbField]: previousValue }
-              }
-            })
-            console.error(`${tokenName} Update Error:`, error)
-            toast.error(ERROR_MESSAGE())
+        updateShowdownSurvivor(showdownSurvivorRecord.id, {
+          [dbField]: value
+        }).catch((error: unknown) => {
+          // Rollback
+          setSelectedShowdown({
+            ...selectedShowdown,
+            showdown_survivors: {
+              ...selectedShowdown.showdown_survivors,
+              [ssKey]: { ...showdownSurvivorRecord, [dbField]: previousValue }
+            }
           })
+          console.error(`${tokenName} Update Error:`, error)
+          toast.error(ERROR_MESSAGE())
+        })
       }
     },
     [
@@ -244,8 +218,7 @@ export function AttributeCard({
       huntSurvivorRecord,
       showdownSurvivorRecord,
       setSelectedHunt,
-      setSelectedShowdown,
-      toast
+      setSelectedShowdown
     ]
   )
 
@@ -300,13 +273,11 @@ export function AttributeCard({
    *
    * @param field Survivor Field to Update
    * @param value New Value
-   * @param successMessage Success Toast Message
    */
   const handleUpdate = useCallback(
     (
       field: keyof SurvivorDetail,
       value: number,
-      successMessage: string,
       setLocal: (v: number) => void,
       oldLocal: number
     ) => {
@@ -316,9 +287,8 @@ export function AttributeCard({
           s.id === selectedSurvivor?.id ? { ...s, [field]: value } : s
         )
       )
-      updateSurvivor(selectedSurvivor?.id, { [field]: value })
-        .then(() => toast.success(successMessage))
-        .catch((error) => {
+      updateSurvivor(selectedSurvivor?.id, { [field]: value }).catch(
+        (error) => {
           console.error(`${String(field)} Update Error:`, error)
           setLocal(oldLocal)
           setSurvivors((prev) =>
@@ -327,9 +297,10 @@ export function AttributeCard({
             )
           )
           toast.error(ERROR_MESSAGE())
-        })
+        }
+      )
     },
-    [selectedSurvivor?.id, setSurvivors, toast]
+    [selectedSurvivor?.id, setSurvivors]
   )
 
   return (
@@ -377,13 +348,7 @@ export function AttributeCard({
             value={movement}
             min={1}
             onChange={(value) =>
-              handleUpdate(
-                'movement',
-                value,
-                SURVIVOR_MOVEMENT_UPDATED_MESSAGE(),
-                setMovement,
-                movement
-              )
+              handleUpdate('movement', value, setMovement, movement)
             }
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
@@ -406,13 +371,7 @@ export function AttributeCard({
             label="Accuracy"
             value={accuracy}
             onChange={(value) =>
-              handleUpdate(
-                'accuracy',
-                value,
-                SURVIVOR_ACCURACY_UPDATED_MESSAGE(),
-                setAccuracy,
-                accuracy
-              )
+              handleUpdate('accuracy', value, setAccuracy, accuracy)
             }
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
@@ -435,13 +394,7 @@ export function AttributeCard({
             label="Strength"
             value={strength}
             onChange={(value) =>
-              handleUpdate(
-                'strength',
-                value,
-                SURVIVOR_STRENGTH_UPDATED_MESSAGE(),
-                setStrength,
-                strength
-              )
+              handleUpdate('strength', value, setStrength, strength)
             }
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
@@ -464,13 +417,7 @@ export function AttributeCard({
             label="Evasion"
             value={evasion}
             onChange={(value) =>
-              handleUpdate(
-                'evasion',
-                value,
-                SURVIVOR_EVASION_UPDATED_MESSAGE(),
-                setEvasion,
-                evasion
-              )
+              handleUpdate('evasion', value, setEvasion, evasion)
             }
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
@@ -492,15 +439,7 @@ export function AttributeCard({
           <NumericInput
             label="Luck"
             value={luck}
-            onChange={(value) =>
-              handleUpdate(
-                'luck',
-                value,
-                SURVIVOR_LUCK_UPDATED_MESSAGE(),
-                setLuck,
-                luck
-              )
-            }
+            onChange={(value) => handleUpdate('luck', value, setLuck, luck)}
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
           />
@@ -521,15 +460,7 @@ export function AttributeCard({
           <NumericInput
             label="Speed"
             value={speed}
-            onChange={(value) =>
-              handleUpdate(
-                'speed',
-                value,
-                SURVIVOR_SPEED_UPDATED_MESSAGE(),
-                setSpeed,
-                speed
-              )
-            }
+            onChange={(value) => handleUpdate('speed', value, setSpeed, speed)}
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
           />
@@ -553,15 +484,7 @@ export function AttributeCard({
               label="Lumi"
               value={lumi}
               min={0}
-              onChange={(value) =>
-                handleUpdate(
-                  'lumi',
-                  value,
-                  SURVIVOR_LUMI_UPDATED_MESSAGE(),
-                  setLumi,
-                  lumi
-                )
-              }
+              onChange={(value) => handleUpdate('lumi', value, setLumi, lumi)}
               className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               disabled={disabled}
             />

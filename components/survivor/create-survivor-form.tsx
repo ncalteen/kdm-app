@@ -17,7 +17,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { LocalStateType } from '@/contexts/local-context'
 import { useCatalogFetch } from '@/hooks/use-catalog-fetch'
-import { useToast } from '@/hooks/use-toast'
 import { createSurvivor } from '@/lib/dal/survivor'
 import { getWanderers } from '@/lib/dal/wanderer'
 import {
@@ -49,6 +48,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ReactElement, useEffect, useMemo, useState } from 'react'
 import { Resolver, useForm, useWatch } from 'react-hook-form'
+import { toast } from 'sonner'
 
 /**
  * Create Survivor Form Properties
@@ -88,8 +88,6 @@ export function CreateSurvivorForm({
   setSurvivors,
   survivors
 }: CreateSurvivorFormProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [activeTab, setActiveTab] = useState<'custom' | 'wanderer'>('custom')
   const [selectedWanderer, setSelectedWanderer] =
     useState<WandererDetail | null>(null)

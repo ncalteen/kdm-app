@@ -4,25 +4,16 @@ import { CustomWeaponTypeRulesIconButton } from '@/components/custom/custom-rule
 import { SelectWeaponType } from '@/components/menu/select-weapon-type'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import {
-  ERROR_MESSAGE,
-  SURVIVOR_WEAPON_PROFICIENCY_MASTER_ACHIEVED_MESSAGE,
-  SURVIVOR_WEAPON_PROFICIENCY_SPECIALIST_ACHIEVED_MESSAGE,
-  SURVIVOR_WEAPON_PROFICIENCY_UPDATED_MESSAGE,
-  SURVIVOR_WEAPON_TYPE_UPDATED_MESSAGE
-} from '@/lib/messages'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { ReactElement, useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Weapon Proficiency Card Properties
  */
 interface WeaponProficiencyCardProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -41,12 +32,9 @@ interface WeaponProficiencyCardProps {
  * @returns Weapon Proficiency Card Component
  */
 export function WeaponProficiencyCard({
-  local,
   selectedSurvivor,
   setSurvivors
 }: WeaponProficiencyCardProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [weaponProficiency, setWeaponProficiency] = useState<number>(
@@ -87,31 +75,21 @@ export function WeaponProficiencyCard({
 
       updateSurvivor(selectedSurvivor?.id, {
         weapon_proficiency: updatedProficiency
-      })
-        .then(() => {
-          if (updatedProficiency === 3)
-            toast.success(
-              SURVIVOR_WEAPON_PROFICIENCY_SPECIALIST_ACHIEVED_MESSAGE()
-            )
-          else if (updatedProficiency === 8)
-            toast.success(SURVIVOR_WEAPON_PROFICIENCY_MASTER_ACHIEVED_MESSAGE())
-          else toast.success(SURVIVOR_WEAPON_PROFICIENCY_UPDATED_MESSAGE())
-        })
-        .catch((error) => {
-          setWeaponProficiency(oldProficiency)
-          setSurvivors((prev) =>
-            prev.map((s) =>
-              s.id === selectedSurvivor?.id
-                ? { ...s, weapon_proficiency: oldProficiency }
-                : s
-            )
+      }).catch((error) => {
+        setWeaponProficiency(oldProficiency)
+        setSurvivors((prev) =>
+          prev.map((s) =>
+            s.id === selectedSurvivor?.id
+              ? { ...s, weapon_proficiency: oldProficiency }
+              : s
           )
+        )
 
-          console.error('Weapon Proficiency Update Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        console.error('Weapon Proficiency Update Error:', error)
+        toast.error(ERROR_MESSAGE())
+      })
     },
-    [weaponProficiency, selectedSurvivor?.id, setSurvivors, toast]
+    [weaponProficiency, selectedSurvivor?.id, setSurvivors]
   )
 
   /**
@@ -143,28 +121,26 @@ export function WeaponProficiencyCard({
       updateSurvivor(selectedSurvivor?.id, {
         weapon_type_id: type || null,
         weapon_proficiency: 0
-      })
-        .then(() => toast.success(SURVIVOR_WEAPON_TYPE_UPDATED_MESSAGE()))
-        .catch((error) => {
-          setWeaponTypeId(oldWeaponTypeId)
-          setWeaponProficiency(oldProficiency)
-          setSurvivors((prev) =>
-            prev.map((s) =>
-              s.id === selectedSurvivor?.id
-                ? {
-                    ...s,
-                    weapon_type_id: oldWeaponTypeId,
-                    weapon_proficiency: oldProficiency
-                  }
-                : s
-            )
+      }).catch((error) => {
+        setWeaponTypeId(oldWeaponTypeId)
+        setWeaponProficiency(oldProficiency)
+        setSurvivors((prev) =>
+          prev.map((s) =>
+            s.id === selectedSurvivor?.id
+              ? {
+                  ...s,
+                  weapon_type_id: oldWeaponTypeId,
+                  weapon_proficiency: oldProficiency
+                }
+              : s
           )
+        )
 
-          console.error('Weapon Type Update Error:', error)
-          toast.error(ERROR_MESSAGE())
-        })
+        console.error('Weapon Type Update Error:', error)
+        toast.error(ERROR_MESSAGE())
+      })
     },
-    [weaponProficiency, weaponTypeId, selectedSurvivor?.id, setSurvivors, toast]
+    [weaponProficiency, weaponTypeId, selectedSurvivor?.id, setSurvivors]
   )
 
   return (
@@ -177,7 +153,6 @@ export function WeaponProficiencyCard({
             </CardTitle>
             <div className="flex flex-row items-center gap-1">
               <SelectWeaponType
-                local={local}
                 value={weaponTypeId}
                 onChange={handleWeaponTypeChange}
               />

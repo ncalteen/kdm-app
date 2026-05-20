@@ -103,21 +103,18 @@ export function SurvivorCard({
           {/* First Column - Essential Stats */}
           <div className="flex flex-col flex-1 gap-1 xl:min-w-112.5">
             <StatusCard
-              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             {selectedSurvivor?.wanderer && (
               <WandererCard
-                local={local}
                 selectedSurvivor={selectedSurvivor}
                 setSurvivors={setSurvivors}
                 survivors={survivors}
               />
             )}
             <HuntXPCard
-              local={local}
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
@@ -132,7 +129,6 @@ export function SurvivorCard({
               />
             )}
             <SurvivalCard
-              local={local}
               mode={mode}
               selectedHunt={selectedHunt}
               selectedSettlement={selectedSettlement}
@@ -143,7 +139,6 @@ export function SurvivorCard({
               setSurvivors={setSurvivors}
             />
             <WeaponProficiencyCard
-              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
             />
@@ -161,7 +156,6 @@ export function SurvivorCard({
               setSurvivors={setSurvivors}
             />
             <OncePerLifetimeCard
-              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
             />
@@ -170,7 +164,6 @@ export function SurvivorCard({
           {/* Second Column - Combat */}
           <div className="flex flex-col flex-1 gap-1 xl:min-w-112.5">
             <AttributeCard
-              local={local}
               mode={mode}
               selectedHunt={selectedHunt}
               selectedSettlement={selectedSettlement}
@@ -194,38 +187,32 @@ export function SurvivorCard({
               setSurvivors={setSurvivors}
             />
             <HeadCard
-              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <ArmsCard
-              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <BodyCard
-              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <WaistCard
-              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <LegsCard
-              local={local}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             {mode === SurvivorCardMode.SURVIVOR_CARD && (
               <NextDepartureCard
-                local={local}
                 selectedSurvivor={selectedSurvivor}
                 setSurvivors={setSurvivors}
               />
@@ -256,14 +243,12 @@ export function SurvivorCard({
           {/* Fourth Column - Gear Grid */}
           <div className="flex flex-col flex-1 gap-1 xl:min-w-[320px] xl:max-w-105">
             <GearGridCard
-              local={local}
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <CursedGearCard
-              local={local}
               selectedSettlement={selectedSettlement}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}

@@ -3,17 +3,6 @@
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import {
-  MONSTER_ACCURACY_TOKENS_UPDATED_MESSAGE,
-  MONSTER_DAMAGE_TOKENS_UPDATED_MESSAGE,
-  MONSTER_EVASION_TOKENS_UPDATED_MESSAGE,
-  MONSTER_LUCK_TOKENS_UPDATED_MESSAGE,
-  MONSTER_MOVEMENT_TOKENS_UPDATED_MESSAGE,
-  MONSTER_MOVEMENT_UPDATED_MESSAGE,
-  MONSTER_SPEED_TOKENS_UPDATED_MESSAGE,
-  MONSTER_SPEED_UPDATED_MESSAGE,
-  MONSTER_STRENGTH_TOKENS_UPDATED_MESSAGE
-} from '@/lib/messages'
 import { ShowdownMonsterDetail } from '@/lib/types'
 import { ReactElement } from 'react'
 
@@ -64,15 +53,7 @@ export function ShowdownMonsterAttributes({
           <NumericInput
             label="Damage Tokens"
             value={monster.damage_tokens}
-            onChange={(value) =>
-              saveMonsterData(
-                { damage_tokens: value },
-                MONSTER_DAMAGE_TOKENS_UPDATED_MESSAGE(
-                  monster.damage_tokens,
-                  value
-                )
-              )
-            }
+            onChange={(value) => saveMonsterData({ damage_tokens: value })}
             className="w-24 h-12 text-xl bg-muted!"
           />
           <NumericInput
@@ -92,26 +73,13 @@ export function ShowdownMonsterAttributes({
             label="Movement"
             value={monster.movement ?? 1}
             min={1}
-            onChange={(value) =>
-              saveMonsterData(
-                { movement: value },
-                MONSTER_MOVEMENT_UPDATED_MESSAGE(monster.movement, value)
-              )
-            }
+            onChange={(value) => saveMonsterData({ movement: value })}
             className="w-24 h-12 text-xl"
           />
           <NumericInput
             label="Movement Tokens"
             value={monster.movement_tokens}
-            onChange={(value) =>
-              saveMonsterData(
-                { movement_tokens: value },
-                MONSTER_MOVEMENT_TOKENS_UPDATED_MESSAGE(
-                  monster.movement_tokens,
-                  value
-                )
-              )
-            }
+            onChange={(value) => saveMonsterData({ movement_tokens: value })}
             className="w-24 h-12 text-xl bg-muted!"
           />
           <NumericInput
@@ -134,15 +102,7 @@ export function ShowdownMonsterAttributes({
           <NumericInput
             label="Accuracy Tokens"
             value={monster.accuracy_tokens}
-            onChange={(value) =>
-              saveMonsterData(
-                { accuracy_tokens: value },
-                MONSTER_ACCURACY_TOKENS_UPDATED_MESSAGE(
-                  monster.accuracy_tokens,
-                  value
-                )
-              )
-            }
+            onChange={(value) => saveMonsterData({ accuracy_tokens: value })}
             className="w-24 h-12 text-xl bg-muted!"
           />
           <NumericInput
@@ -165,15 +125,7 @@ export function ShowdownMonsterAttributes({
           <NumericInput
             label="Strength Tokens"
             value={monster.strength_tokens}
-            onChange={(value) =>
-              saveMonsterData(
-                { strength_tokens: value },
-                MONSTER_STRENGTH_TOKENS_UPDATED_MESSAGE(
-                  monster.strength_tokens,
-                  value
-                )
-              )
-            }
+            onChange={(value) => saveMonsterData({ strength_tokens: value })}
             className="w-24 h-12 text-xl bg-muted!"
           />
           <NumericInput
@@ -196,15 +148,7 @@ export function ShowdownMonsterAttributes({
           <NumericInput
             label="Evasion Tokens"
             value={monster.evasion_tokens}
-            onChange={(value) =>
-              saveMonsterData(
-                { evasion_tokens: value },
-                MONSTER_EVASION_TOKENS_UPDATED_MESSAGE(
-                  monster.evasion_tokens,
-                  value
-                )
-              )
-            }
+            onChange={(value) => saveMonsterData({ evasion_tokens: value })}
             className="w-24 h-12 text-xl bg-muted!"
           />
           <NumericInput
@@ -227,12 +171,7 @@ export function ShowdownMonsterAttributes({
           <NumericInput
             label="Luck Tokens"
             value={monster.luck_tokens}
-            onChange={(value) =>
-              saveMonsterData(
-                { luck_tokens: value },
-                MONSTER_LUCK_TOKENS_UPDATED_MESSAGE(monster.luck_tokens, value)
-              )
-            }
+            onChange={(value) => saveMonsterData({ luck_tokens: value })}
             className="w-24 h-12 text-xl bg-muted!"
           />
           <NumericInput
@@ -250,26 +189,13 @@ export function ShowdownMonsterAttributes({
             label="Speed"
             value={monster.speed}
             min={1}
-            onChange={(value) =>
-              saveMonsterData(
-                { speed: value },
-                MONSTER_SPEED_UPDATED_MESSAGE(monster.speed, value)
-              )
-            }
+            onChange={(value) => saveMonsterData({ speed: value })}
             className="w-24 h-12 text-xl"
           />
           <NumericInput
             label="Speed Tokens"
             value={monster.speed_tokens}
-            onChange={(value) =>
-              saveMonsterData(
-                { speed_tokens: value },
-                MONSTER_SPEED_TOKENS_UPDATED_MESSAGE(
-                  monster.speed_tokens,
-                  value
-                )
-              )
-            }
+            onChange={(value) => saveMonsterData({ speed_tokens: value })}
             className="w-24 h-12 text-xl bg-muted!"
           />
           <NumericInput

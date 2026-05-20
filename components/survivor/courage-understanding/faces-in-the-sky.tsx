@@ -8,10 +8,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { SURVIVOR_FACES_IN_THE_SKY_TRAIT_UPDATED_MESSAGE } from '@/lib/messages'
 import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
 import { BookOpenIcon } from 'lucide-react'
 import {
@@ -26,8 +23,6 @@ import {
  * Faces In The Sky Properties
  */
 interface FacesInTheSkyProps {
-  /** Local State */
-  local: LocalStateType
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
@@ -46,13 +41,10 @@ interface FacesInTheSkyProps {
  * @returns Faces in the Sky Component
  */
 export function FacesInTheSky({
-  local,
   selectedSurvivor,
   setSurvivors,
   survivors
 }: FacesInTheSkyProps): ReactElement {
-  const { toast } = useToast(local)
-
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [gamblerWitch, setGamblerWitch] = useState(
@@ -152,17 +144,15 @@ export function FacesInTheSky({
         )
       )
 
-      updateSurvivor(selectedSurvivor?.id, { [field]: newValue })
-        .then(() =>
-          toast.success(SURVIVOR_FACES_IN_THE_SKY_TRAIT_UPDATED_MESSAGE())
-        )
-        .catch((error) => {
+      updateSurvivor(selectedSurvivor?.id, { [field]: newValue }).catch(
+        (error) => {
           setter(currentValue)
           setSurvivors(oldSurvivors)
           console.error('Error Updating Faces in the Sky Trait:', error)
-        })
+        }
+      )
     },
-    [selectedSurvivor?.id, setSurvivors, survivors, toast]
+    [selectedSurvivor?.id, setSurvivors, survivors]
   )
 
   return (

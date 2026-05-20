@@ -21,8 +21,6 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { LocalStateType } from '@/contexts/local-context'
-import { useToast } from '@/hooks/use-toast'
 import {
   CatalogArchiveItem,
   CatalogPermanentDeleteBlockedError,
@@ -31,19 +29,12 @@ import {
   restoreCatalogRow
 } from '@/lib/dal/catalog-archive'
 import {
-  CATALOG_PERMANENTLY_DELETED_MESSAGE,
   CATALOG_PERMANENT_DELETE_BLOCKED_MESSAGE,
-  CATALOG_RESTORED_MESSAGE,
   ERROR_MESSAGE
 } from '@/lib/messages'
 import { ArchiveRestoreIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
-
-/** Archived Catalog Card Properties */
-interface ArchivedCatalogCardProps {
-  /** Local State */
-  local: LocalStateType
-}
+import { toast } from 'sonner'
 
 function getCatalogArchiveItemKey(
   item: Pick<CatalogArchiveItem, 'id' | 'table'>
@@ -57,14 +48,9 @@ function getCatalogArchiveItemKey(
  * Lists the current user's archived custom catalog rows and allows them to be
  * restored into the active custom content library.
  *
- * @param props Component Properties
  * @returns Archived Catalog Card Component
  */
-export function ArchivedCatalogCard({
-  local
-}: ArchivedCatalogCardProps): ReactElement {
-  const { toast } = useToast(local)
-
+export function ArchivedCatalogCard(): ReactElement {
   const [items, setItems] = useState<CatalogArchiveItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [deletingKey, setDeletingKey] = useState<string | null>(null)
@@ -99,7 +85,7 @@ export function ArchivedCatalogCard({
     return () => {
       cancelled = true
     }
-  }, [toast])
+  }, [])
 
   /**
    * Handle Restore
@@ -121,7 +107,6 @@ export function ArchivedCatalogCard({
       )
 
       restoreCatalogRow(item.table, item.id)
-        .then(() => toast.success(CATALOG_RESTORED_MESSAGE()))
         .catch((err: unknown) => {
           setItems(previous)
           console.error('Restore Catalog Row Error:', err)
@@ -129,7 +114,7 @@ export function ArchivedCatalogCard({
         })
         .finally(() => setRestoringKey(null))
     },
-    [deletingKey, items, restoringKey, toast]
+    [deletingKey, items, restoringKey]
   )
 
   /**
@@ -154,7 +139,6 @@ export function ArchivedCatalogCard({
       )
 
       permanentlyDeleteArchivedCatalogRow(item.table, item.id)
-        .then(() => toast.success(CATALOG_PERMANENTLY_DELETED_MESSAGE()))
         .catch((err: unknown) => {
           setItems(previous)
           console.error('Permanent Delete Catalog Row Error:', err)
@@ -168,7 +152,7 @@ export function ArchivedCatalogCard({
         })
         .finally(() => setDeletingKey(null))
     },
-    [deletingKey, items, restoringKey, toast]
+    [deletingKey, items, restoringKey]
   )
 
   return (
