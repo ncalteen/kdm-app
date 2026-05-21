@@ -98,28 +98,34 @@ Supabase-specific security traps that silently create vulnerabilities:
     `auth.role() = 'authenticated'` breaks silently when anonymous sign-ins are
     enabled, because anonymous users carry the `authenticated` Postgres role and
     pass the check regardless of whether the user is genuinely signed in.
+
     ```sql
     -- Deprecated (do not use)
     create policy "example" on table_name for select
     using ( auth.role() = 'authenticated' );
     ```
+
   - **`TO authenticated` alone is authentication without authorization (BOLA /
     IDOR).** Using `TO authenticated` only checks the role — it does not
     restrict which rows a user can access. The correct pattern combines
     `TO authenticated` with an ownership predicate in `USING`:
+
     ```sql
     create policy "example" on table_name for select
     to authenticated
     using ( (select auth.uid()) = user_id );
     ```
+
   - **UPDATE policies require both `USING` and `WITH CHECK`.** Without
     `WITH CHECK`, a user can reassign a row's `user_id` to another user:
+
     ```sql
     create policy "example" on table_name for update
     to authenticated
     using ( (select auth.uid()) = user_id )
     with check ( (select auth.uid()) = user_id );
     ```
+
   - **`SECURITY DEFINER` functions bypass RLS.** A `SECURITY DEFINER` function
     runs with its creator's privileges — typically a role with `bypassrls`
     (e.g., `postgres`). Never add `SECURITY DEFINER` to resolve a permission
@@ -180,11 +186,11 @@ For setup instructions, server URL, and configuration, see the
    is expected (no token) and means the server is up. Timeout or "connection
    refused" means it may be down.
 
-2. **Check `.mcp.json` configuration:** Verify the project root has a valid
+1. **Check `.mcp.json` configuration:** Verify the project root has a valid
    `.mcp.json` with the correct server URL. If missing, create one pointing to
    `https://mcp.supabase.com/mcp`.
 
-3. **Authenticate the MCP server:** If the server is reachable and `.mcp.json`
+1. **Authenticate the MCP server:** If the server is reachable and `.mcp.json`
    is correct but tools aren't visible, the user needs to authenticate. The
    Supabase MCP server uses OAuth 2.1 — tell the user to trigger the auth flow
    in their agent, complete it in the browser, and reload the session.
@@ -195,9 +201,9 @@ Before implementing any Supabase feature, find the relevant documentation. Use
 these methods in priority order:
 
 1. **MCP `search_docs` tool** (preferred — returns relevant snippets directly)
-2. **Fetch docs pages as markdown** — any docs page can be fetched by appending
+1. **Fetch docs pages as markdown** — any docs page can be fetched by appending
    `.md` to the URL path.
-3. **Web search** for Supabase-specific topics when you don't know which page to
+1. **Web search** for Supabase-specific topics when you don't know which page to
    look at.
 
 ## Making and Committing Schema Changes
@@ -216,15 +222,8 @@ If you use it, you'll be stuck with whatever SQL you passed on the first try.
 
 1. **Run advisors** → `supabase db advisors` (CLI v2.81.3+) or MCP
    `get_advisors`. Fix any issues.
-2. **Review the Security Checklist above** if your changes involve views,
+1. **Review the Security Checklist above** if your changes involve views,
    functions, triggers, or storage.
-3. **Generate the migration** →
+1. **Generate the migration** →
    `supabase db pull <descriptive-name> --local --yes`
-4. **Verify** → `supabase migration list --local`
-
-## Reference Guides
-
-- **Skill Feedback** →
-  [references/skill-feedback.md](references/skill-feedback.md) **MUST read
-  when** the user reports that this skill gave incorrect guidance or is missing
-  information.
+1. **Verify** → `supabase migration list --local`

@@ -169,7 +169,8 @@ describe('getSurvivor', () => {
       knowledge_2: null,
       neurosis: null,
       philosophy: null,
-      tenet_knowledge: null
+      tenet_knowledge: null,
+      weapon_type: null
     }
     const mockMaybeSingle = vi
       .fn()
@@ -191,8 +192,12 @@ describe('getSurvivor', () => {
       neurosis: null,
       philosophy: null,
       secret_fighting_arts: [],
-      tenet_knowledge: null
+      tenet_knowledge: null,
+      weapon_type: null
     })
+    expect(mockSelect).toHaveBeenCalledWith(
+      expect.stringContaining('weapon_type(')
+    )
   })
 })
 
@@ -242,7 +247,8 @@ describe('getSurvivors', () => {
       knowledge_2: null,
       neurosis: null,
       philosophy: null,
-      tenet_knowledge: null
+      tenet_knowledge: null,
+      weapon_type: null
     }
     const mockReturns = vi
       .fn()
@@ -260,7 +266,8 @@ describe('getSurvivors', () => {
       disorders: [],
       embarked: false,
       fighting_arts: [],
-      secret_fighting_arts: []
+      secret_fighting_arts: [],
+      weapon_type: null
     })
   })
 
@@ -315,7 +322,15 @@ describe('getSurvivors', () => {
       knowledge_2: null,
       neurosis: null,
       philosophy: null,
-      tenet_knowledge: null
+      tenet_knowledge: null,
+      weapon_type: {
+        id: 'wt-1',
+        custom: true,
+        user_id: 'author-1',
+        weapon_type_name: 'Axe',
+        specialist_proficiency_rules: 'Axe specialist rules',
+        master_proficiency_rules: 'Axe master rules'
+      }
     }
 
     const mockReturns = vi
@@ -358,6 +373,12 @@ describe('getSurvivors', () => {
     expect(result![0].knowledge_1?.author_avatar_url).toBe(
       'https://a/ashen.png'
     )
+    expect(result![0].weapon_type?.author_username).toBe('ashen.veil')
+    expect(result![0].weapon_type?.author_user_id).toBe('author-1')
+    expect(result![0].weapon_type?.author_avatar_url).toBe(
+      'https://a/ashen.png'
+    )
+    expect(result![0].weapon_type).not.toHaveProperty('user_id')
     expect(mockSupabase.rpc).toHaveBeenCalledWith(
       'get_settlement_member_usernames',
       { target_settlement: 'set-1' }
@@ -387,7 +408,8 @@ describe('getSurvivors', () => {
       knowledge_2: null,
       neurosis: null,
       philosophy: null,
-      tenet_knowledge: null
+      tenet_knowledge: null,
+      weapon_type: null
     }
 
     const mockReturns = vi

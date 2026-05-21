@@ -1557,6 +1557,30 @@ export type SurvivorDetail = Tables<'survivor'> & {
     /** Author Avatar URL (null for built-ins / ghost / no avatar) */
     author_avatar_url: string | null
   } | null
+  /**
+   * Weapon Type.
+   *
+   * Carries the selected weapon type's specialist/mastery rules so survivor
+   * cards can render proficiency bonuses without a second catalog lookup.
+   */
+  weapon_type: {
+    /** Weapon Type ID */
+    id: string
+    /** Weapon Type Name */
+    weapon_type_name: string
+    /** Custom */
+    custom: boolean
+    /** Specialist Proficiency Rules */
+    specialist_proficiency_rules: string | null
+    /** Master Proficiency Rules */
+    master_proficiency_rules: string | null
+    /** Author User ID (null for built-ins / non-custom rows) */
+    author_user_id: string | null
+    /** Author Username (null for built-ins / ghost authors) */
+    author_username: string | null
+    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+    author_avatar_url: string | null
+  } | null
 }
 
 /**

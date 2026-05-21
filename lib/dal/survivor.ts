@@ -55,7 +55,8 @@ const SURVIVOR_SELECT = `
   knowledge_2:knowledge!survivor_knowledge_2_id_fkey(id, custom, user_id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone),
   neurosis(id, custom, user_id, neurosis_name, rules),
   philosophy(id, custom, user_id, philosophy_name, hunt_xp_milestones, tenet_knowledge_id, tier),
-  tenet_knowledge:knowledge!survivor_tenet_knowledge_id_fkey(id, custom, user_id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone)
+  tenet_knowledge:knowledge!survivor_tenet_knowledge_id_fkey(id, custom, user_id, knowledge_name, rules, observation_conditions, observation_rank_up_milestone),
+  weapon_type(id, custom, user_id, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules)
 `
 
 /**
@@ -127,6 +128,9 @@ type SurvivorRow = Tables<'survivor'> & {
   tenet_knowledge: WithAuthorship<
     Omit<NonNullable<SurvivorDetail['tenet_knowledge']>, AuthorshipKeys>
   > | null
+  weapon_type: WithAuthorship<
+    Omit<NonNullable<SurvivorDetail['weapon_type']>, AuthorshipKeys>
+  > | null
 }
 
 /**
@@ -192,6 +196,7 @@ function mapSurvivorRow(
     neurosis,
     philosophy,
     tenet_knowledge,
+    weapon_type,
     ...survivor
   } = row
 
@@ -251,6 +256,9 @@ function mapSurvivorRow(
       ),
     tenet_knowledge: tenet_knowledge
       ? withAuthorUsername(tenet_knowledge, memberProfiles)
+      : null,
+    weapon_type: weapon_type
+      ? withAuthorUsername(weapon_type, memberProfiles)
       : null
   }
 }

@@ -136,6 +136,7 @@ export function SurvivorCard({
             <WeaponProficiencyCard
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
+              survivors={survivors}
             />
             <CourageUnderstandingCard
               selectedSettlement={selectedSettlement}
