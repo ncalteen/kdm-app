@@ -686,8 +686,9 @@ typical KDM session is low; LWW is fine.
 ### 8.1 What's Already in Place
 
 - `hooks/use-realtime.tsx` subscribes to a `settlement-{id}` channel filtered by
-  `settlement_id` for most settlement-child tables, and unfiltered (relying on
-  RLS) for survivor-owned junctions.
+  `settlement_id` for settlement-child gameplay tables, including the
+  survivor-owned and monster-owned junctions that denormalize the parent
+  settlement scope for realtime filtering.
 - 300ms debounce per domain (settlement, hunt, showdown, settlement phase,
   survivor) to batch rapid changes into a single re-fetch.
 - `LocalContext` holds `selectedSettlement: SettlementDetail` etc., refetched on

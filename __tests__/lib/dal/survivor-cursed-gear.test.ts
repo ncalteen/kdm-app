@@ -45,7 +45,7 @@ describe('getSurvivorCursedGear', () => {
     const result = await getSurvivorCursedGear('survivor-1')
 
     expect(mockSupabase.from).toHaveBeenCalledWith('survivor_cursed_gear')
-    expect(mockSelect).toHaveBeenCalledWith('id, gear_id')
+    expect(mockSelect).toHaveBeenCalledWith('id, gear_id, settlement_id')
     expect(mockEq).toHaveBeenCalledWith('survivor_id', 'survivor-1')
     expect(result).toEqual(mockData)
   })

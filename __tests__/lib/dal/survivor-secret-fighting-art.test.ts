@@ -47,7 +47,9 @@ describe('getSurvivorSecretFightingArts', () => {
     expect(mockSupabase.from).toHaveBeenCalledWith(
       'survivor_secret_fighting_art'
     )
-    expect(mockSelect).toHaveBeenCalledWith('id, secret_fighting_art_id')
+    expect(mockSelect).toHaveBeenCalledWith(
+      'id, secret_fighting_art_id, settlement_id'
+    )
     expect(mockEq).toHaveBeenCalledWith('survivor_id', 'survivor-1')
     expect(result).toEqual(mockData)
   })

@@ -19,7 +19,7 @@ export async function getSurvivorCursedGear(
 
   const { data, error } = await supabase
     .from('survivor_cursed_gear')
-    .select('id, gear_id')
+    .select('id, gear_id, settlement_id')
     .eq('survivor_id', survivorId)
 
   if (error)

@@ -19,7 +19,7 @@ export async function getSurvivorFightingArts(
 
   const { data, error } = await supabase
     .from('survivor_fighting_art')
-    .select('id, fighting_art_id')
+    .select('id, fighting_art_id, settlement_id')
     .eq('survivor_id', survivorId)
 
   if (error)

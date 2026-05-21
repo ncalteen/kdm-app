@@ -476,6 +476,7 @@ export type Database = {
           pos_top_left: string | null
           pos_top_right: string | null
           selected_armor_set_id: string | null
+          settlement_id: string
           survivor_id: string
           updated_at: string
         }
@@ -492,6 +493,7 @@ export type Database = {
           pos_top_left?: string | null
           pos_top_right?: string | null
           selected_armor_set_id?: string | null
+          settlement_id?: string
           survivor_id: string
           updated_at?: string
         }
@@ -508,6 +510,7 @@ export type Database = {
           pos_top_left?: string | null
           pos_top_right?: string | null
           selected_armor_set_id?: string | null
+          settlement_id?: string
           survivor_id?: string
           updated_at?: string
         }
@@ -580,6 +583,13 @@ export type Database = {
             columns: ["selected_armor_set_id"]
             isOneToOne: false
             referencedRelation: "armor_set"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gear_grid_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
           {
@@ -952,6 +962,7 @@ export type Database = {
           hunt_monster_id: string
           id: string
           mood_id: string
+          settlement_id: string
           updated_at: string
         }
         Insert: {
@@ -959,6 +970,7 @@ export type Database = {
           hunt_monster_id: string
           id?: string
           mood_id: string
+          settlement_id?: string
           updated_at?: string
         }
         Update: {
@@ -966,6 +978,7 @@ export type Database = {
           hunt_monster_id?: string
           id?: string
           mood_id?: string
+          settlement_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -983,6 +996,13 @@ export type Database = {
             referencedRelation: "mood"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "hunt_monster_mood_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
         ]
       }
       hunt_monster_survivor_status: {
@@ -990,6 +1010,7 @@ export type Database = {
           created_at: string
           hunt_monster_id: string
           id: string
+          settlement_id: string
           survivor_status_id: string
           updated_at: string
         }
@@ -997,6 +1018,7 @@ export type Database = {
           created_at?: string
           hunt_monster_id: string
           id?: string
+          settlement_id?: string
           survivor_status_id: string
           updated_at?: string
         }
@@ -1004,6 +1026,7 @@ export type Database = {
           created_at?: string
           hunt_monster_id?: string
           id?: string
+          settlement_id?: string
           survivor_status_id?: string
           updated_at?: string
         }
@@ -1013,6 +1036,13 @@ export type Database = {
             columns: ["hunt_monster_id"]
             isOneToOne: false
             referencedRelation: "hunt_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hunt_monster_survivor_status_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
           {
@@ -1029,6 +1059,7 @@ export type Database = {
           created_at: string
           hunt_monster_id: string
           id: string
+          settlement_id: string
           trait_id: string
           updated_at: string
         }
@@ -1036,6 +1067,7 @@ export type Database = {
           created_at?: string
           hunt_monster_id: string
           id?: string
+          settlement_id?: string
           trait_id: string
           updated_at?: string
         }
@@ -1043,6 +1075,7 @@ export type Database = {
           created_at?: string
           hunt_monster_id?: string
           id?: string
+          settlement_id?: string
           trait_id?: string
           updated_at?: string
         }
@@ -1052,6 +1085,13 @@ export type Database = {
             columns: ["hunt_monster_id"]
             isOneToOne: false
             referencedRelation: "hunt_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hunt_monster_trait_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
           {
@@ -3869,6 +3909,7 @@ export type Database = {
           created_at: string
           id: string
           mood_id: string
+          settlement_id: string
           showdown_monster_id: string
           updated_at: string
         }
@@ -3876,6 +3917,7 @@ export type Database = {
           created_at?: string
           id?: string
           mood_id: string
+          settlement_id?: string
           showdown_monster_id: string
           updated_at?: string
         }
@@ -3883,6 +3925,7 @@ export type Database = {
           created_at?: string
           id?: string
           mood_id?: string
+          settlement_id?: string
           showdown_monster_id?: string
           updated_at?: string
         }
@@ -3892,6 +3935,13 @@ export type Database = {
             columns: ["mood_id"]
             isOneToOne: false
             referencedRelation: "mood"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showdown_monster_mood_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
           {
@@ -3907,6 +3957,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          settlement_id: string
           showdown_monster_id: string
           survivor_status_id: string
           updated_at: string
@@ -3914,6 +3965,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          settlement_id?: string
           showdown_monster_id: string
           survivor_status_id: string
           updated_at?: string
@@ -3921,11 +3973,19 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          settlement_id?: string
           showdown_monster_id?: string
           survivor_status_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "showdown_monster_survivor_status_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "showdown_monster_survivor_status_showdown_monster_id_fkey"
             columns: ["showdown_monster_id"]
@@ -3946,6 +4006,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          settlement_id: string
           showdown_monster_id: string
           trait_id: string
           updated_at: string
@@ -3953,6 +4014,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          settlement_id?: string
           showdown_monster_id: string
           trait_id: string
           updated_at?: string
@@ -3960,11 +4022,19 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          settlement_id?: string
           showdown_monster_id?: string
           trait_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "showdown_monster_trait_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "showdown_monster_trait_showdown_monster_id_fkey"
             columns: ["showdown_monster_id"]
@@ -4594,6 +4664,7 @@ export type Database = {
           ability_impairment_id: string
           created_at: string
           id: string
+          settlement_id: string
           survivor_id: string
           updated_at: string
         }
@@ -4601,6 +4672,7 @@ export type Database = {
           ability_impairment_id: string
           created_at?: string
           id?: string
+          settlement_id?: string
           survivor_id: string
           updated_at?: string
         }
@@ -4608,6 +4680,7 @@ export type Database = {
           ability_impairment_id?: string
           created_at?: string
           id?: string
+          settlement_id?: string
           survivor_id?: string
           updated_at?: string
         }
@@ -4617,6 +4690,13 @@ export type Database = {
             columns: ["ability_impairment_id"]
             isOneToOne: false
             referencedRelation: "ability_impairment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_ability_impairment_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
           {
@@ -4633,6 +4713,7 @@ export type Database = {
           created_at: string
           gear_id: string
           id: string
+          settlement_id: string
           survivor_id: string
           updated_at: string
         }
@@ -4640,6 +4721,7 @@ export type Database = {
           created_at?: string
           gear_id: string
           id?: string
+          settlement_id?: string
           survivor_id: string
           updated_at?: string
         }
@@ -4647,6 +4729,7 @@ export type Database = {
           created_at?: string
           gear_id?: string
           id?: string
+          settlement_id?: string
           survivor_id?: string
           updated_at?: string
         }
@@ -4656,6 +4739,13 @@ export type Database = {
             columns: ["gear_id"]
             isOneToOne: false
             referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_cursed_gear_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
           {
@@ -4672,6 +4762,7 @@ export type Database = {
           created_at: string
           disorder_id: string
           id: string
+          settlement_id: string
           survivor_id: string
           updated_at: string
         }
@@ -4679,6 +4770,7 @@ export type Database = {
           created_at?: string
           disorder_id: string
           id?: string
+          settlement_id?: string
           survivor_id: string
           updated_at?: string
         }
@@ -4686,6 +4778,7 @@ export type Database = {
           created_at?: string
           disorder_id?: string
           id?: string
+          settlement_id?: string
           survivor_id?: string
           updated_at?: string
         }
@@ -4695,6 +4788,13 @@ export type Database = {
             columns: ["disorder_id"]
             isOneToOne: false
             referencedRelation: "disorder"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_disorder_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
           {
@@ -4711,6 +4811,7 @@ export type Database = {
           created_at: string
           fighting_art_id: string
           id: string
+          settlement_id: string
           survivor_id: string
           updated_at: string
         }
@@ -4718,6 +4819,7 @@ export type Database = {
           created_at?: string
           fighting_art_id: string
           id?: string
+          settlement_id?: string
           survivor_id: string
           updated_at?: string
         }
@@ -4725,6 +4827,7 @@ export type Database = {
           created_at?: string
           fighting_art_id?: string
           id?: string
+          settlement_id?: string
           survivor_id?: string
           updated_at?: string
         }
@@ -4734,6 +4837,13 @@ export type Database = {
             columns: ["fighting_art_id"]
             isOneToOne: false
             referencedRelation: "fighting_art"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_fighting_art_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
           {
@@ -4750,6 +4860,7 @@ export type Database = {
           created_at: string
           id: string
           secret_fighting_art_id: string
+          settlement_id: string
           survivor_id: string
           updated_at: string
         }
@@ -4757,6 +4868,7 @@ export type Database = {
           created_at?: string
           id?: string
           secret_fighting_art_id: string
+          settlement_id?: string
           survivor_id: string
           updated_at?: string
         }
@@ -4764,6 +4876,7 @@ export type Database = {
           created_at?: string
           id?: string
           secret_fighting_art_id?: string
+          settlement_id?: string
           survivor_id?: string
           updated_at?: string
         }
@@ -4773,6 +4886,13 @@ export type Database = {
             columns: ["secret_fighting_art_id"]
             isOneToOne: false
             referencedRelation: "secret_fighting_art"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survivor_secret_fighting_art_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
             referencedColumns: ["id"]
           },
           {
