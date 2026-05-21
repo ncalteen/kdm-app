@@ -50,7 +50,7 @@ interface TableDomainEntry {
    * The column to filter on for settlement-scoped changes.
    * - `'settlement_id'`: filter by `settlement_id=eq.{id}`
    * - `'id'`: filter by `id=eq.{id}` (for the settlement table itself)
-   * - `null`: no filter (RLS handles scoping)
+   * - `null`: no filter (catalog subscriptions rely on RLS)
    */
   filterColumn: 'settlement_id' | 'id' | null
 }
@@ -60,7 +60,7 @@ interface TableDomainEntry {
  *
  * Maps each subscribed table to its domain and filter configuration.
  */
-const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
+export const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   // Settlement domain
   settlement: { domain: 'settlement', filterColumn: 'id' },
   settlement_collective_cognition_reward: {
@@ -113,21 +113,30 @@ const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   hunt_ai_deck: { domain: 'hunt', filterColumn: 'settlement_id' },
   hunt_hunt_board: { domain: 'hunt', filterColumn: 'settlement_id' },
   hunt_monster: { domain: 'hunt', filterColumn: 'settlement_id' },
-  hunt_monster_mood: { domain: 'hunt', filterColumn: null },
-  hunt_monster_survivor_status: { domain: 'hunt', filterColumn: null },
-  hunt_monster_trait: { domain: 'hunt', filterColumn: null },
+  hunt_monster_mood: { domain: 'hunt', filterColumn: 'settlement_id' },
+  hunt_monster_survivor_status: {
+    domain: 'hunt',
+    filterColumn: 'settlement_id'
+  },
+  hunt_monster_trait: { domain: 'hunt', filterColumn: 'settlement_id' },
   hunt_survivor: { domain: 'hunt', filterColumn: 'settlement_id' },
 
   // Showdown domain
   showdown: { domain: 'showdown', filterColumn: 'settlement_id' },
   showdown_ai_deck: { domain: 'showdown', filterColumn: 'settlement_id' },
   showdown_monster: { domain: 'showdown', filterColumn: 'settlement_id' },
-  showdown_monster_mood: { domain: 'showdown', filterColumn: null },
+  showdown_monster_mood: {
+    domain: 'showdown',
+    filterColumn: 'settlement_id'
+  },
   showdown_monster_survivor_status: {
     domain: 'showdown',
-    filterColumn: null
+    filterColumn: 'settlement_id'
   },
-  showdown_monster_trait: { domain: 'showdown', filterColumn: null },
+  showdown_monster_trait: {
+    domain: 'showdown',
+    filterColumn: 'settlement_id'
+  },
   showdown_survivor: { domain: 'showdown', filterColumn: 'settlement_id' },
 
   // Settlement Phase domain
@@ -142,12 +151,24 @@ const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
 
   // Survivor domain
   survivor: { domain: 'survivor', filterColumn: 'settlement_id' },
-  survivor_ability_impairment: { domain: 'survivor', filterColumn: null },
-  survivor_cursed_gear: { domain: 'survivor', filterColumn: null },
-  survivor_disorder: { domain: 'survivor', filterColumn: null },
-  survivor_fighting_art: { domain: 'survivor', filterColumn: null },
-  survivor_secret_fighting_art: { domain: 'survivor', filterColumn: null },
-  gear_grid: { domain: 'survivor', filterColumn: null },
+  survivor_ability_impairment: {
+    domain: 'survivor',
+    filterColumn: 'settlement_id'
+  },
+  survivor_cursed_gear: {
+    domain: 'survivor',
+    filterColumn: 'settlement_id'
+  },
+  survivor_disorder: { domain: 'survivor', filterColumn: 'settlement_id' },
+  survivor_fighting_art: {
+    domain: 'survivor',
+    filterColumn: 'settlement_id'
+  },
+  survivor_secret_fighting_art: {
+    domain: 'survivor',
+    filterColumn: 'settlement_id'
+  },
+  gear_grid: { domain: 'survivor', filterColumn: 'settlement_id' },
 
   // Catalog domain — custom-content tables whose rules / definitions are
   // materialized into `SettlementDetail` (and its survivor / hunt /
@@ -368,21 +389,9 @@ export function useRealtimeSubscriptions(
           () => handleChange(domain)
         )
       } else {
-        // Junction tables that don't carry `settlement_id` directly. The
-        // realtime filter syntax doesn't support joins, so we subscribe
-        // unfiltered and rely on RLS to scope events to rows the user can
-        // read. This is the "coarse subscription" pattern from the sharing
-        // architecture doc §8.2.2 (option B).
-        //
-        // Trade-off: a user with multiple accessible settlements (owned or
-        // shared) will receive events for ALL of them, not just the active
-        // one. The hook fires the domain refetch for any such event,
-        // causing one extra refetch per unrelated mutation. The 300ms
-        // per-domain debounce bounds the blast radius — bursts of
-        // unrelated events collapse into a single refetch. Refining this
-        // to be strictly per-active-settlement requires either denormalising
-        // `settlement_id` onto each junction or threading parent-id
-        // lookups into this hook; tracked in #189.
+        // Catalog tables are subscribed unfiltered because realtime filters
+        // cannot express the transitive joins from catalog rows back to the
+        // active settlement. RLS still gates delivery to readable rows.
         channel = channel.on(
           'postgres_changes',
           {
