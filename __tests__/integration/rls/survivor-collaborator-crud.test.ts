@@ -282,8 +282,10 @@ describe('RLS: collaborator CRUD on survivor + survivor junctions + gear_grid', 
       const insertRow = buildJunctionInsertRow(table)
 
       // Make this test self-contained: remove the conflicting seeded row so
-      // the assertion exercises RLS denial instead of depending on execution
-      // order to avoid a 23505 unique-constraint error.
+      // the assertion exercises the write denial instead of depending on
+      // execution order to avoid a 23505 unique-constraint error. The
+      // denormalized-settlement trigger may now surface this as the same
+      // generic 23503 parent reference used for missing parents.
       const { error: deleteError } = await admin
         .from(table)
         .delete()
@@ -297,7 +299,7 @@ describe('RLS: collaborator CRUD on survivor + survivor junctions + gear_grid', 
           .select('id')
         expect(data ?? []).toEqual([])
         expect(error).not.toBeNull()
-        if (error) expect(error.code).toMatch(/PGRST|42501/)
+        if (error) expect(error.code).toMatch(/PGRST|42501|23503/)
       } finally {
         const { data: restored, error: restoreError } = await admin
           .from(table)
@@ -407,7 +409,7 @@ describe('RLS: collaborator CRUD on survivor + survivor junctions + gear_grid', 
         .insert({ survivor_id: fixture.survivorId })
         .select('id')
       expect(data ?? []).toEqual([])
-      if (error) expect(error.code).toMatch(/PGRST|42501/)
+      if (error) expect(error.code).toMatch(/PGRST|42501|23503/)
     })
   })
 })

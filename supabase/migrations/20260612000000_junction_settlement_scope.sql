@@ -147,9 +147,14 @@ declare parent_settlement_id uuid;
 begin
 select sv.settlement_id into parent_settlement_id
 from public.survivor sv
-where sv.id = new.survivor_id;
-if parent_settlement_id is null then raise exception 'Survivor % does not exist',
-new.survivor_id using errcode = '23503';
+where sv.id = new.survivor_id
+  and (
+    auth.role() = 'service_role'
+    or auth.role() is null
+    or public.is_settlement_owner(sv.settlement_id)
+    or public.is_settlement_collaborator(sv.settlement_id)
+  );
+if parent_settlement_id is null then raise exception 'Invalid parent reference' using errcode = '23503';
 end if;
 new.settlement_id := parent_settlement_id;
 return new;
@@ -161,9 +166,14 @@ declare parent_settlement_id uuid;
 begin
 select hm.settlement_id into parent_settlement_id
 from public.hunt_monster hm
-where hm.id = new.hunt_monster_id;
-if parent_settlement_id is null then raise exception 'Hunt monster % does not exist',
-new.hunt_monster_id using errcode = '23503';
+where hm.id = new.hunt_monster_id
+  and (
+    auth.role() = 'service_role'
+    or auth.role() is null
+    or public.is_settlement_owner(hm.settlement_id)
+    or public.is_settlement_collaborator(hm.settlement_id)
+  );
+if parent_settlement_id is null then raise exception 'Invalid parent reference' using errcode = '23503';
 end if;
 new.settlement_id := parent_settlement_id;
 return new;
@@ -175,9 +185,14 @@ declare parent_settlement_id uuid;
 begin
 select sm.settlement_id into parent_settlement_id
 from public.showdown_monster sm
-where sm.id = new.showdown_monster_id;
-if parent_settlement_id is null then raise exception 'Showdown monster % does not exist',
-new.showdown_monster_id using errcode = '23503';
+where sm.id = new.showdown_monster_id
+  and (
+    auth.role() = 'service_role'
+    or auth.role() is null
+    or public.is_settlement_owner(sm.settlement_id)
+    or public.is_settlement_collaborator(sm.settlement_id)
+  );
+if parent_settlement_id is null then raise exception 'Invalid parent reference' using errcode = '23503';
 end if;
 new.settlement_id := parent_settlement_id;
 return new;

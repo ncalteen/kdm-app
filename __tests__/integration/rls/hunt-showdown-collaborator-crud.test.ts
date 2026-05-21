@@ -370,7 +370,9 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
       // Pair the foreign monster with a catalog id reserved for the
       // stranger denial cases (seeded in beforeAll). The composite has
       // never existed in this table, so a 23505 unique-violation is
-      // impossible — only an RLS denial can produce a failure.
+      // impossible. The denormalized-settlement trigger may now surface the
+      // denial as the same generic 23503 parent reference used for missing
+      // parents.
       const insertRow: Record<string, unknown> = {
         [row.parentColumn]: row.parentMonsterId(),
         [row.catalogColumn]: row.strangerCatalogId()
@@ -380,7 +382,7 @@ describe('RLS: collaborator CRUD on hunt + showdown tables', () => {
         .insert(insertRow)
         .select('id')
       expect(data ?? []).toEqual([])
-      if (error) expect(error.code).toMatch(/PGRST|42501/)
+      if (error) expect(error.code).toMatch(/PGRST|42501|23503/)
     }
   )
 
