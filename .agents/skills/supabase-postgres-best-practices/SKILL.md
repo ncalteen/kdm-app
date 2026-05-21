@@ -54,7 +54,7 @@ Reference these guidelines when:
 
 Read individual rule files for detailed explanations and SQL examples:
 
-```
+```plain
 references/query-missing-indexes.md
 references/query-partial-indexes.md
 references/_sections.md
