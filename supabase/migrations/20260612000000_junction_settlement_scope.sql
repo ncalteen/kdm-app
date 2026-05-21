@@ -5,7 +5,8 @@
 -- junctions previously carried only their parent FK, so the hook subscribed
 -- without a settlement filter and relied on RLS delivery. Add denormalized
 -- `settlement_id`, keep it synchronized with the parent row, and simplify RLS
--- to direct settlement membership checks.
+-- to direct settlement membership checks. Set REPLICA IDENTITY FULL so DELETE
+-- events also carry `settlement_id` for Supabase Realtime filter evaluation.
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 -- 1. Add and backfill settlement_id on every affected junction.
@@ -134,6 +135,10 @@ execute format(
     'Denormalized settlement scope derived from %s.settlement_id for realtime filtering and direct RLS checks.',
     spec.parent_table
   )
+);
+execute format(
+  'alter table public.%I replica identity full',
+  spec.child_table
 );
 end loop;
 end $$;
