@@ -348,6 +348,22 @@ function pickCatalogLinkFields(
 }
 
 /**
+ * Has Any Catalog Link Field
+ *
+ * @param table Table Name
+ * @param row Row Data
+ * @returns Whether the payload carries at least one tracked link field
+ */
+function hasAnyCatalogLinkField(
+  table: string,
+  row: Partial<Record<string, unknown>>
+): boolean {
+  return (DIRECT_CATALOG_LINK_FIELDS_BY_TABLE[table] ?? []).some((field) =>
+    Object.prototype.hasOwnProperty.call(row, field)
+  )
+}
+
+/**
  * Has Any Catalog Link Value
  *
  * @param snapshot Direct Link Snapshot
@@ -397,21 +413,23 @@ export function shouldRefreshCatalogForLinkedContentChange(
   const next = pickCatalogLinkFields(table, payload.new)
   const previous = rowKey ? snapshots.get(rowKey) : undefined
   const old = pickCatalogLinkFields(table, payload.old)
-  const oldHasPayloadValues = Object.keys(old).some((field) =>
-    Object.prototype.hasOwnProperty.call(payload.old, field)
-  )
+  const newHasPayloadValues = hasAnyCatalogLinkField(table, payload.new)
+  const oldHasPayloadValues = hasAnyCatalogLinkField(table, payload.old)
   const previousSnapshot = oldHasPayloadValues ? old : previous
 
   if (payload.eventType === 'DELETE') {
     if (rowKey) snapshots.delete(rowKey)
-    return hasAnyCatalogLinkValue(previousSnapshot ?? old)
+    if (previousSnapshot) return hasAnyCatalogLinkValue(previousSnapshot)
+    return !oldHasPayloadValues
   }
+
+  if (!newHasPayloadValues) return false
 
   if (rowKey) snapshots.set(rowKey, next)
 
   if (payload.eventType === 'INSERT') return hasAnyCatalogLinkValue(next)
 
-  if (!previousSnapshot) return hasAnyCatalogLinkValue(next)
+  if (!previousSnapshot) return true
 
   return didCatalogLinkSnapshotChange(previousSnapshot, next)
 }
@@ -533,10 +551,10 @@ export function useRealtimeSubscriptions(
     /**
      * Handles a Postgres Realtime Payload
      *
-     * Dispatches the table's normal domain and, for gameplay rows that link to
-     * catalog content, also dispatches the catalog fan-out. This refreshes the
-     * materialized catalog state when a custom row becomes visible only after it
-     * is attached to the active settlement.
+     * Dispatches the table's normal domain unless the gameplay row links to
+     * catalog content. Linked-content changes dispatch only the catalog fan-out,
+     * which already refreshes the materialized settlement / survivor / hunt /
+     * showdown state.
      *
      * @param table Changed Table Name
      * @param domain Table Domain
@@ -547,10 +565,12 @@ export function useRealtimeSubscriptions(
       domain: RealtimeDomain,
       payload: RealtimeChangePayload
     ) => {
-      handleChange(domain)
+      if (domain === 'catalog') {
+        handleChange('catalog')
+        return
+      }
 
       if (
-        domain !== 'catalog' &&
         shouldRefreshCatalogForLinkedContentChange(
           table,
           payload,
@@ -558,7 +578,10 @@ export function useRealtimeSubscriptions(
         )
       ) {
         handleChange('catalog')
+        return
       }
+
+      handleChange(domain)
     }
 
     // Create a single channel for all gameplay subscriptions scoped to this

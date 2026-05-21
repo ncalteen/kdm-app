@@ -98,6 +98,26 @@ describe('shouldRefreshCatalogForLinkedContentChange', () => {
     ).toBe(false)
   })
 
+  it('refreshes catalog data when a direct catalog link is cleared as the first observed event', () => {
+    expect(
+      shouldRefreshCatalogForLinkedContentChange('survivor', {
+        eventType: 'UPDATE',
+        new: { id: 'survivor-1', neurosis_id: null },
+        old: { id: 'survivor-1' }
+      })
+    ).toBe(true)
+  })
+
+  it('refreshes catalog data when a direct catalog-link row is deleted before a snapshot exists', () => {
+    expect(
+      shouldRefreshCatalogForLinkedContentChange('survivor', {
+        eventType: 'DELETE',
+        new: {},
+        old: { id: 'survivor-1' }
+      })
+    ).toBe(true)
+  })
+
   it('refreshes catalog data for survivor catalog junction changes', () => {
     expect(
       shouldRefreshCatalogForLinkedContentChange('survivor_disorder', {
