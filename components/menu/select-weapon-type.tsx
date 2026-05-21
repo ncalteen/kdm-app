@@ -31,7 +31,7 @@ export interface SelectWeaponTypeProps {
   /** Disabled State */
   disabled?: boolean
   /** OnChange Handler */
-  onChange?: (value: string) => void
+  onChange?: (value: string, weaponType?: WeaponTypeDetail | null) => void
   /** Value */
   value?: string | null
 }
@@ -83,7 +83,8 @@ export function SelectWeaponType({
    * @param type Selected Weapon Type
    */
   const handleTypeSelect = (type: string) => {
-    onChange?.(type === value ? '' : type)
+    const nextTypeId = type === value ? '' : type
+    onChange?.(nextTypeId, nextTypeId ? weaponTypes[nextTypeId] : null)
     setOpen(false)
   }
 
@@ -130,7 +131,7 @@ export function SelectWeaponType({
         })
 
         setWeaponTypes((prev) => ({ ...prev, [newType.id]: newType }))
-        onChange?.(newType.id)
+        onChange?.(newType.id, newType)
         setSearch('')
         setCreateDialogOpen(false)
       } catch (error) {
