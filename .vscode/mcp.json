@@ -6,6 +6,10 @@
       "headers": {
         "Authorization": "Bearer ${input:github_pat}"
       }
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=wodqhshkazliwadpygpy&read_only=true"
     }
   },
   "inputs": [

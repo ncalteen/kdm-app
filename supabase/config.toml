@@ -220,8 +220,16 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Use a production-ready SMTP server
+# Default for local config sync and ephemeral PR branches.
+# Keep this free of SMTP_* env references so preview branches can initialize.
 [auth.email.smtp]
+enabled = false
+
+# Use the persistent branch name Supabase reports for production.
+[remotes.main]
+project_id = "wodqhshkazliwadpygpy"
+
+[remotes.main.auth.email.smtp]
 enabled = true
 host = "smtp.gmail.com"
 port = 465
