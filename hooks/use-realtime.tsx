@@ -257,6 +257,165 @@ export const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   nemesis_timeline_year: { domain: 'catalog', filterColumn: null }
 }
 
+/** Realtime Postgres Change Event Type */
+type RealtimeChangeEvent = 'INSERT' | 'UPDATE' | 'DELETE'
+
+/** Minimal shape used from Supabase realtime payloads. */
+interface RealtimeChangePayload {
+  /** Event Type */
+  eventType: RealtimeChangeEvent
+  /** New Row */
+  new: Record<string, unknown>
+  /** Old Row */
+  old: Partial<Record<string, unknown>>
+}
+
+/** Direct catalog foreign-key fields stored on gameplay rows. */
+const DIRECT_CATALOG_LINK_FIELDS_BY_TABLE: Record<string, readonly string[]> = {
+  gear_grid: ['selected_armor_set_id'],
+  survivor: [
+    'knowledge_1_id',
+    'knowledge_2_id',
+    'neurosis_id',
+    'philosophy_id',
+    'tenet_knowledge_id',
+    'weapon_type_id'
+  ]
+}
+
+/** Gameplay junctions whose rows reveal or hide catalog content. */
+const CATALOG_LINK_JUNCTION_TABLES = new Set([
+  'hunt_monster_mood',
+  'hunt_monster_survivor_status',
+  'hunt_monster_trait',
+  'showdown_monster_mood',
+  'showdown_monster_survivor_status',
+  'showdown_monster_trait',
+  'survivor_ability_impairment',
+  'survivor_cursed_gear',
+  'survivor_disorder',
+  'survivor_fighting_art',
+  'survivor_secret_fighting_art'
+])
+
+/** Snapshot of direct catalog-link fields for one gameplay row. */
+type CatalogLinkSnapshot = Record<string, unknown>
+
+/** Catalog-link field snapshots keyed by `table:id`. */
+type CatalogLinkSnapshots = Map<string, CatalogLinkSnapshot>
+
+/**
+ * Get Catalog Link Row Key
+ *
+ * Builds a stable key for direct gameplay rows whose catalog-link fields need
+ * old/new comparison. Realtime UPDATE payloads often carry only the primary key
+ * in `old`, so the hook keeps a per-subscription snapshot after the first
+ * event for each row.
+ *
+ * @param table Table Name
+ * @param payload Realtime Payload
+ * @returns Snapshot Key, or `null` when no row id is available
+ */
+function getCatalogLinkRowKey(
+  table: string,
+  payload: RealtimeChangePayload
+): string | null {
+  const id =
+    typeof payload.new.id === 'string'
+      ? payload.new.id
+      : typeof payload.old.id === 'string'
+        ? payload.old.id
+        : null
+
+  return id ? `${table}:${id}` : null
+}
+
+/**
+ * Pick Catalog Link Fields
+ *
+ * Extracts only the catalog-link fields for a table from a row-shaped object.
+ *
+ * @param table Table Name
+ * @param row Row Data
+ * @returns Link Field Snapshot
+ */
+function pickCatalogLinkFields(
+  table: string,
+  row: Partial<Record<string, unknown>>
+): CatalogLinkSnapshot {
+  const fields = DIRECT_CATALOG_LINK_FIELDS_BY_TABLE[table] ?? []
+  return Object.fromEntries(fields.map((field) => [field, row[field] ?? null]))
+}
+
+/**
+ * Has Any Catalog Link Value
+ *
+ * @param snapshot Direct Link Snapshot
+ * @returns Whether any catalog-link field is populated
+ */
+function hasAnyCatalogLinkValue(snapshot: CatalogLinkSnapshot): boolean {
+  return Object.values(snapshot).some((value) => value != null)
+}
+
+/**
+ * Did Catalog Link Snapshot Change
+ *
+ * @param previous Previous Link Snapshot
+ * @param next Next Link Snapshot
+ * @returns Whether any tracked catalog-link field changed
+ */
+function didCatalogLinkSnapshotChange(
+  previous: CatalogLinkSnapshot,
+  next: CatalogLinkSnapshot
+): boolean {
+  return Object.keys(next).some((field) => previous[field] !== next[field])
+}
+
+/**
+ * Should Refresh Catalog For Linked Content Change
+ *
+ * Returns `true` when a gameplay-table event may have revealed or hidden a
+ * custom catalog row for the active settlement. This plugs the race where a
+ * collaborator misses the original catalog INSERT because the row is not
+ * transitively visible until a survivor / monster / gear-grid link is written.
+ *
+ * @param table Changed Table Name
+ * @param payload Realtime Payload
+ * @param snapshots Direct Link Snapshots
+ * @returns Whether the catalog fan-out should run
+ */
+export function shouldRefreshCatalogForLinkedContentChange(
+  table: string,
+  payload: RealtimeChangePayload,
+  snapshots: CatalogLinkSnapshots = new Map()
+): boolean {
+  if (CATALOG_LINK_JUNCTION_TABLES.has(table)) return true
+
+  if (!DIRECT_CATALOG_LINK_FIELDS_BY_TABLE[table]) return false
+
+  const rowKey = getCatalogLinkRowKey(table, payload)
+  const next = pickCatalogLinkFields(table, payload.new)
+  const previous = rowKey ? snapshots.get(rowKey) : undefined
+  const old = pickCatalogLinkFields(table, payload.old)
+  const oldHasPayloadValues = Object.keys(old).some((field) =>
+    Object.prototype.hasOwnProperty.call(payload.old, field)
+  )
+  const previousSnapshot = oldHasPayloadValues ? old : previous
+
+  if (payload.eventType === 'DELETE') {
+    if (rowKey) snapshots.delete(rowKey)
+    return hasAnyCatalogLinkValue(previousSnapshot ?? old)
+  }
+
+  if (rowKey) snapshots.set(rowKey, next)
+
+  if (payload.eventType === 'INSERT') return hasAnyCatalogLinkValue(next)
+
+  if (!previousSnapshot) return hasAnyCatalogLinkValue(next)
+
+  return didCatalogLinkSnapshotChange(previousSnapshot, next)
+}
+
 /** Debounce delay in milliseconds for batching rapid changes. */
 const DEBOUNCE_MS = 300
 
@@ -327,6 +486,7 @@ export function useRealtimeSubscriptions(
       RealtimeDomain,
       ReturnType<typeof setTimeout>
     >()
+    const catalogLinkSnapshots: CatalogLinkSnapshots = new Map()
 
     /**
      * Handles a Realtime Change
@@ -370,6 +530,37 @@ export function useRealtimeSubscriptions(
       )
     }
 
+    /**
+     * Handles a Postgres Realtime Payload
+     *
+     * Dispatches the table's normal domain and, for gameplay rows that link to
+     * catalog content, also dispatches the catalog fan-out. This refreshes the
+     * materialized catalog state when a custom row becomes visible only after it
+     * is attached to the active settlement.
+     *
+     * @param table Changed Table Name
+     * @param domain Table Domain
+     * @param payload Realtime Payload
+     */
+    const handlePostgresChange = (
+      table: string,
+      domain: RealtimeDomain,
+      payload: RealtimeChangePayload
+    ) => {
+      handleChange(domain)
+
+      if (
+        domain !== 'catalog' &&
+        shouldRefreshCatalogForLinkedContentChange(
+          table,
+          payload,
+          catalogLinkSnapshots
+        )
+      ) {
+        handleChange('catalog')
+      }
+    }
+
     // Create a single channel for all gameplay subscriptions scoped to this
     // settlement. Each table gets its own listener with an appropriate filter.
     let channel = supabase.channel(`settlement-${settlementId}`)
@@ -386,7 +577,7 @@ export function useRealtimeSubscriptions(
             table,
             filter: `${filterColumn}=eq.${settlementId}`
           },
-          () => handleChange(domain)
+          (payload) => handlePostgresChange(table, domain, payload)
         )
       } else {
         // Catalog tables are subscribed unfiltered because realtime filters
@@ -399,7 +590,7 @@ export function useRealtimeSubscriptions(
             schema: 'public',
             table
           },
-          () => handleChange(domain)
+          (payload) => handlePostgresChange(table, domain, payload)
         )
       }
     }
@@ -411,6 +602,7 @@ export function useRealtimeSubscriptions(
     return () => {
       debounceTimers.forEach(clearTimeout)
       debounceTimers.clear()
+      catalogLinkSnapshots.clear()
       supabase.removeChannel(channel)
     }
   }, [options.enabled, options.settlementId])
