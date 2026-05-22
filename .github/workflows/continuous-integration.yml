@@ -124,12 +124,6 @@ jobs:
           node-version-file: .node-version
           cache: npm
 
-      - name: Setup Supabase CLI
-        id: setup-supabase
-        uses: supabase/setup-cli@a4d563a017eb7e7da097c40c441f85dbdcc4411f # v2.0.1
-        with:
-          version: latest
-
       - name: Install Dependencies
         id: install
         run: npm install
@@ -145,4 +139,4 @@ jobs:
       - if: ${{ always() }}
         name: Stop Supabase
         id: supabase-stop
-        run: supabase stop || true
+        run: npx supabase stop || true

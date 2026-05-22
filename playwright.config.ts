@@ -1,9 +1,12 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000'
-const base = new URL(baseURL)
+const configuredBaseURL =
+  process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000'
+const base = new URL(configuredBaseURL)
+if (!base.port) base.port = '3000'
+const baseURL = base.toString().replace(/\/$/, '')
 const serverHost = base.hostname
-const serverPort = base.port || (base.protocol === 'https:' ? '443' : '80')
+const serverPort = base.port
 
 export default defineConfig({
   testDir: '__tests__/ui',

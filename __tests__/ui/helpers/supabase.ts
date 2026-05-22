@@ -137,6 +137,8 @@ export async function deleteUsersByEmail(
   const remainingEmails = new Set(emails)
   if (remainingEmails.size === 0) return
 
+  const userIdsToDelete: string[] = []
+
   let page = 1
   const perPage = 1000
 
@@ -146,11 +148,16 @@ export async function deleteUsersByEmail(
 
     for (const user of data.users) {
       if (!user.email || !remainingEmails.has(user.email)) continue
-      await admin.auth.admin.deleteUser(user.id)
+      userIdsToDelete.push(user.id)
       remainingEmails.delete(user.email)
     }
 
-    if (data.users.length < perPage) return
+    if (data.users.length < perPage) break
     page += 1
+  }
+
+  for (const userId of userIdsToDelete) {
+    const { error } = await admin.auth.admin.deleteUser(userId)
+    if (error) throw new Error(`deleteUser failed: ${error.message}`)
   }
 }
