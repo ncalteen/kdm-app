@@ -853,18 +853,45 @@ Acceptance criteria:
 1. **Stripe UI strategy:** Should browser tests mock checkout/portal route
    responses, or should CI use Stripe test mode for a very small number of smoke
    tests?
+
+   Use Stripe's test mode for a very small number of smoke tests.
+
 1. **Feature flag control:** What is the preferred UI-test mechanism for forcing
    `subscription-management` on/off: env allowlist, seeded Edge Config mock, or
    route interception?
+
+   Use a seeded Edge Config mock.
+
 1. **Mobile CI cost:** Should mobile tests run on every PR or only as a smaller
    smoke subset?
+
+   **Recommendation:** Yes. The initial CI setup should run the current small
+   suite in parallel against `desktop-chromium` and `mobile-chromium` through a
+   GitHub Actions matrix so each project gets its own runner, Supabase stack,
+   Mailpit instance, and Next.js dev server. Avoid running desktop and mobile
+   projects concurrently inside the same job until fixture isolation, port
+   isolation, and local Supabase performance have been proven. Once the suite
+   grows, recommended PR shape is full desktop coverage plus a smaller mobile
+   smoke subset in parallel; run the full mobile suite on a schedule or before
+   larger releases.
+
 1. **Realtime flake budget:** What timeout/retry policy is acceptable for
    two-browser realtime assertions on GitHub Actions?
+
+   A reasonable timeout of 3 seconds with 3 retries should be sufficient.
+
 1. **Custom content breadth:** Which custom content types are most valuable to
    test first beyond gear and one simple text-based catalog item?
+
+   All custom content types should be tested, but prioritize the most critical
+   ones based on user feedback and usage patterns.
+
 1. **Page objects vs task helpers:** Should tests use class-style page objects
    or plain task helpers? Plain helpers match the current codebase better, but a
    formal choice will keep contributions consistent.
+
+   Use plain task helpers for now, but document the decision for future
+   reference.
 
 ---
 

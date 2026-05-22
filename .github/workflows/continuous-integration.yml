@@ -100,8 +100,17 @@ jobs:
         run: supabase stop || true
 
   ui-tests:
-    name: UI Tests (Playwright)
+    name: UI Tests (Playwright - ${{ matrix.label }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Desktop Chromium
+            project: desktop-chromium
+          - label: Mobile Chromium
+            project: mobile-chromium
 
     steps:
       - name: Checkout
@@ -131,7 +140,7 @@ jobs:
 
       - name: Run UI Tests
         id: ui-test
-        run: npm run ui-test
+        run: npm run ui-test -- --project=${{ matrix.project }}
 
       - if: ${{ always() }}
         name: Stop Supabase

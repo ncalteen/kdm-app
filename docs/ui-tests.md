@@ -49,7 +49,13 @@ The pilot spec in `__tests__/ui/auth-sign-up.test.ts` covers:
 
 The `UI Tests (Playwright)` job in
 `.github/workflows/continuous-integration.yml` runs on every pull request to
-`main`. It installs dependencies and the Chromium browser, then runs
-`npm run ui-test`. The script owns the temporary SMTP override, Supabase
-startup, local API/key/Mailpit environment export, service verification, and
-config restoration so the same command works locally and in CI.
+`main` as a GitHub Actions matrix. The current matrix runs the same small suite
+against `desktop-chromium` and `mobile-chromium` in parallel on separate
+runners, so each project gets its own Supabase stack, Mailpit instance, and
+Next.js dev server.
+
+Each matrix entry installs dependencies and the Chromium browser, then runs
+`npm run ui-test -- --project=<project>`. The script owns the temporary SMTP
+override, Supabase startup, local API/key/Mailpit environment export, service
+verification, and config restoration so the same command works locally and in
+CI.
