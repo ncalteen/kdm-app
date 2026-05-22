@@ -12,8 +12,9 @@ export default defineConfig({
     include: ['__tests__/**/*.test.{ts,tsx}'],
     exclude: [
       '.next',
-      // Exclude integration tests from unit test runs
+      // Exclude integration and UI tests from unit test runs
       '__tests__/integration/**',
+      '__tests__/ui/**',
       'local',
       'node_modules',
       'out'
