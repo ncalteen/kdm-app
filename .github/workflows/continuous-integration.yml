@@ -98,3 +98,42 @@ jobs:
         name: Stop Supabase
         id: supabase-stop
         run: supabase stop || true
+
+  ui-tests:
+    name: UI Tests (Playwright)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Setup Supabase CLI
+        id: setup-supabase
+        uses: supabase/setup-cli@a4d563a017eb7e7da097c40c441f85dbdcc4411f # v2.0.1
+        with:
+          version: latest
+
+      - name: Install Dependencies
+        id: install
+        run: npm install
+
+      - name: Install Playwright Browsers
+        id: install-playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run UI Tests
+        id: ui-test
+        run: npm run ui-test
+
+      - if: ${{ always() }}
+        name: Stop Supabase
+        id: supabase-stop
+        run: supabase stop || true
