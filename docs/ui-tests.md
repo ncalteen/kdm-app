@@ -45,6 +45,10 @@ The pilot spec in `__tests__/ui/auth-sign-up.test.ts` covers:
 - Confirmed-email conflicts returned by Supabase Auth.
 - Supabase RPC failures surfaced in the inline form alert.
 
+The session spec in `__tests__/ui/auth-session.test.ts` covers confirmed-user
+login, authenticated shell rendering, session persistence across reload, logout,
+and protected-route redirects.
+
 ## CI
 
 The `UI Tests (Playwright)` job in
