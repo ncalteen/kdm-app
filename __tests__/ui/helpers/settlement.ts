@@ -1,13 +1,18 @@
 import { admin } from '@/__tests__/ui/helpers/supabase'
+import { type Database } from '@/lib/database.types'
+import { type PlanSlug } from '@/lib/types'
+
+type DatabaseCampaignType = Database['public']['Enums']['campaign_type']
+type DatabaseSurvivorType = Database['public']['Enums']['survivor_type']
 
 /** Settlement Fixture Options */
 export interface SettlementFixtureOptions {
   /** Campaign Type */
-  campaignType?: string
+  campaignType?: DatabaseCampaignType
   /** Settlement Name */
   name: string
   /** Survivor Type */
-  survivorType?: string
+  survivorType?: DatabaseSurvivorType
   /** Uses Scouts */
   usesScouts?: boolean
   /** User ID */
@@ -17,7 +22,7 @@ export interface SettlementFixtureOptions {
 /** Settlement Creation Summary */
 export interface SettlementCreationSummary {
   /** Campaign Type */
-  campaign_type: string
+  campaign_type: DatabaseCampaignType
   /** Settlement ID */
   id: string
   /** Quarry Names */
@@ -29,7 +34,7 @@ export interface SettlementCreationSummary {
   /** Survivor Count */
   survivorCount: number
   /** Survivor Type */
-  survivor_type: string
+  survivor_type: DatabaseSurvivorType
   /** Timeline Entries By Year */
   timelineEntriesByYear: Record<number, string[]>
   /** Uses Scouts */
@@ -91,7 +96,7 @@ export async function shareSettlementFixture(args: {
  */
 export async function setSubscriptionPlanFixture(
   userId: string,
-  planId: string
+  planId: PlanSlug
 ): Promise<void> {
   const { error } = await admin
     .from('user_subscription')
@@ -313,10 +318,10 @@ export async function countSettlementsForUser(userId: string): Promise<number> {
 }
 
 interface SettlementRow {
-  campaign_type: string
+  campaign_type: DatabaseCampaignType
   id: string
   settlement_name: string
-  survivor_type: string
+  survivor_type: DatabaseSurvivorType
   uses_scouts: boolean
 }
 

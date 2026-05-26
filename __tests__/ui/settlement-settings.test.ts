@@ -16,9 +16,10 @@ import {
   waitForSettlementUsesScouts
 } from '@/__tests__/ui/helpers/settlement'
 import { deleteUsersByEmail } from '@/__tests__/ui/helpers/supabase'
+import { LOCAL_STORAGE_KEY } from '@/lib/common'
+import { TabType } from '@/lib/enums'
+import { ERROR_MESSAGE } from '@/lib/messages'
 import { expect, type Page, test } from '@playwright/test'
-
-const ERROR_MESSAGE = 'The darkness swallows your words. Please try again.'
 
 test.describe('settlement settings flow', () => {
   const emailsToDelete = new Set<string>()
@@ -46,7 +47,7 @@ test.describe('settlement settings flow', () => {
     await failNextSettlementUpdate(page)
     await scoutsSwitch.click()
 
-    await expect(page.getByText(ERROR_MESSAGE)).toBeVisible()
+    await expect(page.getByText(ERROR_MESSAGE())).toBeVisible()
     await expect(scoutsSwitch).toHaveAttribute('data-state', 'checked')
     await expect.poll(() => getSettlementUsesScouts(settlementId)).toBe(true)
   })
@@ -145,21 +146,28 @@ async function openSettlementSettings(
   settlementId: string
 ): Promise<void> {
   await logIn(page, account)
-  await page.evaluate((selectedSettlementId) => {
-    localStorage.setItem(
-      'kdm-archivist-local',
-      JSON.stringify({
-        selectedHuntId: null,
-        selectedHuntMonsterIndex: 0,
-        selectedSettlementId,
-        selectedSettlementPhaseId: null,
-        selectedShowdownId: null,
-        selectedShowdownMonsterIndex: 0,
-        selectedSurvivorId: null,
-        selectedTab: 'settlementSettings'
-      })
-    )
-  }, settlementId)
+  await page.evaluate(
+    ({ selectedSettlementId, selectedTab, storageKey }) => {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          selectedHuntId: null,
+          selectedHuntMonsterIndex: 0,
+          selectedSettlementId,
+          selectedSettlementPhaseId: null,
+          selectedShowdownId: null,
+          selectedShowdownMonsterIndex: 0,
+          selectedSurvivorId: null,
+          selectedTab
+        })
+      )
+    },
+    {
+      selectedSettlementId: settlementId,
+      selectedTab: TabType.SETTLEMENT_SETTINGS,
+      storageKey: LOCAL_STORAGE_KEY
+    }
+  )
   await page.goto('/')
   await expect(page.getByText('Settlement Settings')).toBeVisible()
 }
