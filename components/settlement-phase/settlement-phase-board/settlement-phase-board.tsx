@@ -69,6 +69,7 @@ export function SettlementPhaseBoard({
                 key={space.index}
                 className="relative w-18.75 sm:w-21.25 md:w-22.5 h-18.75 sm:h-21.25 md:h-22.5 shrink-0 flex items-center justify-center">
                 <SettlementPhaseBoardSpace
+                  ariaLabel={`Settlement phase space ${space.index}: ${space.step}`}
                   index={space.index}
                   label={space.step}
                   onClick={() => handleClick(space.index)}>

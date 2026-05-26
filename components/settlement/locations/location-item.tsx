@@ -46,6 +46,7 @@ export const LocationItem = memo(function LocationItem({
     <div className="flex items-center gap-2 pl-2">
       {/* Unlocked Checkbox */}
       <Checkbox
+        aria-label={`Unlock ${location.location_name}`}
         id={`location-unlocked-${index}`}
         name={`location-unlocked-${index}`}
         checked={location.unlocked}

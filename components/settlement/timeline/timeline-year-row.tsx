@@ -149,6 +149,13 @@ export const TimelineYearRow = ({
             )}
             {!completed && (
               <Button
+                aria-label={`Add event to ${
+                  index === 0 && !usesNormalNumbering
+                    ? 'Prologue'
+                    : usesNormalNumbering
+                      ? `Year ${index + 1}`
+                      : `Year ${index}`
+                }`}
                 type="button"
                 variant="outline"
                 size="sm"
@@ -170,6 +177,13 @@ export const TimelineYearRow = ({
 
             {!completed && (
               <Button
+                aria-label={`Add event to ${
+                  index === 0 && !usesNormalNumbering
+                    ? 'Prologue'
+                    : usesNormalNumbering
+                      ? `Year ${index + 1}`
+                      : `Year ${index}`
+                }`}
                 type="button"
                 variant="outline"
                 size="sm"
@@ -230,6 +244,13 @@ export const TimelineYearRow = ({
       {!completed && (
         <div className="justify-end pr-2 hidden sm:flex">
           <Button
+            aria-label={`Add event to ${
+              index === 0 && !usesNormalNumbering
+                ? 'Prologue'
+                : usesNormalNumbering
+                  ? `Year ${index + 1}`
+                  : `Year ${index}`
+            }`}
             type="button"
             variant="outline"
             size="sm"

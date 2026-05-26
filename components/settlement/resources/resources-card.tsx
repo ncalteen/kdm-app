@@ -371,6 +371,7 @@ export function ResourcesCard({
           <Popover open={addOpen} onOpenChange={setAddOpen}>
             <PopoverTrigger asChild>
               <Button
+                aria-label="Add resource"
                 type="button"
                 size="sm"
                 variant="outline"

@@ -462,6 +462,7 @@ export function InnovationsCard({
                     authorUsername={item.author_username}
                   />
                   <Button
+                    aria-label="Remove innovation"
                     variant="ghost"
                     size="icon"
                     type="button"
