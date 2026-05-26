@@ -47,6 +47,7 @@ export const MilestoneItem = memo(function MilestoneItem({
     <div className="flex items-center gap-2 pl-2">
       {/* Completion Checkbox */}
       <Checkbox
+        aria-label={`Complete ${milestone.milestone_name}`}
         id={`milestone-complete-${index}`}
         name={`milestone-complete-${index}`}
         checked={milestone.complete}

@@ -283,6 +283,7 @@ export function GearCard({
           <Popover open={addOpen} onOpenChange={setAddOpen}>
             <PopoverTrigger asChild>
               <Button
+                aria-label="Add gear"
                 type="button"
                 size="sm"
                 variant="outline"
