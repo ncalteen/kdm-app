@@ -158,21 +158,7 @@ export function CreateShowdownCard({
   const [selectedSurvivors, setSelectedSurvivors] = useState<string[]>([])
   const [selectedScout, setSelectedScout] = useState<string | null>(null)
 
-  // Consume the pending special showdown flag from the parent. The handoff
-  // is performed at render time (via a render-time prev check) so the
-  // setState cascade isn't synchronous inside a `useEffect`.
-  const [prevPendingSpecial, setPrevPendingSpecial] = useState(
-    pendingSpecialShowdown
-  )
-
-  if (prevPendingSpecial !== pendingSpecialShowdown) {
-    setPrevPendingSpecial(pendingSpecialShowdown)
-
-    if (pendingSpecialShowdown) {
-      setIsSpecialShowdown(true)
-      setPendingSpecialShowdown(false)
-    }
-  }
+  const specialShowdownSelected = isSpecialShowdown || pendingSpecialShowdown
 
   /** Available survivors (excluding dead/retired/skip next hunt) */
   const availableSurvivors = useMemo(
@@ -459,14 +445,14 @@ export function CreateShowdownCard({
     try {
       // Determine the turn based on ambush type
       const turn: 'MONSTER' | 'SURVIVOR' =
-        ambushType === AmbushType.SURVIVORS ? 'SURVIVOR' : 'MONSTER'
+        startingTurn === TurnType.SURVIVORS ? 'SURVIVOR' : 'MONSTER'
 
       // 1. Create showdown record
       const showdownId = await addShowdown({
         ambush: ambushType.toUpperCase() as 'NONE' | 'SURVIVORS' | 'MONSTER',
         monster_level: selectedLevelNumber,
         settlement_id: selectedSettlement.id,
-        showdown_type: isSpecialShowdown ? 'SPECIAL' : 'REGULAR',
+        showdown_type: specialShowdownSelected ? 'SPECIAL' : 'REGULAR',
         turn
       })
 
@@ -674,7 +660,7 @@ export function CreateShowdownCard({
         ambush: ambushType.toUpperCase() as 'NONE' | 'SURVIVORS' | 'MONSTER',
         monster_level: selectedLevelNumber,
         settlement_id: selectedSettlement.id,
-        showdown_type: isSpecialShowdown ? 'SPECIAL' : 'REGULAR',
+        showdown_type: specialShowdownSelected ? 'SPECIAL' : 'REGULAR',
         turn,
         showdown_monsters: showdownMonsters,
         showdown_survivors: showdownSurvivorMap
@@ -694,6 +680,7 @@ export function CreateShowdownCard({
       setVignetteLevels([])
       setSelectedMonsterIndex(0)
       setIsSpecialShowdown(false)
+      setPendingSpecialShowdown(false)
       setAmbushType(AmbushType.NONE)
       setStartingTurn(TurnType.MONSTER)
       setSelectedSurvivors([])
@@ -710,7 +697,6 @@ export function CreateShowdownCard({
     availableNemeses,
     availableQuarries,
     displayedLevel,
-    isSpecialShowdown,
     selectedHunt,
     selectedLevelNumber,
     selectedLevels,
@@ -718,6 +704,9 @@ export function CreateShowdownCard({
     selectedScout,
     selectedSettlement,
     selectedSurvivors,
+    startingTurn,
+    specialShowdownSelected,
+    setPendingSpecialShowdown,
     setSelectedShowdown,
     survivors
   ])
@@ -744,7 +733,7 @@ export function CreateShowdownCard({
                 const monster = availableMonsters.find((m) => m.id === id)
                 if (monster) handleMonsterSelection(id, monster.source)
               }}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger aria-label="Monster" className="w-full">
                 <SelectValue placeholder="Choose a monster..." />
               </SelectTrigger>
               <SelectContent>
@@ -771,7 +760,7 @@ export function CreateShowdownCard({
             value={String(selectedLevelNumber)}
             onValueChange={(value) => handleLevelSelection(Number(value))}
             disabled={activeLevels.length === 0}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger aria-label="Showdown Level" className="w-full">
               <SelectValue placeholder="Choose level..." />
             </SelectTrigger>
             <SelectContent>
@@ -795,7 +784,7 @@ export function CreateShowdownCard({
               onValueChange={(value) =>
                 handleVersionSelection(value as MonsterVersion)
               }>
-              <SelectTrigger className="w-full">
+              <SelectTrigger aria-label="Showdown Version" className="w-full">
                 <SelectValue placeholder="Choose version..." />
               </SelectTrigger>
               <SelectContent>
@@ -824,9 +813,31 @@ export function CreateShowdownCard({
           </Label>
           <Checkbox
             id="special-showdown-checkbox"
-            checked={isSpecialShowdown}
-            onCheckedChange={(checked) => setIsSpecialShowdown(!!checked)}
+            checked={specialShowdownSelected}
+            onCheckedChange={(checked) => {
+              setIsSpecialShowdown(!!checked)
+              setPendingSpecialShowdown(false)
+            }}
           />
+        </div>
+
+        {/* Ambush */}
+        <div className="flex items-center justify-between">
+          <Label className="text-left whitespace-nowrap min-w-22.5">
+            Ambush
+          </Label>
+          <Select
+            value={ambushType}
+            onValueChange={(value) => setAmbushType(value as AmbushType)}>
+            <SelectTrigger aria-label="Ambush" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={AmbushType.NONE}>None</SelectItem>
+              <SelectItem value={AmbushType.MONSTER}>Monster</SelectItem>
+              <SelectItem value={AmbushType.SURVIVORS}>Survivors</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Starting Turn */}
@@ -837,7 +848,7 @@ export function CreateShowdownCard({
           <Select
             value={startingTurn}
             onValueChange={(value) => setStartingTurn(value as TurnType)}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger aria-label="First Turn" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -1041,7 +1052,7 @@ export function CreateShowdownCard({
             availableSurvivors.length === 0 ||
             selectedSurvivors.length === 0 ||
             (selectedSettlement?.uses_scouts === true && !selectedScout) ||
-            (!!selectedSettlementPhase && !isSpecialShowdown) ||
+            (!!selectedSettlementPhase && !specialShowdownSelected) ||
             isCreating
           }
           className="w-full mt-2">

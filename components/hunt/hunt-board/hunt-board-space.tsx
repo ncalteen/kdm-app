@@ -8,6 +8,8 @@ import { ReactElement } from 'react'
  * Hunt Board Space Component Properties
  */
 interface HuntBoardSpaceProps {
+  /** Accessible Label */
+  ariaLabel: string
   /** Additional CSS classes */
   className?: string
   /** Space Index (0-12) */
@@ -19,7 +21,7 @@ interface HuntBoardSpaceProps {
   /** Is Starvation Space */
   isStarvation?: boolean
   /** Click handler */
-  onClick?: (e: React.MouseEvent) => void
+  onClick?: () => void
 }
 
 /**
@@ -31,6 +33,7 @@ interface HuntBoardSpaceProps {
  * @returns Hunt Board Space Component
  */
 export function HuntBoardSpace({
+  ariaLabel,
   className,
   index,
   label,
@@ -44,8 +47,17 @@ export function HuntBoardSpace({
 
   return (
     <div
+      aria-label={ariaLabel}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
       ref={setNodeRef}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (!onClick) return
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        onClick()
+      }}
       className={cn(
         'relative flex flex-col items-center justify-center w-full h-full border-2 rounded-lg transition-colors',
         'border-border bg-card hover:bg-accent/50',
