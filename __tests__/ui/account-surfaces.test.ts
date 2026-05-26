@@ -1,12 +1,6 @@
 import {
-  assertLoginPage,
-  createAuthAccount,
-  createConfirmedAuthAccount,
-  logOut,
-  type AuthAccount
-} from '@/__tests__/ui/helpers/auth'
-import {
   createNotificationFixture,
+  getAvatarUrlFixture,
   getUnreadNotificationCountFixture,
   getUsernameFixture,
   notificationIsReadFixture,
@@ -14,16 +8,29 @@ import {
   setSubscriptionFixture,
   setUsernameRenamedAtFixture
 } from '@/__tests__/ui/helpers/account-surfaces'
+import {
+  assertLoginPage,
+  createAuthAccount,
+  createConfirmedAuthAccount,
+  logOut,
+  type AuthAccount
+} from '@/__tests__/ui/helpers/auth'
 import { createSettlementFixture } from '@/__tests__/ui/helpers/settlement'
 import { deleteUsersByEmail } from '@/__tests__/ui/helpers/supabase'
 import { LOCAL_STORAGE_KEY } from '@/lib/common'
 import { TabType } from '@/lib/enums'
 import {
+  AVATAR_UPLOAD_SUCCESS_MESSAGE,
   ERROR_MESSAGE,
   USERNAME_INVALID_FORMAT_MESSAGE,
   USERNAME_RENAME_SUCCESS_MESSAGE
 } from '@/lib/messages'
-import { expect, type Page, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+
+const TINY_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
+  'base64'
+)
 
 test.describe('account and device surfaces', () => {
   const emailsToDelete = new Set<string>()
@@ -76,6 +83,31 @@ test.describe('account and device surfaces', () => {
       page.getByRole('button', { name: 'Save new name' })
     ).toBeDisabled()
     expect(existingUser.id).toBeTruthy()
+  })
+
+  test('uploads a custom avatar from the settings dialog', async ({ page }) => {
+    const account = createAuthAccount('avatar_upload')
+    const user = await createConfirmedAuthAccount(account)
+    emailsToDelete.add(account.email)
+
+    await openAccountTab(page, account, TabType.SETTINGS)
+    await page.getByRole('button', { name: 'Upload custom avatar' }).click()
+    await expect(
+      page.getByRole('dialog', { name: 'Upload custom avatar' })
+    ).toBeVisible()
+
+    await page.getByLabel('Choose image').setInputFiles({
+      name: 'avatar.png',
+      mimeType: 'image/png',
+      buffer: TINY_PNG
+    })
+    await expect(page.getByText('Preview new avatar')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Confirm and upload' }).click()
+    await expect(page.getByText(AVATAR_UPLOAD_SUCCESS_MESSAGE())).toBeVisible()
+    await expect
+      .poll(() => getAvatarUrlFixture(user.id))
+      .toContain(`/avatars/${user.id}/avatar`)
   })
 
   test('renders subscription states and handles billing route failures', async ({

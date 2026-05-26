@@ -43,6 +43,20 @@ export const admin: SupabaseClient = createClient(URL, SERVICE_ROLE_KEY, {
 })
 
 /**
+ * Create Anon Client
+ *
+ * Returns an unauthenticated anon-key client for policies that must reject
+ * unauthenticated writes while still allowing public read surfaces.
+ *
+ * @returns Unauthenticated Supabase Client
+ */
+export function createAnonClient(): SupabaseClient {
+  return createClient(URL, ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  })
+}
+
+/**
  * Test User Record
  */
 export interface TestUser {

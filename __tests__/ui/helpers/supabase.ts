@@ -1,3 +1,5 @@
+import { buildAvatarObjectPath } from '@/lib/avatar-upload'
+import { AVATAR_BUCKET } from '@/lib/common'
 import {
   createClient,
   type SupabaseClient,
@@ -165,6 +167,13 @@ export async function deleteUsersByEmail(
 }
 
 async function deleteUserOwnedData(userId: string): Promise<void> {
+  const { error: avatarError } = await admin.storage
+    .from(AVATAR_BUCKET)
+    .remove([buildAvatarObjectPath(userId)])
+
+  if (avatarError)
+    throw new Error(`delete avatar failed: ${avatarError.message}`)
+
   const { error: shareError } = await admin
     .from('settlement_shared_user')
     .delete()
