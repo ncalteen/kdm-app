@@ -157,7 +157,26 @@ export async function deleteUsersByEmail(
   }
 
   for (const userId of userIdsToDelete) {
+    await deleteUserOwnedData(userId)
+
     const { error } = await admin.auth.admin.deleteUser(userId)
     if (error) throw new Error(`deleteUser failed: ${error.message}`)
   }
+}
+
+async function deleteUserOwnedData(userId: string): Promise<void> {
+  const { error: shareError } = await admin
+    .from('settlement_shared_user')
+    .delete()
+    .or(`user_id.eq.${userId},shared_user_id.eq.${userId}`)
+
+  if (shareError) throw new Error(`delete shares failed: ${shareError.message}`)
+
+  const { error: settlementError } = await admin
+    .from('settlement')
+    .delete()
+    .eq('user_id', userId)
+
+  if (settlementError)
+    throw new Error(`delete settlements failed: ${settlementError.message}`)
 }

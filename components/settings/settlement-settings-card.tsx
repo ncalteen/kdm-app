@@ -306,10 +306,29 @@ export function SettlementSettingsCard({
                   End the hunt and return survivors to the settlement.
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={handleDeleteHunt}>
-                <XIcon className="h-4 w-4 mr-2" />
-                Delete Hunt
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <XIcon className="h-4 w-4 mr-2" />
+                    Delete Hunt
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Hunt</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      The current hunt will be erased. Survivors and settlement
+                      records remain, but this action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteHunt}>
+                      Delete Hunt
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </CardContent>
         </Card>
@@ -332,13 +351,30 @@ export function SettlementSettingsCard({
                   End the showdown and return survivors to the settlement.
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDeleteShowdown}>
-                <XIcon className="h-4 w-4 mr-2" />
-                Delete Showdown
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <XIcon className="h-4 w-4 mr-2" />
+                    Delete Showdown
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Showdown</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      The current showdown will be erased. Survivors and
+                      settlement records remain, but this action cannot be
+                      undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteShowdown}>
+                      Delete Showdown
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </CardContent>
         </Card>
@@ -362,13 +398,30 @@ export function SettlementSettingsCard({
                   settlement.
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDeleteSettlementPhase}>
-                <XIcon className="h-4 w-4 mr-2" />
-                Delete Settlement Phase
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <XIcon className="h-4 w-4 mr-2" />
+                    Delete Settlement Phase
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Settlement Phase</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      The current settlement phase will be erased. Survivors and
+                      settlement records remain, but this action cannot be
+                      undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteSettlementPhase}>
+                      Delete Settlement Phase
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </CardContent>
         </Card>
