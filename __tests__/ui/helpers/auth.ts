@@ -51,6 +51,18 @@ export async function assertLoginPage(page: Page): Promise<void> {
 }
 
 /**
+ * Assert Auth Error Page
+ *
+ * @param page Playwright Page
+ */
+export async function assertAuthErrorPage(page: Page): Promise<void> {
+  await expect(page).toHaveURL(/\/auth\/error/)
+  await expect(
+    page.getByText('The darkness swallows your words. Please try again.')
+  ).toBeVisible()
+}
+
+/**
  * Log In
  *
  * Logs in through the public email/password login form.
@@ -70,6 +82,31 @@ export async function logIn(page: Page, account: AuthAccount): Promise<void> {
 }
 
 /**
+ * Assert Login Failure
+ *
+ * @param page Playwright Page
+ * @param account Auth Account Fixture
+ * @param expectedMessage Expected Error Message
+ */
+export async function assertLoginFailure(
+  page: Page,
+  account: AuthAccount,
+  expectedMessage: string | RegExp
+): Promise<void> {
+  await page.goto('/auth/login')
+  await assertLoginPage(page)
+
+  await page.getByLabel('Email').fill(account.email)
+  await page.getByLabel('Password').fill(account.password)
+  await page.getByRole('button', { name: /^Login$/ }).click()
+
+  await expect(page).toHaveURL(/\/auth\/login$/)
+  await expect(page.locator('[data-slot="alert"]')).toContainText(
+    expectedMessage
+  )
+}
+
+/**
  * Log Out
  *
  * Logs out through the sign-out route and verifies the login redirect.
@@ -79,6 +116,48 @@ export async function logIn(page: Page, account: AuthAccount): Promise<void> {
 export async function logOut(page: Page): Promise<void> {
   await page.goto('/auth/sign-out')
   await assertLoginPage(page)
+}
+
+/**
+ * Request Password Reset
+ *
+ * Requests a password reset email through the public forgot-password form.
+ *
+ * @param page Playwright Page
+ * @param email Email Address
+ */
+export async function requestPasswordReset(
+  page: Page,
+  email: string
+): Promise<void> {
+  await page.goto('/auth/forgot-password')
+  await expect(page.getByText('Reset your password')).toBeVisible()
+
+  await page.getByLabel('Email').fill(email)
+  await page.getByRole('button', { name: 'Send reset email' }).click()
+
+  await expect(page.getByText('Check your email')).toBeVisible()
+}
+
+/**
+ * Update Password
+ *
+ * Submits a new password through the update-password page.
+ *
+ * @param page Playwright Page
+ * @param password New Password
+ */
+export async function updatePassword(
+  page: Page,
+  password: string
+): Promise<void> {
+  await expect(page).toHaveURL(/\/auth\/update-password/)
+  await expect(page.getByText('Choose a new password')).toBeVisible()
+
+  await page.getByLabel('New password').fill(password)
+  await page.getByRole('button', { name: 'Save new password' }).click()
+
+  await assertAuthenticatedShell(page)
 }
 
 /**

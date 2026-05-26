@@ -49,6 +49,10 @@ The session spec in `__tests__/ui/auth-session.test.ts` covers confirmed-user
 login, authenticated shell rendering, session persistence across reload, logout,
 and protected-route redirects.
 
+The password reset spec in `__tests__/ui/auth-password-reset.test.ts` covers the
+forgot-password form, Mailpit recovery email capture, update-password form,
+old/new password login behavior, and reused recovery-link failure.
+
 ## CI
 
 The `UI Tests (Playwright)` job in
