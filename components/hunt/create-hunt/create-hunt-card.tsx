@@ -682,7 +682,7 @@ export function CreateHuntCard({
             <Select
               value={selectedQuarryId ?? ''}
               onValueChange={handleQuarrySelection}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger aria-label="Quarry" className="w-full">
                 <SelectValue placeholder="Choose a quarry..." />
               </SelectTrigger>
 
@@ -711,7 +711,7 @@ export function CreateHuntCard({
             value={String(selectedLevelNumber)}
             onValueChange={(value) => handleLevelSelection(Number(value))}
             disabled={activeLevels.length === 0}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger aria-label="Hunt Level" className="w-full">
               <SelectValue placeholder="Choose level..." />
             </SelectTrigger>
 
@@ -737,7 +737,7 @@ export function CreateHuntCard({
               onValueChange={(value) =>
                 handleVersionSelection(value as MonsterVersion)
               }>
-              <SelectTrigger className="w-full">
+              <SelectTrigger aria-label="Hunt Version" className="w-full">
                 <SelectValue placeholder="Choose version..." />
               </SelectTrigger>
 

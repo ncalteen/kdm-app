@@ -138,49 +138,70 @@ export function HuntBoard({
     }
   }
 
+  /**
+   * Get Accessible Space Label
+   *
+   * @param index Hunt Board Space Index
+   * @param label Hunt Board Space Label
+   * @returns Accessible Label
+   */
+  const getAccessibleSpaceLabel = (
+    index: number,
+    label: string | null | undefined
+  ) => `Hunt board space ${index}: ${label ?? index}`
+
   return (
     <Card className="p-0 w-full">
       <CardContent className="p-0 w-full overflow-x-auto">
         <DndContext onDragEnd={handleDragEnd}>
           <div className="w-full overflow-x-auto gap-1 p-2 bg-muted/30 rounded-lg relative flex flex-row flex-wrap items-center justify-center">
-            {spaces.map((space) => (
-              <div
-                key={space.index}
-                className="relative w-18.75 sm:w-21.25 md:w-22.5 h-18.75 sm:h-21.25 md:h-22.5 shrink-0 flex items-center justify-center">
-                <HuntBoardSpace
-                  onClick={() => handleSpaceClick(space.index)}
-                  className={
-                    space.isStart || space.isStarvation || space.index === 6
-                      ? ''
-                      : 'cursor-pointer'
-                  }
-                  index={space.index}
-                  label={getLabelOrIcon(space.label)}
-                  isStart={space.isStart}
-                  isStarvation={space.isStarvation}
-                />
+            {spaces.map((space) => {
+              const isEditableSpace =
+                !space.isStart && !space.isStarvation && space.index !== 6
 
-                {selectedHunt?.survivor_position === space.index && (
-                  <HuntBoardToken
-                    overlap={
-                      selectedHunt?.survivor_position ===
-                      selectedHunt?.monster_position
+              return (
+                <div
+                  key={space.index}
+                  className="relative w-18.75 sm:w-21.25 md:w-22.5 h-18.75 sm:h-21.25 md:h-22.5 shrink-0 flex items-center justify-center">
+                  <HuntBoardSpace
+                    ariaLabel={getAccessibleSpaceLabel(
+                      space.index,
+                      space.label
+                    )}
+                    onClick={
+                      isEditableSpace
+                        ? () => handleSpaceClick(space.index)
+                        : undefined
                     }
-                    tokenType="survivors"
+                    className={isEditableSpace ? 'cursor-pointer' : ''}
+                    index={space.index}
+                    label={getLabelOrIcon(space.label)}
+                    isStart={space.isStart}
+                    isStarvation={space.isStarvation}
                   />
-                )}
 
-                {selectedHunt?.monster_position === space.index && (
-                  <HuntBoardToken
-                    overlap={
-                      selectedHunt?.survivor_position ===
-                      selectedHunt?.monster_position
-                    }
-                    tokenType="quarry"
-                  />
-                )}
-              </div>
-            ))}
+                  {selectedHunt?.survivor_position === space.index && (
+                    <HuntBoardToken
+                      overlap={
+                        selectedHunt?.survivor_position ===
+                        selectedHunt?.monster_position
+                      }
+                      tokenType="survivors"
+                    />
+                  )}
+
+                  {selectedHunt?.monster_position === space.index && (
+                    <HuntBoardToken
+                      overlap={
+                        selectedHunt?.survivor_position ===
+                        selectedHunt?.monster_position
+                      }
+                      tokenType="quarry"
+                    />
+                  )}
+                </div>
+              )
+            })}
           </div>
         </DndContext>
       </CardContent>
