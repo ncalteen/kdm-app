@@ -1225,6 +1225,7 @@ export function GearDialog({
             <div className="flex items-center justify-between">
               <Label>Gear Costs (optional)</Label>
               <Button
+                aria-label="Add gear cost"
                 type="button"
                 variant="outline"
                 size="sm"
@@ -1352,6 +1353,7 @@ export function GearDialog({
             <div className="flex items-center justify-between">
               <Label>Resource Costs (optional)</Label>
               <Button
+                aria-label="Add resource cost"
                 type="button"
                 variant="outline"
                 size="sm"
@@ -1481,6 +1483,7 @@ export function GearDialog({
             <div className="flex items-center justify-between">
               <Label>Resource Type Costs (optional)</Label>
               <Button
+                aria-label="Add resource type cost"
                 type="button"
                 variant="outline"
                 size="sm"
