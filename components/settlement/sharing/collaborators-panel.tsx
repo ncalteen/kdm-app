@@ -24,6 +24,7 @@ import {
 } from '@/lib/dal/user'
 import {
   ERROR_MESSAGE,
+  SETTLEMENT_SHARE_DUPLICATE_INVITE_MESSAGE,
   SETTLEMENT_SHARE_PAYWALL_MESSAGE,
   SETTLEMENT_SHARE_REVOKE_BLOCKED_MESSAGE,
   SETTLEMENT_SHARE_REVOKE_SUCCESS_MESSAGE,
@@ -259,7 +260,10 @@ function CollaboratorsPanelContent({
           return
         }
 
-        if (collaborators.some((c) => c.shared_user_id === targetUserId)) return
+        if (collaborators.some((c) => c.shared_user_id === targetUserId)) {
+          toast.error(SETTLEMENT_SHARE_DUPLICATE_INVITE_MESSAGE())
+          return
+        }
 
         // Optimistic insert. The real `created_at` comes from the server;
         // an optimistic `now()` is close enough for the "Joined: just now"
@@ -390,10 +394,7 @@ function CollaboratorsPanelContent({
   )
 
   const trimmedUsername = username.trim()
-  const submitDisabled =
-    isInviting ||
-    trimmedUsername.length === 0 ||
-    !USERNAME_PATTERN.test(trimmedUsername)
+  const submitDisabled = isInviting || trimmedUsername.length === 0
 
   return (
     <Card className="p-0">
@@ -402,7 +403,7 @@ function CollaboratorsPanelContent({
       </CardHeader>
       <CardContent className="p-4 pt-0 space-y-4">
         {canShare ? (
-          <form onSubmit={handleInvite}>
+          <form onSubmit={handleInvite} noValidate>
             <div className="grid gap-2">
               <Label htmlFor="invite-username" className="sr-only">
                 Username

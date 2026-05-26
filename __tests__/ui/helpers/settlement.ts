@@ -88,6 +88,86 @@ export async function shareSettlementFixture(args: {
   if (error) throw new Error(`share settlement failed: ${error.message}`)
 }
 
+/** Settlement Share Exists */
+export async function settlementShareExists(args: {
+  settlementId: string
+  sharedUserId: string
+  ownerId?: string
+}): Promise<boolean> {
+  let query = admin
+    .from('settlement_shared_user')
+    .select('settlement_id')
+    .eq('settlement_id', args.settlementId)
+    .eq('shared_user_id', args.sharedUserId)
+
+  if (args.ownerId) query = query.eq('user_id', args.ownerId)
+
+  const { data, error } = await query.maybeSingle()
+
+  if (error) throw new Error(`share lookup failed: ${error.message}`)
+
+  return Boolean(data)
+}
+
+/** Create Attached Custom Knowledge Fixture */
+export async function createAttachedCustomKnowledgeFixture(args: {
+  settlementId: string
+  authorUserId: string
+  name: string
+}): Promise<string> {
+  const { data, error } = await admin
+    .from('knowledge')
+    .insert({
+      custom: true,
+      knowledge_name: args.name,
+      rules: 'A collaborator-authored ember.',
+      user_id: args.authorUserId
+    })
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`create custom knowledge failed: ${error.message}`)
+
+  const { error: attachError } = await admin
+    .from('settlement_knowledge')
+    .insert({ knowledge_id: data.id, settlement_id: args.settlementId })
+
+  if (attachError)
+    throw new Error(`attach custom knowledge failed: ${attachError.message}`)
+
+  return data.id
+}
+
+/** Get Settlement Notes */
+export async function getSettlementNotes(
+  settlementId: string
+): Promise<string> {
+  const { data, error } = await admin
+    .from('settlement')
+    .select('notes')
+    .eq('id', settlementId)
+    .single()
+
+  if (error) throw new Error(`settlement notes lookup failed: ${error.message}`)
+
+  return data.notes
+}
+
+/** Wait For Settlement Notes */
+export async function waitForSettlementNotes(
+  settlementId: string,
+  expected: string
+): Promise<void> {
+  const timeoutAt = Date.now() + 10_000
+
+  while (Date.now() < timeoutAt) {
+    if ((await getSettlementNotes(settlementId)) === expected) return
+    await new Promise((resolve) => setTimeout(resolve, 250))
+  }
+
+  throw new Error(`Timed out waiting for settlement notes ${expected}`)
+}
+
 /**
  * Set Subscription Plan Fixture
  *
