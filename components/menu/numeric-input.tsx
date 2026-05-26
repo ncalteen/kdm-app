@@ -126,6 +126,7 @@ export function NumericInput({
   return disabled ? (
     <Input
       type="number"
+      aria-label={label}
       value={value}
       disabled={disabled}
       className={cn('text-center no-spinners', className)}
@@ -141,6 +142,7 @@ export function NumericInput({
       <DialogTrigger asChild>
         <Input
           type="number"
+          aria-label={label}
           value={value}
           className={cn('text-center no-spinners', className)}
           readOnly
@@ -158,6 +160,7 @@ export function NumericInput({
         <div className="flex items-center justify-center gap-4">
           {/* Decrement Button */}
           <Button
+            aria-label={`Decrease ${label}`}
             variant="outline"
             size="icon"
             onClick={handleDecrement}
@@ -172,6 +175,7 @@ export function NumericInput({
           {/* Current Value Display */}
           <Input
             type="number"
+            aria-label={`${label} value`}
             value={draftValue}
             readOnly
             className="w-20 h-12 text-center text-xl font-semibold focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -182,6 +186,7 @@ export function NumericInput({
 
           {/* Increment Button */}
           <Button
+            aria-label={`Increase ${label}`}
             variant="outline"
             size="icon"
             onClick={handleIncrement}

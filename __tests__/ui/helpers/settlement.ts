@@ -13,6 +13,8 @@ export interface SettlementFixtureOptions {
   name: string
   /** Survivor Type */
   survivorType?: DatabaseSurvivorType
+  /** Survival Limit */
+  survivalLimit?: number
   /** Uses Scouts */
   usesScouts?: boolean
   /** User ID */
@@ -57,6 +59,7 @@ export async function createSettlementFixture(
     .insert({
       campaign_type: options.campaignType ?? 'PEOPLE_OF_THE_LANTERN',
       settlement_name: options.name,
+      survival_limit: options.survivalLimit ?? 1,
       survivor_type: options.survivorType ?? 'CORE',
       uses_scouts: options.usesScouts ?? false,
       user_id: options.userId
