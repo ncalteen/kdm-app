@@ -62,15 +62,67 @@ export async function waitForMessageTo(
  * @returns Supabase Confirmation URL
  */
 export function extractConfirmationUrl(message: unknown): string {
+  return extractAuthActionUrl(
+    message,
+    (url) => url.includes('/auth/v1/verify') || url.includes('/auth/confirm'),
+    'Confirmation URL not found in email'
+  )
+}
+
+/**
+ * Extract Recovery URL
+ *
+ * @param message Captured Mail Message
+ * @returns Supabase Password Recovery URL
+ */
+export function extractRecoveryUrl(message: unknown): string {
+  return extractAuthActionUrl(
+    message,
+    (url) => {
+      const decodedUrl = decodeUrl(url)
+      return (
+        decodedUrl.includes('/auth/v1/verify') &&
+        decodedUrl.includes('type=recovery')
+      )
+    },
+    'Recovery URL not found in email'
+  )
+}
+
+/**
+ * Extract Auth Action URL
+ *
+ * @param message Captured Mail Message
+ * @param predicate URL Match Predicate
+ * @param errorMessage Error Message
+ * @returns Matching Auth Action URL
+ */
+function extractAuthActionUrl(
+  message: unknown,
+  predicate: (url: string) => boolean,
+  errorMessage: string
+): string {
   const content = JSON.stringify(message).replaceAll('&amp;', '&')
   const urls = content.match(/https?:\/\/[^"'<>\\\s]+/g) ?? []
-  const confirmationUrl = urls.find(
-    (url) => url.includes('/auth/v1/verify') || url.includes('/auth/confirm')
-  )
+  const actionUrl = urls.find(predicate)
 
-  if (!confirmationUrl) throw new Error('Confirmation URL not found in email')
+  if (!actionUrl) throw new Error(errorMessage)
 
-  return confirmationUrl
+  return actionUrl
+}
+
+/**
+ * Decode URL
+ *
+ * @param url URL
+ * @returns Decoded URL, falling back to the original value if decoding fails
+ */
+function decodeUrl(url: string): string {
+  try {
+    return decodeURIComponent(url)
+  } catch {
+    return url
+  }
 }
 
 /**
