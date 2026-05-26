@@ -44,6 +44,7 @@ export function SiteHeader(): ReactElement {
     <header className="bg-background fixed top-0 left-0 right-0 z-50 flex w-full items-center justify-between border-b px-4 min-h-(--header-height)">
       <div className="flex h-(--header-height) items-center gap-2">
         <Button
+          aria-label="Toggle Sidebar"
           className="h-8 w-8"
           variant="ghost"
           size="icon"
