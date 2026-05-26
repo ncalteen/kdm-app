@@ -265,7 +265,9 @@ export function UserCard({
         {/* Mobile: dropdown selector */}
         <div className="lg:hidden">
           <Select value={activeTab} onValueChange={setActiveTab}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger
+              aria-label="Custom content category"
+              className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -377,7 +377,11 @@ export function CustomGearCard(): ReactElement {
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-md flex flex-row items-center justify-between">
           <span>Gear</span>
-          <Button variant="outline" size="sm" onClick={openCreateDialog}>
+          <Button
+            aria-label="Add custom gear"
+            variant="outline"
+            size="sm"
+            onClick={openCreateDialog}>
             <PlusIcon className="h-4 w-4 mr-2" />
             Add
           </Button>
@@ -443,6 +447,7 @@ export function CustomGearCard(): ReactElement {
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button
+                            aria-label={`Edit ${item.gear_name}`}
                             variant="ghost"
                             size="icon"
                             onClick={() => openEditDialog(item)}
@@ -450,6 +455,7 @@ export function CustomGearCard(): ReactElement {
                             <PencilIcon className="h-4 w-4" />
                           </Button>
                           <Button
+                            aria-label={`Delete ${item.gear_name}`}
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(item)}
