@@ -452,6 +452,14 @@ export const SETTLEMENT_SHARE_SELF_INVITE_MESSAGE = () =>
   'You already keep watch over this settlement.'
 
 /**
+ * Settlement Share Duplicate Invite Rejected
+ *
+ * @returns Settlement Share Duplicate Invite Rejected Message
+ */
+export const SETTLEMENT_SHARE_DUPLICATE_INVITE_MESSAGE = () =>
+  'Their lantern already burns beside yours.'
+
+/**
  * Settlement Share Revoke Succeeded
  *
  * @returns Settlement Share Revoke Succeeded Message
