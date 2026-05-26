@@ -1,6 +1,9 @@
 import { Database, Json, Tables } from '@/lib/database.types'
 import { DatabaseCampaignType, HuntEventType } from '@/lib/enums'
 
+/** Avatar Source */
+export type AvatarSource = 'provider' | 'uploaded' | 'none'
+
 /**
  * Campaign Template
  *

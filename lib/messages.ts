@@ -64,6 +64,49 @@ export const ERROR_MESSAGE = () =>
   'The darkness swallows your words. Please try again.'
 
 /**
+ * Avatar Upload Succeeded
+ *
+ * @returns Avatar Upload Succeeded Message
+ */
+export const AVATAR_UPLOAD_SUCCESS_MESSAGE = () => 'A new face emerges.'
+
+/**
+ * Avatar Source Updated
+ *
+ * @returns Avatar Source Updated Message
+ */
+export const AVATAR_SOURCE_UPDATED_MESSAGE = () => 'Your mark has changed.'
+
+/**
+ * Avatar Invalid Type
+ *
+ * @returns Avatar Invalid Type Message
+ */
+export const AVATAR_INVALID_TYPE_MESSAGE = () =>
+  'Only JPG, PNG, GIF, or WebP images can bear your mark.'
+
+/**
+ * Avatar Invalid Size
+ *
+ * @param maxMegabytes Maximum Allowed Size in MB
+ * @returns Avatar Invalid Size Message
+ */
+export const AVATAR_INVALID_SIZE_MESSAGE = (maxMegabytes: number) =>
+  `Avatar images must be ${maxMegabytes} MB or smaller.`
+
+/**
+ * Avatar Invalid Dimensions
+ *
+ * @param maxWidth Maximum Allowed Width in Pixels
+ * @param maxHeight Maximum Allowed Height in Pixels
+ * @returns Avatar Invalid Dimensions Message
+ */
+export const AVATAR_INVALID_DIMENSIONS_MESSAGE = (
+  maxWidth: number,
+  maxHeight: number
+) => `Avatar images must be ${maxWidth}x${maxHeight} pixels or smaller.`
+
+/**
  * Fighting Arts Max Exceeded Error
  *
  * @param survivorType Survivor Type

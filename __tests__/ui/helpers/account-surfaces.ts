@@ -48,6 +48,21 @@ export async function getUsernameFixture(userId: string): Promise<string> {
   return data.username
 }
 
+/** Get Avatar URL Fixture */
+export async function getAvatarUrlFixture(
+  userId: string
+): Promise<string | null> {
+  const { data, error } = await admin
+    .from('user_settings')
+    .select('avatar_url')
+    .eq('user_id', userId)
+    .single()
+
+  if (error) throw new Error(`avatar URL lookup failed: ${error.message}`)
+
+  return data.avatar_url
+}
+
 /** Set Subscription Fixture */
 export async function setSubscriptionFixture({
   cancelAtPeriodEnd = false,

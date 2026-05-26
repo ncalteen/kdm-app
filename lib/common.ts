@@ -14,6 +14,12 @@ import {
   WrenchIcon
 } from 'lucide-react'
 
+/** Avatar Storage Bucket */
+export const AVATAR_BUCKET = 'avatars'
+
+/** Avatar Object Name */
+export const AVATAR_OBJECT_NAME = 'avatar'
+
 /**
  * Free-Tier Settlement Limit
  *
@@ -45,6 +51,15 @@ export const LOCAL_STORAGE_KEY = 'kdm-archivist-local'
  */
 export const MARKDOWN_SYNTAX_URL = 'https://www.markdownguide.org/basic-syntax/'
 
+/** Maximum Avatar File Size (2 MB) */
+export const MAX_AVATAR_FILE_SIZE_BYTES = 2 * 1024 * 1024
+
+/** Maximum Avatar Width */
+export const MAX_AVATAR_WIDTH_PX = 1024
+
+/** Maximum Avatar Height */
+export const MAX_AVATAR_HEIGHT_PX = 1024
+
 /**
  * Plan Order
  *
@@ -61,6 +76,17 @@ export const PLAN_ORDER: ReadonlyArray<PlanSlug> = [
  * Support Email Address
  */
 export const SUPPORT_EMAIL = 'ncalteen@archivist.monster'
+
+/** Supported Avatar Label */
+export const SUPPORTED_AVATAR_FILE_LABEL = 'JPG, PNG, GIF, or WebP'
+
+/** Supported Avatar MIME Types */
+export const SUPPORTED_AVATAR_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp'
+]
 
 /**
  * Stripe API Version

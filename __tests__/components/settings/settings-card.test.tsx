@@ -28,6 +28,10 @@ vi.mock('@/components/update-password-form', () => ({
   UpdatePasswordForm: () => <div data-test="update-password-form" />
 }))
 
+vi.mock('@/components/settings/update-avatar-form', () => ({
+  UpdateAvatarForm: () => <div data-test="update-avatar-form" />
+}))
+
 vi.mock('@/components/update-username-form', () => ({
   UpdateUsernameForm: () => <div data-test="update-username-form" />
 }))
@@ -221,6 +225,7 @@ describe('UserSettingsCard', () => {
       <UserSettingsCard {...buildUserSettingsProps()} />
     )
 
+    expect(html).toContain('update-avatar-form')
     expect(html).toContain('update-username-form')
     expect(html).toContain('update-password-form')
     expect(html).not.toContain('Settlement Settings')

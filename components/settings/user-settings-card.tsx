@@ -1,5 +1,6 @@
 'use client'
 
+import { UpdateAvatarForm } from '@/components/settings/update-avatar-form'
 import { UpdatePasswordForm } from '@/components/update-password-form'
 import { UpdateUsernameForm } from '@/components/update-username-form'
 import { UserSettingsDetail } from '@/lib/types'
@@ -28,15 +29,18 @@ export function UserSettingsCard({
   userSettings
 }: UserSettingsCardProps): ReactElement {
   return (
-    <div className="flex flex-col gap-4 pt-12 px-2">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UpdateUsernameForm
-          setUserSettings={setUserSettings}
-          userSettings={userSettings}
-          className="h-full"
-        />
-        <UpdatePasswordForm className="h-full" />
-      </div>
+    <div className="grid grid-cols-1 gap-4 px-2 pt-12 md:grid-cols-3 md:items-stretch">
+      <UpdateAvatarForm
+        setUserSettings={setUserSettings}
+        userSettings={userSettings}
+        className="flex-1 h-full"
+      />
+      <UpdateUsernameForm
+        setUserSettings={setUserSettings}
+        userSettings={userSettings}
+        className="flex-1 h-full"
+      />
+      <UpdatePasswordForm className="flex-1 h-full" />
     </div>
   )
 }

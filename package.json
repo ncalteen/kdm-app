@@ -2,7 +2,7 @@
   "name": "kdm",
   "description": "Kingdom Death: Monster (KDM) - Archivist",
   "author": "Nick Alteen <ncalteen@gmail.com>",
-  "version": "0.85.1",
+  "version": "0.86.0",
   "type": "module",
   "homepage": "https://github.com/ncalteen/kdm-app#readme",
   "repository": "ncalteen/kdm-app",
@@ -30,7 +30,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "ui-test": "./scripts/ui-test.sh",
-    "all": "npm run format:write && npm run lint && npm run ci-test && npm run integration-test && npm run coverage && npm run build"
+    "all": "npm run format:write && npm run lint && npm run ci-test && npm run integration-test && npm run ui-test && npm run coverage && npm run build"
   },
   "license": "MIT",
   "dependencies": {
