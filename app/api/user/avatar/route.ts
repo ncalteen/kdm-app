@@ -2,6 +2,7 @@ import 'server-only'
 
 import {
   buildAvatarObjectPath,
+  detectAvatarDimensionsFromBytes,
   detectAvatarMimeTypeFromBytes,
   isSupportedAvatarMimeType,
   stripAvatarVersionQuery
@@ -9,7 +10,9 @@ import {
 import {
   AVATAR_BUCKET,
   AVATAR_OBJECT_NAME,
-  MAX_AVATAR_FILE_SIZE_BYTES
+  MAX_AVATAR_FILE_SIZE_BYTES,
+  MAX_AVATAR_HEIGHT_PX,
+  MAX_AVATAR_WIDTH_PX
 } from '@/lib/common'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/server'
@@ -292,6 +295,24 @@ export async function POST(request: NextRequest) {
       if (!detectedMimeType)
         return NextResponse.json(
           { code: 'invalid-type', error: 'Unsupported avatar image format.' },
+          { status: 400 }
+        )
+
+      const dimensions = detectAvatarDimensionsFromBytes(
+        bytes,
+        detectedMimeType
+      )
+
+      if (
+        !dimensions ||
+        dimensions.width > MAX_AVATAR_WIDTH_PX ||
+        dimensions.height > MAX_AVATAR_HEIGHT_PX
+      )
+        return NextResponse.json(
+          {
+            code: 'invalid-dimensions',
+            error: 'Avatar image dimensions are too large.'
+          },
           { status: 400 }
         )
 

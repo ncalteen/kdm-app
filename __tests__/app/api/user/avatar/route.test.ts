@@ -15,9 +15,25 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: mockCreateClient
 }))
 
+import { MAX_AVATAR_WIDTH_PX } from '@/lib/common'
 import { NextRequest } from 'next/server'
 
 const { GET, POST } = await import('@/app/api/user/avatar/route')
+
+function buildPngBytes(width: number, height: number): Uint8Array<ArrayBuffer> {
+  const bytes = new Uint8Array(new ArrayBuffer(24))
+  bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+  bytes[16] = (width >>> 24) & 0xff
+  bytes[17] = (width >>> 16) & 0xff
+  bytes[18] = (width >>> 8) & 0xff
+  bytes[19] = width & 0xff
+  bytes[20] = (height >>> 24) & 0xff
+  bytes[21] = (height >>> 16) & 0xff
+  bytes[22] = (height >>> 8) & 0xff
+  bytes[23] = height & 0xff
+
+  return bytes
+}
 
 function buildClient() {
   return {
@@ -238,6 +254,25 @@ describe('POST /api/user/avatar', () => {
     expect(json.code).toBe('invalid-size')
   })
 
+  it('rejects uploads with oversized image dimensions', async () => {
+    setupAuth({ user: { id: 'user-1', user_metadata: {} } })
+
+    const formData = new FormData()
+    formData.append('action', 'upload')
+    formData.append(
+      'avatar',
+      new File([buildPngBytes(MAX_AVATAR_WIDTH_PX + 1, 512)], 'wide.png', {
+        type: 'image/png'
+      })
+    )
+
+    const response = await POST(buildFormRequest(formData))
+    const json = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(json.code).toBe('invalid-dimensions')
+  })
+
   it('uploads a valid image and selects uploaded avatar', async () => {
     setupAuth({ user: { id: 'user-1', user_metadata: {} } })
 
@@ -266,13 +301,13 @@ describe('POST /api/user/avatar', () => {
       .mockReturnValueOnce({ update })
       .mockReturnValueOnce({ select: readSelect })
 
-    const jpegBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xee])
+    const pngBytes = buildPngBytes(512, 512)
 
     const formData = new FormData()
     formData.append('action', 'upload')
     formData.append(
       'avatar',
-      new File([jpegBytes], 'avatar.jpg', { type: 'image/jpeg' })
+      new File([pngBytes], 'avatar.png', { type: 'image/png' })
     )
 
     const response = await POST(buildFormRequest(formData))

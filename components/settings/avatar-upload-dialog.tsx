@@ -28,7 +28,7 @@ import {
   AVATAR_UPLOAD_SUCCESS_MESSAGE,
   ERROR_MESSAGE
 } from '@/lib/messages'
-import { UserSettingsDetail } from '@/lib/types'
+import { AvatarSource, UserSettingsDetail } from '@/lib/types'
 import { TriangleAlertIcon, UploadIcon } from 'lucide-react'
 import { ChangeEvent, ReactElement, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -44,7 +44,7 @@ interface AvatarStatePayload {
   /** Uploaded Avatar URL */
   uploadedAvatarUrl: string | null
   /** Selected Source */
-  selectedSource: 'provider' | 'uploaded' | 'none'
+  selectedSource: AvatarSource
 }
 
 /**
