@@ -12,11 +12,19 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import {
+  getUserCustomEncounterMonsters,
+  removeEncounterMonster
+} from '@/lib/dal/encounter-monster'
 import { getUserCustomNemeses, removeNemesis } from '@/lib/dal/nemesis'
 import { getUserCustomQuarries, removeQuarry } from '@/lib/dal/quarry'
 import { MonsterType } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
-import { NemesisDetail, QuarryDetail } from '@/lib/types'
+import {
+  EncounterMonsterDetail,
+  NemesisDetail,
+  QuarryDetail
+} from '@/lib/types'
 import { getCatalogDeleteGuardMessage } from '@/lib/utils'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
@@ -27,7 +35,7 @@ interface MonsterEntry {
   /** Monster ID */
   id: string
   /** Monster Detail */
-  detail: QuarryDetail | NemesisDetail
+  detail: EncounterMonsterDetail | QuarryDetail | NemesisDetail
   /** Monster Type */
   type: MonsterType
 }
@@ -60,12 +68,16 @@ export function CustomMonstersCard(): ReactElement {
     setIsLoading(true)
 
     try {
-      const [quarries, nemeses] = await Promise.all([
+      const [encounters, quarries, nemeses] = await Promise.all([
+        getUserCustomEncounterMonsters(),
         getUserCustomQuarries(),
         getUserCustomNemeses()
       ])
 
       const entries: MonsterEntry[] = []
+
+      for (const [id, detail] of Object.entries(encounters))
+        entries.push({ id, detail, type: MonsterType.ENCOUNTER })
 
       for (const [id, detail] of Object.entries(quarries))
         entries.push({ id, detail, type: MonsterType.QUARRY })
@@ -91,11 +103,18 @@ export function CustomMonstersCard(): ReactElement {
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([getUserCustomQuarries(), getUserCustomNemeses()])
-      .then(([quarries, nemeses]) => {
+    Promise.all([
+      getUserCustomEncounterMonsters(),
+      getUserCustomQuarries(),
+      getUserCustomNemeses()
+    ])
+      .then(([encounters, quarries, nemeses]) => {
         if (cancelled) return
 
         const entries: MonsterEntry[] = []
+
+        for (const [id, detail] of Object.entries(encounters))
+          entries.push({ id, detail, type: MonsterType.ENCOUNTER })
 
         for (const [id, detail] of Object.entries(quarries))
           entries.push({ id, detail, type: MonsterType.QUARRY })
@@ -140,7 +159,9 @@ export function CustomMonstersCard(): ReactElement {
       const deletePromise =
         entry.type === MonsterType.QUARRY
           ? removeQuarry(entry.id)
-          : removeNemesis(entry.id)
+          : entry.type === MonsterType.NEMESIS
+            ? removeNemesis(entry.id)
+            : removeEncounterMonster(entry.id)
 
       deletePromise.catch((err: unknown) => {
         // Rollback
@@ -258,14 +279,16 @@ export function CustomMonstersCard(): ReactElement {
                         className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                           entry.type === MonsterType.QUARRY
                             ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            : entry.type === MonsterType.ENCOUNTER
+                              ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                              : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                         }`}>
                         {entry.type}
                       </span>
                     </TableCell>
                     <TableCell>
                       <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                        {entry.detail.node}
+                        {'node' in entry.detail ? entry.detail.node : 'N/A'}
                       </code>
                     </TableCell>
                     <TableCell className="text-right">

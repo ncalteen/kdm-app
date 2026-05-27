@@ -5,6 +5,10 @@ import {
   MonsterFormPayload
 } from '@/components/monster/monster-form'
 import {
+  addEncounterMonster,
+  addEncounterMonsterLevel
+} from '@/lib/dal/encounter-monster'
+import {
   syncMonsterMoods,
   syncMonsterSurvivorStatuses,
   syncMonsterTraits
@@ -62,25 +66,32 @@ export function CreateMonsterCard({
 
       try {
         const isQuarry = payload.monsterType === MonsterType.QUARRY
+        const isEncounter = payload.monsterType === MonsterType.ENCOUNTER
         const levelEntries = Object.entries(payload.levels)
 
         // 1. Create the monster record
-        const addMonster = isQuarry ? addQuarry : addNemesis
-        const monster = await addMonster({
-          custom: true,
-          monster_name: payload.name,
-          multi_monster: levelEntries.some(
-            ([, subMonsters]) => subMonsters.length > 1
-          ),
-          node: payload.node,
-          instinct: payload.instinct.trim() || null,
-          basic_action: payload.basicAction.trim() || null,
-          blind_spot: payload.blindSpot.trim() || null,
-          defeat_outcome: payload.defeatOutcome.trim() || null,
-          deployment_rules: payload.deploymentRules.trim() || null,
-          victory_outcome: payload.victoryOutcome.trim() || null,
-          ...(isQuarry ? { prologue: payload.prologue } : {})
-        })
+        const monster = isEncounter
+          ? await addEncounterMonster({
+              custom: true,
+              monster_name: payload.name,
+              instinct: payload.instinct.trim(),
+              basic_action: payload.basicAction.trim()
+            })
+          : await (isQuarry ? addQuarry : addNemesis)({
+              custom: true,
+              monster_name: payload.name,
+              multi_monster: levelEntries.some(
+                ([, subMonsters]) => subMonsters.length > 1
+              ),
+              node: payload.node,
+              instinct: payload.instinct.trim() || null,
+              basic_action: payload.basicAction.trim() || null,
+              blind_spot: payload.blindSpot.trim() || null,
+              defeat_outcome: payload.defeatOutcome.trim() || null,
+              deployment_rules: payload.deploymentRules.trim() || null,
+              victory_outcome: payload.victoryOutcome.trim() || null,
+              ...(isQuarry ? { prologue: payload.prologue } : {})
+            })
 
         // 2. Create hunt board (quarry only)
         if (isQuarry)
@@ -90,12 +101,26 @@ export function CreateMonsterCard({
           })
 
         // 3. Create levels + per-level hunt positions
-        const addLevel = isQuarry ? addQuarryLevel : addNemesisLevel
-        const idKey = isQuarry ? 'quarry_id' : 'nemesis_id'
-        const traitTable = isQuarry
-          ? 'quarry_level_trait'
-          : 'nemesis_level_trait'
-        const moodTable = isQuarry ? 'quarry_level_mood' : 'nemesis_level_mood'
+        const addLevel = isEncounter
+          ? addEncounterMonsterLevel
+          : isQuarry
+            ? addQuarryLevel
+            : addNemesisLevel
+        const idKey = isEncounter
+          ? 'encounter_monster_id'
+          : isQuarry
+            ? 'quarry_id'
+            : 'nemesis_id'
+        const traitTable = isEncounter
+          ? 'encounter_monster_level_trait'
+          : isQuarry
+            ? 'quarry_level_trait'
+            : 'nemesis_level_trait'
+        const moodTable = isEncounter
+          ? 'encounter_monster_level_mood'
+          : isQuarry
+            ? 'quarry_level_mood'
+            : 'nemesis_level_mood'
         const survivorStatusTable = isQuarry
           ? 'quarry_level_survivor_status'
           : 'nemesis_level_survivor_status'
@@ -105,20 +130,34 @@ export function CreateMonsterCard({
 
           for (const sub of subMonsters) {
             const { life, traits, moods, survivor_statuses, ...rest } = sub
-            const insertData: Record<string, unknown> = {
-              [idKey]: monster.id,
-              ...rest,
-              sub_monster_name: sub.sub_monster_name || null,
-              level_number: levelNum,
-              ai_deck_remaining:
-                sub.basic_cards +
-                sub.advanced_cards +
-                sub.legendary_cards +
-                sub.overtone_cards
-            }
+            const insertData: Record<string, unknown> = isEncounter
+              ? {
+                  [idKey]: monster.id,
+                  level_number: levelNum,
+                  sub_monster_name: sub.sub_monster_name || null,
+                  life: life || 0,
+                  movement: sub.movement,
+                  toughness: sub.toughness,
+                  speed: sub.speed,
+                  damage: sub.damage,
+                  accuracy: sub.accuracy,
+                  evasion: sub.evasion,
+                  luck: sub.luck
+                }
+              : {
+                  [idKey]: monster.id,
+                  ...rest,
+                  sub_monster_name: sub.sub_monster_name || null,
+                  level_number: levelNum,
+                  ai_deck_remaining:
+                    sub.basic_cards +
+                    sub.advanced_cards +
+                    sub.legendary_cards +
+                    sub.overtone_cards
+                }
 
             // Quarry levels don't have a `life` column.
-            if (!isQuarry) insertData.life = life || null
+            if (!isQuarry && !isEncounter) insertData.life = life || null
 
             const levelId = await (
               addLevel as (data: Record<string, unknown>) => Promise<string>
@@ -136,7 +175,7 @@ export function CreateMonsterCard({
                 levelId,
                 moods.map((m) => m.mood_name)
               )
-            if (survivor_statuses.length > 0)
+            if (!isEncounter && survivor_statuses.length > 0)
               await syncMonsterSurvivorStatuses(
                 survivorStatusTable,
                 levelId,

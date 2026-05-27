@@ -1,3 +1,4 @@
+import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -22,7 +23,7 @@ export async function getEncounterMonsters(): Promise<
   const { data, error } = await supabase
     .from('encounter_monster')
     .select(
-      'id, archived_at, basic_action, custom, instinct, monster_name, encounter_monster_level(id, accuracy, damage, encounter_monster_id, evasion, level_number, life, luck, movement, speed, sub_monster_name, toughness, encounter_monster_level_trait(trait(id, custom, trait_name, rules)), encounter_monster_level_mood(mood(id, custom, mood_name, rules)))'
+      'id, archived_at, basic_action, custom, instinct, monster_name, user_id, encounter_monster_level(id, accuracy, damage, encounter_monster_id, evasion, level_number, life, luck, movement, speed, sub_monster_name, toughness, encounter_monster_level_trait(trait(id, custom, trait_name, rules)), encounter_monster_level_mood(mood(id, custom, mood_name, rules)))'
     )
     .order('monster_name')
 
@@ -67,6 +68,44 @@ export async function getEncounterMonsters(): Promise<
 }
 
 /**
+ * Get User Custom Encounter Monsters
+ *
+ * Retrieves only custom encounter monsters created by the current user.
+ *
+ * @returns Custom Encounter Monster Data Map
+ */
+export async function getUserCustomEncounterMonsters(): Promise<{
+  [key: string]: EncounterMonsterDetail
+}> {
+  const userId = await getUserId()
+  const monsters = await getEncounterMonsters()
+
+  const monsterMap: { [key: string]: EncounterMonsterDetail } = {}
+  for (const monster of monsters)
+    if (monster.custom && monster.user_id === userId && !monster.archived_at)
+      monsterMap[monster.id] = monster
+
+  return monsterMap
+}
+
+/**
+ * Get Encounter Monster
+ *
+ * Retrieves a single encounter monster by ID.
+ *
+ * @param encounterMonsterId Encounter Monster ID
+ * @returns Encounter Monster Detail or null
+ */
+export async function getEncounterMonster(
+  encounterMonsterId: string | null | undefined
+): Promise<EncounterMonsterDetail | null> {
+  if (!encounterMonsterId) return null
+
+  const monsters = await getEncounterMonsters()
+  return monsters.find((monster) => monster.id === encounterMonsterId) ?? null
+}
+
+/**
  * Add Encounter Monster
  *
  * Adds an encounter monster catalog row.
@@ -77,20 +116,28 @@ export async function getEncounterMonsters(): Promise<
 export async function addEncounterMonster(
   encounterMonster: Omit<
     TablesInsert<'encounter_monster'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'user_id'
   >
-): Promise<string> {
+): Promise<EncounterMonsterDetail> {
+  const userId = await getUserIdOrNull()
   const supabase = createClient()
+
+  if (encounterMonster.custom && !userId) throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('encounter_monster')
-    .insert(encounterMonster)
-    .select('id')
+    .insert({
+      ...encounterMonster,
+      ...(encounterMonster.custom ? { user_id: userId! } : {})
+    })
+    .select(
+      'id, archived_at, basic_action, custom, instinct, monster_name, updated_at, user_id'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding Encounter Monster: ${error.message}`)
 
-  return data.id
+  return { ...data, levels: [] }
 }
 
 /**
@@ -164,4 +211,49 @@ export async function addEncounterMonsterLevel(
     throw new Error(`Error Adding Encounter Monster Level: ${error.message}`)
 
   return data.id
+}
+
+/**
+ * Update Encounter Monster Level
+ *
+ * Updates an existing encounter monster level row.
+ *
+ * @param id Encounter Monster Level ID
+ * @param level Encounter Monster Level Data
+ */
+export async function updateEncounterMonsterLevel(
+  id: string,
+  level: Omit<
+    TablesUpdate<'encounter_monster_level'>,
+    'id' | 'created_at' | 'updated_at'
+  >
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('encounter_monster_level')
+    .update(level)
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Updating Encounter Monster Level: ${error.message}`)
+}
+
+/**
+ * Remove Encounter Monster Level
+ *
+ * Deletes an encounter monster level row.
+ *
+ * @param id Encounter Monster Level ID
+ */
+export async function removeEncounterMonsterLevel(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('encounter_monster_level')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Encounter Monster Level: ${error.message}`)
 }

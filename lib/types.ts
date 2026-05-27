@@ -359,7 +359,7 @@ export type EncounterDetail = Omit<
  */
 export type EncounterMonsterDetail = Omit<
   Tables<'encounter_monster'>,
-  'created_at' | 'updated_at' | 'user_id'
+  'created_at' | 'updated_at'
 > & {
   /** Level Data */
   levels: EncounterMonsterLevelDetail[]

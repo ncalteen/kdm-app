@@ -129,6 +129,7 @@ describe('ResourceType', () => {
 
 describe('MonsterType', () => {
   it('has correct values', () => {
+    expect(MonsterType.ENCOUNTER).toBe('Encounter')
     expect(MonsterType.NEMESIS).toBe('Nemesis')
     expect(MonsterType.QUARRY).toBe('Quarry')
   })

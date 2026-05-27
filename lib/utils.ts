@@ -324,6 +324,8 @@ export function getOverwhelmingDarknessLabel(
  * @returns Available Monster Nodes
  */
 export const getAvailableNodes = (type: MonsterType): MonsterNode[] => {
+  if (type === MonsterType.ENCOUNTER) return []
+
   return type === MonsterType.NEMESIS
     ? [
         MonsterNode.NN1,

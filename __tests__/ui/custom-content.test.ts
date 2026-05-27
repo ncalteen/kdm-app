@@ -5,12 +5,15 @@ import {
 } from '@/__tests__/ui/helpers/auth'
 import {
   attachDisorderToSurvivorFixture,
+  countEncounterMonsterLevels,
   countGearResourceCosts,
   findCustomDisorderByName,
   getCustomDisorderById,
   getWeaponTypeId,
   waitForCustomDisorderByName,
+  waitForCustomEncounterMonsterByName,
   waitForCustomGearByName,
+  waitForMissingCustomEncounterMonster,
   waitForMissingCustomGear
 } from '@/__tests__/ui/helpers/custom-content'
 import { createSettlementFixture } from '@/__tests__/ui/helpers/settlement'
@@ -190,6 +193,51 @@ test.describe('custom content flow', () => {
 
     await page.getByRole('button', { name: `Delete ${editedGearName}` }).click()
     await waitForMissingCustomGear(userId, editedGearName)
+  })
+
+  test('creates, edits, and deletes custom encounter monster content', async ({
+    page
+  }) => {
+    test.slow()
+
+    const { account, settlementId, userId } =
+      await createCustomScenario('encounter')
+    emailsToDelete.add(account.email)
+    const monsterName = `E2E Lantern Leech ${crypto.randomUUID().slice(0, 8)}`
+    const editedMonsterName = `${monsterName} Revised`
+
+    await openUserContent(page, account, settlementId)
+    await selectCustomContentCategory(page, 'Monsters')
+
+    await page.getByRole('button', { name: 'Create Monster' }).click()
+    await expect(page.getByText('Create Custom Monster')).toBeVisible()
+    await selectOption(page, 'Monster Type', 'Encounter')
+    await page.getByLabel('Monster Name').fill(monsterName)
+    await page.getByRole('button', { name: /Level 1/ }).click()
+    await page.getByRole('button', { name: 'Add Sub-Monster' }).click()
+    await page.getByRole('button', { name: 'Create Monster' }).click()
+
+    const created = await waitForCustomEncounterMonsterByName(
+      userId,
+      monsterName
+    )
+    await expect.poll(() => countEncounterMonsterLevels(created.id)).toBe(1)
+
+    await page.getByRole('button', { name: `Edit ${monsterName}` }).click()
+    await expect(page.getByText('Edit Monster')).toBeVisible()
+    await page.getByLabel('Monster Name').fill(editedMonsterName)
+    await page.getByRole('button', { name: 'Save Changes' }).click()
+
+    const edited = await waitForCustomEncounterMonsterByName(
+      userId,
+      editedMonsterName
+    )
+    await expect.poll(() => countEncounterMonsterLevels(edited.id)).toBe(1)
+
+    await page
+      .getByRole('button', { name: `Delete ${editedMonsterName}` })
+      .click()
+    await waitForMissingCustomEncounterMonster(userId, editedMonsterName)
   })
 })
 

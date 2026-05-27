@@ -163,6 +163,8 @@ export enum ResourceType {
  * Monster Type
  */
 export enum MonsterType {
+  /** Encounter */
+  ENCOUNTER = 'Encounter',
   /** Nemesis */
   NEMESIS = 'Nemesis',
   /** Quarry */

@@ -14,6 +14,13 @@ import {
   syncMonsterSurvivorStatuses,
   syncMonsterTraits
 } from '@/lib/dal/monster-trait-mood'
+import {
+  addEncounterMonsterLevel,
+  getEncounterMonster,
+  removeEncounterMonsterLevel,
+  updateEncounterMonster,
+  updateEncounterMonsterLevel
+} from '@/lib/dal/encounter-monster'
 import { getNemesis, updateNemesis } from '@/lib/dal/nemesis'
 import {
   addNemesisLevel,
@@ -154,6 +161,40 @@ export function EditMonsterCard({
 
       try {
         const isQuarry = monsterType === MonsterType.QUARRY
+        const isEncounter = monsterType === MonsterType.ENCOUNTER
+
+        if (isEncounter) {
+          const monsterData = await getEncounterMonster(monsterId)
+          if (!monsterData) throw new Error('Encounter Monster Not Found')
+
+          const groupedLevels: { [key: number]: MonsterLevelDraft[] } = {}
+          for (const lvl of monsterData.levels) {
+            if (!groupedLevels[lvl.level_number])
+              groupedLevels[lvl.level_number] = []
+            groupedLevels[lvl.level_number].push(
+              lvl as unknown as MonsterLevelDraft
+            )
+          }
+
+          setInitialData({
+            monsterType,
+            name: monsterData.monster_name,
+            node: MonsterNode.NQ1,
+            prologue: false,
+            instinct: monsterData.instinct ?? '',
+            basicAction: monsterData.basic_action ?? '',
+            blindSpot: '',
+            defeatOutcome: '',
+            deploymentRules: '',
+            victoryOutcome: '',
+            levels: groupedLevels,
+            locations: [],
+            timelineEvents: [],
+            ccRewards: []
+          })
+
+          return
+        }
 
         const fns = {
           getMonster: isQuarry ? getQuarry : getNemesis,
@@ -270,6 +311,73 @@ export function EditMonsterCard({
       setIsSaving(true)
 
       const isQuarry = payload.monsterType === MonsterType.QUARRY
+      const isEncounter = payload.monsterType === MonsterType.ENCOUNTER
+
+      if (isEncounter) {
+        try {
+          await updateEncounterMonster(monsterId, {
+            monster_name: payload.name,
+            instinct: payload.instinct.trim(),
+            basic_action: payload.basicAction.trim()
+          })
+
+          for (const id of payload.deletedLevelIds)
+            await removeEncounterMonsterLevel(id)
+
+          for (const [levelNumStr, subMonsters] of Object.entries(
+            payload.levels
+          )) {
+            const levelNum = parseInt(levelNumStr, 10)
+
+            for (const sub of subMonsters) {
+              const { id, traits, moods } = sub
+              const levelData = {
+                level_number: levelNum,
+                sub_monster_name: sub.sub_monster_name || null,
+                life: sub.life || 0,
+                movement: sub.movement,
+                toughness: sub.toughness,
+                speed: sub.speed,
+                damage: sub.damage,
+                accuracy: sub.accuracy,
+                evasion: sub.evasion,
+                luck: sub.luck
+              }
+
+              let levelId: string
+              if (id && !id.startsWith('temp-')) {
+                await updateEncounterMonsterLevel(id, levelData)
+                levelId = id
+              } else {
+                levelId = await addEncounterMonsterLevel({
+                  ...levelData,
+                  encounter_monster_id: monsterId
+                })
+              }
+
+              await syncMonsterTraits(
+                'encounter_monster_level_trait',
+                levelId,
+                traits.map((t) => t.trait_name)
+              )
+              await syncMonsterMoods(
+                'encounter_monster_level_mood',
+                levelId,
+                moods.map((m) => m.mood_name)
+              )
+            }
+          }
+
+          onMonsterUpdated()
+        } catch (error) {
+          console.error('Update Encounter Monster Error:', error)
+          toast.error(ERROR_MESSAGE())
+        } finally {
+          setIsSaving(false)
+        }
+
+        return
+      }
 
       const fns = {
         updateMonster: isQuarry ? updateQuarry : updateNemesis,
