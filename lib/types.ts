@@ -323,6 +323,103 @@ export type GearGridDetail = {
 }
 
 /**
+ * Encounter State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type EncounterStateSetter = (
+  encounterOrUpdater:
+    | EncounterDetail
+    | null
+    | ((prev: EncounterDetail | null) => EncounterDetail | null)
+) => void
+
+/**
+ * Encounter Detail
+ *
+ * Used throughout the app to represent the currently selected encounter.
+ */
+export type EncounterDetail = Omit<
+  Tables<'encounter'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Encounter Monsters */
+  encounter_monsters: { [key: string]: EncounterActiveMonsterDetail } | null
+  /** Encounter Survivors */
+  encounter_survivors: { [key: string]: EncounterSurvivorDetail } | null
+}
+
+/**
+ * Encounter Monster Detail
+ *
+ * Used throughout the app to represent a catalog encounter monster and its
+ * level data.
+ */
+export type EncounterMonsterDetail = Omit<
+  Tables<'encounter_monster'>,
+  'created_at' | 'updated_at' | 'user_id'
+> & {
+  /** Level Data */
+  levels: EncounterMonsterLevelDetail[]
+}
+
+/**
+ * Encounter Monster Level Detail
+ *
+ * Used throughout the app to represent encounter monster level data.
+ */
+export type EncounterMonsterLevelDetail = Omit<
+  Tables<'encounter_monster_level'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Traits */
+  traits: TraitDetail[]
+  /** Moods */
+  moods: MoodDetail[]
+}
+
+/**
+ * Encounter Active Monster Detail
+ *
+ * Used throughout the app to represent a monster in an active encounter.
+ */
+export type EncounterActiveMonsterDetail = Omit<
+  Tables<'encounter_active_monster'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Traits */
+  traits: (TraitDetail & {
+    author_user_id: string | null
+    author_username: string | null
+    author_avatar_url: string | null
+  })[]
+  /** Moods */
+  moods: (MoodDetail & {
+    author_user_id: string | null
+    author_username: string | null
+    author_avatar_url: string | null
+  })[]
+  /** Survivor Statuses */
+  survivor_statuses: (SurvivorStatusDetail & {
+    author_user_id: string | null
+    author_username: string | null
+    author_avatar_url: string | null
+  })[]
+}
+
+/**
+ * Encounter Survivor Detail
+ *
+ * Used throughout the app to represent a survivor in an active encounter.
+ */
+export type EncounterSurvivorDetail = Omit<
+  Tables<'encounter_survivor'>,
+  'created_at' | 'updated_at'
+>
+
+/**
  * Hunt AI Deck Detail
  *
  * Used throughout the app to represent a monster's AI deck in a hunt.

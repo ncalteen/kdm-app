@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { updateEncounterSurvivor } from '@/lib/dal/encounter-survivor'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -20,6 +21,8 @@ import {
   SYSTEMIC_PRESSURE_MINIMUM_ERROR_MESSAGE
 } from '@/lib/messages'
 import {
+  EncounterDetail,
+  EncounterStateSetter,
   HuntDetail,
   HuntStateSetter,
   SettlementDetail,
@@ -40,6 +43,8 @@ interface SurvivalCardProps {
   mode: SurvivorCardMode
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
+  /** Selected Encounter */
+  selectedEncounter: EncounterDetail | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Showdown */
@@ -48,6 +53,8 @@ interface SurvivalCardProps {
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt (for optimistic token updates) */
   setSelectedHunt?: HuntStateSetter
+  /** Set Selected Encounter (for optimistic token updates) */
+  setSelectedEncounter?: EncounterStateSetter
   /** Set Selected Showdown (for optimistic token updates) */
   setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
@@ -68,10 +75,12 @@ interface SurvivalCardProps {
  */
 export function SurvivalCard({
   mode,
+  selectedEncounter,
   selectedHunt,
   selectedSettlement,
   selectedShowdown,
   selectedSurvivor,
+  setSelectedEncounter,
   setSelectedHunt,
   setSelectedShowdown,
   setSurvivors
@@ -126,6 +135,17 @@ export function SurvivalCard({
     )
   }, [mode, selectedHunt, selectedSurvivor?.id])
 
+  const encounterSurvivorRecord = useMemo(() => {
+    if (
+      mode !== SurvivorCardMode.ENCOUNTER_CARD ||
+      !selectedEncounter?.encounter_survivors
+    )
+      return undefined
+    return Object.values(selectedEncounter.encounter_survivors).find(
+      (es) => es.survivor_id === selectedSurvivor?.id
+    )
+  }, [mode, selectedEncounter, selectedSurvivor?.id])
+
   const showdownSurvivorRecord = useMemo(() => {
     if (
       mode !== SurvivorCardMode.SHOWDOWN_CARD ||
@@ -140,6 +160,7 @@ export function SurvivalCard({
   /** Current survival tokens derived from hunt/showdown survivor record */
   const survivalTokens =
     huntSurvivorRecord?.survival_tokens ??
+    encounterSurvivorRecord?.survival_tokens ??
     showdownSurvivorRecord?.survival_tokens ??
     0
 
@@ -198,6 +219,48 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
       } else if (
+        mode === SurvivorCardMode.ENCOUNTER_CARD &&
+        encounterSurvivorRecord &&
+        selectedEncounter?.encounter_survivors &&
+        setSelectedEncounter
+      ) {
+        const previousValue = encounterSurvivorRecord.survival_tokens
+        const esKey = Object.entries(
+          selectedEncounter.encounter_survivors
+        ).find(([, es]) => es.id === encounterSurvivorRecord.id)?.[0]
+        if (!esKey) return
+
+        // Optimistic update
+        setSelectedEncounter({
+          ...selectedEncounter,
+          encounter_survivors: {
+            ...selectedEncounter.encounter_survivors,
+            [esKey]: { ...encounterSurvivorRecord, survival_tokens: value }
+          }
+        })
+
+        updateEncounterSurvivor(encounterSurvivorRecord.id, {
+          survival_tokens: value
+        }).catch((error: unknown) => {
+          // Rollback
+          setSelectedEncounter((prev) =>
+            prev?.encounter_survivors
+              ? {
+                  ...prev,
+                  encounter_survivors: {
+                    ...prev.encounter_survivors,
+                    [esKey]: {
+                      ...encounterSurvivorRecord,
+                      survival_tokens: previousValue
+                    }
+                  }
+                }
+              : prev
+          )
+          console.error('Survival Tokens Update Error:', error)
+          toast.error(ERROR_MESSAGE())
+        })
+      } else if (
         mode === SurvivorCardMode.SHOWDOWN_CARD &&
         showdownSurvivorRecord &&
         selectedShowdown?.showdown_survivors &&
@@ -244,10 +307,13 @@ export function SurvivalCard({
     [
       mode,
       selectedSurvivor?.id,
+      selectedEncounter,
       selectedHunt,
       selectedShowdown,
+      encounterSurvivorRecord,
       huntSurvivorRecord,
       showdownSurvivorRecord,
+      setSelectedEncounter,
       setSelectedHunt,
       setSelectedShowdown
     ]
@@ -582,6 +648,7 @@ export function SurvivalCard({
               <div className="flex flex-row items-center gap-2">
                 <div className="flex flex-col items-center gap-1">
                   {(mode === SurvivorCardMode.SHOWDOWN_CARD ||
+                    mode === SurvivorCardMode.ENCOUNTER_CARD ||
                     mode === SurvivorCardMode.HUNT_CARD) && (
                     <Label className="text-xs text-muted-foreground uppercase tracking-wide">
                       Base
@@ -600,6 +667,7 @@ export function SurvivalCard({
 
                 {/* Survival Tokens */}
                 {(mode === SurvivorCardMode.SHOWDOWN_CARD ||
+                  mode === SurvivorCardMode.ENCOUNTER_CARD ||
                   mode === SurvivorCardMode.HUNT_CARD) && (
                   <div className="flex flex-col items-center gap-1">
                     <Label className="text-xs text-muted-foreground uppercase tracking-wide">

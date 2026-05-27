@@ -22,6 +22,7 @@ import { getMoods } from '@/lib/dal/mood'
 import { getSurvivorStatuses } from '@/lib/dal/survivor-status'
 import { getTraits } from '@/lib/dal/trait'
 import {
+  EncounterActiveMonsterDetail,
   HuntMonsterDetail,
   MoodDetail,
   ShowdownMonsterDetail,
@@ -36,7 +37,10 @@ import { ReactElement, useEffect, useState } from 'react'
  */
 interface TraitsMoodsProps {
   /** Monster data */
-  monster: HuntMonsterDetail | ShowdownMonsterDetail
+  monster:
+    | HuntMonsterDetail
+    | EncounterActiveMonsterDetail
+    | ShowdownMonsterDetail
   /**
    * Called when the traits list should change. Each entry carries the
    * authorship triplet (`author_user_id`, `author_username`,

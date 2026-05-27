@@ -152,6 +152,11 @@ const navEmbark = [
     icon: PawPrintIcon
   },
   {
+    title: 'Encounter',
+    tab: TabType.ENCOUNTER,
+    icon: SwordsIcon
+  },
+  {
     title: 'Showdown',
     tab: TabType.SHOWDOWN,
     icon: SkullIcon

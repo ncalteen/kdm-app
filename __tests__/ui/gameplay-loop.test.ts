@@ -8,18 +8,25 @@ import {
   countHuntsForSettlement,
   countReturningSurvivors,
   createActiveHuntFixture,
+  createEncounterMonsterFixture,
   createGameplaySurvivorsFixture,
   createSettlementPhaseAtStepFixture,
+  findEncounterSurvivorWithBleedingTokens,
+  getEncounterSummary,
   getHuntBoardSpace,
   getHuntSummary,
+  getHuntSurvivorBleedingTokens,
   getSettlementPhaseStep,
   getShowdownSummary,
+  getShowdownSurvivorBleedingTokens,
   getShowdownTurn,
   unlockNemesisFixture,
   unlockQuarryFixture,
+  waitForActiveEncounter,
   waitForActiveHunt,
   waitForActiveSettlementPhase,
   waitForActiveShowdown,
+  waitForNoActiveEncounter,
   waitForNoActiveHunt,
   waitForNoActiveShowdown,
   type GameplaySurvivorFixture
@@ -153,6 +160,108 @@ test.describe('gameplay loop flow', () => {
       )
     ).toBeVisible()
     await expect.poll(() => countHuntsForSettlement(settlementId)).toBe(0)
+  })
+
+  test('pauses a hunt for an encounter and carries bleeding into showdown', async ({
+    page
+  }) => {
+    test.slow()
+
+    const { account, settlementId, survivors, userId } =
+      await createGameplayScenario('encounter', { survivorCount: 4 })
+    emailsToDelete.add(account.email)
+
+    const encounterMonsterName = `E2E Encounter ${Date.now()}`
+    await createEncounterMonsterFixture({
+      monsterName: encounterMonsterName,
+      subMonsterNames: ['E2E Lantern Mite', 'E2E Bone Mite'],
+      userId
+    })
+
+    await openGameplayTab(page, account, settlementId, TabType.HUNT)
+    await configureHunt(page, survivors.slice(0, 4))
+    await page.getByRole('button', { name: 'Begin Hunt' }).click()
+
+    const hunt = await waitForActiveHunt(settlementId)
+    const huntId = hunt.id as string
+
+    await page.getByRole('button', { name: 'Begin Encounter' }).click()
+    const encounterDialog = page.getByRole('alertdialog')
+    await expect(
+      encounterDialog.getByRole('heading', { name: 'Begin Encounter' })
+    ).toBeVisible()
+    await selectOption(page, 'Encounter Monster', encounterMonsterName)
+    await selectOption(page, 'Encounter Level', 'Level 1 (2 monsters)')
+    await encounterDialog
+      .getByRole('button', { name: 'Begin Encounter' })
+      .click()
+
+    const encounter = await waitForActiveEncounter(settlementId)
+    const encounterId = encounter.id as string
+    await expect
+      .poll(() => getEncounterSummary(encounterId))
+      .toEqual({
+        monsterCount: 2,
+        survivorCount: 4
+      })
+    await expect(page.getByText('E2E Lantern Mite')).toBeVisible()
+    await page.getByRole('button', { name: 'Next encounter monster' }).click()
+    await expect(page.getByText('E2E Bone Mite')).toBeVisible()
+
+    await page.getByLabel('Bleeding Tokens', { exact: true }).click()
+    const numericDialog = page.getByRole('dialog')
+    await numericDialog
+      .getByRole('button', { name: 'Increase Bleeding Tokens' })
+      .click()
+    await numericDialog
+      .getByRole('button', { name: 'Increase Bleeding Tokens' })
+      .click()
+    await numericDialog.getByRole('button', { name: 'Save' }).click()
+    let bleedingSurvivorId: string | null = null
+    await expect
+      .poll(async () => {
+        bleedingSurvivorId = await findEncounterSurvivorWithBleedingTokens(
+          encounterId,
+          2
+        )
+        return bleedingSurvivorId
+      })
+      .not.toBeNull()
+
+    if (!bleedingSurvivorId)
+      throw new Error('Expected an encounter survivor with bleeding tokens')
+    const editedSurvivorId = bleedingSurvivorId
+
+    await page.getByRole('button', { name: 'Resume Hunt' }).click()
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Resume Hunt' })
+      .click()
+
+    await waitForNoActiveEncounter(settlementId)
+    await expect
+      .poll(() => getHuntSurvivorBleedingTokens(huntId, editedSurvivorId))
+      .toBe(2)
+    await expect(
+      page.getByRole('button', { name: 'Begin Showdown' })
+    ).toBeVisible()
+
+    await page.getByRole('button', { name: 'Begin Showdown' }).click()
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Proceed' })
+      .click()
+
+    await waitForNoActiveHunt(settlementId)
+    const showdown = await waitForActiveShowdown(settlementId)
+    await expect
+      .poll(() =>
+        getShowdownSurvivorBleedingTokens(
+          showdown.id as string,
+          editedSurvivorId
+        )
+      )
+      .toBe(2)
   })
 
   test('blocks hunts while a showdown is already active', async ({ page }) => {
@@ -341,7 +450,7 @@ async function createGameplayScenario(
     settlementId
   })
 
-  return { account, settlementId, survivors }
+  return { account, settlementId, survivors, userId: user.id }
 }
 
 async function openGameplayTab(

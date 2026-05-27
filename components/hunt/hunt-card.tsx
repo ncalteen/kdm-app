@@ -6,6 +6,8 @@ import { CreateHuntCard } from '@/components/hunt/create-hunt/create-hunt-card'
 import { updateSettlement } from '@/lib/dal/settlement'
 import { TabType } from '@/lib/enums'
 import {
+  EncounterDetail,
+  EncounterStateSetter,
   HuntDetail,
   HuntStateSetter,
   SettlementDetail,
@@ -23,6 +25,8 @@ import { ReactElement } from 'react'
  * Hunt Card Properties
  */
 interface HuntCardProps {
+  /** Selected Encounter */
+  selectedEncounter: EncounterDetail | null
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
@@ -33,6 +37,8 @@ interface HuntCardProps {
   selectedShowdown: ShowdownDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Encounter */
+  setSelectedEncounter: EncounterStateSetter
   /** Set Selected Hunt */
   setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt Monster Index */
@@ -63,11 +69,13 @@ interface HuntCardProps {
  * @returns Hunt Card Component
  */
 export function HuntCard({
+  selectedEncounter,
   selectedHunt,
   selectedHuntMonsterIndex,
   selectedSettlement,
   selectedShowdown,
   selectedSurvivor,
+  setSelectedEncounter,
   setSelectedHunt,
   setSelectedHuntMonsterIndex,
   setSelectedShowdown,
@@ -81,9 +89,11 @@ export function HuntCard({
   return selectedHunt ? (
     <ActiveHuntCard
       selectedHunt={selectedHunt}
+      selectedEncounter={selectedEncounter}
       selectedHuntMonsterIndex={selectedHuntMonsterIndex}
       selectedSettlement={selectedSettlement}
       selectedSurvivor={selectedSurvivor}
+      setSelectedEncounter={setSelectedEncounter}
       setSelectedHunt={setSelectedHunt}
       setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
       setSelectedShowdown={setSelectedShowdown}

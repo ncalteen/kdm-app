@@ -6,6 +6,7 @@ import {
   useUserRealtimeSubscriptions
 } from '@/hooks/use-realtime'
 import { LOCAL_STORAGE_KEY } from '@/lib/common'
+import { getEncounter } from '@/lib/dal/encounter'
 import { getHunt } from '@/lib/dal/hunt'
 import { getSettlement } from '@/lib/dal/settlement'
 import { getSettlementPhase } from '@/lib/dal/settlement-phase'
@@ -18,6 +19,8 @@ import { ERROR_MESSAGE } from '@/lib/messages'
 import { isUserSettingsAdmin } from '@/lib/supabase/admin-role'
 import { createClient } from '@/lib/supabase/client'
 import {
+  EncounterDetail,
+  EncounterStateSetter,
   HuntDetail,
   HuntStateSetter,
   SettlementDetail,
@@ -110,6 +113,8 @@ interface LocalContextType {
 
   /** Pending Special Showdown */
   pendingSpecialShowdown: boolean
+  /** Selected Encounter */
+  selectedEncounter: EncounterDetail | null
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt ID */
@@ -148,6 +153,8 @@ interface LocalContextType {
 
   /** Set Pending Special Showdown */
   setPendingSpecialShowdown: (pending: boolean) => void
+  /** Set Selected Encounter */
+  setSelectedEncounter: EncounterStateSetter
   /** Set Selected Hunt */
   setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt ID */
@@ -353,6 +360,10 @@ export function LocalProvider({
   const [pendingSpecialShowdown, setPendingSpecialShowdown] =
     useState<boolean>(false)
 
+  // Encounter
+  const [selectedEncounter, setSelectedEncounterState] =
+    useState<EncounterDetail | null>(null)
+
   // Wait for authentication before fetching any data.
   // `null` = check in flight, `true` = authenticated, `false` = not
   // authenticated. The tri-state lets downstream consumers (e.g. `app/page.tsx`)
@@ -465,6 +476,7 @@ export function LocalProvider({
             setSelectedHuntState(null)
             setSelectedHuntIdState(null)
             setSelectedHuntMonsterIndexState(0)
+            setSelectedEncounterState(null)
             setSelectedSettlementPhaseState(null)
             setSelectedSettlementPhaseIdState(null)
             setSelectedShowdownState(null)
@@ -500,6 +512,7 @@ export function LocalProvider({
           if (!hunt && selectedHuntId) {
             setSelectedHuntIdState(null)
             setSelectedHuntMonsterIndexState(0)
+            setSelectedEncounterState(null)
 
             setLocalState((prev) => ({
               ...prev,
@@ -518,6 +531,17 @@ export function LocalProvider({
         })
         .catch((err: unknown) => {
           console.error('Realtime Hunt Refetch Error:', err)
+        })
+    },
+    onEncounterChange: () => {
+      if (!selectedSettlementId) return
+
+      getEncounter(selectedSettlementId)
+        .then((encounter) => {
+          setSelectedEncounterState(encounter)
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Encounter Refetch Error:', err)
         })
     },
     onShowdownChange: () => {
@@ -665,6 +689,14 @@ export function LocalProvider({
           console.error('Realtime Catalog Hunt Refetch Error:', err)
         })
 
+      getEncounter(selectedSettlementId)
+        .then((encounter) => {
+          setSelectedEncounterState(encounter)
+        })
+        .catch((err: unknown) => {
+          console.error('Realtime Catalog Encounter Refetch Error:', err)
+        })
+
       getShowdown(selectedSettlementId)
         .then((showdown) => {
           setSelectedShowdownState(showdown)
@@ -744,6 +776,7 @@ export function LocalProvider({
                 setSelectedHuntState(null)
                 setSelectedHuntIdState(null)
                 setSelectedHuntMonsterIndexState(0)
+                setSelectedEncounterState(null)
                 setSelectedSettlementPhaseState(null)
                 setSelectedSettlementPhaseIdState(null)
                 setSelectedShowdownState(null)
@@ -969,6 +1002,49 @@ export function LocalProvider({
   }, [isAuthenticated, selectedSettlementId, selectedHunt])
 
   /**
+   * Fetch Encounter Data
+   *
+   * Triggered whenever the active settlement changes. Encounters are
+   * settlement-scoped singletons that pause the current hunt while active.
+   */
+  useEffect(() => {
+    console.debug('Fetching Encounter Data')
+
+    let isCancelled = false
+
+    if (!isAuthenticated || !selectedSettlementId)
+      return () => {
+        isCancelled = true
+      }
+
+    if (
+      selectedEncounter &&
+      selectedEncounter.settlement_id === selectedSettlementId
+    )
+      return () => {
+        isCancelled = true
+      }
+
+    getEncounter(selectedSettlementId)
+      .then((encounter) => {
+        if (isCancelled) return
+
+        console.debug('Encounter Data:', encounter)
+        setSelectedEncounterState(encounter)
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('Encounter Fetch Error:', err)
+        setSelectedEncounterState(null)
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated, selectedSettlementId, selectedEncounter])
+
+  /**
    * Fetch Settlement Data
    *
    * Triggered whenever the settlement selection changes. Uses a cancellation
@@ -1005,6 +1081,7 @@ export function LocalProvider({
           setSelectedHuntState(null)
           setSelectedHuntIdState(null)
           setSelectedHuntMonsterIndexState(0)
+          setSelectedEncounterState(null)
           setSelectedSettlementPhaseState(null)
           setSelectedSettlementPhaseIdState(null)
           setSelectedShowdownState(null)
@@ -1036,6 +1113,7 @@ export function LocalProvider({
         setSelectedHuntState(null)
         setSelectedHuntIdState(null)
         setSelectedHuntMonsterIndexState(0)
+        setSelectedEncounterState(null)
         setSelectedSettlementPhaseState(null)
         setSelectedSettlementPhaseIdState(null)
         setSelectedShowdownState(null)
@@ -1374,6 +1452,24 @@ export function LocalProvider({
       setUserSubscriptionState(null)
     }
   }, [isAuthenticated])
+
+  /**
+   * Set Selected Encounter
+   *
+   * @param encounterOrUpdater Selected Encounter or functional updater
+   * receiving the previous encounter state
+   */
+  const setSelectedEncounter = useCallback<EncounterStateSetter>(
+    (encounterOrUpdater) => {
+      if (typeof encounterOrUpdater === 'function') {
+        setSelectedEncounterState(encounterOrUpdater)
+        return
+      }
+
+      setSelectedEncounterState(encounterOrUpdater)
+    },
+    []
+  )
 
   /**
    * Set Selected Hunt
@@ -1718,6 +1814,7 @@ export function LocalProvider({
 
       pendingSpecialShowdown,
 
+      selectedEncounter,
       selectedHunt,
       selectedHuntId,
       selectedHuntMonsterIndex,
@@ -1739,6 +1836,7 @@ export function LocalProvider({
 
       setPendingSpecialShowdown,
 
+      setSelectedEncounter,
       setSelectedHunt,
       setSelectedHuntId,
       setSelectedHuntMonsterIndex,
@@ -1779,6 +1877,7 @@ export function LocalProvider({
       isCreatingNewShowdown,
       isCreatingNewSurvivor,
       pendingSpecialShowdown,
+      selectedEncounter,
       selectedHunt,
       selectedHuntId,
       selectedHuntMonsterIndex,
@@ -1813,6 +1912,7 @@ export function LocalProvider({
       setSelectedSurvivor,
       setSelectedSurvivorId,
       setSelectedTab,
+      setSelectedEncounter,
       setUserSettings,
       setUserSubscription,
       updateLocal

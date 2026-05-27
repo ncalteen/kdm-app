@@ -2,6 +2,8 @@ import { admin } from '@/__tests__/ui/helpers/supabase'
 import { type Database } from '@/lib/database.types'
 
 type HuntEventType = Database['public']['Enums']['hunt_event_type']
+type EncounterMonsterLevelInsert =
+  Database['public']['Tables']['encounter_monster_level']['Insert']
 type SettlementPhaseStep = Database['public']['Enums']['settlement_phase_step']
 type ShowdownTurn = Database['public']['Enums']['showdown_turn']
 
@@ -40,6 +42,14 @@ export interface ActiveShowdownSummary {
   /** Showdown Monster Count */
   monsterCount: number
   /** Showdown Survivor Count */
+  survivorCount: number
+}
+
+/** Active Encounter Summary */
+export interface ActiveEncounterSummary {
+  /** Encounter Monster Count */
+  monsterCount: number
+  /** Encounter Survivor Count */
   survivorCount: number
 }
 
@@ -108,6 +118,76 @@ export async function unlockNemesisFixture(
   if (error) throw new Error(`unlock nemesis failed: ${error.message}`)
 
   return nemesisId
+}
+
+/** Create Encounter Monster Fixture */
+export async function createEncounterMonsterFixture({
+  monsterName,
+  subMonsterNames = [],
+  userId
+}: {
+  monsterName: string
+  subMonsterNames?: string[]
+  userId: string
+}): Promise<{ levelId: string; monsterId: string }> {
+  const { data: monster, error: monsterError } = await admin
+    .from('encounter_monster')
+    .insert({
+      basic_action: 'Claw at the lantern light.',
+      custom: true,
+      instinct: 'Rush the closest survivor.',
+      monster_name: monsterName,
+      user_id: userId
+    })
+    .select('id')
+    .single()
+
+  if (monsterError)
+    throw new Error(`create encounter monster failed: ${monsterError.message}`)
+
+  const levelRows: EncounterMonsterLevelInsert[] =
+    subMonsterNames.length > 0
+      ? subMonsterNames.map((subMonsterName, index) => ({
+          accuracy: index % 2 === 0 ? 4 : 3,
+          damage: 1,
+          encounter_monster_id: monster.id,
+          evasion: index % 2 === 0 ? 0 : 1,
+          level_number: 1,
+          life: 6,
+          luck: 0,
+          movement: 5,
+          speed: 2,
+          sub_monster_name: subMonsterName,
+          toughness: 7
+        }))
+      : [
+          {
+            accuracy: 4,
+            damage: 1,
+            encounter_monster_id: monster.id,
+            evasion: 0,
+            level_number: 1,
+            life: 6,
+            luck: 1,
+            movement: 5,
+            speed: 2,
+            sub_monster_name: null,
+            toughness: 7
+          }
+        ]
+
+  const { data: levels, error: levelError } = await admin
+    .from('encounter_monster_level')
+    .insert(levelRows)
+    .select('id')
+    .order('id')
+
+  if (levelError)
+    throw new Error(
+      `create encounter monster level failed: ${levelError.message}`
+    )
+
+  return { levelId: levels[0].id, monsterId: monster.id }
 }
 
 /** Add Survivor Gear Grid Fixture */
@@ -270,11 +350,23 @@ export async function waitForActiveShowdown(settlementId: string) {
   return waitForRow('showdown', 'settlement_id', settlementId, true)
 }
 
+/** Wait For Active Encounter */
+export async function waitForActiveEncounter(settlementId: string) {
+  return waitForRow('encounter', 'settlement_id', settlementId, true)
+}
+
 /** Wait For No Active Showdown */
 export async function waitForNoActiveShowdown(
   settlementId: string
 ): Promise<void> {
   await waitForRow('showdown', 'settlement_id', settlementId, false)
+}
+
+/** Wait For No Active Encounter */
+export async function waitForNoActiveEncounter(
+  settlementId: string
+): Promise<void> {
+  await waitForRow('encounter', 'settlement_id', settlementId, false)
 }
 
 /** Wait For Active Settlement Phase */
@@ -332,6 +424,70 @@ export async function getShowdownSummary(
   ])
 
   return { aiDeckCount, monsterCount, survivorCount }
+}
+
+/** Get Encounter Summary */
+export async function getEncounterSummary(
+  encounterId: string
+): Promise<ActiveEncounterSummary> {
+  const [monsterCount, survivorCount] = await Promise.all([
+    countRows('encounter_active_monster', 'encounter_id', encounterId),
+    countRows('encounter_survivor', 'encounter_id', encounterId)
+  ])
+
+  return { monsterCount, survivorCount }
+}
+
+/** Get Encounter Survivor Bleeding Tokens */
+export async function getEncounterSurvivorBleedingTokens(
+  encounterId: string,
+  survivorId: string
+): Promise<number> {
+  return getPhaseSurvivorBleedingTokens(
+    'encounter_survivor',
+    'encounter_id',
+    encounterId,
+    survivorId
+  )
+}
+
+/** Find Encounter Survivor With Bleeding Tokens */
+export async function findEncounterSurvivorWithBleedingTokens(
+  encounterId: string,
+  bleedingTokens: number
+): Promise<string | null> {
+  return findPhaseSurvivorWithBleedingTokens(
+    'encounter_survivor',
+    'encounter_id',
+    encounterId,
+    bleedingTokens
+  )
+}
+
+/** Get Hunt Survivor Bleeding Tokens */
+export async function getHuntSurvivorBleedingTokens(
+  huntId: string,
+  survivorId: string
+): Promise<number> {
+  return getPhaseSurvivorBleedingTokens(
+    'hunt_survivor',
+    'hunt_id',
+    huntId,
+    survivorId
+  )
+}
+
+/** Get Showdown Survivor Bleeding Tokens */
+export async function getShowdownSurvivorBleedingTokens(
+  showdownId: string,
+  survivorId: string
+): Promise<number> {
+  return getPhaseSurvivorBleedingTokens(
+    'showdown_survivor',
+    'showdown_id',
+    showdownId,
+    survivorId
+  )
 }
 
 /** Get Showdown Turn */
@@ -405,19 +561,19 @@ async function findGearId(gearName: string): Promise<string> {
 }
 
 async function waitForRow(
-  table: 'hunt' | 'settlement_phase' | 'showdown',
+  table: 'encounter' | 'hunt' | 'settlement_phase' | 'showdown',
   column: string,
   value: string,
   shouldExist: true
 ): Promise<Record<string, unknown>>
 async function waitForRow(
-  table: 'hunt' | 'settlement_phase' | 'showdown',
+  table: 'encounter' | 'hunt' | 'settlement_phase' | 'showdown',
   column: string,
   value: string,
   shouldExist: false
 ): Promise<void>
 async function waitForRow(
-  table: 'hunt' | 'settlement_phase' | 'showdown',
+  table: 'encounter' | 'hunt' | 'settlement_phase' | 'showdown',
   column: string,
   value: string,
   shouldExist: boolean
@@ -458,4 +614,42 @@ async function countRows(
   if (error) throw new Error(`${table} count failed: ${error.message}`)
 
   return count ?? 0
+}
+
+async function getPhaseSurvivorBleedingTokens(
+  table: 'encounter_survivor' | 'hunt_survivor' | 'showdown_survivor',
+  phaseColumn: 'encounter_id' | 'hunt_id' | 'showdown_id',
+  phaseId: string,
+  survivorId: string
+): Promise<number> {
+  const { data, error } = await admin
+    .from(table)
+    .select('bleeding_tokens')
+    .eq(phaseColumn, phaseId)
+    .eq('survivor_id', survivorId)
+    .single<{ bleeding_tokens: number }>()
+
+  if (error)
+    throw new Error(`${table} bleeding lookup failed: ${error.message}`)
+
+  return data.bleeding_tokens
+}
+
+async function findPhaseSurvivorWithBleedingTokens(
+  table: 'encounter_survivor' | 'hunt_survivor' | 'showdown_survivor',
+  phaseColumn: 'encounter_id' | 'hunt_id' | 'showdown_id',
+  phaseId: string,
+  bleedingTokens: number
+): Promise<string | null> {
+  const { data, error } = await admin
+    .from(table)
+    .select('survivor_id')
+    .eq(phaseColumn, phaseId)
+    .eq('bleeding_tokens', bleedingTokens)
+    .limit(1)
+
+  if (error)
+    throw new Error(`${table} bleeding search failed: ${error.message}`)
+
+  return data?.[0]?.survivor_id ?? null
 }

@@ -19,6 +19,17 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { addEncounter } from '@/lib/dal/encounter'
+import { addEncounterActiveMonster } from '@/lib/dal/encounter-active-monster'
+import { getEncounterMonsters } from '@/lib/dal/encounter-monster'
+import { addEncounterSurvivor } from '@/lib/dal/encounter-survivor'
 import { removeHunt, updateHunt } from '@/lib/dal/hunt'
 import { updateHuntHuntBoard } from '@/lib/dal/hunt-hunt-board'
 import { copyMonsterJunctions } from '@/lib/dal/monster-trait-mood'
@@ -39,6 +50,11 @@ import {
   ERROR_MESSAGE
 } from '@/lib/messages'
 import {
+  EncounterActiveMonsterDetail,
+  EncounterDetail,
+  EncounterMonsterDetail,
+  EncounterStateSetter,
+  EncounterSurvivorDetail,
   HuntDetail,
   HuntHuntBoardDetail,
   HuntStateSetter,
@@ -51,8 +67,8 @@ import {
   SurvivorsStateSetter,
   SurvivorStateSetter
 } from '@/lib/types'
-import { ChevronRightIcon, DicesIcon, XIcon } from 'lucide-react'
-import { ReactElement, useCallback, useState } from 'react'
+import { ChevronRightIcon, DicesIcon, SwordsIcon, XIcon } from 'lucide-react'
+import { ReactElement, useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -61,12 +77,16 @@ import { toast } from 'sonner'
 interface ActiveHuntCardProps {
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
+  /** Selected Encounter */
+  selectedEncounter: EncounterDetail | null
   /** Selected Hunt Monster Index */
   selectedHuntMonsterIndex: number
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Encounter */
+  setSelectedEncounter: EncounterStateSetter
   /** Set Selected Hunt */
   setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt Monster Index */
@@ -97,9 +117,11 @@ interface ActiveHuntCardProps {
  */
 export function ActiveHuntCard({
   selectedHunt,
+  selectedEncounter,
   selectedHuntMonsterIndex,
   selectedSettlement,
   selectedSurvivor,
+  setSelectedEncounter,
   setSelectedHunt,
   setSelectedHuntMonsterIndex,
   setSelectedShowdown,
@@ -110,12 +132,48 @@ export function ActiveHuntCard({
   survivors
 }: ActiveHuntCardProps): ReactElement {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState<boolean>(false)
+  const [isEncounterDialogOpen, setIsEncounterDialogOpen] =
+    useState<boolean>(false)
   const [isShowdownDialogOpen, setIsShowdownDialogOpen] =
     useState<boolean>(false)
+  const [isStartingEncounter, setIsStartingEncounter] = useState<boolean>(false)
   const [isProceedingToShowdown, setIsProceedingToShowdown] =
     useState<boolean>(false)
   const [huntEventPopoverOpen, setHuntEventPopoverOpen] =
     useState<boolean>(false)
+  const [encounterMonsters, setEncounterMonsters] = useState<
+    EncounterMonsterDetail[]
+  >([])
+  const [selectedEncounterMonsterId, setSelectedEncounterMonsterId] = useState<
+    string | null
+  >(null)
+  const [selectedEncounterLevelNumber, setSelectedEncounterLevelNumber] =
+    useState<number | null>(null)
+
+  const selectedEncounterMonster = useMemo(
+    () => encounterMonsters.find((m) => m.id === selectedEncounterMonsterId),
+    [encounterMonsters, selectedEncounterMonsterId]
+  )
+
+  const selectedEncounterLevelNumbers = useMemo(
+    () =>
+      [
+        ...new Set(
+          (selectedEncounterMonster?.levels ?? []).map(
+            (level) => level.level_number
+          )
+        )
+      ].sort((a, b) => a - b),
+    [selectedEncounterMonster]
+  )
+
+  const selectedEncounterLevels = useMemo(
+    () =>
+      (selectedEncounterMonster?.levels ?? []).filter(
+        (level) => level.level_number === selectedEncounterLevelNumber
+      ),
+    [selectedEncounterMonster, selectedEncounterLevelNumber]
+  )
 
   /**
    * Roll Random Hunt Event
@@ -257,6 +315,220 @@ export function ActiveHuntCard({
         toast.error(ERROR_MESSAGE())
       })
   }, [selectedHunt, setSelectedHunt, setSelectedHuntMonsterIndex])
+
+  /**
+   * Handle Encounter
+   *
+   * Opens the encounter selection dialog, or returns to an already active
+   * encounter.
+   */
+  const handleEncounter = useCallback(() => {
+    if (selectedEncounter) {
+      setSelectedTab(TabType.ENCOUNTER)
+      return
+    }
+
+    setIsEncounterDialogOpen(true)
+
+    if (encounterMonsters.length > 0) return
+
+    getEncounterMonsters()
+      .then((monsters) => {
+        setEncounterMonsters(monsters)
+        const firstMonster = monsters.find((monster) => monster.levels.length)
+        setSelectedEncounterMonsterId(firstMonster?.id ?? null)
+        setSelectedEncounterLevelNumber(
+          firstMonster?.levels[0]?.level_number ?? null
+        )
+      })
+      .catch((err: unknown) => {
+        console.error('Encounter Monster Fetch Error:', err)
+        toast.error(ERROR_MESSAGE())
+      })
+  }, [encounterMonsters.length, selectedEncounter, setSelectedTab])
+
+  /**
+   * Handle Encounter Monster Selection
+   *
+   * @param monsterId Encounter Monster ID
+   */
+  const handleEncounterMonsterSelection = useCallback(
+    (monsterId: string) => {
+      const monster = encounterMonsters.find((m) => m.id === monsterId)
+      setSelectedEncounterMonsterId(monsterId)
+      setSelectedEncounterLevelNumber(monster?.levels[0]?.level_number ?? null)
+    },
+    [encounterMonsters]
+  )
+
+  /**
+   * Handle Start Encounter
+   *
+   * Creates an active encounter from the current hunt party and selected
+   * encounter monster level, preserving the hunt so it can be resumed later.
+   */
+  const handleStartEncounter = useCallback(async () => {
+    if (
+      !selectedHunt ||
+      !selectedSettlement ||
+      !selectedEncounterMonster ||
+      !selectedEncounterLevelNumber ||
+      selectedEncounterLevels.length === 0
+    )
+      return
+
+    const huntSurvivors = selectedHunt.hunt_survivors
+    if (!huntSurvivors) {
+      toast.error(ERROR_MESSAGE())
+      return
+    }
+
+    setIsStartingEncounter(true)
+
+    try {
+      const encounterId = await addEncounter({
+        hunt_id: selectedHunt.id,
+        monster_level: selectedEncounterLevelNumber,
+        settlement_id: selectedSettlement.id,
+        turn: 'MONSTER'
+      })
+
+      const encounterMonstersById: {
+        [key: string]: EncounterActiveMonsterDetail
+      } = {}
+
+      for (const [levelIndex, level] of selectedEncounterLevels.entries()) {
+        const encounterMonster = {
+          accuracy: level.accuracy,
+          accuracy_tokens: 0,
+          damage: level.damage,
+          damage_tokens: 0,
+          encounter_id: encounterId,
+          encounter_monster_id: selectedEncounterMonster.id,
+          encounter_monster_level_id: level.id,
+          evasion: level.evasion,
+          evasion_tokens: 0,
+          knocked_down: false,
+          life: level.life,
+          luck: level.luck,
+          luck_tokens: 0,
+          monster_name:
+            level.sub_monster_name ??
+            (selectedEncounterLevels.length > 1
+              ? `${selectedEncounterMonster.monster_name} ${levelIndex + 1}`
+              : selectedEncounterMonster.monster_name),
+          movement: level.movement,
+          movement_tokens: 0,
+          notes: '',
+          settlement_id: selectedSettlement.id,
+          speed: level.speed,
+          speed_tokens: 0,
+          toughness: level.toughness
+        }
+        const encounterMonsterId =
+          await addEncounterActiveMonster(encounterMonster)
+
+        await Promise.all([
+          copyMonsterJunctions(
+            {
+              table: 'encounter_monster_level_trait',
+              parentId: level.id
+            },
+            {
+              table: 'encounter_active_monster_trait',
+              parentId: encounterMonsterId
+            }
+          ),
+          copyMonsterJunctions(
+            {
+              table: 'encounter_monster_level_mood',
+              parentId: level.id
+            },
+            {
+              table: 'encounter_active_monster_mood',
+              parentId: encounterMonsterId
+            }
+          )
+        ])
+
+        encounterMonstersById[encounterMonsterId] = {
+          id: encounterMonsterId,
+          ...encounterMonster,
+          traits: level.traits.map((trait) => ({
+            ...trait,
+            author_user_id: null,
+            author_username: null,
+            author_avatar_url: null
+          })),
+          moods: level.moods.map((mood) => ({
+            ...mood,
+            author_user_id: null,
+            author_username: null,
+            author_avatar_url: null
+          })),
+          survivor_statuses: []
+        }
+      }
+
+      const encounterSurvivors: { [key: string]: EncounterSurvivorDetail } = {}
+
+      for (const huntSurvivor of Object.values(huntSurvivors)) {
+        const encounterSurvivor = {
+          accuracy_tokens: huntSurvivor.accuracy_tokens,
+          activation_used: false,
+          bleeding_tokens: huntSurvivor.bleeding_tokens,
+          block_tokens: 0,
+          deflect_tokens: 0,
+          encounter_id: encounterId,
+          evasion_tokens: huntSurvivor.evasion_tokens,
+          insanity_tokens: huntSurvivor.insanity_tokens,
+          knocked_down: false,
+          luck_tokens: huntSurvivor.luck_tokens,
+          movement_tokens: huntSurvivor.movement_tokens,
+          movement_used: false,
+          notes: huntSurvivor.notes,
+          scout: huntSurvivor.scout,
+          settlement_id: selectedSettlement.id,
+          speed_tokens: huntSurvivor.speed_tokens,
+          strength_tokens: huntSurvivor.strength_tokens,
+          survival_tokens: huntSurvivor.survival_tokens,
+          survivor_id: huntSurvivor.survivor_id
+        }
+        const encounterSurvivorId =
+          await addEncounterSurvivor(encounterSurvivor)
+        encounterSurvivors[encounterSurvivorId] = {
+          id: encounterSurvivorId,
+          ...encounterSurvivor
+        }
+      }
+
+      setSelectedEncounter({
+        id: encounterId,
+        hunt_id: selectedHunt.id,
+        monster_level: selectedEncounterLevelNumber,
+        settlement_id: selectedSettlement.id,
+        turn: 'MONSTER',
+        encounter_monsters: encounterMonstersById,
+        encounter_survivors: encounterSurvivors
+      })
+
+      setIsEncounterDialogOpen(false)
+      setSelectedTab(TabType.ENCOUNTER)
+    } catch (error: unknown) {
+      console.error('Start Encounter Error:', error)
+      toast.error(ERROR_MESSAGE())
+    } finally {
+      setIsStartingEncounter(false)
+    }
+  }, [
+    selectedEncounterLevelNumber,
+    selectedEncounterLevels,
+    selectedEncounterMonster,
+    selectedHunt,
+    selectedSettlement,
+    setSelectedEncounter,
+    setSelectedTab
+  ])
 
   /**
    * Handle Showdown (open confirmation dialog)
@@ -424,7 +696,7 @@ export function ActiveHuntCard({
         const showdownSurvivorId = await addShowdownSurvivor({
           accuracy_tokens: huntSurvivor.accuracy_tokens,
           activation_used: false,
-          bleeding_tokens: 0,
+          bleeding_tokens: huntSurvivor.bleeding_tokens,
           block_tokens: 0,
           deflect_tokens: 0,
           evasion_tokens: huntSurvivor.evasion_tokens,
@@ -448,7 +720,7 @@ export function ActiveHuntCard({
           id: showdownSurvivorId,
           accuracy_tokens: huntSurvivor.accuracy_tokens,
           activation_used: false,
-          bleeding_tokens: 0,
+          bleeding_tokens: huntSurvivor.bleeding_tokens,
           block_tokens: 0,
           deflect_tokens: 0,
           evasion_tokens: huntSurvivor.evasion_tokens,
@@ -527,6 +799,16 @@ export function ActiveHuntCard({
           End Hunt
         </Button>
 
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleEncounter}
+          className="pointer-events-auto w-full sm:w-auto"
+          title={selectedEncounter ? 'Open Encounter' : 'Begin Encounter'}>
+          <SwordsIcon className="size-4" />
+          {selectedEncounter ? 'Open Encounter' : 'Begin Encounter'}
+        </Button>
+
         {selectedSettlement?.survivor_type ===
           DatabaseSurvivorType[SurvivorType.ARC] ||
         selectedSettlement?.uses_scouts ? (
@@ -588,6 +870,7 @@ export function ActiveHuntCard({
           variant="destructive"
           size="sm"
           onClick={handleShowdown}
+          disabled={!!selectedEncounter}
           className="pointer-events-auto w-full sm:w-auto"
           title="Begin Showdown">
           Begin Showdown <ChevronRightIcon className="size-4" />
@@ -619,6 +902,88 @@ export function ActiveHuntCard({
         setSurvivors={setSurvivors}
         survivors={survivors}
       />
+
+      {/* Encounter Selection Dialog */}
+      <AlertDialog
+        open={isEncounterDialogOpen}
+        onOpenChange={setIsEncounterDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Begin Encounter</AlertDialogTitle>
+            <AlertDialogDescription>
+              The hunt will pause while the party faces a nearer threat.
+              Survivors will carry their wounds and tokens into the encounter.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="flex flex-col gap-3 py-2">
+            <Select
+              value={selectedEncounterMonsterId ?? ''}
+              onValueChange={handleEncounterMonsterSelection}
+              disabled={encounterMonsters.length === 0}>
+              <SelectTrigger aria-label="Encounter Monster">
+                <SelectValue placeholder="Choose an encounter monster..." />
+              </SelectTrigger>
+              <SelectContent>
+                {encounterMonsters
+                  .filter((monster) => monster.levels.length > 0)
+                  .map((monster) => (
+                    <SelectItem key={monster.id} value={monster.id}>
+                      {monster.monster_name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={
+                selectedEncounterLevelNumber === null
+                  ? ''
+                  : String(selectedEncounterLevelNumber)
+              }
+              onValueChange={(value) =>
+                setSelectedEncounterLevelNumber(Number(value))
+              }
+              disabled={selectedEncounterLevelNumbers.length === 0}>
+              <SelectTrigger aria-label="Encounter Level">
+                <SelectValue placeholder="Choose level..." />
+              </SelectTrigger>
+              <SelectContent>
+                {selectedEncounterLevelNumbers.map((levelNumber) => {
+                  const monsterCount =
+                    selectedEncounterMonster?.levels.filter(
+                      (level) => level.level_number === levelNumber
+                    ).length ?? 0
+
+                  return (
+                    <SelectItem key={levelNumber} value={String(levelNumber)}>
+                      Level {levelNumber}
+                      {monsterCount > 1 ? ` (${monsterCount} monsters)` : ''}
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+
+            {encounterMonsters.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No encounter monsters wait in the dark.
+              </p>
+            )}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go Back</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleStartEncounter}
+              disabled={
+                selectedEncounterLevels.length === 0 || isStartingEncounter
+              }>
+              {isStartingEncounter ? 'Beginning...' : 'Begin Encounter'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Cancel Hunt Confirmation Dialog */}
       <AlertDialog

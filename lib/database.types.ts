@@ -303,6 +303,529 @@ export type Database = {
         }
         Relationships: []
       }
+      encounter: {
+        Row: {
+          created_at: string
+          hunt_id: string
+          id: string
+          monster_level: number
+          settlement_id: string
+          turn: Database["public"]["Enums"]["showdown_turn"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hunt_id: string
+          id?: string
+          monster_level: number
+          settlement_id: string
+          turn?: Database["public"]["Enums"]["showdown_turn"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hunt_id?: string
+          id?: string
+          monster_level?: number
+          settlement_id?: string
+          turn?: Database["public"]["Enums"]["showdown_turn"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_hunt_id_settlement_id_fkey"
+            columns: ["hunt_id", "settlement_id"]
+            isOneToOne: false
+            referencedRelation: "hunt"
+            referencedColumns: ["id", "settlement_id"]
+          },
+          {
+            foreignKeyName: "encounter_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: true
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      encounter_active_monster: {
+        Row: {
+          accuracy: number
+          accuracy_tokens: number
+          created_at: string
+          damage: number
+          damage_tokens: number
+          encounter_id: string
+          encounter_monster_id: string | null
+          encounter_monster_level_id: string | null
+          evasion: number
+          evasion_tokens: number
+          id: string
+          knocked_down: boolean
+          life: number
+          luck: number
+          luck_tokens: number
+          monster_name: string
+          movement: number
+          movement_tokens: number
+          notes: string
+          settlement_id: string
+          speed: number
+          speed_tokens: number
+          toughness: number
+          updated_at: string
+        }
+        Insert: {
+          accuracy?: number
+          accuracy_tokens?: number
+          created_at?: string
+          damage?: number
+          damage_tokens?: number
+          encounter_id: string
+          encounter_monster_id?: string | null
+          encounter_monster_level_id?: string | null
+          evasion?: number
+          evasion_tokens?: number
+          id?: string
+          knocked_down?: boolean
+          life?: number
+          luck?: number
+          luck_tokens?: number
+          monster_name: string
+          movement?: number
+          movement_tokens?: number
+          notes?: string
+          settlement_id: string
+          speed?: number
+          speed_tokens?: number
+          toughness?: number
+          updated_at?: string
+        }
+        Update: {
+          accuracy?: number
+          accuracy_tokens?: number
+          created_at?: string
+          damage?: number
+          damage_tokens?: number
+          encounter_id?: string
+          encounter_monster_id?: string | null
+          encounter_monster_level_id?: string | null
+          evasion?: number
+          evasion_tokens?: number
+          id?: string
+          knocked_down?: boolean
+          life?: number
+          luck?: number
+          luck_tokens?: number
+          monster_name?: string
+          movement?: number
+          movement_tokens?: number
+          notes?: string
+          settlement_id?: string
+          speed?: number
+          speed_tokens?: number
+          toughness?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_active_monster_encounter_id_settlement_id_fkey"
+            columns: ["encounter_id", "settlement_id"]
+            isOneToOne: false
+            referencedRelation: "encounter"
+            referencedColumns: ["id", "settlement_id"]
+          },
+          {
+            foreignKeyName: "encounter_active_monster_encounter_monster_id_fkey"
+            columns: ["encounter_monster_id"]
+            isOneToOne: false
+            referencedRelation: "encounter_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_active_monster_encounter_monster_level_id_fkey"
+            columns: ["encounter_monster_level_id"]
+            isOneToOne: false
+            referencedRelation: "encounter_monster_level"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_active_monster_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      encounter_active_monster_mood: {
+        Row: {
+          created_at: string
+          encounter_active_monster_id: string
+          id: string
+          mood_id: string
+          settlement_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          encounter_active_monster_id: string
+          id?: string
+          mood_id: string
+          settlement_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          encounter_active_monster_id?: string
+          id?: string
+          mood_id?: string
+          settlement_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_active_monster_mood_encounter_active_monster_id_fkey"
+            columns: ["encounter_active_monster_id"]
+            isOneToOne: false
+            referencedRelation: "encounter_active_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_active_monster_mood_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "mood"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_active_monster_mood_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      encounter_active_monster_trait: {
+        Row: {
+          created_at: string
+          encounter_active_monster_id: string
+          id: string
+          settlement_id: string
+          trait_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          encounter_active_monster_id: string
+          id?: string
+          settlement_id?: string
+          trait_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          encounter_active_monster_id?: string
+          id?: string
+          settlement_id?: string
+          trait_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_active_monster_trait_encounter_active_monster_id_fkey"
+            columns: ["encounter_active_monster_id"]
+            isOneToOne: false
+            referencedRelation: "encounter_active_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_active_monster_trait_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_active_monster_trait_trait_id_fkey"
+            columns: ["trait_id"]
+            isOneToOne: false
+            referencedRelation: "trait"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      encounter_monster: {
+        Row: {
+          archived_at: string | null
+          basic_action: string
+          created_at: string
+          custom: boolean
+          id: string
+          instinct: string
+          monster_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          basic_action?: string
+          created_at?: string
+          custom?: boolean
+          id?: string
+          instinct?: string
+          monster_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          basic_action?: string
+          created_at?: string
+          custom?: boolean
+          id?: string
+          instinct?: string
+          monster_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      encounter_monster_level: {
+        Row: {
+          accuracy: number
+          created_at: string
+          damage: number
+          encounter_monster_id: string
+          evasion: number
+          id: string
+          level_number: number
+          life: number
+          luck: number
+          movement: number
+          speed: number
+          sub_monster_name: string | null
+          toughness: number
+          updated_at: string
+        }
+        Insert: {
+          accuracy?: number
+          created_at?: string
+          damage?: number
+          encounter_monster_id: string
+          evasion?: number
+          id?: string
+          level_number: number
+          life?: number
+          luck?: number
+          movement?: number
+          speed?: number
+          sub_monster_name?: string | null
+          toughness?: number
+          updated_at?: string
+        }
+        Update: {
+          accuracy?: number
+          created_at?: string
+          damage?: number
+          encounter_monster_id?: string
+          evasion?: number
+          id?: string
+          level_number?: number
+          life?: number
+          luck?: number
+          movement?: number
+          speed?: number
+          sub_monster_name?: string | null
+          toughness?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_monster_level_encounter_monster_id_fkey"
+            columns: ["encounter_monster_id"]
+            isOneToOne: false
+            referencedRelation: "encounter_monster"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      encounter_monster_level_mood: {
+        Row: {
+          created_at: string
+          encounter_monster_level_id: string
+          id: string
+          mood_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          encounter_monster_level_id: string
+          id?: string
+          mood_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          encounter_monster_level_id?: string
+          id?: string
+          mood_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_monster_level_mood_encounter_monster_level_id_fkey"
+            columns: ["encounter_monster_level_id"]
+            isOneToOne: false
+            referencedRelation: "encounter_monster_level"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_monster_level_mood_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "mood"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      encounter_monster_level_trait: {
+        Row: {
+          created_at: string
+          encounter_monster_level_id: string
+          id: string
+          trait_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          encounter_monster_level_id: string
+          id?: string
+          trait_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          encounter_monster_level_id?: string
+          id?: string
+          trait_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_monster_level_trait_encounter_monster_level_id_fkey"
+            columns: ["encounter_monster_level_id"]
+            isOneToOne: false
+            referencedRelation: "encounter_monster_level"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_monster_level_trait_trait_id_fkey"
+            columns: ["trait_id"]
+            isOneToOne: false
+            referencedRelation: "trait"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      encounter_survivor: {
+        Row: {
+          accuracy_tokens: number
+          activation_used: boolean
+          bleeding_tokens: number
+          block_tokens: number
+          created_at: string
+          deflect_tokens: number
+          encounter_id: string
+          evasion_tokens: number
+          id: string
+          insanity_tokens: number
+          knocked_down: boolean
+          luck_tokens: number
+          movement_tokens: number
+          movement_used: boolean
+          notes: string
+          scout: boolean
+          settlement_id: string
+          speed_tokens: number
+          strength_tokens: number
+          survival_tokens: number
+          survivor_id: string
+          updated_at: string
+        }
+        Insert: {
+          accuracy_tokens?: number
+          activation_used?: boolean
+          bleeding_tokens?: number
+          block_tokens?: number
+          created_at?: string
+          deflect_tokens?: number
+          encounter_id: string
+          evasion_tokens?: number
+          id?: string
+          insanity_tokens?: number
+          knocked_down?: boolean
+          luck_tokens?: number
+          movement_tokens?: number
+          movement_used?: boolean
+          notes?: string
+          scout?: boolean
+          settlement_id: string
+          speed_tokens?: number
+          strength_tokens?: number
+          survival_tokens?: number
+          survivor_id: string
+          updated_at?: string
+        }
+        Update: {
+          accuracy_tokens?: number
+          activation_used?: boolean
+          bleeding_tokens?: number
+          block_tokens?: number
+          created_at?: string
+          deflect_tokens?: number
+          encounter_id?: string
+          evasion_tokens?: number
+          id?: string
+          insanity_tokens?: number
+          knocked_down?: boolean
+          luck_tokens?: number
+          movement_tokens?: number
+          movement_used?: boolean
+          notes?: string
+          scout?: boolean
+          settlement_id?: string
+          speed_tokens?: number
+          strength_tokens?: number
+          survival_tokens?: number
+          survivor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_survivor_encounter_id_settlement_id_fkey"
+            columns: ["encounter_id", "settlement_id"]
+            isOneToOne: false
+            referencedRelation: "encounter"
+            referencedColumns: ["id", "settlement_id"]
+          },
+          {
+            foreignKeyName: "encounter_survivor_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_survivor_survivor_id_fkey"
+            columns: ["survivor_id"]
+            isOneToOne: false
+            referencedRelation: "survivor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fighting_art: {
         Row: {
           archived_at: string | null
@@ -1106,6 +1629,7 @@ export type Database = {
       hunt_survivor: {
         Row: {
           accuracy_tokens: number
+          bleeding_tokens: number
           created_at: string
           evasion_tokens: number
           hunt_id: string
@@ -1124,6 +1648,7 @@ export type Database = {
         }
         Insert: {
           accuracy_tokens?: number
+          bleeding_tokens?: number
           created_at?: string
           evasion_tokens?: number
           hunt_id: string
@@ -1142,6 +1667,7 @@ export type Database = {
         }
         Update: {
           accuracy_tokens?: number
+          bleeding_tokens?: number
           created_at?: string
           evasion_tokens?: number
           hunt_id?: string

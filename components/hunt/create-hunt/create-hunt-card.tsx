@@ -568,6 +568,7 @@ export function CreateHuntCard({
       for (const survivorId of selectedSurvivors) {
         const huntSurvivor = {
           accuracy_tokens: 0,
+          bleeding_tokens: 0,
           evasion_tokens: 0,
           hunt_id: huntId,
           insanity_tokens: 0,
@@ -593,6 +594,7 @@ export function CreateHuntCard({
       if (selectedScout) {
         const huntScout = {
           accuracy_tokens: 0,
+          bleeding_tokens: 0,
           evasion_tokens: 0,
           hunt_id: huntId,
           insanity_tokens: 0,
