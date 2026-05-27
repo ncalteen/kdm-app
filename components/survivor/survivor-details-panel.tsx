@@ -75,6 +75,7 @@ export function SurvivorDetailsPanel({
       <CardContent className="p-4 space-y-4 max-h-[calc(60vh-120px)] overflow-y-auto">
         <AttributeCard
           mode={SurvivorCardMode.SURVIVOR_CARD}
+          selectedEncounter={null}
           selectedHunt={null}
           selectedSettlement={null}
           selectedShowdown={null}

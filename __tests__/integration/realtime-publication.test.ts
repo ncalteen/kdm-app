@@ -70,6 +70,13 @@ describe('Realtime publication membership', () => {
     'showdown_monster_trait',
     'showdown_survivor',
 
+    // Encounter
+    'encounter',
+    'encounter_active_monster',
+    'encounter_active_monster_mood',
+    'encounter_active_monster_trait',
+    'encounter_survivor',
+
     // Survivor
     'survivor',
     'survivor_ability_impairment',
@@ -123,6 +130,7 @@ describe('Realtime publication membership', () => {
     'nemesis_level',
     'nemesis_level_trait',
     'nemesis_level_mood',
+    'encounter_monster',
     // Catalogs without a settlement-bound junction (yet).
     'character',
     'strain_milestone',
@@ -172,7 +180,10 @@ describe('Realtime publication membership', () => {
     'quarry_hunt_board_position',
     'quarry_collective_cognition_reward',
     'nemesis_location',
-    'nemesis_timeline_year'
+    'nemesis_timeline_year',
+    'encounter_monster_level',
+    'encounter_monster_level_trait',
+    'encounter_monster_level_mood'
   ] as const
 
   it('includes every settlement-scoped table in `supabase_realtime`', async () => {

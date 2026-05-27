@@ -246,6 +246,53 @@ async function linkShowdownMonsterCatalog(
 }
 
 /**
+ * Link Catalog Mood and Trait to an Encounter Monster Level
+ *
+ * Inserts at most one mood and one trait into the encounter monster level
+ * junction tables for the given level id. Missing catalog entries are skipped
+ * silently so dev seed generation still works against partial local catalogs.
+ *
+ * @param supabase Supabase Client
+ * @param levelId Encounter Monster Level ID
+ */
+async function linkEncounterMonsterLevelMoodAndTrait(
+  supabase: SupabaseClient,
+  levelId: string
+): Promise<void> {
+  const [moodRes, traitRes] = await Promise.all([
+    supabase
+      .from('mood')
+      .select('id')
+      .eq('custom', false)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('trait')
+      .select('id')
+      .eq('custom', false)
+      .limit(1)
+      .maybeSingle()
+  ])
+
+  if (moodRes.data?.id) {
+    const { error } = await supabase
+      .from('encounter_monster_level_mood')
+      .insert({ encounter_monster_level_id: levelId, mood_id: moodRes.data.id })
+    if (error) throw error
+  }
+
+  if (traitRes.data?.id) {
+    const { error } = await supabase
+      .from('encounter_monster_level_trait')
+      .insert({
+        encounter_monster_level_id: levelId,
+        trait_id: traitRes.data.id
+      })
+    if (error) throw error
+  }
+}
+
+/**
  * Generate Seed Data
  *
  * Creates comprehensive test data including multiple settlements of each type
@@ -338,6 +385,7 @@ export async function generateSeedData() {
   // Create the custom quarries and nemeses
   await createCustomNemeses(supabase, data.user.id)
   await createCustomQuarries(supabase, data.user.id)
+  await createCustomEncounterMonsters(supabase, data.user.id)
 
   // Seed a custom armor set so the slot/junction tables are exercised.
   await createCustomArmorSets(supabase, data.user.id)
@@ -396,6 +444,7 @@ async function deleteUserData(supabase: SupabaseClient, userId: string) {
     'mood',
     'trait',
     'ability_impairment',
+    'encounter_monster',
     'survivor_status'
   ]) {
     console.log(`Deleting From ${table}...`)
@@ -2667,6 +2716,206 @@ async function createCustomQuarries(
 
   if (createDarkHorsesQuarryCollectiveCognitionRewardError)
     throw createDarkHorsesQuarryCollectiveCognitionRewardError
+}
+
+/**
+ * Create Custom Encounter Monsters
+ *
+ * Creates sample encounter monsters for testing the hunt pause/resume flow.
+ * These are intentionally smaller than quarries/nemeses and carry enough
+ * level, instinct, basic action, trait, and mood data for the encounter picker
+ * and active encounter surface to exercise realistic rows.
+ *
+ * @param supabase Supabase Client
+ * @param userId User ID
+ */
+async function createCustomEncounterMonsters(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<void> {
+  console.log(`Creating Custom Encounter Monsters for User ${userId}...`)
+
+  const encounters = [
+    {
+      monster_name: 'Lantern Leech',
+      basic_action:
+        'Target the survivor with the lowest survival. Move and attack for 1 damage.',
+      instinct:
+        'If a survivor has bleeding tokens, move toward them and gain +1 speed token.',
+      levels: [
+        {
+          level_number: 1,
+          sub_monster_name: null,
+          life: 6,
+          movement: 5,
+          toughness: 6,
+          speed: 1,
+          damage: 1,
+          accuracy: 4,
+          evasion: 0,
+          luck: 0
+        },
+        {
+          level_number: 2,
+          sub_monster_name: null,
+          life: 9,
+          movement: 6,
+          toughness: 8,
+          speed: 2,
+          damage: 1,
+          accuracy: 3,
+          evasion: 1,
+          luck: 0
+        }
+      ]
+    },
+    {
+      monster_name: 'Bone Eater',
+      basic_action:
+        'Snatch at the nearest survivor. On a hit, archive one basic resource if possible.',
+      instinct:
+        'If no survivor is adjacent, knock down the closest survivor in range 2.',
+      levels: [
+        {
+          level_number: 1,
+          sub_monster_name: null,
+          life: 8,
+          movement: 4,
+          toughness: 7,
+          speed: 1,
+          damage: 2,
+          accuracy: 4,
+          evasion: 0,
+          luck: 0
+        },
+        {
+          level_number: 2,
+          sub_monster_name: null,
+          life: 12,
+          movement: 5,
+          toughness: 9,
+          speed: 2,
+          damage: 2,
+          accuracy: 3,
+          evasion: 0,
+          luck: 1
+        },
+        {
+          level_number: 3,
+          sub_monster_name: null,
+          life: 16,
+          movement: 5,
+          toughness: 11,
+          speed: 3,
+          damage: 3,
+          accuracy: 3,
+          evasion: 1,
+          luck: 1
+        }
+      ]
+    },
+    {
+      monster_name: 'Gloom Mite Swarm',
+      basic_action:
+        'Swarm the loudest survivor. Attack all adjacent survivors for 1 damage.',
+      instinct:
+        'If any survivor is knocked down, gain +1 movement token and target them.',
+      levels: [
+        {
+          level_number: 1,
+          sub_monster_name: 'Gloom Mite Skitterer',
+          life: 5,
+          movement: 6,
+          toughness: 5,
+          speed: 2,
+          damage: 1,
+          accuracy: 4,
+          evasion: 1,
+          luck: 0
+        },
+        {
+          level_number: 1,
+          sub_monster_name: 'Gloom Mite Gnawer',
+          life: 5,
+          movement: 6,
+          toughness: 5,
+          speed: 2,
+          damage: 1,
+          accuracy: 4,
+          evasion: 1,
+          luck: 0
+        },
+        {
+          level_number: 2,
+          sub_monster_name: 'Gloom Mite Skitterer',
+          life: 8,
+          movement: 7,
+          toughness: 7,
+          speed: 3,
+          damage: 1,
+          accuracy: 3,
+          evasion: 2,
+          luck: 0
+        },
+        {
+          level_number: 2,
+          sub_monster_name: 'Gloom Mite Gnawer',
+          life: 8,
+          movement: 7,
+          toughness: 7,
+          speed: 3,
+          damage: 1,
+          accuracy: 3,
+          evasion: 2,
+          luck: 0
+        },
+        {
+          level_number: 2,
+          sub_monster_name: 'Gloom Mite Burrower',
+          life: 10,
+          movement: 5,
+          toughness: 8,
+          speed: 2,
+          damage: 2,
+          accuracy: 4,
+          evasion: 1,
+          luck: 0
+        }
+      ]
+    }
+  ]
+
+  for (const encounter of encounters) {
+    const { data: monster, error: createEncounterMonsterError } = await supabase
+      .from('encounter_monster')
+      .insert({
+        basic_action: encounter.basic_action,
+        custom: true,
+        instinct: encounter.instinct,
+        monster_name: encounter.monster_name,
+        user_id: userId
+      })
+      .select('id')
+      .single()
+
+    if (createEncounterMonsterError) throw createEncounterMonsterError
+
+    for (const level of encounter.levels) {
+      const { data: levelRow, error: createEncounterLevelError } =
+        await supabase
+          .from('encounter_monster_level')
+          .insert({
+            ...level,
+            encounter_monster_id: monster.id
+          })
+          .select('id')
+          .single()
+
+      if (createEncounterLevelError) throw createEncounterLevelError
+
+      await linkEncounterMonsterLevelMoodAndTrait(supabase, levelRow.id)
+    }
+  }
 }
 
 /**

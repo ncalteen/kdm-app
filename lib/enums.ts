@@ -75,6 +75,8 @@ export enum TabType {
   CRAFTING = 'crafting',
   /** Help */
   HELP = 'help',
+  /** Encounter */
+  ENCOUNTER = 'encounter',
   /** Hunt */
   HUNT = 'hunt',
   /** Monsters */
@@ -161,6 +163,8 @@ export enum ResourceType {
  * Monster Type
  */
 export enum MonsterType {
+  /** Encounter */
+  ENCOUNTER = 'Encounter',
   /** Nemesis */
   NEMESIS = 'Nemesis',
   /** Quarry */
@@ -243,6 +247,8 @@ export enum TurnType {
  * Survivor Card Mode
  */
 export enum SurvivorCardMode {
+  /** Encounter Page */
+  ENCOUNTER_CARD = 'encounter',
   /** Hunt Page */
   HUNT_CARD = 'hunt',
   /** Settlement Phase Page */

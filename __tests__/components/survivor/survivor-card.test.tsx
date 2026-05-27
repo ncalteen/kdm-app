@@ -103,6 +103,7 @@ type SurvivorCardProps = Parameters<typeof SurvivorCard>[0]
 const baseProps = {
   local: {},
   mode: SurvivorCardMode.SHOWDOWN_CARD,
+  selectedEncounter: null,
   selectedHunt: null,
   selectedSettlement: null,
   selectedShowdown: { showdown_survivors: {} },
@@ -127,9 +128,9 @@ describe('SurvivorCard', () => {
     )
   })
 
-  it('does not render the bleeding card outside showdown mode', () => {
+  it('does not render the bleeding card outside active phase modes', () => {
     const html = renderToStaticMarkup(
-      <SurvivorCard {...baseProps} mode={SurvivorCardMode.HUNT_CARD} />
+      <SurvivorCard {...baseProps} mode={SurvivorCardMode.SURVIVOR_CARD} />
     )
 
     expect(html).not.toContain('BleedingCard')

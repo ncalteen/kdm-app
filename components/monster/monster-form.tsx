@@ -416,7 +416,7 @@ export function MonsterForm({
    */
   const handleMonsterTypeChange = useCallback((type: MonsterType) => {
     setMonsterType(type)
-    setNode(getAvailableNodes(type)[0])
+    setNode(getAvailableNodes(type)[0] ?? MonsterNode.NQ1)
   }, [])
 
   /**
@@ -599,6 +599,7 @@ export function MonsterForm({
   ])
 
   const isQuarry = monsterType === MonsterType.QUARRY
+  const isEncounter = monsterType === MonsterType.ENCOUNTER
   const submitDisabled =
     !name.trim() ||
     isSubmitting ||
@@ -652,7 +653,8 @@ export function MonsterForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div
+            className={`grid gap-2 ${isEncounter ? 'grid-cols-1' : 'grid-cols-2'}`}>
             <div className="space-y-2">
               <Label>Monster Type</Label>
               {mode === 'create' ? (
@@ -661,10 +663,13 @@ export function MonsterForm({
                   onValueChange={(v) =>
                     handleMonsterTypeChange(v as MonsterType)
                   }>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger aria-label="Monster Type" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value={MonsterType.ENCOUNTER}>
+                      Encounter
+                    </SelectItem>
                     <SelectItem value={MonsterType.QUARRY}>Quarry</SelectItem>
                     <SelectItem value={MonsterType.NEMESIS}>Nemesis</SelectItem>
                   </SelectContent>
@@ -674,23 +679,25 @@ export function MonsterForm({
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label>Monster Node</Label>
-              <Select
-                value={node}
-                onValueChange={(v) => setNode(v as MonsterNode)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {getAvailableNodes(monsterType).map((n) => (
-                    <SelectItem key={n} value={n}>
-                      {n}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!isEncounter && (
+              <div className="space-y-2">
+                <Label>Monster Node</Label>
+                <Select
+                  value={node}
+                  onValueChange={(v) => setNode(v as MonsterNode)}>
+                  <SelectTrigger aria-label="Monster Node" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableNodes(monsterType).map((n) => (
+                      <SelectItem key={n} value={n}>
+                        {n}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -703,10 +710,14 @@ export function MonsterForm({
             <TabsList className="w-full flex-wrap h-auto">
               <TabsTrigger value="instinct">Instinct</TabsTrigger>
               <TabsTrigger value="basicAction">Basic Action</TabsTrigger>
-              <TabsTrigger value="blindSpot">Blind Spot</TabsTrigger>
-              <TabsTrigger value="defeatOutcome">Defeat</TabsTrigger>
-              <TabsTrigger value="deploymentRules">Deployment</TabsTrigger>
-              <TabsTrigger value="victoryOutcome">Victory</TabsTrigger>
+              {!isEncounter && (
+                <>
+                  <TabsTrigger value="blindSpot">Blind Spot</TabsTrigger>
+                  <TabsTrigger value="defeatOutcome">Defeat</TabsTrigger>
+                  <TabsTrigger value="deploymentRules">Deployment</TabsTrigger>
+                  <TabsTrigger value="victoryOutcome">Victory</TabsTrigger>
+                </>
+              )}
             </TabsList>
 
             <TabsContent value="instinct">
@@ -725,38 +736,42 @@ export function MonsterForm({
                 preview="edit"
               />
             </TabsContent>
-            <TabsContent value="blindSpot">
-              <SafeMarkdownEditor
-                value={blindSpot}
-                onChange={(val) => setBlindSpot(val ?? '')}
-                height={200}
-                preview="edit"
-              />
-            </TabsContent>
-            <TabsContent value="defeatOutcome">
-              <SafeMarkdownEditor
-                value={defeatOutcome}
-                onChange={(val) => setDefeatOutcome(val ?? '')}
-                height={200}
-                preview="edit"
-              />
-            </TabsContent>
-            <TabsContent value="deploymentRules">
-              <SafeMarkdownEditor
-                value={deploymentRules}
-                onChange={(val) => setDeploymentRules(val ?? '')}
-                height={200}
-                preview="edit"
-              />
-            </TabsContent>
-            <TabsContent value="victoryOutcome">
-              <SafeMarkdownEditor
-                value={victoryOutcome}
-                onChange={(val) => setVictoryOutcome(val ?? '')}
-                height={200}
-                preview="edit"
-              />
-            </TabsContent>
+            {!isEncounter && (
+              <>
+                <TabsContent value="blindSpot">
+                  <SafeMarkdownEditor
+                    value={blindSpot}
+                    onChange={(val) => setBlindSpot(val ?? '')}
+                    height={200}
+                    preview="edit"
+                  />
+                </TabsContent>
+                <TabsContent value="defeatOutcome">
+                  <SafeMarkdownEditor
+                    value={defeatOutcome}
+                    onChange={(val) => setDefeatOutcome(val ?? '')}
+                    height={200}
+                    preview="edit"
+                  />
+                </TabsContent>
+                <TabsContent value="deploymentRules">
+                  <SafeMarkdownEditor
+                    value={deploymentRules}
+                    onChange={(val) => setDeploymentRules(val ?? '')}
+                    height={200}
+                    preview="edit"
+                  />
+                </TabsContent>
+                <TabsContent value="victoryOutcome">
+                  <SafeMarkdownEditor
+                    value={victoryOutcome}
+                    onChange={(val) => setVictoryOutcome(val ?? '')}
+                    height={200}
+                    preview="edit"
+                  />
+                </TabsContent>
+              </>
+            )}
           </Tabs>
           <MarkdownSyntaxHelp />
         </div>
@@ -822,204 +837,210 @@ export function MonsterForm({
           </>
         )}
 
-        <Separator />
+        {!isEncounter && (
+          <>
+            <Separator />
 
-        {/* Locations */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-semibold">Locations</Label>
-            <Popover open={locationAddOpen} onOpenChange={setLocationAddOpen}>
-              <PopoverTrigger asChild>
+            {/* Locations */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">Locations</Label>
+                <Popover
+                  open={locationAddOpen}
+                  onOpenChange={setLocationAddOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={selectableLocations.length === 0}
+                      aria-label="Add location"
+                      title="Add location">
+                      <PlusIcon className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0" align="end">
+                    <Command>
+                      <CommandInput placeholder="Search locations..." />
+                      <CommandList>
+                        <CommandEmpty>No locations found.</CommandEmpty>
+                        <CommandGroup>
+                          {selectableLocations.map((loc) => (
+                            <CommandItem
+                              key={loc.id}
+                              value={loc.id}
+                              keywords={[loc.location_name]}
+                              onSelect={() => {
+                                setLocations((prev) => [...prev, loc])
+                                setLocationAddOpen(false)
+                              }}>
+                              {loc.location_name}
+                              {loc.custom && (
+                                <Badge variant="outline" className="ml-auto">
+                                  Custom
+                                </Badge>
+                              )}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              {locations.map((loc) => (
+                <div key={loc.id} className="flex items-center gap-1">
+                  <Input value={loc.location_name} disabled />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setLocations(locations.filter((l) => l.id !== loc.id))
+                    }
+                    aria-label="Remove location"
+                    title="Remove location">
+                    <Trash2Icon className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <Separator />
+
+            {/* Timeline Events */}
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h5 className="text-sm font-semibold">Timeline</h5>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  disabled={selectableLocations.length === 0}
-                  aria-label="Add location"
-                  title="Add location">
-                  <PlusIcon className="h-3 w-3" />
+                  onClick={() =>
+                    setTimelineEvents((prev) => [
+                      ...prev,
+                      mode === 'edit'
+                        ? {
+                            id: `temp-${crypto.randomUUID()}`,
+                            year_number: 0,
+                            entries: []
+                          }
+                        : { year_number: 0, entries: [] }
+                    ])
+                  }>
+                  <PlusIcon className="h-3 w-3 mr-1" />
+                  Add Year
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="p-0" align="end">
-                <Command>
-                  <CommandInput placeholder="Search locations..." />
-                  <CommandList>
-                    <CommandEmpty>No locations found.</CommandEmpty>
-                    <CommandGroup>
-                      {selectableLocations.map((loc) => (
-                        <CommandItem
-                          key={loc.id}
-                          value={loc.id}
-                          keywords={[loc.location_name]}
-                          onSelect={() => {
-                            setLocations((prev) => [...prev, loc])
-                            setLocationAddOpen(false)
-                          }}>
-                          {loc.location_name}
-                          {loc.custom && (
-                            <Badge variant="outline" className="ml-auto">
-                              Custom
-                            </Badge>
-                          )}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-          {locations.map((loc) => (
-            <div key={loc.id} className="flex items-center gap-1">
-              <Input value={loc.location_name} disabled />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() =>
-                  setLocations(locations.filter((l) => l.id !== loc.id))
-                }
-                aria-label="Remove location"
-                title="Remove location">
-                <Trash2Icon className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        <Separator />
-
-        {/* Timeline Events */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h5 className="text-sm font-semibold">Timeline</h5>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setTimelineEvents((prev) => [
-                  ...prev,
-                  mode === 'edit'
-                    ? {
-                        id: `temp-${crypto.randomUUID()}`,
-                        year_number: 0,
-                        entries: []
-                      }
-                    : { year_number: 0, entries: [] }
-                ])
-              }>
-              <PlusIcon className="h-3 w-3 mr-1" />
-              Add Year
-            </Button>
-          </div>
-          {timelineEvents.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              No timeline entries defined.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {timelineEvents.map((te, teIdx) => (
-                <div key={teIdx} className="rounded-md border p-3">
-                  <div className="flex items-start gap-2">
-                    {/* Year label + number + delete */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Label className="text-xs shrink-0">Year</Label>
-                      <NumericInput
-                        className="w-16 h-8"
-                        label="Year number"
-                        min={0}
-                        max={50}
-                        value={te.year_number}
-                        onChange={(v) => {
-                          const next = [...timelineEvents]
-                          next[teIdx] = { ...next[teIdx], year_number: v }
-                          setTimelineEvents(next)
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => {
-                          const removed = timelineEvents[teIdx]
-                          if (removed.id && !removed.id.startsWith('temp-'))
-                            setDeletedTimelineIds((ids) => [
-                              ...ids,
-                              removed.id as string
-                            ])
-                          setTimelineEvents(
-                            timelineEvents.filter((_, i) => i !== teIdx)
-                          )
-                        }}
-                        title="Remove year"
-                        aria-label="Remove timeline year">
-                        <Trash2Icon className="h-3 w-3" />
-                      </Button>
-                    </div>
-
-                    {/* Entries */}
-                    <div className="flex-1 space-y-1 min-w-0">
-                      {te.entries.map((entry, eIdx) => (
-                        <div key={eIdx} className="flex items-center gap-1">
-                          <Input
-                            className="h-8 text-sm"
-                            value={entry}
-                            placeholder="Timeline entry"
-                            onChange={(e) => {
+              </div>
+              {timelineEvents.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  No timeline entries defined.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {timelineEvents.map((te, teIdx) => (
+                    <div key={teIdx} className="rounded-md border p-3">
+                      <div className="flex items-start gap-2">
+                        {/* Year label + number + delete */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Label className="text-xs shrink-0">Year</Label>
+                          <NumericInput
+                            className="w-16 h-8"
+                            label="Year number"
+                            min={0}
+                            max={50}
+                            value={te.year_number}
+                            onChange={(v) => {
                               const next = [...timelineEvents]
-                              const entries = [...next[teIdx].entries]
-                              entries[eIdx] = e.target.value
-                              next[teIdx] = { ...next[teIdx], entries }
+                              next[teIdx] = { ...next[teIdx], year_number: v }
                               setTimelineEvents(next)
                             }}
-                            aria-label={`Year ${te.year_number} entry ${eIdx + 1}`}
                           />
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 shrink-0"
+                            className="h-6 w-6"
+                            onClick={() => {
+                              const removed = timelineEvents[teIdx]
+                              if (removed.id && !removed.id.startsWith('temp-'))
+                                setDeletedTimelineIds((ids) => [
+                                  ...ids,
+                                  removed.id as string
+                                ])
+                              setTimelineEvents(
+                                timelineEvents.filter((_, i) => i !== teIdx)
+                              )
+                            }}
+                            title="Remove year"
+                            aria-label="Remove timeline year">
+                            <Trash2Icon className="h-3 w-3" />
+                          </Button>
+                        </div>
+
+                        {/* Entries */}
+                        <div className="flex-1 space-y-1 min-w-0">
+                          {te.entries.map((entry, eIdx) => (
+                            <div key={eIdx} className="flex items-center gap-1">
+                              <Input
+                                className="h-8 text-sm"
+                                value={entry}
+                                placeholder="Timeline entry"
+                                onChange={(e) => {
+                                  const next = [...timelineEvents]
+                                  const entries = [...next[teIdx].entries]
+                                  entries[eIdx] = e.target.value
+                                  next[teIdx] = { ...next[teIdx], entries }
+                                  setTimelineEvents(next)
+                                }}
+                                aria-label={`Year ${te.year_number} entry ${eIdx + 1}`}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                                onClick={() => {
+                                  const next = [...timelineEvents]
+                                  next[teIdx] = {
+                                    ...next[teIdx],
+                                    entries: next[teIdx].entries.filter(
+                                      (_, i) => i !== eIdx
+                                    )
+                                  }
+                                  setTimelineEvents(next)
+                                }}
+                                title="Remove entry"
+                                aria-label="Remove timeline entry">
+                                <XIcon className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
                             onClick={() => {
                               const next = [...timelineEvents]
                               next[teIdx] = {
                                 ...next[teIdx],
-                                entries: next[teIdx].entries.filter(
-                                  (_, i) => i !== eIdx
-                                )
+                                entries: [...next[teIdx].entries, '']
                               }
                               setTimelineEvents(next)
-                            }}
-                            title="Remove entry"
-                            aria-label="Remove timeline entry">
-                            <XIcon className="h-3 w-3" />
+                            }}>
+                            <PlusIcon className="h-3 w-3 mr-1" />
+                            Add Entry
                           </Button>
                         </div>
-                      ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => {
-                          const next = [...timelineEvents]
-                          next[teIdx] = {
-                            ...next[teIdx],
-                            entries: [...next[teIdx].entries, '']
-                          }
-                          setTimelineEvents(next)
-                        }}>
-                        <PlusIcon className="h-3 w-3 mr-1" />
-                        Add Entry
-                      </Button>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
+              )}
+            </section>
+          </>
+        )}
 
         {/* CC Rewards (Quarry Only) */}
         {isQuarry && (
@@ -1103,7 +1124,9 @@ export function MonsterForm({
         <div className="space-y-2">
           <Label className="text-sm font-semibold">Monster Levels</Label>
           <p className="text-xs text-muted-foreground">
-            Add levels (1-4) with attributes, AI deck, traits, and moods.
+            {isEncounter
+              ? 'Add levels (1-4) with attributes, traits, and moods.'
+              : 'Add levels (1-4) with attributes, AI deck, traits, and moods.'}
           </p>
 
           {[1, 2, 3, 4].map((levelNum) => {
@@ -1264,111 +1287,130 @@ export function MonsterForm({
 
                                   <Separator />
 
-                                  {/* AI Deck */}
-                                  <div>
-                                    <Label className="text-center block pb-2">
-                                      AI Deck
-                                    </Label>
-                                    <div className="grid grid-cols-4 gap-2 mt-1">
-                                      {aiDeckCards.map((deck) => (
-                                        <div
-                                          key={deck.key}
-                                          className="space-y-1">
-                                          <Label className="text-xs text-center block text-muted-foreground">
-                                            {deck.label} Cards
-                                          </Label>
-                                          <NumericInput
-                                            label={deck.full}
-                                            value={sub[deck.key] ?? 0}
-                                            min={0}
-                                            onChange={(v) =>
-                                              updateSubMonster(
-                                                levelNum,
-                                                subIdx,
-                                                {
-                                                  [deck.key]: v
+                                  {!isEncounter && (
+                                    <>
+                                      {/* AI Deck */}
+                                      <div>
+                                        <Label className="text-center block pb-2">
+                                          AI Deck
+                                        </Label>
+                                        <div className="grid grid-cols-4 gap-2 mt-1">
+                                          {aiDeckCards.map((deck) => (
+                                            <div
+                                              key={deck.key}
+                                              className="space-y-1">
+                                              <Label className="text-xs text-center block text-muted-foreground">
+                                                {deck.label} Cards
+                                              </Label>
+                                              <NumericInput
+                                                label={deck.full}
+                                                value={sub[deck.key] ?? 0}
+                                                min={0}
+                                                onChange={(v) =>
+                                                  updateSubMonster(
+                                                    levelNum,
+                                                    subIdx,
+                                                    {
+                                                      [deck.key]: v
+                                                    }
+                                                  )
                                                 }
-                                              )
-                                            }
-                                          />
+                                              />
+                                            </div>
+                                          ))}
                                         </div>
-                                      ))}
-                                    </div>
-                                  </div>
+                                      </div>
 
-                                  <Separator />
+                                      <Separator />
+                                    </>
+                                  )}
 
                                   {/* Attributes */}
                                   <div>
                                     <Label className="text-center block pb-2">
                                       Attributes
                                     </Label>
-                                    <div className="grid grid-cols-4 gap-x-2 gap-y-1 mt-1">
+                                    <div
+                                      className={`grid gap-x-2 gap-y-1 mt-1 ${isEncounter ? 'grid-cols-2' : 'grid-cols-4'}`}>
                                       <div />
                                       <Label className="text-xs text-center block text-muted-foreground">
                                         Base
                                       </Label>
-                                      <Label className="text-xs text-center block text-muted-foreground">
-                                        Tokens
-                                      </Label>
-                                      <Label className="text-xs text-center block text-muted-foreground">
-                                        Total
-                                      </Label>
+                                      {!isEncounter && (
+                                        <>
+                                          <Label className="text-xs text-center block text-muted-foreground">
+                                            Tokens
+                                          </Label>
+                                          <Label className="text-xs text-center block text-muted-foreground">
+                                            Total
+                                          </Label>
+                                        </>
+                                      )}
 
-                                      {monsterAttributeTokenMap.map((attr) => {
-                                        const subRecord =
-                                          sub as unknown as Record<
-                                            string,
-                                            unknown
-                                          >
-                                        const baseVal =
-                                          (subRecord[attr.key] as number) ?? 0
-                                        const tokenVal =
-                                          (subRecord[
-                                            attr.tokenKey
-                                          ] as number) ?? 0
-                                        return (
-                                          <div
-                                            key={attr.key}
-                                            className="grid grid-cols-subgrid col-span-4 items-center">
-                                            <Label className="text-xs text-muted-foreground">
-                                              {attr.label}
-                                            </Label>
-                                            <NumericInput
-                                              label={attr.label}
-                                              value={baseVal}
-                                              onChange={(v) =>
-                                                updateSubMonster(
-                                                  levelNum,
-                                                  subIdx,
-                                                  {
-                                                    [attr.key]: v
-                                                  }
-                                                )
-                                              }
-                                            />
-                                            <NumericInput
-                                              label={`${attr.label} Tokens`}
-                                              value={tokenVal}
-                                              onChange={(v) =>
-                                                updateSubMonster(
-                                                  levelNum,
-                                                  subIdx,
-                                                  {
-                                                    [attr.tokenKey]: v
-                                                  }
-                                                )
-                                              }
-                                              className="bg-muted!"
-                                            />
-                                            <NumericInput
-                                              label={`${attr.label} Total`}
-                                              value={baseVal + tokenVal}
-                                              disabled
-                                            />
-                                          </div>
+                                      {monsterAttributeTokenMap
+                                        .filter((attr) =>
+                                          isEncounter
+                                            ? attr.key !== 'strength'
+                                            : true
                                         )
-                                      })}
+                                        .map((attr) => {
+                                          const subRecord =
+                                            sub as unknown as Record<
+                                              string,
+                                              unknown
+                                            >
+                                          const baseVal =
+                                            (subRecord[attr.key] as number) ?? 0
+                                          const tokenVal =
+                                            (subRecord[
+                                              attr.tokenKey
+                                            ] as number) ?? 0
+                                          return (
+                                            <div
+                                              key={attr.key}
+                                              className={`grid grid-cols-subgrid ${isEncounter ? 'col-span-2' : 'col-span-4'} items-center`}>
+                                              <Label className="text-xs text-muted-foreground">
+                                                {attr.label}
+                                              </Label>
+                                              <NumericInput
+                                                label={attr.label}
+                                                value={baseVal}
+                                                onChange={(v) =>
+                                                  updateSubMonster(
+                                                    levelNum,
+                                                    subIdx,
+                                                    {
+                                                      [attr.key]: v
+                                                    }
+                                                  )
+                                                }
+                                              />
+                                              {!isEncounter && (
+                                                <>
+                                                  <NumericInput
+                                                    label={`${attr.label} Tokens`}
+                                                    value={tokenVal}
+                                                    onChange={(v) =>
+                                                      updateSubMonster(
+                                                        levelNum,
+                                                        subIdx,
+                                                        {
+                                                          [attr.tokenKey]: v
+                                                        }
+                                                      )
+                                                    }
+                                                    className="bg-muted!"
+                                                  />
+                                                  <NumericInput
+                                                    label={`${attr.label} Total`}
+                                                    value={baseVal + tokenVal}
+                                                    disabled
+                                                  />
+                                                </>
+                                              )}
+                                            </div>
+                                          )
+                                        })}
                                     </div>
                                   </div>
 
@@ -1598,127 +1640,140 @@ export function MonsterForm({
                                     ))}
                                   </div>
 
-                                  <Separator />
+                                  {!isEncounter && (
+                                    <>
+                                      <Separator />
 
-                                  {/* Survivor Statuses */}
-                                  <div className="space-y-1">
-                                    <div className="flex items-center justify-between">
-                                      <Label>Survivor Statuses</Label>
-                                      <Popover
-                                        open={
-                                          openSurvivorStatusPicker ===
-                                          `${levelNum}-${subIdx}`
-                                        }
-                                        onOpenChange={(open) =>
-                                          setOpenSurvivorStatusPicker(
-                                            open
-                                              ? `${levelNum}-${subIdx}`
-                                              : null
-                                          )
-                                        }>
-                                        <PopoverTrigger asChild>
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            disabled={
-                                              Object.keys(
-                                                availableSurvivorStatuses
-                                              ).length ===
-                                              sub.survivor_statuses.length
+                                      {/* Survivor Statuses */}
+                                      <div className="space-y-1">
+                                        <div className="flex items-center justify-between">
+                                          <Label>Survivor Statuses</Label>
+                                          <Popover
+                                            open={
+                                              openSurvivorStatusPicker ===
+                                              `${levelNum}-${subIdx}`
+                                            }
+                                            onOpenChange={(open) =>
+                                              setOpenSurvivorStatusPicker(
+                                                open
+                                                  ? `${levelNum}-${subIdx}`
+                                                  : null
+                                              )
                                             }>
-                                            <PlusIcon className="h-3 w-3" />
-                                          </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                          className="p-0"
-                                          align="end">
-                                          <Command>
-                                            <CommandInput placeholder="Search statuses..." />
-                                            <CommandList>
-                                              <CommandEmpty>
-                                                No survivor statuses found.
-                                              </CommandEmpty>
-                                              <CommandGroup>
-                                                {Object.values(
-                                                  availableSurvivorStatuses
-                                                )
-                                                  .filter(
-                                                    (s) =>
-                                                      !sub.survivor_statuses.some(
-                                                        (ss) => ss.id === s.id
-                                                      )
-                                                  )
-                                                  .sort((a, b) =>
-                                                    a.survivor_status_name.localeCompare(
-                                                      b.survivor_status_name
+                                            <PopoverTrigger asChild>
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                disabled={
+                                                  Object.keys(
+                                                    availableSurvivorStatuses
+                                                  ).length ===
+                                                  sub.survivor_statuses.length
+                                                }>
+                                                <PlusIcon className="h-3 w-3" />
+                                              </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                              className="p-0"
+                                              align="end">
+                                              <Command>
+                                                <CommandInput placeholder="Search statuses..." />
+                                                <CommandList>
+                                                  <CommandEmpty>
+                                                    No survivor statuses found.
+                                                  </CommandEmpty>
+                                                  <CommandGroup>
+                                                    {Object.values(
+                                                      availableSurvivorStatuses
                                                     )
-                                                  )
-                                                  .map((status) => (
-                                                    <CommandItem
-                                                      key={status.id}
-                                                      value={status.id}
-                                                      keywords={[
-                                                        status.survivor_status_name
-                                                      ]}
-                                                      onSelect={() => {
-                                                        updateSubMonster(
-                                                          levelNum,
-                                                          subIdx,
+                                                      .filter(
+                                                        (s) =>
+                                                          !sub.survivor_statuses.some(
+                                                            (ss) =>
+                                                              ss.id === s.id
+                                                          )
+                                                      )
+                                                      .sort((a, b) =>
+                                                        a.survivor_status_name.localeCompare(
+                                                          b.survivor_status_name
+                                                        )
+                                                      )
+                                                      .map((status) => (
+                                                        <CommandItem
+                                                          key={status.id}
+                                                          value={status.id}
+                                                          keywords={[
+                                                            status.survivor_status_name
+                                                          ]}
+                                                          onSelect={() => {
+                                                            updateSubMonster(
+                                                              levelNum,
+                                                              subIdx,
+                                                              {
+                                                                survivor_statuses:
+                                                                  [
+                                                                    ...sub.survivor_statuses,
+                                                                    status
+                                                                  ]
+                                                              }
+                                                            )
+                                                            setOpenSurvivorStatusPicker(
+                                                              null
+                                                            )
+                                                          }}>
                                                           {
-                                                            survivor_statuses: [
-                                                              ...sub.survivor_statuses,
-                                                              status
-                                                            ]
+                                                            status.survivor_status_name
                                                           }
-                                                        )
-                                                        setOpenSurvivorStatusPicker(
-                                                          null
-                                                        )
-                                                      }}>
-                                                      {
-                                                        status.survivor_status_name
-                                                      }
-                                                      {status.custom && (
-                                                        <Badge
-                                                          variant="outline"
-                                                          className="ml-auto">
-                                                          Custom
-                                                        </Badge>
-                                                      )}
-                                                    </CommandItem>
-                                                  ))}
-                                              </CommandGroup>
-                                            </CommandList>
-                                          </Command>
-                                        </PopoverContent>
-                                      </Popover>
-                                    </div>
-                                    {sub.survivor_statuses.map((status) => (
-                                      <div
-                                        key={status.id}
-                                        className="flex items-center gap-1">
-                                        <Input
-                                          value={status.survivor_status_name}
-                                          disabled
-                                        />
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            updateSubMonster(levelNum, subIdx, {
-                                              survivor_statuses:
-                                                sub.survivor_statuses.filter(
-                                                  (s) => s.id !== status.id
+                                                          {status.custom && (
+                                                            <Badge
+                                                              variant="outline"
+                                                              className="ml-auto">
+                                                              Custom
+                                                            </Badge>
+                                                          )}
+                                                        </CommandItem>
+                                                      ))}
+                                                  </CommandGroup>
+                                                </CommandList>
+                                              </Command>
+                                            </PopoverContent>
+                                          </Popover>
+                                        </div>
+                                        {sub.survivor_statuses.map((status) => (
+                                          <div
+                                            key={status.id}
+                                            className="flex items-center gap-1">
+                                            <Input
+                                              value={
+                                                status.survivor_status_name
+                                              }
+                                              disabled
+                                            />
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() =>
+                                                updateSubMonster(
+                                                  levelNum,
+                                                  subIdx,
+                                                  {
+                                                    survivor_statuses:
+                                                      sub.survivor_statuses.filter(
+                                                        (s) =>
+                                                          s.id !== status.id
+                                                      )
+                                                  }
                                                 )
-                                            })
-                                          }>
-                                          <Trash2Icon className="h-3 w-3" />
-                                        </Button>
+                                              }>
+                                              <Trash2Icon className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        ))}
                                       </div>
-                                    ))}
-                                  </div>
+                                    </>
+                                  )}
                                 </div>
                               )}
                             </div>

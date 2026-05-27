@@ -20,7 +20,7 @@ export async function getHuntSurvivors(
   const { data, error } = await supabase
     .from('hunt_survivor')
     .select(
-      'id, accuracy_tokens, evasion_tokens, hunt_id, insanity_tokens, luck_tokens, movement_tokens, notes, scout, settlement_id, speed_tokens, strength_tokens, survival_tokens, survivor_id'
+      'id, accuracy_tokens, bleeding_tokens, evasion_tokens, hunt_id, insanity_tokens, luck_tokens, movement_tokens, notes, scout, settlement_id, speed_tokens, strength_tokens, survival_tokens, survivor_id'
     )
     .eq('hunt_id', huntId)
 

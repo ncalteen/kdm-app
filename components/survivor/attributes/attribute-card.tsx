@@ -3,6 +3,7 @@
 import { NumericInput } from '@/components/menu/numeric-input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { updateEncounterSurvivor } from '@/lib/dal/encounter-survivor'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -13,6 +14,8 @@ import {
 } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import {
+  EncounterDetail,
+  EncounterStateSetter,
   HuntDetail,
   HuntStateSetter,
   SettlementDetail,
@@ -44,6 +47,8 @@ interface AttributeCardProps {
   mode: SurvivorCardMode
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
+  /** Selected Encounter */
+  selectedEncounter: EncounterDetail | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Showdown */
@@ -52,6 +57,8 @@ interface AttributeCardProps {
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt (for optimistic token updates) */
   setSelectedHunt?: HuntStateSetter
+  /** Set Selected Encounter (for optimistic token updates) */
+  setSelectedEncounter?: EncounterStateSetter
   /** Set Selected Showdown (for optimistic token updates) */
   setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
@@ -71,10 +78,12 @@ interface AttributeCardProps {
 export function AttributeCard({
   disabled = false,
   mode,
+  selectedEncounter,
   selectedHunt,
   selectedSettlement,
   selectedShowdown,
   selectedSurvivor,
+  setSelectedEncounter,
   setSelectedHunt,
   setSelectedShowdown,
   setSurvivors
@@ -108,6 +117,18 @@ export function AttributeCard({
       (hs) => hs.survivor_id === selectedSurvivor?.id
     )
   }, [mode, selectedHunt, selectedSurvivor?.id])
+
+  /** Encounter survivor record for the current survivor */
+  const encounterSurvivorRecord = useMemo(() => {
+    if (
+      mode !== SurvivorCardMode.ENCOUNTER_CARD ||
+      !selectedEncounter?.encounter_survivors
+    )
+      return undefined
+    return Object.values(selectedEncounter.encounter_survivors).find(
+      (es) => es.survivor_id === selectedSurvivor?.id
+    )
+  }, [mode, selectedEncounter, selectedSurvivor?.id])
 
   /** Showdown survivor record for the current survivor */
   const showdownSurvivorRecord = useMemo(() => {
@@ -173,6 +194,47 @@ export function AttributeCard({
           }
         )
       } else if (
+        mode === SurvivorCardMode.ENCOUNTER_CARD &&
+        encounterSurvivorRecord &&
+        selectedEncounter?.encounter_survivors &&
+        setSelectedEncounter
+      ) {
+        const previousValue =
+          encounterSurvivorRecord[
+            dbField as keyof typeof encounterSurvivorRecord
+          ]
+        const esKey = Object.entries(
+          selectedEncounter.encounter_survivors
+        ).find(([, es]) => es.id === encounterSurvivorRecord.id)?.[0]
+        if (!esKey) return
+
+        // Optimistic update
+        setSelectedEncounter({
+          ...selectedEncounter,
+          encounter_survivors: {
+            ...selectedEncounter.encounter_survivors,
+            [esKey]: { ...encounterSurvivorRecord, [dbField]: value }
+          }
+        })
+
+        updateEncounterSurvivor(encounterSurvivorRecord.id, {
+          [dbField]: value
+        }).catch((error: unknown) => {
+          // Rollback
+          setSelectedEncounter({
+            ...selectedEncounter,
+            encounter_survivors: {
+              ...selectedEncounter.encounter_survivors,
+              [esKey]: {
+                ...encounterSurvivorRecord,
+                [dbField]: previousValue
+              }
+            }
+          })
+          console.error(`${tokenName} Update Error:`, error)
+          toast.error(ERROR_MESSAGE())
+        })
+      } else if (
         mode === SurvivorCardMode.SHOWDOWN_CARD &&
         showdownSurvivorRecord &&
         selectedShowdown?.showdown_survivors &&
@@ -213,10 +275,13 @@ export function AttributeCard({
     [
       mode,
       selectedSurvivor?.id,
+      selectedEncounter,
       selectedHunt,
       selectedShowdown,
+      encounterSurvivorRecord,
       huntSurvivorRecord,
       showdownSurvivorRecord,
+      setSelectedEncounter,
       setSelectedHunt,
       setSelectedShowdown
     ]
@@ -225,42 +290,51 @@ export function AttributeCard({
   const columnCount =
     selectedSettlement?.survivor_type === DatabaseSurvivorType[SurvivorType.ARC]
       ? mode === SurvivorCardMode.SHOWDOWN_CARD ||
+        mode === SurvivorCardMode.ENCOUNTER_CARD ||
         mode === SurvivorCardMode.HUNT_CARD
         ? 'lg:grid-cols-8'
         : 'lg:grid-cols-7'
       : mode === SurvivorCardMode.SHOWDOWN_CARD ||
+          mode === SurvivorCardMode.ENCOUNTER_CARD ||
           mode === SurvivorCardMode.HUNT_CARD
         ? 'lg:grid-cols-7'
         : 'lg:grid-cols-6'
 
   const showTokens =
     mode === SurvivorCardMode.HUNT_CARD ||
+    mode === SurvivorCardMode.ENCOUNTER_CARD ||
     mode === SurvivorCardMode.SHOWDOWN_CARD
 
   /** Current token values derived from hunt/showdown survivor record */
   const tokenValues = {
     movementTokens:
       huntSurvivorRecord?.movement_tokens ??
+      encounterSurvivorRecord?.movement_tokens ??
       showdownSurvivorRecord?.movement_tokens ??
       0,
     accuracyTokens:
       huntSurvivorRecord?.accuracy_tokens ??
+      encounterSurvivorRecord?.accuracy_tokens ??
       showdownSurvivorRecord?.accuracy_tokens ??
       0,
     strengthTokens:
       huntSurvivorRecord?.strength_tokens ??
+      encounterSurvivorRecord?.strength_tokens ??
       showdownSurvivorRecord?.strength_tokens ??
       0,
     evasionTokens:
       huntSurvivorRecord?.evasion_tokens ??
+      encounterSurvivorRecord?.evasion_tokens ??
       showdownSurvivorRecord?.evasion_tokens ??
       0,
     luckTokens:
       huntSurvivorRecord?.luck_tokens ??
+      encounterSurvivorRecord?.luck_tokens ??
       showdownSurvivorRecord?.luck_tokens ??
       0,
     speedTokens:
       huntSurvivorRecord?.speed_tokens ??
+      encounterSurvivorRecord?.speed_tokens ??
       showdownSurvivorRecord?.speed_tokens ??
       0
   }

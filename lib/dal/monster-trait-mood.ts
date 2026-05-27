@@ -17,12 +17,16 @@ type JunctionTable =
   | 'showdown_monster_trait'
   | 'showdown_monster_mood'
   | 'showdown_monster_survivor_status'
+  | 'encounter_active_monster_trait'
+  | 'encounter_active_monster_mood'
   | 'quarry_level_trait'
   | 'quarry_level_mood'
   | 'quarry_level_survivor_status'
   | 'nemesis_level_trait'
   | 'nemesis_level_mood'
   | 'nemesis_level_survivor_status'
+  | 'encounter_monster_level_trait'
+  | 'encounter_monster_level_mood'
 
 /** Mapping from junction table → (parent FK column, catalog FK column). */
 const COLUMNS: Record<
@@ -44,6 +48,14 @@ const COLUMNS: Record<
     parent: 'showdown_monster_id',
     catalog: 'survivor_status_id'
   },
+  encounter_active_monster_trait: {
+    parent: 'encounter_active_monster_id',
+    catalog: 'trait_id'
+  },
+  encounter_active_monster_mood: {
+    parent: 'encounter_active_monster_id',
+    catalog: 'mood_id'
+  },
   quarry_level_trait: { parent: 'quarry_level_id', catalog: 'trait_id' },
   quarry_level_mood: { parent: 'quarry_level_id', catalog: 'mood_id' },
   quarry_level_survivor_status: {
@@ -55,6 +67,14 @@ const COLUMNS: Record<
   nemesis_level_survivor_status: {
     parent: 'nemesis_level_id',
     catalog: 'survivor_status_id'
+  },
+  encounter_monster_level_trait: {
+    parent: 'encounter_monster_level_id',
+    catalog: 'trait_id'
+  },
+  encounter_monster_level_mood: {
+    parent: 'encounter_monster_level_id',
+    catalog: 'mood_id'
   }
 }
 

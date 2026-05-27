@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
+import { updateEncounterSurvivor } from '@/lib/dal/encounter-survivor'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -18,6 +19,8 @@ import {
   TORMENT_MINIMUM_ERROR_MESSAGE
 } from '@/lib/messages'
 import {
+  EncounterDetail,
+  EncounterStateSetter,
   HuntDetail,
   HuntStateSetter,
   SettlementDetail,
@@ -42,6 +45,8 @@ interface SanityCardProps {
   mode: SurvivorCardMode
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
+  /** Selected Encounter */
+  selectedEncounter: EncounterDetail | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Showdown */
@@ -50,6 +55,8 @@ interface SanityCardProps {
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt (for optimistic token updates) */
   setSelectedHunt?: HuntStateSetter
+  /** Set Selected Encounter (for optimistic token updates) */
+  setSelectedEncounter?: EncounterStateSetter
   /** Set Selected Showdown (for optimistic token updates) */
   setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
@@ -70,10 +77,12 @@ export function SanityCard({
   displayText,
   displayTormentInput,
   mode,
+  selectedEncounter,
   selectedHunt,
   selectedSettlement,
   selectedShowdown,
   selectedSurvivor,
+  setSelectedEncounter,
   setSelectedHunt,
   setSelectedShowdown,
   setSurvivors
@@ -103,6 +112,18 @@ export function SanityCard({
     )
   }, [mode, selectedHunt, selectedSurvivor?.id])
 
+  /** Encounter survivor record for the current survivor */
+  const encounterSurvivorRecord = useMemo(() => {
+    if (
+      mode !== SurvivorCardMode.ENCOUNTER_CARD ||
+      !selectedEncounter?.encounter_survivors
+    )
+      return undefined
+    return Object.values(selectedEncounter.encounter_survivors).find(
+      (es) => es.survivor_id === selectedSurvivor?.id
+    )
+  }, [mode, selectedEncounter, selectedSurvivor?.id])
+
   /** Showdown survivor record for the current survivor */
   const showdownSurvivorRecord = useMemo(() => {
     if (
@@ -118,6 +139,7 @@ export function SanityCard({
   /** Current insanity tokens derived from hunt/showdown survivor record */
   const insanityTokens =
     huntSurvivorRecord?.insanity_tokens ??
+    encounterSurvivorRecord?.insanity_tokens ??
     showdownSurvivorRecord?.insanity_tokens ??
     0
 
@@ -173,6 +195,46 @@ export function SanityCard({
           }
         })
       } else if (
+        mode === SurvivorCardMode.ENCOUNTER_CARD &&
+        encounterSurvivorRecord &&
+        selectedEncounter?.encounter_survivors &&
+        setSelectedEncounter
+      ) {
+        const previousValue = encounterSurvivorRecord.insanity_tokens
+        const esKey = Object.entries(
+          selectedEncounter.encounter_survivors
+        ).find(([, es]) => es.id === encounterSurvivorRecord.id)?.[0]
+        if (!esKey) return
+
+        // Optimistic update
+        setSelectedEncounter({
+          ...selectedEncounter,
+          encounter_survivors: {
+            ...selectedEncounter.encounter_survivors,
+            [esKey]: { ...encounterSurvivorRecord, insanity_tokens: value }
+          }
+        })
+
+        void mutate({
+          context: 'Insanity Tokens Update',
+          persist: () =>
+            updateEncounterSurvivor(encounterSurvivorRecord.id, {
+              insanity_tokens: value
+            }),
+          rollback: () => {
+            setSelectedEncounter({
+              ...selectedEncounter,
+              encounter_survivors: {
+                ...selectedEncounter.encounter_survivors,
+                [esKey]: {
+                  ...encounterSurvivorRecord,
+                  insanity_tokens: previousValue
+                }
+              }
+            })
+          }
+        })
+      } else if (
         mode === SurvivorCardMode.SHOWDOWN_CARD &&
         showdownSurvivorRecord &&
         selectedShowdown?.showdown_survivors &&
@@ -217,10 +279,13 @@ export function SanityCard({
     [
       mode,
       selectedSurvivor?.id,
+      selectedEncounter,
       selectedHunt,
       selectedShowdown,
+      encounterSurvivorRecord,
       huntSurvivorRecord,
       showdownSurvivorRecord,
+      setSelectedEncounter,
       setSelectedHunt,
       setSelectedShowdown,
       mutate
@@ -357,18 +422,14 @@ export function SanityCard({
             {displayText && <Label className="text-xs">Insanity</Label>}
           </div>
 
-          {/* Insanity Tokens (Showdown) */}
-          {mode === SurvivorCardMode.SHOWDOWN_CARD && (
+          {/* Insanity Tokens */}
+          {(mode === SurvivorCardMode.HUNT_CARD ||
+            mode === SurvivorCardMode.ENCOUNTER_CARD ||
+            mode === SurvivorCardMode.SHOWDOWN_CARD) && (
             <div className="flex flex-col items-center gap-2 pt-1">
               <NumericInput
                 label="Insanity Tokens"
-                value={
-                  mode === SurvivorCardMode.SHOWDOWN_CARD
-                    ? insanityTokens
-                    : mode === SurvivorCardMode.HUNT_CARD
-                      ? insanityTokens
-                      : 0
-                }
+                value={insanityTokens}
                 min={0}
                 onChange={(value) => saveInsanityTokens(value)}
                 className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted!"

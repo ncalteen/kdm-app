@@ -258,6 +258,10 @@ describe('getAvailableNodes', () => {
     expect(nodes).toContain(MonsterNode.NQ4)
     expect(nodes).not.toContain(MonsterNode.NN1)
   })
+
+  it('returns no nodes for ENCOUNTER type', () => {
+    expect(getAvailableNodes(MonsterType.ENCOUNTER)).toEqual([])
+  })
 })
 
 describe('saveToLocalStorage', () => {

@@ -40,6 +40,24 @@ export interface CustomGearRow {
   weapon_type_id: string | null
 }
 
+/** Custom Encounter Monster Row */
+export interface CustomEncounterMonsterRow {
+  /** Archive Timestamp */
+  archived_at: string | null
+  /** Basic Action */
+  basic_action: string
+  /** Custom Flag */
+  custom: boolean
+  /** Encounter Monster ID */
+  id: string
+  /** Instinct */
+  instinct: string
+  /** Monster Name */
+  monster_name: string
+  /** User ID */
+  user_id: string | null
+}
+
 /** Find Custom Disorder By Name */
 export async function findCustomDisorderByName(
   userId: string,
@@ -108,6 +126,78 @@ export async function waitForCustomGearByName(
   }
 
   throw new Error(`Timed out waiting for custom gear ${gearName}`)
+}
+
+/** Find Custom Encounter Monster By Name */
+export async function findCustomEncounterMonsterByName(
+  userId: string,
+  monsterName: string
+): Promise<CustomEncounterMonsterRow | null> {
+  const { data, error } = await admin
+    .from('encounter_monster')
+    .select(
+      'id, custom, monster_name, basic_action, instinct, archived_at, user_id'
+    )
+    .eq('user_id', userId)
+    .eq('custom', true)
+    .eq('monster_name', monsterName)
+    .maybeSingle()
+
+  if (error)
+    throw new Error(`custom encounter monster lookup failed: ${error.message}`)
+
+  return data
+}
+
+/** Wait For Custom Encounter Monster By Name */
+export async function waitForCustomEncounterMonsterByName(
+  userId: string,
+  monsterName: string
+): Promise<CustomEncounterMonsterRow> {
+  const timeoutAt = Date.now() + 10_000
+
+  while (Date.now() < timeoutAt) {
+    const monster = await findCustomEncounterMonsterByName(userId, monsterName)
+    if (monster) return monster
+    await new Promise((resolve) => setTimeout(resolve, 250))
+  }
+
+  throw new Error(
+    `Timed out waiting for custom encounter monster ${monsterName}`
+  )
+}
+
+/** Wait For Missing Custom Encounter Monster */
+export async function waitForMissingCustomEncounterMonster(
+  userId: string,
+  monsterName: string
+): Promise<void> {
+  const timeoutAt = Date.now() + 10_000
+
+  while (Date.now() < timeoutAt) {
+    const monster = await findCustomEncounterMonsterByName(userId, monsterName)
+    if (!monster) return
+    await new Promise((resolve) => setTimeout(resolve, 250))
+  }
+
+  throw new Error(
+    `Timed out waiting for custom encounter monster ${monsterName} to disappear`
+  )
+}
+
+/** Count Encounter Monster Levels */
+export async function countEncounterMonsterLevels(
+  encounterMonsterId: string
+): Promise<number> {
+  const { count, error } = await admin
+    .from('encounter_monster_level')
+    .select('encounter_monster_id', { count: 'exact', head: true })
+    .eq('encounter_monster_id', encounterMonsterId)
+
+  if (error)
+    throw new Error(`encounter monster level count failed: ${error.message}`)
+
+  return count ?? 0
 }
 
 /** Wait For Missing Custom Gear */

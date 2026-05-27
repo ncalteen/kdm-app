@@ -87,6 +87,7 @@ function MainPage(): ReactElement {
 
     pendingSpecialShowdown,
 
+    selectedEncounter,
     selectedHunt,
     selectedHuntId,
     selectedHuntMonsterIndex,
@@ -108,6 +109,7 @@ function MainPage(): ReactElement {
 
     setPendingSpecialShowdown,
 
+    setSelectedEncounter,
     setSelectedHunt,
     setSelectedHuntId,
     setSelectedHuntMonsterIndex,
@@ -163,6 +165,7 @@ function MainPage(): ReactElement {
             isCreatingNewSettlement={isCreatingNewSettlement}
             isCreatingNewSurvivor={isCreatingNewSurvivor}
             pendingSpecialShowdown={pendingSpecialShowdown}
+            selectedEncounter={selectedEncounter}
             selectedHunt={selectedHunt}
             selectedHuntMonsterIndex={selectedHuntMonsterIndex}
             selectedSettlement={selectedSettlement}
@@ -175,6 +178,7 @@ function MainPage(): ReactElement {
             setIsCreatingNewSettlement={setIsCreatingNewSettlement}
             setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
             setPendingSpecialShowdown={setPendingSpecialShowdown}
+            setSelectedEncounter={setSelectedEncounter}
             setSelectedHunt={setSelectedHunt}
             setSelectedHuntId={setSelectedHuntId}
             setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}

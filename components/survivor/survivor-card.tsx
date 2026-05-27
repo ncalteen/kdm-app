@@ -31,6 +31,8 @@ import {
   SurvivorType
 } from '@/lib/enums'
 import {
+  EncounterDetail,
+  EncounterStateSetter,
   HuntDetail,
   HuntStateSetter,
   SettlementDetail,
@@ -50,6 +52,8 @@ interface SurvivorCardProps extends Partial<SurvivorDetail> {
   mode: SurvivorCardMode
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
+  /** Selected Encounter */
+  selectedEncounter?: EncounterDetail | null
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Showdown */
@@ -58,6 +62,8 @@ interface SurvivorCardProps extends Partial<SurvivorDetail> {
   selectedSurvivor: SurvivorDetail | null
   /** Set Selected Hunt (for optimistic token updates) */
   setSelectedHunt?: HuntStateSetter
+  /** Set Selected Encounter (for optimistic token updates) */
+  setSelectedEncounter?: EncounterStateSetter
   /** Set Selected Showdown (for optimistic token updates) */
   setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
@@ -76,10 +82,12 @@ interface SurvivorCardProps extends Partial<SurvivorDetail> {
  */
 export function SurvivorCard({
   mode,
+  selectedEncounter,
   selectedHunt,
   selectedSettlement,
   selectedShowdown,
   selectedSurvivor,
+  setSelectedEncounter,
   setSelectedHunt,
   setSelectedShowdown,
   setSurvivors,
@@ -116,19 +124,28 @@ export function SurvivorCard({
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
-            {mode === SurvivorCardMode.SHOWDOWN_CARD && (
+            {(mode === SurvivorCardMode.ENCOUNTER_CARD ||
+              mode === SurvivorCardMode.HUNT_CARD ||
+              mode === SurvivorCardMode.SHOWDOWN_CARD) && (
               <BleedingCard
+                mode={mode}
+                selectedEncounter={selectedEncounter ?? null}
+                selectedHunt={selectedHunt}
                 selectedShowdown={selectedShowdown}
                 selectedSurvivor={selectedSurvivor}
+                setSelectedEncounter={setSelectedEncounter}
+                setSelectedHunt={setSelectedHunt}
                 setSelectedShowdown={setSelectedShowdown}
               />
             )}
             <SurvivalCard
               mode={mode}
+              selectedEncounter={selectedEncounter ?? null}
               selectedHunt={selectedHunt}
               selectedSettlement={selectedSettlement}
               selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedEncounter={setSelectedEncounter}
               setSelectedHunt={setSelectedHunt}
               setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
@@ -159,10 +176,12 @@ export function SurvivorCard({
           <div className="flex flex-col flex-1 gap-1 xl:min-w-112.5">
             <AttributeCard
               mode={mode}
+              selectedEncounter={selectedEncounter ?? null}
               selectedHunt={selectedHunt}
               selectedSettlement={selectedSettlement}
               selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedEncounter={setSelectedEncounter}
               setSelectedHunt={setSelectedHunt}
               setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
@@ -171,10 +190,12 @@ export function SurvivorCard({
               displayText={true}
               displayTormentInput={true}
               mode={mode}
+              selectedEncounter={selectedEncounter ?? null}
               selectedHunt={selectedHunt}
               selectedSettlement={selectedSettlement}
               selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedEncounter={setSelectedEncounter}
               setSelectedHunt={setSelectedHunt}
               setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}

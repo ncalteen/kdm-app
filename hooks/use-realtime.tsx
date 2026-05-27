@@ -32,6 +32,7 @@ import { useEffect, useRef } from 'react'
  */
 type RealtimeDomain =
   | 'settlement'
+  | 'encounter'
   | 'hunt'
   | 'showdown'
   | 'settlementPhase'
@@ -120,6 +121,22 @@ export const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   },
   hunt_monster_trait: { domain: 'hunt', filterColumn: 'settlement_id' },
   hunt_survivor: { domain: 'hunt', filterColumn: 'settlement_id' },
+
+  // Encounter domain
+  encounter: { domain: 'encounter', filterColumn: 'settlement_id' },
+  encounter_active_monster: {
+    domain: 'encounter',
+    filterColumn: 'settlement_id'
+  },
+  encounter_active_monster_mood: {
+    domain: 'encounter',
+    filterColumn: 'settlement_id'
+  },
+  encounter_active_monster_trait: {
+    domain: 'encounter',
+    filterColumn: 'settlement_id'
+  },
+  encounter_survivor: { domain: 'encounter', filterColumn: 'settlement_id' },
 
   // Showdown domain
   showdown: { domain: 'showdown', filterColumn: 'settlement_id' },
@@ -216,6 +233,10 @@ export const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
   wanderer: { domain: 'catalog', filterColumn: null },
   constellation: { domain: 'catalog', filterColumn: null },
   survivor_status: { domain: 'catalog', filterColumn: null },
+  encounter_monster: { domain: 'catalog', filterColumn: null },
+  encounter_monster_level: { domain: 'catalog', filterColumn: null },
+  encounter_monster_level_trait: { domain: 'catalog', filterColumn: null },
+  encounter_monster_level_mood: { domain: 'catalog', filterColumn: null },
 
   // Catalog sub-row tables — children of the catalog parents above whose
   // transitive SELECT and realtime publication membership were installed
@@ -288,6 +309,8 @@ const CATALOG_LINK_JUNCTION_TABLES = new Set([
   'hunt_monster_mood',
   'hunt_monster_survivor_status',
   'hunt_monster_trait',
+  'encounter_active_monster_mood',
+  'encounter_active_monster_trait',
   'showdown_monster_mood',
   'showdown_monster_survivor_status',
   'showdown_monster_trait',
@@ -449,6 +472,8 @@ interface UseRealtimeSubscriptionsOptions {
   onSettlementChange: () => void
   /** Called when hunt data changes */
   onHuntChange: () => void
+  /** Called when encounter data changes */
+  onEncounterChange: () => void
   /** Called when showdown data changes */
   onShowdownChange: () => void
   /** Called when settlement phase data changes */
@@ -530,6 +555,9 @@ export function useRealtimeSubscriptions(
               break
             case 'hunt':
               callbacks.onHuntChange()
+              break
+            case 'encounter':
+              callbacks.onEncounterChange()
               break
             case 'showdown':
               callbacks.onShowdownChange()

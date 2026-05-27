@@ -16,16 +16,28 @@ vi.mock('@/hooks/use-optimistic-mutation', () => ({
   useOptimisticMutation: () => vi.fn()
 }))
 
+vi.mock('@/lib/dal/encounter-survivor', () => ({
+  updateEncounterSurvivor: vi.fn()
+}))
+
+vi.mock('@/lib/dal/hunt-survivor', () => ({
+  updateHuntSurvivor: vi.fn()
+}))
+
 vi.mock('@/lib/dal/showdown-survivor', () => ({
   updateShowdownSurvivor: vi.fn()
 }))
 
 import { BleedingCard } from '@/components/survivor/bleeding/bleeding-card'
+import { SurvivorCardMode } from '@/lib/enums'
 
 type BleedingCardProps = Parameters<typeof BleedingCard>[0]
 
 const baseProps = {
   local: {},
+  mode: SurvivorCardMode.SHOWDOWN_CARD,
+  selectedEncounter: null,
+  selectedHunt: null,
   selectedShowdown: {
     showdown_survivors: {
       ss1: {
@@ -60,5 +72,28 @@ describe('BleedingCard', () => {
     )
 
     expect(html).toBe('')
+  })
+
+  it('renders bleeding token controls for an active hunt survivor', () => {
+    const html = renderToStaticMarkup(
+      <BleedingCard
+        {...baseProps}
+        mode={SurvivorCardMode.HUNT_CARD}
+        selectedHunt={
+          {
+            hunt_survivors: {
+              hs1: {
+                id: 'hs1',
+                bleeding_tokens: 3,
+                survivor_id: 'survivor-1'
+              }
+            }
+          } as unknown as BleedingCardProps['selectedHunt']
+        }
+        selectedShowdown={null}
+      />
+    )
+
+    expect(html).toContain('Bleeding Tokens:3')
   })
 })

@@ -1,5 +1,6 @@
 'use client'
 
+import { EncounterCard } from '@/components/encounter/encounter-card'
 import { LanternMark } from '@/components/generic/lantern-mark'
 import { ListCard } from '@/components/generic/list-card'
 import { HelpCard } from '@/components/help/help-card'
@@ -65,6 +66,8 @@ import {
 import { FREE_TIER_SETTLEMENT_LIMIT_MESSAGE } from '@/lib/messages'
 import { canCreateUnlimitedSettlements } from '@/lib/subscription-entitlements'
 import {
+  EncounterDetail,
+  EncounterStateSetter,
   HuntDetail,
   HuntStateSetter,
   SettlementDetail,
@@ -96,6 +99,8 @@ interface SettlementCardProps {
   isCreatingNewSurvivor: boolean
   /* Pending Special Showdown */
   pendingSpecialShowdown: boolean
+  /** Selected Encounter */
+  selectedEncounter: EncounterDetail | null
   /** Selected Hunt */
   selectedHunt: HuntDetail | null
   /** Selected Hunt Monster Index */
@@ -120,6 +125,8 @@ interface SettlementCardProps {
   setIsCreatingNewSurvivor: (isCreating: boolean) => void
   /** Set Pending Special Showdown */
   setPendingSpecialShowdown: (pending: boolean) => void
+  /** Set Selected Encounter */
+  setSelectedEncounter: EncounterStateSetter
   /** Set Selected Hunt */
   setSelectedHunt: HuntStateSetter
   /** Set Selected Hunt ID */
@@ -168,6 +175,7 @@ export function SettlementCard({
   isCreatingNewSettlement,
   isCreatingNewSurvivor,
   pendingSpecialShowdown,
+  selectedEncounter,
   selectedHunt,
   selectedHuntMonsterIndex,
   selectedSettlement,
@@ -180,6 +188,7 @@ export function SettlementCard({
   setIsCreatingNewSettlement,
   setIsCreatingNewSurvivor,
   setPendingSpecialShowdown,
+  setSelectedEncounter,
   setSelectedHunt,
   setSelectedHuntId,
   setSelectedHuntMonsterIndex,
@@ -632,11 +641,13 @@ export function SettlementCard({
           {/* Hunt Tab */}
           {selectedSettlement && selectedTab === TabType.HUNT && (
             <HuntCard
+              selectedEncounter={selectedEncounter}
               selectedHunt={selectedHunt}
               selectedHuntMonsterIndex={selectedHuntMonsterIndex}
               selectedSettlement={selectedSettlement}
               selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedEncounter={setSelectedEncounter}
               setSelectedHunt={setSelectedHunt}
               setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
               setSelectedShowdown={setSelectedShowdown}
@@ -646,6 +657,25 @@ export function SettlementCard({
               setSurvivors={setSurvivors}
               survivors={survivors}
               userSettings={userSettings}
+            />
+          )}
+
+          {/* Encounter Tab */}
+          {selectedSettlement && selectedTab === TabType.ENCOUNTER && (
+            <EncounterCard
+              selectedEncounter={selectedEncounter}
+              selectedHunt={selectedHunt}
+              selectedSettlement={selectedSettlement}
+              selectedSettlementPhase={selectedSettlementPhase}
+              selectedSurvivor={selectedSurvivor}
+              setSelectedEncounter={setSelectedEncounter}
+              setSelectedHunt={setSelectedHunt}
+              setSelectedHuntMonsterIndex={setSelectedHuntMonsterIndex}
+              setSelectedSettlementPhase={setSelectedSettlementPhase}
+              setSelectedSurvivor={setSelectedSurvivor}
+              setSelectedTab={setSelectedTab}
+              setSurvivors={setSurvivors}
+              survivors={survivors}
             />
           )}
 
