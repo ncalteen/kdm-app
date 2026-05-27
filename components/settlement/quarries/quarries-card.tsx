@@ -22,7 +22,6 @@ import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
 import { getQuarries } from '@/lib/dal/quarry'
 import { getQuarryCollectiveCognitionRewardIds } from '@/lib/dal/quarry-collective-cognition-reward'
 import { getQuarryLocationIds } from '@/lib/dal/quarry-location'
-import { getQuarryTimelineYears } from '@/lib/dal/quarry-timeline-year'
 import { addSettlementCollectiveCognitionRewards } from '@/lib/dal/settlement-collective-cognition-reward'
 import { addSettlementLocations } from '@/lib/dal/settlement-location'
 import {
@@ -30,11 +29,7 @@ import {
   removeSettlementQuarry,
   updateSettlementQuarry
 } from '@/lib/dal/settlement-quarry'
-import {
-  addSettlementTimelineYear,
-  saveSettlementTimelineYearEntry
-} from '@/lib/dal/settlement-timeline-year'
-import { CampaignType, MonsterNode } from '@/lib/enums'
+import { MonsterNode } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { sortQuarries } from '@/lib/settlement/quarries'
 import {
@@ -192,16 +187,12 @@ export function QuarriesCard({
               : null
           )
 
-          // Add related locations, timeline events, and CC rewards
+          // Add related locations and CC rewards.
+          // Note: Timeline events are not added. See:
+          //       https://github.com/ncalteen/kdm-app/issues/83
           try {
-            const campaignType =
-              CampaignType[
-                selectedSettlement.campaign_type as keyof typeof CampaignType
-              ]
-
-            const [locationIds, timelineYears, ccrIds] = await Promise.all([
+            const [locationIds, ccrIds] = await Promise.all([
               getQuarryLocationIds(quarryId),
-              getQuarryTimelineYears(quarryId, campaignType),
               getQuarryCollectiveCognitionRewardIds(quarryId)
             ])
 
@@ -232,57 +223,6 @@ export function QuarriesCard({
                   author_username: null,
                   author_avatar_url: null
                 }))
-              }
-            }
-
-            // Collect timeline changes
-            const timelineUpdates: {
-              [year: number]: {
-                completed: boolean
-                entries: string[]
-                id: string
-              }
-            } = {}
-
-            if (timelineYears.length > 0) {
-              for (const ty of timelineYears) {
-                const existingYear = selectedSettlement.timeline[ty.year_number]
-                if (existingYear) {
-                  const existingEntries = new Set(existingYear.entries)
-                  const newEntries = ty.entries.filter(
-                    (e) => !existingEntries.has(e)
-                  )
-                  let updatedEntries = existingYear.entries
-                  for (const entry of newEntries) {
-                    updatedEntries = await saveSettlementTimelineYearEntry(
-                      existingYear.id,
-                      entry,
-                      updatedEntries.length
-                    )
-                  }
-                  timelineUpdates[ty.year_number] = {
-                    ...existingYear,
-                    entries: updatedEntries
-                  }
-                } else {
-                  const yearId = await addSettlementTimelineYear(
-                    selectedSettlement.id,
-                    ty.year_number
-                  )
-                  let entries: string[] = []
-                  for (let i = 0; i < ty.entries.length; i++) {
-                    entries = await saveSettlementTimelineYearEntry(
-                      yearId,
-                      ty.entries[i],
-                      i
-                    )
-                  }
-                  timelineUpdates[ty.year_number] = {
-                    id: yearId,
-                    completed: false,
-                    entries
-                  }
-                }
               }
             }
 
@@ -342,10 +282,6 @@ export function QuarriesCard({
                         )
                       ]
                     : prev.locations,
-                timeline:
-                  Object.keys(timelineUpdates).length > 0
-                    ? { ...prev.timeline, ...timelineUpdates }
-                    : prev.timeline,
                 collective_cognition_rewards:
                   newCcrRows.length > 0
                     ? [
