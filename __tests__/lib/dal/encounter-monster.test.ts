@@ -314,7 +314,9 @@ describe('updateEncounterMonster', () => {
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
     await expect(
-      updateEncounterMonster('encounter-monster-1', { monster_name: 'New Name' })
+      updateEncounterMonster('encounter-monster-1', {
+        monster_name: 'New Name'
+      })
     ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('encounter_monster')
@@ -330,7 +332,9 @@ describe('updateEncounterMonster', () => {
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
     await expect(
-      updateEncounterMonster('encounter-monster-1', { monster_name: 'New Name' })
+      updateEncounterMonster('encounter-monster-1', {
+        monster_name: 'New Name'
+      })
     ).rejects.toThrow('Error Updating Encounter Monster: Update failed')
   })
 })
@@ -433,7 +437,9 @@ describe('removeEncounterMonsterLevel', () => {
     const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ delete: mockDelete })
 
-    await expect(removeEncounterMonsterLevel('level-1')).resolves.toBeUndefined()
+    await expect(
+      removeEncounterMonsterLevel('level-1')
+    ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('encounter_monster_level')
     expect(mockEq).toHaveBeenCalledWith('id', 'level-1')

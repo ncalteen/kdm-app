@@ -1350,8 +1350,7 @@ export function MonsterForm({
                                       {monsterAttributeTokenMap
                                         .filter((attr) =>
                                           isEncounter
-                                            ? attr.key !== 'strength' &&
-                                              attr.key !== 'toughness'
+                                            ? attr.key !== 'strength'
                                             : true
                                         )
                                         .map((attr) => {

@@ -72,6 +72,8 @@ interface TraitsMoodsProps {
       author_avatar_url: string | null
     })[]
   ) => void
+  /** Show survivor status picker and list */
+  showSurvivorStatuses?: boolean
 }
 
 /**
@@ -90,7 +92,8 @@ export function TraitsMoods({
   monster,
   onTraitsChange,
   onMoodsChange,
-  onSurvivorStatusesChange
+  onSurvivorStatusesChange,
+  showSurvivorStatuses = true
 }: TraitsMoodsProps): ReactElement {
   const [availableTraits, setAvailableTraits] = useState<{
     [key: string]: TraitDetail
@@ -109,7 +112,11 @@ export function TraitsMoods({
   // stable across the session, so no refresh is needed after mount.
   useEffect(() => {
     let cancelled = false
-    Promise.all([getTraits(), getMoods(), getSurvivorStatuses()])
+    Promise.all([
+      getTraits(),
+      getMoods(),
+      showSurvivorStatuses ? getSurvivorStatuses() : Promise.resolve({})
+    ])
       .then(([traits, moods, statuses]) => {
         if (cancelled) return
         setAvailableTraits(traits)
@@ -122,7 +129,7 @@ export function TraitsMoods({
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [showSurvivorStatuses])
 
   const selectableTraits = Object.values(availableTraits)
     .filter((t) => !monster.traits.some((mt) => mt.id === t.id))
@@ -314,95 +321,103 @@ export function TraitsMoods({
         ))}
       </div>
 
-      <Separator className="my-2" />
+      {showSurvivorStatuses && (
+        <>
+          <Separator className="my-2" />
 
-      {/* Survivor Statuses */}
-      <div className="mb-2">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-semibold text-muted-foreground flex-1 text-center">
-            Survivor Statuses
-          </Label>
-          <Popover open={openStatusPicker} onOpenChange={setOpenStatusPicker}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="border-0 h-6 w-6"
-                disabled={selectableStatuses.length === 0}
-                aria-label="Add a survivor status"
-                title="Add a survivor status">
-                <PlusIcon className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0" align="end">
-              <Command>
-                <CommandInput placeholder="Search survivor statuses..." />
-                <CommandList>
-                  <CommandEmpty>No survivor statuses found.</CommandEmpty>
-                  <CommandGroup>
-                    {selectableStatuses.map((status) => (
-                      <CommandItem
-                        key={status.id}
-                        value={status.id}
-                        keywords={[status.survivor_status_name]}
-                        onSelect={() => {
-                          onSurvivorStatusesChange([
-                            ...monster.survivor_statuses,
-                            {
-                              ...status,
-                              author_user_id: null,
-                              author_username: null,
-                              author_avatar_url: null
-                            }
-                          ])
-                          setOpenStatusPicker(false)
-                        }}>
-                        {status.survivor_status_name}
-                        {status.custom && (
-                          <Badge variant="outline" className="ml-auto">
-                            Custom
-                          </Badge>
-                        )}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1 pb-2">
-        {monster.survivor_statuses.map((status) => (
-          <div key={status.id} className="flex items-center gap-2">
-            <CustomRulesText
-              className="grow"
-              custom={status.custom}
-              label={status.survivor_status_name}
-              title={status.survivor_status_name}
-              sections={[{ label: 'Rules', content: status.rules }]}
-              showCustomBadge
-              authorUserId={status.author_user_id}
-              authorUsername={status.author_username}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() =>
-                onSurvivorStatusesChange(
-                  monster.survivor_statuses.filter((s) => s.id !== status.id)
-                )
-              }
-              aria-label="Remove survivor status"
-              title="Remove survivor status">
-              <Trash2Icon className="h-4 w-4" />
-            </Button>
+          {/* Survivor Statuses */}
+          <div className="mb-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold text-muted-foreground flex-1 text-center">
+                Survivor Statuses
+              </Label>
+              <Popover
+                open={openStatusPicker}
+                onOpenChange={setOpenStatusPicker}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-0 h-6 w-6"
+                    disabled={selectableStatuses.length === 0}
+                    aria-label="Add a survivor status"
+                    title="Add a survivor status">
+                    <PlusIcon className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0" align="end">
+                  <Command>
+                    <CommandInput placeholder="Search survivor statuses..." />
+                    <CommandList>
+                      <CommandEmpty>No survivor statuses found.</CommandEmpty>
+                      <CommandGroup>
+                        {selectableStatuses.map((status) => (
+                          <CommandItem
+                            key={status.id}
+                            value={status.id}
+                            keywords={[status.survivor_status_name]}
+                            onSelect={() => {
+                              onSurvivorStatusesChange([
+                                ...monster.survivor_statuses,
+                                {
+                                  ...status,
+                                  author_user_id: null,
+                                  author_username: null,
+                                  author_avatar_url: null
+                                }
+                              ])
+                              setOpenStatusPicker(false)
+                            }}>
+                            {status.survivor_status_name}
+                            {status.custom && (
+                              <Badge variant="outline" className="ml-auto">
+                                Custom
+                              </Badge>
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
-        ))}
-      </div>
+
+          <div className="flex flex-col gap-1 pb-2">
+            {monster.survivor_statuses.map((status) => (
+              <div key={status.id} className="flex items-center gap-2">
+                <CustomRulesText
+                  className="grow"
+                  custom={status.custom}
+                  label={status.survivor_status_name}
+                  title={status.survivor_status_name}
+                  sections={[{ label: 'Rules', content: status.rules }]}
+                  showCustomBadge
+                  authorUserId={status.author_user_id}
+                  authorUsername={status.author_username}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    onSurvivorStatusesChange(
+                      monster.survivor_statuses.filter(
+                        (statusItem) => statusItem.id !== status.id
+                      )
+                    )
+                  }
+                  aria-label="Remove survivor status"
+                  title="Remove survivor status">
+                  <Trash2Icon className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </>
   )
 }

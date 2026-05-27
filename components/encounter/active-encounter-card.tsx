@@ -803,6 +803,7 @@ export function ActiveEncounterCard({
                   onTraitsChange={(traits) => saveMonsterData({ traits })}
                   onMoodsChange={(moods) => saveMonsterData({ moods })}
                   onSurvivorStatusesChange={() => null}
+                  showSurvivorStatuses={false}
                 />
                 <Separator className="my-2" />
                 <div className="flex flex-col gap-2 pb-2">

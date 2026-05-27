@@ -37,9 +37,8 @@ const {
   updateEncounterActiveMonster,
   removeEncounterActiveMonster
 } = await import('@/lib/dal/encounter-active-monster')
-const { getSettlementMemberUsernames } = await import(
-  '@/lib/dal/settlement-shared-user'
-)
+const { getSettlementMemberUsernames } =
+  await import('@/lib/dal/settlement-shared-user')
 
 beforeEach(() => {
   vi.resetAllMocks()

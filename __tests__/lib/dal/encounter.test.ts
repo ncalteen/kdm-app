@@ -22,13 +22,11 @@ vi.mock('@/lib/dal/settlement-shared-user', () => ({
 
 const { getEncounter, addEncounter, updateEncounter, removeEncounter } =
   await import('@/lib/dal/encounter')
-const { getEncounterActiveMonsters } = await import(
-  '@/lib/dal/encounter-active-monster'
-)
+const { getEncounterActiveMonsters } =
+  await import('@/lib/dal/encounter-active-monster')
 const { getEncounterSurvivors } = await import('@/lib/dal/encounter-survivor')
-const { getSettlementMemberUsernames } = await import(
-  '@/lib/dal/settlement-shared-user'
-)
+const { getSettlementMemberUsernames } =
+  await import('@/lib/dal/settlement-shared-user')
 
 beforeEach(() => {
   vi.resetAllMocks()

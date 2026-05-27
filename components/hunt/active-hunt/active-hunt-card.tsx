@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { addEncounter } from '@/lib/dal/encounter'
+import { addEncounter, removeEncounter } from '@/lib/dal/encounter'
 import { addEncounterActiveMonster } from '@/lib/dal/encounter-active-monster'
 import { getEncounterMonsters } from '@/lib/dal/encounter-monster'
 import { addEncounterSurvivor } from '@/lib/dal/encounter-survivor'
@@ -385,8 +385,23 @@ export function ActiveHuntCard({
 
     setIsStartingEncounter(true)
 
+    let encounterId: string | null = null
+    const usedMonsterNames = new Set<string>()
+    const getUniqueMonsterName = (baseName: string): string => {
+      let monsterName = baseName
+      let suffix = 2
+
+      while (usedMonsterNames.has(monsterName)) {
+        monsterName = `${baseName} ${suffix}`
+        suffix += 1
+      }
+
+      usedMonsterNames.add(monsterName)
+      return monsterName
+    }
+
     try {
-      const encounterId = await addEncounter({
+      encounterId = await addEncounter({
         hunt_id: selectedHunt.id,
         monster_level: selectedEncounterLevelNumber,
         settlement_id: selectedSettlement.id,
@@ -398,6 +413,11 @@ export function ActiveHuntCard({
       } = {}
 
       for (const [levelIndex, level] of selectedEncounterLevels.entries()) {
+        const baseMonsterName =
+          level.sub_monster_name?.trim() ||
+          (selectedEncounterLevels.length > 1
+            ? `${selectedEncounterMonster.monster_name} ${levelIndex + 1}`
+            : selectedEncounterMonster.monster_name)
         const encounterMonster = {
           accuracy: level.accuracy,
           accuracy_tokens: 0,
@@ -412,11 +432,7 @@ export function ActiveHuntCard({
           life: level.life,
           luck: level.luck,
           luck_tokens: 0,
-          monster_name:
-            level.sub_monster_name ??
-            (selectedEncounterLevels.length > 1
-              ? `${selectedEncounterMonster.monster_name} ${levelIndex + 1}`
-              : selectedEncounterMonster.monster_name),
+          monster_name: getUniqueMonsterName(baseMonsterName),
           movement: level.movement,
           movement_tokens: 0,
           notes: '',
@@ -516,6 +532,13 @@ export function ActiveHuntCard({
       setSelectedTab(TabType.ENCOUNTER)
     } catch (error: unknown) {
       console.error('Start Encounter Error:', error)
+      if (encounterId) {
+        try {
+          await removeEncounter(encounterId)
+        } catch (cleanupError: unknown) {
+          console.error('Start Encounter Cleanup Error:', cleanupError)
+        }
+      }
       toast.error(ERROR_MESSAGE())
     } finally {
       setIsStartingEncounter(false)
