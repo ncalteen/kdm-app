@@ -38,7 +38,10 @@
   },
   "inputs": [
     {
-      "description": "GitHub personal access token (PAT)"
+      "id": "token",
+      "type": "promptString",
+      "description": "GitHub personal access token (PAT)",
+      "password": true
     },
     {
       "id": "project-ref",
