@@ -550,7 +550,7 @@ async function selectOption(
   await page.getByRole('option', { exact: true, name: optionName }).click()
 }
 
-function getErrorToast(page: Page) {
+function getErrorToast(page: Page): ReturnType<Page['locator']> {
   return page
     .locator('[data-sonner-toast][data-type="error"]', {
       hasText: ERROR_MESSAGE()

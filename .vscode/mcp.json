@@ -38,21 +38,12 @@
   },
   "inputs": [
     {
-      "id": "token",
-      "type": "promptString",
-      "description": "",
-      "password": true
+      "description": "GitHub personal access token (PAT)",
     },
     {
       "id": "project-ref",
       "type": "promptString",
       "description": "Supabase project reference ID",
-      "password": false
-    },
-    {
-      "id": "read-only",
-      "type": "promptString",
-      "description": "Enable read-only mode",
       "password": false
     },
     {
