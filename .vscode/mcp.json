@@ -38,7 +38,7 @@
   },
   "inputs": [
     {
-      "description": "GitHub personal access token (PAT)",
+      "description": "GitHub personal access token (PAT)"
     },
     {
       "id": "project-ref",
