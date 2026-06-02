@@ -96,7 +96,7 @@ export const SUPPORTED_AVATAR_MIME_TYPES = [
  * with the checkout + webhook handlers; update them together when intentionally
  * upgrading.
  */
-export const STRIPE_API_VERSION = '2026-04-22.dahlia'
+export const STRIPE_API_VERSION = '2026-05-27.dahlia'
 
 /**
  * Basic Hunt Board Configuration

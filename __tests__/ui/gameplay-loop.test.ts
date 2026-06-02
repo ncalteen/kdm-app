@@ -308,7 +308,7 @@ test.describe('gameplay loop flow', () => {
       .getByRole('button', { name: 'Hunt board space 1: MONSTER' })
       .click()
 
-    await expect(page.getByText(ERROR_MESSAGE())).toBeVisible()
+    await expect(getErrorToast(page)).toBeVisible()
     await expect.poll(() => getHuntBoardSpace(huntId, 1)).toBe('MONSTER')
     await expect(
       page.getByRole('button', { name: 'Hunt board space 1: MONSTER' })
@@ -359,7 +359,7 @@ test.describe('gameplay loop flow', () => {
 
     await failNextRestPatch(page, '**/rest/v1/showdown*')
     await page.getByRole('button', { name: 'End Monster Turn' }).click()
-    await expect(page.getByText(ERROR_MESSAGE())).toBeVisible()
+    await expect(getErrorToast(page)).toBeVisible()
     await expect.poll(() => getShowdownTurn(showdownId)).toBe('MONSTER')
     await expect(
       page.getByRole('button', { name: 'End Monster Turn' })
@@ -548,6 +548,14 @@ async function selectOption(
 ): Promise<void> {
   await page.getByRole('combobox', { name: comboboxName }).click()
   await page.getByRole('option', { exact: true, name: optionName }).click()
+}
+
+function getErrorToast(page: Page): ReturnType<Page['locator']> {
+  return page
+    .locator('[data-sonner-toast][data-type="error"]', {
+      hasText: ERROR_MESSAGE()
+    })
+    .first()
 }
 
 async function failNextRestPatch(page: Page, url: string): Promise<void> {
