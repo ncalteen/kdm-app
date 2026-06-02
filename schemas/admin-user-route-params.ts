@@ -8,7 +8,7 @@ import { z } from 'zod'
  */
 export const AdminUserRouteParamsSchema = z.object({
   /** User ID */
-  userId: z.string().uuid('User ID must be a valid UUID.')
+  userId: z.uuid('User ID must be a valid UUID.')
 })
 
 /**
