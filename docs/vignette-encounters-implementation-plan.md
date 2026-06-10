@@ -62,13 +62,7 @@
 
 ---
 
-## 2. Static Mockups
-
-Five static mockups are available in
-[docs/vignette-encounters-static-mockups.html](vignette-encounters-static-mockups.html).
-They are intentionally static and can be opened directly in a browser.
-
-The mockups cover:
+## 2. Focus Areas
 
 1. **Vignette Encounter Landing** - a top-level one-shot navigation surface
    outside the settlement loop, with owned and shared active encounters visible.
@@ -579,7 +573,7 @@ Use `sonner` toasts and the app's existing error style. Suggested copy:
   `Only Lantern Hoard subscription holders may share vignette encounters.`
 - Generic failure: use the existing fallback,
   `The darkness swallows your words. Please try again.` This should be sourced
-  from `lib/messages.ts`, not copied ad-nauseum.
+  from `lib/messages.ts`, not copied ad nauseum.
 
 ---
 
