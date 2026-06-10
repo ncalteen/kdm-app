@@ -5579,6 +5579,614 @@ export type Database = {
           },
         ]
       }
+      vignette_encounter_definition: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          published: boolean
+          slug: string
+          sort_order: number
+          source_monster_type: string
+          source_nemesis_id: string | null
+          source_quarry_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          published?: boolean
+          slug: string
+          sort_order?: number
+          source_monster_type: string
+          source_nemesis_id?: string | null
+          source_quarry_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          published?: boolean
+          slug?: string
+          sort_order?: number
+          source_monster_type?: string
+          source_nemesis_id?: string | null
+          source_quarry_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_encounter_definition_source_nemesis_id_fkey"
+            columns: ["source_nemesis_id"]
+            isOneToOne: false
+            referencedRelation: "nemesis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_definition_source_quarry_id_fkey"
+            columns: ["source_quarry_id"]
+            isOneToOne: false
+            referencedRelation: "quarry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_encounter_level: {
+        Row: {
+          accuracy: number
+          ai_deck_size: number | null
+          basic_action: string | null
+          created_at: string
+          damage: number
+          evasion: number
+          hit_location_deck_size: number | null
+          id: string
+          level_number: number
+          movement: number
+          sort_order: number
+          special_rules: string | null
+          speed: number
+          toughness: number
+          updated_at: string
+          vignette_encounter_definition_id: string
+          wounds: number | null
+        }
+        Insert: {
+          accuracy?: number
+          ai_deck_size?: number | null
+          basic_action?: string | null
+          created_at?: string
+          damage?: number
+          evasion?: number
+          hit_location_deck_size?: number | null
+          id?: string
+          level_number: number
+          movement?: number
+          sort_order?: number
+          special_rules?: string | null
+          speed?: number
+          toughness?: number
+          updated_at?: string
+          vignette_encounter_definition_id: string
+          wounds?: number | null
+        }
+        Update: {
+          accuracy?: number
+          ai_deck_size?: number | null
+          basic_action?: string | null
+          created_at?: string
+          damage?: number
+          evasion?: number
+          hit_location_deck_size?: number | null
+          id?: string
+          level_number?: number
+          movement?: number
+          sort_order?: number
+          special_rules?: string | null
+          speed?: number
+          toughness?: number
+          updated_at?: string
+          vignette_encounter_definition_id?: string
+          wounds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_encounter_level_vignette_encounter_definition_id_fkey"
+            columns: ["vignette_encounter_definition_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter_definition"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_encounter_level_mood: {
+        Row: {
+          created_at: string
+          id: string
+          mood_id: string
+          sort_order: number
+          updated_at: string
+          vignette_encounter_level_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mood_id: string
+          sort_order?: number
+          updated_at?: string
+          vignette_encounter_level_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mood_id?: string
+          sort_order?: number
+          updated_at?: string
+          vignette_encounter_level_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_encounter_level_mood_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "mood"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_level_mood_vignette_encounter_level_id_fkey"
+            columns: ["vignette_encounter_level_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter_level"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_encounter_level_survivor_status: {
+        Row: {
+          created_at: string
+          id: string
+          sort_order: number
+          survivor_status_id: string
+          updated_at: string
+          vignette_encounter_level_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sort_order?: number
+          survivor_status_id: string
+          updated_at?: string
+          vignette_encounter_level_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sort_order?: number
+          survivor_status_id?: string
+          updated_at?: string
+          vignette_encounter_level_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_encounter_level_survi_vignette_encounter_level_id_fkey"
+            columns: ["vignette_encounter_level_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter_level"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_level_survivor_statu_survivor_status_id_fkey"
+            columns: ["survivor_status_id"]
+            isOneToOne: false
+            referencedRelation: "survivor_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_encounter_level_trait: {
+        Row: {
+          created_at: string
+          id: string
+          sort_order: number
+          trait_id: string
+          updated_at: string
+          vignette_encounter_level_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sort_order?: number
+          trait_id: string
+          updated_at?: string
+          vignette_encounter_level_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sort_order?: number
+          trait_id?: string
+          updated_at?: string
+          vignette_encounter_level_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_encounter_level_trait_trait_id_fkey"
+            columns: ["trait_id"]
+            isOneToOne: false
+            referencedRelation: "trait"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_level_trait_vignette_encounter_level_id_fkey"
+            columns: ["vignette_encounter_level_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter_level"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_survivor_template: {
+        Row: {
+          accuracy: number
+          arm_armor: number
+          body_armor: number
+          courage: number
+          created_at: string
+          evasion: number
+          gender: Database["public"]["Enums"]["gender"] | null
+          head_armor: number
+          id: string
+          insanity: number
+          leg_armor: number
+          luck: number
+          movement: number
+          notes: string
+          sort_order: number
+          speed: number
+          strength: number
+          survival: number
+          survivor_name: string
+          survivor_type: Database["public"]["Enums"]["survivor_type"]
+          understanding: number
+          updated_at: string
+          vignette_encounter_definition_id: string
+          waist_armor: number
+          weapon_proficiency: number
+          weapon_type_id: string | null
+        }
+        Insert: {
+          accuracy?: number
+          arm_armor?: number
+          body_armor?: number
+          courage?: number
+          created_at?: string
+          evasion?: number
+          gender?: Database["public"]["Enums"]["gender"] | null
+          head_armor?: number
+          id?: string
+          insanity?: number
+          leg_armor?: number
+          luck?: number
+          movement?: number
+          notes?: string
+          sort_order?: number
+          speed?: number
+          strength?: number
+          survival?: number
+          survivor_name: string
+          survivor_type?: Database["public"]["Enums"]["survivor_type"]
+          understanding?: number
+          updated_at?: string
+          vignette_encounter_definition_id: string
+          waist_armor?: number
+          weapon_proficiency?: number
+          weapon_type_id?: string | null
+        }
+        Update: {
+          accuracy?: number
+          arm_armor?: number
+          body_armor?: number
+          courage?: number
+          created_at?: string
+          evasion?: number
+          gender?: Database["public"]["Enums"]["gender"] | null
+          head_armor?: number
+          id?: string
+          insanity?: number
+          leg_armor?: number
+          luck?: number
+          movement?: number
+          notes?: string
+          sort_order?: number
+          speed?: number
+          strength?: number
+          survival?: number
+          survivor_name?: string
+          survivor_type?: Database["public"]["Enums"]["survivor_type"]
+          understanding?: number
+          updated_at?: string
+          vignette_encounter_definition_id?: string
+          waist_armor?: number
+          weapon_proficiency?: number
+          weapon_type_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_survivor_template_vignette_encounter_definition_i_fkey"
+            columns: ["vignette_encounter_definition_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter_definition"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_template_weapon_type_id_fkey"
+            columns: ["weapon_type_id"]
+            isOneToOne: false
+            referencedRelation: "weapon_type"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_survivor_template_ability_impairment: {
+        Row: {
+          ability_impairment_id: string
+          created_at: string
+          id: string
+          sort_order: number
+          updated_at: string
+          vignette_survivor_template_id: string
+        }
+        Insert: {
+          ability_impairment_id: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          updated_at?: string
+          vignette_survivor_template_id: string
+        }
+        Update: {
+          ability_impairment_id?: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          updated_at?: string
+          vignette_survivor_template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_survivor_template_ab_vignette_survivor_template_i_fkey"
+            columns: ["vignette_survivor_template_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_template"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_template_ability_i_ability_impairment_id_fkey"
+            columns: ["ability_impairment_id"]
+            isOneToOne: false
+            referencedRelation: "ability_impairment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_survivor_template_disorder: {
+        Row: {
+          created_at: string
+          disorder_id: string
+          id: string
+          sort_order: number
+          updated_at: string
+          vignette_survivor_template_id: string
+        }
+        Insert: {
+          created_at?: string
+          disorder_id: string
+          id?: string
+          sort_order?: number
+          updated_at?: string
+          vignette_survivor_template_id: string
+        }
+        Update: {
+          created_at?: string
+          disorder_id?: string
+          id?: string
+          sort_order?: number
+          updated_at?: string
+          vignette_survivor_template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_survivor_template_di_vignette_survivor_template_i_fkey"
+            columns: ["vignette_survivor_template_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_template"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_template_disorder_disorder_id_fkey"
+            columns: ["disorder_id"]
+            isOneToOne: false
+            referencedRelation: "disorder"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_survivor_template_fighting_art: {
+        Row: {
+          created_at: string
+          fighting_art_id: string
+          id: string
+          sort_order: number
+          updated_at: string
+          vignette_survivor_template_id: string
+        }
+        Insert: {
+          created_at?: string
+          fighting_art_id: string
+          id?: string
+          sort_order?: number
+          updated_at?: string
+          vignette_survivor_template_id: string
+        }
+        Update: {
+          created_at?: string
+          fighting_art_id?: string
+          id?: string
+          sort_order?: number
+          updated_at?: string
+          vignette_survivor_template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_survivor_template_fi_vignette_survivor_template_i_fkey"
+            columns: ["vignette_survivor_template_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_template"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_template_fighting_art_fighting_art_id_fkey"
+            columns: ["fighting_art_id"]
+            isOneToOne: false
+            referencedRelation: "fighting_art"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_survivor_template_gear_grid: {
+        Row: {
+          column_number: number
+          created_at: string
+          gear_id: string
+          id: string
+          row_number: number
+          updated_at: string
+          vignette_survivor_template_id: string
+        }
+        Insert: {
+          column_number: number
+          created_at?: string
+          gear_id: string
+          id?: string
+          row_number: number
+          updated_at?: string
+          vignette_survivor_template_id: string
+        }
+        Update: {
+          column_number?: number
+          created_at?: string
+          gear_id?: string
+          id?: string
+          row_number?: number
+          updated_at?: string
+          vignette_survivor_template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_survivor_template_ge_vignette_survivor_template_i_fkey"
+            columns: ["vignette_survivor_template_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_template"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_template_gear_grid_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_survivor_template_secret_fighting_art: {
+        Row: {
+          created_at: string
+          id: string
+          secret_fighting_art_id: string
+          sort_order: number
+          updated_at: string
+          vignette_survivor_template_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          secret_fighting_art_id: string
+          sort_order?: number
+          updated_at?: string
+          vignette_survivor_template_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          secret_fighting_art_id?: string
+          sort_order?: number
+          updated_at?: string
+          vignette_survivor_template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_survivor_template_se_vignette_survivor_template_i_fkey"
+            columns: ["vignette_survivor_template_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_template"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_template_secret_f_secret_fighting_art_id_fkey"
+            columns: ["secret_fighting_art_id"]
+            isOneToOne: false
+            referencedRelation: "secret_fighting_art"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_survivor_template_survivor_status: {
+        Row: {
+          created_at: string
+          id: string
+          sort_order: number
+          survivor_status_id: string
+          updated_at: string
+          vignette_survivor_template_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sort_order?: number
+          survivor_status_id: string
+          updated_at?: string
+          vignette_survivor_template_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sort_order?: number
+          survivor_status_id?: string
+          updated_at?: string
+          vignette_survivor_template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_survivor_template_su_vignette_survivor_template_i_fkey"
+            columns: ["vignette_survivor_template_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_template"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_template_survivor_sta_survivor_status_id_fkey"
+            columns: ["survivor_status_id"]
+            isOneToOne: false
+            referencedRelation: "survivor_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wanderer: {
         Row: {
           accuracy: number
