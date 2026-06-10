@@ -5976,6 +5976,42 @@ export type Database = {
           },
         ]
       }
+      vignette_encounter_shared_user: {
+        Row: {
+          created_at: string
+          created_by: string
+          shared_user_id: string
+          vignette_encounter_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          shared_user_id: string
+          vignette_encounter_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          shared_user_id?: string
+          vignette_encounter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_vignette_encounter_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_shared_user_vignette_encounter_id_fkey"
+            columns: ["vignette_encounter_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vignette_encounter_survivor: {
         Row: {
           accuracy: number
@@ -6945,6 +6981,10 @@ export type Database = {
         Args: { p_armor_set_id: string; p_equipped_gear_ids: string[] }
         Returns: boolean
       }
+      can_share_vignette_encounters: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       check_username_available: {
         Args: { desired_username: string }
         Returns: boolean
@@ -7021,6 +7061,10 @@ export type Database = {
         Returns: boolean
       }
       is_settlement_owner: { Args: { record_id: string }; Returns: boolean }
+      is_vignette_encounter_owner: {
+        Args: { target_vignette_encounter: string }
+        Returns: boolean
+      }
       lookup_user_by_username: { Args: { p_username: string }; Returns: string }
       provision_user_settings_for_oauth: {
         Args: { p_user_id: string }
