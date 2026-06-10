@@ -3,7 +3,7 @@
 ## Table of Contents
 
 1. [Goals & Non-Goals](#1-goals--non-goals)
-1. [Static Mockups](#2-static-mockups)
+1. [Focus Areas](#2-focus-areas)
 1. [Current Codebase Fit](#3-current-codebase-fit)
 1. [Recommended Product Model](#4-recommended-product-model)
 1. [Recommended Data Model](#5-recommended-data-model)
