@@ -13,7 +13,8 @@ create table vignette_encounter_shared_user (
 	created_by uuid not null references auth.users(id) on delete cascade,
 	-- Constraints
 	primary key (vignette_encounter_id, shared_user_id),
-	constraint vignette_encounter_shared_user_no_self_share check (shared_user_id <> created_by)
+	constraint vignette_encounter_shared_user_no_self_share check (shared_user_id <> created_by),
+	constraint fk_vignette_encounter_shared_user_settings foreign key (shared_user_id) references user_settings(user_id) on delete cascade
 );
 --------------------------------------------------------------------------------
 -- Helper: is_vignette_encounter_owner(uuid)

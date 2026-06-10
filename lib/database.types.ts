@@ -5997,6 +5997,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_vignette_encounter_shared_user_settings"
+            columns: ["shared_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_settings"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "vignette_encounter_shared_user_vignette_encounter_id_fkey"
             columns: ["vignette_encounter_id"]
             isOneToOne: false

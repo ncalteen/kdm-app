@@ -213,6 +213,34 @@ describe('RLS: vignette encounter sharing', () => {
     expect(remainingRows).toEqual([])
   })
 
+  it('prevents duplicate shares for the same vignette and collaborator', async () => {
+    await setUserSubscription(owner.id, 'lantern_hoard', 'active')
+    await clearShares()
+
+    const share = {
+      vignette_encounter_id: vignetteEncounterId,
+      shared_user_id: collaborator.id,
+      created_by: owner.id
+    }
+
+    const { error: firstInsertError } = await owner.client
+      .from('vignette_encounter_shared_user')
+      .insert(share)
+    expect(firstInsertError).toBeNull()
+
+    const { error: duplicateInsertError } = await owner.client
+      .from('vignette_encounter_shared_user')
+      .insert(share)
+    expect(duplicateInsertError).not.toBeNull()
+
+    const { data: shareRows, error: shareRowsError } = await admin
+      .from('vignette_encounter_shared_user')
+      .select('shared_user_id')
+      .eq('vignette_encounter_id', vignetteEncounterId)
+    expect(shareRowsError).toBeNull()
+    expect(shareRows).toEqual([{ shared_user_id: collaborator.id }])
+  })
+
   it('prevents owners from sharing a vignette with themselves', async () => {
     await setUserSubscription(owner.id, 'lantern_hoard', 'active')
     await clearShares()
