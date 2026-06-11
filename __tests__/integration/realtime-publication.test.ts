@@ -4,11 +4,12 @@ import { describe, expect, it } from 'vitest'
 /**
  * Integration — Realtime Publication Membership
  *
- * Asserts that every settlement-scoped table AND every catalog table
- * covered by [E2.1.a/b/c] is included in the `supabase_realtime`
- * publication. Tables in the publication broadcast row-level changes to
- * subscribed clients, which is what powers multiplayer sync for shared
- * settlements and collaborator-visible custom rules text.
+ * Asserts that every settlement-scoped table, every catalog table covered
+ * by [E2.1.a/b/c], and every vignette encounter instance/share table is
+ * included in the `supabase_realtime` publication. Tables in the
+ * publication broadcast row-level changes to subscribed clients, which is
+ * what powers multiplayer sync for shared settlements, collaborator-visible
+ * custom rules text, and shared vignette encounter state.
  *
  * If a new settlement-scoped table or a custom catalog is added to the
  * schema without being added to the publication, this test fails with a
@@ -186,6 +187,25 @@ describe('Realtime publication membership', () => {
     'encounter_monster_level_mood'
   ] as const
 
+  /**
+   * Source of truth: every vignette encounter instance/share table whose
+   * rows must broadcast to owners and collaborators. Mirrors the
+   * `vignette_realtime_tables` array in
+   * `20260613000005_vignette_realtime_publication.sql`.
+   */
+  const EXPECTED_VIGNETTE_TABLES = [
+    'vignette_encounter',
+    'vignette_encounter_monster',
+    'vignette_encounter_survivor',
+    'vignette_encounter_survivor_fighting_art',
+    'vignette_encounter_survivor_secret_fighting_art',
+    'vignette_encounter_survivor_disorder',
+    'vignette_encounter_survivor_ability_impairment',
+    'vignette_encounter_survivor_status',
+    'vignette_encounter_gear_grid',
+    'vignette_encounter_shared_user'
+  ] as const
+
   it('includes every settlement-scoped table in `supabase_realtime`', async () => {
     const { data, error } = await admin.rpc('realtime_publication_tables')
 
@@ -264,6 +284,20 @@ describe('Realtime publication membership', () => {
     const missing = EXPECTED_CATALOG_SUB_ROW_TABLES.filter(
       (t) => !actual.has(t)
     )
+
+    expect(missing).toEqual([])
+  })
+
+  // [VIG-01.05] acceptance: vignette encounter gameplay and sharing tables
+  // are in the publication so later owner/collaborator subscriptions can
+  // receive encounter, monster, survivor, gear-grid, and share/revoke events.
+  it('includes every vignette encounter table in `supabase_realtime` ([VIG-01.05])', async () => {
+    const { data, error } = await admin.rpc('realtime_publication_tables')
+
+    expect(error).toBeNull()
+    const rows = (data ?? []) as { tablename: string }[]
+    const actual = new Set(rows.map((r) => r.tablename))
+    const missing = EXPECTED_VIGNETTE_TABLES.filter((t) => !actual.has(t))
 
     expect(missing).toEqual([])
   })
