@@ -16,7 +16,7 @@ describe('RLS: vignette encounter sharing', () => {
   let owner: TestUser
   let collaborator: TestUser
   let stranger: TestUser
-  let vignetteEncounterDefinitionId: string
+  const vignetteEncounterDefinitionIds: string[] = []
   let vignetteEncounterId: string
   let vignetteEncounterMonsterId: string
   let vignetteEncounterSurvivorId: string
@@ -39,11 +39,11 @@ describe('RLS: vignette encounter sharing', () => {
     await deleteTestUser(collaborator.id)
     await deleteTestUser(stranger.id)
 
-    if (vignetteEncounterDefinitionId) {
+    if (vignetteEncounterDefinitionIds.length > 0) {
       await admin
         .from('vignette_encounter_definition')
         .delete()
-        .eq('id', vignetteEncounterDefinitionId)
+        .in('id', vignetteEncounterDefinitionIds)
     }
   })
 
@@ -70,7 +70,8 @@ describe('RLS: vignette encounter sharing', () => {
     expect(definitionError).toBeNull()
     expect(definition).not.toBeNull()
 
-    vignetteEncounterDefinitionId = definition!.id
+    const vignetteEncounterDefinitionId = definition!.id
+    vignetteEncounterDefinitionIds.push(vignetteEncounterDefinitionId)
 
     const { data: level, error: levelError } = await admin
       .from('vignette_encounter_level')
