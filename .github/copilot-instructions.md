@@ -101,7 +101,8 @@ Other terms and phrases that can be used to describe the game include:
 Use JSDoc for exported functions, components, types, classes, enums, and complex
 logic when consistent with the surrounding file.
 
-JSDoc titles should use **Capital Case**.
+JSDoc titles, parameters, return values, and other elements should use **Capital
+Case**. Underneath the title, provide a description in regular sentences.
 
 ```ts
 /**
