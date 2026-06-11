@@ -9,21 +9,29 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 /**
  * RLS — Vignette Encounter Sharing
  *
- * Exercises the sharing table and Lantern Hoard entitlement helper introduced
- * for VIG-01.03 / GitHub issue #335.
+ * Exercises vignette instance ownership, collaboration, and sharing policies
+ * introduced for VIG-01.04 / GitHub issue #332.
  */
 describe('RLS: vignette encounter sharing', () => {
   let owner: TestUser
   let collaborator: TestUser
   let stranger: TestUser
-  let vignetteEncounterDefinitionId: string
+  const vignetteEncounterDefinitionIds: string[] = []
   let vignetteEncounterId: string
+  let vignetteEncounterMonsterId: string
+  let vignetteEncounterSurvivorId: string
+  let vignetteEncounterGearGridId: string
 
   beforeAll(async () => {
     owner = await createTestUser()
     collaborator = await createTestUser()
     stranger = await createTestUser()
     vignetteEncounterId = await seedVignetteEncounter(owner.id)
+    const stateIds =
+      await seedVignetteEncounterGameplayState(vignetteEncounterId)
+    vignetteEncounterMonsterId = stateIds.monsterId
+    vignetteEncounterSurvivorId = stateIds.survivorId
+    vignetteEncounterGearGridId = stateIds.gearGridId
   })
 
   afterAll(async () => {
@@ -31,11 +39,11 @@ describe('RLS: vignette encounter sharing', () => {
     await deleteTestUser(collaborator.id)
     await deleteTestUser(stranger.id)
 
-    if (vignetteEncounterDefinitionId) {
+    if (vignetteEncounterDefinitionIds.length > 0) {
       await admin
         .from('vignette_encounter_definition')
         .delete()
-        .eq('id', vignetteEncounterDefinitionId)
+        .in('id', vignetteEncounterDefinitionIds)
     }
   })
 
@@ -62,7 +70,8 @@ describe('RLS: vignette encounter sharing', () => {
     expect(definitionError).toBeNull()
     expect(definition).not.toBeNull()
 
-    vignetteEncounterDefinitionId = definition!.id
+    const vignetteEncounterDefinitionId = definition!.id
+    vignetteEncounterDefinitionIds.push(vignetteEncounterDefinitionId)
 
     const { data: level, error: levelError } = await admin
       .from('vignette_encounter_level')
@@ -90,6 +99,56 @@ describe('RLS: vignette encounter sharing', () => {
     return encounter!.id
   }
 
+  async function seedVignetteEncounterGameplayState(
+    encounterId: string
+  ): Promise<{ monsterId: string; survivorId: string; gearGridId: string }> {
+    const { data: gear, error: gearError } = await admin
+      .from('gear')
+      .select('id')
+      .limit(1)
+      .single()
+    expect(gearError).toBeNull()
+    expect(gear).not.toBeNull()
+
+    const { data: monster, error: monsterError } = await admin
+      .from('vignette_encounter_monster')
+      .insert({ vignette_encounter_id: encounterId })
+      .select('id')
+      .single()
+    expect(monsterError).toBeNull()
+    expect(monster).not.toBeNull()
+
+    const { data: survivor, error: survivorError } = await admin
+      .from('vignette_encounter_survivor')
+      .insert({
+        vignette_encounter_id: encounterId,
+        survivor_name: 'RLS Vignette Survivor'
+      })
+      .select('id')
+      .single()
+    expect(survivorError).toBeNull()
+    expect(survivor).not.toBeNull()
+
+    const { data: gearGrid, error: gearGridError } = await admin
+      .from('vignette_encounter_gear_grid')
+      .insert({
+        vignette_encounter_survivor_id: survivor!.id,
+        gear_id: gear!.id,
+        row_number: 0,
+        column_number: 0
+      })
+      .select('id')
+      .single()
+    expect(gearGridError).toBeNull()
+    expect(gearGrid).not.toBeNull()
+
+    return {
+      monsterId: monster!.id,
+      survivorId: survivor!.id,
+      gearGridId: gearGrid!.id
+    }
+  }
+
   async function setUserSubscription(
     userId: string,
     planId: 'free' | 'lantern' | 'lantern_hoard',
@@ -109,6 +168,222 @@ describe('RLS: vignette encounter sharing', () => {
       .eq('vignette_encounter_id', vignetteEncounterId)
     expect(error).toBeNull()
   }
+
+  it('allows the owner to create and update their own active vignette instance', async () => {
+    const tempOwner = await createTestUser()
+    const tempEncounterId = await seedVignetteEncounter(tempOwner.id)
+
+    const { data: selected, error: selectError } = await tempOwner.client
+      .from('vignette_encounter')
+      .select('id, round')
+      .eq('id', tempEncounterId)
+    expect(selectError).toBeNull()
+    expect(selected).toEqual([{ id: tempEncounterId, round: 1 }])
+
+    const { data: updated, error: updateError } = await tempOwner.client
+      .from('vignette_encounter')
+      .update({ round: 2, notes: 'Owner keeps the lantern high' })
+      .eq('id', tempEncounterId)
+      .select('id, round, notes')
+    expect(updateError).toBeNull()
+    expect(updated).toEqual([
+      {
+        id: tempEncounterId,
+        round: 2,
+        notes: 'Owner keeps the lantern high'
+      }
+    ])
+
+    await deleteTestUser(tempOwner.id)
+  })
+
+  it('allows the owner to end their own active vignette instance', async () => {
+    const tempOwner = await createTestUser()
+    const tempEncounterId = await seedVignetteEncounter(tempOwner.id)
+    const endedAt = new Date().toISOString()
+
+    const { data, error } = await tempOwner.client
+      .from('vignette_encounter')
+      .update({ status: 'ENDED', ended_at: endedAt })
+      .eq('id', tempEncounterId)
+      .select('id, status, ended_at')
+    expect(error).toBeNull()
+    expect(data).toEqual([
+      {
+        id: tempEncounterId,
+        status: 'ENDED',
+        ended_at: expect.any(String)
+      }
+    ])
+    expect(new Date(data![0].ended_at!).toISOString()).toBe(endedAt)
+
+    await deleteTestUser(tempOwner.id)
+  })
+
+  it('allows the owner to delete their own active vignette instance', async () => {
+    const tempOwner = await createTestUser()
+    const tempEncounterId = await seedVignetteEncounter(tempOwner.id)
+
+    const { error } = await tempOwner.client
+      .from('vignette_encounter')
+      .delete()
+      .eq('id', tempEncounterId)
+    expect(error).toBeNull()
+
+    const { data: remaining, error: remainingError } = await admin
+      .from('vignette_encounter')
+      .select('id')
+      .eq('id', tempEncounterId)
+    expect(remainingError).toBeNull()
+    expect(remaining).toEqual([])
+
+    await deleteTestUser(tempOwner.id)
+  })
+
+  it('allows a collaborator to read and update active gameplay state', async () => {
+    await setUserSubscription(owner.id, 'lantern_hoard', 'active')
+    await clearShares()
+
+    const { error: shareError } = await owner.client
+      .from('vignette_encounter_shared_user')
+      .insert({
+        vignette_encounter_id: vignetteEncounterId,
+        shared_user_id: collaborator.id,
+        created_by: owner.id
+      })
+    expect(shareError).toBeNull()
+
+    const { data: encounterRows, error: encounterSelectError } =
+      await collaborator.client
+        .from('vignette_encounter')
+        .select('id, round')
+        .eq('id', vignetteEncounterId)
+    expect(encounterSelectError).toBeNull()
+    expect(encounterRows).toEqual([{ id: vignetteEncounterId, round: 1 }])
+
+    const { data: encounterUpdate, error: encounterUpdateError } =
+      await collaborator.client
+        .from('vignette_encounter')
+        .update({ round: 2, notes: 'Collaborator trims the wick' })
+        .eq('id', vignetteEncounterId)
+        .select('id, round, notes')
+    expect(encounterUpdateError).toBeNull()
+    expect(encounterUpdate).toEqual([
+      {
+        id: vignetteEncounterId,
+        round: 2,
+        notes: 'Collaborator trims the wick'
+      }
+    ])
+
+    const { data: monsterUpdate, error: monsterUpdateError } =
+      await collaborator.client
+        .from('vignette_encounter_monster')
+        .update({ current_wounds: 3, knocked_down: true })
+        .eq('id', vignetteEncounterMonsterId)
+        .select('id, current_wounds, knocked_down')
+    expect(monsterUpdateError).toBeNull()
+    expect(monsterUpdate).toEqual([
+      {
+        id: vignetteEncounterMonsterId,
+        current_wounds: 3,
+        knocked_down: true
+      }
+    ])
+
+    const { data: survivorUpdate, error: survivorUpdateError } =
+      await collaborator.client
+        .from('vignette_encounter_survivor')
+        .update({ survival: 2, notes: 'The survivor refuses the dark' })
+        .eq('id', vignetteEncounterSurvivorId)
+        .select('id, survival, notes')
+    expect(survivorUpdateError).toBeNull()
+    expect(survivorUpdate).toEqual([
+      {
+        id: vignetteEncounterSurvivorId,
+        survival: 2,
+        notes: 'The survivor refuses the dark'
+      }
+    ])
+
+    const { data: gearGridUpdate, error: gearGridUpdateError } =
+      await collaborator.client
+        .from('vignette_encounter_gear_grid')
+        .update({ row_number: 1, column_number: 1 })
+        .eq('id', vignetteEncounterGearGridId)
+        .select('id, row_number, column_number')
+    expect(gearGridUpdateError).toBeNull()
+    expect(gearGridUpdate).toEqual([
+      {
+        id: vignetteEncounterGearGridId,
+        row_number: 1,
+        column_number: 1
+      }
+    ])
+  })
+
+  it('prevents a collaborator from ending or deleting a vignette instance', async () => {
+    await setUserSubscription(owner.id, 'lantern_hoard', 'active')
+    await clearShares()
+
+    const { error: shareError } = await owner.client
+      .from('vignette_encounter_shared_user')
+      .insert({
+        vignette_encounter_id: vignetteEncounterId,
+        shared_user_id: collaborator.id,
+        created_by: owner.id
+      })
+    expect(shareError).toBeNull()
+
+    const { error: endError } = await collaborator.client
+      .from('vignette_encounter')
+      .update({ status: 'ENDED', ended_at: new Date().toISOString() })
+      .eq('id', vignetteEncounterId)
+    expect(endError).not.toBeNull()
+
+    const { error: deleteError } = await collaborator.client
+      .from('vignette_encounter')
+      .delete()
+      .eq('id', vignetteEncounterId)
+    expect(deleteError).toBeNull()
+
+    const { data: remaining, error: remainingError } = await admin
+      .from('vignette_encounter')
+      .select('id, status')
+      .eq('id', vignetteEncounterId)
+    expect(remainingError).toBeNull()
+    expect(remaining).toEqual([{ id: vignetteEncounterId, status: 'ACTIVE' }])
+  })
+
+  it('prevents strangers from reading or mutating vignette instance rows', async () => {
+    await setUserSubscription(owner.id, 'lantern_hoard', 'active')
+    await clearShares()
+
+    const { data: encounterRows, error: encounterSelectError } =
+      await stranger.client
+        .from('vignette_encounter')
+        .select('id')
+        .eq('id', vignetteEncounterId)
+    expect(encounterSelectError).toBeNull()
+    expect(encounterRows).toEqual([])
+
+    const { data: updateRows, error: updateError } = await stranger.client
+      .from('vignette_encounter_monster')
+      .update({ current_wounds: 9 })
+      .eq('id', vignetteEncounterMonsterId)
+      .select('id')
+    expect(updateError).toBeNull()
+    expect(updateRows).toEqual([])
+
+    const { data: monsterRows, error: monsterRowsError } = await admin
+      .from('vignette_encounter_monster')
+      .select('id, current_wounds')
+      .eq('id', vignetteEncounterMonsterId)
+    expect(monsterRowsError).toBeNull()
+    expect(monsterRows).toEqual([
+      { id: vignetteEncounterMonsterId, current_wounds: 3 }
+    ])
+  })
 
   it('denies share creation for a free owner', async () => {
     await setUserSubscription(owner.id, 'free', 'active')
