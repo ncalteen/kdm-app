@@ -6981,8 +6981,23 @@ export type Database = {
         Args: { p_armor_set_id: string; p_equipped_gear_ids: string[] }
         Returns: boolean
       }
+      can_access_active_vignette_encounter: {
+        Args: { target_vignette_encounter: string }
+        Returns: boolean
+      }
       can_share_vignette_encounters: {
         Args: { target_user_id: string }
+        Returns: boolean
+      }
+      can_update_vignette_encounter_as_collaborator: {
+        Args: {
+          proposed_definition_id: string
+          proposed_ended_at: string
+          proposed_level_id: string
+          proposed_status: string
+          proposed_user_id: string
+          target_vignette_encounter: string
+        }
         Returns: boolean
       }
       check_username_available: {
@@ -7030,6 +7045,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: number
       }
+      is_active_vignette_encounter_owner: {
+        Args: { target_vignette_encounter: string }
+        Returns: boolean
+      }
       is_admin: { Args: never; Returns: boolean }
       is_armor_set_owner: { Args: { record_id: string }; Returns: boolean }
       is_collective_cognition_reward_visible_via_quarry_reference: {
@@ -7061,6 +7080,10 @@ export type Database = {
         Returns: boolean
       }
       is_settlement_owner: { Args: { record_id: string }; Returns: boolean }
+      is_vignette_encounter_collaborator: {
+        Args: { target_vignette_encounter: string }
+        Returns: boolean
+      }
       is_vignette_encounter_owner: {
         Args: { target_vignette_encounter: string }
         Returns: boolean
