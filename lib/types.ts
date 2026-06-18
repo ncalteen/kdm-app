@@ -419,6 +419,357 @@ export type EncounterSurvivorDetail = Omit<
   'created_at' | 'updated_at'
 >
 
+/** Vignette Encounter Role */
+export type VignetteEncounterRole = 'owner' | 'collaborator'
+
+/** Catalog Authorship Detail */
+export type CatalogAuthorshipDetail = {
+  /** Author User ID (null for built-ins / non-custom rows) */
+  author_user_id: string | null
+  /** Author Username (null for built-ins / ghost authors) */
+  author_username: string | null
+  /** Author Avatar URL (null for built-ins / ghost / no avatar) */
+  author_avatar_url: string | null
+}
+
+/** Vignette Catalog Mood Detail */
+export type VignetteMonsterLevelMoodDetail = Omit<
+  Tables<'vignette_monster_level_mood'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Mood */
+  mood: MoodDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Catalog Trait Detail */
+export type VignetteMonsterLevelTraitDetail = Omit<
+  Tables<'vignette_monster_level_trait'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Trait */
+  trait: TraitDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Catalog Survivor Status Detail */
+export type VignetteMonsterLevelSurvivorStatusDetail = Omit<
+  Tables<'vignette_monster_level_survivor_status'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Survivor Status */
+  survivor_status: SurvivorStatusDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Monster Level Detail */
+export type VignetteMonsterLevelDetail = Omit<
+  Tables<'vignette_monster_level'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Moods */
+  moods: VignetteMonsterLevelMoodDetail[]
+  /** Traits */
+  traits: VignetteMonsterLevelTraitDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: VignetteMonsterLevelSurvivorStatusDetail[]
+}
+
+/** Vignette Survivor Ability / Impairment Detail */
+export type VignetteSurvivorAbilityImpairmentDetail = Omit<
+  Tables<'vignette_survivor_ability_impairment'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Ability or Impairment */
+  ability_impairment: AbilityImpairmentDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Survivor Disorder Detail */
+export type VignetteSurvivorDisorderDetail = Omit<
+  Tables<'vignette_survivor_disorder'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Disorder */
+  disorder: DisorderDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Survivor Fighting Art Detail */
+export type VignetteSurvivorFightingArtDetail = Omit<
+  Tables<'vignette_survivor_fighting_art'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Fighting Art */
+  fighting_art: FightingArtDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Survivor Secret Fighting Art Detail */
+export type VignetteSurvivorSecretFightingArtDetail = Omit<
+  Tables<'vignette_survivor_secret_fighting_art'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Secret Fighting Art */
+  secret_fighting_art: SecretFightingArtDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Survivor Gear Grid Detail */
+export type VignetteSurvivorGearGridDetail = Omit<
+  Tables<'vignette_survivor_gear_grid'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Gear */
+  gear: GearDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Survivor Detail */
+export type VignetteSurvivorDetail = Omit<
+  Tables<'vignette_survivor'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Abilities and Impairments */
+  abilities_impairments: VignetteSurvivorAbilityImpairmentDetail[]
+  /** Disorders */
+  disorders: VignetteSurvivorDisorderDetail[]
+  /** Fighting Arts */
+  fighting_arts: VignetteSurvivorFightingArtDetail[]
+  /** Secret Fighting Arts */
+  secret_fighting_arts: VignetteSurvivorSecretFightingArtDetail[]
+  /** Gear Grid */
+  gear_grid: VignetteSurvivorGearGridDetail[]
+}
+
+/** Vignette Monster Detail */
+export type VignetteMonsterDetail = Omit<
+  Tables<'vignette_monster'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Levels */
+  levels: VignetteMonsterLevelDetail[]
+  /** Survivor Presets */
+  survivors: VignetteSurvivorDetail[]
+}
+
+/** Vignette Encounter AI Deck Detail */
+export type VignetteEncounterAIDeckDetail = Omit<
+  Tables<'vignette_encounter_ai_deck'>,
+  'created_at' | 'updated_at'
+>
+
+/** Vignette Encounter Monster Mood Detail */
+export type VignetteEncounterMonsterMoodDetail = Omit<
+  Tables<'vignette_encounter_monster_mood'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Mood */
+  mood: MoodDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Encounter Monster Trait Detail */
+export type VignetteEncounterMonsterTraitDetail = Omit<
+  Tables<'vignette_encounter_monster_trait'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Trait */
+  trait: TraitDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Encounter Monster Survivor Status Detail */
+export type VignetteEncounterMonsterSurvivorStatusDetail = Omit<
+  Tables<'vignette_encounter_monster_survivor_status'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Survivor Status */
+  survivor_status: SurvivorStatusDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Encounter Monster Detail */
+export type VignetteEncounterMonsterDetail = Omit<
+  Tables<'vignette_encounter_monster'>,
+  'created_at' | 'updated_at'
+> & {
+  /** AI Deck */
+  ai_deck: VignetteEncounterAIDeckDetail
+  /** Moods */
+  moods: VignetteEncounterMonsterMoodDetail[]
+  /** Traits */
+  traits: VignetteEncounterMonsterTraitDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: VignetteEncounterMonsterSurvivorStatusDetail[]
+}
+
+/** Vignette Encounter Survivor Live State Key */
+export type VignetteEncounterSurvivorLiveStateKey =
+  | 'accuracy_tokens'
+  | 'activation_used'
+  | 'arm_heavy_damage'
+  | 'arm_light_damage'
+  | 'bleeding_tokens'
+  | 'block_tokens'
+  | 'body_heavy_damage'
+  | 'body_light_damage'
+  | 'brain_light_damage'
+  | 'dead'
+  | 'deflect_tokens'
+  | 'evasion_tokens'
+  | 'head_heavy_damage'
+  | 'insanity_tokens'
+  | 'knocked_down'
+  | 'leg_heavy_damage'
+  | 'leg_light_damage'
+  | 'luck_tokens'
+  | 'movement_tokens'
+  | 'movement_used'
+  | 'notes'
+  | 'priority_target'
+  | 'retired'
+  | 'scout'
+  | 'speed_tokens'
+  | 'strength_tokens'
+  | 'survival'
+  | 'survival_tokens'
+  | 'waist_heavy_damage'
+  | 'waist_light_damage'
+
+/** Vignette Encounter Survivor Live State */
+export type VignetteEncounterSurvivorLiveState = Pick<
+  Tables<'vignette_encounter_survivor'>,
+  VignetteEncounterSurvivorLiveStateKey
+>
+
+/** Vignette Encounter Survivor Ability / Impairment Detail */
+export type VignetteEncounterSurvivorAbilityImpairmentDetail = Omit<
+  Tables<'vignette_encounter_survivor_ability_impairment'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Ability or Impairment */
+  ability_impairment: AbilityImpairmentDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Encounter Survivor Disorder Detail */
+export type VignetteEncounterSurvivorDisorderDetail = Omit<
+  Tables<'vignette_encounter_survivor_disorder'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Disorder */
+  disorder: DisorderDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Encounter Survivor Fighting Art Detail */
+export type VignetteEncounterSurvivorFightingArtDetail = Omit<
+  Tables<'vignette_encounter_survivor_fighting_art'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Fighting Art */
+  fighting_art: FightingArtDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Encounter Survivor Secret Fighting Art Detail */
+export type VignetteEncounterSurvivorSecretFightingArtDetail = Omit<
+  Tables<'vignette_encounter_survivor_secret_fighting_art'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Secret Fighting Art */
+  secret_fighting_art: SecretFightingArtDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Encounter Survivor Gear Grid Detail */
+export type VignetteEncounterSurvivorGearGridDetail = Omit<
+  Tables<'vignette_encounter_survivor_gear_grid'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Gear */
+  gear: GearDetail & CatalogAuthorshipDetail
+}
+
+/** Vignette Encounter Survivor Detail */
+export type VignetteEncounterSurvivorDetail = Omit<
+  Tables<'vignette_encounter_survivor'>,
+  'created_at' | 'updated_at' | VignetteEncounterSurvivorLiveStateKey
+> & {
+  /** Live Survivor State */
+  live_state: VignetteEncounterSurvivorLiveState
+  /** Abilities and Impairments */
+  abilities_impairments: VignetteEncounterSurvivorAbilityImpairmentDetail[]
+  /** Disorders */
+  disorders: VignetteEncounterSurvivorDisorderDetail[]
+  /** Fighting Arts */
+  fighting_arts: VignetteEncounterSurvivorFightingArtDetail[]
+  /** Secret Fighting Arts */
+  secret_fighting_arts: VignetteEncounterSurvivorSecretFightingArtDetail[]
+  /** Gear Grid */
+  gear_grid: VignetteEncounterSurvivorGearGridDetail[]
+}
+
+/** Vignette Encounter Shared User Detail */
+export type VignetteEncounterSharedUserDetail = Omit<
+  Tables<'vignette_encounter_shared_user'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Shared Username */
+  username: string
+  /** Shared User Avatar URL */
+  avatar_url: string | null
+}
+
+/** Vignette Encounter Detail */
+export type VignetteEncounterDetail = Omit<
+  Tables<'vignette_encounter'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Caller's Role on This Vignette */
+  role: VignetteEncounterRole
+  /** Catalog Monster */
+  vignette_monster: VignetteMonsterDetail
+  /** Active AI Decks */
+  ai_decks: { [key: string]: VignetteEncounterAIDeckDetail }
+  /** Active Monsters */
+  monsters: { [key: string]: VignetteEncounterMonsterDetail }
+  /** Active Survivors */
+  survivors: { [key: string]: VignetteEncounterSurvivorDetail }
+  /** Shared Users */
+  shared_users: VignetteEncounterSharedUserDetail[]
+}
+
+/** Vignette Encounter Summary */
+export interface VignetteEncounterSummary {
+  /** Vignette Encounter ID */
+  id: string
+  /** Vignette Monster ID */
+  vignette_monster_id: string
+  /** Vignette Monster Name */
+  monster_name: string
+  /** Level Number */
+  level_number: number
+  /** Turn */
+  turn: Database['public']['Enums']['showdown_turn']
+  /** Owner User ID */
+  owner_user_id: string
+  /** Owner Username */
+  owner_username: string | null
+  /** Owner Avatar URL */
+  owner_avatar_url: string | null
+  /** Caller's Role on This Vignette */
+  role: VignetteEncounterRole
+}
+
+/** Selected Vignette Encounter */
+export interface SelectedVignetteEncounter {
+  /** Vignette Encounter ID */
+  vignette_encounter_id: string
+  /** Caller's Role on This Vignette */
+  role: VignetteEncounterRole
+}
+
+/**
+ * Vignette Encounter State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type VignetteEncounterStateSetter = (
+  vignetteOrUpdater:
+    | VignetteEncounterDetail
+    | null
+    | ((prev: VignetteEncounterDetail | null) => VignetteEncounterDetail | null)
+) => void
+
 /**
  * Hunt AI Deck Detail
  *
