@@ -134,7 +134,7 @@ describe('Vignette seed fixtures', () => {
         evasion: 0,
         damage: 1,
         toughness: 13,
-        life: 0,
+        life: null,
         ai_deck_remaining: 15
       }
     ])
