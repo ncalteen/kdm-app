@@ -6,52 +6,48 @@ import {
 } from '@/__tests__/integration/helpers/supabase'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-const SINGLE_MONSTER_FIXTURE_SLUG = 'fixture-lantern-raked-lion'
-const MULTI_MONSTER_FIXTURE_SLUG = 'fixture-three-witches-at-the-door'
-const EXPECTED_FIXTURE_SLUGS = [
-  SINGLE_MONSTER_FIXTURE_SLUG,
-  MULTI_MONSTER_FIXTURE_SLUG
+const KILLENIUM_BUTCHER_FIXTURE_NAME = 'Killenium Butcher'
+const SCREAMING_NUKALOPE_FIXTURE_NAME = 'Screaming Nukalope'
+const WHITE_GIGALION_FIXTURE_NAME = 'White Gigalion'
+const EXPECTED_FIXTURE_NAMES = [
+  KILLENIUM_BUTCHER_FIXTURE_NAME,
+  SCREAMING_NUKALOPE_FIXTURE_NAME,
+  WHITE_GIGALION_FIXTURE_NAME
 ] as const
 
-interface FixtureDefinition {
+interface FixtureMonster {
   id: string
-  name: string
-  slug: string
-  description: string | null
+  monster_name: string
+  multi_monster: boolean
   source_monster_type: 'NEMESIS' | 'QUARRY'
   source_nemesis_id: string | null
   source_quarry_id: string | null
-  published: boolean
 }
 
-interface FixtureLevel {
-  id: string
-  vignette_encounter_definition_id: string
+interface FixtureMonsterLevel {
+  vignette_monster_id: string
   level_number: number
+  movement: number
+  speed: number
+  accuracy: number
+  evasion: number
+  damage: number
+  toughness: number
+  life: number | null
+  ai_deck_remaining: number
 }
 
-interface FixtureSurvivorTemplate {
-  id: string
-  vignette_encounter_definition_id: string
+interface FixtureSurvivor {
+  vignette_monster_id: string
   survivor_name: string
-  notes: string
-}
-
-interface LevelJunctionRow {
-  vignette_encounter_level_id: string
-}
-
-interface SurvivorTemplateJunctionRow {
-  vignette_survivor_template_id: string
 }
 
 /**
- * Integration — Vignette Seed Fixtures
+ * Integration - Vignette Seed Fixtures
  *
- * Locks down the fixture-only vignette encounter catalog rows seeded for
- * VIG-01.06. These rows intentionally exercise published quarry and nemesis
- * source relationships, single and multi-monster source data, level setup
- * junctions, survivor templates, and gear-grid templates.
+ * Locks down the VIG-01.06 fixture catalog rows against the final vignette
+ * monster and survivor schema. The current fixtures cover one nemesis source
+ * and two quarry sources, with four preset survivors for each encounter.
  */
 describe('Vignette seed fixtures', () => {
   let authenticatedUser: TestUser
@@ -64,235 +60,167 @@ describe('Vignette seed fixtures', () => {
     if (authenticatedUser) await deleteTestUser(authenticatedUser.id)
   })
 
-  it('seeds visible published fixture definitions for single and multi-monster sources', async () => {
+  it('seeds visible fixture monsters for nemesis and quarry sources', async () => {
     const { data, error } = await authenticatedUser.client
-      .from('vignette_encounter_definition')
+      .from('vignette_monster')
       .select(
-        'id, name, slug, description, source_monster_type, source_nemesis_id, source_quarry_id, published'
+        'id, monster_name, multi_monster, source_monster_type, source_nemesis_id, source_quarry_id'
       )
-      .in('slug', EXPECTED_FIXTURE_SLUGS)
-      .order('sort_order')
+      .in('monster_name', EXPECTED_FIXTURE_NAMES)
+      .order('monster_name')
 
     expect(error).toBeNull()
 
-    const definitions = (data ?? []) as FixtureDefinition[]
-    expect(definitions).toHaveLength(EXPECTED_FIXTURE_SLUGS.length)
-    expect(definitions.every((definition) => definition.published)).toBe(true)
-    expect(
-      definitions.every((definition) => definition.name.startsWith('[Fixture]'))
-    ).toBe(true)
-    expect(
-      definitions.every((definition) =>
-        definition.description?.startsWith('Fixture-only')
-      )
-    ).toBe(true)
-
-    const definitionBySlug = toMapBySlug(definitions)
-    const singleMonsterDefinition = definitionBySlug.get(
-      SINGLE_MONSTER_FIXTURE_SLUG
-    )
-    const multiMonsterDefinition = definitionBySlug.get(
-      MULTI_MONSTER_FIXTURE_SLUG
+    const monsters = (data ?? []) as FixtureMonster[]
+    expect(monsters).toHaveLength(EXPECTED_FIXTURE_NAMES.length)
+    expect(monsters.map((monster) => monster.monster_name)).toEqual(
+      sorted([...EXPECTED_FIXTURE_NAMES])
     )
 
-    expect(singleMonsterDefinition).toBeDefined()
-    expect(multiMonsterDefinition).toBeDefined()
-    if (!singleMonsterDefinition || !multiMonsterDefinition) {
-      throw new Error('Expected vignette fixture definitions were not seeded.')
-    }
-
-    expect(singleMonsterDefinition.source_monster_type).toBe('QUARRY')
-    expect(singleMonsterDefinition.source_nemesis_id).toBeNull()
-    expect(singleMonsterDefinition.source_quarry_id).not.toBeNull()
-
-    expect(multiMonsterDefinition.source_monster_type).toBe('NEMESIS')
-    expect(multiMonsterDefinition.source_nemesis_id).not.toBeNull()
-    expect(multiMonsterDefinition.source_quarry_id).toBeNull()
-
-    const { data: quarrySource, error: quarrySourceError } = await admin
-      .from('quarry')
-      .select('monster_name, multi_monster')
-      .eq('id', singleMonsterDefinition.source_quarry_id)
-      .single()
-    expect(quarrySourceError).toBeNull()
-    expect(quarrySource).toMatchObject({
-      monster_name: 'White Lion',
-      multi_monster: false
+    const monsterByName = toMapByName(monsters)
+    expect(monsterByName.get(KILLENIUM_BUTCHER_FIXTURE_NAME)).toMatchObject({
+      multi_monster: false,
+      source_monster_type: 'NEMESIS',
+      source_quarry_id: null
+    })
+    expect(monsterByName.get(SCREAMING_NUKALOPE_FIXTURE_NAME)).toMatchObject({
+      multi_monster: false,
+      source_monster_type: 'QUARRY',
+      source_nemesis_id: null
+    })
+    expect(monsterByName.get(WHITE_GIGALION_FIXTURE_NAME)).toMatchObject({
+      multi_monster: false,
+      source_monster_type: 'QUARRY',
+      source_nemesis_id: null
     })
 
-    const { data: nemesisSource, error: nemesisSourceError } = await admin
-      .from('nemesis')
-      .select('monster_name, multi_monster')
-      .eq('id', multiMonsterDefinition.source_nemesis_id)
-      .single()
-    expect(nemesisSourceError).toBeNull()
-    expect(nemesisSource).toMatchObject({
-      monster_name: 'Red Witches',
-      multi_monster: true
-    })
+    await expectSourceMonsterName(
+      'nemesis',
+      monsterByName.get(KILLENIUM_BUTCHER_FIXTURE_NAME)!.source_nemesis_id!,
+      KILLENIUM_BUTCHER_FIXTURE_NAME
+    )
+    await expectSourceMonsterName(
+      'quarry',
+      monsterByName.get(SCREAMING_NUKALOPE_FIXTURE_NAME)!.source_quarry_id!,
+      SCREAMING_NUKALOPE_FIXTURE_NAME
+    )
+    await expectSourceMonsterName(
+      'quarry',
+      monsterByName.get(WHITE_GIGALION_FIXTURE_NAME)!.source_quarry_id!,
+      WHITE_GIGALION_FIXTURE_NAME
+    )
   })
 
-  it('seeds level moods, traits, and survivor statuses for every fixture level', async () => {
-    const definitions = await getFixtureDefinitions()
-    const definitionIds = definitions.map((definition) => definition.id)
-
+  it('seeds the Killenium Butcher vignette monster level', async () => {
+    const monsters = await getFixtureMonsters()
+    const killeniumButcher = toMapByName(monsters).get(
+      KILLENIUM_BUTCHER_FIXTURE_NAME
+    )!
     const { data, error } = await admin
-      .from('vignette_encounter_level')
-      .select('id, vignette_encounter_definition_id, level_number')
-      .in('vignette_encounter_definition_id', definitionIds)
-      .order('sort_order')
+      .from('vignette_monster_level')
+      .select(
+        'vignette_monster_id, level_number, movement, speed, accuracy, evasion, damage, toughness, life, ai_deck_remaining'
+      )
+      .eq('vignette_monster_id', killeniumButcher.id)
+
+    expect(error).toBeNull()
+    expect((data ?? []) as FixtureMonsterLevel[]).toEqual([
+      {
+        vignette_monster_id: killeniumButcher.id,
+        level_number: 2,
+        movement: 5,
+        speed: 1,
+        accuracy: 0,
+        evasion: 0,
+        damage: 1,
+        toughness: 13,
+        life: 0,
+        ai_deck_remaining: 15
+      }
+    ])
+  })
+
+  it('seeds four survivor presets for each fixture monster', async () => {
+    const monsters = await getFixtureMonsters()
+    const monsterById = toMapById(monsters)
+    const { data, error } = await admin
+      .from('vignette_survivor')
+      .select('vignette_monster_id, survivor_name')
+      .in(
+        'vignette_monster_id',
+        monsters.map((monster) => monster.id)
+      )
+      .order('survivor_name')
 
     expect(error).toBeNull()
 
-    const levels = (data ?? []) as FixtureLevel[]
-    expect(levels).toHaveLength(4)
-    expect(countBy(levels, 'vignette_encounter_definition_id')).toEqual(
-      new Map(definitionIds.map((definitionId) => [definitionId, 2]))
+    const survivors = (data ?? []) as FixtureSurvivor[]
+    expect(survivors).toHaveLength(12)
+    expect(countBy(survivors, 'vignette_monster_id')).toEqual(
+      new Map(monsters.map((monster) => [monster.id, 4]))
     )
 
-    const levelIds = levels.map((level) => level.id)
-    const [moodResult, traitResult, survivorStatusResult] = await Promise.all([
-      admin
-        .from('vignette_encounter_level_mood')
-        .select('vignette_encounter_level_id')
-        .in('vignette_encounter_level_id', levelIds),
-      admin
-        .from('vignette_encounter_level_trait')
-        .select('vignette_encounter_level_id')
-        .in('vignette_encounter_level_id', levelIds),
-      admin
-        .from('vignette_encounter_level_survivor_status')
-        .select('vignette_encounter_level_id')
-        .in('vignette_encounter_level_id', levelIds)
-    ])
-
-    expect(moodResult.error).toBeNull()
-    expect(traitResult.error).toBeNull()
-    expect(survivorStatusResult.error).toBeNull()
-
-    expect(levelIdsFrom(moodResult.data)).toEqual(sorted(levelIds))
-    expect(levelIdsFrom(traitResult.data)).toEqual(sorted(levelIds))
-    expect(levelIdsFrom(survivorStatusResult.data)).toEqual(sorted(levelIds))
-  })
-
-  it('seeds survivor templates, survivor template links, and gear grids', async () => {
-    const definitions = await getFixtureDefinitions()
-    const definitionBySlug = toMapBySlug(definitions)
-    const singleMonsterDefinition = definitionBySlug.get(
-      SINGLE_MONSTER_FIXTURE_SLUG
-    )
-    const multiMonsterDefinition = definitionBySlug.get(
-      MULTI_MONSTER_FIXTURE_SLUG
-    )
-
-    expect(singleMonsterDefinition).toBeDefined()
-    expect(multiMonsterDefinition).toBeDefined()
-    if (!singleMonsterDefinition || !multiMonsterDefinition) {
-      throw new Error('Expected vignette fixture definitions were not seeded.')
+    const survivorNamesByMonster = new Map<string, string[]>()
+    for (const survivor of survivors) {
+      const monsterName = monsterById.get(
+        survivor.vignette_monster_id
+      )!.monster_name
+      survivorNamesByMonster.set(monsterName, [
+        ...(survivorNamesByMonster.get(monsterName) ?? []),
+        survivor.survivor_name
+      ])
     }
 
-    const definitionIds = definitions.map((definition) => definition.id)
-    const { data, error } = await admin
-      .from('vignette_survivor_template')
-      .select('id, vignette_encounter_definition_id, survivor_name, notes')
-      .in('vignette_encounter_definition_id', definitionIds)
-      .order('sort_order')
-
-    expect(error).toBeNull()
-
-    const survivorTemplates = (data ?? []) as FixtureSurvivorTemplate[]
-    expect(survivorTemplates).toHaveLength(5)
     expect(
-      survivorTemplates.every((template) =>
-        template.survivor_name.startsWith('[Fixture]')
-      )
-    ).toBe(true)
+      sorted(survivorNamesByMonster.get(KILLENIUM_BUTCHER_FIXTURE_NAME) ?? [])
+    ).toEqual(['Brave', 'Forgot', 'Hollow', 'Red'])
     expect(
-      survivorTemplates.every((template) =>
-        template.notes.startsWith('Fixture-only')
-      )
-    ).toBe(true)
-
-    const survivorTemplateCounts = countBy(
-      survivorTemplates,
-      'vignette_encounter_definition_id'
-    )
-    expect(survivorTemplateCounts.get(singleMonsterDefinition.id)).toBe(2)
-    expect(survivorTemplateCounts.get(multiMonsterDefinition.id)).toBe(3)
-
-    const survivorTemplateIds = survivorTemplates.map((template) => template.id)
-    const [
-      gearGridResult,
-      fightingArtResult,
-      secretFightingArtResult,
-      disorderResult,
-      abilityImpairmentResult,
-      survivorStatusResult
-    ] = await Promise.all([
-      admin
-        .from('vignette_survivor_template_gear_grid')
-        .select('vignette_survivor_template_id')
-        .in('vignette_survivor_template_id', survivorTemplateIds),
-      admin
-        .from('vignette_survivor_template_fighting_art')
-        .select('vignette_survivor_template_id')
-        .in('vignette_survivor_template_id', survivorTemplateIds),
-      admin
-        .from('vignette_survivor_template_secret_fighting_art')
-        .select('vignette_survivor_template_id')
-        .in('vignette_survivor_template_id', survivorTemplateIds),
-      admin
-        .from('vignette_survivor_template_disorder')
-        .select('vignette_survivor_template_id')
-        .in('vignette_survivor_template_id', survivorTemplateIds),
-      admin
-        .from('vignette_survivor_template_ability_impairment')
-        .select('vignette_survivor_template_id')
-        .in('vignette_survivor_template_id', survivorTemplateIds),
-      admin
-        .from('vignette_survivor_template_survivor_status')
-        .select('vignette_survivor_template_id')
-        .in('vignette_survivor_template_id', survivorTemplateIds)
-    ])
-
-    expect(gearGridResult.error).toBeNull()
-    expect(fightingArtResult.error).toBeNull()
-    expect(secretFightingArtResult.error).toBeNull()
-    expect(disorderResult.error).toBeNull()
-    expect(abilityImpairmentResult.error).toBeNull()
-    expect(survivorStatusResult.error).toBeNull()
-
-    expect(survivorTemplateIdsFrom(gearGridResult.data)).toEqual(
-      sorted(survivorTemplateIds)
-    )
-    expect((fightingArtResult.data ?? []).length).toBeGreaterThan(0)
-    expect((secretFightingArtResult.data ?? []).length).toBeGreaterThan(0)
-    expect((disorderResult.data ?? []).length).toBeGreaterThan(0)
-    expect((abilityImpairmentResult.data ?? []).length).toBeGreaterThan(0)
-    expect((survivorStatusResult.data ?? []).length).toBeGreaterThan(0)
+      sorted(survivorNamesByMonster.get(SCREAMING_NUKALOPE_FIXTURE_NAME) ?? [])
+    ).toEqual(['Ashbloom', 'Ashroot', 'Gnostin', 'Monday'])
+    expect(
+      sorted(survivorNamesByMonster.get(WHITE_GIGALION_FIXTURE_NAME) ?? [])
+    ).toEqual(['Breccia', 'Gadrock', 'Hungry Basalt', 'Rock Knight'])
   })
 })
 
-async function getFixtureDefinitions(): Promise<FixtureDefinition[]> {
+async function getFixtureMonsters(): Promise<FixtureMonster[]> {
   const { data, error } = await admin
-    .from('vignette_encounter_definition')
+    .from('vignette_monster')
     .select(
-      'id, name, slug, description, source_monster_type, source_nemesis_id, source_quarry_id, published'
+      'id, monster_name, multi_monster, source_monster_type, source_nemesis_id, source_quarry_id'
     )
-    .in('slug', EXPECTED_FIXTURE_SLUGS)
-    .order('sort_order')
+    .in('monster_name', EXPECTED_FIXTURE_NAMES)
 
   expect(error).toBeNull()
-  const definitions = (data ?? []) as FixtureDefinition[]
-  expect(definitions).toHaveLength(EXPECTED_FIXTURE_SLUGS.length)
+  const monsters = (data ?? []) as FixtureMonster[]
+  expect(monsters).toHaveLength(EXPECTED_FIXTURE_NAMES.length)
 
-  return definitions
+  return monsters
 }
 
-function toMapBySlug(
-  definitions: FixtureDefinition[]
-): Map<string, FixtureDefinition> {
-  return new Map(definitions.map((definition) => [definition.slug, definition]))
+async function expectSourceMonsterName(
+  tableName: 'nemesis' | 'quarry',
+  sourceMonsterId: string,
+  expectedMonsterName: string
+): Promise<void> {
+  const { data, error } = await admin
+    .from(tableName)
+    .select('monster_name')
+    .eq('id', sourceMonsterId)
+    .single()
+
+  expect(error).toBeNull()
+  expect(data).toEqual({ monster_name: expectedMonsterName })
+}
+
+function toMapByName(monsters: FixtureMonster[]): Map<string, FixtureMonster> {
+  return new Map(monsters.map((monster) => [monster.monster_name, monster]))
+}
+
+function toMapById<Item extends { id: string }>(
+  items: Item[]
+): Map<string, Item> {
+  return new Map(items.map((item) => [item.id, item]))
 }
 
 function countBy<
@@ -306,16 +234,6 @@ function countBy<
   }, new Map<string, number>())
 }
 
-function levelIdsFrom(rows: LevelJunctionRow[] | null): string[] {
-  return sorted((rows ?? []).map((row) => row.vignette_encounter_level_id))
-}
-
-function survivorTemplateIdsFrom(
-  rows: SurvivorTemplateJunctionRow[] | null
-): string[] {
-  return sorted((rows ?? []).map((row) => row.vignette_survivor_template_id))
-}
-
-function sorted(values: string[]): string[] {
-  return [...new Set(values)].sort()
+function sorted(values: readonly string[]): string[] {
+  return [...values].sort()
 }

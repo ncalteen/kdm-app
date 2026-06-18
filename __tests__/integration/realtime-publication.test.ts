@@ -191,18 +191,22 @@ describe('Realtime publication membership', () => {
    * Source of truth: every vignette encounter instance/share table whose
    * rows must broadcast to owners and collaborators. Mirrors the
    * `vignette_realtime_tables` array in
-   * `20260613000005_vignette_realtime_publication.sql`.
+   * `20260616010944_reshape_vignette_tables.sql` plus later active
+   * monster-state publication migrations.
    */
   const EXPECTED_VIGNETTE_TABLES = [
     'vignette_encounter',
+    'vignette_encounter_ai_deck',
     'vignette_encounter_monster',
+    'vignette_encounter_monster_mood',
+    'vignette_encounter_monster_trait',
+    'vignette_encounter_monster_survivor_status',
     'vignette_encounter_survivor',
+    'vignette_encounter_survivor_ability_impairment',
+    'vignette_encounter_survivor_disorder',
     'vignette_encounter_survivor_fighting_art',
     'vignette_encounter_survivor_secret_fighting_art',
-    'vignette_encounter_survivor_disorder',
-    'vignette_encounter_survivor_ability_impairment',
-    'vignette_encounter_survivor_status',
-    'vignette_encounter_gear_grid',
+    'vignette_encounter_survivor_gear_grid',
     'vignette_encounter_shared_user'
   ] as const
 

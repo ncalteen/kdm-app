@@ -5582,307 +5582,291 @@ export type Database = {
       vignette_encounter: {
         Row: {
           created_at: string
-          ended_at: string | null
           id: string
+          level_number: number
           notes: string
-          round: number
-          status: string
           turn: Database["public"]["Enums"]["showdown_turn"]
           updated_at: string
           user_id: string
-          vignette_encounter_definition_id: string
-          vignette_encounter_level_id: string
+          vignette_monster_id: string
         }
         Insert: {
           created_at?: string
-          ended_at?: string | null
           id?: string
+          level_number: number
           notes?: string
-          round?: number
-          status?: string
           turn?: Database["public"]["Enums"]["showdown_turn"]
           updated_at?: string
           user_id: string
-          vignette_encounter_definition_id: string
-          vignette_encounter_level_id: string
+          vignette_monster_id: string
         }
         Update: {
           created_at?: string
-          ended_at?: string | null
           id?: string
+          level_number?: number
           notes?: string
-          round?: number
-          status?: string
           turn?: Database["public"]["Enums"]["showdown_turn"]
           updated_at?: string
           user_id?: string
-          vignette_encounter_definition_id?: string
-          vignette_encounter_level_id?: string
+          vignette_monster_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_encounter_vignette_encounter_definition_id_fkey"
-            columns: ["vignette_encounter_definition_id"]
+            foreignKeyName: "vignette_encounter_vignette_monster_id_fkey"
+            columns: ["vignette_monster_id"]
             isOneToOne: false
-            referencedRelation: "vignette_encounter_definition"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_encounter_vignette_encounter_level_id_fkey"
-            columns: ["vignette_encounter_level_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_encounter_level"
+            referencedRelation: "vignette_monster"
             referencedColumns: ["id"]
           },
         ]
       }
-      vignette_encounter_definition: {
+      vignette_encounter_ai_deck: {
         Row: {
+          advanced_cards: number
+          basic_cards: number
           created_at: string
-          description: string | null
           id: string
-          name: string
-          published: boolean
-          slug: string
-          sort_order: number
-          source_monster_type: string
-          source_nemesis_id: string | null
-          source_quarry_id: string | null
+          legendary_cards: number
+          overtone_cards: number
           updated_at: string
+          vignette_encounter_id: string
         }
         Insert: {
+          advanced_cards?: number
+          basic_cards?: number
           created_at?: string
-          description?: string | null
           id?: string
-          name: string
-          published?: boolean
-          slug: string
-          sort_order?: number
-          source_monster_type: string
-          source_nemesis_id?: string | null
-          source_quarry_id?: string | null
+          legendary_cards?: number
+          overtone_cards?: number
           updated_at?: string
+          vignette_encounter_id: string
         }
         Update: {
+          advanced_cards?: number
+          basic_cards?: number
           created_at?: string
-          description?: string | null
           id?: string
-          name?: string
-          published?: boolean
-          slug?: string
-          sort_order?: number
-          source_monster_type?: string
-          source_nemesis_id?: string | null
-          source_quarry_id?: string | null
+          legendary_cards?: number
+          overtone_cards?: number
           updated_at?: string
+          vignette_encounter_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_encounter_definition_source_nemesis_id_fkey"
-            columns: ["source_nemesis_id"]
+            foreignKeyName: "vignette_encounter_ai_deck_vignette_encounter_id_fkey"
+            columns: ["vignette_encounter_id"]
             isOneToOne: false
-            referencedRelation: "nemesis"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_encounter_definition_source_quarry_id_fkey"
-            columns: ["source_quarry_id"]
-            isOneToOne: false
-            referencedRelation: "quarry"
+            referencedRelation: "vignette_encounter"
             referencedColumns: ["id"]
           },
         ]
       }
-      vignette_encounter_gear_grid: {
-        Row: {
-          column_number: number
-          created_at: string
-          gear_id: string
-          id: string
-          row_number: number
-          updated_at: string
-          vignette_encounter_survivor_id: string
-        }
-        Insert: {
-          column_number: number
-          created_at?: string
-          gear_id: string
-          id?: string
-          row_number: number
-          updated_at?: string
-          vignette_encounter_survivor_id: string
-        }
-        Update: {
-          column_number?: number
-          created_at?: string
-          gear_id?: string
-          id?: string
-          row_number?: number
-          updated_at?: string
-          vignette_encounter_survivor_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "vignette_encounter_gear_grid_gear_id_fkey"
-            columns: ["gear_id"]
-            isOneToOne: false
-            referencedRelation: "gear"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_encounter_gear_grid_vignette_encounter_survivor_i_fkey"
-            columns: ["vignette_encounter_survivor_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_encounter_survivor"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      vignette_encounter_level: {
+      vignette_encounter_monster: {
         Row: {
           accuracy: number
-          ai_deck_size: number | null
-          basic_action: string | null
+          accuracy_tokens: number
+          ai_card_drawn: boolean
+          ai_deck_id: string
+          ai_deck_remaining: number
           created_at: string
           damage: number
+          damage_tokens: number
           evasion: number
-          hit_location_deck_size: number | null
+          evasion_tokens: number
           id: string
-          level_number: number
+          knocked_down: boolean
+          luck: number
+          luck_tokens: number
+          monster_name: string | null
           movement: number
-          sort_order: number
-          special_rules: string | null
+          movement_tokens: number
+          notes: string
+          source_vignette_monster_level_id: string | null
           speed: number
+          speed_tokens: number
+          strength: number
+          strength_tokens: number
           toughness: number
+          toughness_tokens: number
           updated_at: string
-          vignette_encounter_definition_id: string
-          wounds: number | null
+          vignette_encounter_id: string
+          wounds: number
         }
         Insert: {
           accuracy?: number
-          ai_deck_size?: number | null
-          basic_action?: string | null
+          accuracy_tokens?: number
+          ai_card_drawn?: boolean
+          ai_deck_id: string
+          ai_deck_remaining?: number
           created_at?: string
           damage?: number
+          damage_tokens?: number
           evasion?: number
-          hit_location_deck_size?: number | null
+          evasion_tokens?: number
           id?: string
-          level_number: number
+          knocked_down?: boolean
+          luck?: number
+          luck_tokens?: number
+          monster_name?: string | null
           movement?: number
-          sort_order?: number
-          special_rules?: string | null
+          movement_tokens?: number
+          notes?: string
+          source_vignette_monster_level_id?: string | null
           speed?: number
+          speed_tokens?: number
+          strength?: number
+          strength_tokens?: number
           toughness?: number
+          toughness_tokens?: number
           updated_at?: string
-          vignette_encounter_definition_id: string
-          wounds?: number | null
+          vignette_encounter_id: string
+          wounds?: number
         }
         Update: {
           accuracy?: number
-          ai_deck_size?: number | null
-          basic_action?: string | null
+          accuracy_tokens?: number
+          ai_card_drawn?: boolean
+          ai_deck_id?: string
+          ai_deck_remaining?: number
           created_at?: string
           damage?: number
+          damage_tokens?: number
           evasion?: number
-          hit_location_deck_size?: number | null
+          evasion_tokens?: number
           id?: string
-          level_number?: number
+          knocked_down?: boolean
+          luck?: number
+          luck_tokens?: number
+          monster_name?: string | null
           movement?: number
-          sort_order?: number
-          special_rules?: string | null
+          movement_tokens?: number
+          notes?: string
+          source_vignette_monster_level_id?: string | null
           speed?: number
+          speed_tokens?: number
+          strength?: number
+          strength_tokens?: number
           toughness?: number
+          toughness_tokens?: number
           updated_at?: string
-          vignette_encounter_definition_id?: string
-          wounds?: number | null
+          vignette_encounter_id?: string
+          wounds?: number
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_encounter_level_vignette_encounter_definition_id_fkey"
-            columns: ["vignette_encounter_definition_id"]
+            foreignKeyName: "vignette_encounter_monster_ai_deck_id_fkey"
+            columns: ["ai_deck_id"]
+            isOneToOne: true
+            referencedRelation: "vignette_encounter_ai_deck"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_monster_source_vignette_monster_level_i_fkey"
+            columns: ["source_vignette_monster_level_id"]
             isOneToOne: false
-            referencedRelation: "vignette_encounter_definition"
+            referencedRelation: "vignette_monster_level"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_monster_vignette_encounter_id_fkey"
+            columns: ["vignette_encounter_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter"
             referencedColumns: ["id"]
           },
         ]
       }
-      vignette_encounter_level_mood: {
+      vignette_encounter_monster_mood: {
         Row: {
           created_at: string
           id: string
           mood_id: string
-          sort_order: number
+          source_vignette_monster_level_mood_id: string | null
           updated_at: string
-          vignette_encounter_level_id: string
+          vignette_encounter_monster_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           mood_id: string
-          sort_order?: number
+          source_vignette_monster_level_mood_id?: string | null
           updated_at?: string
-          vignette_encounter_level_id: string
+          vignette_encounter_monster_id: string
         }
         Update: {
           created_at?: string
           id?: string
           mood_id?: string
-          sort_order?: number
+          source_vignette_monster_level_mood_id?: string | null
           updated_at?: string
-          vignette_encounter_level_id?: string
+          vignette_encounter_monster_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_encounter_level_mood_mood_id_fkey"
+            foreignKeyName: "vignette_encounter_monster_mo_source_vignette_monster_leve_fkey"
+            columns: ["source_vignette_monster_level_mood_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_monster_level_mood"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_monster_mo_vignette_encounter_monster_i_fkey"
+            columns: ["vignette_encounter_monster_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_monster_mood_mood_id_fkey"
             columns: ["mood_id"]
             isOneToOne: false
             referencedRelation: "mood"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "vignette_encounter_level_mood_vignette_encounter_level_id_fkey"
-            columns: ["vignette_encounter_level_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_encounter_level"
-            referencedColumns: ["id"]
-          },
         ]
       }
-      vignette_encounter_level_survivor_status: {
+      vignette_encounter_monster_survivor_status: {
         Row: {
           created_at: string
           id: string
-          sort_order: number
+          source_vignette_monster_level_survivor_status_id: string | null
           survivor_status_id: string
           updated_at: string
-          vignette_encounter_level_id: string
+          vignette_encounter_monster_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          sort_order?: number
+          source_vignette_monster_level_survivor_status_id?: string | null
           survivor_status_id: string
           updated_at?: string
-          vignette_encounter_level_id: string
+          vignette_encounter_monster_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          sort_order?: number
+          source_vignette_monster_level_survivor_status_id?: string | null
           survivor_status_id?: string
           updated_at?: string
-          vignette_encounter_level_id?: string
+          vignette_encounter_monster_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_encounter_level_survi_vignette_encounter_level_id_fkey"
-            columns: ["vignette_encounter_level_id"]
+            foreignKeyName: "vignette_encounter_monster_su_source_vignette_monster_leve_fkey"
+            columns: ["source_vignette_monster_level_survivor_status_id"]
             isOneToOne: false
-            referencedRelation: "vignette_encounter_level"
+            referencedRelation: "vignette_monster_level_survivor_status"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vignette_encounter_level_survivor_statu_survivor_status_id_fkey"
+            foreignKeyName: "vignette_encounter_monster_su_vignette_encounter_monster_i_fkey"
+            columns: ["vignette_encounter_monster_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_monster_survivor_sta_survivor_status_id_fkey"
             columns: ["survivor_status_id"]
             isOneToOne: false
             referencedRelation: "survivor_status"
@@ -5890,88 +5874,51 @@ export type Database = {
           },
         ]
       }
-      vignette_encounter_level_trait: {
+      vignette_encounter_monster_trait: {
         Row: {
           created_at: string
           id: string
-          sort_order: number
+          source_vignette_monster_level_trait_id: string | null
           trait_id: string
           updated_at: string
-          vignette_encounter_level_id: string
+          vignette_encounter_monster_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          sort_order?: number
+          source_vignette_monster_level_trait_id?: string | null
           trait_id: string
           updated_at?: string
-          vignette_encounter_level_id: string
+          vignette_encounter_monster_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          sort_order?: number
+          source_vignette_monster_level_trait_id?: string | null
           trait_id?: string
           updated_at?: string
-          vignette_encounter_level_id?: string
+          vignette_encounter_monster_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_encounter_level_trait_trait_id_fkey"
+            foreignKeyName: "vignette_encounter_monster_tr_source_vignette_monster_leve_fkey"
+            columns: ["source_vignette_monster_level_trait_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_monster_level_trait"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_monster_tr_vignette_encounter_monster_i_fkey"
+            columns: ["vignette_encounter_monster_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_monster_trait_trait_id_fkey"
             columns: ["trait_id"]
             isOneToOne: false
             referencedRelation: "trait"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_encounter_level_trait_vignette_encounter_level_id_fkey"
-            columns: ["vignette_encounter_level_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_encounter_level"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      vignette_encounter_monster: {
-        Row: {
-          created_at: string
-          current_ai_cards: number | null
-          current_hit_location_cards: number | null
-          current_wounds: number | null
-          id: string
-          knocked_down: boolean
-          notes: string
-          updated_at: string
-          vignette_encounter_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_ai_cards?: number | null
-          current_hit_location_cards?: number | null
-          current_wounds?: number | null
-          id?: string
-          knocked_down?: boolean
-          notes?: string
-          updated_at?: string
-          vignette_encounter_id: string
-        }
-        Update: {
-          created_at?: string
-          current_ai_cards?: number | null
-          current_hit_location_cards?: number | null
-          current_wounds?: number | null
-          id?: string
-          knocked_down?: boolean
-          notes?: string
-          updated_at?: string
-          vignette_encounter_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "vignette_encounter_monster_vignette_encounter_id_fkey"
-            columns: ["vignette_encounter_id"]
-            isOneToOne: true
-            referencedRelation: "vignette_encounter"
             referencedColumns: ["id"]
           },
         ]
@@ -5979,20 +5926,23 @@ export type Database = {
       vignette_encounter_shared_user: {
         Row: {
           created_at: string
-          created_by: string
+          id: string
           shared_user_id: string
+          updated_at: string
           vignette_encounter_id: string
         }
         Insert: {
           created_at?: string
-          created_by: string
+          id?: string
           shared_user_id: string
+          updated_at?: string
           vignette_encounter_id: string
         }
         Update: {
           created_at?: string
-          created_by?: string
+          id?: string
           shared_user_id?: string
+          updated_at?: string
           vignette_encounter_id?: string
         }
         Relationships: [
@@ -6048,8 +5998,10 @@ export type Database = {
           movement_tokens: number
           movement_used: boolean
           notes: string
+          priority_target: boolean
           retired: boolean
-          sort_order: number
+          scout: boolean
+          source_vignette_survivor_id: string | null
           speed: number
           speed_tokens: number
           strength: number
@@ -6061,7 +6013,7 @@ export type Database = {
           understanding: number
           updated_at: string
           vignette_encounter_id: string
-          vignette_survivor_template_id: string | null
+          vignette_monster_id: string
           waist_armor: number
           waist_heavy_damage: boolean
           waist_light_damage: boolean
@@ -6103,8 +6055,10 @@ export type Database = {
           movement_tokens?: number
           movement_used?: boolean
           notes?: string
+          priority_target?: boolean
           retired?: boolean
-          sort_order?: number
+          scout?: boolean
+          source_vignette_survivor_id?: string | null
           speed?: number
           speed_tokens?: number
           strength?: number
@@ -6116,7 +6070,7 @@ export type Database = {
           understanding?: number
           updated_at?: string
           vignette_encounter_id: string
-          vignette_survivor_template_id?: string | null
+          vignette_monster_id: string
           waist_armor?: number
           waist_heavy_damage?: boolean
           waist_light_damage?: boolean
@@ -6158,8 +6112,10 @@ export type Database = {
           movement_tokens?: number
           movement_used?: boolean
           notes?: string
+          priority_target?: boolean
           retired?: boolean
-          sort_order?: number
+          scout?: boolean
+          source_vignette_survivor_id?: string | null
           speed?: number
           speed_tokens?: number
           strength?: number
@@ -6171,7 +6127,7 @@ export type Database = {
           understanding?: number
           updated_at?: string
           vignette_encounter_id?: string
-          vignette_survivor_template_id?: string | null
+          vignette_monster_id?: string
           waist_armor?: number
           waist_heavy_damage?: boolean
           waist_light_damage?: boolean
@@ -6180,6 +6136,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "vignette_encounter_survivor_source_vignette_survivor_id_fkey"
+            columns: ["source_vignette_survivor_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "vignette_encounter_survivor_vignette_encounter_id_fkey"
             columns: ["vignette_encounter_id"]
             isOneToOne: false
@@ -6187,10 +6150,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vignette_encounter_survivor_vignette_survivor_template_id_fkey"
-            columns: ["vignette_survivor_template_id"]
+            foreignKeyName: "vignette_encounter_survivor_vignette_monster_id_fkey"
+            columns: ["vignette_monster_id"]
             isOneToOne: false
-            referencedRelation: "vignette_survivor_template"
+            referencedRelation: "vignette_monster"
             referencedColumns: ["id"]
           },
           {
@@ -6207,7 +6170,7 @@ export type Database = {
           ability_impairment_id: string
           created_at: string
           id: string
-          sort_order: number
+          source_vignette_survivor_ability_impairment_id: string | null
           updated_at: string
           vignette_encounter_survivor_id: string
         }
@@ -6215,7 +6178,7 @@ export type Database = {
           ability_impairment_id: string
           created_at?: string
           id?: string
-          sort_order?: number
+          source_vignette_survivor_ability_impairment_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id: string
         }
@@ -6223,11 +6186,18 @@ export type Database = {
           ability_impairment_id?: string
           created_at?: string
           id?: string
-          sort_order?: number
+          source_vignette_survivor_ability_impairment_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "vignette_encounter_survivor_a_source_vignette_survivor_abi_fkey"
+            columns: ["source_vignette_survivor_ability_impairment_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_ability_impairment"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vignette_encounter_survivor_a_vignette_encounter_survivor__fkey"
             columns: ["vignette_encounter_survivor_id"]
@@ -6249,7 +6219,7 @@ export type Database = {
           created_at: string
           disorder_id: string
           id: string
-          sort_order: number
+          source_vignette_survivor_disorder_id: string | null
           updated_at: string
           vignette_encounter_survivor_id: string
         }
@@ -6257,7 +6227,7 @@ export type Database = {
           created_at?: string
           disorder_id: string
           id?: string
-          sort_order?: number
+          source_vignette_survivor_disorder_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id: string
         }
@@ -6265,11 +6235,18 @@ export type Database = {
           created_at?: string
           disorder_id?: string
           id?: string
-          sort_order?: number
+          source_vignette_survivor_disorder_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "vignette_encounter_survivor_d_source_vignette_survivor_dis_fkey"
+            columns: ["source_vignette_survivor_disorder_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_disorder"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vignette_encounter_survivor_d_vignette_encounter_survivor__fkey"
             columns: ["vignette_encounter_survivor_id"]
@@ -6291,7 +6268,7 @@ export type Database = {
           created_at: string
           fighting_art_id: string
           id: string
-          sort_order: number
+          source_vignette_survivor_fighting_art_id: string | null
           updated_at: string
           vignette_encounter_survivor_id: string
         }
@@ -6299,7 +6276,7 @@ export type Database = {
           created_at?: string
           fighting_art_id: string
           id?: string
-          sort_order?: number
+          source_vignette_survivor_fighting_art_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id: string
         }
@@ -6307,11 +6284,18 @@ export type Database = {
           created_at?: string
           fighting_art_id?: string
           id?: string
-          sort_order?: number
+          source_vignette_survivor_fighting_art_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "vignette_encounter_survivor_f_source_vignette_survivor_fig_fkey"
+            columns: ["source_vignette_survivor_fighting_art_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_fighting_art"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vignette_encounter_survivor_f_vignette_encounter_survivor__fkey"
             columns: ["vignette_encounter_survivor_id"]
@@ -6328,12 +6312,67 @@ export type Database = {
           },
         ]
       }
+      vignette_encounter_survivor_gear_grid: {
+        Row: {
+          column_number: number
+          created_at: string
+          gear_id: string
+          id: string
+          row_number: number
+          source_vignette_survivor_gear_grid_id: string | null
+          updated_at: string
+          vignette_encounter_survivor_id: string
+        }
+        Insert: {
+          column_number: number
+          created_at?: string
+          gear_id: string
+          id?: string
+          row_number: number
+          source_vignette_survivor_gear_grid_id?: string | null
+          updated_at?: string
+          vignette_encounter_survivor_id: string
+        }
+        Update: {
+          column_number?: number
+          created_at?: string
+          gear_id?: string
+          id?: string
+          row_number?: number
+          source_vignette_survivor_gear_grid_id?: string | null
+          updated_at?: string
+          vignette_encounter_survivor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_encounter_survivor_g_source_vignette_survivor_gea_fkey"
+            columns: ["source_vignette_survivor_gear_grid_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_gear_grid"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_g_vignette_encounter_survivor__fkey"
+            columns: ["vignette_encounter_survivor_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_encounter_survivor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_gear_grid_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vignette_encounter_survivor_secret_fighting_art: {
         Row: {
           created_at: string
           id: string
           secret_fighting_art_id: string
-          sort_order: number
+          source_vignette_survivor_secret_fighting_art_id: string | null
           updated_at: string
           vignette_encounter_survivor_id: string
         }
@@ -6341,7 +6380,7 @@ export type Database = {
           created_at?: string
           id?: string
           secret_fighting_art_id: string
-          sort_order?: number
+          source_vignette_survivor_secret_fighting_art_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id: string
         }
@@ -6349,11 +6388,18 @@ export type Database = {
           created_at?: string
           id?: string
           secret_fighting_art_id?: string
-          sort_order?: number
+          source_vignette_survivor_secret_fighting_art_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "vignette_encounter_survivor_s_source_vignette_survivor_sec_fkey"
+            columns: ["source_vignette_survivor_secret_fighting_art_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor_secret_fighting_art"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vignette_encounter_survivor_s_vignette_encounter_survivor__fkey"
             columns: ["vignette_encounter_survivor_id"]
@@ -6370,41 +6416,226 @@ export type Database = {
           },
         ]
       }
-      vignette_encounter_survivor_status: {
+      vignette_monster: {
         Row: {
           created_at: string
           id: string
-          sort_order: number
-          survivor_status_id: string
+          monster_name: string
+          multi_monster: boolean
+          source_monster_type: string
+          source_nemesis_id: string | null
+          source_quarry_id: string | null
           updated_at: string
-          vignette_encounter_survivor_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          sort_order?: number
-          survivor_status_id: string
+          monster_name: string
+          multi_monster?: boolean
+          source_monster_type: string
+          source_nemesis_id?: string | null
+          source_quarry_id?: string | null
           updated_at?: string
-          vignette_encounter_survivor_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          sort_order?: number
-          survivor_status_id?: string
+          monster_name?: string
+          multi_monster?: boolean
+          source_monster_type?: string
+          source_nemesis_id?: string | null
+          source_quarry_id?: string | null
           updated_at?: string
-          vignette_encounter_survivor_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_encounter_survivor__vignette_encounter_survivor__fkey1"
-            columns: ["vignette_encounter_survivor_id"]
+            foreignKeyName: "vignette_monster_source_nemesis_id_fkey"
+            columns: ["source_nemesis_id"]
             isOneToOne: false
-            referencedRelation: "vignette_encounter_survivor"
+            referencedRelation: "nemesis"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vignette_encounter_survivor_status_survivor_status_id_fkey"
+            foreignKeyName: "vignette_monster_source_quarry_id_fkey"
+            columns: ["source_quarry_id"]
+            isOneToOne: false
+            referencedRelation: "quarry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_monster_level: {
+        Row: {
+          accuracy: number
+          accuracy_tokens: number
+          advanced_cards: number
+          ai_deck_remaining: number
+          basic_cards: number
+          created_at: string
+          damage: number
+          damage_tokens: number
+          evasion: number
+          evasion_tokens: number
+          id: string
+          legendary_cards: number
+          level_number: number
+          life: number | null
+          luck: number
+          luck_tokens: number
+          movement: number
+          movement_tokens: number
+          overtone_cards: number
+          speed: number
+          speed_tokens: number
+          strength: number
+          strength_tokens: number
+          sub_monster_name: string | null
+          toughness: number
+          toughness_tokens: number
+          updated_at: string
+          vignette_monster_id: string
+        }
+        Insert: {
+          accuracy?: number
+          accuracy_tokens?: number
+          advanced_cards?: number
+          ai_deck_remaining?: number
+          basic_cards?: number
+          created_at?: string
+          damage?: number
+          damage_tokens?: number
+          evasion?: number
+          evasion_tokens?: number
+          id?: string
+          legendary_cards?: number
+          level_number: number
+          life?: number | null
+          luck?: number
+          luck_tokens?: number
+          movement?: number
+          movement_tokens?: number
+          overtone_cards?: number
+          speed?: number
+          speed_tokens?: number
+          strength?: number
+          strength_tokens?: number
+          sub_monster_name?: string | null
+          toughness?: number
+          toughness_tokens?: number
+          updated_at?: string
+          vignette_monster_id: string
+        }
+        Update: {
+          accuracy?: number
+          accuracy_tokens?: number
+          advanced_cards?: number
+          ai_deck_remaining?: number
+          basic_cards?: number
+          created_at?: string
+          damage?: number
+          damage_tokens?: number
+          evasion?: number
+          evasion_tokens?: number
+          id?: string
+          legendary_cards?: number
+          level_number?: number
+          life?: number | null
+          luck?: number
+          luck_tokens?: number
+          movement?: number
+          movement_tokens?: number
+          overtone_cards?: number
+          speed?: number
+          speed_tokens?: number
+          strength?: number
+          strength_tokens?: number
+          sub_monster_name?: string | null
+          toughness?: number
+          toughness_tokens?: number
+          updated_at?: string
+          vignette_monster_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_monster_level_vignette_monster_id_fkey"
+            columns: ["vignette_monster_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_monster"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_monster_level_mood: {
+        Row: {
+          created_at: string
+          id: string
+          mood_id: string
+          updated_at: string
+          vignette_monster_level_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mood_id: string
+          updated_at?: string
+          vignette_monster_level_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mood_id?: string
+          updated_at?: string
+          vignette_monster_level_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_monster_level_mood_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "mood"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_monster_level_mood_vignette_monster_level_id_fkey"
+            columns: ["vignette_monster_level_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_monster_level"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_monster_level_survivor_status: {
+        Row: {
+          created_at: string
+          id: string
+          survivor_status_id: string
+          updated_at: string
+          vignette_monster_level_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          survivor_status_id: string
+          updated_at?: string
+          vignette_monster_level_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          survivor_status_id?: string
+          updated_at?: string
+          vignette_monster_level_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_monster_level_survivor__vignette_monster_level_id_fkey"
+            columns: ["vignette_monster_level_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_monster_level"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_monster_level_survivor_status_survivor_status_id_fkey"
             columns: ["survivor_status_id"]
             isOneToOne: false
             referencedRelation: "survivor_status"
@@ -6412,7 +6643,46 @@ export type Database = {
           },
         ]
       }
-      vignette_survivor_template: {
+      vignette_monster_level_trait: {
+        Row: {
+          created_at: string
+          id: string
+          trait_id: string
+          updated_at: string
+          vignette_monster_level_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          trait_id: string
+          updated_at?: string
+          vignette_monster_level_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          trait_id?: string
+          updated_at?: string
+          vignette_monster_level_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vignette_monster_level_trait_trait_id_fkey"
+            columns: ["trait_id"]
+            isOneToOne: false
+            referencedRelation: "trait"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_monster_level_trait_vignette_monster_level_id_fkey"
+            columns: ["vignette_monster_level_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_monster_level"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vignette_survivor: {
         Row: {
           accuracy: number
           arm_armor: number
@@ -6428,7 +6698,6 @@ export type Database = {
           luck: number
           movement: number
           notes: string
-          sort_order: number
           speed: number
           strength: number
           survival: number
@@ -6436,7 +6705,7 @@ export type Database = {
           survivor_type: Database["public"]["Enums"]["survivor_type"]
           understanding: number
           updated_at: string
-          vignette_encounter_definition_id: string
+          vignette_monster_id: string
           waist_armor: number
           weapon_proficiency: number
           weapon_type_id: string | null
@@ -6456,7 +6725,6 @@ export type Database = {
           luck?: number
           movement?: number
           notes?: string
-          sort_order?: number
           speed?: number
           strength?: number
           survival?: number
@@ -6464,7 +6732,7 @@ export type Database = {
           survivor_type?: Database["public"]["Enums"]["survivor_type"]
           understanding?: number
           updated_at?: string
-          vignette_encounter_definition_id: string
+          vignette_monster_id: string
           waist_armor?: number
           weapon_proficiency?: number
           weapon_type_id?: string | null
@@ -6484,7 +6752,6 @@ export type Database = {
           luck?: number
           movement?: number
           notes?: string
-          sort_order?: number
           speed?: number
           strength?: number
           survival?: number
@@ -6492,21 +6759,21 @@ export type Database = {
           survivor_type?: Database["public"]["Enums"]["survivor_type"]
           understanding?: number
           updated_at?: string
-          vignette_encounter_definition_id?: string
+          vignette_monster_id?: string
           waist_armor?: number
           weapon_proficiency?: number
           weapon_type_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_survivor_template_vignette_encounter_definition_i_fkey"
-            columns: ["vignette_encounter_definition_id"]
+            foreignKeyName: "vignette_survivor_vignette_monster_id_fkey"
+            columns: ["vignette_monster_id"]
             isOneToOne: false
-            referencedRelation: "vignette_encounter_definition"
+            referencedRelation: "vignette_monster"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vignette_survivor_template_weapon_type_id_fkey"
+            foreignKeyName: "vignette_survivor_weapon_type_id_fkey"
             columns: ["weapon_type_id"]
             isOneToOne: false
             referencedRelation: "weapon_type"
@@ -6514,133 +6781,124 @@ export type Database = {
           },
         ]
       }
-      vignette_survivor_template_ability_impairment: {
+      vignette_survivor_ability_impairment: {
         Row: {
           ability_impairment_id: string
           created_at: string
           id: string
-          sort_order: number
           updated_at: string
-          vignette_survivor_template_id: string
+          vignette_survivor_id: string
         }
         Insert: {
           ability_impairment_id: string
           created_at?: string
           id?: string
-          sort_order?: number
           updated_at?: string
-          vignette_survivor_template_id: string
+          vignette_survivor_id: string
         }
         Update: {
           ability_impairment_id?: string
           created_at?: string
           id?: string
-          sort_order?: number
           updated_at?: string
-          vignette_survivor_template_id?: string
+          vignette_survivor_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_survivor_template_ab_vignette_survivor_template_i_fkey"
-            columns: ["vignette_survivor_template_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor_template"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_survivor_template_ability_i_ability_impairment_id_fkey"
+            foreignKeyName: "vignette_survivor_ability_impairment_ability_impairment_id_fkey"
             columns: ["ability_impairment_id"]
             isOneToOne: false
             referencedRelation: "ability_impairment"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vignette_survivor_ability_impairment_vignette_survivor_id_fkey"
+            columns: ["vignette_survivor_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      vignette_survivor_template_disorder: {
+      vignette_survivor_disorder: {
         Row: {
           created_at: string
           disorder_id: string
           id: string
-          sort_order: number
           updated_at: string
-          vignette_survivor_template_id: string
+          vignette_survivor_id: string
         }
         Insert: {
           created_at?: string
           disorder_id: string
           id?: string
-          sort_order?: number
           updated_at?: string
-          vignette_survivor_template_id: string
+          vignette_survivor_id: string
         }
         Update: {
           created_at?: string
           disorder_id?: string
           id?: string
-          sort_order?: number
           updated_at?: string
-          vignette_survivor_template_id?: string
+          vignette_survivor_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_survivor_template_di_vignette_survivor_template_i_fkey"
-            columns: ["vignette_survivor_template_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor_template"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_survivor_template_disorder_disorder_id_fkey"
+            foreignKeyName: "vignette_survivor_disorder_disorder_id_fkey"
             columns: ["disorder_id"]
             isOneToOne: false
             referencedRelation: "disorder"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vignette_survivor_disorder_vignette_survivor_id_fkey"
+            columns: ["vignette_survivor_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      vignette_survivor_template_fighting_art: {
+      vignette_survivor_fighting_art: {
         Row: {
           created_at: string
           fighting_art_id: string
           id: string
-          sort_order: number
           updated_at: string
-          vignette_survivor_template_id: string
+          vignette_survivor_id: string
         }
         Insert: {
           created_at?: string
           fighting_art_id: string
           id?: string
-          sort_order?: number
           updated_at?: string
-          vignette_survivor_template_id: string
+          vignette_survivor_id: string
         }
         Update: {
           created_at?: string
           fighting_art_id?: string
           id?: string
-          sort_order?: number
           updated_at?: string
-          vignette_survivor_template_id?: string
+          vignette_survivor_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_survivor_template_fi_vignette_survivor_template_i_fkey"
-            columns: ["vignette_survivor_template_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor_template"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_survivor_template_fighting_art_fighting_art_id_fkey"
+            foreignKeyName: "vignette_survivor_fighting_art_fighting_art_id_fkey"
             columns: ["fighting_art_id"]
             isOneToOne: false
             referencedRelation: "fighting_art"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vignette_survivor_fighting_art_vignette_survivor_id_fkey"
+            columns: ["vignette_survivor_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      vignette_survivor_template_gear_grid: {
+      vignette_survivor_gear_grid: {
         Row: {
           column_number: number
           created_at: string
@@ -6648,7 +6906,7 @@ export type Database = {
           id: string
           row_number: number
           updated_at: string
-          vignette_survivor_template_id: string
+          vignette_survivor_id: string
         }
         Insert: {
           column_number: number
@@ -6657,7 +6915,7 @@ export type Database = {
           id?: string
           row_number: number
           updated_at?: string
-          vignette_survivor_template_id: string
+          vignette_survivor_id: string
         }
         Update: {
           column_number?: number
@@ -6666,105 +6924,60 @@ export type Database = {
           id?: string
           row_number?: number
           updated_at?: string
-          vignette_survivor_template_id?: string
+          vignette_survivor_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_survivor_template_ge_vignette_survivor_template_i_fkey"
-            columns: ["vignette_survivor_template_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor_template"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_survivor_template_gear_grid_gear_id_fkey"
+            foreignKeyName: "vignette_survivor_gear_grid_gear_id_fkey"
             columns: ["gear_id"]
             isOneToOne: false
             referencedRelation: "gear"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vignette_survivor_gear_grid_vignette_survivor_id_fkey"
+            columns: ["vignette_survivor_id"]
+            isOneToOne: false
+            referencedRelation: "vignette_survivor"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      vignette_survivor_template_secret_fighting_art: {
+      vignette_survivor_secret_fighting_art: {
         Row: {
           created_at: string
           id: string
           secret_fighting_art_id: string
-          sort_order: number
           updated_at: string
-          vignette_survivor_template_id: string
+          vignette_survivor_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           secret_fighting_art_id: string
-          sort_order?: number
           updated_at?: string
-          vignette_survivor_template_id: string
+          vignette_survivor_id: string
         }
         Update: {
           created_at?: string
           id?: string
           secret_fighting_art_id?: string
-          sort_order?: number
           updated_at?: string
-          vignette_survivor_template_id?: string
+          vignette_survivor_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_survivor_template_se_vignette_survivor_template_i_fkey"
-            columns: ["vignette_survivor_template_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor_template"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_survivor_template_secret_f_secret_fighting_art_id_fkey"
+            foreignKeyName: "vignette_survivor_secret_fighting_a_secret_fighting_art_id_fkey"
             columns: ["secret_fighting_art_id"]
             isOneToOne: false
             referencedRelation: "secret_fighting_art"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      vignette_survivor_template_survivor_status: {
-        Row: {
-          created_at: string
-          id: string
-          sort_order: number
-          survivor_status_id: string
-          updated_at: string
-          vignette_survivor_template_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          sort_order?: number
-          survivor_status_id: string
-          updated_at?: string
-          vignette_survivor_template_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          sort_order?: number
-          survivor_status_id?: string
-          updated_at?: string
-          vignette_survivor_template_id?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "vignette_survivor_template_su_vignette_survivor_template_i_fkey"
-            columns: ["vignette_survivor_template_id"]
+            foreignKeyName: "vignette_survivor_secret_fighting_art_vignette_survivor_id_fkey"
+            columns: ["vignette_survivor_id"]
             isOneToOne: false
-            referencedRelation: "vignette_survivor_template"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_survivor_template_survivor_sta_survivor_status_id_fkey"
-            columns: ["survivor_status_id"]
-            isOneToOne: false
-            referencedRelation: "survivor_status"
+            referencedRelation: "vignette_survivor"
             referencedColumns: ["id"]
           },
         ]
@@ -6991,11 +7204,9 @@ export type Database = {
       }
       can_update_vignette_encounter_as_collaborator: {
         Args: {
-          proposed_definition_id: string
-          proposed_ended_at: string
-          proposed_level_id: string
-          proposed_status: string
+          proposed_level_number: number
           proposed_user_id: string
+          proposed_vignette_monster_id: string
           target_vignette_encounter: string
         }
         Returns: boolean
@@ -7003,6 +7214,13 @@ export type Database = {
       check_username_available: {
         Args: { desired_username: string }
         Returns: boolean
+      }
+      create_vignette_encounter_from_catalog: {
+        Args: {
+          target_level_number: number
+          target_vignette_monster_id: string
+        }
+        Returns: string
       }
       get_admin_adoption_metrics: { Args: never; Returns: Json }
       get_settlement_collaborators: {

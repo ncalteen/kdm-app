@@ -1,538 +1,1820 @@
 --------------------------------------------------------------------------------
--- Vignette Encounter Fixture Data
--- Clearly marked fixture-only one-shots for integration and UI development.
+-- Vignette Fixture Gear Data
 --------------------------------------------------------------------------------
-do $$
-declare
-	white_lion_id uuid;
-	red_witches_id uuid;
-	feeding_time_id uuid;
-	frantic_spinning_id uuid;
-	necrotoxins_id uuid;
-	aleatoric_melody_id uuid;
-	cunning_id uuid;
-	merciless_id uuid;
-	boiling_blood_id uuid;
-	discouraging_presence_id uuid;
-	red_initiate_id uuid;
-	witching_cloak_id uuid;
-	battle_tempo_id uuid;
-	bloody_hands_id uuid;
-	dreaded_decade_id uuid;
-	polarized_aura_id uuid;
-	somatic_static_id uuid;
-	sword_id uuid;
-	dagger_id uuid;
-	lantern_id uuid;
-	shield_id uuid;
-	spear_id uuid;
-	founding_stone_id uuid;
-	cloth_id uuid;
-	bone_dagger_id uuid;
-	skull_helm_id uuid;
-	rawhide_headband_id uuid;
-	white_lion_gauntlet_id uuid;
-	king_spear_id uuid;
-	lantern_sword_id uuid;
-	gorment_mask_id uuid;
-	leader_id uuid;
-	mighty_strike_id uuid;
-	strategist_id uuid;
-	acrobatics_id uuid;
-	tough_id uuid;
-	red_fist_id uuid;
-	kings_step_id uuid;
-	synchronized_strike_id uuid;
-	fear_of_the_dark_id uuid;
-	cowardice_id uuid;
-	brain_smog_id uuid;
-	veteran_id uuid;
-	servant_of_fate_id uuid;
-	revenant_id uuid;
-begin
-	select id into strict white_lion_id
-	from quarry
-	where monster_name = 'White Lion'
-		and not custom;
-
-	select id into strict red_witches_id
-	from nemesis
-	where monster_name = 'Red Witches'
-		and not custom
-		and multi_monster;
-
-	select id into strict feeding_time_id from mood where mood_name = 'Feeding Time' and not custom;
-	select id into strict frantic_spinning_id from mood where mood_name = 'Frantic Spinning' and not custom;
-	select id into strict necrotoxins_id from mood where mood_name = 'Necrotoxins' and not custom;
-	select id into strict aleatoric_melody_id from mood where mood_name = 'Aleatoric Melody' and not custom;
-
-	select id into strict cunning_id from trait where trait_name = 'Cunning' and not custom;
-	select id into strict merciless_id from trait where trait_name = 'Merciless' and not custom;
-	select id into strict boiling_blood_id from trait where trait_name = 'Boiling Blood' and not custom;
-	select id into strict discouraging_presence_id from trait where trait_name = 'Discouraging Presence' and not custom;
-	select id into strict red_initiate_id from trait where trait_name = 'Red Initiate' and not custom;
-	select id into strict witching_cloak_id from trait where trait_name = 'Witching Cloak' and not custom;
-
-	select id into strict battle_tempo_id from survivor_status where survivor_status_name = 'Battle Tempo' and not custom;
-	select id into strict bloody_hands_id from survivor_status where survivor_status_name = 'Bloody Hands' and not custom;
-	select id into strict dreaded_decade_id from survivor_status where survivor_status_name = 'Dreaded Decade' and not custom;
-	select id into strict polarized_aura_id from survivor_status where survivor_status_name = 'Polarized Aura' and not custom;
-	select id into strict somatic_static_id from survivor_status where survivor_status_name = 'Somatic Static' and not custom;
-
-	select id into strict sword_id from weapon_type where weapon_type_name = 'Sword' and not custom;
-	select id into strict dagger_id from weapon_type where weapon_type_name = 'Dagger' and not custom;
-	select id into strict lantern_id from weapon_type where weapon_type_name = 'Lantern' and not custom;
-	select id into strict shield_id from weapon_type where weapon_type_name = 'Shield' and not custom;
-	select id into strict spear_id from weapon_type where weapon_type_name = 'Spear' and not custom;
-
-	select id into strict founding_stone_id from gear where gear_name = 'Founding Stone' and not custom;
-	select id into strict cloth_id from gear where gear_name = 'Cloth' and not custom;
-	select id into strict bone_dagger_id from gear where gear_name = 'Bone Dagger' and not custom;
-	select id into strict skull_helm_id from gear where gear_name = 'Skull Helm' and not custom;
-	select id into strict rawhide_headband_id from gear where gear_name = 'Rawhide Headband' and not custom;
-	select id into strict white_lion_gauntlet_id from gear where gear_name = 'White Lion Gauntlet' and not custom;
-	select id into strict king_spear_id from gear where gear_name = 'King Spear' and not custom;
-	select id into strict lantern_sword_id from gear where gear_name = 'Lantern Sword' and not custom;
-	select id into strict gorment_mask_id from gear where gear_name = 'Gorment Mask' and not custom;
-
-	select id into strict leader_id from fighting_art where fighting_art_name = 'Leader' and not custom;
-	select id into strict mighty_strike_id from fighting_art where fighting_art_name = 'Mighty Strike' and not custom;
-	select id into strict strategist_id from fighting_art where fighting_art_name = 'Strategist' and not custom;
-	select id into strict acrobatics_id from fighting_art where fighting_art_name = 'Acrobatics' and not custom;
-	select id into strict tough_id from fighting_art where fighting_art_name = 'Tough' and not custom;
-
-	select id into strict red_fist_id from secret_fighting_art where secret_fighting_art_name = 'Red Fist' and not custom;
-	select id into strict kings_step_id from secret_fighting_art where secret_fighting_art_name = 'King''s Step' and not custom;
-	select id into strict synchronized_strike_id from secret_fighting_art where secret_fighting_art_name = 'Synchronized Strike' and not custom;
-
-	select id into strict fear_of_the_dark_id from disorder where disorder_name = 'Fear of the Dark' and not custom;
-	select id into strict cowardice_id from disorder where disorder_name = 'Cowardice' and not custom;
-	select id into strict brain_smog_id from disorder where disorder_name = 'Brain Smog' and not custom;
-
-	select id into strict veteran_id from ability_impairment where ability_impairment_name = 'Veteran' and not custom;
-	select id into strict servant_of_fate_id from ability_impairment where ability_impairment_name = 'Servant of Fate' and not custom;
-	select id into strict revenant_id from ability_impairment where ability_impairment_name = 'Revenant' and not custom;
-
-	insert into vignette_encounter_definition (
-		id,
-		name,
-		slug,
-		description,
-		source_monster_type,
-		source_nemesis_id,
-		source_quarry_id,
-		sort_order,
-		published
-	)
+insert into gear (gear_name)
+select fixture_gear.gear_name
+from (
 	values
-		(
-			'33600000-0000-4000-8000-000000000101',
-			'[Fixture] Lantern-Raked Lion',
-			'fixture-lantern-raked-lion',
-			'Fixture-only single-monster quarry vignette for integration and UI development.',
-			'QUARRY',
-			null,
-			white_lion_id,
-			10,
-			true
-		),
-		(
-			'33600000-0000-4000-8000-000000000102',
-			'[Fixture] Three Witches at the Door',
-			'fixture-three-witches-at-the-door',
-			'Fixture-only multi-monster nemesis vignette for integration and UI development.',
-			'NEMESIS',
-			red_witches_id,
-			null,
-			20,
-			true
+		('Ambush Falchion'),
+		('Braveshield'),
+		('Bravesword'),
+		('Cobbled Faulds'),
+		('Cobbled Greaves'),
+		('Cobbled Plackart'),
+		('Cobbled Vambraces'),
+		('Crusader Breastplate'),
+		('Crusader Cuisses'),
+		('Crusader Gauntlets'),
+		('Crusader Heirloom'),
+		('Crusader Sabatons'),
+		('Heart of a Hero'),
+		('Laurie''s Lenses'),
+		('Locking Tome'),
+		('Memento Blade'),
+		('Mush Diadema'),
+		('Protean Charm'),
+		('Ram Photophore'),
+		('Sacrificial Fang'),
+		('Sculptor Beads'),
+		('Shadowstalker Geta'),
+		('Shadowstalker Houmongi'),
+		('Shadowstalker Kasa'),
+		('Shadowstalker Obi'),
+		('Shadowstalker Sode'),
+		('Stoic Mask'),
+		('Stonescraper'),
+		('Survival Spear'),
+		('Tattered Archivist Robe'),
+		('Warding Guidon Lance'),
+		('Warding Tower Shield')
+) as fixture_gear(gear_name)
+where not exists (
+	select 1
+	from gear
+	where gear.gear_name = fixture_gear.gear_name
+		and gear.custom is false
+);
+--------------------------------------------------------------------------------
+-- Vignette Monster Data
+--------------------------------------------------------------------------------
+insert into vignette_monster
+(
+	monster_name,
+	multi_monster,
+	source_monster_type,
+	source_nemesis_id,
+	source_quarry_id
+)
+values
+(
+	'Killenium Butcher', -- Name
+	false, -- Multi Monster
+	'NEMESIS', -- Source Monster Type
+	(select id from nemesis where monster_name = 'Killenium Butcher'), -- Source Nemesis ID
+	null -- Source Quarry ID
+),
+(
+	'Screaming God', -- Name
+	false, -- Multi Monster
+	'QUARRY', -- Source Monster Type
+	null, -- Source Nemesis ID
+	(select id from quarry where monster_name = 'Screaming God') -- Source Quarry ID
+),
+(
+	'Screaming Nukalope', -- Name
+	false, -- Multi Monster
+	'QUARRY', -- Source Monster Type
+	null, -- Source Nemesis ID
+	(select id from quarry where monster_name = 'Screaming Nukalope') -- Source Quarry ID
+),
+(
+	'White Gigalion', -- Name
+	false, -- Multi Monster
+	'QUARRY', -- Source Monster Type
+	null, -- Source Nemesis ID
+	(select id from quarry where monster_name = 'White Gigalion') -- Source Quarry ID
+);
+--------------------------------------------------------------------------------
+-- Vignette Monster Level Data
+--------------------------------------------------------------------------------
+insert into vignette_monster_level
+(
+	ai_deck_remaining,
+	basic_cards,
+	advanced_cards,
+	legendary_cards,
+	overtone_cards,
+	accuracy,
+	accuracy_tokens,
+	damage,
+	damage_tokens,
+	evasion,
+	evasion_tokens,
+	level_number,
+	life,
+	luck,
+	luck_tokens,
+	movement,
+	movement_tokens,
+	sub_monster_name,
+	speed,
+	speed_tokens,
+	strength,
+	strength_tokens,
+	toughness,
+	toughness_tokens,
+	vignette_monster_id
+)
+values
+(
+	15, -- AI Deck Remaining
+	9, -- Basic Cards
+	6, -- Advanced Cards
+	0, -- Legendary Cards
+	0, -- Overtone Cards
+	0, -- Accuracy
+	1, -- Accuracy Tokens
+	1, -- Damage
+	0, -- Damage Tokens
+	0, -- Evasion
+	0, -- Evasion Tokens
+	2, -- Level Number
+	null, -- Life
+	0, -- Luck
+	0, -- Luck Tokens
+	5, -- Movement
+	0, -- Movement Tokens
+	null, -- Sub Monster Name
+	1, -- Speed
+	0, -- Speed Tokens
+	0, -- Strength
+	0, -- Strength Tokens
+	13, -- Toughness
+	0, -- Toughness Tokens
+	(select id from vignette_monster where monster_name = 'Killenium Butcher') -- Vignette Monster ID
+),
+(
+	16, -- AI Deck Remaining
+	11, -- Basic Cards
+	5, -- Advanced Cards
+	0, -- Legendary Cards
+	0, -- Overtone Cards
+	0, -- Accuracy
+	0, -- Accuracy Tokens
+	0, -- Damage
+	0, -- Damage Tokens
+	0, -- Evasion
+	0, -- Evasion Tokens
+	1, -- Level Number
+	null, -- Life
+	0, -- Luck
+	0, -- Luck Tokens
+	-1, -- Movement
+	0, -- Movement Tokens
+	null, -- Sub Monster Name
+	0, -- Speed
+	0, -- Speed Tokens
+	0, -- Strength
+	0, -- Strength Tokens
+	18, -- Toughness
+	0, -- Toughness Tokens
+	(select id from vignette_monster where monster_name = 'Screaming God') -- Vignette Monster ID
+),
+(
+	16, -- AI Deck Remaining
+	9, -- Basic Cards
+	7, -- Advanced Cards
+	0, -- Legendary Cards
+	0, -- Overtone Cards
+	0, -- Accuracy
+	1, -- Accuracy Tokens
+	0, -- Damage
+	0, -- Damage Tokens
+	0, -- Evasion
+	0, -- Evasion Tokens
+	2, -- Level Number
+	null, -- Life
+	0, -- Luck
+	0, -- Luck Tokens
+	9, -- Movement
+	0, -- Movement Tokens
+	null, -- Sub Monster Name
+	2, -- Speed
+	0, -- Speed Tokens
+	0, -- Strength
+	0, -- Strength Tokens
+	11, -- Toughness
+	0, -- Toughness Tokens
+	(select id from vignette_monster where monster_name = 'Screaming Nukalope') -- Vignette Monster ID
+),
+(
+	15, -- AI Deck Remaining
+	10, -- Basic Cards
+	5, -- Advanced Cards
+	0, -- Legendary Cards
+	0, -- Overtone Cards
+	0, -- Accuracy
+	0, -- Accuracy Tokens
+	1, -- Damage
+	0, -- Damage Tokens
+	0, -- Evasion
+	0, -- Evasion Tokens
+	2, -- Level Number
+	null, -- Life
+	0, -- Luck
+	0, -- Luck Tokens
+	8, -- Movement
+	0, -- Movement Tokens
+	null, -- Sub Monster Name
+	1, -- Speed
+	0, -- Speed Tokens
+	0, -- Strength
+	0, -- Strength Tokens
+	10, -- Toughness
+	0, -- Toughness Tokens
+	(select id from vignette_monster where monster_name = 'White Gigalion') -- Vignette Monster ID
+);
+--------------------------------------------------------------------------------
+-- Vignette Monster Level Survivor Status
+--------------------------------------------------------------------------------
+insert into vignette_monster_level_survivor_status
+(
+	vignette_monster_level_id,
+	survivor_status_id
+)
+values
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'Killenium Butcher'
 		)
-	on conflict (id) do update set
-		name = excluded.name,
-		slug = excluded.slug,
-		description = excluded.description,
-		source_monster_type = excluded.source_monster_type,
-		source_nemesis_id = excluded.source_nemesis_id,
-		source_quarry_id = excluded.source_quarry_id,
-		sort_order = excluded.sort_order,
-		published = excluded.published;
-
-	insert into vignette_encounter_level (
-		id,
-		vignette_encounter_definition_id,
-		level_number,
-		movement,
-		speed,
-		accuracy,
-		evasion,
-		damage,
-		toughness,
-		wounds,
-		ai_deck_size,
-		hit_location_deck_size,
-		basic_action,
-		special_rules,
-		sort_order
+		and level_number = 2
+	),
+	(
+		select id from survivor_status
+		where survivor_status_name = 'Infectious Lunacy'
+		and custom = false
 	)
-	values
-		(
-			'33600000-0000-4000-8000-000000000201',
-			'33600000-0000-4000-8000-000000000101',
-			1,
-			6,
-			2,
-			4,
-			0,
-			1,
-			6,
-			8,
-			7,
-			10,
-			'Claw and Lantern Snap',
-			'Fixture setup: a single White Lion prowls the edge of the lantern light.',
-			10
-		),
-		(
-			'33600000-0000-4000-8000-000000000202',
-			'33600000-0000-4000-8000-000000000101',
-			2,
-			6,
-			2,
-			4,
-			1,
-			2,
-			8,
-			10,
-			9,
-			10,
-			'Pounce Through the Dark',
-			'Fixture setup: the lion is still a single monster, just meaner about it.',
-			20
-		),
-		(
-			'33600000-0000-4000-8000-000000000203',
-			'33600000-0000-4000-8000-000000000102',
-			1,
-			5,
-			2,
-			4,
-			1,
-			1,
-			7,
-			12,
-			8,
-			12,
-			'Witch-Flame Advance',
-			'Fixture setup: Braal and Nico share the darkness as a multi-monster nemesis source.',
-			10
-		),
-		(
-			'33600000-0000-4000-8000-000000000204',
-			'33600000-0000-4000-8000-000000000102',
-			2,
-			6,
-			3,
-			3,
-			1,
-			2,
-			9,
-			16,
-			10,
-			12,
-			'Three-Fold Hex',
-			'Fixture setup: Braal, Nico, and the Seer test multi-monster copy flows.',
-			20
+);
+--------------------------------------------------------------------------------
+-- Vignette Monster Level Trait
+--------------------------------------------------------------------------------
+insert into vignette_monster_level_trait
+(
+	vignette_monster_level_id,
+	trait_id
+)
+values
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'Killenium Butcher'
 		)
-	on conflict (id) do update set
-		vignette_encounter_definition_id = excluded.vignette_encounter_definition_id,
-		level_number = excluded.level_number,
-		movement = excluded.movement,
-		speed = excluded.speed,
-		accuracy = excluded.accuracy,
-		evasion = excluded.evasion,
-		damage = excluded.damage,
-		toughness = excluded.toughness,
-		wounds = excluded.wounds,
-		ai_deck_size = excluded.ai_deck_size,
-		hit_location_deck_size = excluded.hit_location_deck_size,
-		basic_action = excluded.basic_action,
-		special_rules = excluded.special_rules,
-		sort_order = excluded.sort_order;
-
-	insert into vignette_encounter_level_mood (id, vignette_encounter_level_id, mood_id, sort_order)
-	values
-		('33600000-0000-4000-8000-000000000301', '33600000-0000-4000-8000-000000000201', feeding_time_id, 10),
-		('33600000-0000-4000-8000-000000000302', '33600000-0000-4000-8000-000000000202', frantic_spinning_id, 10),
-		('33600000-0000-4000-8000-000000000303', '33600000-0000-4000-8000-000000000203', necrotoxins_id, 10),
-		('33600000-0000-4000-8000-000000000304', '33600000-0000-4000-8000-000000000204', aleatoric_melody_id, 10)
-	on conflict (vignette_encounter_level_id, mood_id) do update set
-		sort_order = excluded.sort_order;
-
-	insert into vignette_encounter_level_trait (id, vignette_encounter_level_id, trait_id, sort_order)
-	values
-		('33600000-0000-4000-8000-000000000401', '33600000-0000-4000-8000-000000000201', cunning_id, 10),
-		('33600000-0000-4000-8000-000000000402', '33600000-0000-4000-8000-000000000202', merciless_id, 10),
-		('33600000-0000-4000-8000-000000000403', '33600000-0000-4000-8000-000000000203', boiling_blood_id, 10),
-		('33600000-0000-4000-8000-000000000404', '33600000-0000-4000-8000-000000000203', discouraging_presence_id, 20),
-		('33600000-0000-4000-8000-000000000405', '33600000-0000-4000-8000-000000000204', red_initiate_id, 10),
-		('33600000-0000-4000-8000-000000000406', '33600000-0000-4000-8000-000000000204', witching_cloak_id, 20)
-	on conflict (vignette_encounter_level_id, trait_id) do update set
-		sort_order = excluded.sort_order;
-
-	insert into vignette_encounter_level_survivor_status (id, vignette_encounter_level_id, survivor_status_id, sort_order)
-	values
-		('33600000-0000-4000-8000-000000000501', '33600000-0000-4000-8000-000000000201', bloody_hands_id, 10),
-		('33600000-0000-4000-8000-000000000502', '33600000-0000-4000-8000-000000000202', battle_tempo_id, 10),
-		('33600000-0000-4000-8000-000000000503', '33600000-0000-4000-8000-000000000203', somatic_static_id, 10),
-		('33600000-0000-4000-8000-000000000504', '33600000-0000-4000-8000-000000000204', dreaded_decade_id, 10),
-		('33600000-0000-4000-8000-000000000505', '33600000-0000-4000-8000-000000000204', polarized_aura_id, 20)
-	on conflict (vignette_encounter_level_id, survivor_status_id) do update set
-		sort_order = excluded.sort_order;
-
-	insert into vignette_survivor_template (
-		id,
-		vignette_encounter_definition_id,
-		survivor_name,
-		survivor_type,
-		gender,
-		movement,
-		accuracy,
-		strength,
-		evasion,
-		luck,
-		speed,
-		survival,
-		insanity,
-		courage,
-		understanding,
-		weapon_proficiency,
-		weapon_type_id,
-		arm_armor,
-		body_armor,
-		head_armor,
-		leg_armor,
-		waist_armor,
-		notes,
-		sort_order
+		and level_number = 2
+	),
+	(
+		select id from trait
+		where trait_name = 'Self-Aware'
+		and custom = false
 	)
-	values
-		(
-			'33600000-0000-4000-8000-000000000601',
-			'33600000-0000-4000-8000-000000000101',
-			'[Fixture] Ashen Blade',
-			'CORE',
-			'FEMALE',
-			5,
-			1,
-			1,
-			1,
-			0,
-			0,
-			3,
-			4,
-			2,
-			1,
-			2,
-			sword_id,
-			1,
-			1,
-			1,
-			1,
-			1,
-			'Fixture-only survivor template for the single-monster quarry vignette.',
-			10
-		),
-		(
-			'33600000-0000-4000-8000-000000000602',
-			'33600000-0000-4000-8000-000000000101',
-			'[Fixture] Lantern Hook',
-			'CORE',
-			'MALE',
-			5,
-			0,
-			1,
-			2,
-			0,
-			1,
-			4,
-			2,
-			1,
-			2,
-			1,
-			dagger_id,
-			2,
-			1,
-			1,
-			0,
-			1,
-			'Fixture-only survivor template with an offset gear grid.',
-			20
-		),
-		(
-			'33600000-0000-4000-8000-000000000603',
-			'33600000-0000-4000-8000-000000000102',
-			'[Fixture] Braal Ward',
-			'CORE',
-			'FEMALE',
-			5,
-			0,
-			2,
-			0,
-			1,
-			0,
-			2,
-			5,
-			3,
-			1,
-			3,
-			shield_id,
-			2,
-			2,
-			1,
-			1,
-			1,
-			'Fixture-only survivor template for the multi-monster nemesis vignette.',
-			10
-		),
-		(
-			'33600000-0000-4000-8000-000000000604',
-			'33600000-0000-4000-8000-000000000102',
-			'[Fixture] Nico Spark',
-			'CORE',
-			'MALE',
-			5,
-			1,
-			1,
-			1,
-			0,
-			1,
-			3,
-			6,
-			2,
-			2,
-			2,
-			lantern_id,
-			1,
-			2,
-			1,
-			1,
-			1,
-			'Fixture-only survivor template carrying a lantern weapon type.',
-			20
-		),
-		(
-			'33600000-0000-4000-8000-000000000605',
-			'33600000-0000-4000-8000-000000000102',
-			'[Fixture] Seer Thread',
-			'CORE',
-			'FEMALE',
-			6,
-			1,
-			0,
-			2,
-			1,
-			0,
-			5,
-			8,
-			4,
-			4,
-			1,
-			spear_id,
-			1,
-			1,
-			2,
-			1,
-			2,
-			'Fixture-only survivor template for testing a fuller copied party.',
-			30
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'Killenium Butcher'
 		)
-	on conflict (id) do update set
-		vignette_encounter_definition_id = excluded.vignette_encounter_definition_id,
-		survivor_name = excluded.survivor_name,
-		survivor_type = excluded.survivor_type,
-		gender = excluded.gender,
-		movement = excluded.movement,
-		accuracy = excluded.accuracy,
-		strength = excluded.strength,
-		evasion = excluded.evasion,
-		luck = excluded.luck,
-		speed = excluded.speed,
-		survival = excluded.survival,
-		insanity = excluded.insanity,
-		courage = excluded.courage,
-		understanding = excluded.understanding,
-		weapon_proficiency = excluded.weapon_proficiency,
-		weapon_type_id = excluded.weapon_type_id,
-		arm_armor = excluded.arm_armor,
-		body_armor = excluded.body_armor,
-		head_armor = excluded.head_armor,
-		leg_armor = excluded.leg_armor,
-		waist_armor = excluded.waist_armor,
-		notes = excluded.notes,
-		sort_order = excluded.sort_order;
-
-	insert into vignette_survivor_template_fighting_art (id, vignette_survivor_template_id, fighting_art_id, sort_order)
-	values
-		('33600000-0000-4000-8000-000000000701', '33600000-0000-4000-8000-000000000601', leader_id, 10),
-		('33600000-0000-4000-8000-000000000702', '33600000-0000-4000-8000-000000000601', mighty_strike_id, 20),
-		('33600000-0000-4000-8000-000000000703', '33600000-0000-4000-8000-000000000602', strategist_id, 10),
-		('33600000-0000-4000-8000-000000000704', '33600000-0000-4000-8000-000000000603', tough_id, 10),
-		('33600000-0000-4000-8000-000000000705', '33600000-0000-4000-8000-000000000604', acrobatics_id, 10),
-		('33600000-0000-4000-8000-000000000706', '33600000-0000-4000-8000-000000000605', leader_id, 10)
-	on conflict (vignette_survivor_template_id, fighting_art_id) do update set
-		sort_order = excluded.sort_order;
-
-	insert into vignette_survivor_template_secret_fighting_art (id, vignette_survivor_template_id, secret_fighting_art_id, sort_order)
-	values
-		('33600000-0000-4000-8000-000000000801', '33600000-0000-4000-8000-000000000601', red_fist_id, 10),
-		('33600000-0000-4000-8000-000000000802', '33600000-0000-4000-8000-000000000603', kings_step_id, 10),
-		('33600000-0000-4000-8000-000000000803', '33600000-0000-4000-8000-000000000605', synchronized_strike_id, 10)
-	on conflict (vignette_survivor_template_id, secret_fighting_art_id) do update set
-		sort_order = excluded.sort_order;
-
-	insert into vignette_survivor_template_disorder (id, vignette_survivor_template_id, disorder_id, sort_order)
-	values
-		('33600000-0000-4000-8000-000000000901', '33600000-0000-4000-8000-000000000602', fear_of_the_dark_id, 10),
-		('33600000-0000-4000-8000-000000000902', '33600000-0000-4000-8000-000000000604', brain_smog_id, 10),
-		('33600000-0000-4000-8000-000000000903', '33600000-0000-4000-8000-000000000605', cowardice_id, 10)
-	on conflict (vignette_survivor_template_id, disorder_id) do update set
-		sort_order = excluded.sort_order;
-
-	insert into vignette_survivor_template_ability_impairment (id, vignette_survivor_template_id, ability_impairment_id, sort_order)
-	values
-		('33600000-0000-4000-8000-000000001001', '33600000-0000-4000-8000-000000000601', veteran_id, 10),
-		('33600000-0000-4000-8000-000000001002', '33600000-0000-4000-8000-000000000603', servant_of_fate_id, 10),
-		('33600000-0000-4000-8000-000000001003', '33600000-0000-4000-8000-000000000605', revenant_id, 10)
-	on conflict (vignette_survivor_template_id, ability_impairment_id) do update set
-		sort_order = excluded.sort_order;
-
-	insert into vignette_survivor_template_survivor_status (id, vignette_survivor_template_id, survivor_status_id, sort_order)
-	values
-		('33600000-0000-4000-8000-000000001101', '33600000-0000-4000-8000-000000000601', bloody_hands_id, 10),
-		('33600000-0000-4000-8000-000000001102', '33600000-0000-4000-8000-000000000603', battle_tempo_id, 10),
-		('33600000-0000-4000-8000-000000001103', '33600000-0000-4000-8000-000000000604', somatic_static_id, 10),
-		('33600000-0000-4000-8000-000000001104', '33600000-0000-4000-8000-000000000605', polarized_aura_id, 10)
-	on conflict (vignette_survivor_template_id, survivor_status_id) do update set
-		sort_order = excluded.sort_order;
-
-	insert into vignette_survivor_template_gear_grid (id, vignette_survivor_template_id, gear_id, row_number, column_number)
-	values
-		('33600000-0000-4000-8000-000000001201', '33600000-0000-4000-8000-000000000601', founding_stone_id, 0, 0),
-		('33600000-0000-4000-8000-000000001202', '33600000-0000-4000-8000-000000000601', cloth_id, 0, 1),
-		('33600000-0000-4000-8000-000000001203', '33600000-0000-4000-8000-000000000601', bone_dagger_id, 1, 0),
-		('33600000-0000-4000-8000-000000001204', '33600000-0000-4000-8000-000000000601', rawhide_headband_id, 1, 1),
-		('33600000-0000-4000-8000-000000001205', '33600000-0000-4000-8000-000000000602', white_lion_gauntlet_id, 0, 0),
-		('33600000-0000-4000-8000-000000001206', '33600000-0000-4000-8000-000000000602', bone_dagger_id, 0, 1),
-		('33600000-0000-4000-8000-000000001207', '33600000-0000-4000-8000-000000000602', skull_helm_id, 1, 0),
-		('33600000-0000-4000-8000-000000001208', '33600000-0000-4000-8000-000000000603', king_spear_id, 0, 0),
-		('33600000-0000-4000-8000-000000001209', '33600000-0000-4000-8000-000000000603', skull_helm_id, 1, 0),
-		('33600000-0000-4000-8000-000000001210', '33600000-0000-4000-8000-000000000603', cloth_id, 2, 0),
-		('33600000-0000-4000-8000-000000001211', '33600000-0000-4000-8000-000000000604', lantern_sword_id, 0, 0),
-		('33600000-0000-4000-8000-000000001212', '33600000-0000-4000-8000-000000000604', gorment_mask_id, 1, 0),
-		('33600000-0000-4000-8000-000000001213', '33600000-0000-4000-8000-000000000604', founding_stone_id, 1, 1),
-		('33600000-0000-4000-8000-000000001214', '33600000-0000-4000-8000-000000000605', rawhide_headband_id, 0, 0),
-		('33600000-0000-4000-8000-000000001215', '33600000-0000-4000-8000-000000000605', bone_dagger_id, 0, 1),
-		('33600000-0000-4000-8000-000000001216', '33600000-0000-4000-8000-000000000605', cloth_id, 1, 1)
-	on conflict (vignette_survivor_template_id, row_number, column_number) do update set
-		gear_id = excluded.gear_id;
-end $$;
+		and level_number = 2
+	),
+	(
+		select id from trait
+		where trait_name = 'Scorn'
+		and custom = false
+	)
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'Screaming Nukalope'
+		)
+		and level_number = 2
+	),
+	(
+		select id from trait
+		where trait_name = 'Atomic Vigor - Inert'
+		and custom = false
+	)
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'Screaming Nukalope'
+		)
+		and level_number = 2
+	),
+	(
+		select id from trait
+		where trait_name = 'Critical Mass - Inert'
+		and custom = false
+	)
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'Screaming Nukalope'
+		)
+		and level_number = 2
+	),
+	(
+		select id from trait
+		where trait_name = 'Prehensile Tail - Inert'
+		and custom = false
+	)
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'White Gigalion'
+		)
+		and level_number = 2
+	),
+	(
+		select id from trait
+		where trait_name = 'Vicious'
+		and custom = false
+	)
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'White Gigalion'
+		)
+		and level_number = 2
+	),
+	(
+		select id from trait
+		where trait_name = 'Giga Claws'
+		and custom = false
+	)
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'White Gigalion'
+		)
+		and level_number = 2
+	),
+	(
+		select id from trait
+		where trait_name = 'Smart Cat'
+		and custom = false
+	)
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'Screaming God'
+		)
+		and level_number = 1
+	),
+	(
+		select id from trait
+		where trait_name = 'Endless Horizon'
+		and custom = false
+	)
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'Screaming God'
+		)
+		and level_number = 1
+	),
+	(
+		select id from trait
+		where trait_name = 'Stampede'
+		and custom = false
+	)
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'Screaming God'
+		)
+		and level_number = 1
+	),
+	(
+		select id from trait
+		where trait_name = 'Withering Blast'
+		and custom = false
+	)
+),
+(
+	(
+		select id from vignette_monster_level
+		where vignette_monster_id = (
+			select id from vignette_monster
+			where monster_name = 'Screaming God'
+		)
+		and level_number = 1
+	),
+	(
+		select id from trait
+		where trait_name = 'Grasping Undermaw'
+		and custom = false
+	)
+);
+--------------------------------------------------------------------------------
+-- Vignette Survivor Data
+--------------------------------------------------------------------------------
+insert into vignette_survivor
+(
+	vignette_monster_id,
+	survivor_name,
+	survivor_type,
+	gender,
+	movement,
+	accuracy,
+	strength,
+	evasion,
+	luck,
+	speed,
+	survival,
+	insanity,
+	courage,
+	understanding,
+	weapon_proficiency,
+	weapon_type_id,
+	arm_armor,
+	body_armor,
+	head_armor,
+	leg_armor,
+	waist_armor,
+	notes
+)
+values
+-- Killenium Butcher
+(
+	(select id from vignette_monster where monster_name = 'Killenium Butcher'),
+	'Brave', -- Survivor Name
+	'CORE', -- Survivor Type
+	'MALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	0, -- Strength
+	0, -- Evasion
+	3, -- Luck
+	0, -- Speed
+	4, -- Survival
+	4, -- Insanity
+	7, -- Courage
+	0, -- Understanding
+	0, -- Weapon Proficiency
+	null, -- Weapon Type ID
+	4, -- Arm Armor
+	4, -- Body Armor
+	0, -- Head Armor
+	4, -- Leg Armor
+	4, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'Killenium Butcher'),
+	'Hollow', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	0, -- Strength
+	-1, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	3, -- Survival
+	1, -- Insanity
+	0, -- Courage
+	0, -- Understanding
+	0, -- Weapon Proficiency
+	null, -- Weapon Type ID
+	7, -- Arm Armor
+	5, -- Body Armor
+	6, -- Head Armor
+	5, -- Leg Armor
+	5, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'Killenium Butcher'),
+	'Forgot', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	0, -- Strength
+	0, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	5, -- Survival
+	3, -- Insanity
+	1, -- Courage
+	5, -- Understanding
+	0, -- Weapon Proficiency
+	null, -- Weapon Type ID
+	6, -- Arm Armor
+	3, -- Body Armor
+	3, -- Head Armor
+	5, -- Leg Armor
+	5, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'Killenium Butcher'),
+	'Red', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	0, -- Strength
+	0, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	5, -- Survival
+	2, -- Insanity
+	5, -- Courage
+	2, -- Understanding
+	3, -- Weapon Proficiency
+	(select id from weapon_type where weapon_type_name = 'Spear' and custom is false), -- Weapon Type ID
+	12, -- Arm Armor
+	4, -- Body Armor
+	3, -- Head Armor
+	4, -- Leg Armor
+	3, -- Waist Armor
+	'' -- Notes
+),
+-- Screaming Nukalope
+(
+	(select id from vignette_monster where monster_name = 'Screaming Nukalope'),
+	'Ashbloom', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	6, -- Movement
+	0, -- Accuracy
+	2, -- Strength
+	0, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	6, -- Survival
+	5, -- Insanity
+	6, -- Courage
+	2, -- Understanding
+	0, -- Weapon Proficiency
+	null, -- Weapon Type ID
+	4, -- Arm Armor
+	4, -- Body Armor
+	4, -- Head Armor
+	4, -- Leg Armor
+	0, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'Screaming Nukalope'),
+	'Gnostin', -- Survivor Name
+	'CORE', -- Survivor Type
+	'MALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	0, -- Strength
+	0, -- Evasion
+	1, -- Luck
+	0, -- Speed
+	6, -- Survival
+	5, -- Insanity
+	2, -- Courage
+	7, -- Understanding
+	0, -- Weapon Proficiency
+	null, -- Weapon Type ID
+	4, -- Arm Armor
+	4, -- Body Armor
+	3, -- Head Armor
+	2, -- Leg Armor
+	2, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'Screaming Nukalope'),
+	'Monday', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	0, -- Strength
+	0, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	6, -- Survival
+	3, -- Insanity
+	4, -- Courage
+	2, -- Understanding
+	0, -- Weapon Proficiency
+	null, -- Weapon Type ID
+	2, -- Arm Armor
+	2, -- Body Armor
+	2, -- Head Armor
+	2, -- Leg Armor
+	2, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'Screaming Nukalope'),
+	'Ashroot', -- Survivor Name
+	'CORE', -- Survivor Type
+	'MALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	0, -- Strength
+	0, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	6, -- Survival
+	3, -- Insanity
+	1, -- Courage
+	0, -- Understanding
+	4, -- Weapon Proficiency
+	(select id from weapon_type where weapon_type_name = 'Shield' and custom is false), -- Weapon Type ID
+	6, -- Arm Armor
+	6, -- Body Armor
+	6, -- Head Armor
+	6, -- Leg Armor
+	6, -- Waist Armor
+	'' -- Notes
+),
+-- White Gigalion
+(
+	(select id from vignette_monster where monster_name = 'White Gigalion'),
+	'Rock Knight', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	1, -- Strength
+	0, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	3, -- Survival
+	6, -- Insanity
+	0, -- Courage
+	2, -- Understanding
+	4, -- Weapon Proficiency
+	(select id from weapon_type where weapon_type_name = 'Club' and custom is false), -- Weapon Type ID
+	0, -- Arm Armor
+	4, -- Body Armor
+	3, -- Head Armor
+	4, -- Leg Armor
+	4, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'White Gigalion'),
+	'Hungry Basalt', -- Survivor Name
+	'CORE', -- Survivor Type
+	'MALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	0, -- Strength
+	0, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	3, -- Survival
+	3, -- Insanity
+	0, -- Courage
+	0, -- Understanding
+	0, -- Weapon Proficiency
+	null, -- Weapon Type ID
+	4, -- Arm Armor
+	4, -- Body Armor
+	4, -- Head Armor
+	4, -- Leg Armor
+	4, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'White Gigalion'),
+	'Gadrock', -- Survivor Name
+	'CORE', -- Survivor Type
+	'MALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	0, -- Strength
+	0, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	3, -- Survival
+	4, -- Insanity
+	6, -- Courage
+	2, -- Understanding
+	2, -- Weapon Proficiency
+	(select id from weapon_type where weapon_type_name = 'Katar' and custom is false), -- Weapon Type ID
+	3, -- Arm Armor
+	3, -- Body Armor
+	3, -- Head Armor
+	3, -- Leg Armor
+	3, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'White Gigalion'),
+	'Breccia', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	0, -- Strength
+	0, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	4, -- Survival
+	2, -- Insanity
+	1, -- Courage
+	5, -- Understanding
+	3, -- Weapon Proficiency
+	(select id from weapon_type where weapon_type_name = 'Whip' and custom is false), -- Weapon Type ID
+	4, -- Arm Armor
+	4, -- Body Armor
+	4, -- Head Armor
+	4, -- Leg Armor
+	4, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'Screaming God'),
+	'Sage', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	2, -- Strength
+	1, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	8, -- Survival
+	0, -- Insanity
+	7, -- Courage
+	0, -- Understanding
+	0, -- Weapon Proficiency
+	null, -- Weapon Type ID
+	10, -- Arm Armor
+	10, -- Body Armor
+	10, -- Head Armor
+	10, -- Leg Armor
+	10, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'Screaming God'),
+	'Lyra', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	5, -- Movement
+	1, -- Accuracy
+	7, -- Strength
+	1, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	8, -- Survival
+	3, -- Insanity
+	0, -- Courage
+	0, -- Understanding
+	0, -- Weapon Proficiency
+	null, -- Weapon Type ID
+	3, -- Arm Armor
+	3, -- Body Armor
+	3, -- Head Armor
+	3, -- Leg Armor
+	3, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'Screaming God'),
+	'Melody', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	3, -- Strength
+	1, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	8, -- Survival
+	9, -- Insanity
+	5, -- Courage
+	2, -- Understanding
+	0, -- Weapon Proficiency
+	null, -- Weapon Type ID
+	4, -- Arm Armor
+	4, -- Body Armor
+	4, -- Head Armor
+	4, -- Leg Armor
+	4, -- Waist Armor
+	'' -- Notes
+),
+(
+	(select id from vignette_monster where monster_name = 'Screaming God'),
+	'Harmony', -- Survivor Name
+	'CORE', -- Survivor Type
+	'FEMALE', -- Gender
+	5, -- Movement
+	0, -- Accuracy
+	4, -- Strength
+	1, -- Evasion
+	0, -- Luck
+	0, -- Speed
+	8, -- Survival
+	5, -- Insanity
+	2, -- Courage
+	5, -- Understanding
+	5, -- Weapon Proficiency
+	(select id from weapon_type where weapon_type_name = 'Axe' and custom is false), -- Weapon Type ID
+	4, -- Arm Armor
+	4, -- Body Armor
+	4, -- Head Armor
+	4, -- Leg Armor
+	4, -- Waist Armor
+	'' -- Notes
+);
+--------------------------------------------------------------------------------
+-- Vignette Survivor Disorder Data
+--------------------------------------------------------------------------------
+insert into vignette_survivor_disorder (vignette_survivor_id, disorder_id) values
+(
+	(select id from vignette_survivor where survivor_name = 'Brave'),
+	(select id from disorder where disorder_name = 'Quixotic')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashroot'),
+	(select id from disorder where disorder_name = 'Anxiety')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from disorder where disorder_name = 'Hoarder')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hungry Basalt'),
+	(select id from disorder where disorder_name = 'Binge Eating')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from disorder where disorder_name = 'Squeamish')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from disorder where disorder_name = 'Post-Traumatic Stress')
+);
+--------------------------------------------------------------------------------
+-- Vignette Survivor Fighting Art Data
+--------------------------------------------------------------------------------
+insert into vignette_survivor_fighting_art (vignette_survivor_id, fighting_art_id) values
+(
+	(select id from vignette_survivor where survivor_name = 'Monday'),
+	(select id from fighting_art where fighting_art_name = 'Trick Attack')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gnostin'),
+	(select id from fighting_art where fighting_art_name = 'Strategist')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashbloom'),
+	(select id from fighting_art where fighting_art_name = 'Wardrobe Expert')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from fighting_art where fighting_art_name = 'Orator of Death')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from fighting_art where fighting_art_name = 'Clutch Fighter')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Breccia'),
+	(select id from fighting_art where fighting_art_name = 'Mighty Strike')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from fighting_art where fighting_art_name = 'Leader')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from fighting_art where fighting_art_name = 'Combo Master')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from fighting_art where fighting_art_name = 'Clutch Fighter')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from fighting_art where fighting_art_name = 'Extra Sense')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Harmony'),
+	(select id from fighting_art where fighting_art_name = 'Double Dash')
+);
+--------------------------------------------------------------------------------
+-- Vignette Survivor Secret Fighting Art Data
+--------------------------------------------------------------------------------
+insert into vignette_survivor_secret_fighting_art (vignette_survivor_id, secret_fighting_art_id) values
+(
+	(select id from vignette_survivor where survivor_name = 'Gnostin'),
+	(select id from secret_fighting_art where secret_fighting_art_name = 'Beetle Strength')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashbloom'),
+	(select id from secret_fighting_art where secret_fighting_art_name = 'Unshackled')
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from secret_fighting_art where secret_fighting_art_name = 'King''s Step')
+);
+--------------------------------------------------------------------------------
+-- Vignette Survivor Gear Grid Data
+--------------------------------------------------------------------------------
+insert into vignette_survivor_gear_grid (
+	vignette_survivor_id,
+	gear_id,
+	row_number,
+	column_number
+) values
+-- Ashbloom
+(
+	(select id from vignette_survivor where survivor_name = 'Ashbloom'),
+	(select id from gear where gear_name = 'Musk Bomb'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashbloom'),
+	(select id from gear where gear_name = 'Warding Guidon Lance'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashbloom'),
+	(select id from gear where gear_name = 'Warding Tower Shield'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashbloom'),
+	(select id from gear where gear_name = 'Crusader Breastplate'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashbloom'),
+	(select id from gear where gear_name = 'Crusader Heirloom'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashbloom'),
+	(select id from gear where gear_name = 'Dried Acanthus'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashbloom'),
+	(select id from gear where gear_name = 'Crusader Gauntlets'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashbloom'),
+	(select id from gear where gear_name = 'Crusader Sabatons'),
+	2,
+	2
+),
+-- Ashroot
+(
+	(select id from vignette_survivor where survivor_name = 'Ashroot'),
+	(select id from gear where gear_name = 'First Aid Kit'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashroot'),
+	(select id from gear where gear_name = 'Crusader Cuisses'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashroot'),
+	(select id from gear where gear_name = 'Warding Guidon Lance'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashroot'),
+	(select id from gear where gear_name = 'Warding Tower Shield'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashroot'),
+	(select id from gear where gear_name = 'Crusader Breastplate'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashroot'),
+	(select id from gear where gear_name = 'Crusader Heirloom'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashroot'),
+	(select id from gear where gear_name = 'Sunspot Dart'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashroot'),
+	(select id from gear where gear_name = 'Crusader Gauntlets'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Ashroot'),
+	(select id from gear where gear_name = 'Crusader Sabatons'),
+	2,
+	2
+),
+-- Gnostin
+(
+	(select id from vignette_survivor where survivor_name = 'Gnostin'),
+	(select id from gear where gear_name = 'Phoenix Gauntlet'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gnostin'),
+	(select id from gear where gear_name = 'Stonesmasher'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gnostin'),
+	(select id from gear where gear_name = 'Lucky Charm'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gnostin'),
+	(select id from gear where gear_name = 'Sculptor Beads'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gnostin'),
+	(select id from gear where gear_name = 'Cycloid Scale Shoes'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gnostin'),
+	(select id from gear where gear_name = 'Stonescraper'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gnostin'),
+	(select id from gear where gear_name = 'Phoenix Plackart'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gnostin'),
+	(select id from gear where gear_name = 'White Lion Skirt'),
+	2,
+	2
+),
+-- Monday
+(
+	(select id from vignette_survivor where survivor_name = 'Monday'),
+	(select id from gear where gear_name = 'Fecal Salve'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Monday'),
+	(select id from gear where gear_name = 'Shadowstalker Houmongi'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Monday'),
+	(select id from gear where gear_name = 'Ambush Falchion'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Monday'),
+	(select id from gear where gear_name = 'Shadowstalker Kasa'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Monday'),
+	(select id from gear where gear_name = 'Shadowstalker Sode'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Monday'),
+	(select id from gear where gear_name = 'Shadowstalker Obi'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Monday'),
+	(select id from gear where gear_name = 'Shadowstalker Geta'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Monday'),
+	(select id from gear where gear_name = 'Scarab Circlet'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Monday'),
+	(select id from gear where gear_name = 'Stone Noses'),
+	2,
+	2
+),
+-- Red
+(
+	(select id from vignette_survivor where survivor_name = 'Red'),
+	(select id from gear where gear_name = 'Ram Photophore'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Red'),
+	(select id from gear where gear_name = 'Tabard'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Red'),
+	(select id from gear where gear_name = 'Hard Breastplate'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Red'),
+	(select id from gear where gear_name = 'Leather Skirt'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Red'),
+	(select id from gear where gear_name = 'Cloth Leggings'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Red'),
+	(select id from gear where gear_name = 'Protean Charm'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Red'),
+	(select id from gear where gear_name = 'Seasoned Monster Meat'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Red'),
+	(select id from gear where gear_name = 'Survival Spear'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Red'),
+	(select id from gear where gear_name = 'White Dragon Gauntlets'),
+	2,
+	2
+),
+-- Brave
+(
+	(select id from vignette_survivor where survivor_name = 'Brave'),
+	(select id from gear where gear_name = 'Bravesword'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Brave'),
+	(select id from gear where gear_name = 'Cobbled Vambraces'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Brave'),
+	(select id from gear where gear_name = 'Braveshield'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Brave'),
+	(select id from gear where gear_name = 'Cobbled Plackart'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Brave'),
+	(select id from gear where gear_name = 'Heart of a Hero'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Brave'),
+	(select id from gear where gear_name = 'Cobbled Faulds'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Brave'),
+	(select id from gear where gear_name = 'Life Elixir'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Brave'),
+	(select id from gear where gear_name = 'Cobbled Greaves'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Brave'),
+	(select id from gear where gear_name = 'Bandages'),
+	2,
+	2
+),
+-- Forgot
+(
+	(select id from vignette_survivor where survivor_name = 'Forgot'),
+	(select id from gear where gear_name = 'Tattered Archivist Robe'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Forgot'),
+	(select id from gear where gear_name = 'Leather Cuirass'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Forgot'),
+	(select id from gear where gear_name = 'Laurie''s Lenses'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Forgot'),
+	(select id from gear where gear_name = 'Gloom Bracelets'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Forgot'),
+	(select id from gear where gear_name = 'Gloom Cream'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Forgot'),
+	(select id from gear where gear_name = 'Lantern Greaves'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Forgot'),
+	(select id from gear where gear_name = 'Lantern Mail'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Forgot'),
+	(select id from gear where gear_name = 'Locking Tome'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Forgot'),
+	(select id from gear where gear_name = 'Memento Blade'),
+	2,
+	2
+),
+-- Hollow
+(
+	(select id from vignette_survivor where survivor_name = 'Hollow'),
+	(select id from gear where gear_name = 'Sacrificial Fang'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hollow'),
+	(select id from gear where gear_name = 'Dragonskull Helm'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hollow'),
+	(select id from gear where gear_name = 'Dragon Belt'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hollow'),
+	(select id from gear where gear_name = 'Green Ring'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hollow'),
+	(select id from gear where gear_name = 'Dragon Mantle'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hollow'),
+	(select id from gear where gear_name = 'Stoic Mask'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hollow'),
+	(select id from gear where gear_name = 'Dragon Boots'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hollow'),
+	(select id from gear where gear_name = 'Bird Bread'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hollow'),
+	(select id from gear where gear_name = 'Dragon Gloves'),
+	2,
+	2
+),
+-- Rock Knight
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from gear where gear_name = 'Lovelorn Rock'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from gear where gear_name = 'Bone Darts'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from gear where gear_name = 'Armor Spikes'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from gear where gear_name = 'Skull Helm'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from gear where gear_name = 'Regal Plackart'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from gear where gear_name = 'Skullcap Hammer'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from gear where gear_name = 'Bone Earrings'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from gear where gear_name = 'Regal Faulds'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Rock Knight'),
+	(select id from gear where gear_name = 'Regal Greaves'),
+	2,
+	2
+),
+-- Hungry Basalt
+(
+	(select id from vignette_survivor where survivor_name = 'Hungry Basalt'),
+	(select id from gear where gear_name = 'Gorment Boots'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hungry Basalt'),
+	(select id from gear where gear_name = 'Monster Tooth Necklace'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hungry Basalt'),
+	(select id from gear where gear_name = 'Elder Earrings'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hungry Basalt'),
+	(select id from gear where gear_name = 'Gorment Sleeves'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hungry Basalt'),
+	(select id from gear where gear_name = 'Gorment Suit'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hungry Basalt'),
+	(select id from gear where gear_name = 'Gorment Mask'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hungry Basalt'),
+	(select id from gear where gear_name = 'Boss Mehndi'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hungry Basalt'),
+	(select id from gear where gear_name = 'Greater Gaxe'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Hungry Basalt'),
+	(select id from gear where gear_name = 'Round Leather Shield'),
+	2,
+	2
+),
+-- Gadrock
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from gear where gear_name = 'Gorn'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from gear where gear_name = 'White Lion Boots'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from gear where gear_name = 'White Lion Skirt'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from gear where gear_name = 'White Lion Coat'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from gear where gear_name = 'Frenzy Drink'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from gear where gear_name = 'Lion Headdress'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from gear where gear_name = 'White Lion Helm'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from gear where gear_name = 'White Lion Gauntlet'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Gadrock'),
+	(select id from gear where gear_name = 'Beast Knuckle'),
+	2,
+	2
+),
+-- Breccia
+(
+	(select id from vignette_survivor where survivor_name = 'Breccia'),
+	(select id from gear where gear_name = 'Leather Cuirass'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Breccia'),
+	(select id from gear where gear_name = 'Leather Mask'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Breccia'),
+	(select id from gear where gear_name = 'Leather Skirt'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Breccia'),
+	(select id from gear where gear_name = 'Hunter Whip'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Breccia'),
+	(select id from gear where gear_name = 'Lucky Charm'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Breccia'),
+	(select id from gear where gear_name = 'Brain Mint'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Breccia'),
+	(select id from gear where gear_name = 'Leather Bracers'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Breccia'),
+	(select id from gear where gear_name = 'Leather Boots'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Breccia'),
+	(select id from gear where gear_name = 'Monster Grease'),
+	2,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Melody'),
+	(select id from gear where gear_name = 'Dark Water Vial'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Melody'),
+	(select id from gear where gear_name = 'Gorn'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Melody'),
+	(select id from gear where gear_name = 'Vandal Sledge'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Melody'),
+	(select id from gear where gear_name = 'Count Tabard'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Melody'),
+	(select id from gear where gear_name = 'Count Vest'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Melody'),
+	(select id from gear where gear_name = 'Count Wrappings'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Melody'),
+	(select id from gear where gear_name = 'Count Sandals'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Melody'),
+	(select id from gear where gear_name = 'Count Treukh'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Melody'),
+	(select id from gear where gear_name = 'Bone Dagger'),
+	2,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from gear where gear_name = 'White Lion Gauntlet'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from gear where gear_name = 'White Lion Helm'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from gear where gear_name = 'White Lion Skirt'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from gear where gear_name = 'White Lion Boots'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from gear where gear_name = 'Pipa'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from gear where gear_name = 'Vespertine Cello'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from gear where gear_name = 'Zanbato'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from gear where gear_name = 'Monster Grease'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Lyra'),
+	(select id from gear where gear_name = 'White Lion Coat'),
+	2,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from gear where gear_name = 'Beacon Shield'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from gear where gear_name = 'Oxidized Lantern Helm'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from gear where gear_name = 'Meteor Unguis'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from gear where gear_name = 'Lantern Mail'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from gear where gear_name = 'Lantern Cuirass'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from gear where gear_name = 'Lantern Gauntlets'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from gear where gear_name = 'Mush Diadema'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from gear where gear_name = 'Lantern Greaves'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Sage'),
+	(select id from gear where gear_name = 'Elder Earrings'),
+	2,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Harmony'),
+	(select id from gear where gear_name = 'Singing Pantaloons'),
+	0,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Harmony'),
+	(select id from gear where gear_name = 'Singing Gloves'),
+	0,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Harmony'),
+	(select id from gear where gear_name = 'Energy Drum'),
+	0,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Harmony'),
+	(select id from gear where gear_name = 'Singing Cap'),
+	1,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Harmony'),
+	(select id from gear where gear_name = 'Lucky Charm'),
+	1,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Harmony'),
+	(select id from gear where gear_name = 'Bandages'),
+	1,
+	2
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Harmony'),
+	(select id from gear where gear_name = 'Singing Breastplate'),
+	2,
+	0
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Harmony'),
+	(select id from gear where gear_name = 'Saxe'),
+	2,
+	1
+),
+(
+	(select id from vignette_survivor where survivor_name = 'Harmony'),
+	(select id from gear where gear_name = 'Singing Boots'),
+	2,
+	2
+);
