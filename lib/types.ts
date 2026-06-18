@@ -754,7 +754,13 @@ export interface SelectedVignetteEncounter {
   role: VignetteEncounterRole
 }
 
-/** Vignette Encounter State Setter */
+/**
+ * Vignette Encounter State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
 export type VignetteEncounterStateSetter = (
   vignetteOrUpdater:
     | VignetteEncounterDetail
