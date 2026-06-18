@@ -593,9 +593,8 @@ export type VignetteEncounterMonsterDetail = Omit<
   survivor_statuses: VignetteEncounterMonsterSurvivorStatusDetail[]
 }
 
-/** Vignette Encounter Survivor Live State */
-export type VignetteEncounterSurvivorLiveState = Pick<
-  Tables<'vignette_encounter_survivor'>,
+/** Vignette Encounter Survivor Live State Key */
+export type VignetteEncounterSurvivorLiveStateKey =
   | 'accuracy_tokens'
   | 'activation_used'
   | 'arm_heavy_damage'
@@ -624,6 +623,11 @@ export type VignetteEncounterSurvivorLiveState = Pick<
   | 'survival_tokens'
   | 'waist_heavy_damage'
   | 'waist_light_damage'
+
+/** Vignette Encounter Survivor Live State */
+export type VignetteEncounterSurvivorLiveState = Pick<
+  Tables<'vignette_encounter_survivor'>,
+  VignetteEncounterSurvivorLiveStateKey
 >
 
 /** Vignette Encounter Survivor Ability / Impairment Detail */
@@ -674,7 +678,7 @@ export type VignetteEncounterSurvivorGearGridDetail = Omit<
 /** Vignette Encounter Survivor Detail */
 export type VignetteEncounterSurvivorDetail = Omit<
   Tables<'vignette_encounter_survivor'>,
-  'created_at' | 'updated_at'
+  'created_at' | 'updated_at' | VignetteEncounterSurvivorLiveStateKey
 > & {
   /** Live Survivor State */
   live_state: VignetteEncounterSurvivorLiveState
