@@ -1,8 +1,8 @@
 import { Constants } from '@/lib/database.types'
 import { z } from 'zod'
 
-/** Vignette UUID Schema */
-const VignetteUuidSchema = z.uuid('A valid vignette id is required.')
+/** UUID Schema */
+const UuidSchema = z.uuid('A valid UUID is required.')
 
 /** Vignette Level Number Schema */
 const VignetteLevelNumberSchema = z
@@ -18,7 +18,9 @@ const VignetteNonNegativeCountSchema = z
   .min(0, 'Count cannot be negative.')
 
 /** Vignette Token Count Schema */
-const VignetteTokenCountSchema = z.number().int('Token count must be whole.')
+const VignetteTokenCountSchema = z
+  .number()
+  .int('Token count must be a whole number.')
 
 /** Vignette Grid Coordinate Schema */
 const VignetteGridCoordinateSchema = z
@@ -73,7 +75,7 @@ function requireAtLeastOneUpdate(
 /** Vignette Create Input Schema */
 export const VignetteCreateInputSchema = z.object({
   /** Vignette Monster ID */
-  vignette_monster_id: VignetteUuidSchema,
+  vignette_monster_id: UuidSchema,
   /** Level Number */
   level_number: VignetteLevelNumberSchema
 })
@@ -85,7 +87,7 @@ export type VignetteCreateInput = z.infer<typeof VignetteCreateInputSchema>
 export const VignetteActiveLimitSchema = z
   .object({
     /** Active Owned Vignette Encounter ID */
-    active_vignette_encounter_id: VignetteUuidSchema.nullable().default(null)
+    active_vignette_encounter_id: UuidSchema.nullable().default(null)
   })
   .refine((data) => data.active_vignette_encounter_id === null, {
     message: 'Only one active vignette can run at a time.',
@@ -99,7 +101,7 @@ export type VignetteActiveLimit = z.infer<typeof VignetteActiveLimitSchema>
 export const VignetteEncounterUpdateInputSchema = z
   .object({
     /** Vignette Encounter ID */
-    vignette_encounter_id: VignetteUuidSchema,
+    vignette_encounter_id: UuidSchema,
     /** Turn */
     turn: VignetteShowdownTurnSchema.optional(),
     /** Notes */
@@ -117,7 +119,7 @@ export type VignetteEncounterUpdateInput = z.infer<
 /** Vignette Encounter Delete Input Schema */
 export const VignetteEncounterDeleteInputSchema = z.object({
   /** Vignette Encounter ID */
-  vignette_encounter_id: VignetteUuidSchema
+  vignette_encounter_id: UuidSchema
 })
 
 /** Vignette Encounter Delete Input */
@@ -129,7 +131,7 @@ export type VignetteEncounterDeleteInput = z.infer<
 export const VignetteEncounterAIDeckUpdateInputSchema = z
   .object({
     /** Vignette Encounter AI Deck ID */
-    vignette_encounter_ai_deck_id: VignetteUuidSchema,
+    vignette_encounter_ai_deck_id: UuidSchema,
     /** Basic Cards */
     basic_cards: VignetteNonNegativeCountSchema.optional(),
     /** Advanced Cards */
@@ -183,7 +185,7 @@ const VignetteEncounterMonsterUpdateFields = [
 export const VignetteEncounterMonsterUpdateInputSchema = z
   .object({
     /** Vignette Encounter Monster ID */
-    vignette_encounter_monster_id: VignetteUuidSchema,
+    vignette_encounter_monster_id: UuidSchema,
     /** Accuracy */
     accuracy: z.number().int('Accuracy must be a whole number.').optional(),
     /** Accuracy Tokens */
@@ -245,12 +247,12 @@ export type VignetteEncounterMonsterUpdateInput = z.infer<
 /** Vignette Encounter Monster Mood Input Schema */
 export const VignetteEncounterMonsterMoodInputSchema = z.object({
   /** Vignette Encounter Monster ID */
-  vignette_encounter_monster_id: VignetteUuidSchema,
+  vignette_encounter_monster_id: UuidSchema,
   /** Mood ID */
-  mood_id: VignetteUuidSchema,
+  mood_id: UuidSchema,
   /** Source Vignette Monster Level Mood ID */
   source_vignette_monster_level_mood_id:
-    VignetteUuidSchema.nullable().default(null)
+    UuidSchema.nullable().default(null)
 })
 
 /** Vignette Encounter Monster Mood Input */
@@ -261,12 +263,12 @@ export type VignetteEncounterMonsterMoodInput = z.infer<
 /** Vignette Encounter Monster Trait Input Schema */
 export const VignetteEncounterMonsterTraitInputSchema = z.object({
   /** Vignette Encounter Monster ID */
-  vignette_encounter_monster_id: VignetteUuidSchema,
+  vignette_encounter_monster_id: UuidSchema,
   /** Trait ID */
-  trait_id: VignetteUuidSchema,
+  trait_id: UuidSchema,
   /** Source Vignette Monster Level Trait ID */
   source_vignette_monster_level_trait_id:
-    VignetteUuidSchema.nullable().default(null)
+    UuidSchema.nullable().default(null)
 })
 
 /** Vignette Encounter Monster Trait Input */
@@ -277,12 +279,12 @@ export type VignetteEncounterMonsterTraitInput = z.infer<
 /** Vignette Encounter Monster Survivor Status Input Schema */
 export const VignetteEncounterMonsterSurvivorStatusInputSchema = z.object({
   /** Vignette Encounter Monster ID */
-  vignette_encounter_monster_id: VignetteUuidSchema,
+  vignette_encounter_monster_id: UuidSchema,
   /** Survivor Status ID */
-  survivor_status_id: VignetteUuidSchema,
+  survivor_status_id: UuidSchema,
   /** Source Vignette Monster Level Survivor Status ID */
   source_vignette_monster_level_survivor_status_id:
-    VignetteUuidSchema.nullable().default(null)
+    UuidSchema.nullable().default(null)
 })
 
 /** Vignette Encounter Monster Survivor Status Input */
@@ -293,7 +295,7 @@ export type VignetteEncounterMonsterSurvivorStatusInput = z.infer<
 /** Vignette Encounter Monster State Delete Input Schema */
 export const VignetteEncounterMonsterStateDeleteInputSchema = z.object({
   /** Active Monster State Row ID */
-  id: VignetteUuidSchema
+  id: UuidSchema
 })
 
 /** Vignette Encounter Monster State Delete Input */
@@ -339,7 +341,7 @@ const VignetteEncounterSurvivorLiveStateFields = [
 export const VignetteEncounterSurvivorLiveStateUpdateInputSchema = z
   .object({
     /** Vignette Encounter Survivor ID */
-    vignette_encounter_survivor_id: VignetteUuidSchema,
+    vignette_encounter_survivor_id: UuidSchema,
     /** Accuracy Tokens */
     accuracy_tokens: VignetteTokenCountSchema.optional(),
     /** Activation Used */
@@ -414,9 +416,9 @@ export type VignetteEncounterSurvivorLiveStateUpdateInput = z.infer<
 export const VignetteEncounterSurvivorGearGridUpdateInputSchema = z
   .object({
     /** Vignette Encounter Survivor Gear Grid ID */
-    vignette_encounter_survivor_gear_grid_id: VignetteUuidSchema,
+    vignette_encounter_survivor_gear_grid_id: UuidSchema,
     /** Gear ID */
-    gear_id: VignetteUuidSchema.optional(),
+    gear_id: UuidSchema.optional(),
     /** Row Number */
     row_number: VignetteGridCoordinateSchema.optional(),
     /** Column Number */
@@ -438,7 +440,7 @@ export type VignetteEncounterSurvivorGearGridUpdateInput = z.infer<
 /** Vignette Share Input Schema */
 export const VignetteShareInputSchema = z.object({
   /** Vignette Encounter ID */
-  vignette_encounter_id: VignetteUuidSchema,
+  vignette_encounter_id: UuidSchema,
   /** Username */
   username: z
     .string()
@@ -452,9 +454,9 @@ export type VignetteShareInput = z.infer<typeof VignetteShareInputSchema>
 /** Vignette Share Removal Input Schema */
 export const VignetteShareRemovalInputSchema = z.object({
   /** Vignette Encounter ID */
-  vignette_encounter_id: VignetteUuidSchema,
+  vignette_encounter_id: UuidSchema,
   /** Shared User ID */
-  shared_user_id: VignetteUuidSchema
+  shared_user_id: UuidSchema
 })
 
 /** Vignette Share Removal Input */
