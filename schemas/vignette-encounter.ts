@@ -251,8 +251,7 @@ export const VignetteEncounterMonsterMoodInputSchema = z.object({
   /** Mood ID */
   mood_id: UuidSchema,
   /** Source Vignette Monster Level Mood ID */
-  source_vignette_monster_level_mood_id:
-    UuidSchema.nullable().default(null)
+  source_vignette_monster_level_mood_id: UuidSchema.nullable().default(null)
 })
 
 /** Vignette Encounter Monster Mood Input */
@@ -267,8 +266,7 @@ export const VignetteEncounterMonsterTraitInputSchema = z.object({
   /** Trait ID */
   trait_id: UuidSchema,
   /** Source Vignette Monster Level Trait ID */
-  source_vignette_monster_level_trait_id:
-    UuidSchema.nullable().default(null)
+  source_vignette_monster_level_trait_id: UuidSchema.nullable().default(null)
 })
 
 /** Vignette Encounter Monster Trait Input */
