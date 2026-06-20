@@ -18,7 +18,7 @@ import {
  * @param row Raw gear row including the junction relations.
  * @returns Normalized GearDetail.
  */
-function toGearDetail(
+export function toGearDetail(
   row: Omit<
     GearDetail,
     | 'gear_costs'
@@ -30,6 +30,7 @@ function toGearDetail(
     gear_gear_cost?: GearGearCostDetail[] | null
     gear_resource_cost?: GearResourceCostDetail[] | null
     gear_resource_type_cost?: GearResourceTypeCostDetail[] | null
+    user_id?: string | null
   }
 ): GearDetail {
   const {
@@ -37,8 +38,10 @@ function toGearDetail(
     gear_gear_cost,
     gear_resource_cost,
     gear_resource_type_cost,
-    ...rest
+    ...restWithUserId
   } = row
+  const rest = { ...restWithUserId }
+  delete (rest as { user_id?: string | null }).user_id
 
   return {
     ...rest,
