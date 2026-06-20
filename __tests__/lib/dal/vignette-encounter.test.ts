@@ -504,6 +504,19 @@ describe('getVignetteEncounter', () => {
       'Error Fetching Vignette Encounter: DB error'
     )
   })
+
+  it('throws with the missing vignette monster id when catalog data is absent', async () => {
+    mockFromSequence(
+      makeQuery(encounter),
+      makeQuery([]),
+      makeQuery([]),
+      makeQuery([])
+    )
+
+    await expect(getVignetteEncounter('encounter-1')).rejects.toThrow(
+      'Error Fetching Vignette Encounter: Vignette Monster Not Found for vignette_monster_id vm-1'
+    )
+  })
 })
 
 describe('active vignette child readers', () => {
@@ -549,6 +562,36 @@ describe('active vignette child readers', () => {
     expect(mockSupabase.from).toHaveBeenNthCalledWith(
       2,
       'vignette_encounter_ai_deck'
+    )
+  })
+
+  it('throws when an active monster references an unknown AI deck', async () => {
+    mockFromSequence(
+      makeQuery([
+        {
+          id: 'active-monster-1',
+          vignette_encounter_id: 'encounter-1',
+          ai_deck_id: 'missing-deck',
+          monster_name: 'Butcher',
+          vignette_encounter_monster_mood: [],
+          vignette_encounter_monster_trait: [],
+          vignette_encounter_monster_survivor_status: []
+        }
+      ]),
+      makeQuery([
+        {
+          id: 'deck-1',
+          vignette_encounter_id: 'encounter-1',
+          basic_cards: 4,
+          advanced_cards: 2,
+          legendary_cards: 1,
+          overtone_cards: 0
+        }
+      ])
+    )
+
+    await expect(getVignetteEncounterMonsters('encounter-1')).rejects.toThrow(
+      'Error Fetching Vignette Encounter Monsters: AI deck missing-deck not found for monster active-monster-1'
     )
   })
 })

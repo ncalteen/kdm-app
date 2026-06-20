@@ -491,13 +491,28 @@ function activeMonster(
   row: DataRow,
   aiDecks: { [key: string]: VignetteEncounterAIDeckDetail }
 ): VignetteEncounterMonsterDetail {
+  const monsterId = typeof row.id === 'string' && row.id ? row.id : 'unknown'
+  const aiDeckId = row.ai_deck_id
+
+  if (typeof aiDeckId !== 'string' || !aiDeckId)
+    throw new Error(
+      `Error Fetching Vignette Encounter Monsters: Monster ${monsterId} is missing ai_deck_id`
+    )
+
+  const aiDeck = aiDecks[aiDeckId]
+
+  if (!aiDeck)
+    throw new Error(
+      `Error Fetching Vignette Encounter Monsters: AI deck ${aiDeckId} not found for monster ${monsterId}`
+    )
+
   return {
     ...omit(row, [
       'vignette_encounter_monster_mood',
       'vignette_encounter_monster_trait',
       'vignette_encounter_monster_survivor_status'
     ]),
-    ai_deck: aiDecks[row.ai_deck_id as string],
+    ai_deck: aiDeck,
     moods: mapPresent(rows(row.vignette_encounter_monster_mood), (moodRow) =>
       relationDetail(moodRow, 'mood')
     ),
@@ -948,8 +963,9 @@ export async function getVignetteEncounter(
   if (!data) return null
 
   const encounter = data as unknown as DataRow
+  const vignetteMonsterId = encounter.vignette_monster_id as string
   const [catalogMonsterRows, aiDecks, sharedUsers] = await Promise.all([
-    fetchVignetteMonsterRows(encounter.vignette_monster_id as string),
+    fetchVignetteMonsterRows(vignetteMonsterId),
     getVignetteEncounterAIDecks(encounter.id as string),
     getVignetteEncounterSharedUsers(encounter.id as string)
   ])
@@ -957,7 +973,10 @@ export async function getVignetteEncounter(
     ? vignetteMonster(catalogMonsterRows[0])
     : null
 
-  if (!catalogMonster) throw new Error('Vignette Monster Not Found')
+  if (!catalogMonster)
+    throw new Error(
+      `Error Fetching Vignette Encounter: Vignette Monster Not Found for vignette_monster_id ${vignetteMonsterId}`
+    )
 
   const [monsters, survivors] = await Promise.all([
     getVignetteEncounterMonsters(encounter.id as string, aiDecks ?? {}),

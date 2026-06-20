@@ -38,10 +38,10 @@ export function toGearDetail(
     gear_gear_cost,
     gear_resource_cost,
     gear_resource_type_cost,
-    ...restWithUserId
+    user_id,
+    ...rest
   } = row
-  const rest = { ...restWithUserId }
-  delete (rest as { user_id?: string | null }).user_id
+  void user_id
 
   return {
     ...rest,
