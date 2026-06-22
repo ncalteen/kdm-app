@@ -3,7 +3,8 @@ import {
   resolveSettlementAuthorship,
   type SettlementMemberProfile
 } from '@/lib/dal/settlement-shared-user'
-import { getUserId } from '@/lib/dal/user'
+import { getUserId, lookupUserByUsername } from '@/lib/dal/user'
+import type { TablesInsert } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import type {
   CatalogAuthorshipDetail,
@@ -17,8 +18,39 @@ import type {
   VignetteEncounterSurvivorLiveState,
   VignetteMonsterDetail
 } from '@/lib/types'
+import type {
+  VignetteCreateInput,
+  VignetteEncounterAIDeckUpdateInput,
+  VignetteEncounterDeleteInput,
+  VignetteEncounterMonsterMoodInput,
+  VignetteEncounterMonsterStateDeleteInput,
+  VignetteEncounterMonsterSurvivorStatusInput,
+  VignetteEncounterMonsterTraitInput,
+  VignetteEncounterMonsterUpdateInput,
+  VignetteEncounterSurvivorGearGridUpdateInput,
+  VignetteEncounterSurvivorLiveStateUpdateInput,
+  VignetteEncounterUpdateInput,
+  VignetteShareInput,
+  VignetteShareRemovalInput
+} from '@/schemas/vignette-encounter'
 
 type DataRow = Record<string, unknown>
+type VignetteEncounterSurvivorAbilityImpairmentInput = Omit<
+  TablesInsert<'vignette_encounter_survivor_ability_impairment'>,
+  'created_at' | 'id' | 'updated_at'
+>
+type VignetteEncounterSurvivorDisorderInput = Omit<
+  TablesInsert<'vignette_encounter_survivor_disorder'>,
+  'created_at' | 'id' | 'updated_at'
+>
+type VignetteEncounterSurvivorFightingArtInput = Omit<
+  TablesInsert<'vignette_encounter_survivor_fighting_art'>,
+  'created_at' | 'id' | 'updated_at'
+>
+type VignetteEncounterSurvivorSecretFightingArtInput = Omit<
+  TablesInsert<'vignette_encounter_survivor_secret_fighting_art'>,
+  'created_at' | 'id' | 'updated_at'
+>
 
 const EMPTY_MEMBER_PROFILES = new Map<string, SettlementMemberProfile>()
 
@@ -279,6 +311,21 @@ function omit(row: DataRow, keys: readonly string[]): DataRow {
   const result = { ...row }
   for (const key of keys) delete result[key]
   return result
+}
+
+async function resolveVignetteSharedUserId(
+  username: string,
+  operation: string
+): Promise<string> {
+  try {
+    const sharedUserId = await lookupUserByUsername(username)
+    if (!sharedUserId) throw new Error('User not found or lookup throttled')
+    return sharedUserId
+  } catch (error) {
+    throw new Error(
+      `${operation}: ${error instanceof Error ? error.message : String(error)}`
+    )
+  }
 }
 
 /**
@@ -992,4 +1039,610 @@ export async function getVignetteEncounter(
     survivors: survivors ?? {},
     shared_users: sharedUsers ?? []
   } as VignetteEncounterDetail
+}
+
+/**
+ * Create Vignette Encounter
+ *
+ * Creates an active vignette encounter from catalog monster and level data.
+ * The database RPC performs the deterministic catalog-to-active copy for the
+ * encounter, AI decks, monsters, survivors, and copied child rows.
+ *
+ * @param input Vignette Create Input
+ * @returns Created Vignette Encounter ID
+ */
+export async function createVignetteEncounter(
+  input: VignetteCreateInput
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase.rpc(
+    'create_vignette_encounter_from_catalog',
+    {
+      target_level_number: input.level_number,
+      target_vignette_monster_id: input.vignette_monster_id
+    }
+  )
+
+  if (error)
+    throw new Error(`Error Creating Vignette Encounter: ${error.message}`)
+  if (!data)
+    throw new Error('Error Creating Vignette Encounter: Missing encounter ID')
+
+  return data
+}
+
+/**
+ * Update Vignette Encounter
+ *
+ * Updates mutable encounter-level state such as turn and notes.
+ *
+ * @param input Vignette Encounter Update Input
+ */
+export async function updateVignetteEncounter(
+  input: VignetteEncounterUpdateInput
+): Promise<void> {
+  const { vignette_encounter_id, ...updateData } = input
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter')
+    .update(updateData)
+    .eq('id', vignette_encounter_id)
+
+  if (error)
+    throw new Error(`Error Updating Vignette Encounter: ${error.message}`)
+}
+
+/**
+ * Remove Vignette Encounter
+ *
+ * Deletes an active vignette encounter. Database cascade rules remove active
+ * child state, clearing the owned active slot without recording outcome or
+ * lifecycle history.
+ *
+ * @param input Vignette Encounter Delete Input
+ */
+export async function removeVignetteEncounter(
+  input: VignetteEncounterDeleteInput
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter')
+    .delete()
+    .eq('id', input.vignette_encounter_id)
+
+  if (error)
+    throw new Error(`Error Removing Vignette Encounter: ${error.message}`)
+}
+
+/**
+ * Update Vignette Encounter AI Deck
+ *
+ * Updates remaining active AI deck card counts for a vignette encounter.
+ *
+ * @param input Vignette Encounter AI Deck Update Input
+ */
+export async function updateVignetteEncounterAIDeck(
+  input: VignetteEncounterAIDeckUpdateInput
+): Promise<void> {
+  const { vignette_encounter_ai_deck_id, ...updateData } = input
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_ai_deck')
+    .update(updateData)
+    .eq('id', vignette_encounter_ai_deck_id)
+
+  if (error)
+    throw new Error(
+      `Error Updating Vignette Encounter AI Deck: ${error.message}`
+    )
+}
+
+/**
+ * Update Vignette Encounter Monster
+ *
+ * Updates mutable active monster state including wounds, tokens, card state,
+ * stats, and notes.
+ *
+ * @param input Vignette Encounter Monster Update Input
+ */
+export async function updateVignetteEncounterMonster(
+  input: VignetteEncounterMonsterUpdateInput
+): Promise<void> {
+  const { vignette_encounter_monster_id, ...updateData } = input
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_monster')
+    .update(updateData)
+    .eq('id', vignette_encounter_monster_id)
+
+  if (error)
+    throw new Error(
+      `Error Updating Vignette Encounter Monster: ${error.message}`
+    )
+}
+
+/**
+ * Add Vignette Encounter Monster Mood
+ *
+ * Adds a mood row to an active vignette monster.
+ *
+ * @param input Vignette Encounter Monster Mood Input
+ * @returns Created Mood Row ID
+ */
+export async function addVignetteEncounterMonsterMood(
+  input: VignetteEncounterMonsterMoodInput
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('vignette_encounter_monster_mood')
+    .insert(input)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(
+      `Error Adding Vignette Encounter Monster Mood: ${error.message}`
+    )
+
+  return data.id
+}
+
+/**
+ * Remove Vignette Encounter Monster Mood
+ *
+ * Removes a mood row from an active vignette monster.
+ *
+ * @param input Vignette Encounter Monster State Delete Input
+ */
+export async function removeVignetteEncounterMonsterMood(
+  input: VignetteEncounterMonsterStateDeleteInput
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_monster_mood')
+    .delete()
+    .eq('id', input.id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Vignette Encounter Monster Mood: ${error.message}`
+    )
+}
+
+/**
+ * Add Vignette Encounter Monster Trait
+ *
+ * Adds a trait row to an active vignette monster.
+ *
+ * @param input Vignette Encounter Monster Trait Input
+ * @returns Created Trait Row ID
+ */
+export async function addVignetteEncounterMonsterTrait(
+  input: VignetteEncounterMonsterTraitInput
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('vignette_encounter_monster_trait')
+    .insert(input)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(
+      `Error Adding Vignette Encounter Monster Trait: ${error.message}`
+    )
+
+  return data.id
+}
+
+/**
+ * Remove Vignette Encounter Monster Trait
+ *
+ * Removes a trait row from an active vignette monster.
+ *
+ * @param input Vignette Encounter Monster State Delete Input
+ */
+export async function removeVignetteEncounterMonsterTrait(
+  input: VignetteEncounterMonsterStateDeleteInput
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_monster_trait')
+    .delete()
+    .eq('id', input.id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Vignette Encounter Monster Trait: ${error.message}`
+    )
+}
+
+/**
+ * Add Vignette Encounter Monster Survivor Status
+ *
+ * Adds a survivor status row to an active vignette monster.
+ *
+ * @param input Vignette Encounter Monster Survivor Status Input
+ * @returns Created Survivor Status Row ID
+ */
+export async function addVignetteEncounterMonsterSurvivorStatus(
+  input: VignetteEncounterMonsterSurvivorStatusInput
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('vignette_encounter_monster_survivor_status')
+    .insert(input)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(
+      `Error Adding Vignette Encounter Monster Survivor Status: ${error.message}`
+    )
+
+  return data.id
+}
+
+/**
+ * Remove Vignette Encounter Monster Survivor Status
+ *
+ * Removes a survivor status row from an active vignette monster.
+ *
+ * @param input Vignette Encounter Monster State Delete Input
+ */
+export async function removeVignetteEncounterMonsterSurvivorStatus(
+  input: VignetteEncounterMonsterStateDeleteInput
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_monster_survivor_status')
+    .delete()
+    .eq('id', input.id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Vignette Encounter Monster Survivor Status: ${error.message}`
+    )
+}
+
+/**
+ * Update Vignette Encounter Survivor Live State
+ *
+ * Updates mutable active survivor live-state fields without changing copied
+ * survivor identity or base stat fields.
+ *
+ * @param input Vignette Encounter Survivor Live State Update Input
+ */
+export async function updateVignetteEncounterSurvivorLiveState(
+  input: VignetteEncounterSurvivorLiveStateUpdateInput
+): Promise<void> {
+  const { vignette_encounter_survivor_id, ...updateData } = input
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_survivor')
+    .update(updateData)
+    .eq('id', vignette_encounter_survivor_id)
+
+  if (error)
+    throw new Error(
+      `Error Updating Vignette Encounter Survivor Live State: ${error.message}`
+    )
+}
+
+/**
+ * Add Vignette Encounter Survivor Ability Impairment
+ *
+ * Adds an ability impairment row to an active vignette survivor.
+ *
+ * @param input Vignette Encounter Survivor Ability Impairment Input
+ * @returns Created Ability Impairment Row ID
+ */
+export async function addVignetteEncounterSurvivorAbilityImpairment(
+  input: VignetteEncounterSurvivorAbilityImpairmentInput
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('vignette_encounter_survivor_ability_impairment')
+    .insert(input)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(
+      `Error Adding Vignette Encounter Survivor Ability Impairment: ${error.message}`
+    )
+
+  return data.id
+}
+
+/**
+ * Remove Vignette Encounter Survivor Ability Impairment
+ *
+ * Removes an ability impairment row from an active vignette survivor.
+ *
+ * @param id Vignette Encounter Survivor Ability Impairment Row ID
+ */
+export async function removeVignetteEncounterSurvivorAbilityImpairment(
+  id: string
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_survivor_ability_impairment')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Vignette Encounter Survivor Ability Impairment: ${error.message}`
+    )
+}
+
+/**
+ * Add Vignette Encounter Survivor Disorder
+ *
+ * Adds a disorder row to an active vignette survivor.
+ *
+ * @param input Vignette Encounter Survivor Disorder Input
+ * @returns Created Disorder Row ID
+ */
+export async function addVignetteEncounterSurvivorDisorder(
+  input: VignetteEncounterSurvivorDisorderInput
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('vignette_encounter_survivor_disorder')
+    .insert(input)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(
+      `Error Adding Vignette Encounter Survivor Disorder: ${error.message}`
+    )
+
+  return data.id
+}
+
+/**
+ * Remove Vignette Encounter Survivor Disorder
+ *
+ * Removes a disorder row from an active vignette survivor.
+ *
+ * @param id Vignette Encounter Survivor Disorder Row ID
+ */
+export async function removeVignetteEncounterSurvivorDisorder(
+  id: string
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_survivor_disorder')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Vignette Encounter Survivor Disorder: ${error.message}`
+    )
+}
+
+/**
+ * Add Vignette Encounter Survivor Fighting Art
+ *
+ * Adds a fighting art row to an active vignette survivor.
+ *
+ * @param input Vignette Encounter Survivor Fighting Art Input
+ * @returns Created Fighting Art Row ID
+ */
+export async function addVignetteEncounterSurvivorFightingArt(
+  input: VignetteEncounterSurvivorFightingArtInput
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('vignette_encounter_survivor_fighting_art')
+    .insert(input)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(
+      `Error Adding Vignette Encounter Survivor Fighting Art: ${error.message}`
+    )
+
+  return data.id
+}
+
+/**
+ * Remove Vignette Encounter Survivor Fighting Art
+ *
+ * Removes a fighting art row from an active vignette survivor.
+ *
+ * @param id Vignette Encounter Survivor Fighting Art Row ID
+ */
+export async function removeVignetteEncounterSurvivorFightingArt(
+  id: string
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_survivor_fighting_art')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Vignette Encounter Survivor Fighting Art: ${error.message}`
+    )
+}
+
+/**
+ * Add Vignette Encounter Survivor Secret Fighting Art
+ *
+ * Adds a secret fighting art row to an active vignette survivor.
+ *
+ * @param input Vignette Encounter Survivor Secret Fighting Art Input
+ * @returns Created Secret Fighting Art Row ID
+ */
+export async function addVignetteEncounterSurvivorSecretFightingArt(
+  input: VignetteEncounterSurvivorSecretFightingArtInput
+): Promise<string> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('vignette_encounter_survivor_secret_fighting_art')
+    .insert(input)
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(
+      `Error Adding Vignette Encounter Survivor Secret Fighting Art: ${error.message}`
+    )
+
+  return data.id
+}
+
+/**
+ * Remove Vignette Encounter Survivor Secret Fighting Art
+ *
+ * Removes a secret fighting art row from an active vignette survivor.
+ *
+ * @param id Vignette Encounter Survivor Secret Fighting Art Row ID
+ */
+export async function removeVignetteEncounterSurvivorSecretFightingArt(
+  id: string
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_survivor_secret_fighting_art')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Vignette Encounter Survivor Secret Fighting Art: ${error.message}`
+    )
+}
+
+/**
+ * Update Vignette Encounter Survivor Gear Grid
+ *
+ * Updates one copied active survivor gear-grid row.
+ *
+ * @param input Vignette Encounter Survivor Gear Grid Update Input
+ */
+export async function updateVignetteEncounterSurvivorGearGrid(
+  input: VignetteEncounterSurvivorGearGridUpdateInput
+): Promise<void> {
+  const { vignette_encounter_survivor_gear_grid_id, ...updateData } = input
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_survivor_gear_grid')
+    .update(updateData)
+    .eq('id', vignette_encounter_survivor_gear_grid_id)
+
+  if (error)
+    throw new Error(
+      `Error Updating Vignette Encounter Survivor Gear Grid: ${error.message}`
+    )
+}
+
+/**
+ * Add Vignette Encounter Shared User
+ *
+ * Resolves an exact username through the username lookup RPC, then shares the
+ * active vignette encounter with the resolved user.
+ *
+ * @param input Vignette Share Input
+ * @returns Created Share Row ID
+ */
+export async function addVignetteEncounterSharedUser(
+  input: VignetteShareInput
+): Promise<string> {
+  const sharedUserId = await resolveVignetteSharedUserId(
+    input.username,
+    'Error Adding Vignette Encounter Shared User'
+  )
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('vignette_encounter_shared_user')
+    .insert({
+      shared_user_id: sharedUserId,
+      vignette_encounter_id: input.vignette_encounter_id
+    })
+    .select('id')
+    .single()
+
+  if (error)
+    throw new Error(
+      `Error Adding Vignette Encounter Shared User: ${error.message}`
+    )
+
+  return data.id
+}
+
+/**
+ * Remove Vignette Encounter Shared User
+ *
+ * Revokes a user's access to an active vignette encounter by user ID.
+ *
+ * @param input Vignette Share Removal Input
+ */
+export async function removeVignetteEncounterSharedUser(
+  input: VignetteShareRemovalInput
+): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('vignette_encounter_shared_user')
+    .delete()
+    .eq('vignette_encounter_id', input.vignette_encounter_id)
+    .eq('shared_user_id', input.shared_user_id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Vignette Encounter Shared User: ${error.message}`
+    )
+}
+
+/**
+ * Remove Vignette Encounter Shared User By Username
+ *
+ * Resolves an exact username, then revokes that user's access to an active
+ * vignette encounter.
+ *
+ * @param input Vignette Share Input
+ */
+export async function removeVignetteEncounterSharedUserByUsername(
+  input: VignetteShareInput
+): Promise<void> {
+  const sharedUserId = await resolveVignetteSharedUserId(
+    input.username,
+    'Error Removing Vignette Encounter Shared User'
+  )
+
+  await removeVignetteEncounterSharedUser({
+    shared_user_id: sharedUserId,
+    vignette_encounter_id: input.vignette_encounter_id
+  })
 }
