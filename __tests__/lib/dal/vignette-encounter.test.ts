@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -9,10 +10,20 @@ vi.mock('@/lib/supabase/client', () => ({
 }))
 
 vi.mock('@/lib/dal/user', () => ({
-  getUserId: vi.fn()
+  getUserId: vi.fn(),
+  lookupUserByUsername: vi.fn()
 }))
 
 const {
+  addVignetteEncounterMonsterMood,
+  addVignetteEncounterMonsterSurvivorStatus,
+  addVignetteEncounterMonsterTrait,
+  addVignetteEncounterSharedUser,
+  addVignetteEncounterSurvivorAbilityImpairment,
+  addVignetteEncounterSurvivorDisorder,
+  addVignetteEncounterSurvivorFightingArt,
+  addVignetteEncounterSurvivorSecretFightingArt,
+  createVignetteEncounter,
   getAccessibleVignetteEncountersForUser,
   getActiveVignetteEncounterForUser,
   getSharedVignetteEncountersForUser,
@@ -22,9 +33,24 @@ const {
   getVignetteEncounterSharedUsers,
   getVignetteEncounterSurvivors,
   getVignetteMonster,
-  getVignetteMonsters
+  getVignetteMonsters,
+  removeVignetteEncounter,
+  removeVignetteEncounterMonsterMood,
+  removeVignetteEncounterMonsterSurvivorStatus,
+  removeVignetteEncounterMonsterTrait,
+  removeVignetteEncounterSharedUser,
+  removeVignetteEncounterSharedUserByUsername,
+  removeVignetteEncounterSurvivorAbilityImpairment,
+  removeVignetteEncounterSurvivorDisorder,
+  removeVignetteEncounterSurvivorFightingArt,
+  removeVignetteEncounterSurvivorSecretFightingArt,
+  updateVignetteEncounter,
+  updateVignetteEncounterAIDeck,
+  updateVignetteEncounterMonster,
+  updateVignetteEncounterSurvivorGearGrid,
+  updateVignetteEncounterSurvivorLiveState
 } = await import('@/lib/dal/vignette-encounter')
-const { getUserId } = await import('@/lib/dal/user')
+const { getUserId, lookupUserByUsername } = await import('@/lib/dal/user')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -54,6 +80,45 @@ function mockFromSequence(...queries: ReturnType<typeof makeQuery>[]) {
     if (!query) throw new Error('Unexpected query')
     return query
   })
+}
+
+function makeMutationQuery(error: unknown = null) {
+  const resolved = { error }
+  const query = {
+    eq: vi.fn().mockReturnThis(),
+    then: (resolve: (value: typeof resolved) => unknown) =>
+      Promise.resolve(resolve(resolved))
+  }
+
+  return query
+}
+
+function mockUpdate(error: unknown = null) {
+  const query = makeMutationQuery(error)
+  const update = vi.fn().mockReturnValue(query)
+  mockSupabase.from.mockReturnValue({ update })
+
+  return { query, update }
+}
+
+function mockDelete(error: unknown = null) {
+  const query = makeMutationQuery(error)
+  const remove = vi.fn().mockReturnValue(query)
+  mockSupabase.from.mockReturnValue({ delete: remove })
+
+  return { query, remove }
+}
+
+function mockInsertWithId(id: string, error: unknown = null) {
+  const single = vi.fn().mockResolvedValue({
+    data: error ? null : { id },
+    error
+  })
+  const select = vi.fn().mockReturnValue({ single })
+  const insert = vi.fn().mockReturnValue({ select })
+  mockSupabase.from.mockReturnValue({ insert })
+
+  return { insert, select, single }
 }
 
 const rawCatalogMonster = {
@@ -593,5 +658,350 @@ describe('active vignette child readers', () => {
     await expect(getVignetteEncounterMonsters('encounter-1')).rejects.toThrow(
       'Error Fetching Vignette Encounter Monsters: AI deck missing-deck not found for monster active-monster-1'
     )
+  })
+})
+
+describe('vignette encounter mutation helpers', () => {
+  it('creates an active vignette encounter from catalog data', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: 'encounter-1', error: null })
+
+    const result = await createVignetteEncounter({
+      vignette_monster_id: 'vm-1',
+      level_number: 2
+    })
+
+    expect(result).toBe('encounter-1')
+    expect(mockSupabase.rpc).toHaveBeenCalledWith(
+      'create_vignette_encounter_from_catalog',
+      {
+        target_level_number: 2,
+        target_vignette_monster_id: 'vm-1'
+      }
+    )
+  })
+
+  it('throws when active vignette creation fails', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'active limit reached' }
+    })
+
+    await expect(
+      createVignetteEncounter({
+        vignette_monster_id: 'vm-1',
+        level_number: 1
+      })
+    ).rejects.toThrow('Error Creating Vignette Encounter: active limit reached')
+  })
+
+  it('updates encounter-level state', async () => {
+    const { query, update } = mockUpdate()
+
+    await updateVignetteEncounter({
+      vignette_encounter_id: 'encounter-1',
+      notes: 'The lantern guttered.',
+      turn: 'SURVIVOR'
+    })
+
+    expect(mockSupabase.from).toHaveBeenCalledWith('vignette_encounter')
+    expect(update).toHaveBeenCalledWith({
+      notes: 'The lantern guttered.',
+      turn: 'SURVIVOR'
+    })
+    expect(query.eq).toHaveBeenCalledWith('id', 'encounter-1')
+  })
+
+  it('removes an active vignette encounter by id', async () => {
+    const { query } = mockDelete()
+
+    await removeVignetteEncounter({ vignette_encounter_id: 'encounter-1' })
+
+    expect(mockSupabase.from).toHaveBeenCalledWith('vignette_encounter')
+    expect(query.eq).toHaveBeenCalledWith('id', 'encounter-1')
+  })
+
+  it('updates active AI deck, monster, survivor, and gear-grid state', async () => {
+    let mutation = mockUpdate()
+    await updateVignetteEncounterAIDeck({
+      vignette_encounter_ai_deck_id: 'deck-1',
+      basic_cards: 2
+    })
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_ai_deck'
+    )
+    expect(mutation.update).toHaveBeenCalledWith({ basic_cards: 2 })
+    expect(mutation.query.eq).toHaveBeenCalledWith('id', 'deck-1')
+
+    mutation = mockUpdate()
+    await updateVignetteEncounterMonster({
+      vignette_encounter_monster_id: 'monster-1',
+      wounds: 3
+    })
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_monster'
+    )
+    expect(mutation.update).toHaveBeenCalledWith({ wounds: 3 })
+    expect(mutation.query.eq).toHaveBeenCalledWith('id', 'monster-1')
+
+    mutation = mockUpdate()
+    await updateVignetteEncounterSurvivorLiveState({
+      vignette_encounter_survivor_id: 'survivor-1',
+      knocked_down: true,
+      survival_tokens: -1
+    })
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_survivor'
+    )
+    expect(mutation.update).toHaveBeenCalledWith({
+      knocked_down: true,
+      survival_tokens: -1
+    })
+    expect(mutation.query.eq).toHaveBeenCalledWith('id', 'survivor-1')
+
+    mutation = mockUpdate()
+    await updateVignetteEncounterSurvivorGearGrid({
+      vignette_encounter_survivor_gear_grid_id: 'gear-grid-1',
+      column_number: 2,
+      row_number: 1
+    })
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_survivor_gear_grid'
+    )
+    expect(mutation.update).toHaveBeenCalledWith({
+      column_number: 2,
+      row_number: 1
+    })
+    expect(mutation.query.eq).toHaveBeenCalledWith('id', 'gear-grid-1')
+  })
+
+  it('adds and removes active monster state rows', async () => {
+    let insertion = mockInsertWithId('mood-row-1')
+    await expect(
+      addVignetteEncounterMonsterMood({
+        mood_id: 'mood-1',
+        source_vignette_monster_level_mood_id: null,
+        vignette_encounter_monster_id: 'monster-1'
+      })
+    ).resolves.toBe('mood-row-1')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_monster_mood'
+    )
+    expect(insertion.insert).toHaveBeenCalledWith({
+      mood_id: 'mood-1',
+      source_vignette_monster_level_mood_id: null,
+      vignette_encounter_monster_id: 'monster-1'
+    })
+
+    insertion = mockInsertWithId('trait-row-1')
+    await expect(
+      addVignetteEncounterMonsterTrait({
+        source_vignette_monster_level_trait_id: null,
+        trait_id: 'trait-1',
+        vignette_encounter_monster_id: 'monster-1'
+      })
+    ).resolves.toBe('trait-row-1')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_monster_trait'
+    )
+    expect(insertion.insert).toHaveBeenCalledWith({
+      source_vignette_monster_level_trait_id: null,
+      trait_id: 'trait-1',
+      vignette_encounter_monster_id: 'monster-1'
+    })
+
+    insertion = mockInsertWithId('status-row-1')
+    await expect(
+      addVignetteEncounterMonsterSurvivorStatus({
+        source_vignette_monster_level_survivor_status_id: null,
+        survivor_status_id: 'status-1',
+        vignette_encounter_monster_id: 'monster-1'
+      })
+    ).resolves.toBe('status-row-1')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_monster_survivor_status'
+    )
+    expect(insertion.insert).toHaveBeenCalledWith({
+      source_vignette_monster_level_survivor_status_id: null,
+      survivor_status_id: 'status-1',
+      vignette_encounter_monster_id: 'monster-1'
+    })
+
+    let deletion = mockDelete()
+    await removeVignetteEncounterMonsterMood({ id: 'mood-row-1' })
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_monster_mood'
+    )
+    expect(deletion.query.eq).toHaveBeenCalledWith('id', 'mood-row-1')
+
+    deletion = mockDelete()
+    await removeVignetteEncounterMonsterTrait({ id: 'trait-row-1' })
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_monster_trait'
+    )
+    expect(deletion.query.eq).toHaveBeenCalledWith('id', 'trait-row-1')
+
+    deletion = mockDelete()
+    await removeVignetteEncounterMonsterSurvivorStatus({ id: 'status-row-1' })
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_monster_survivor_status'
+    )
+    expect(deletion.query.eq).toHaveBeenCalledWith('id', 'status-row-1')
+  })
+
+  it('adds and removes active survivor child rows', async () => {
+    let insertion = mockInsertWithId('ability-row-1')
+    await expect(
+      addVignetteEncounterSurvivorAbilityImpairment({
+        ability_impairment_id: 'ability-1',
+        source_vignette_survivor_ability_impairment_id: null,
+        vignette_encounter_survivor_id: 'survivor-1'
+      })
+    ).resolves.toBe('ability-row-1')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_survivor_ability_impairment'
+    )
+
+    insertion = mockInsertWithId('disorder-row-1')
+    await expect(
+      addVignetteEncounterSurvivorDisorder({
+        disorder_id: 'disorder-1',
+        source_vignette_survivor_disorder_id: null,
+        vignette_encounter_survivor_id: 'survivor-1'
+      })
+    ).resolves.toBe('disorder-row-1')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_survivor_disorder'
+    )
+
+    insertion = mockInsertWithId('fighting-art-row-1')
+    await expect(
+      addVignetteEncounterSurvivorFightingArt({
+        fighting_art_id: 'fighting-art-1',
+        source_vignette_survivor_fighting_art_id: null,
+        vignette_encounter_survivor_id: 'survivor-1'
+      })
+    ).resolves.toBe('fighting-art-row-1')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_survivor_fighting_art'
+    )
+
+    insertion = mockInsertWithId('secret-fighting-art-row-1')
+    await expect(
+      addVignetteEncounterSurvivorSecretFightingArt({
+        secret_fighting_art_id: 'secret-fighting-art-1',
+        source_vignette_survivor_secret_fighting_art_id: null,
+        vignette_encounter_survivor_id: 'survivor-1'
+      })
+    ).resolves.toBe('secret-fighting-art-row-1')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_survivor_secret_fighting_art'
+    )
+    expect(insertion.insert).toHaveBeenCalledWith({
+      secret_fighting_art_id: 'secret-fighting-art-1',
+      source_vignette_survivor_secret_fighting_art_id: null,
+      vignette_encounter_survivor_id: 'survivor-1'
+    })
+
+    let deletion = mockDelete()
+    await removeVignetteEncounterSurvivorAbilityImpairment('ability-row-1')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_survivor_ability_impairment'
+    )
+    expect(deletion.query.eq).toHaveBeenCalledWith('id', 'ability-row-1')
+
+    deletion = mockDelete()
+    await removeVignetteEncounterSurvivorDisorder('disorder-row-1')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_survivor_disorder'
+    )
+    expect(deletion.query.eq).toHaveBeenCalledWith('id', 'disorder-row-1')
+
+    deletion = mockDelete()
+    await removeVignetteEncounterSurvivorFightingArt('fighting-art-row-1')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_survivor_fighting_art'
+    )
+    expect(deletion.query.eq).toHaveBeenCalledWith('id', 'fighting-art-row-1')
+
+    deletion = mockDelete()
+    await removeVignetteEncounterSurvivorSecretFightingArt(
+      'secret-fighting-art-row-1'
+    )
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_survivor_secret_fighting_art'
+    )
+    expect(deletion.query.eq).toHaveBeenCalledWith(
+      'id',
+      'secret-fighting-art-row-1'
+    )
+  })
+
+  it('adds and removes shared users by exact username', async () => {
+    vi.mocked(lookupUserByUsername).mockResolvedValue('shared-user-1')
+
+    const insertion = mockInsertWithId('share-row-1')
+    await expect(
+      addVignetteEncounterSharedUser({
+        username: 'lantern.friend',
+        vignette_encounter_id: 'encounter-1'
+      })
+    ).resolves.toBe('share-row-1')
+
+    expect(lookupUserByUsername).toHaveBeenCalledWith('lantern.friend')
+    expect(mockSupabase.from).toHaveBeenLastCalledWith(
+      'vignette_encounter_shared_user'
+    )
+    expect(insertion.insert).toHaveBeenCalledWith({
+      shared_user_id: 'shared-user-1',
+      vignette_encounter_id: 'encounter-1'
+    })
+
+    const deletion = mockDelete()
+    await removeVignetteEncounterSharedUserByUsername({
+      username: 'lantern.friend',
+      vignette_encounter_id: 'encounter-1'
+    })
+
+    expect(deletion.query.eq).toHaveBeenCalledWith(
+      'vignette_encounter_id',
+      'encounter-1'
+    )
+    expect(deletion.query.eq).toHaveBeenCalledWith(
+      'shared_user_id',
+      'shared-user-1'
+    )
+  })
+
+  it('removes shared users by id', async () => {
+    const { query } = mockDelete()
+
+    await removeVignetteEncounterSharedUser({
+      shared_user_id: 'shared-user-1',
+      vignette_encounter_id: 'encounter-1'
+    })
+
+    expect(mockSupabase.from).toHaveBeenCalledWith(
+      'vignette_encounter_shared_user'
+    )
+    expect(query.eq).toHaveBeenCalledWith(
+      'vignette_encounter_id',
+      'encounter-1'
+    )
+    expect(query.eq).toHaveBeenCalledWith('shared_user_id', 'shared-user-1')
+  })
+
+  it('throws with the share prefix when username lookup fails', async () => {
+    vi.mocked(lookupUserByUsername).mockResolvedValue(null)
+
+    await expect(
+      addVignetteEncounterSharedUser({
+        username: 'missing.friend',
+        vignette_encounter_id: 'encounter-1'
+      })
+    ).rejects.toThrow(
+      'Error Adding Vignette Encounter Shared User: User Not Found'
+    )
+
+    expect(mockSupabase.from).not.toHaveBeenCalled()
   })
 })
