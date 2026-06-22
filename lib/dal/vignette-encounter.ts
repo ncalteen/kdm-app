@@ -319,7 +319,7 @@ async function resolveVignetteSharedUserId(
 ): Promise<string> {
   try {
     const sharedUserId = await lookupUserByUsername(username)
-    if (!sharedUserId) throw new Error('User Not Found')
+    if (!sharedUserId) throw new Error('User not found or lookup throttled')
     return sharedUserId
   } catch (error) {
     throw new Error(

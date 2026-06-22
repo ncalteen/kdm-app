@@ -999,7 +999,7 @@ describe('vignette encounter mutation helpers', () => {
         vignette_encounter_id: 'encounter-1'
       })
     ).rejects.toThrow(
-      'Error Adding Vignette Encounter Shared User: User Not Found'
+      'Error Adding Vignette Encounter Shared User: User not found or lookup throttled'
     )
 
     expect(mockSupabase.from).not.toHaveBeenCalled()
