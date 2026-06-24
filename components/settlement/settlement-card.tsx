@@ -52,6 +52,7 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip'
 import { UserCard } from '@/components/user/user-card'
+import { VignetteEncountersCard } from '@/components/vignette/vignette-encounters-card'
 import { useLocal } from '@/contexts/local-context'
 import { FREE_TIER_SETTLEMENT_LIMIT } from '@/lib/common'
 import { updateSettlement } from '@/lib/dal/settlement'
@@ -276,6 +277,9 @@ export function SettlementCard({
 
   // Help tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.HELP) return <HelpCard />
+
+  if (selectedTab === TabType.VIGNETTE_ENCOUNTERS)
+    return <VignetteEncountersCard />
 
   if (isCreatingNewSettlement)
     return (

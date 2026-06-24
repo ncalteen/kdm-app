@@ -143,6 +143,17 @@ const navSettlementSettingsEntry = {
 }
 
 /**
+ * One-Shot Navigation Items
+ */
+const navOneShots = [
+  {
+    title: 'Vignette Encounters',
+    tab: TabType.VIGNETTE_ENCOUNTERS,
+    icon: SkullIcon
+  }
+]
+
+/**
  * Embark Navigation Items
  */
 const navEmbark = [
@@ -389,6 +400,15 @@ export function AppSidebar({
           <SidebarGroupLabel>Embark</SidebarGroupLabel>
           <NavMain
             items={navEmbark}
+            selectedTab={selectedTab}
+            setSelectedTab={setSelectedTab}
+          />
+        </SidebarGroup>
+
+        <SidebarGroup className="group-data-[collapsible=icon]:p-0">
+          <SidebarGroupLabel>One-Shots</SidebarGroupLabel>
+          <NavMain
+            items={navOneShots}
             selectedTab={selectedTab}
             setSelectedTab={setSelectedTab}
           />

@@ -89,6 +89,7 @@ describe('TabType', () => {
     expect(TabType.SQUIRES).toBe('squires')
     expect(TabType.SURVIVORS).toBe('survivors')
     expect(TabType.TIMELINE).toBe('timeline')
+    expect(TabType.VIGNETTE_ENCOUNTERS).toBe('vignetteEncounters')
     expect(TabType.USER).toBe('user')
   })
 })

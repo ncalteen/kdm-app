@@ -103,6 +103,8 @@ export enum TabType {
   SURVIVORS = 'survivors',
   /** Timeline */
   TIMELINE = 'timeline',
+  /** Vignette Encounters */
+  VIGNETTE_ENCOUNTERS = 'vignetteEncounters',
   /** User */
   USER = 'user'
 }
