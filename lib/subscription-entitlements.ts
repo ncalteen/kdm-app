@@ -5,7 +5,13 @@ const UNLIMITED_OWNED_SETTLEMENT_PLAN_IDS: ReadonlySet<PlanSlug> = new Set([
   'lantern_hoard'
 ])
 
-const ENTITLED_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing'])
+const VIGNETTE_SHARING_PLAN_IDS: ReadonlySet<PlanSlug> = new Set([
+  'lantern_hoard'
+])
+
+const ENTITLED_SUBSCRIPTION_STATUSES: ReadonlySet<
+  UserSubscriptionDetail['status']
+> = new Set(['active', 'trialing'])
 
 /**
  * Can Create Unlimited Settlements
@@ -24,5 +30,26 @@ export function canCreateUnlimitedSettlements(
     !!subscription &&
     ENTITLED_SUBSCRIPTION_STATUSES.has(subscription.status) &&
     UNLIMITED_OWNED_SETTLEMENT_PLAN_IDS.has(subscription.plan_id)
+  )
+}
+
+/**
+ * Can Share Vignette Encounters
+ *
+ * Returns true when the current subscription is on the Lantern Hoard tier and
+ * still in an entitling Stripe status. This mirrors the
+ * `can_share_vignette_encounters(target_user_id uuid)` Postgres helper consulted by
+ * RLS on `vignette_encounter_shared_user.INSERT`.
+ *
+ * @param subscription User Subscription Detail
+ * @returns Whether The User Can Create Vignette Encounter Shares
+ */
+export function canShareVignetteEncounters(
+  subscription: Pick<UserSubscriptionDetail, 'plan_id' | 'status'> | null
+): boolean {
+  return (
+    !!subscription &&
+    ENTITLED_SUBSCRIPTION_STATUSES.has(subscription.status) &&
+    VIGNETTE_SHARING_PLAN_IDS.has(subscription.plan_id)
   )
 }
