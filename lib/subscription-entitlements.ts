@@ -9,7 +9,9 @@ const VIGNETTE_SHARING_PLAN_IDS: ReadonlySet<PlanSlug> = new Set([
   'lantern_hoard'
 ])
 
-const ENTITLED_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing'])
+const ENTITLED_SUBSCRIPTION_STATUSES: ReadonlySet<
+  UserSubscriptionDetail['status']
+> = new Set(['active', 'trialing'])
 
 /**
  * Can Create Unlimited Settlements
@@ -36,7 +38,7 @@ export function canCreateUnlimitedSettlements(
  *
  * Returns true when the current subscription is on the Lantern Hoard tier and
  * still in an entitling Stripe status. This mirrors the
- * `can_share_vignette_encounters(user_id uuid)` Postgres helper consulted by
+ * `can_share_vignette_encounters(target_user_id uuid)` Postgres helper consulted by
  * RLS on `vignette_encounter_shared_user.INSERT`.
  *
  * @param subscription User Subscription Detail
