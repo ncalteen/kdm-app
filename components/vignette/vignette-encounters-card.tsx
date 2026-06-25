@@ -14,7 +14,7 @@ import type {
   VignetteEncounterSummary,
   VignetteMonsterSummary
 } from '@/lib/types'
-import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 /** Vignette Landing State */
@@ -32,6 +32,14 @@ const EMPTY_VIGNETTE_LANDING_STATE: VignetteLandingState = {
   catalogMonsters: [],
   ownedActive: null,
   sharedActive: []
+}
+
+/** Vignette Encounters Card Properties */
+interface VignetteEncountersCardProps {
+  /** Selected Vignette Encounter ID */
+  selectedVignetteEncounterId: string | null
+  /** Set Selected Vignette Encounter ID */
+  setSelectedVignetteEncounterId: (vignetteEncounterId: string | null) => void
 }
 
 /**
@@ -90,6 +98,39 @@ function sortedVignetteLevels(
 }
 
 /**
+ * Resolve Selected Vignette Encounter ID
+ *
+ * Keeps the current active vignette selection when it is still accessible,
+ * otherwise defaults to the owned active vignette, then the first shared
+ * active vignette. The selected role is intentionally not stored in context;
+ * callers should derive role from server-backed summary/detail rows.
+ *
+ * @param landingState Vignette Landing State
+ * @param currentVignetteEncounterId Current Vignette Encounter ID
+ * @returns Resolved Selected Vignette Encounter ID
+ */
+function resolveSelectedVignetteEncounterId(
+  landingState: VignetteLandingState,
+  currentVignetteEncounterId: string | null
+): string | null {
+  const accessibleVignettes = [
+    ...(landingState.ownedActive ? [landingState.ownedActive] : []),
+    ...landingState.sharedActive
+  ]
+  const currentSummary = currentVignetteEncounterId
+    ? accessibleVignettes.find(
+        (summary) => summary.id === currentVignetteEncounterId
+      )
+    : null
+
+  if (currentSummary) return currentSummary.id
+  if (landingState.ownedActive) return landingState.ownedActive.id
+  if (landingState.sharedActive[0]) return landingState.sharedActive[0].id
+
+  return null
+}
+
+/**
  * Report Vignette Landing Error
  *
  * @param error Error to Report
@@ -105,28 +146,53 @@ function reportVignetteLandingError(error: unknown): void {
  * Top-level one-shot surface that is intentionally available without a selected
  * settlement.
  *
+ * @param props Vignette Encounters Card Properties
  * @returns Vignette Encounters Card
  */
-export function VignetteEncountersCard(): ReactElement {
+export function VignetteEncountersCard({
+  selectedVignetteEncounterId,
+  setSelectedVignetteEncounterId
+}: VignetteEncountersCardProps): ReactElement {
   const [landingState, setLandingState] = useState<VignetteLandingState>(
     EMPTY_VIGNETTE_LANDING_STATE
   )
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoadError, setHasLoadError] = useState(false)
+  const selectedVignetteEncounterIdRef = useRef(selectedVignetteEncounterId)
+
+  useEffect(() => {
+    selectedVignetteEncounterIdRef.current = selectedVignetteEncounterId
+  }, [selectedVignetteEncounterId])
+
+  const applyLandingState = useCallback(
+    (nextLandingState: VignetteLandingState) => {
+      const nextSelectedVignetteEncounterId =
+        resolveSelectedVignetteEncounterId(
+          nextLandingState,
+          selectedVignetteEncounterIdRef.current
+        )
+
+      selectedVignetteEncounterIdRef.current = nextSelectedVignetteEncounterId
+      setLandingState(nextLandingState)
+      setSelectedVignetteEncounterId(nextSelectedVignetteEncounterId)
+      setHasLoadError(false)
+    },
+    [setSelectedVignetteEncounterId]
+  )
 
   const reloadLandingState = useCallback(async () => {
     setIsLoading(true)
     setHasLoadError(false)
 
     try {
-      setLandingState(await fetchVignetteLandingState())
+      applyLandingState(await fetchVignetteLandingState())
     } catch (error) {
       reportVignetteLandingError(error)
       setHasLoadError(true)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [applyLandingState])
 
   useEffect(() => {
     let ignore = false
@@ -136,8 +202,7 @@ export function VignetteEncountersCard(): ReactElement {
         const nextLandingState = await fetchVignetteLandingState()
         if (ignore) return
 
-        setLandingState(nextLandingState)
-        setHasLoadError(false)
+        applyLandingState(nextLandingState)
       } catch (error) {
         if (ignore) return
 
@@ -153,13 +218,20 @@ export function VignetteEncountersCard(): ReactElement {
     return () => {
       ignore = true
     }
-  }, [])
+  }, [applyLandingState])
+
+  const handleSelectVignetteEncounter = useCallback(
+    (summary: VignetteEncounterSummary) => {
+      selectedVignetteEncounterIdRef.current = summary.id
+      setSelectedVignetteEncounterId(summary.id)
+    },
+    [setSelectedVignetteEncounterId]
+  )
 
   const hasSharedActive = landingState.sharedActive.length > 0
   const hasCatalogMonsters = landingState.catalogMonsters.length > 0
   const isEmptyLanding =
     !landingState.ownedActive && !hasSharedActive && !hasCatalogMonsters
-
   return (
     <div className="pt-(--header-height) px-2 py-2">
       <Card className="mx-auto max-w-3xl border bg-card/70 mt-2">
@@ -199,6 +271,11 @@ export function VignetteEncountersCard(): ReactElement {
                   <VignetteSummaryRow
                     summary={landingState.ownedActive}
                     badge="Owner"
+                    isSelected={
+                      selectedVignetteEncounterId ===
+                      landingState.ownedActive.id
+                    }
+                    onSelect={handleSelectVignetteEncounter}
                   />
                 </section>
               ) : (
@@ -232,6 +309,8 @@ export function VignetteEncountersCard(): ReactElement {
                         key={summary.id}
                         summary={summary}
                         badge="Shared"
+                        isSelected={selectedVignetteEncounterId === summary.id}
+                        onSelect={handleSelectVignetteEncounter}
                       />
                     ))}
                   </div>
@@ -257,15 +336,27 @@ export function VignetteEncountersCard(): ReactElement {
  */
 function VignetteSummaryRow({
   badge,
+  isSelected,
+  onSelect,
   summary
 }: {
   /** Badge Label */
   badge: string
+  /** Whether This Vignette Is Selected */
+  isSelected: boolean
+  /** Select Vignette Encounter */
+  onSelect: (summary: VignetteEncounterSummary) => void
   /** Vignette Encounter Summary */
   summary: VignetteEncounterSummary
 }): ReactElement {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-md border p-3">
+    <button
+      type="button"
+      aria-pressed={isSelected}
+      onClick={() => onSelect(summary)}
+      className={`flex w-full items-start justify-between gap-3 rounded-md border p-3 text-left transition-colors hover:bg-accent hover:text-accent-foreground ${
+        isSelected ? 'border-primary bg-primary/10' : ''
+      }`}>
       <div className="min-w-0">
         <p className="font-medium leading-none">{summary.monster_name}</p>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -273,7 +364,7 @@ function VignetteSummaryRow({
         </p>
       </div>
       <Badge variant={badge === 'Owner' ? 'default' : 'outline'}>{badge}</Badge>
-    </div>
+    </button>
   )
 }
 

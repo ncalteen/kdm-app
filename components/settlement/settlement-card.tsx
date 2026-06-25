@@ -118,6 +118,8 @@ interface SettlementCardProps {
   selectedSurvivor: SurvivorDetail | null
   /** Selected Tab */
   selectedTab: TabType
+  /** Selected Vignette Encounter ID */
+  selectedVignetteEncounterId: string | null
   /** Settlement List (owned + shared, sourced from LocalContext) */
   settlementList: SettlementListEntry[]
   /** Set Is Creating New Settlement */
@@ -154,6 +156,8 @@ interface SettlementCardProps {
   setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
+  /** Set Selected Vignette Encounter ID */
+  setSelectedVignetteEncounterId: (vignetteEncounterId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
   /** Set Survivors */
@@ -185,6 +189,7 @@ export function SettlementCard({
   selectedShowdownMonsterIndex,
   selectedSurvivor,
   selectedTab,
+  selectedVignetteEncounterId,
   settlementList,
   setIsCreatingNewSettlement,
   setIsCreatingNewSurvivor,
@@ -202,6 +207,7 @@ export function SettlementCard({
   setSelectedShowdownMonsterIndex,
   setSelectedSurvivor,
   setSelectedSurvivorId,
+  setSelectedVignetteEncounterId,
   setSelectedTab,
   setSurvivors,
   setUserSettings,
@@ -283,7 +289,12 @@ export function SettlementCard({
   if (selectedTab === TabType.HELP) return <HelpCard />
 
   if (selectedTab === TabType.VIGNETTE_ENCOUNTERS && vignetteEncountersEnabled)
-    return <VignetteEncountersCard />
+    return (
+      <VignetteEncountersCard
+        selectedVignetteEncounterId={selectedVignetteEncounterId}
+        setSelectedVignetteEncounterId={setSelectedVignetteEncounterId}
+      />
+    )
 
   if (isCreatingNewSettlement)
     return (

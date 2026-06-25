@@ -757,14 +757,6 @@ export interface VignetteEncounterSummary {
   role: VignetteEncounterRole
 }
 
-/** Selected Vignette Encounter */
-export interface SelectedVignetteEncounter {
-  /** Vignette Encounter ID */
-  vignette_encounter_id: string
-  /** Caller's Role on This Vignette */
-  role: VignetteEncounterRole
-}
-
 /**
  * Vignette Encounter State Setter
  *

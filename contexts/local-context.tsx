@@ -14,6 +14,7 @@ import { getShowdown } from '@/lib/dal/showdown'
 import { getSurvivor, getSurvivors } from '@/lib/dal/survivor'
 import { getSettlementForUser, getUserSettings } from '@/lib/dal/user'
 import { getUserSubscription } from '@/lib/dal/user-subscription'
+import { getVignetteEncounter } from '@/lib/dal/vignette-encounter'
 import { TabType } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { isUserSettingsAdmin } from '@/lib/supabase/admin-role'
@@ -33,7 +34,9 @@ import {
   SurvivorsStateSetter,
   SurvivorStateSetter,
   UserSettingsDetail,
-  UserSubscriptionDetail
+  UserSubscriptionDetail,
+  VignetteEncounterDetail,
+  VignetteEncounterStateSetter
 } from '@/lib/types'
 import { saveToLocalStorage } from '@/lib/utils'
 import {
@@ -67,6 +70,8 @@ export interface LocalStateType {
   selectedShowdownMonsterIndex: number
   /** Selected Survivor ID */
   selectedSurvivorId: string | null
+  /** Selected Vignette Encounter ID */
+  selectedVignetteEncounterId: string | null
   /** Selected Tab */
   selectedTab: TabType | null
 }
@@ -79,6 +84,7 @@ const newLocal: LocalStateType = {
   selectedShowdownId: null,
   selectedShowdownMonsterIndex: 0,
   selectedSurvivorId: null,
+  selectedVignetteEncounterId: null,
   selectedTab: null
 }
 
@@ -139,6 +145,10 @@ interface LocalContextType {
   selectedSurvivor: SurvivorDetail | null
   /** Selected Survivor ID */
   selectedSurvivorId: string | null
+  /** Selected Vignette Encounter */
+  selectedVignetteEncounter: VignetteEncounterDetail | null
+  /** Selected Vignette Encounter ID */
+  selectedVignetteEncounterId: string | null
   /** Selected Tab */
   selectedTab: TabType
 
@@ -181,6 +191,10 @@ interface LocalContextType {
   setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
+  /** Set Selected Vignette Encounter */
+  setSelectedVignetteEncounter: VignetteEncounterStateSetter
+  /** Set Selected Vignette Encounter ID */
+  setSelectedVignetteEncounterId: (vignetteEncounterId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
 
@@ -348,6 +362,12 @@ export function LocalProvider({
   const [selectedSurvivorId, setSelectedSurvivorIdState] = useState<
     string | null
   >(() => local.selectedSurvivorId ?? null)
+
+  // Vignette Encounter
+  const [selectedVignetteEncounter, setSelectedVignetteEncounterState] =
+    useState<VignetteEncounterDetail | null>(null)
+  const [selectedVignetteEncounterId, setSelectedVignetteEncounterIdState] =
+    useState<string | null>(() => local.selectedVignetteEncounterId ?? null)
 
   // Survivors (all for Settlement)
   const [survivors, setSurvivors] = useState<SurvivorDetail[]>([])
@@ -1389,6 +1409,74 @@ export function LocalProvider({
   ])
 
   /**
+   * Fetch Vignette Encounter Data
+   *
+   * Triggered whenever the selected vignette encounter id changes. The
+   * persisted browser state stores only the id; this effect resolves the full
+   * detail from the Supabase-backed DAL so caller role and encounter state are
+   * always server-derived.
+   */
+  useEffect(() => {
+    console.debug('Fetching Vignette Encounter Data')
+
+    let isCancelled = false
+
+    if (
+      !vignetteEncountersEnabled ||
+      !isAuthenticated ||
+      !selectedVignetteEncounterId
+    )
+      return () => {
+        isCancelled = true
+      }
+
+    if (selectedVignetteEncounter?.id === selectedVignetteEncounterId)
+      return () => {
+        isCancelled = true
+      }
+
+    getVignetteEncounter(selectedVignetteEncounterId)
+      .then((vignetteEncounter) => {
+        if (isCancelled) return
+
+        console.debug('Vignette Encounter Data:', vignetteEncounter)
+
+        setSelectedVignetteEncounterState(vignetteEncounter)
+
+        if (!vignetteEncounter) {
+          setSelectedVignetteEncounterIdState(null)
+
+          setLocalState((prev) => ({
+            ...prev,
+            selectedVignetteEncounterId: null
+          }))
+        }
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('Vignette Encounter Fetch Error:', err)
+
+        setSelectedVignetteEncounterState(null)
+        setSelectedVignetteEncounterIdState(null)
+
+        setLocalState((prev) => ({
+          ...prev,
+          selectedVignetteEncounterId: null
+        }))
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [
+    isAuthenticated,
+    selectedVignetteEncounter?.id,
+    selectedVignetteEncounterId,
+    vignetteEncountersEnabled
+  ])
+
+  /**
    * Fetch User Settings Data
    */
   useEffect(() => {
@@ -1777,6 +1865,54 @@ export function LocalProvider({
   }, [])
 
   /**
+   * Set Selected Vignette Encounter
+   *
+   * @param vignetteOrUpdater Selected Vignette Encounter or functional updater
+   * receiving the previous vignette encounter state
+   */
+  const setSelectedVignetteEncounter =
+    useCallback<VignetteEncounterStateSetter>((vignetteOrUpdater) => {
+      if (typeof vignetteOrUpdater === 'function') {
+        setSelectedVignetteEncounterState(vignetteOrUpdater)
+        return
+      }
+
+      const vignetteEncounter = vignetteOrUpdater
+
+      setSelectedVignetteEncounterState(vignetteEncounter)
+      setSelectedVignetteEncounterIdState(vignetteEncounter?.id ?? null)
+
+      setLocalState((local) => ({
+        ...local,
+        selectedVignetteEncounterId: vignetteEncounter?.id ?? null
+      }))
+    }, [])
+
+  /**
+   * Set Selected Vignette Encounter ID
+   *
+   * Pure ID mutation. The vignette encounter fetch effect is the source of
+   * truth for resolving full detail.
+   *
+   * @param vignetteEncounterId Selected Vignette Encounter ID
+   */
+  const setSelectedVignetteEncounterId = useCallback(
+    (vignetteEncounterId: string | null) => {
+      setSelectedVignetteEncounterIdState((prevId) => {
+        if (prevId === vignetteEncounterId) return prevId
+
+        setSelectedVignetteEncounterState(null)
+        setLocalState((local) => ({
+          ...local,
+          selectedVignetteEncounterId: vignetteEncounterId
+        }))
+        return vignetteEncounterId
+      })
+    },
+    []
+  )
+
+  /**
    * Set Selected Tab
    *
    * @param tab Selected Tab
@@ -1845,6 +1981,8 @@ export function LocalProvider({
       selectedShowdownMonsterIndex,
       selectedSurvivor,
       selectedSurvivorId,
+      selectedVignetteEncounter,
+      selectedVignetteEncounterId,
       selectedTab,
 
       setIsCreatingNewHunt,
@@ -1867,6 +2005,8 @@ export function LocalProvider({
       setSelectedShowdownMonsterIndex,
       setSelectedSurvivor,
       setSelectedSurvivorId,
+      setSelectedVignetteEncounter,
+      setSelectedVignetteEncounterId,
       setSelectedTab,
 
       setSurvivors,
@@ -1909,6 +2049,8 @@ export function LocalProvider({
       selectedShowdownMonsterIndex,
       selectedSurvivor,
       selectedSurvivorId,
+      selectedVignetteEncounter,
+      selectedVignetteEncounterId,
       selectedTab,
       survivors,
       local,
@@ -1931,6 +2073,8 @@ export function LocalProvider({
       setSelectedShowdownMonsterIndex,
       setSelectedSurvivor,
       setSelectedSurvivorId,
+      setSelectedVignetteEncounter,
+      setSelectedVignetteEncounterId,
       setSelectedTab,
       setSelectedEncounter,
       setUserSettings,

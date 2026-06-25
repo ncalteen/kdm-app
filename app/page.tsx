@@ -101,6 +101,7 @@ function MainPage(): ReactElement {
     selectedSurvivor,
     // selectedSurvivorId,
     selectedTab,
+    selectedVignetteEncounterId,
 
     // setIsCreatingNewHunt,
     setIsCreatingNewSettlement,
@@ -122,6 +123,7 @@ function MainPage(): ReactElement {
     setSelectedShowdownMonsterIndex,
     setSelectedSurvivor,
     setSelectedSurvivorId,
+    setSelectedVignetteEncounterId,
     setSelectedTab,
 
     setSurvivors,
@@ -174,6 +176,7 @@ function MainPage(): ReactElement {
             selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
             selectedSurvivor={selectedSurvivor}
             selectedTab={selectedTab}
+            selectedVignetteEncounterId={selectedVignetteEncounterId}
             settlementList={settlementList}
             setIsCreatingNewSettlement={setIsCreatingNewSettlement}
             setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
@@ -191,6 +194,7 @@ function MainPage(): ReactElement {
             setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
             setSelectedSurvivor={setSelectedSurvivor}
             setSelectedSurvivorId={setSelectedSurvivorId}
+            setSelectedVignetteEncounterId={setSelectedVignetteEncounterId}
             setSelectedTab={setSelectedTab}
             setSurvivors={setSurvivors}
             setUserSettings={setUserSettings}
