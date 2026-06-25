@@ -15,7 +15,7 @@ import {
   createVignetteEncounter,
   getVignetteMonster
 } from '@/lib/dal/vignette-encounter'
-import { ERROR_MESSAGE } from '@/lib/messages'
+import { ERROR_MESSAGE, VIGNETTE_ACTIVE_LIMIT_MESSAGE } from '@/lib/messages'
 import type {
   VignetteEncounterSummary,
   VignetteLandingState,
@@ -24,7 +24,10 @@ import type {
   VignetteMonsterSummary,
   VignetteSurvivorDetail
 } from '@/lib/types'
-import { VignetteCreateInputSchema } from '@/schemas/vignette-encounter'
+import {
+  VignetteActiveLimitSchema,
+  VignetteCreateInputSchema
+} from '@/schemas/vignette-encounter'
 import { Loader2Icon } from 'lucide-react'
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -104,6 +107,23 @@ function formatVignetteLabel(value: string | null | undefined): string {
  */
 function formatVignetteNumber(value: number | null | undefined): string {
   return value === null || value === undefined ? '-' : value.toString()
+}
+
+/**
+ * Is Vignette Active Limit Error
+ *
+ * @param error Error Value
+ * @returns Whether Error Represents Active Vignette Limit
+ */
+function isVignetteActiveLimitError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+
+  const message = error.message.toLowerCase()
+  return (
+    message.includes('active limit') ||
+    message.includes('only one active vignette') ||
+    message.includes('one_active_vignette_encounter_per_user')
+  )
 }
 
 /**
@@ -278,6 +298,15 @@ export function VignetteEncountersCard({
   const handleCreateVignetteEncounter = useCallback(() => {
     if (!selectedCatalogMonster || !selectedLevelNumber) return
 
+    const activeLimit = VignetteActiveLimitSchema.safeParse({
+      active_vignette_encounter_id: vignetteLandingState.ownedActive?.id ?? null
+    })
+
+    if (!activeLimit.success) {
+      toast.error(VIGNETTE_ACTIVE_LIMIT_MESSAGE())
+      return
+    }
+
     const parsedInput = VignetteCreateInputSchema.safeParse({
       vignette_monster_id: selectedCatalogMonster.id,
       level_number: selectedLevelNumber
@@ -298,14 +327,21 @@ export function VignetteEncountersCard({
       })
       .catch((error: unknown) => {
         console.error('Vignette Encounter Create Error:', error)
-        toast.error(error instanceof Error ? error.message : ERROR_MESSAGE())
+        toast.error(
+          isVignetteActiveLimitError(error)
+            ? VIGNETTE_ACTIVE_LIMIT_MESSAGE()
+            : error instanceof Error
+              ? error.message
+              : ERROR_MESSAGE()
+        )
       })
       .finally(() => setIsCreatingVignetteEncounter(false))
   }, [
     refetchVignetteLandingState,
     selectedCatalogMonster,
     selectedLevelNumber,
-    setSelectedVignetteEncounterId
+    setSelectedVignetteEncounterId,
+    vignetteLandingState.ownedActive?.id
   ])
 
   const hasSharedActive = vignetteLandingState.sharedActive.length > 0
@@ -364,34 +400,46 @@ export function VignetteEncountersCard({
                     Available Vignette Encounters
                   </h3>
                   {hasCatalogMonsters ? (
-                    <Select
-                      value={selectedCatalogMonsterId}
-                      onValueChange={handleSelectCatalogMonster}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose a vignette encounter..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vignetteLandingState.catalogMonsters.map((monster) => {
-                          const levels = sortedVignetteLevels(monster)
+                    <div className="space-y-2">
+                      {hasSharedActive && (
+                        <p className="rounded-md border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground">
+                          Shared vignette encounters do not stop you from
+                          creating one of your own.
+                        </p>
+                      )}
+                      <Select
+                        value={selectedCatalogMonsterId}
+                        onValueChange={handleSelectCatalogMonster}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Choose a vignette encounter..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vignetteLandingState.catalogMonsters.map(
+                            (monster) => {
+                              const levels = sortedVignetteLevels(monster)
 
-                          return (
-                            <SelectItem key={monster.id} value={monster.id}>
-                              {monster.monster_name} ·{' '}
-                              {formatVignetteLabel(monster.source_monster_type)}
-                              {levels.length > 1 && (
-                                <>
-                                  {' '}
-                                  · Levels{' '}
-                                  {levels
-                                    .map((level) => level.level_number)
-                                    .join(', ')}
-                                </>
-                              )}
-                            </SelectItem>
-                          )
-                        })}
-                      </SelectContent>
-                    </Select>
+                              return (
+                                <SelectItem key={monster.id} value={monster.id}>
+                                  {monster.monster_name} ·{' '}
+                                  {formatVignetteLabel(
+                                    monster.source_monster_type
+                                  )}
+                                  {levels.length > 1 && (
+                                    <>
+                                      {' '}
+                                      · Levels{' '}
+                                      {levels
+                                        .map((level) => level.level_number)
+                                        .join(', ')}
+                                    </>
+                                  )}
+                                </SelectItem>
+                              )
+                            }
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   ) : (
                     <p className="rounded-md border border-dashed p-3 text-muted-foreground">
                       No available vignette encounters.

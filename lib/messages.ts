@@ -195,6 +195,14 @@ export const MONSTER_LEVEL_MISSING_MESSAGE = () =>
   'At least one level is required.'
 
 /**
+ * Vignette Active Limit
+ *
+ * @returns Vignette Active Limit Message
+ */
+export const VIGNETTE_ACTIVE_LIMIT_MESSAGE = () =>
+  'End your active vignette encounter before creating another.'
+
+/**
  * Nameless Object Error
  *
  * @param objType Object Type
