@@ -4,74 +4,28 @@ import { LanternLoader } from '@/components/generic/lantern-loader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  getActiveVignetteEncounterForUser,
-  getSharedVignetteEncountersForUser,
-  getVignetteMonsterSummaries
-} from '@/lib/dal/vignette-encounter'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import type {
+  VignetteLandingState,
   VignetteEncounterSummary,
   VignetteMonsterSummary
 } from '@/lib/types'
-import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
-
-/** Vignette Landing State */
-interface VignetteLandingState {
-  /** Catalog Monsters */
-  catalogMonsters: VignetteMonsterSummary[]
-  /** Owned Active Vignette */
-  ownedActive: VignetteEncounterSummary | null
-  /** Shared Active Vignettes */
-  sharedActive: VignetteEncounterSummary[]
-}
-
-/** Empty Vignette Landing State */
-const EMPTY_VIGNETTE_LANDING_STATE: VignetteLandingState = {
-  catalogMonsters: [],
-  ownedActive: null,
-  sharedActive: []
-}
+import { ReactElement, useCallback } from 'react'
 
 /** Vignette Encounters Card Properties */
 interface VignetteEncountersCardProps {
+  /** Whether Vignette Landing State Failed to Load */
+  hasVignetteLandingStateLoadError: boolean
+  /** Whether Vignette Landing State Is Loading */
+  isVignetteLandingStateLoading: boolean
+  /** Refetch Vignette Landing State */
+  refetchVignetteLandingState: () => void
   /** Selected Vignette Encounter ID */
   selectedVignetteEncounterId: string | null
   /** Set Selected Vignette Encounter ID */
   setSelectedVignetteEncounterId: (vignetteEncounterId: string | null) => void
-}
-
-/**
- * Fetch Vignette Landing State
- *
- * Retrieves active owned and shared vignette summaries. Catalog monsters are
- * fetched only when the caller does not own an active vignette so shared
- * vignettes never block owned vignette setup.
- *
- * @returns Vignette Landing State
- */
-async function fetchVignetteLandingState(): Promise<VignetteLandingState> {
-  const [ownedActive, sharedActive] = await Promise.all([
-    getActiveVignetteEncounterForUser(),
-    getSharedVignetteEncountersForUser()
-  ])
-
-  if (ownedActive) {
-    return {
-      catalogMonsters: [],
-      ownedActive,
-      sharedActive
-    }
-  }
-
-  const catalogMonsters = await getVignetteMonsterSummaries()
-
-  return {
-    catalogMonsters,
-    ownedActive,
-    sharedActive
-  }
+  /** Vignette Landing State */
+  vignetteLandingState: VignetteLandingState
 }
 
 /**
@@ -98,49 +52,6 @@ function sortedVignetteLevels(
 }
 
 /**
- * Resolve Selected Vignette Encounter ID
- *
- * Keeps the current active vignette selection when it is still accessible,
- * otherwise defaults to the owned active vignette, then the first shared
- * active vignette. The selected role is intentionally not stored in context;
- * callers should derive role from server-backed summary/detail rows.
- *
- * @param landingState Vignette Landing State
- * @param currentVignetteEncounterId Current Vignette Encounter ID
- * @returns Resolved Selected Vignette Encounter ID
- */
-function resolveSelectedVignetteEncounterId(
-  landingState: VignetteLandingState,
-  currentVignetteEncounterId: string | null
-): string | null {
-  const accessibleVignettes = [
-    ...(landingState.ownedActive ? [landingState.ownedActive] : []),
-    ...landingState.sharedActive
-  ]
-  const currentSummary = currentVignetteEncounterId
-    ? accessibleVignettes.find(
-        (summary) => summary.id === currentVignetteEncounterId
-      )
-    : null
-
-  if (currentSummary) return currentSummary.id
-  if (landingState.ownedActive) return landingState.ownedActive.id
-  if (landingState.sharedActive[0]) return landingState.sharedActive[0].id
-
-  return null
-}
-
-/**
- * Report Vignette Landing Error
- *
- * @param error Error to Report
- */
-function reportVignetteLandingError(error: unknown): void {
-  console.error('Vignette Landing Fetch Error:', error)
-  toast.error(ERROR_MESSAGE())
-}
-
-/**
  * Vignette Encounters Card
  *
  * Top-level one-shot surface that is intentionally available without a selected
@@ -150,88 +61,24 @@ function reportVignetteLandingError(error: unknown): void {
  * @returns Vignette Encounters Card
  */
 export function VignetteEncountersCard({
+  hasVignetteLandingStateLoadError,
+  isVignetteLandingStateLoading,
+  refetchVignetteLandingState,
   selectedVignetteEncounterId,
-  setSelectedVignetteEncounterId
+  setSelectedVignetteEncounterId,
+  vignetteLandingState
 }: VignetteEncountersCardProps): ReactElement {
-  const [landingState, setLandingState] = useState<VignetteLandingState>(
-    EMPTY_VIGNETTE_LANDING_STATE
-  )
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasLoadError, setHasLoadError] = useState(false)
-  const selectedVignetteEncounterIdRef = useRef(selectedVignetteEncounterId)
-
-  useEffect(() => {
-    selectedVignetteEncounterIdRef.current = selectedVignetteEncounterId
-  }, [selectedVignetteEncounterId])
-
-  const applyLandingState = useCallback(
-    (nextLandingState: VignetteLandingState) => {
-      const nextSelectedVignetteEncounterId =
-        resolveSelectedVignetteEncounterId(
-          nextLandingState,
-          selectedVignetteEncounterIdRef.current
-        )
-
-      selectedVignetteEncounterIdRef.current = nextSelectedVignetteEncounterId
-      setLandingState(nextLandingState)
-      setSelectedVignetteEncounterId(nextSelectedVignetteEncounterId)
-      setHasLoadError(false)
-    },
-    [setSelectedVignetteEncounterId]
-  )
-
-  const reloadLandingState = useCallback(async () => {
-    setIsLoading(true)
-    setHasLoadError(false)
-
-    try {
-      applyLandingState(await fetchVignetteLandingState())
-    } catch (error) {
-      reportVignetteLandingError(error)
-      setHasLoadError(true)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [applyLandingState])
-
-  useEffect(() => {
-    let ignore = false
-
-    async function loadLandingState(): Promise<void> {
-      try {
-        const nextLandingState = await fetchVignetteLandingState()
-        if (ignore) return
-
-        applyLandingState(nextLandingState)
-      } catch (error) {
-        if (ignore) return
-
-        reportVignetteLandingError(error)
-        setHasLoadError(true)
-      } finally {
-        if (!ignore) setIsLoading(false)
-      }
-    }
-
-    loadLandingState()
-
-    return () => {
-      ignore = true
-    }
-  }, [applyLandingState])
-
   const handleSelectVignetteEncounter = useCallback(
     (summary: VignetteEncounterSummary) => {
-      selectedVignetteEncounterIdRef.current = summary.id
       setSelectedVignetteEncounterId(summary.id)
     },
     [setSelectedVignetteEncounterId]
   )
 
-  const hasSharedActive = landingState.sharedActive.length > 0
-  const hasCatalogMonsters = landingState.catalogMonsters.length > 0
+  const hasSharedActive = vignetteLandingState.sharedActive.length > 0
+  const hasCatalogMonsters = vignetteLandingState.catalogMonsters.length > 0
   const isEmptyLanding =
-    !landingState.ownedActive && !hasSharedActive && !hasCatalogMonsters
+    !vignetteLandingState.ownedActive && !hasSharedActive && !hasCatalogMonsters
   return (
     <div className="pt-(--header-height) px-2 py-2">
       <Card className="mx-auto max-w-3xl border bg-card/70 mt-2">
@@ -239,13 +86,13 @@ export function VignetteEncountersCard({
           <CardTitle>Vignette Encounters</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 text-sm">
-          {isLoading ? (
+          {isVignetteLandingStateLoading ? (
             <LanternLoader
               variant="inline"
               title="Kindling the vignette lantern..."
               caption="A one-shot waits beyond the settlement record."
             />
-          ) : hasLoadError ? (
+          ) : hasVignetteLandingStateLoadError ? (
             <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-destructive">
               <p className="font-medium">{ERROR_MESSAGE()}</p>
               <Button
@@ -253,7 +100,7 @@ export function VignetteEncountersCard({
                 variant="outline"
                 size="sm"
                 className="mt-3"
-                onClick={() => void reloadLandingState()}>
+                onClick={refetchVignetteLandingState}>
                 Try again
               </Button>
             </div>
@@ -263,17 +110,17 @@ export function VignetteEncountersCard({
             </p>
           ) : (
             <>
-              {landingState.ownedActive ? (
+              {vignetteLandingState.ownedActive ? (
                 <section className="space-y-2">
                   <h3 className="text-sm font-semibold">
                     Active Vignette Encounter
                   </h3>
                   <VignetteSummaryRow
-                    summary={landingState.ownedActive}
+                    summary={vignetteLandingState.ownedActive}
                     badge="Owner"
                     isSelected={
                       selectedVignetteEncounterId ===
-                      landingState.ownedActive.id
+                      vignetteLandingState.ownedActive.id
                     }
                     onSelect={handleSelectVignetteEncounter}
                   />
@@ -285,7 +132,7 @@ export function VignetteEncountersCard({
                   </h3>
                   {hasCatalogMonsters ? (
                     <div className="grid gap-2">
-                      {landingState.catalogMonsters.map((monster) => (
+                      {vignetteLandingState.catalogMonsters.map((monster) => (
                         <VignetteCatalogRow
                           key={monster.id}
                           monster={monster}
@@ -304,7 +151,7 @@ export function VignetteEncountersCard({
                 <h3 className="text-sm font-semibold">Shared With Me</h3>
                 {hasSharedActive ? (
                   <div className="grid gap-2">
-                    {landingState.sharedActive.map((summary) => (
+                    {vignetteLandingState.sharedActive.map((summary) => (
                       <VignetteSummaryRow
                         key={summary.id}
                         summary={summary}

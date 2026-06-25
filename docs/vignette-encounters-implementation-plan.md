@@ -507,8 +507,10 @@ cannot create another owned vignette until their owned active vignette is ended.
   `selectedShowdown`, or `selectedSettlementPhase`.
 - The surface will depend on new state tracking fields such as
   `selectedVignetteEncounterId` in browser local storage and
-  `selectedVignetteEncounter` in `LocalContext`. Role should be derived from
-  server-backed vignette summary/detail rows, not persisted separately.
+  `selectedVignetteEncounter` in `LocalContext`. Owned/shared vignette landing
+  data should also be cached in `LocalContext` and passed down through the page
+  tree. Role should be derived from server-backed vignette summary/detail rows,
+  not persisted separately.
 
 ### Suggested Component Structure
 

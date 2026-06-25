@@ -80,7 +80,8 @@ import {
   SurvivorDetail,
   SurvivorsStateSetter,
   SurvivorStateSetter,
-  UserSettingsDetail
+  UserSettingsDetail,
+  VignetteLandingState
 } from '@/lib/types'
 import {
   BookOpenIcon,
@@ -120,6 +121,14 @@ interface SettlementCardProps {
   selectedTab: TabType
   /** Selected Vignette Encounter ID */
   selectedVignetteEncounterId: string | null
+  /** Vignette Landing State */
+  vignetteLandingState: VignetteLandingState
+  /** Whether Vignette Landing State Is Loading */
+  isVignetteLandingStateLoading: boolean
+  /** Whether Vignette Landing State Failed to Load */
+  hasVignetteLandingStateLoadError: boolean
+  /** Refetch Vignette Landing State */
+  refetchVignetteLandingState: () => void
   /** Settlement List (owned + shared, sourced from LocalContext) */
   settlementList: SettlementListEntry[]
   /** Set Is Creating New Settlement */
@@ -190,6 +199,10 @@ export function SettlementCard({
   selectedSurvivor,
   selectedTab,
   selectedVignetteEncounterId,
+  vignetteLandingState,
+  isVignetteLandingStateLoading,
+  hasVignetteLandingStateLoadError,
+  refetchVignetteLandingState,
   settlementList,
   setIsCreatingNewSettlement,
   setIsCreatingNewSurvivor,
@@ -291,8 +304,12 @@ export function SettlementCard({
   if (selectedTab === TabType.VIGNETTE_ENCOUNTERS && vignetteEncountersEnabled)
     return (
       <VignetteEncountersCard
+        hasVignetteLandingStateLoadError={hasVignetteLandingStateLoadError}
+        isVignetteLandingStateLoading={isVignetteLandingStateLoading}
+        refetchVignetteLandingState={refetchVignetteLandingState}
         selectedVignetteEncounterId={selectedVignetteEncounterId}
         setSelectedVignetteEncounterId={setSelectedVignetteEncounterId}
+        vignetteLandingState={vignetteLandingState}
       />
     )
 

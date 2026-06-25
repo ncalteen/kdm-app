@@ -757,6 +757,16 @@ export interface VignetteEncounterSummary {
   role: VignetteEncounterRole
 }
 
+/** Vignette Landing State */
+export interface VignetteLandingState {
+  /** Catalog Monsters */
+  catalogMonsters: VignetteMonsterSummary[]
+  /** Owned Active Vignette */
+  ownedActive: VignetteEncounterSummary | null
+  /** Shared Active Vignettes */
+  sharedActive: VignetteEncounterSummary[]
+}
+
 /**
  * Vignette Encounter State Setter
  *

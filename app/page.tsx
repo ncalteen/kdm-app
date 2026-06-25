@@ -102,6 +102,9 @@ function MainPage(): ReactElement {
     // selectedSurvivorId,
     selectedTab,
     selectedVignetteEncounterId,
+    vignetteLandingState,
+    isVignetteLandingStateLoading,
+    hasVignetteLandingStateLoadError,
 
     // setIsCreatingNewHunt,
     setIsCreatingNewSettlement,
@@ -128,6 +131,7 @@ function MainPage(): ReactElement {
 
     setSurvivors,
     survivors,
+    refetchVignetteLandingState,
 
     // local,
     // updateLocal,
@@ -177,6 +181,10 @@ function MainPage(): ReactElement {
             selectedSurvivor={selectedSurvivor}
             selectedTab={selectedTab}
             selectedVignetteEncounterId={selectedVignetteEncounterId}
+            vignetteLandingState={vignetteLandingState}
+            isVignetteLandingStateLoading={isVignetteLandingStateLoading}
+            hasVignetteLandingStateLoadError={hasVignetteLandingStateLoadError}
+            refetchVignetteLandingState={refetchVignetteLandingState}
             settlementList={settlementList}
             setIsCreatingNewSettlement={setIsCreatingNewSettlement}
             setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
