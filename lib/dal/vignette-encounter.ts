@@ -1109,6 +1109,8 @@ export async function getVignetteEncounter(
 export async function createVignetteEncounter(
   input: VignetteCreateInput
 ): Promise<string> {
+  await getUserId()
+
   const supabase = createClient()
 
   const { data, error } = await supabase.rpc(
