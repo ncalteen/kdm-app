@@ -188,19 +188,17 @@ function VignetteMonsterStateCard({
   /** Set Selected Vignette Encounter */
   setSelectedVignetteEncounter: VignetteEncounterStateSetter
 }): ReactElement {
-  const [notesDraft, setNotesDraft] = useState(monster.notes ?? '')
-  const [isNotesDirty, setIsNotesDirty] = useState(false)
-  const [lastMonsterId, setLastMonsterId] = useState(monster.id)
-  const [lastPersistedNotes, setLastPersistedNotes] = useState(
-    monster.notes ?? ''
-  )
-
-  if (lastMonsterId !== monster.id || lastPersistedNotes !== monster.notes) {
-    setLastMonsterId(monster.id)
-    setLastPersistedNotes(monster.notes ?? '')
-    setNotesDraft(monster.notes ?? '')
-    setIsNotesDirty(false)
-  }
+  const persistedNotes = monster.notes ?? ''
+  const [notesState, setNotesState] = useState(() => ({
+    draft: persistedNotes,
+    monsterId: monster.id,
+    persistedNotes
+  }))
+  const isNotesStateCurrent =
+    notesState.monsterId === monster.id &&
+    notesState.persistedNotes === persistedNotes
+  const notesDraft = isNotesStateCurrent ? notesState.draft : persistedNotes
+  const isNotesDirty = notesDraft !== persistedNotes
 
   const updateMonsterState = useCallback(
     (updatedMonster: VignetteEncounterMonsterDetail) => {
@@ -249,7 +247,6 @@ function VignetteMonsterStateCard({
   )
 
   const handleSaveNotes = useCallback(() => {
-    setIsNotesDirty(false)
     saveMonsterData({ notes: notesDraft })
   }, [notesDraft, saveMonsterData])
 
@@ -343,8 +340,11 @@ function VignetteMonsterStateCard({
                 name={`vignette-monster-${monster.id}-notes`}
                 id={`vignette-monster-${monster.id}-notes`}
                 onChange={(event) => {
-                  setNotesDraft(event.target.value)
-                  setIsNotesDirty(event.target.value !== monster.notes)
+                  setNotesState({
+                    draft: event.target.value,
+                    monsterId: monster.id,
+                    persistedNotes
+                  })
                 }}
                 placeholder="Add notes about the vignette monster..."
                 className="w-full resize-none"
