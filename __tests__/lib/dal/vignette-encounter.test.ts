@@ -33,6 +33,7 @@ const {
   getVignetteEncounterSharedUsers,
   getVignetteEncounterSurvivors,
   getVignetteMonster,
+  getVignetteMonsterSummaries,
   getVignetteMonsters,
   removeVignetteEncounter,
   removeVignetteEncounterMonsterMood,
@@ -286,6 +287,65 @@ describe('getVignetteMonsters', () => {
 
     await expect(getVignetteMonsters()).rejects.toThrow(
       'Error Fetching Vignette Monsters: DB error'
+    )
+  })
+})
+
+describe('getVignetteMonsterSummaries', () => {
+  it('returns lightweight vignette catalog rows keyed for landing display', async () => {
+    const query = makeQuery([
+      {
+        id: 'vm-2',
+        monster_name: 'Screaming Nukalope',
+        multi_monster: false,
+        source_monster_type: 'QUARRY',
+        vignette_monster_level: [
+          { id: 'level-2', level_number: 2 },
+          { id: 'level-1', level_number: 1 }
+        ]
+      },
+      {
+        id: 'vm-1',
+        monster_name: 'Killenium Butcher',
+        multi_monster: true,
+        source_monster_type: 'NEMESIS',
+        vignette_monster_level: [{ id: 'level-3', level_number: 3 }]
+      }
+    ])
+    mockSupabase.from.mockReturnValue(query)
+
+    const result = await getVignetteMonsterSummaries()
+
+    expect(mockSupabase.from).toHaveBeenCalledWith('vignette_monster')
+    expect(query.select).toHaveBeenCalledWith(
+      'id, monster_name, multi_monster, source_monster_type, vignette_monster_level(id, level_number)'
+    )
+    expect(result).toEqual([
+      {
+        id: 'vm-1',
+        monster_name: 'Killenium Butcher',
+        multi_monster: true,
+        source_monster_type: 'NEMESIS',
+        levels: [{ id: 'level-3', level_number: 3 }]
+      },
+      {
+        id: 'vm-2',
+        monster_name: 'Screaming Nukalope',
+        multi_monster: false,
+        source_monster_type: 'QUARRY',
+        levels: [
+          { id: 'level-2', level_number: 2 },
+          { id: 'level-1', level_number: 1 }
+        ]
+      }
+    ])
+  })
+
+  it('throws when the summary query fails', async () => {
+    mockSupabase.from.mockReturnValue(makeQuery(null, { message: 'DB error' }))
+
+    await expect(getVignetteMonsterSummaries()).rejects.toThrow(
+      'Error Fetching Vignette Monster Summaries: DB error'
     )
   })
 })

@@ -7,12 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   getActiveVignetteEncounterForUser,
   getSharedVignetteEncountersForUser,
-  getVignetteMonsters
+  getVignetteMonsterSummaries
 } from '@/lib/dal/vignette-encounter'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import type {
   VignetteEncounterSummary,
-  VignetteMonsterDetail
+  VignetteMonsterSummary
 } from '@/lib/types'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -20,7 +20,7 @@ import { toast } from 'sonner'
 /** Vignette Landing State */
 interface VignetteLandingState {
   /** Catalog Monsters */
-  catalogMonsters: VignetteMonsterDetail[]
+  catalogMonsters: VignetteMonsterSummary[]
   /** Owned Active Vignette */
   ownedActive: VignetteEncounterSummary | null
   /** Shared Active Vignettes */
@@ -57,10 +57,7 @@ async function fetchVignetteLandingState(): Promise<VignetteLandingState> {
     }
   }
 
-  const catalogMonsterMap = await getVignetteMonsters()
-  const catalogMonsters = Object.values(catalogMonsterMap).sort((a, b) =>
-    a.monster_name.localeCompare(b.monster_name)
-  )
+  const catalogMonsters = await getVignetteMonsterSummaries()
 
   return {
     catalogMonsters,
@@ -87,8 +84,8 @@ function formatVignetteTurn(turn: VignetteEncounterSummary['turn']): string {
  * @returns Sorted Vignette Levels
  */
 function sortedVignetteLevels(
-  monster: VignetteMonsterDetail
-): VignetteMonsterDetail['levels'] {
+  monster: VignetteMonsterSummary
+): VignetteMonsterSummary['levels'] {
   return [...monster.levels].sort((a, b) => a.level_number - b.level_number)
 }
 
@@ -290,7 +287,7 @@ function VignetteCatalogRow({
   monster
 }: {
   /** Vignette Monster */
-  monster: VignetteMonsterDetail
+  monster: VignetteMonsterSummary
 }): ReactElement {
   const levels = sortedVignetteLevels(monster)
 

@@ -545,6 +545,15 @@ export type VignetteMonsterDetail = Omit<
   survivors: VignetteSurvivorDetail[]
 }
 
+/** Vignette Monster Summary */
+export type VignetteMonsterSummary = Pick<
+  Tables<'vignette_monster'>,
+  'id' | 'monster_name' | 'multi_monster' | 'source_monster_type'
+> & {
+  /** Levels */
+  levels: Pick<Tables<'vignette_monster_level'>, 'id' | 'level_number'>[]
+}
+
 /** Vignette Encounter AI Deck Detail */
 export type VignetteEncounterAIDeckDetail = Omit<
   Tables<'vignette_encounter_ai_deck'>,
