@@ -14,6 +14,12 @@ import { getShowdown } from '@/lib/dal/showdown'
 import { getSurvivor, getSurvivors } from '@/lib/dal/survivor'
 import { getSettlementForUser, getUserSettings } from '@/lib/dal/user'
 import { getUserSubscription } from '@/lib/dal/user-subscription'
+import {
+  getActiveVignetteEncounterForUser,
+  getSharedVignetteEncountersForUser,
+  getVignetteEncounter,
+  getVignetteMonsterSummaries
+} from '@/lib/dal/vignette-encounter'
 import { TabType } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import { isUserSettingsAdmin } from '@/lib/supabase/admin-role'
@@ -33,7 +39,10 @@ import {
   SurvivorsStateSetter,
   SurvivorStateSetter,
   UserSettingsDetail,
-  UserSubscriptionDetail
+  UserSubscriptionDetail,
+  VignetteEncounterDetail,
+  VignetteEncounterStateSetter,
+  VignetteLandingState
 } from '@/lib/types'
 import { saveToLocalStorage } from '@/lib/utils'
 import {
@@ -67,6 +76,8 @@ export interface LocalStateType {
   selectedShowdownMonsterIndex: number
   /** Selected Survivor ID */
   selectedSurvivorId: string | null
+  /** Selected Vignette Encounter ID */
+  selectedVignetteEncounterId: string | null
   /** Selected Tab */
   selectedTab: TabType | null
 }
@@ -79,12 +90,52 @@ const newLocal: LocalStateType = {
   selectedShowdownId: null,
   selectedShowdownMonsterIndex: 0,
   selectedSurvivorId: null,
+  selectedVignetteEncounterId: null,
   selectedTab: null
 }
 
 const NOTIFICATION_INSERT_COALESCE_MS = 250
 
+/** Empty Vignette Landing State */
+const EMPTY_VIGNETTE_LANDING_STATE: VignetteLandingState = {
+  catalogMonsters: [],
+  ownedActive: null,
+  sharedActive: []
+}
+
 type NotificationInsertListener = () => void
+
+/**
+ * Fetch Vignette Landing State
+ *
+ * Retrieves active owned and shared vignette summaries. Catalog monsters are
+ * fetched only when the caller does not own an active vignette so shared
+ * vignettes never block owned vignette setup.
+ *
+ * @returns Vignette Landing State
+ */
+async function fetchVignetteLandingState(): Promise<VignetteLandingState> {
+  const [ownedActive, sharedActive] = await Promise.all([
+    getActiveVignetteEncounterForUser(),
+    getSharedVignetteEncountersForUser()
+  ])
+
+  if (ownedActive) {
+    return {
+      catalogMonsters: [],
+      ownedActive,
+      sharedActive
+    }
+  }
+
+  const catalogMonsters = await getVignetteMonsterSummaries()
+
+  return {
+    catalogMonsters,
+    ownedActive,
+    sharedActive
+  }
+}
 
 /**
  * Local Context Type
@@ -139,6 +190,16 @@ interface LocalContextType {
   selectedSurvivor: SurvivorDetail | null
   /** Selected Survivor ID */
   selectedSurvivorId: string | null
+  /** Selected Vignette Encounter */
+  selectedVignetteEncounter: VignetteEncounterDetail | null
+  /** Selected Vignette Encounter ID */
+  selectedVignetteEncounterId: string | null
+  /** Vignette Landing State */
+  vignetteLandingState: VignetteLandingState
+  /** Whether Vignette Landing State Is Loading */
+  isVignetteLandingStateLoading: boolean
+  /** Whether Vignette Landing State Failed to Load */
+  hasVignetteLandingStateLoadError: boolean
   /** Selected Tab */
   selectedTab: TabType
 
@@ -181,6 +242,10 @@ interface LocalContextType {
   setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
+  /** Set Selected Vignette Encounter */
+  setSelectedVignetteEncounter: VignetteEncounterStateSetter
+  /** Set Selected Vignette Encounter ID */
+  setSelectedVignetteEncounterId: (vignetteEncounterId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
 
@@ -188,6 +253,8 @@ interface LocalContextType {
   setSurvivors: SurvivorsStateSetter
   /** Survivors */
   survivors: SurvivorDetail[]
+  /** Refetch Vignette Landing State */
+  refetchVignetteLandingState: () => void
 
   /** Local Context */
   local: LocalStateType
@@ -348,6 +415,22 @@ export function LocalProvider({
   const [selectedSurvivorId, setSelectedSurvivorIdState] = useState<
     string | null
   >(() => local.selectedSurvivorId ?? null)
+
+  // Vignette Encounter
+  const [selectedVignetteEncounter, setSelectedVignetteEncounterState] =
+    useState<VignetteEncounterDetail | null>(null)
+  const [selectedVignetteEncounterId, setSelectedVignetteEncounterIdState] =
+    useState<string | null>(() => local.selectedVignetteEncounterId ?? null)
+
+  // Vignette Landing State
+  const [vignetteLandingState, setVignetteLandingState] =
+    useState<VignetteLandingState>(EMPTY_VIGNETTE_LANDING_STATE)
+  const [isVignetteLandingStateLoading, setIsVignetteLandingStateLoading] =
+    useState<boolean>(true)
+  const [
+    hasVignetteLandingStateLoadError,
+    setHasVignetteLandingStateLoadError
+  ] = useState<boolean>(false)
 
   // Survivors (all for Settlement)
   const [survivors, setSurvivors] = useState<SurvivorDetail[]>([])
@@ -956,6 +1039,82 @@ export function LocalProvider({
   })
 
   /**
+   * Refetch Vignette Landing State
+   *
+   * Refreshes owned/shared vignette summaries and catalog monsters without
+   * changing the selected vignette id. Selection remains an explicit user
+   * action.
+   */
+  const refetchVignetteLandingState = useCallback(() => {
+    if (!vignetteEncountersEnabled || isAuthenticated !== true) {
+      setVignetteLandingState(EMPTY_VIGNETTE_LANDING_STATE)
+      setIsVignetteLandingStateLoading(false)
+      setHasVignetteLandingStateLoadError(false)
+      return
+    }
+
+    setIsVignetteLandingStateLoading(true)
+    setHasVignetteLandingStateLoadError(false)
+
+    fetchVignetteLandingState()
+      .then((nextLandingState) => {
+        setVignetteLandingState(nextLandingState)
+      })
+      .catch((err: unknown) => {
+        console.error('Vignette Landing Fetch Error:', err)
+        setHasVignetteLandingStateLoadError(true)
+        sonnerToast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        setIsVignetteLandingStateLoading(false)
+      })
+  }, [isAuthenticated, vignetteEncountersEnabled])
+
+  /**
+   * Fetch Vignette Landing State
+   *
+   * Loads the switcher/list data into LocalContext after authentication. This
+   * intentionally does not select a default vignette; it only refreshes the
+   * data that the vignette tab renders.
+   */
+  useEffect(() => {
+    let isCancelled = false
+
+    if (!vignetteEncountersEnabled || isAuthenticated !== true)
+      return () => {
+        isCancelled = true
+      }
+
+    Promise.resolve()
+      .then(() => {
+        if (isCancelled) return null
+
+        setIsVignetteLandingStateLoading(true)
+        setHasVignetteLandingStateLoadError(false)
+        return fetchVignetteLandingState()
+      })
+      .then((nextLandingState) => {
+        if (isCancelled || !nextLandingState) return
+
+        setVignetteLandingState(nextLandingState)
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('Vignette Landing Fetch Error:', err)
+        setHasVignetteLandingStateLoadError(true)
+        sonnerToast.error(ERROR_MESSAGE())
+      })
+      .finally(() => {
+        if (!isCancelled) setIsVignetteLandingStateLoading(false)
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isAuthenticated, vignetteEncountersEnabled])
+
+  /**
    * Fetch Hunt Data
    *
    * Triggered whenever the active settlement changes. The hunt is a per-
@@ -1389,6 +1548,74 @@ export function LocalProvider({
   ])
 
   /**
+   * Fetch Vignette Encounter Data
+   *
+   * Triggered whenever the selected vignette encounter id changes. The
+   * persisted browser state stores only the id; this effect resolves the full
+   * detail from the Supabase-backed DAL so caller role and encounter state are
+   * always server-derived.
+   */
+  useEffect(() => {
+    console.debug('Fetching Vignette Encounter Data')
+
+    let isCancelled = false
+
+    if (
+      !vignetteEncountersEnabled ||
+      !isAuthenticated ||
+      !selectedVignetteEncounterId
+    )
+      return () => {
+        isCancelled = true
+      }
+
+    if (selectedVignetteEncounter?.id === selectedVignetteEncounterId)
+      return () => {
+        isCancelled = true
+      }
+
+    getVignetteEncounter(selectedVignetteEncounterId)
+      .then((vignetteEncounter) => {
+        if (isCancelled) return
+
+        console.debug('Vignette Encounter Data:', vignetteEncounter)
+
+        setSelectedVignetteEncounterState(vignetteEncounter)
+
+        if (!vignetteEncounter) {
+          setSelectedVignetteEncounterIdState(null)
+
+          setLocalState((prev) => ({
+            ...prev,
+            selectedVignetteEncounterId: null
+          }))
+        }
+      })
+      .catch((err: unknown) => {
+        if (isCancelled) return
+
+        console.error('Vignette Encounter Fetch Error:', err)
+
+        setSelectedVignetteEncounterState(null)
+        setSelectedVignetteEncounterIdState(null)
+
+        setLocalState((prev) => ({
+          ...prev,
+          selectedVignetteEncounterId: null
+        }))
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [
+    isAuthenticated,
+    selectedVignetteEncounter?.id,
+    selectedVignetteEncounterId,
+    vignetteEncountersEnabled
+  ])
+
+  /**
    * Fetch User Settings Data
    */
   useEffect(() => {
@@ -1777,6 +2004,54 @@ export function LocalProvider({
   }, [])
 
   /**
+   * Set Selected Vignette Encounter
+   *
+   * @param vignetteOrUpdater Selected Vignette Encounter or functional updater
+   * receiving the previous vignette encounter state
+   */
+  const setSelectedVignetteEncounter =
+    useCallback<VignetteEncounterStateSetter>((vignetteOrUpdater) => {
+      if (typeof vignetteOrUpdater === 'function') {
+        setSelectedVignetteEncounterState(vignetteOrUpdater)
+        return
+      }
+
+      const vignetteEncounter = vignetteOrUpdater
+
+      setSelectedVignetteEncounterState(vignetteEncounter)
+      setSelectedVignetteEncounterIdState(vignetteEncounter?.id ?? null)
+
+      setLocalState((local) => ({
+        ...local,
+        selectedVignetteEncounterId: vignetteEncounter?.id ?? null
+      }))
+    }, [])
+
+  /**
+   * Set Selected Vignette Encounter ID
+   *
+   * Pure ID mutation. The vignette encounter fetch effect is the source of
+   * truth for resolving full detail.
+   *
+   * @param vignetteEncounterId Selected Vignette Encounter ID
+   */
+  const setSelectedVignetteEncounterId = useCallback(
+    (vignetteEncounterId: string | null) => {
+      setSelectedVignetteEncounterIdState((prevId) => {
+        if (prevId === vignetteEncounterId) return prevId
+
+        setSelectedVignetteEncounterState(null)
+        setLocalState((local) => ({
+          ...local,
+          selectedVignetteEncounterId: vignetteEncounterId
+        }))
+        return vignetteEncounterId
+      })
+    },
+    []
+  )
+
+  /**
    * Set Selected Tab
    *
    * @param tab Selected Tab
@@ -1845,6 +2120,11 @@ export function LocalProvider({
       selectedShowdownMonsterIndex,
       selectedSurvivor,
       selectedSurvivorId,
+      selectedVignetteEncounter,
+      selectedVignetteEncounterId,
+      vignetteLandingState,
+      isVignetteLandingStateLoading,
+      hasVignetteLandingStateLoadError,
       selectedTab,
 
       setIsCreatingNewHunt,
@@ -1867,10 +2147,13 @@ export function LocalProvider({
       setSelectedShowdownMonsterIndex,
       setSelectedSurvivor,
       setSelectedSurvivorId,
+      setSelectedVignetteEncounter,
+      setSelectedVignetteEncounterId,
       setSelectedTab,
 
       setSurvivors,
       survivors,
+      refetchVignetteLandingState,
 
       local,
       updateLocal,
@@ -1909,6 +2192,11 @@ export function LocalProvider({
       selectedShowdownMonsterIndex,
       selectedSurvivor,
       selectedSurvivorId,
+      selectedVignetteEncounter,
+      selectedVignetteEncounterId,
+      vignetteLandingState,
+      isVignetteLandingStateLoading,
+      hasVignetteLandingStateLoadError,
       selectedTab,
       survivors,
       local,
@@ -1919,6 +2207,7 @@ export function LocalProvider({
       vignetteEncountersEnabled,
       settlementList,
       isSettlementListLoading,
+      refetchVignetteLandingState,
       setSelectedHunt,
       setSelectedHuntId,
       setSelectedHuntMonsterIndex,
@@ -1931,6 +2220,8 @@ export function LocalProvider({
       setSelectedShowdownMonsterIndex,
       setSelectedSurvivor,
       setSelectedSurvivorId,
+      setSelectedVignetteEncounter,
+      setSelectedVignetteEncounterId,
       setSelectedTab,
       setSelectedEncounter,
       setUserSettings,

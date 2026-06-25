@@ -757,12 +757,14 @@ export interface VignetteEncounterSummary {
   role: VignetteEncounterRole
 }
 
-/** Selected Vignette Encounter */
-export interface SelectedVignetteEncounter {
-  /** Vignette Encounter ID */
-  vignette_encounter_id: string
-  /** Caller's Role on This Vignette */
-  role: VignetteEncounterRole
+/** Vignette Landing State */
+export interface VignetteLandingState {
+  /** Catalog Monsters */
+  catalogMonsters: VignetteMonsterSummary[]
+  /** Owned Active Vignette */
+  ownedActive: VignetteEncounterSummary | null
+  /** Shared Active Vignettes */
+  sharedActive: VignetteEncounterSummary[]
 }
 
 /**

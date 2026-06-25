@@ -101,6 +101,10 @@ function MainPage(): ReactElement {
     selectedSurvivor,
     // selectedSurvivorId,
     selectedTab,
+    selectedVignetteEncounterId,
+    vignetteLandingState,
+    isVignetteLandingStateLoading,
+    hasVignetteLandingStateLoadError,
 
     // setIsCreatingNewHunt,
     setIsCreatingNewSettlement,
@@ -122,10 +126,12 @@ function MainPage(): ReactElement {
     setSelectedShowdownMonsterIndex,
     setSelectedSurvivor,
     setSelectedSurvivorId,
+    setSelectedVignetteEncounterId,
     setSelectedTab,
 
     setSurvivors,
     survivors,
+    refetchVignetteLandingState,
 
     // local,
     // updateLocal,
@@ -174,6 +180,11 @@ function MainPage(): ReactElement {
             selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
             selectedSurvivor={selectedSurvivor}
             selectedTab={selectedTab}
+            selectedVignetteEncounterId={selectedVignetteEncounterId}
+            vignetteLandingState={vignetteLandingState}
+            isVignetteLandingStateLoading={isVignetteLandingStateLoading}
+            hasVignetteLandingStateLoadError={hasVignetteLandingStateLoadError}
+            refetchVignetteLandingState={refetchVignetteLandingState}
             settlementList={settlementList}
             setIsCreatingNewSettlement={setIsCreatingNewSettlement}
             setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}
@@ -191,6 +202,7 @@ function MainPage(): ReactElement {
             setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
             setSelectedSurvivor={setSelectedSurvivor}
             setSelectedSurvivorId={setSelectedSurvivorId}
+            setSelectedVignetteEncounterId={setSelectedVignetteEncounterId}
             setSelectedTab={setSelectedTab}
             setSurvivors={setSurvivors}
             setUserSettings={setUserSettings}

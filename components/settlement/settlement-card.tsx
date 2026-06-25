@@ -80,7 +80,8 @@ import {
   SurvivorDetail,
   SurvivorsStateSetter,
   SurvivorStateSetter,
-  UserSettingsDetail
+  UserSettingsDetail,
+  VignetteLandingState
 } from '@/lib/types'
 import {
   BookOpenIcon,
@@ -118,6 +119,16 @@ interface SettlementCardProps {
   selectedSurvivor: SurvivorDetail | null
   /** Selected Tab */
   selectedTab: TabType
+  /** Selected Vignette Encounter ID */
+  selectedVignetteEncounterId: string | null
+  /** Vignette Landing State */
+  vignetteLandingState: VignetteLandingState
+  /** Whether Vignette Landing State Is Loading */
+  isVignetteLandingStateLoading: boolean
+  /** Whether Vignette Landing State Failed to Load */
+  hasVignetteLandingStateLoadError: boolean
+  /** Refetch Vignette Landing State */
+  refetchVignetteLandingState: () => void
   /** Settlement List (owned + shared, sourced from LocalContext) */
   settlementList: SettlementListEntry[]
   /** Set Is Creating New Settlement */
@@ -154,6 +165,8 @@ interface SettlementCardProps {
   setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
+  /** Set Selected Vignette Encounter ID */
+  setSelectedVignetteEncounterId: (vignetteEncounterId: string | null) => void
   /** Set Selected Tab */
   setSelectedTab: (tab: TabType) => void
   /** Set Survivors */
@@ -185,6 +198,11 @@ export function SettlementCard({
   selectedShowdownMonsterIndex,
   selectedSurvivor,
   selectedTab,
+  selectedVignetteEncounterId,
+  vignetteLandingState,
+  isVignetteLandingStateLoading,
+  hasVignetteLandingStateLoadError,
+  refetchVignetteLandingState,
   settlementList,
   setIsCreatingNewSettlement,
   setIsCreatingNewSurvivor,
@@ -202,6 +220,7 @@ export function SettlementCard({
   setSelectedShowdownMonsterIndex,
   setSelectedSurvivor,
   setSelectedSurvivorId,
+  setSelectedVignetteEncounterId,
   setSelectedTab,
   setSurvivors,
   setUserSettings,
@@ -283,7 +302,16 @@ export function SettlementCard({
   if (selectedTab === TabType.HELP) return <HelpCard />
 
   if (selectedTab === TabType.VIGNETTE_ENCOUNTERS && vignetteEncountersEnabled)
-    return <VignetteEncountersCard />
+    return (
+      <VignetteEncountersCard
+        hasVignetteLandingStateLoadError={hasVignetteLandingStateLoadError}
+        isVignetteLandingStateLoading={isVignetteLandingStateLoading}
+        refetchVignetteLandingState={refetchVignetteLandingState}
+        selectedVignetteEncounterId={selectedVignetteEncounterId}
+        setSelectedVignetteEncounterId={setSelectedVignetteEncounterId}
+        vignetteLandingState={vignetteLandingState}
+      />
+    )
 
   if (isCreatingNewSettlement)
     return (
