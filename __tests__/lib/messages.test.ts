@@ -33,7 +33,8 @@ import {
   SYSTEMIC_PRESSURE_MINIMUM_ERROR_MESSAGE,
   TIMELINE_EVENT_EMPTY_ERROR_MESSAGE,
   TIMELINE_EVENT_EMPTY_WARNING_MESSAGE,
-  TORMENT_MINIMUM_ERROR_MESSAGE
+  TORMENT_MINIMUM_ERROR_MESSAGE,
+  VIGNETTE_ACTIVE_LIMIT_MESSAGE
 } from '@/lib/messages'
 
 describe('CAMPAIGN_UNLOCK_KILLENIUM_BUTCHER_UPDATED_MESSAGE', () => {
@@ -159,6 +160,14 @@ describe('MONSTER_LEVEL_MISSING_MESSAGE', () => {
   it('returns correct message', () => {
     expect(MONSTER_LEVEL_MISSING_MESSAGE()).toBe(
       'At least one level is required.'
+    )
+  })
+})
+
+describe('VIGNETTE_ACTIVE_LIMIT_MESSAGE', () => {
+  it('returns themed active-limit copy', () => {
+    expect(VIGNETTE_ACTIVE_LIMIT_MESSAGE()).toBe(
+      'End your active vignette encounter before creating another.'
     )
   })
 })
