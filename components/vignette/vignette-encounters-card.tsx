@@ -232,12 +232,18 @@ export function VignetteEncountersCard({
           setSelectedLevelNumber(
             levels.length === 1 ? levels[0].level_number : null
           )
-          if (!detail) setHasCatalogMonsterLoadError(true)
+          if (!detail) {
+            setSelectedCatalogMonsterId('')
+            setHasCatalogMonsterLoadError(true)
+          }
         })
         .catch((error: unknown) => {
           if (catalogMonsterRequestRef.current !== requestId) return
 
           console.error('Vignette Monster Detail Fetch Error:', error)
+          setSelectedCatalogMonsterId('')
+          setSelectedCatalogMonster(null)
+          setSelectedLevelNumber(null)
           setHasCatalogMonsterLoadError(true)
           toast.error(ERROR_MESSAGE())
         })
@@ -365,21 +371,25 @@ export function VignetteEncountersCard({
                         <SelectValue placeholder="Choose a vignette encounter..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {vignetteLandingState.catalogMonsters.map((monster) => (
-                          <SelectItem key={monster.id} value={monster.id}>
-                            {monster.monster_name} ·{' '}
-                            {formatVignetteLabel(monster.source_monster_type)}
-                            {sortedVignetteLevels(monster).length > 1 && (
-                              <>
-                                {' '}
-                                · Levels{' '}
-                                {sortedVignetteLevels(monster)
-                                  .map((level) => level.level_number)
-                                  .join(', ')}
-                              </>
-                            )}
-                          </SelectItem>
-                        ))}
+                        {vignetteLandingState.catalogMonsters.map((monster) => {
+                          const levels = sortedVignetteLevels(monster)
+
+                          return (
+                            <SelectItem key={monster.id} value={monster.id}>
+                              {monster.monster_name} ·{' '}
+                              {formatVignetteLabel(monster.source_monster_type)}
+                              {levels.length > 1 && (
+                                <>
+                                  {' '}
+                                  · Levels{' '}
+                                  {levels
+                                    .map((level) => level.level_number)
+                                    .join(', ')}
+                                </>
+                              )}
+                            </SelectItem>
+                          )
+                        })}
                       </SelectContent>
                     </Select>
                   ) : (
