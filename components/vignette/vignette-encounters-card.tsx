@@ -14,7 +14,6 @@ import type {
   VignetteEncounterSummary,
   VignetteMonsterDetail
 } from '@/lib/types'
-import { SkullIcon } from 'lucide-react'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -168,9 +167,6 @@ export function VignetteEncountersCard(): ReactElement {
     <div className="pt-(--header-height) px-2 py-2">
       <Card className="mx-auto max-w-3xl border bg-card/70 mt-2">
         <CardHeader>
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-md border border-red-400/40 bg-red-500/10 text-red-400">
-            <SkullIcon className="h-6 w-6" />
-          </div>
           <CardTitle>Vignette Encounters</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 text-sm">
