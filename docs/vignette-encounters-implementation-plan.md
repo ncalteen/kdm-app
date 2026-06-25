@@ -567,6 +567,15 @@ Client behavior:
 - If the selected shared vignette is revoked, selection falls back to the user's
   owned active vignette or the next shared vignette.
 
+### Encounter Setup
+
+When the user has no owned active vignette, the Vignette Encounters surface
+shows catalog monsters from the landing state. Selecting a catalog monster
+lazily loads full setup detail, including level stats, moods, traits, survivor
+statuses, predefined survivors, and survivor gear grids. Starting a vignette
+requires an explicit level selection and calls `createVignetteEncounter()` so
+the catalog-copy RPC builds the active encounter state.
+
 ### User Messaging
 
 Use `sonner` toasts and the app's existing error style. Suggested copy:
