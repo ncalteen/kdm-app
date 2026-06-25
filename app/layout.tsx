@@ -51,6 +51,7 @@ export default async function RootLayout({
   // dynamic rendering, so this per-request flag evaluation does not
   // regress static optimization.
   const subscriptionManagementEnabled = await subscriptionManagementFlag()
+  const vignetteEncountersEnabled = process.env.NODE_ENV === 'development'
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -64,7 +65,8 @@ export default async function RootLayout({
           disableTransitionOnChange
           nonce={nonce}>
           <LocalProvider
-            subscriptionManagementEnabled={subscriptionManagementEnabled}>
+            subscriptionManagementEnabled={subscriptionManagementEnabled}
+            vignetteEncountersEnabled={vignetteEncountersEnabled}>
             {children}
           </LocalProvider>
           <Toaster />

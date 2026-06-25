@@ -239,6 +239,15 @@ interface LocalContextType {
   subscriptionManagementEnabled: boolean
 
   /**
+   * Vignette Encounters Flag
+   *
+   * Server-derived development-mode gate for the unfinished Vignette
+   * Encounters UI. Kept separate from user-facing feature flags so this
+   * surface cannot leak in production before launch.
+   */
+  vignetteEncountersEnabled: boolean
+
+  /**
    * Settlement List
    *
    * Cached result of `getSettlementForUser`. Refreshed automatically when
@@ -267,6 +276,14 @@ interface LocalProviderProps {
    * Edge Config from the browser.
    */
   subscriptionManagementEnabled?: boolean
+  /**
+   * Vignette Encounters Flag
+   *
+   * Pre-resolved server-side from `process.env.NODE_ENV === 'development'`.
+   * Defaults to `false` so tests and stories do not accidentally expose the
+   * unfinished one-shot surfaces.
+   */
+  vignetteEncountersEnabled?: boolean
 }
 
 /**
@@ -282,7 +299,8 @@ const LocalContext = createContext<LocalContextType | undefined>(undefined)
  */
 export function LocalProvider({
   children,
-  subscriptionManagementEnabled = false
+  subscriptionManagementEnabled = false,
+  vignetteEncountersEnabled = false
 }: LocalProviderProps): ReactElement {
   // Get the local state information from local storage, or set to default if
   // not present.
@@ -1865,6 +1883,7 @@ export function LocalProvider({
       subscribeToNotificationInserts,
       canShare: userSubscription?.can_share === true,
       subscriptionManagementEnabled,
+      vignetteEncountersEnabled,
 
       settlementList,
       isSettlementListLoading
@@ -1897,6 +1916,7 @@ export function LocalProvider({
       userSubscription,
       subscribeToNotificationInserts,
       subscriptionManagementEnabled,
+      vignetteEncountersEnabled,
       settlementList,
       isSettlementListLoading,
       setSelectedHunt,

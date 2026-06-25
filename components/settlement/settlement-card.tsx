@@ -214,8 +214,12 @@ export function SettlementCard({
   // skips the post-checkout tab switch). This local check protects against
   // a stale `selectedTab` value persisted to localStorage from a previous
   // session when the user was on the allowlist but has since been removed.
-  const { isAdmin, subscriptionManagementEnabled, userSubscription } =
-    useLocal()
+  const {
+    isAdmin,
+    subscriptionManagementEnabled,
+    userSubscription,
+    vignetteEncountersEnabled
+  } = useLocal()
 
   // User settings are always accessible, regardless of settlement state.
   if (selectedTab === TabType.SETTINGS)
@@ -278,7 +282,7 @@ export function SettlementCard({
   // Help tab is always accessible, regardless of settlement state.
   if (selectedTab === TabType.HELP) return <HelpCard />
 
-  if (selectedTab === TabType.VIGNETTE_ENCOUNTERS)
+  if (selectedTab === TabType.VIGNETTE_ENCOUNTERS && vignetteEncountersEnabled)
     return <VignetteEncountersCard />
 
   if (isCreatingNewSettlement)

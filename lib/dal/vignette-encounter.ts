@@ -16,7 +16,8 @@ import type {
   VignetteEncounterSummary,
   VignetteEncounterSurvivorDetail,
   VignetteEncounterSurvivorLiveState,
-  VignetteMonsterDetail
+  VignetteMonsterDetail,
+  VignetteMonsterSummary
 } from '@/lib/types'
 import type {
   VignetteCreateInput,
@@ -165,6 +166,15 @@ const VIGNETTE_MONSTER_SELECT = [
     ].join(', '),
     ')'
   ].join('')
+].join(', ')
+
+/** Vignette Monster Summary Select Statement */
+const VIGNETTE_MONSTER_SUMMARY_SELECT = [
+  'id',
+  'monster_name',
+  'multi_monster',
+  'source_monster_type',
+  'vignette_monster_level(id, level_number)'
 ].join(', ')
 
 /**
@@ -522,6 +532,21 @@ function vignetteMonster(row: DataRow): VignetteMonsterDetail {
     levels: rows(row.vignette_monster_level).map(vignetteMonsterLevel),
     survivors: rows(row.vignette_survivor).map(vignetteSurvivor)
   } as VignetteMonsterDetail
+}
+
+/**
+ * Vignette Monster Summary
+ *
+ * Maps a lightweight catalog vignette monster row for landing-page lists.
+ *
+ * @param row Vignette Monster Row
+ * @returns Vignette Monster Summary
+ */
+function vignetteMonsterSummary(row: DataRow): VignetteMonsterSummary {
+  return {
+    ...omit(row, ['vignette_monster_level']),
+    levels: rows(row.vignette_monster_level)
+  } as VignetteMonsterSummary
 }
 
 /**
@@ -888,6 +913,36 @@ export async function getVignetteMonsters(): Promise<{
   for (const row of rawRows) monsters[row.id as string] = vignetteMonster(row)
 
   return monsters
+}
+
+/**
+ * Get Vignette Monster Summaries
+ *
+ * Retrieves lightweight vignette catalog monster summaries for landing UI.
+ * This intentionally avoids the full survivor, gear-grid, and catalog card
+ * graph loaded by {@link getVignetteMonsters}.
+ *
+ * @returns Vignette Monster Summaries
+ */
+export async function getVignetteMonsterSummaries(): Promise<
+  VignetteMonsterSummary[]
+> {
+  await getUserId()
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('vignette_monster')
+    .select(VIGNETTE_MONSTER_SUMMARY_SELECT)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Vignette Monster Summaries: ${error.message}`
+    )
+
+  return ((data ?? []) as unknown as DataRow[])
+    .map(vignetteMonsterSummary)
+    .sort((a, b) => a.monster_name.localeCompare(b.monster_name))
 }
 
 /**

@@ -307,8 +307,12 @@ export function AppSidebar({
   // single early-access allowlist. When the rollout opens to everyone, the
   // Sharing entry should be re-gated on `canShare` so non-subscribers stop
   // seeing it; see `docs/settlement-sharing-architecture.md` §9.
-  const { isAdmin, subscriptionManagementEnabled, userSubscription } =
-    useLocal()
+  const {
+    isAdmin,
+    subscriptionManagementEnabled,
+    userSubscription,
+    vignetteEncountersEnabled
+  } = useLocal()
 
   const navItems = useMemo(() => {
     const items =
@@ -405,14 +409,16 @@ export function AppSidebar({
           />
         </SidebarGroup>
 
-        <SidebarGroup className="group-data-[collapsible=icon]:p-0">
-          <SidebarGroupLabel>One-Shots</SidebarGroupLabel>
-          <NavMain
-            items={navOneShots}
-            selectedTab={selectedTab}
-            setSelectedTab={setSelectedTab}
-          />
-        </SidebarGroup>
+        {vignetteEncountersEnabled && (
+          <SidebarGroup className="group-data-[collapsible=icon]:p-0">
+            <SidebarGroupLabel>One-Shots</SidebarGroupLabel>
+            <NavMain
+              items={navOneShots}
+              selectedTab={selectedTab}
+              setSelectedTab={setSelectedTab}
+            />
+          </SidebarGroup>
+        )}
 
         <SidebarGroup>
           <SidebarGroupLabel>Configuration</SidebarGroupLabel>
