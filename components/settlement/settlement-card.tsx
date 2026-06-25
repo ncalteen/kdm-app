@@ -81,6 +81,8 @@ import {
   SurvivorsStateSetter,
   SurvivorStateSetter,
   UserSettingsDetail,
+  VignetteEncounterDetail,
+  VignetteEncounterStateSetter,
   VignetteLandingState
 } from '@/lib/types'
 import {
@@ -119,6 +121,8 @@ interface SettlementCardProps {
   selectedSurvivor: SurvivorDetail | null
   /** Selected Tab */
   selectedTab: TabType
+  /** Selected Vignette Encounter */
+  selectedVignetteEncounter: VignetteEncounterDetail | null
   /** Selected Vignette Encounter ID */
   selectedVignetteEncounterId: string | null
   /** Vignette Landing State */
@@ -165,6 +169,8 @@ interface SettlementCardProps {
   setSelectedSurvivor: SurvivorStateSetter
   /** Set Selected Survivor ID */
   setSelectedSurvivorId: (survivorId: string | null) => void
+  /** Set Selected Vignette Encounter */
+  setSelectedVignetteEncounter: VignetteEncounterStateSetter
   /** Set Selected Vignette Encounter ID */
   setSelectedVignetteEncounterId: (vignetteEncounterId: string | null) => void
   /** Set Selected Tab */
@@ -198,6 +204,7 @@ export function SettlementCard({
   selectedShowdownMonsterIndex,
   selectedSurvivor,
   selectedTab,
+  selectedVignetteEncounter,
   selectedVignetteEncounterId,
   vignetteLandingState,
   isVignetteLandingStateLoading,
@@ -220,6 +227,7 @@ export function SettlementCard({
   setSelectedShowdownMonsterIndex,
   setSelectedSurvivor,
   setSelectedSurvivorId,
+  setSelectedVignetteEncounter,
   setSelectedVignetteEncounterId,
   setSelectedTab,
   setSurvivors,
@@ -307,7 +315,9 @@ export function SettlementCard({
         hasVignetteLandingStateLoadError={hasVignetteLandingStateLoadError}
         isVignetteLandingStateLoading={isVignetteLandingStateLoading}
         refetchVignetteLandingState={refetchVignetteLandingState}
+        selectedVignetteEncounter={selectedVignetteEncounter}
         selectedVignetteEncounterId={selectedVignetteEncounterId}
+        setSelectedVignetteEncounter={setSelectedVignetteEncounter}
         setSelectedVignetteEncounterId={setSelectedVignetteEncounterId}
         vignetteLandingState={vignetteLandingState}
       />

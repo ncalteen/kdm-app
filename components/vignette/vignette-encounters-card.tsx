@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
+import { VignetteMonsterCard } from '@/components/vignette/vignette-monster-card'
 import {
   addVignetteEncounterSharedUser,
   createVignetteEncounter,
@@ -28,6 +29,8 @@ import {
 } from '@/lib/dal/vignette-encounter'
 import { ERROR_MESSAGE, VIGNETTE_ACTIVE_LIMIT_MESSAGE } from '@/lib/messages'
 import type {
+  VignetteEncounterDetail,
+  VignetteEncounterStateSetter,
   VignetteEncounterSummary,
   VignetteLandingState,
   VignetteMonsterDetail,
@@ -59,8 +62,12 @@ interface VignetteEncountersCardProps {
   isVignetteLandingStateLoading: boolean
   /** Refetch Vignette Landing State */
   refetchVignetteLandingState: () => void
+  /** Selected Vignette Encounter */
+  selectedVignetteEncounter: VignetteEncounterDetail | null
   /** Selected Vignette Encounter ID */
   selectedVignetteEncounterId: string | null
+  /** Set Selected Vignette Encounter */
+  setSelectedVignetteEncounter: VignetteEncounterStateSetter
   /** Set Selected Vignette Encounter ID */
   setSelectedVignetteEncounterId: (vignetteEncounterId: string | null) => void
   /** Vignette Landing State */
@@ -227,7 +234,9 @@ export function VignetteEncountersCard({
   hasVignetteLandingStateLoadError,
   isVignetteLandingStateLoading,
   refetchVignetteLandingState,
+  selectedVignetteEncounter,
   selectedVignetteEncounterId,
+  setSelectedVignetteEncounter,
   setSelectedVignetteEncounterId,
   vignetteLandingState
 }: VignetteEncountersCardProps): ReactElement {
@@ -557,6 +566,14 @@ export function VignetteEncountersCard({
                   </p>
                 )}
               </section>
+
+              {selectedVignetteEncounter?.id ===
+                selectedVignetteEncounterId && (
+                <VignetteMonsterCard
+                  selectedVignetteEncounter={selectedVignetteEncounter}
+                  setSelectedVignetteEncounter={setSelectedVignetteEncounter}
+                />
+              )}
 
               <VignetteShareDialog
                 isSharing={isSharingVignetteEncounter}

@@ -101,6 +101,7 @@ function MainPage(): ReactElement {
     selectedSurvivor,
     // selectedSurvivorId,
     selectedTab,
+    selectedVignetteEncounter,
     selectedVignetteEncounterId,
     vignetteLandingState,
     isVignetteLandingStateLoading,
@@ -126,6 +127,7 @@ function MainPage(): ReactElement {
     setSelectedShowdownMonsterIndex,
     setSelectedSurvivor,
     setSelectedSurvivorId,
+    setSelectedVignetteEncounter,
     setSelectedVignetteEncounterId,
     setSelectedTab,
 
@@ -180,6 +182,7 @@ function MainPage(): ReactElement {
             selectedShowdownMonsterIndex={selectedShowdownMonsterIndex}
             selectedSurvivor={selectedSurvivor}
             selectedTab={selectedTab}
+            selectedVignetteEncounter={selectedVignetteEncounter}
             selectedVignetteEncounterId={selectedVignetteEncounterId}
             vignetteLandingState={vignetteLandingState}
             isVignetteLandingStateLoading={isVignetteLandingStateLoading}
@@ -202,6 +205,7 @@ function MainPage(): ReactElement {
             setSelectedShowdownMonsterIndex={setSelectedShowdownMonsterIndex}
             setSelectedSurvivor={setSelectedSurvivor}
             setSelectedSurvivorId={setSelectedSurvivorId}
+            setSelectedVignetteEncounter={setSelectedVignetteEncounter}
             setSelectedVignetteEncounterId={setSelectedVignetteEncounterId}
             setSelectedTab={setSelectedTab}
             setSurvivors={setSurvivors}
