@@ -731,6 +731,7 @@ describe('vignette encounter mutation helpers', () => {
     })
 
     expect(result).toBe('encounter-1')
+    expect(getUserId).toHaveBeenCalled()
     expect(mockSupabase.rpc).toHaveBeenCalledWith(
       'create_vignette_encounter_from_catalog',
       {

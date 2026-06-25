@@ -5,6 +5,16 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -12,6 +22,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import {
+  addVignetteEncounterSharedUser,
   createVignetteEncounter,
   getVignetteMonster
 } from '@/lib/dal/vignette-encounter'
@@ -26,10 +37,18 @@ import type {
 } from '@/lib/types'
 import {
   VignetteActiveLimitSchema,
-  VignetteCreateInputSchema
+  VignetteCreateInputSchema,
+  VignetteShareInputSchema
 } from '@/schemas/vignette-encounter'
-import { Loader2Icon } from 'lucide-react'
-import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
+import { Loader2Icon, Share2Icon } from 'lucide-react'
+import {
+  FormEvent,
+  ReactElement,
+  useCallback,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 import { toast } from 'sonner'
 
 /** Vignette Encounters Card Properties */
@@ -224,6 +243,11 @@ export function VignetteEncountersCard({
     useState(false)
   const [isCreatingVignetteEncounter, setIsCreatingVignetteEncounter] =
     useState(false)
+  const [sharingVignetteEncounter, setSharingVignetteEncounter] =
+    useState<VignetteEncounterSummary | null>(null)
+  const [shareUsername, setShareUsername] = useState('')
+  const [isSharingVignetteEncounter, setIsSharingVignetteEncounter] =
+    useState(false)
 
   const handleSelectVignetteEncounter = useCallback(
     (summary: VignetteEncounterSummary) => {
@@ -344,6 +368,57 @@ export function VignetteEncountersCard({
     vignetteLandingState.ownedActive?.id
   ])
 
+  const handleOpenVignetteShare = useCallback(
+    (summary: VignetteEncounterSummary) => {
+      setSharingVignetteEncounter(summary)
+      setShareUsername('')
+    },
+    []
+  )
+
+  const handleShareDialogOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (isOpen || isSharingVignetteEncounter) return
+
+      setSharingVignetteEncounter(null)
+      setShareUsername('')
+    },
+    [isSharingVignetteEncounter]
+  )
+
+  const handleShareVignetteEncounter = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      if (!sharingVignetteEncounter) return
+
+      const parsedInput = VignetteShareInputSchema.safeParse({
+        vignette_encounter_id: sharingVignetteEncounter.id,
+        username: shareUsername
+      })
+
+      if (!parsedInput.success) {
+        toast.error(parsedInput.error.message)
+        return
+      }
+
+      setIsSharingVignetteEncounter(true)
+
+      addVignetteEncounterSharedUser(parsedInput.data)
+        .then(() => {
+          toast.success('Another lantern joins the vignette.')
+          setSharingVignetteEncounter(null)
+          setShareUsername('')
+          refetchVignetteLandingState()
+        })
+        .catch((error: unknown) => {
+          console.error('Vignette Encounter Share Error:', error)
+          toast.error(error instanceof Error ? error.message : ERROR_MESSAGE())
+        })
+        .finally(() => setIsSharingVignetteEncounter(false))
+    },
+    [refetchVignetteLandingState, shareUsername, sharingVignetteEncounter]
+  )
+
   const hasSharedActive = vignetteLandingState.sharedActive.length > 0
   const hasCatalogMonsters = vignetteLandingState.catalogMonsters.length > 0
   const isEmptyLanding =
@@ -392,6 +467,7 @@ export function VignetteEncountersCard({
                       vignetteLandingState.ownedActive.id
                     }
                     onSelect={handleSelectVignetteEncounter}
+                    onShare={handleOpenVignetteShare}
                   />
                 </section>
               ) : (
@@ -481,11 +557,94 @@ export function VignetteEncountersCard({
                   </p>
                 )}
               </section>
+
+              <VignetteShareDialog
+                isSharing={isSharingVignetteEncounter}
+                summary={sharingVignetteEncounter}
+                username={shareUsername}
+                onOpenChange={handleShareDialogOpenChange}
+                onSubmit={handleShareVignetteEncounter}
+                onUsernameChange={setShareUsername}
+              />
             </>
           )}
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+/**
+ * Vignette Share Dialog
+ *
+ * @param props Vignette Share Dialog Properties
+ * @returns Vignette Share Dialog
+ */
+function VignetteShareDialog({
+  isSharing,
+  onOpenChange,
+  onSubmit,
+  onUsernameChange,
+  summary,
+  username
+}: {
+  /** Whether A Share Is Being Created */
+  isSharing: boolean
+  /** Handle Dialog Open State Change */
+  onOpenChange: (isOpen: boolean) => void
+  /** Handle Share Form Submit */
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  /** Handle Username Change */
+  onUsernameChange: (username: string) => void
+  /** Vignette Encounter Summary */
+  summary: VignetteEncounterSummary | null
+  /** Username Input Value */
+  username: string
+}): ReactElement {
+  return (
+    <Dialog open={summary !== null} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Share Vignette Encounter</DialogTitle>
+          <DialogDescription>
+            Invite another user to {summary?.monster_name ?? 'this vignette'} by
+            exact username.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form
+          id="vignette-share-form"
+          className="space-y-2"
+          onSubmit={onSubmit}>
+          <Label htmlFor="vignette-share-username">Username</Label>
+          <Input
+            id="vignette-share-username"
+            name="username"
+            autoComplete="off"
+            disabled={isSharing}
+            value={username}
+            onChange={(event) => onUsernameChange(event.target.value)}
+          />
+        </form>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSharing}
+            onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="vignette-share-form"
+            disabled={isSharing || username.trim().length === 0}>
+            {isSharing && <Loader2Icon className="h-4 w-4 animate-spin" />}
+            Share
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -498,6 +657,7 @@ export function VignetteEncountersCard({
 function VignetteSummaryRow({
   badge,
   isSelected,
+  onShare,
   onSelect,
   summary
 }: {
@@ -505,27 +665,46 @@ function VignetteSummaryRow({
   badge: string
   /** Whether This Vignette Is Selected */
   isSelected: boolean
+  /** Share Vignette Encounter */
+  onShare?: (summary: VignetteEncounterSummary) => void
   /** Select Vignette Encounter */
   onSelect: (summary: VignetteEncounterSummary) => void
   /** Vignette Encounter Summary */
   summary: VignetteEncounterSummary
 }): ReactElement {
   return (
-    <button
-      type="button"
-      aria-pressed={isSelected}
-      onClick={() => onSelect(summary)}
+    <div
       className={`flex w-full items-start justify-between gap-3 rounded-md border p-3 text-left transition-colors hover:bg-accent hover:text-accent-foreground ${
         isSelected ? 'border-primary bg-primary/10' : ''
       }`}>
-      <div className="min-w-0">
-        <p className="font-medium leading-none">{summary.monster_name}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
+      <button
+        type="button"
+        aria-pressed={isSelected}
+        onClick={() => onSelect(summary)}
+        className="min-w-0 flex-1 text-left">
+        <span className="block font-medium leading-none">
+          {summary.monster_name}
+        </span>
+        <span className="mt-1 block text-xs text-muted-foreground">
           Level {summary.level_number} · {formatVignetteTurn(summary.turn)}
-        </p>
+        </span>
+      </button>
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+        {onShare && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onShare(summary)}>
+            <Share2Icon className="h-4 w-4" />
+            Share
+          </Button>
+        )}
+        <Badge variant={badge === 'Owner' ? 'default' : 'outline'}>
+          {badge}
+        </Badge>
       </div>
-      <Badge variant={badge === 'Owner' ? 'default' : 'outline'}>{badge}</Badge>
-    </button>
+    </div>
   )
 }
 
