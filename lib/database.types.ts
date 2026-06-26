@@ -5681,7 +5681,6 @@ export type Database = {
           movement: number
           movement_tokens: number
           notes: string
-          source_vignette_monster_level_id: string | null
           speed: number
           speed_tokens: number
           strength: number
@@ -5711,7 +5710,6 @@ export type Database = {
           movement?: number
           movement_tokens?: number
           notes?: string
-          source_vignette_monster_level_id?: string | null
           speed?: number
           speed_tokens?: number
           strength?: number
@@ -5741,7 +5739,6 @@ export type Database = {
           movement?: number
           movement_tokens?: number
           notes?: string
-          source_vignette_monster_level_id?: string | null
           speed?: number
           speed_tokens?: number
           strength?: number
@@ -5758,13 +5755,6 @@ export type Database = {
             columns: ["ai_deck_id"]
             isOneToOne: true
             referencedRelation: "vignette_encounter_ai_deck"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_encounter_monster_source_vignette_monster_level_i_fkey"
-            columns: ["source_vignette_monster_level_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_monster_level"
             referencedColumns: ["id"]
           },
           {
@@ -6001,7 +5991,6 @@ export type Database = {
           priority_target: boolean
           retired: boolean
           scout: boolean
-          source_vignette_survivor_id: string | null
           speed: number
           speed_tokens: number
           strength: number
@@ -6013,7 +6002,6 @@ export type Database = {
           understanding: number
           updated_at: string
           vignette_encounter_id: string
-          vignette_monster_id: string
           waist_armor: number
           waist_heavy_damage: boolean
           waist_light_damage: boolean
@@ -6058,7 +6046,6 @@ export type Database = {
           priority_target?: boolean
           retired?: boolean
           scout?: boolean
-          source_vignette_survivor_id?: string | null
           speed?: number
           speed_tokens?: number
           strength?: number
@@ -6070,7 +6057,6 @@ export type Database = {
           understanding?: number
           updated_at?: string
           vignette_encounter_id: string
-          vignette_monster_id: string
           waist_armor?: number
           waist_heavy_damage?: boolean
           waist_light_damage?: boolean
@@ -6115,7 +6101,6 @@ export type Database = {
           priority_target?: boolean
           retired?: boolean
           scout?: boolean
-          source_vignette_survivor_id?: string | null
           speed?: number
           speed_tokens?: number
           strength?: number
@@ -6127,7 +6112,6 @@ export type Database = {
           understanding?: number
           updated_at?: string
           vignette_encounter_id?: string
-          vignette_monster_id?: string
           waist_armor?: number
           waist_heavy_damage?: boolean
           waist_light_damage?: boolean
@@ -6136,24 +6120,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_encounter_survivor_source_vignette_survivor_id_fkey"
-            columns: ["source_vignette_survivor_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "vignette_encounter_survivor_vignette_encounter_id_fkey"
             columns: ["vignette_encounter_id"]
             isOneToOne: false
             referencedRelation: "vignette_encounter"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vignette_encounter_survivor_vignette_monster_id_fkey"
-            columns: ["vignette_monster_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_monster"
             referencedColumns: ["id"]
           },
           {
@@ -6170,7 +6140,6 @@ export type Database = {
           ability_impairment_id: string
           created_at: string
           id: string
-          source_vignette_survivor_ability_impairment_id: string | null
           updated_at: string
           vignette_encounter_survivor_id: string
         }
@@ -6178,7 +6147,6 @@ export type Database = {
           ability_impairment_id: string
           created_at?: string
           id?: string
-          source_vignette_survivor_ability_impairment_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id: string
         }
@@ -6186,18 +6154,10 @@ export type Database = {
           ability_impairment_id?: string
           created_at?: string
           id?: string
-          source_vignette_survivor_ability_impairment_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "vignette_encounter_survivor_a_source_vignette_survivor_abi_fkey"
-            columns: ["source_vignette_survivor_ability_impairment_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor_ability_impairment"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "vignette_encounter_survivor_a_vignette_encounter_survivor__fkey"
             columns: ["vignette_encounter_survivor_id"]
@@ -6219,7 +6179,6 @@ export type Database = {
           created_at: string
           disorder_id: string
           id: string
-          source_vignette_survivor_disorder_id: string | null
           updated_at: string
           vignette_encounter_survivor_id: string
         }
@@ -6227,7 +6186,6 @@ export type Database = {
           created_at?: string
           disorder_id: string
           id?: string
-          source_vignette_survivor_disorder_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id: string
         }
@@ -6235,18 +6193,10 @@ export type Database = {
           created_at?: string
           disorder_id?: string
           id?: string
-          source_vignette_survivor_disorder_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "vignette_encounter_survivor_d_source_vignette_survivor_dis_fkey"
-            columns: ["source_vignette_survivor_disorder_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor_disorder"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "vignette_encounter_survivor_d_vignette_encounter_survivor__fkey"
             columns: ["vignette_encounter_survivor_id"]
@@ -6268,7 +6218,6 @@ export type Database = {
           created_at: string
           fighting_art_id: string
           id: string
-          source_vignette_survivor_fighting_art_id: string | null
           updated_at: string
           vignette_encounter_survivor_id: string
         }
@@ -6276,7 +6225,6 @@ export type Database = {
           created_at?: string
           fighting_art_id: string
           id?: string
-          source_vignette_survivor_fighting_art_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id: string
         }
@@ -6284,18 +6232,10 @@ export type Database = {
           created_at?: string
           fighting_art_id?: string
           id?: string
-          source_vignette_survivor_fighting_art_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "vignette_encounter_survivor_f_source_vignette_survivor_fig_fkey"
-            columns: ["source_vignette_survivor_fighting_art_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor_fighting_art"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "vignette_encounter_survivor_f_vignette_encounter_survivor__fkey"
             columns: ["vignette_encounter_survivor_id"]
@@ -6314,43 +6254,54 @@ export type Database = {
       }
       vignette_encounter_survivor_gear_grid: {
         Row: {
-          column_number: number
           created_at: string
-          gear_id: string
           id: string
-          row_number: number
-          source_vignette_survivor_gear_grid_id: string | null
+          pos_bottom_center: string | null
+          pos_bottom_left: string | null
+          pos_bottom_right: string | null
+          pos_mid_center: string | null
+          pos_mid_left: string | null
+          pos_mid_right: string | null
+          pos_top_center: string | null
+          pos_top_left: string | null
+          pos_top_right: string | null
+          selected_armor_set_id: string | null
           updated_at: string
           vignette_encounter_survivor_id: string
         }
         Insert: {
-          column_number: number
           created_at?: string
-          gear_id: string
           id?: string
-          row_number: number
-          source_vignette_survivor_gear_grid_id?: string | null
+          pos_bottom_center?: string | null
+          pos_bottom_left?: string | null
+          pos_bottom_right?: string | null
+          pos_mid_center?: string | null
+          pos_mid_left?: string | null
+          pos_mid_right?: string | null
+          pos_top_center?: string | null
+          pos_top_left?: string | null
+          pos_top_right?: string | null
+          selected_armor_set_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id: string
         }
         Update: {
-          column_number?: number
           created_at?: string
-          gear_id?: string
           id?: string
-          row_number?: number
-          source_vignette_survivor_gear_grid_id?: string | null
+          pos_bottom_center?: string | null
+          pos_bottom_left?: string | null
+          pos_bottom_right?: string | null
+          pos_mid_center?: string | null
+          pos_mid_left?: string | null
+          pos_mid_right?: string | null
+          pos_top_center?: string | null
+          pos_top_left?: string | null
+          pos_top_right?: string | null
+          selected_armor_set_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "vignette_encounter_survivor_g_source_vignette_survivor_gea_fkey"
-            columns: ["source_vignette_survivor_gear_grid_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor_gear_grid"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "vignette_encounter_survivor_g_vignette_encounter_survivor__fkey"
             columns: ["vignette_encounter_survivor_id"]
@@ -6359,8 +6310,71 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vignette_encounter_survivor_gear_grid_gear_id_fkey"
-            columns: ["gear_id"]
+            foreignKeyName: "vignette_encounter_survivor_gear_gri_selected_armor_set_id_fkey"
+            columns: ["selected_armor_set_id"]
+            isOneToOne: false
+            referencedRelation: "armor_set"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_gear_grid_pos_bottom_center_fkey"
+            columns: ["pos_bottom_center"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_gear_grid_pos_bottom_left_fkey"
+            columns: ["pos_bottom_left"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_gear_grid_pos_bottom_right_fkey"
+            columns: ["pos_bottom_right"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_gear_grid_pos_mid_center_fkey"
+            columns: ["pos_mid_center"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_gear_grid_pos_mid_left_fkey"
+            columns: ["pos_mid_left"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_gear_grid_pos_mid_right_fkey"
+            columns: ["pos_mid_right"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_gear_grid_pos_top_center_fkey"
+            columns: ["pos_top_center"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_gear_grid_pos_top_left_fkey"
+            columns: ["pos_top_left"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_encounter_survivor_gear_grid_pos_top_right_fkey"
+            columns: ["pos_top_right"]
             isOneToOne: false
             referencedRelation: "gear"
             referencedColumns: ["id"]
@@ -6372,7 +6386,6 @@ export type Database = {
           created_at: string
           id: string
           secret_fighting_art_id: string
-          source_vignette_survivor_secret_fighting_art_id: string | null
           updated_at: string
           vignette_encounter_survivor_id: string
         }
@@ -6380,7 +6393,6 @@ export type Database = {
           created_at?: string
           id?: string
           secret_fighting_art_id: string
-          source_vignette_survivor_secret_fighting_art_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id: string
         }
@@ -6388,18 +6400,10 @@ export type Database = {
           created_at?: string
           id?: string
           secret_fighting_art_id?: string
-          source_vignette_survivor_secret_fighting_art_id?: string | null
           updated_at?: string
           vignette_encounter_survivor_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "vignette_encounter_survivor_s_source_vignette_survivor_sec_fkey"
-            columns: ["source_vignette_survivor_secret_fighting_art_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_survivor_secret_fighting_art"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "vignette_encounter_survivor_s_vignette_encounter_survivor__fkey"
             columns: ["vignette_encounter_survivor_id"]
@@ -6900,38 +6904,122 @@ export type Database = {
       }
       vignette_survivor_gear_grid: {
         Row: {
-          column_number: number
           created_at: string
-          gear_id: string
           id: string
-          row_number: number
+          pos_bottom_center: string | null
+          pos_bottom_left: string | null
+          pos_bottom_right: string | null
+          pos_mid_center: string | null
+          pos_mid_left: string | null
+          pos_mid_right: string | null
+          pos_top_center: string | null
+          pos_top_left: string | null
+          pos_top_right: string | null
+          selected_armor_set_id: string | null
           updated_at: string
           vignette_survivor_id: string
         }
         Insert: {
-          column_number: number
           created_at?: string
-          gear_id: string
           id?: string
-          row_number: number
+          pos_bottom_center?: string | null
+          pos_bottom_left?: string | null
+          pos_bottom_right?: string | null
+          pos_mid_center?: string | null
+          pos_mid_left?: string | null
+          pos_mid_right?: string | null
+          pos_top_center?: string | null
+          pos_top_left?: string | null
+          pos_top_right?: string | null
+          selected_armor_set_id?: string | null
           updated_at?: string
           vignette_survivor_id: string
         }
         Update: {
-          column_number?: number
           created_at?: string
-          gear_id?: string
           id?: string
-          row_number?: number
+          pos_bottom_center?: string | null
+          pos_bottom_left?: string | null
+          pos_bottom_right?: string | null
+          pos_mid_center?: string | null
+          pos_mid_left?: string | null
+          pos_mid_right?: string | null
+          pos_top_center?: string | null
+          pos_top_left?: string | null
+          pos_top_right?: string | null
+          selected_armor_set_id?: string | null
           updated_at?: string
           vignette_survivor_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "vignette_survivor_gear_grid_gear_id_fkey"
-            columns: ["gear_id"]
+            foreignKeyName: "vignette_survivor_gear_grid_pos_bottom_center_fkey"
+            columns: ["pos_bottom_center"]
             isOneToOne: false
             referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_gear_grid_pos_bottom_left_fkey"
+            columns: ["pos_bottom_left"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_gear_grid_pos_bottom_right_fkey"
+            columns: ["pos_bottom_right"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_gear_grid_pos_mid_center_fkey"
+            columns: ["pos_mid_center"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_gear_grid_pos_mid_left_fkey"
+            columns: ["pos_mid_left"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_gear_grid_pos_mid_right_fkey"
+            columns: ["pos_mid_right"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_gear_grid_pos_top_center_fkey"
+            columns: ["pos_top_center"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_gear_grid_pos_top_left_fkey"
+            columns: ["pos_top_left"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_gear_grid_pos_top_right_fkey"
+            columns: ["pos_top_right"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vignette_survivor_gear_grid_selected_armor_set_id_fkey"
+            columns: ["selected_armor_set_id"]
+            isOneToOne: false
+            referencedRelation: "armor_set"
             referencedColumns: ["id"]
           },
           {
