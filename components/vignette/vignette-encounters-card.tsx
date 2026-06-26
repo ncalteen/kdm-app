@@ -1,9 +1,19 @@
 'use client'
 
 import { LanternLoader } from '@/components/generic/lantern-loader'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -25,7 +35,8 @@ import { VignetteMonsterCard } from '@/components/vignette/vignette-monster-card
 import {
   addVignetteEncounterSharedUser,
   createVignetteEncounter,
-  getVignetteMonster
+  getVignetteMonster,
+  removeVignetteEncounter
 } from '@/lib/dal/vignette-encounter'
 import { ERROR_MESSAGE, VIGNETTE_ACTIVE_LIMIT_MESSAGE } from '@/lib/messages'
 import type {
@@ -254,8 +265,12 @@ export function VignetteEncountersCard({
     useState(false)
   const [sharingVignetteEncounter, setSharingVignetteEncounter] =
     useState<VignetteEncounterSummary | null>(null)
+  const [endingVignetteEncounter, setEndingVignetteEncounter] =
+    useState<VignetteEncounterSummary | null>(null)
   const [shareUsername, setShareUsername] = useState('')
   const [isSharingVignetteEncounter, setIsSharingVignetteEncounter] =
+    useState(false)
+  const [isEndingVignetteEncounter, setIsEndingVignetteEncounter] =
     useState(false)
 
   const handleSelectVignetteEncounter = useCallback(
@@ -385,6 +400,20 @@ export function VignetteEncountersCard({
     []
   )
 
+  const handleOpenVignetteEnd = useCallback(
+    (summary: VignetteEncounterSummary) => setEndingVignetteEncounter(summary),
+    []
+  )
+
+  const handleEndDialogOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (isOpen || isEndingVignetteEncounter) return
+
+      setEndingVignetteEncounter(null)
+    },
+    [isEndingVignetteEncounter]
+  )
+
   const handleShareDialogOpenChange = useCallback(
     (isOpen: boolean) => {
       if (isOpen || isSharingVignetteEncounter) return
@@ -428,16 +457,46 @@ export function VignetteEncountersCard({
     [refetchVignetteLandingState, shareUsername, sharingVignetteEncounter]
   )
 
+  const handleEndVignetteEncounter = useCallback(() => {
+    if (!endingVignetteEncounter) return
+
+    setIsEndingVignetteEncounter(true)
+
+    removeVignetteEncounter({
+      vignette_encounter_id: endingVignetteEncounter.id
+    })
+      .then(() => {
+        toast.success('The vignette lantern gutters out.')
+        setEndingVignetteEncounter(null)
+        setSelectedVignetteEncounter(null)
+        setSelectedVignetteEncounterId(null)
+        refetchVignetteLandingState()
+      })
+      .catch((error: unknown) => {
+        console.error('Vignette Encounter End Error:', error)
+        toast.error(error instanceof Error ? error.message : ERROR_MESSAGE())
+      })
+      .finally(() => setIsEndingVignetteEncounter(false))
+  }, [
+    endingVignetteEncounter,
+    refetchVignetteLandingState,
+    setSelectedVignetteEncounter,
+    setSelectedVignetteEncounterId
+  ])
+
   const hasSharedActive = vignetteLandingState.sharedActive.length > 0
   const hasCatalogMonsters = vignetteLandingState.catalogMonsters.length > 0
   const isEmptyLanding =
     !vignetteLandingState.ownedActive && !hasSharedActive && !hasCatalogMonsters
+  const hasSelectedActiveVignette =
+    selectedVignetteEncounter?.id === selectedVignetteEncounterId
+
   return (
     <div className="pt-(--header-height) px-2 py-2">
-      <Card className="mx-auto max-w-3xl border bg-card/70 mt-2">
-        <CardHeader>
-          <CardTitle>Vignette Encounters</CardTitle>
-        </CardHeader>
+      <Card
+        className={`mx-auto w-full border bg-card/70 mt-2 ${
+          hasSelectedActiveVignette ? 'max-w-none' : 'max-w-3xl'
+        }`}>
         <CardContent className="flex flex-col gap-4 text-sm">
           {isVignetteLandingStateLoading ? (
             <LanternLoader
@@ -470,11 +529,12 @@ export function VignetteEncountersCard({
                   </h3>
                   <VignetteSummaryRow
                     summary={vignetteLandingState.ownedActive}
-                    badge="Owner"
                     isSelected={
                       selectedVignetteEncounterId ===
                       vignetteLandingState.ownedActive.id
                     }
+                    isEnding={isEndingVignetteEncounter}
+                    onEnd={handleOpenVignetteEnd}
                     onSelect={handleSelectVignetteEncounter}
                     onShare={handleOpenVignetteShare}
                   />
@@ -567,8 +627,7 @@ export function VignetteEncountersCard({
                 )}
               </section>
 
-              {selectedVignetteEncounter?.id ===
-                selectedVignetteEncounterId && (
+              {hasSelectedActiveVignette && selectedVignetteEncounter && (
                 <VignetteMonsterCard
                   selectedVignetteEncounter={selectedVignetteEncounter}
                   setSelectedVignetteEncounter={setSelectedVignetteEncounter}
@@ -583,11 +642,66 @@ export function VignetteEncountersCard({
                 onSubmit={handleShareVignetteEncounter}
                 onUsernameChange={setShareUsername}
               />
+              <VignetteEndDialog
+                isEnding={isEndingVignetteEncounter}
+                summary={endingVignetteEncounter}
+                onConfirm={handleEndVignetteEncounter}
+                onOpenChange={handleEndDialogOpenChange}
+              />
             </>
           )}
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+/**
+ * Vignette End Dialog
+ *
+ * @param props Vignette End Dialog Properties
+ * @returns Vignette End Dialog
+ */
+function VignetteEndDialog({
+  isEnding,
+  onConfirm,
+  onOpenChange,
+  summary
+}: {
+  /** Whether The Vignette Is Ending */
+  isEnding: boolean
+  /** Confirm End Vignette */
+  onConfirm: () => void
+  /** Handle Dialog Open State Change */
+  onOpenChange: (isOpen: boolean) => void
+  /** Vignette Encounter Summary */
+  summary: VignetteEncounterSummary | null
+}): ReactElement {
+  return (
+    <AlertDialog open={summary !== null} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>End Vignette Encounter</AlertDialogTitle>
+          <AlertDialogDescription>
+            The lantern dims. {summary?.monster_name ?? 'This vignette'} and its
+            copied play state will be removed.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isEnding}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isEnding}
+            onClick={(event) => {
+              event.preventDefault()
+              onConfirm()
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            {isEnding && <Loader2Icon className="h-4 w-4 animate-spin" />}
+            End vignette
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
 
@@ -673,15 +787,21 @@ function VignetteShareDialog({
  */
 function VignetteSummaryRow({
   badge,
+  isEnding,
   isSelected,
+  onEnd,
   onShare,
   onSelect,
   summary
 }: {
   /** Badge Label */
-  badge: string
+  badge?: string
+  /** Whether This Vignette Is Ending */
+  isEnding?: boolean
   /** Whether This Vignette Is Selected */
   isSelected: boolean
+  /** End Vignette Encounter */
+  onEnd?: (summary: VignetteEncounterSummary) => void
   /** Share Vignette Encounter */
   onShare?: (summary: VignetteEncounterSummary) => void
   /** Select Vignette Encounter */
@@ -717,9 +837,22 @@ function VignetteSummaryRow({
             Share
           </Button>
         )}
-        <Badge variant={badge === 'Owner' ? 'default' : 'outline'}>
-          {badge}
-        </Badge>
+        {onEnd && (
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            disabled={isEnding}
+            onClick={() => onEnd(summary)}>
+            {isEnding && <Loader2Icon className="h-4 w-4 animate-spin" />}
+            End vignette
+          </Button>
+        )}
+        {badge && (
+          <Badge variant={badge === 'Owner' ? 'default' : 'outline'}>
+            {badge}
+          </Badge>
+        )}
       </div>
     </div>
   )
