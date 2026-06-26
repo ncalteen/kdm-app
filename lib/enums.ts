@@ -257,6 +257,8 @@ export enum SurvivorCardMode {
   SETTLEMENT_PHASE_CARD = 'settlementPhase',
   /** Showdown Page */
   SHOWDOWN_CARD = 'showdown',
+  /** Vignette Page */
+  VIGNETTE_CARD = 'vignette',
   /** Survivor Page */
   SURVIVOR_CARD = 'survivor'
 }
