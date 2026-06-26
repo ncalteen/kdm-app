@@ -1,3 +1,4 @@
+import { Database } from '@/lib/database.types'
 import { createBrowserClient } from '@supabase/ssr'
 import { SupabaseClient } from '@supabase/supabase-js'
 
@@ -13,17 +14,17 @@ import { SupabaseClient } from '@supabase/supabase-js'
  * module scope safely in app code — this wrapper just centralizes the
  * instance.
  */
-let client: SupabaseClient | null = null
+let client: SupabaseClient<Database> | null = null
 
 /**
  * Get the Shared Supabase Browser Client
  *
  * @returns Shared Supabase Client
  */
-export function createClient(): SupabaseClient {
+export function createClient(): SupabaseClient<Database> {
   if (client) return client
 
-  client = createBrowserClient(
+  client = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
   )

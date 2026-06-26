@@ -1890,6 +1890,18 @@ export type VignetteEncounterStateSetter = (
 ) => void
 
 /**
+ * Vignette Encounter Summary Detail
+ *
+ * Used throughout the app to represent an active vignette encounter.
+ */
+export type VignetteEncounterSummaryDetail = Omit<
+  Tables<'vignette_encounter'>,
+  'created_at' | 'updated_at'
+> & {
+  vignette_monster: { monster_name: string }
+}
+
+/**
  * Vignette Encounter Detail
  *
  * Used throughout the app to represent an active vignette encounter.
