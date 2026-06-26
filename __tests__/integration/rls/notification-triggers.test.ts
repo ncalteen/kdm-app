@@ -18,7 +18,7 @@ interface NotificationPayload {
   settlement_name?: string
 }
 
-interface NotificationRow {
+interface NotificationDetail {
   /** Notification Kind */
   kind: string
   /** Notification Payload */
@@ -73,12 +73,12 @@ describe('RLS: notification triggers', () => {
    *
    * @returns Notification Rows
    */
-  async function getCollaboratorNotifications(): Promise<NotificationRow[]> {
+  async function getCollaboratorNotifications(): Promise<NotificationDetail[]> {
     const { data, error } = await collaborator.client
       .from('notification')
       .select('kind, payload')
       .order('created_at', { ascending: true })
-      .returns<NotificationRow[]>()
+      .returns<NotificationDetail[]>()
 
     expect(error).toBeNull()
     return data ?? []

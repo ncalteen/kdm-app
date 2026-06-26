@@ -21,7 +21,6 @@
   "github.copilot.chat.pullRequestDescriptionGeneration.instructions": [
     { "text": "Always include a list of key changes." }
   ],
-  "editor.inlineSuggest.enabled": true,
   "editor.rulers": [80],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,

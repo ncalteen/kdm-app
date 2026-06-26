@@ -15,7 +15,7 @@ import {
   markRead
 } from '@/lib/dal/notification'
 import { ERROR_MESSAGE } from '@/lib/messages'
-import { NotificationRow } from '@/lib/types'
+import { NotificationDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -23,13 +23,13 @@ import { toast } from 'sonner'
 const MAX_VISIBLE_NOTIFICATIONS = 10
 
 type NotificationPayloadRecord = Exclude<
-  Extract<NotificationRow['payload'], object>,
+  Extract<NotificationDetail['payload'], object>,
   unknown[]
 >
 
 interface NotificationSnapshot {
   /** Notification Rows */
-  notifications: NotificationRow[]
+  notifications: NotificationDetail[]
   /** Unread Count */
   unreadCount: number
 }
@@ -41,7 +41,7 @@ interface NotificationSnapshot {
  * @returns Whether the payload is an object record
  */
 function isNotificationPayloadRecord(
-  payload: NotificationRow['payload']
+  payload: NotificationDetail['payload']
 ): payload is NotificationPayloadRecord {
   return (
     typeof payload === 'object' && payload !== null && !Array.isArray(payload)
@@ -75,7 +75,7 @@ async function fetchNotificationSnapshot(): Promise<NotificationSnapshot> {
  * @returns Payload String or Fallback
  */
 function readPayloadString(
-  payload: NotificationRow['payload'],
+  payload: NotificationDetail['payload'],
   keys: string[],
   fallback: string
 ): string {
@@ -97,7 +97,7 @@ function readPayloadString(
  * @returns Notification Copy
  */
 export function formatNotificationCopy(
-  notification: Pick<NotificationRow, 'kind' | 'payload'>
+  notification: Pick<NotificationDetail, 'kind' | 'payload'>
 ): string {
   const settlementName = readPayloadString(
     notification.payload,
@@ -139,7 +139,7 @@ export function formatUnreadBadgeCount(unreadCount: number): string {
  */
 export function NotificationBell(): ReactElement {
   const { isAuthenticated, subscribeToNotificationInserts } = useLocal()
-  const [notifications, setNotifications] = useState<NotificationRow[]>([])
+  const [notifications, setNotifications] = useState<NotificationDetail[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false)
 
@@ -193,7 +193,7 @@ export function NotificationBell(): ReactElement {
     }
   }, [isAuthenticated, subscribeToNotificationInserts])
 
-  const handleMarkRead = async (notification: NotificationRow) => {
+  const handleMarkRead = async (notification: NotificationDetail) => {
     if (notification.read_at) return
 
     const readAt = new Date().toISOString()

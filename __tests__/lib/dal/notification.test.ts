@@ -1,4 +1,4 @@
-import type { NotificationRow } from '@/lib/types'
+import type { NotificationDetail } from '@/lib/types'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSupabase = {
@@ -25,7 +25,7 @@ beforeEach(() => {
 
 describe('getNotifications', () => {
   it('fetches the authenticated user notifications newest first with a limit', async () => {
-    const rows: NotificationRow[] = [
+    const rows: NotificationDetail[] = [
       {
         id: 'notification-1',
         recipient_user_id: 'user-1',

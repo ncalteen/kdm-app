@@ -2,10 +2,10 @@ import {
   formatNotificationCopy,
   formatUnreadBadgeCount
 } from '@/components/notifications/notification-bell'
-import { NotificationRow } from '@/lib/types'
+import { NotificationDetail } from '@/lib/types'
 import { describe, expect, it } from 'vitest'
 
-const baseNotification: NotificationRow = {
+const baseNotification: NotificationDetail = {
   id: 'notification-1',
   recipient_user_id: 'user-1',
   kind: 'settlement_shared_with_you',

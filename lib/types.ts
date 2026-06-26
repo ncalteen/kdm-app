@@ -1,8 +1,22 @@
-import { Database, Json, Tables } from '@/lib/database.types'
+import { Database, Tables } from '@/lib/database.types'
 import { DatabaseCampaignType, HuntEventType } from '@/lib/enums'
+
+/****************************************************************************
+ * Miscellaneous Types
+ ****************************************************************************/
 
 /** Avatar Source */
 export type AvatarSource = 'provider' | 'uploaded' | 'none'
+
+/** Authorship Information */
+export type Authorship = {
+  /** Author User ID */
+  author_user_id: string | null
+  /** Author Username */
+  author_username: string | null
+  /** Author Avatar URL */
+  author_avatar_url: string | null
+}
 
 /**
  * Campaign Template
@@ -39,128 +53,7 @@ export type CampaignTemplate = {
 }
 
 /**
- * Ability/Impairment Detail
- *
- * Used throughout the app to represent an abilitiy/impairment object. Includes
- * additional information not present in the ability_impairment table.
- */
-export type AbilityImpairmentDetail = Omit<
-  Tables<'ability_impairment'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
-> & {}
-
-/**
- * Trait Detail
- *
- * Used throughout the app to represent a monster trait. Custom traits are
- * scoped to a single user; non-custom traits are part of the shared catalog.
- */
-export type TraitDetail = Omit<
-  Tables<'trait'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
-> & {}
-
-/**
- * Mood Detail
- *
- * Used throughout the app to represent a monster mood. Custom moods are scoped
- * to a single user; non-custom moods are part of the shared catalog.
- */
-export type MoodDetail = Omit<
-  Tables<'mood'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
-> & {}
-
-/**
- * Survivor Status Detail
- *
- * Used throughout the app to represent a survivor status inflicted by a
- * nemesis or quarry level. Custom statuses are scoped to a single user;
- * non-custom statuses are part of the shared catalog.
- */
-export type SurvivorStatusDetail = Omit<
-  Tables<'survivor_status'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
-> & {}
-
-/**
- * Character Detail
- *
- * Used throughout the app to represent a character object. Includes additional
- * information not present in the character table.
- */
-export type CharacterDetail = Omit<
-  Tables<'character'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
-> & {}
-
-/**
- * Collective Cognition Reward Detail
- *
- * Used throughout the app to represent a collective cognition reward.
- */
-export type CollectiveCognitionRewardDetail = Omit<
-  Tables<'collective_cognition_reward'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Disorder Detail
- *
- * Used throughout the app to represent a disorder.
- */
-export type DisorderDetail = Omit<
-  Tables<'disorder'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Fighting Art Detail
- *
- * Used throughout the app to represent a fighting art.
- */
-export type FightingArtDetail = Omit<
-  Tables<'fighting_art'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Secret Fighting Art Detail
- *
- * Used throughout the app to represent a secret fighting art.
- */
-export type SecretFightingArtDetail = Omit<
-  Tables<'secret_fighting_art'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Seed Pattern Gear Cost Detail
- *
- * Represents a single gear cost entry tied to a seed pattern.
- */
-export type SeedPatternGearCostDetail = {
-  /** Gear ID Required to Craft the Seed Pattern */
-  cost_gear_id: string
-  /** Quantity Required */
-  quantity: number
-}
-
-/**
- * Seed Pattern Detail
- *
- * Used throughout the app to represent a seed pattern.
- */
-export type SeedPatternDetail = Omit<
-  Tables<'seed_pattern'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
-> & {
-  /** Gear Costs Required to Craft the Seed Pattern */
-  gear_costs: SeedPatternGearCostDetail[]
-}
-
-/**
- * Gear Affinity Bonus Requirement Detail
+ * Gear Affinity Bonus Requirement
  *
  * Represents a single affinity requirement entry that must be met for the
  * gear's affinity bonus to be active.
@@ -168,102 +61,8 @@ export type SeedPatternDetail = Omit<
 export type GearAffinityRequirementDetail = {
   /** Required Affinity Color */
   affinity: Database['public']['Enums']['affinity']
-  /** Whether the matching affinity must form a "puzzle" */
+  /** Affinity Puzzle Requirement */
   puzzle: boolean
-}
-
-/**
- * Gear Gear Cost Detail
- *
- * Represents a specific gear item required to craft this gear.
- */
-export type GearGearCostDetail = {
-  /** Gear ID Required to Craft this Gear */
-  cost_gear_id: string
-  /** Quantity Required */
-  quantity: number
-}
-
-/**
- * Gear Resource Cost Detail
- *
- * Represents a specific resource required to craft this gear.
- */
-export type GearResourceCostDetail = {
-  /** Resource ID Required to Craft this Gear */
-  resource_id: string
-  /** Quantity Required */
-  quantity: number
-}
-
-/**
- * Gear Resource Type Cost Detail
- *
- * Represents a quantity of any resource matching the given resource type
- * required to craft this gear.
- */
-export type GearResourceTypeCostDetail = {
-  /** Resource Type Required to Craft this Gear */
-  resource_type: Database['public']['Enums']['resource_type']
-  /** Quantity Required */
-  quantity: number
-}
-
-/**
- * Gear Detail
- *
- * Used throughout the app to represent a gear item.
- */
-export type GearDetail = Omit<
-  Tables<'gear'>,
-  | 'created_at'
-  | 'updated_at'
-  | 'user_id'
-  | 'affinity_bonus_requirements'
-  | 'archived_at'
-> & {
-  /** Affinity Bonus Requirements */
-  affinity_bonus_requirements: GearAffinityRequirementDetail[]
-  /** Gear Costs Required to Craft this Gear */
-  gear_costs: GearGearCostDetail[]
-  /** Resource Costs Required to Craft this Gear */
-  resource_costs: GearResourceCostDetail[]
-  /** Resource Type Costs Required to Craft this Gear */
-  resource_type_costs: GearResourceTypeCostDetail[]
-}
-
-/**
- * Armor Set Slot Detail
- *
- * Represents a single slot in an armor set together with the list of gear
- * pieces that satisfy it. A survivor qualifies for a slot when their gear
- * grid contains at least one of the listed `gear_ids`.
- */
-export type ArmorSetSlotDetail = {
-  /** Slot ID */
-  id: string
-  /** Slot Name (e.g. "Head", "Chest") */
-  slot_name: string
-  /** Slot Display Order */
-  slot_order: number
-  /** Whether the Slot Must Be Satisfied for the Set to Qualify */
-  required: boolean
-  /** Gear IDs That Satisfy This Slot */
-  gear_ids: string[]
-}
-
-/**
- * Armor Set Detail
- *
- * Used throughout the app to represent an armor set together with its slots
- * and slot gear candidates.
- */
-export type ArmorSetDetail = Omit<
-  Tables<'armor_set'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
-> & {
-  /** Slots Composing the Set */
-  slots: ArmorSetSlotDetail[]
 }
 
 /**
@@ -283,151 +82,6 @@ export type GearGridPosition =
   | 'bottom_left'
   | 'bottom_center'
   | 'bottom_right'
-
-/**
- * Gear Grid Detail
- *
- * Used throughout the app to represent a survivor's 3x3 gear grid. Each
- * position holds an optional gear ID drawn from the settlement's storage.
- */
-export type GearGridDetail = {
-  /** Gear Grid ID (null until the row has been persisted) */
-  id: string | null
-  /** Top-Left Position Gear ID */
-  pos_top_left: string | null
-  /** Top-Center Position Gear ID */
-  pos_top_center: string | null
-  /** Top-Right Position Gear ID */
-  pos_top_right: string | null
-  /** Middle-Left Position Gear ID */
-  pos_mid_left: string | null
-  /** Middle-Center Position Gear ID */
-  pos_mid_center: string | null
-  /** Middle-Right Position Gear ID */
-  pos_mid_right: string | null
-  /** Bottom-Left Position Gear ID */
-  pos_bottom_left: string | null
-  /** Bottom-Center Position Gear ID */
-  pos_bottom_center: string | null
-  /** Bottom-Right Position Gear ID */
-  pos_bottom_right: string | null
-  /**
-   * Selected Armor Set ID
-   *
-   * The armor set the survivor has chosen to apply when their loadout qualifies
-   * for more than one. A `clear_selected_armor_set_if_unqualified` database
-   * trigger automatically resets this column to null when the persisted
-   * positions no longer satisfy the selected set.
-   */
-  selected_armor_set_id: string | null
-}
-
-/**
- * Encounter State Setter
- *
- * Accepts either a direct value or a functional updater. Use the functional
- * form inside async `.then` / `.catch` callbacks so the update always operates
- * on the latest state instead of a stale closure capture.
- */
-export type EncounterStateSetter = (
-  encounterOrUpdater:
-    | EncounterDetail
-    | null
-    | ((prev: EncounterDetail | null) => EncounterDetail | null)
-) => void
-
-/**
- * Encounter Detail
- *
- * Used throughout the app to represent the currently selected encounter.
- */
-export type EncounterDetail = Omit<
-  Tables<'encounter'>,
-  'created_at' | 'updated_at'
-> & {
-  /** Encounter Monsters */
-  encounter_monsters: { [key: string]: EncounterActiveMonsterDetail } | null
-  /** Encounter Survivors */
-  encounter_survivors: { [key: string]: EncounterSurvivorDetail } | null
-}
-
-/**
- * Encounter Monster Detail
- *
- * Used throughout the app to represent a catalog encounter monster and its
- * level data.
- */
-export type EncounterMonsterDetail = Omit<
-  Tables<'encounter_monster'>,
-  'created_at' | 'updated_at'
-> & {
-  /** Level Data */
-  levels: EncounterMonsterLevelDetail[]
-}
-
-/**
- * Encounter Monster Level Detail
- *
- * Used throughout the app to represent encounter monster level data.
- */
-export type EncounterMonsterLevelDetail = Omit<
-  Tables<'encounter_monster_level'>,
-  'created_at' | 'updated_at'
-> & {
-  /** Traits */
-  traits: TraitDetail[]
-  /** Moods */
-  moods: MoodDetail[]
-}
-
-/**
- * Encounter Active Monster Detail
- *
- * Used throughout the app to represent a monster in an active encounter.
- */
-export type EncounterActiveMonsterDetail = Omit<
-  Tables<'encounter_active_monster'>,
-  'created_at' | 'updated_at'
-> & {
-  /** Traits */
-  traits: (TraitDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
-  /** Moods */
-  moods: (MoodDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
-  /** Survivor Statuses */
-  survivor_statuses: (SurvivorStatusDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
-}
-
-/**
- * Encounter Survivor Detail
- *
- * Used throughout the app to represent a survivor in an active encounter.
- */
-export type EncounterSurvivorDetail = Omit<
-  Tables<'encounter_survivor'>,
-  'created_at' | 'updated_at'
->
-
-/**
- * Hunt AI Deck Detail
- *
- * Used throughout the app to represent a monster's AI deck in a hunt.
- */
-export type HuntAIDeckDetail = Omit<
-  Tables<'hunt_ai_deck'>,
-  'created_at' | 'updated_at' | 'settlement_id' | 'hunt_id'
->
 
 /**
  * Hunt Board
@@ -456,322 +110,15 @@ export type HuntBoard = {
 }
 
 /**
- * Hunt State Setter
+ * Notification Kind
  *
- * Accepts either a direct value or a functional updater. Use the functional
- * form inside async `.then` / `.catch` callbacks so the update always operates
- * on the latest state instead of a stale closure capture.
+ * Discriminator for in-app notification rows. Trigger producers write these
+ * values into `notification.kind`; UI renderers can switch on them to choose
+ * copy and destination links.
  */
-export type HuntStateSetter = (
-  huntOrUpdater:
-    | HuntDetail
-    | null
-    | ((prev: HuntDetail | null) => HuntDetail | null)
-) => void
-
-/**
- * Hunt Detail
- *
- * Used throughout the app to represent the currently selected hunt.
- */
-export type HuntDetail = Omit<Tables<'hunt'>, 'created_at' | 'updated_at'> & {
-  /** Hunt Board */
-  hunt_board: HuntHuntBoardDetail | null
-  /** Hunt Monsters */
-  hunt_monsters: { [key: string]: HuntMonsterDetail } | null
-  /** Hunt Survivors */
-  hunt_survivors: { [key: string]: HuntSurvivorDetail } | null
-}
-
-/**
- * Hunt Hunt Board Detail
- *
- * Used throughout the app to represent a hunt board.
- */
-export type HuntHuntBoardDetail = Omit<
-  Tables<'hunt_hunt_board'>,
-  'created_at' | 'updated_at'
->
-
-/**
- * Hunt Monster Detail
- *
- * Used throughout the app to represent a monster in a hunt.
- */
-export type HuntMonsterDetail = Omit<
-  Tables<'hunt_monster'>,
-  'created_at' | 'updated_at'
-> & {
-  /** AI Deck */
-  ai_deck: HuntAIDeckDetail
-  /**
-   * Traits (joined from hunt_monster_trait → trait).
-   *
-   * Each entry carries `author_username` — `null` for built-in (non-custom)
-   * traits, and the catalog author's username for custom traits so the UI can
-   * render the "By @username" chip (E2.8; see
-   * `docs/settlement-sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
-   */
-  traits: (TraitDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
-  /**
-   * Moods (joined from hunt_monster_mood → mood).
-   *
-   * Each entry carries `author_username`; see `traits` above.
-   */
-  moods: (MoodDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
-  /**
-   * Survivor statuses (joined from hunt_monster_survivor_status →
-   * survivor_status).
-   *
-   * Each entry carries `author_username`; see `traits` above.
-   */
-  survivor_statuses: (SurvivorStatusDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
-}
-
-/**
- * Hunt Survivor Detail
- *
- * Used throughout the app to represent a survivor in a hunt.
- */
-export type HuntSurvivorDetail = Omit<
-  Tables<'hunt_survivor'>,
-  'created_at' | 'updated_at'
->
-
-/**
- * Innovation Detail
- *
- * Used throughout the app to represent an innovation.
- */
-export type InnovationDetail = Omit<
-  Tables<'innovation'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Knowledge Detail
- *
- * Used throughout the app to represent a knowledge.
- */
-export type KnowledgeDetail = Omit<
-  Tables<'knowledge'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Location Detail
- *
- * Used throughout the app to represent a location.
- */
-export type LocationDetail = Omit<
-  Tables<'location'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Milestone Detail
- *
- * Used throughout the app to represent a milestone.
- */
-export type MilestoneDetail = Omit<
-  Tables<'milestone'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Monster Level Data
- *
- * Used when creating or editing a custom monster.
- */
-/** Per-level sub-monster form data */
-export type MonsterLevelData = {
-  /** Sub-Monster Name (Optional) */
-  sub_monster_name: string | null
-  /** AI Deck: Basic Cards */
-  basic_cards: number
-  /** AI Deck: Advanced Cards */
-  advanced_cards: number
-  /** AI Deck: Legendary Cards */
-  legendary_cards: number
-  /** AI Deck: Overtone Cards */
-  overtone_cards: number
-  /** Accuracy */
-  accuracy: number
-  /** Accuracy Tokens */
-  accuracy_tokens: number
-  /** Damage */
-  damage: number
-  /** Damage Tokens */
-  damage_tokens: number
-  /** Evasion */
-  evasion: number
-  /** Evasion Tokens */
-  evasion_tokens: number
-  /** Luck */
-  luck: number
-  /** Luck Tokens */
-  luck_tokens: number
-  /** Movement */
-  movement: number
-  /** Movement Tokens */
-  movement_tokens: number
-  /** Speed */
-  speed: number
-  /** Speed Tokens */
-  speed_tokens: number
-  /** Strength */
-  strength: number
-  /** Strength Tokens */
-  strength_tokens: number
-  /** Toughness */
-  toughness: number
-  /** Toughness Tokens */
-  toughness_tokens: number
-  /** Life (nemesis only) */
-  life: number
-  /** Traits */
-  traits: TraitDetail[]
-  /** Moods */
-  moods: MoodDetail[]
-  /** Survivor Statuses */
-  survivor_statuses: SurvivorStatusDetail[]
-}
-
-/**
- * Nemesis Detail
- *
- * Used throughout the app to represent a nemesis.
- */
-export type NemesisDetail = Omit<
-  Tables<'nemesis'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Nemesis Level Detail
- *
- * Used throughout the app to represent a nemesis's level configuration
- * including stats, AI deck, and life value.
- */
-export type NemesisLevelDetail = Omit<
-  Tables<'nemesis_level'>,
-  'created_at' | 'updated_at' | 'nemesis_id'
-> & {
-  /** Traits (joined from nemesis_level_trait → trait) */
-  traits: TraitDetail[]
-  /** Moods (joined from nemesis_level_mood → mood) */
-  moods: MoodDetail[]
-  /** Survivor statuses (joined from nemesis_level_survivor_status → survivor_status) */
-  survivor_statuses: SurvivorStatusDetail[]
-}
-
-/**
- * Nemesis Timeline Detail
- *
- * Used throughout the app to represent a nemesis timeline entry.
- */
-export type NemesisTimelineDetail = Omit<
-  Tables<'nemesis_timeline_year'>,
-  'created_at' | 'updated_at' | 'campaign_types' | 'nemesis_id'
->
-
-/**
- * Neurosis Detail
- *
- * Used throughout the app to represent a neurosis.
- */
-export type NeurosisDetail = Omit<
-  Tables<'neurosis'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Pattern Gear Cost Detail
- *
- * Represents a single gear cost entry tied to a pattern.
- */
-export type PatternGearCostDetail = {
-  /** Gear ID Required to Craft the Pattern */
-  cost_gear_id: string
-  /** Quantity Required */
-  quantity: number
-}
-
-/**
- * Pattern Resource Cost Detail
- *
- * Represents a specific resource required to craft a pattern.
- */
-export type PatternResourceCostDetail = {
-  /** Resource ID Required to Craft the Pattern */
-  resource_id: string
-  /** Quantity Required */
-  quantity: number
-}
-
-/**
- * Pattern Resource Type Cost Detail
- *
- * Represents a quantity of any resource matching the given resource type
- * required to craft a pattern.
- */
-export type PatternResourceTypeCostDetail = {
-  /** Resource Type Required to Craft the Pattern */
-  resource_type: Database['public']['Enums']['resource_type']
-  /** Quantity Required */
-  quantity: number
-}
-
-/**
- * Pattern Detail
- *
- * Used throughout the app to represent a pattern.
- */
-export type PatternDetail = Omit<
-  Tables<'pattern'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
-> & {
-  /** Gear Costs Required to Craft the Pattern */
-  gear_costs: PatternGearCostDetail[]
-  /** Resource Costs Required to Craft the Pattern */
-  resource_costs: PatternResourceCostDetail[]
-  /** Resource Type Costs Required to Craft the Pattern */
-  resource_type_costs: PatternResourceTypeCostDetail[]
-  /** Innovation Requirements (settlement must have all of these) */
-  innovation_requirement_ids: string[]
-}
-
-/**
- * Philosophy Detail
- *
- * Used throughout the app to represent a philosophy.
- */
-export type PhilosophyDetail = Omit<
-  Tables<'philosophy'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Philosophy Rank Detail
- *
- * Used throughout the app to represent a rank within a philosophy.
- */
-export type PhilosophyRankDetail = Omit<
-  Tables<'philosophy_rank'>,
-  'created_at' | 'updated_at'
->
+export type NotificationKind =
+  | 'settlement_shared_with_you'
+  | 'removed_from_settlement'
 
 /**
  * Plan Slug
@@ -781,116 +128,6 @@ export type PhilosophyRankDetail = Omit<
  * Each slug maps to a Stripe Price and a presentation block below.
  */
 export type PlanSlug = 'free' | 'lantern' | 'lantern_hoard'
-
-/**
- * Principle Detail
- *
- * Used throughout the app to represent a principle.
- */
-export type PrincipleDetail = Omit<
-  Tables<'principle'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Quarry Detail
- *
- * Used throughout the app to represent a quarry.
- */
-export type QuarryDetail = Omit<
-  Tables<'quarry'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Quarry Hunt Board Detail
- *
- * Used throughout the app to represent a quarry's hunt board template.
- */
-export type QuarryHuntBoardDetail = Omit<
-  Tables<'quarry_hunt_board'>,
-  'created_at' | 'updated_at'
->
-
-/**
- * Quarry Hunt Board Position Detail
- *
- * Used throughout the app to represent a quarry's level-based hunt positions.
- */
-export type QuarryHuntBoardPositionDetail = Omit<
-  Tables<'quarry_hunt_board_position'>,
-  'created_at' | 'updated_at'
->
-
-/**
- * Quarry Level Detail
- *
- * Used throughout the app to represent a quarry's level configuration
- * including stats, AI deck, and hunt positions.
- */
-export type QuarryLevelDetail = Omit<
-  Tables<'quarry_level'>,
-  'created_at' | 'updated_at' | 'quarry_id'
-> & {
-  /** Monster Hunt Position (joined from quarry_hunt_board_position) */
-  hunt_pos: number
-  /** Survivor Hunt Position (joined from quarry_hunt_board_position) */
-  survivor_hunt_pos: number
-  /** Traits (joined from quarry_level_trait → trait) */
-  traits: TraitDetail[]
-  /** Moods (joined from quarry_level_mood → mood) */
-  moods: MoodDetail[]
-  /** Survivor statuses (joined from quarry_level_survivor_status → survivor_status) */
-  survivor_statuses: SurvivorStatusDetail[]
-}
-
-/**
- * Quarry Timeline Detail
- *
- * Used throughout the app to represent a quarry timeline entry.
- */
-export type QuarryTimelineDetail = Omit<
-  Tables<'quarry_timeline_year'>,
-  'created_at' | 'updated_at' | 'campaign_types' | 'quarry_id'
->
-
-/**
- * Resource Detail
- *
- * Used throughout the app to represent a resource.
- */
-export type ResourceDetail = Omit<
-  Tables<'resource'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
-> & {
-  /** Quarry Monster Name (joined from quarry table) */
-  quarry_monster_name: string | null
-  /** Quarry Node (joined from quarry table) */
-  quarry_node: string | null
-}
-
-/**
- * Settlement State Setter
- *
- * Accepts either a direct value or a functional updater. Use the functional
- * form inside async `.then` / `.catch` callbacks so the update always operates
- * on the latest state instead of a stale closure capture.
- */
-export type SettlementStateSetter = (
-  settlementOrUpdater:
-    | SettlementDetail
-    | null
-    | ((prev: SettlementDetail | null) => SettlementDetail | null)
-) => void
-
-/**
- * Settlement Role
- *
- * The caller's relationship to a settlement. `owner` rows are loaded directly
- * from `settlement.user_id = auth.uid()`. `collaborator` rows are reached via
- * `settlement_shared_user` and are subject to the shared-user permission set.
- */
-export type SettlementRole = 'owner' | 'collaborator'
 
 /**
  * Settlement List Entry
@@ -913,6 +150,916 @@ export interface SettlementListEntry {
 }
 
 /**
+ * Settlement Role
+ *
+ * The caller's relationship to a settlement. `owner` rows are loaded directly
+ * from `settlement.user_id = auth.uid()`. `collaborator` rows are reached via
+ * `settlement_shared_user` and are subject to the shared-user permission set.
+ */
+export type SettlementRole = 'owner' | 'collaborator'
+
+/****************************************************************************
+ * Database Types (with Joins)
+ ****************************************************************************/
+
+/**
+ * Ability/Impairment Detail
+ *
+ * Used throughout the app to represent an ability or impairment object.
+ */
+export type AbilityImpairmentDetail = Omit<
+  Tables<'ability_impairment'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Armor Set Detail
+ *
+ * Used throughout the app to represent an armor set together with its slots
+ * and slot gear candidates.
+ */
+export type ArmorSetDetail = Omit<
+  Tables<'armor_set'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {
+  /** Armor Set Slot Details */
+  slots: ArmorSetSlotDetail[]
+}
+
+/**
+ * Armor Set Slot Detail
+ *
+ * Represents a single slot in an armor set together with the list of gear
+ * pieces that satisfy it. A survivor qualifies for a slot when their gear
+ * grid contains at least one of the listed `gear_ids`.
+ */
+export type ArmorSetSlotDetail = Omit<
+  Tables<'armor_set_slot'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Armor Set Slot Gear Details */
+  slot_gear: ArmorSetSlotGearDetail[]
+}
+
+/**
+ * Armor Set Slot Gear Detail
+ *
+ * Represents a gear item that satisfies a particular slot for an armor set.
+ * Also includes the details about the particular gear item.
+ */
+export type ArmorSetSlotGearDetail = Omit<
+  Tables<'armor_set_slot_gear'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Gear Details */
+  gear: GearDetail
+}
+
+/**
+ * Character Detail
+ *
+ * Used throughout the app to represent a character object. Includes additional
+ * information not present in the character table.
+ */
+export type CharacterDetail = Omit<
+  Tables<'character'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Collective Cognition Reward Detail
+ *
+ * Used throughout the app to represent a collective cognition reward.
+ */
+export type CollectiveCognitionRewardDetail = Omit<
+  Tables<'collective_cognition_reward'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Constellation Detail
+ *
+ * Used throughout the app to represent a constellation.
+ */
+export type ConstellationDetail = Omit<
+  Tables<'constellation'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Disorder Detail
+ *
+ * Used throughout the app to represent a disorder.
+ */
+export type DisorderDetail = Omit<
+  Tables<'disorder'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Encounter Detail
+ *
+ * Used throughout the app to represent the currently selected encounter.
+ */
+export type EncounterDetail = Omit<
+  Tables<'encounter'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Encounter Active Monsters */
+  monsters: { [key: string]: EncounterActiveMonsterDetail }
+  /** Encounter Survivors */
+  survivors: { [key: string]: EncounterSurvivorDetail }
+}
+
+/**
+ * Encounter Active Monster Detail
+ *
+ * Used throughout the app to represent a monster in an active encounter.
+ */
+export type EncounterActiveMonsterDetail = Omit<
+  Tables<'encounter_active_monster'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Moods */
+  moods: (EncounterActiveMonsterMoodDetail & Authorship)[]
+  /** Traits */
+  traits: (EncounterActiveMonsterTraitDetail & Authorship)[]
+}
+
+/**
+ * Encounter Active Monster Mood Detail
+ *
+ * Represents a monster's mood in an active encounter.
+ */
+export type EncounterActiveMonsterMoodDetail = Omit<
+  Tables<'encounter_active_monster_mood'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Mood Details */
+  mood: MoodDetail
+}
+
+/**
+ * Encounter Active Monster Trait Detail
+ *
+ * Represents a monster's trait in an active encounter.
+ */
+export type EncounterActiveMonsterTraitDetail = Omit<
+  Tables<'encounter_active_monster_trait'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Trait Details */
+  trait: TraitDetail
+}
+
+/**
+ * Encounter Monster Detail
+ *
+ * Used throughout the app to represent a catalog encounter monster and its
+ * level data.
+ */
+export type EncounterMonsterDetail = Omit<
+  Tables<'encounter_monster'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {
+  /** Level Data */
+  levels: EncounterMonsterLevelDetail[]
+}
+
+/**
+ * Encounter Monster Level Detail
+ *
+ * Used throughout the app to represent encounter monster level data.
+ */
+export type EncounterMonsterLevelDetail = Omit<
+  Tables<'encounter_monster_level'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Moods */
+  moods: EncounterMonsterLevelMoodDetail[]
+  /** Traits */
+  traits: EncounterMonsterLevelTraitDetail[]
+}
+
+/**
+ * Encounter Monster Level Mood Detail
+ *
+ * Represents a monster's mood in an encounter at a specific level.
+ */
+export type EncounterMonsterLevelMoodDetail = Omit<
+  Tables<'encounter_monster_level_mood'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Mood Details */
+  mood: MoodDetail
+}
+
+/**
+ * Encounter Monster Level Trait Detail
+ *
+ * Represents a monster's trait in an encounter at a specific level.
+ */
+export type EncounterMonsterLevelTraitDetail = Omit<
+  Tables<'encounter_monster_level_trait'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Trait Details */
+  trait: TraitDetail
+}
+
+/**
+ * Encounter Survivor Detail
+ *
+ * Used throughout the app to represent a survivor in an active encounter.
+ */
+export type EncounterSurvivorDetail = Omit<
+  Tables<'encounter_survivor'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Survivor Details */
+  survivor: SurvivorDetail
+}
+
+/**
+ * Fighting Art Detail
+ *
+ * Used throughout the app to represent a fighting art.
+ */
+export type FightingArtDetail = Omit<
+  Tables<'fighting_art'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Gear Detail
+ *
+ * Used throughout the app to represent a gear item.
+ */
+export type GearDetail = Omit<
+  Tables<'gear'>,
+  | 'created_at'
+  | 'updated_at'
+  | 'user_id'
+  | 'affinity_bonus_requirements'
+  | 'archived_at'
+> & {
+  /** Affinity Bonus Requirements */
+  affinity_bonus_requirements: GearAffinityRequirementDetail[]
+  /** Gear Costs Required to Craft this Gear */
+  gear_costs: GearGearCostDetail[]
+  /** Other Costs Required to Craft this Gear */
+  other_costs: GearOtherCostDetail[]
+  /** Resource Costs Required to Craft this Gear */
+  resource_costs: GearResourceCostDetail[]
+  /** Resource Type Costs Required to Craft this Gear */
+  resource_type_costs: GearResourceTypeCostDetail[]
+}
+
+/**
+ * Gear Gear Cost Detail
+ *
+ * Represents a specific gear item required to craft this gear.
+ */
+export type GearGearCostDetail = Tables<'gear_gear_cost'> & {
+  /** Cost Gear Details */
+  cost_gear: GearDetail
+}
+
+/**
+ * Gear Grid Detail
+ *
+ * Used throughout the app to represent a survivor's 3x3 gear grid. Each
+ * position holds an optional gear ID drawn from the settlement's storage.
+ */
+export type GearGridDetail = Omit<
+  Tables<'gear_grid'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Gear Other Cost Detail
+ *
+ * Represents a specific other cost required to craft this gear.
+ */
+export type GearOtherCostDetail = Tables<'gear_other_cost'> & {}
+
+/**
+ * Gear Resource Cost Detail
+ *
+ * Represents a specific resource required to craft this gear.
+ */
+export type GearResourceCostDetail = Tables<'gear_resource_cost'> & {
+  /** Resource Details */
+  resource: ResourceDetail
+}
+
+/**
+ * Gear Resource Type Cost Detail
+ *
+ * Represents a quantity of any resource matching the given resource type
+ * required to craft this gear.
+ */
+export type GearResourceTypeCostDetail = Tables<'gear_resource_type_cost'> & {}
+
+/**
+ * Hunt Detail
+ *
+ * Used throughout the app to represent the currently selected hunt.
+ */
+export type HuntDetail = Omit<Tables<'hunt'>, 'created_at' | 'updated_at'> & {
+  /** Hunt Board */
+  hunt_board: HuntHuntBoardDetail
+  /** Hunt Monsters */
+  monsters: { [key: string]: HuntMonsterDetail }
+  /** Hunt Survivors */
+  survivors: { [key: string]: HuntSurvivorDetail }
+}
+
+/**
+ * Hunt AI Deck Detail
+ *
+ * Used throughout the app to represent a monster's AI deck in a hunt.
+ */
+export type HuntAIDeckDetail = Omit<
+  Tables<'hunt_ai_deck'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Hunt Hunt Board Detail
+ *
+ * Used throughout the app to represent a hunt board for the currently selected
+ * hunt.
+ */
+export type HuntHuntBoardDetail = Omit<
+  Tables<'hunt_hunt_board'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Hunt Monster Detail
+ *
+ * Used throughout the app to represent a monster in a hunt.
+ */
+export type HuntMonsterDetail = Omit<
+  Tables<'hunt_monster'>,
+  'created_at' | 'updated_at'
+> & {
+  /** AI Deck */
+  ai_deck: HuntAIDeckDetail
+  /** Moods */
+  moods: (HuntMonsterMoodDetail & Authorship)[]
+  /** Survivor Statuses */
+  survivor_statuses: (HuntMonsterSurvivorStatusDetail & Authorship)[]
+  /** Traits */
+  traits: (HuntMonsterTraitDetail & Authorship)[]
+}
+
+/**
+ * Hunt Monster Mood Detail
+ *
+ * Used throughout the app to represent a monster's mood in a hunt.
+ */
+export type HuntMonsterMoodDetail = Omit<
+  Tables<'hunt_monster_mood'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Mood Details */
+  mood: MoodDetail
+}
+
+/**
+ * Hunt Monster Survivor Status Detail
+ *
+ * Used throughout the app to represent a survivor status inflicted by a
+ * nemesis or quarry level.
+ */
+export type HuntMonsterSurvivorStatusDetail = Omit<
+  Tables<'hunt_monster_survivor_status'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Survivor Status Details */
+  survivor_status: SurvivorStatusDetail
+}
+
+/**
+ * Hunt Monster Trait Detail
+ *
+ * Used throughout the app to represent a monster trait in a hunt.
+ */
+export type HuntMonsterTraitDetail = Omit<
+  Tables<'hunt_monster_trait'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Trait Details */
+  trait: TraitDetail
+}
+
+/**
+ * Hunt Survivor Detail
+ *
+ * Used throughout the app to represent a survivor in a hunt.
+ */
+export type HuntSurvivorDetail = Omit<
+  Tables<'hunt_survivor'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Survivor Details */
+  survivor: SurvivorDetail
+}
+
+/**
+ * Innovation Detail
+ *
+ * Used throughout the app to represent an innovation.
+ */
+export type InnovationDetail = Omit<
+  Tables<'innovation'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Knowledge Detail
+ *
+ * Used throughout the app to represent a knowledge.
+ */
+export type KnowledgeDetail = Omit<
+  Tables<'knowledge'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Location Detail
+ *
+ * Used throughout the app to represent a location.
+ */
+export type LocationDetail = Omit<
+  Tables<'location'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Milestone Detail
+ *
+ * Used throughout the app to represent a milestone.
+ */
+export type MilestoneDetail = Omit<
+  Tables<'milestone'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Mood Detail
+ *
+ * Used throughout the app to represent a monster mood. Custom moods are scoped
+ * to a single user; non-custom moods are part of the shared catalog.
+ */
+export type MoodDetail = Omit<
+  Tables<'mood'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Nemesis Detail
+ *
+ * Used throughout the app to represent a nemesis.
+ */
+export type NemesisDetail = Omit<
+  Tables<'nemesis'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {
+  /** Level Details */
+  levels: NemesisLevelDetail[]
+  /** Location Details */
+  location: NemesisLocationDetail
+  /** Timeline Years */
+  timeline_years: NemesisTimelineYearDetail[]
+}
+
+/**
+ * Nemesis Level Detail
+ *
+ * Used throughout the app to represent a nemesis's level configuration
+ * including stats, AI deck, and life value.
+ */
+export type NemesisLevelDetail = Omit<
+  Tables<'nemesis_level'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Moods */
+  moods: NemesisLevelMoodDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: NemesisLevelSurvivorStatusDetail[]
+  /** Traits */
+  traits: NemesisLevelTraitDetail[]
+}
+
+/**
+ * Nemesis Level Mood Detail
+ *
+ * Used throughout the app to represent a nemesis's mood at a specific level.
+ */
+export type NemesisLevelMoodDetail = Omit<
+  Tables<'nemesis_level_mood'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Mood Details */
+  mood: MoodDetail
+}
+
+/**
+ * Nemesis Level Survivor Status Detail
+ *
+ * Used throughout the app to represent a survivor status inflicted by a
+ * nemesis at a specific level.
+ */
+export type NemesisLevelSurvivorStatusDetail = Omit<
+  Tables<'nemesis_level_survivor_status'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Survivor Status Details */
+  survivor_status: SurvivorStatusDetail
+}
+
+/**
+ * Nemesis Level Trait Detail
+ *
+ * Used throughout the app to represent a trait of a nemesis at a specific level.
+ */
+export type NemesisLevelTraitDetail = Omit<
+  Tables<'nemesis_level_trait'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Trait Details */
+  trait: TraitDetail
+}
+
+/**
+ * Nemesis Location Detail
+ *
+ * Used throughout the app to represent a nemesis's location.
+ */
+export type NemesisLocationDetail = Omit<
+  Tables<'nemesis_location'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Location Details */
+  location: LocationDetail
+}
+
+/**
+ * Nemesis Timeline Year Detail
+ *
+ * Used throughout the app to represent a nemesis timeline year entry.
+ */
+export type NemesisTimelineYearDetail = Omit<
+  Tables<'nemesis_timeline_year'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Neurosis Detail
+ *
+ * Used throughout the app to represent a neurosis.
+ */
+export type NeurosisDetail = Omit<
+  Tables<'neurosis'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Notification Detail
+ *
+ * Used throughout the app to represent a notification.
+ */
+export type NotificationDetail = Tables<'notification'> & {}
+
+/**
+ * Pattern Detail
+ *
+ * Used throughout the app to represent a pattern.
+ */
+export type PatternDetail = Omit<
+  Tables<'pattern'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {
+  /** Crafted Gear */
+  crafted_gear: GearDetail
+  /** Gear Costs Required to Craft the Pattern */
+  gear_costs: PatternGearCostDetail[]
+  /** Innovation Requirements (settlement must have all of these) */
+  innovation_requirements: PatternInnovationRequirementDetail[]
+  /** Resource Costs Required to Craft the Pattern */
+  resource_costs: PatternResourceCostDetail[]
+  /** Resource Type Costs Required to Craft the Pattern */
+  resource_type_costs: PatternResourceTypeCostDetail[]
+}
+
+/**
+ * Pattern Gear Cost Detail
+ *
+ * Represents a single gear cost entry tied to a pattern.
+ */
+export type PatternGearCostDetail = Tables<'pattern_gear_cost'> & {
+  /** Cost Gear Details */
+  cost_gear: GearDetail
+}
+
+/**
+ * Pattern Innovation Requirement Detail
+ */
+export type PatternInnovationRequirementDetail =
+  Tables<'pattern_innovation_requirement'> & {
+    /** Innovation Details */
+    innovation: InnovationDetail
+  }
+
+/**
+ * Pattern Resource Cost Detail
+ *
+ * Represents a specific resource required to craft a pattern.
+ */
+export type PatternResourceCostDetail = Tables<'pattern_resource_cost'> & {
+  /** Resource Details */
+  resource: ResourceDetail
+}
+
+/**
+ * Pattern Resource Type Cost Detail
+ *
+ * Represents a quantity of any resource matching the given resource type
+ * required to craft a pattern.
+ */
+export type PatternResourceTypeCostDetail =
+  Tables<'pattern_resource_type_cost'> & {}
+
+/**
+ * Philosophy Detail
+ *
+ * Used throughout the app to represent a philosophy.
+ */
+export type PhilosophyDetail = Omit<
+  Tables<'philosophy'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {
+  /** Neurosis Details */
+  neurosis: NeurosisDetail[]
+  /** Philosophy Ranks */
+  ranks: PhilosophyRankDetail[]
+  /** Tenet Knowledge Details */
+  tenet_knowledge: KnowledgeDetail[]
+}
+
+/**
+ * Philosophy Rank Detail
+ *
+ * Used throughout the app to represent a rank within a philosophy.
+ */
+export type PhilosophyRankDetail = Omit<
+  Tables<'philosophy_rank'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Principle Detail
+ *
+ * Used throughout the app to represent a principle.
+ */
+export type PrincipleDetail = Omit<
+  Tables<'principle'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/**
+ * Quarry Detail
+ *
+ * Used throughout the app to represent a quarry.
+ */
+export type QuarryDetail = Omit<
+  Tables<'quarry'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {
+  /** Alternate Quarry Details */
+  alternate: QuarryDetail | null
+  /** Collective Cognition Reward Details */
+  collective_cognition_reward: QuarryCollectiveCognitionRewardDetail | null
+  /** Hunt Board Details */
+  hunt_board: QuarryHuntBoardDetail
+  /** Levels */
+  levels: QuarryLevelDetail[]
+  /** Location Details */
+  location: QuarryLocationDetail | null
+  /** Timeline Year Detail */
+  timeline_year: QuarryTimelineYearDetail[]
+  /** Vignette Quarry Details */
+  vignette: QuarryDetail | null
+}
+
+/**
+ * Quarry Collective Cognition Reward Detail
+ *
+ * Used throughout the app to represent the reward for collecting collective
+ * cognition from a quarry.
+ */
+export type QuarryCollectiveCognitionRewardDetail = Omit<
+  Tables<'quarry_collective_cognition_reward'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Collective Cognition Reward Details */
+  collective_cognition_reward: CollectiveCognitionRewardDetail
+}
+
+/**
+ * Quarry Hunt Board Detail
+ *
+ * Used throughout the app to represent a quarry's hunt board template.
+ */
+export type QuarryHuntBoardDetail = Omit<
+  Tables<'quarry_hunt_board'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Quarry Hunt Board Position Detail
+ *
+ * Used throughout the app to represent a quarry's level-based hunt positions.
+ */
+export type QuarryHuntBoardPositionDetail = Omit<
+  Tables<'quarry_hunt_board_position'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Quarry Level Detail
+ *
+ * Used throughout the app to represent a quarry's level configuration
+ * including stats, AI deck, and hunt positions.
+ */
+export type QuarryLevelDetail = Omit<
+  Tables<'quarry_level'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Hunt Board Positions */
+  hunt_board_position: QuarryHuntBoardPositionDetail
+  /** Moods */
+  moods: QuarryLevelMoodDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: QuarryLevelSurvivorStatusDetail[]
+  /** Traits */
+  traits: QuarryLevelTraitDetail[]
+}
+
+/**
+ * Quarry Level Mood Detail
+ *
+ * Used throughout the app to represent a quarry level's mood.
+ */
+export type QuarryLevelMoodDetail = Omit<
+  Tables<'quarry_level_mood'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Mood Details */
+  mood: MoodDetail
+}
+
+/**
+ * Quarry Level Survivor Status Detail
+ *
+ * Used throughout the app to represent a quarry level's survivor status.
+ */
+export type QuarryLevelSurvivorStatusDetail = Omit<
+  Tables<'quarry_level_survivor_status'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Survivor Status Details */
+  survivor_status: SurvivorStatusDetail
+}
+
+/**
+ * Quarry Level Trait Detail
+ *
+ * Used throughout the app to represent a quarry level's trait.
+ */
+export type QuarryLevelTraitDetail = Omit<
+  Tables<'quarry_level_trait'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Trait Details */
+  trait: TraitDetail
+}
+
+/**
+ * Quarry Location Detail
+ *
+ * Used throughout the app to represent a quarry's location.
+ */
+export type QuarryLocationDetail = Omit<
+  Tables<'quarry_location'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Location Details */
+  location: LocationDetail
+}
+
+/**
+ * Quarry Timeline Year Detail
+ *
+ * Used throughout the app to represent a quarry timeline year entry.
+ */
+export type QuarryTimelineYearDetail = Omit<
+  Tables<'quarry_timeline_year'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Resource Detail
+ *
+ * Used throughout the app to represent a resource.
+ */
+export type ResourceDetail = Omit<
+  Tables<'resource'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {
+  /** Nemesis */
+  nemesis: NemesisDetail | null
+  /** Pattern */
+  pattern: PatternDetail | null
+  /** Quarry */
+  quarry: QuarryDetail | null
+}
+
+/**
+ * Secret Fighting Art Detail
+ *
+ * Used throughout the app to represent a secret fighting art.
+ */
+export type SecretFightingArtDetail = Omit<
+  Tables<'secret_fighting_art'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+>
+
+/**
+ * Seed Pattern Detail
+ *
+ * Used throughout the app to represent a seed pattern.
+ */
+export type SeedPatternDetail = Omit<
+  Tables<'seed_pattern'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {
+  /** Crafted Gear */
+  crafted_gear: GearDetail
+  /** Gear Costs Required to Craft the Seed Pattern */
+  gear_costs: SeedPatternGearCostDetail[]
+  /** Innovation Requirements */
+  innovation_requirements: SeedPatternInnovationRequirementDetail[]
+  /** Resource Costs */
+  resource_costs: SeedPatternResourceCostDetail[]
+  /** Resource Type Costs */
+  resource_type_costs: SeedPatternResourceTypeCostDetail[]
+}
+
+/**
+ * Seed Pattern Gear Cost Detail
+ *
+ * Represents a single gear cost entry tied to a seed pattern.
+ */
+export type SeedPatternGearCostDetail = Tables<'seed_pattern_gear_cost'> & {
+  /** Cost Gear */
+  cost_gear: GearDetail
+}
+
+/**
+ * Seed Pattern Innovation Requirement Detail
+ *
+ * Represents a single innovation requirement entry tied to a seed pattern.
+ */
+export type SeedPatternInnovationRequirementDetail =
+  Tables<'seed_pattern_innovation_requirement'> & {
+    /** Innovation Details */
+    innovation: InnovationDetail
+  }
+
+/**
+ * Seed Pattern Resource Cost Detail
+ *
+ * Represents a single resource cost entry tied to a seed pattern.
+ */
+export type SeedPatternResourceCostDetail =
+  Tables<'seed_pattern_resource_cost'> & {
+    /** Cost Resource */
+    resource: ResourceDetail
+  }
+
+/**
+ * Seed Pattern Resource Type Cost Detail
+ *
+ * Represents a single resource type cost entry tied to a seed pattern.
+ */
+export type SeedPatternResourceTypeCostDetail =
+  Tables<'seed_pattern_resource_type_cost'> & {}
+
+/**
  * Settlement Detail
  *
  * Used throughout the app to represent the currently selected settlement.
@@ -923,374 +1070,162 @@ export type SettlementDetail = Omit<
   'created_at' | 'updated_at'
 > & {
   /** Collective Cognition Rewards */
-  collective_cognition_rewards: {
-    /** Collective Cognition Reward Collective Cognition */
-    collective_cognition: number
-    /** Collective Cognition Reward ID */
-    collective_cognition_reward_id: string
-    /** Settlement Collective Cognition Reward ID */
-    id: string
-    /** Collective Cognition Reward Name */
-    reward_name: string
-    /** Collective Cognition Reward Rules */
-    rules: string | null
-    /** Unlocked */
-    unlocked: boolean
-    /** Whether the underlying reward is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  collective_cognition_rewards: SettlementCollectiveCognitionRewardDetail[]
   /** Gear */
-  gear: {
-    /** Settlement Gear ID */
-    id: string
-    /** Gear ID */
-    gear_id: string
-    /** Gear Name */
-    gear_name: string
-    /** Quantity */
-    quantity: number
-    /** Whether the underlying gear is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  gear: SettlementGearDetail[]
   /** Innovations */
-  innovations: {
-    /** Settlement Innovation ID */
-    id: string
-    /** Innovation ID */
-    innovation_id: string
-    /** Innovation Name */
-    innovation_name: string
-    /** Innovation Rules */
-    rules: string | null
-    /** Innovation Consequences */
-    consequences: string | null
-    /** Innovation Benefits */
-    benefits: string | null
-    /** Whether the underlying innovation is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  innovations: SettlementInnovationDetail[]
   /** Knowledges */
-  knowledges: {
-    /** Settlement Knowledge ID */
-    id: string
-    /** Knowledge ID */
-    knowledge_id: string
-    /** Knowledge Name */
-    knowledge_name: string
-    /** Philosophy ID */
-    philosophy_id: string | null
-    /** Knowledge Rules */
-    rules: string | null
-    /** Observation Conditions */
-    observation_conditions: string | null
-    /** Observation Rank Up Milestone */
-    observation_rank_up_milestone: number | null
-    /** Whether the underlying knowledge is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  knowledges: SettlementKnowledgeDetail[]
   /** Locations */
-  locations: {
-    /** Settlement Location ID */
-    id: string
-    /** Location ID */
-    location_id: string
-    /** Location Name */
-    location_name: string
-    /** Location Rules */
-    rules: string | null
-    /** Unlocked */
-    unlocked: boolean
-    /** Whether the underlying location is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
-  /** Neuroses */
-  neuroses: {
-    /** Neurosis ID */
-    id: string
-    /** Neurosis Name */
-    neurosis_name: string
-    /** Whether the underlying neurosis is user-defined */
-    custom: boolean
-  }[]
+  locations: SettlementLocationDetail[]
   /** Milestones */
-  milestones: {
-    /** Complete */
-    complete: boolean
-    /** Event Name */
-    event_name: string
-    /** Settlement Milestone ID */
-    id: string
-    /** Milestone ID */
-    milestone_id: string
-    /** Milestone Name */
-    milestone_name: string
-    /** Milestone Requirements */
-    requirements: string | null
-    /** Milestone Rules */
-    rules: string | null
-    /** Whether the underlying milestone is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  milestones: SettlementMilestoneDetail[]
   /** Nemeses */
-  nemeses: {
-    /** Available Levels */
-    available_levels: number[]
-    /** Collective Cognition Level 1 */
-    collective_cognition_level_1: boolean
-    /** Collective Cognition Level 2 */
-    collective_cognition_level_2: boolean
-    /** Collective Cognition Level 3 */
-    collective_cognition_level_3: boolean
-    /** Settlement Nemesis ID */
-    id: string
-    /** Level 1 Defeated */
-    level_1_defeated: boolean
-    /** Level 2 Defeated */
-    level_2_defeated: boolean
-    /** Level 3 Defeated */
-    level_3_defeated: boolean
-    /** Level 4 Defeated */
-    level_4_defeated: boolean
-    /** Nemesis ID */
-    nemesis_id: string
-    /** Unlocked */
-    unlocked: boolean
-    /** Monster Name */
-    monster_name: string
-    /** Node */
-    node: string
-    /** Instinct */
-    instinct: string | null
-    /** Basic Action */
-    basic_action: string | null
-    /** Blind Spot */
-    blind_spot: string | null
-    /** Defeat Outcome */
-    defeat_outcome: string | null
-    /** Deployment Rules */
-    deployment_rules: string | null
-    /** Victory Outcome */
-    victory_outcome: string | null
-    /** Whether the underlying nemesis is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  nemeses: SettlementNemesisDetail[]
+  /** Neuroses */
+  // neuroses: SettlementNeurosisDetails[]
   /** Patterns */
-  patterns: {
-    /** Settlement Pattern ID */
-    id: string
-    /** Pattern ID */
-    pattern_id: string
-    /** Pattern Name */
-    pattern_name: string
-    /** Whether the underlying pattern is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  patterns: SettlementPatternDetail[]
   /** Philosophies */
-  philosophies: {
-    /** Settlement Philosophy ID */
-    id: string
-    /** Philosophy ID */
-    philosophy_id: string
-    /** Philosophy Name */
-    philosophy_name: string
-    /** Hunt XP Milestones */
-    hunt_xp_milestones: number[] | null
-    /** Tenet Knowledge ID */
-    tenet_knowledge_id: string | null
-    /** Philosophy Tier */
-    tier: number | null
-    /** Linked Neurosis ID */
-    neurosis_id: string | null
-    /** Whether the underlying philosophy is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  philosophies: SettlementPhilosophyDetail[]
   /** Principles */
-  principles: {
-    /** Settlement Principle ID */
-    id: string
-    /** Option 1 Name */
-    option_1_name: string
-    /** Option 1 Rules */
-    option_1_rules: string | null
-    /** Option 1 Selected */
-    option_1_selected: boolean
-    /** Option 2 Name */
-    option_2_name: string
-    /** Option 2 Rules */
-    option_2_rules: string | null
-    /** Option 2 Selected */
-    option_2_selected: boolean
-    /** Principle ID */
-    principle_id: string
-    /** Principle Name */
-    principle_name: string
-    /** Whether the underlying principle is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  principles: SettlementPrincipleDetail[]
   /** Quarries */
-  quarries: {
-    /** Collective Cognition Level 1 */
-    collective_cognition_level_1: boolean
-    /** Collective Cognition Level 2 */
-    collective_cognition_level_2: [boolean, boolean]
-    /** Collective Cognition Level 3 */
-    collective_cognition_level_3: [boolean, boolean, boolean]
-    /** Collective Cognition Prologue */
-    collective_cognition_prologue: boolean
-    /** Settlement Quarry ID */
-    id: string
-    /** Monster Name */
-    monster_name: string
-    /** Node */
-    node: string
-    /** Has Prologue Hunt */
-    prologue: boolean
-    /** Quarry ID */
-    quarry_id: string
-    /** Unlocked */
-    unlocked: boolean
-    /** Instinct */
-    instinct: string | null
-    /** Basic Action */
-    basic_action: string | null
-    /** Blind Spot */
-    blind_spot: string | null
-    /** Defeat Outcome */
-    defeat_outcome: string | null
-    /** Deployment Rules */
-    deployment_rules: string | null
-    /** Victory Outcome */
-    victory_outcome: string | null
-    /** Whether the underlying quarry is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  quarries: SettlementQuarryDetail[]
   /** Resources */
-  resources: {
-    /** Category */
-    category: string
-    /** Settlement Resource ID */
-    id: string
-    /** Quantity */
-    quantity: number
-    /** Quarry ID */
-    quarry_id: string | null
-    /** Quarry Monster Name */
-    quarry_monster_name: string | null
-    /** Quarry Node */
-    quarry_node: string | null
-    /** Resource ID */
-    resource_id: string
-    /** Resource Name */
-    resource_name: string
-    /** Resource Types */
-    resource_types: string[]
-    /** Whether the underlying resource is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  resources: SettlementResourceDetail[]
   /** Seed Patterns */
-  seed_patterns: {
-    /** Settlement Seed Pattern ID */
-    id: string
-    /** Seed Pattern ID */
-    seed_pattern_id: string
-    /** Seed Pattern Name */
-    seed_pattern_name: string
-    /** Whether the underlying seed pattern is user-defined */
-    custom: boolean
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  seed_patterns: SettlementSeedPatternDetail[]
   /** Caller's Role on This Settlement */
   role: SettlementRole
   /** Settlement Timeline */
   timeline: {
     /** Year Number */
-    [key: number]: {
-      /** Year Completed */
-      completed: boolean
-      /** Settlement Timeline Year Entries */
-      entries: string[]
-      /** Settlement Timeline Year ID */
-      id: string
-    }
+    [key: number]: SettlementTimelineYearDetail
   }
 }
+
+/**
+ * Settlement Collective Cognition Reward Detail
+ *
+ * Used throughout the app to represent a settlement's collective cognition
+ * reward. Custom rewards are scoped to a single user; non-custom rewards are
+ * part of the shared catalog.
+ */
+export type SettlementCollectiveCognitionRewardDetail = Omit<
+  Tables<'settlement_collective_cognition_reward'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Collective Cognition Reward Details */
+    collective_cognition_reward: CollectiveCognitionRewardDetail
+  }
+
+/**
+ * Settlement Gear Detail
+ *
+ * Used throughout the app to represent a settlement's gear. Custom gear is
+ * scoped to a single user; non-custom gear is part of the shared catalog.
+ */
+export type SettlementGearDetail = Omit<
+  Tables<'settlement_gear'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Gear Details */
+    gear: GearDetail
+  }
+
+/**
+ * Settlement Innovation Detail
+ *
+ * Used throughout the app to represent a settlement's innovation. Custom innovations are
+ * scoped to a single user; non-custom innovations are part of the shared catalog.
+ */
+export type SettlementInnovationDetail = Omit<
+  Tables<'settlement_innovation'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Innovation Details */
+    innovation: InnovationDetail
+  }
+
+/**
+ * Settlement Knowledge Detail
+ *
+ * Used throughout the app to represent a settlement's knowledge. Custom knowledge is
+ * scoped to a single user; non-custom knowledge is part of the shared catalog.
+ */
+export type SettlementKnowledgeDetail = Omit<
+  Tables<'settlement_knowledge'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Knowledge Details */
+    knowledge: KnowledgeDetail
+  }
+
+/**
+ * Settlement Location Detail
+ *
+ * Used throughout the app to represent a settlement's location. Custom locations are
+ * scoped to a single user; non-custom locations are part of the shared catalog.
+ */
+export type SettlementLocationDetail = Omit<
+  Tables<'settlement_location'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Location Details */
+    location: LocationDetail
+  }
+
+/**
+ * Settlement Milestone Detail
+ *
+ * Used throughout the app to represent a settlement's milestone. Custom milestones are
+ * scoped to a single user; non-custom milestones are part of the shared catalog.
+ */
+export type SettlementMilestoneDetail = Omit<
+  Tables<'settlement_milestone'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Milestone Details */
+    milestone: MilestoneDetail
+  }
+
+/**
+ * Settlement Nemesis Detail
+ *
+ * Used throughout the app to represent a settlement's nemesis. Custom nemeses are
+ * scoped to a single user; non-custom nemeses are part of the shared catalog.
+ */
+export type SettlementNemesisDetail = Omit<
+  Tables<'settlement_nemesis'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Nemesis Details */
+    nemesis: NemesisDetail
+  }
+
+/**
+ * Settlement Pattern Detail
+ *
+ * Used throughout the app to represent a settlement's pattern. Custom patterns are
+ * scoped to a single user; non-custom patterns are part of the shared catalog.
+ */
+export type SettlementPatternDetail = Omit<
+  Tables<'settlement_pattern'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Pattern Details */
+    pattern: PatternDetail
+  }
 
 /**
  * Settlement Phase Detail
@@ -1301,29 +1236,107 @@ export type SettlementPhaseDetail = Omit<
   Tables<'settlement_phase'>,
   'created_at' | 'updated_at'
 > & {
-  /** Returning Survivor IDs */
-  returning_survivor_ids: string[]
+  /** Returning Scout */
+  returning_scout: SurvivorDetail
+  /** Returning Survivors */
+  returning_survivors: SettlementPhaseReturningSurvivorDetail[]
 }
 
 /**
- * Settlement Nemesis Detail
+ * Settlement Phase Returning Survivor Detail
  *
- * Used throughout the app to represent a settlement nemesis.
+ * Used throughout the app to represent a survivor returning in a settlement phase.
  */
-export type SettlementNemesisDetail = Omit<
-  Tables<'settlement_nemesis'>,
-  'created_at' | 'updated_at' | 'settlement_id'
->
+export type SettlementPhaseReturningSurvivorDetail =
+  Tables<'settlement_phase_returning_survivor'> & {
+    /** Returning Survivor */
+    returning_survivor: SurvivorDetail
+  }
+
+/**
+ * Settlement Philosophy Detail
+ *
+ * Used throughout the app to represent a settlement's philosophy. Custom philosophies are
+ * scoped to a single user; non-custom philosophies are part of the shared catalog.
+ */
+export type SettlementPhilosophyDetail = Omit<
+  Tables<'settlement_philosophy'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Philosophy Details */
+    philosophy: PhilosophyDetail
+  }
+
+/**
+ * Settlement Principle Detail
+ *
+ * Used throughout the app to represent a settlement's principle. Custom principles are
+ * scoped to a single user; non-custom principles are part of the shared catalog.
+ */
+export type SettlementPrincipleDetail = Omit<
+  Tables<'settlement_principle'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Principle Details */
+    principle: PrincipleDetail
+  }
 
 /**
  * Settlement Quarry Detail
  *
- * Used throughout the app to represent a settlement quarry.
+ * Used throughout the app to represent a settlement's quarry. Custom quarries are
+ * scoped to a single user; non-custom quarries are part of the shared catalog.
  */
 export type SettlementQuarryDetail = Omit<
   Tables<'settlement_quarry'>,
-  'created_at' | 'updated_at' | 'settlement_id'
->
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Quarry Details */
+    quarry: QuarryDetail
+  }
+
+/**
+ * Settlement Resource Detail
+ *
+ * Used throughout the app to represent a settlement's resource. Custom resources are
+ * scoped to a single user; non-custom resources are part of the shared catalog.
+ */
+export type SettlementResourceDetail = Omit<
+  Tables<'settlement_resource'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Resource Details */
+    resource: ResourceDetail
+  }
+
+/**
+ * Settlement Seed Pattern Detail
+ *
+ * Used throughout the app to represent a settlement's seed pattern. Custom seed patterns are
+ * scoped to a single user; non-custom seed patterns are part of the shared catalog.
+ */
+export type SettlementSeedPatternDetail = Omit<
+  Tables<'settlement_seed_pattern'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Seed Pattern Details */
+    seed_pattern: SeedPatternDetail
+  }
+
+/**
+ * Settlement Shared User Detail
+ *
+ * Used throughout the app to represent a user who has shared a settlement.
+ */
+export type SettlementSharedUserDetail = Omit<
+  Tables<'settlement_shared_user'>,
+  'created_at'
+> & {}
 
 /**
  * Settlement Timeline Year Detail
@@ -1333,31 +1346,7 @@ export type SettlementQuarryDetail = Omit<
 export type SettlementTimelineYearDetail = Omit<
   Tables<'settlement_timeline_year'>,
   'created_at' | 'id' | 'updated_at'
->
-
-/**
- * Showdown AI Deck Detail
- *
- * Used throughout the app to represent a monster's AI deck in a showdown.
- */
-export type ShowdownAIDeckDetail = Omit<
-  Tables<'showdown_ai_deck'>,
-  'created_at' | 'updated_at' | 'settlement_id' | 'showdown_id'
->
-
-/**
- * Showdown State Setter
- *
- * Accepts either a direct value or a functional updater. Use the functional
- * form inside async `.then` / `.catch` callbacks so the update always operates
- * on the latest state instead of a stale closure capture.
- */
-export type ShowdownStateSetter = (
-  showdownOrUpdater:
-    | ShowdownDetail
-    | null
-    | ((prev: ShowdownDetail | null) => ShowdownDetail | null)
-) => void
+> & {}
 
 /**
  * Showdown Detail
@@ -1369,10 +1358,20 @@ export type ShowdownDetail = Omit<
   'created_at' | 'updated_at'
 > & {
   /** Showdown Monsters */
-  showdown_monsters: { [key: string]: ShowdownMonsterDetail } | null
+  monsters: { [key: string]: ShowdownMonsterDetail }
   /** Showdown Survivors */
-  showdown_survivors: { [key: string]: ShowdownSurvivorDetail } | null
+  survivors: { [key: string]: ShowdownSurvivorDetail }
 }
+
+/**
+ * Showdown AI Deck Detail
+ *
+ * Used throughout the app to represent a monster's AI deck in a showdown.
+ */
+export type ShowdownAIDeckDetail = Omit<
+  Tables<'showdown_ai_deck'>,
+  'created_at' | 'updated_at'
+>
 
 /**
  * Showdown Monster Detail
@@ -1385,41 +1384,57 @@ export type ShowdownMonsterDetail = Omit<
 > & {
   /** AI Deck */
   ai_deck: ShowdownAIDeckDetail
-  /**
-   * Traits (joined from showdown_monster_trait → trait).
-   *
-   * Each entry carries `author_username` — `null` for built-in (non-custom)
-   * traits, and the catalog author's username for custom traits so the UI can
-   * render the "By @username" chip (E2.8; see `docs/settlement-sharing-architecture.md`
-   * §7.4 / §10 Phase 2 item 2.6).
-   */
-  traits: (TraitDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
-  /**
-   * Moods (joined from showdown_monster_mood → mood).
-   *
-   * Each entry carries `author_username`; see `traits` above.
-   */
-  moods: (MoodDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
-  /**
-   * Survivor statuses (joined from showdown_monster_survivor_status →
-   * survivor_status).
-   *
-   * Each entry carries `author_username`; see `traits` above.
-   */
-  survivor_statuses: (SurvivorStatusDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
+  /** Moods */
+  moods: ShowdownMonsterMoodDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: ShowdownMonsterSurvivorStatusDetail[]
+  /** Traits */
+  traits: ShowdownMonsterTraitDetail[]
 }
+
+/**
+ * Showdown Monster Mood Detail
+ *
+ * Used throughout the app to represent a monster's mood in a showdown.
+ */
+export type ShowdownMonsterMoodDetail = Omit<
+  Tables<'showdown_monster_mood'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Mood Details */
+    mood: MoodDetail
+  }
+
+/**
+ * Showdown Monster Survivor Status Detail
+ *
+ * Used throughout the app to represent a survivor status inflicted by a
+ * nemesis or quarry level. Custom statuses are scoped to a single user;
+ * non-custom statuses are part of the shared catalog.
+ */
+export type ShowdownMonsterSurvivorStatusDetail = Omit<
+  Tables<'showdown_monster_survivor_status'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Survivor Status Details */
+    survivor_status: SurvivorStatusDetail
+  }
+
+/**
+ * Showdown Monster Trait Detail
+ *
+ * Used throughout the app to represent a monster's trait in a showdown.
+ */
+export type ShowdownMonsterTraitDetail = Omit<
+  Tables<'showdown_monster_trait'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Trait Details */
+    trait: TraitDetail
+  }
 
 /**
  * Showdown Survivor Detail
@@ -1429,7 +1444,10 @@ export type ShowdownMonsterDetail = Omit<
 export type ShowdownSurvivorDetail = Omit<
   Tables<'showdown_survivor'>,
   'created_at' | 'updated_at'
->
+> & {
+  /** Survivor Details */
+  survivor: SurvivorDetail
+}
 
 /**
  * Strain Milestone Detail
@@ -1439,7 +1457,7 @@ export type ShowdownSurvivorDetail = Omit<
 export type StrainMilestoneDetail = Omit<
   Tables<'strain_milestone'>,
   'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
+> & {}
 
 /**
  * Survivor Detail
@@ -1448,270 +1466,97 @@ export type StrainMilestoneDetail = Omit<
  * Includes additional information not present in the survivor table.
  */
 export type SurvivorDetail = Tables<'survivor'> & {
-  /**
-   * Abilities and Impairments.
-   *
-   * Each entry carries `author_username` — `null` for built-in (non-custom)
-   * rows, and the catalog author's username for custom rows so the UI can
-   * render the "By @username" chip (E2.8; see
-   * `docs/settlement-sharing-architecture.md` §7.4 / §10 Phase 2 item 2.6).
-   */
-  abilities_impairments: {
-    /** Ability or Impairment Name */
-    ability_impairment_name: string
-    /** Custom */
-    custom: boolean
-    /** Ability or Impairment ID */
-    id: string
-    /** Rules */
-    rules: string
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
-  /**
-   * Cursed Gear.
-   *
-   * Each entry carries `author_username`; see `abilities_impairments` above.
-   */
-  cursed_gear: {
-    /** Custom */
-    custom: boolean
-    /** Cursed Gear Name */
-    gear_name: string
-    /** Cursed Gear ID */
-    id: string
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
-  /**
-   * Disorders.
-   *
-   * Each entry carries `author_username`; see `abilities_impairments` above.
-   */
-  disorders: {
-    /** Custom */
-    custom: boolean
-    /** Disorder Name */
-    disorder_name: string
-    /** Disorder ID */
-    id: string
-    /** Rules */
-    rules: string
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  }[]
+  /** Abilities and Impairments */
+  abilities_impairments: SurvivorAbilityImpairmentDetail[]
+  /** Cursed Gear */
+  cursed_gear: SurvivorCursedGearDetail[]
+  /** Disorders */
+  disorders: SurvivorDisorderDetail[]
   /** Survivor Embarked on Hunt/Showdown */
   embarked: boolean
-  /**
-   * Fighting Arts.
-   *
-   * Each entry carries `author_username`; see `abilities_impairments` above.
-   */
-  fighting_arts: (FightingArtDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
+  /** Fighting Arts */
+  fighting_arts: SurvivorFightingArtDetail[]
   /** Gear Grid (3x3 of equipped gear; null until first edit) */
   gear_grid: GearGridDetail | null
-  /**
-   * Knowledge 1.
-   *
-   * Carries `author_username`; see `abilities_impairments` above.
-   */
-  knowledge_1: {
-    /** Knowledge ID */
-    id: string
-    /** Knowledge Name */
-    knowledge_name: string
-    /** Custom */
-    custom: boolean
-    /** Rules */
-    rules: string | null
-    /** Observation Conditions */
-    observation_conditions: string | null
-    /** Observation Rank Up Milestone */
-    observation_rank_up_milestone: number | null
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  } | null
-  /**
-   * Knowledge 2.
-   *
-   * Carries `author_username`; see `abilities_impairments` above.
-   */
-  knowledge_2: {
-    /** Knowledge ID */
-    id: string
-    /** Knowledge Name */
-    knowledge_name: string
-    /** Custom */
-    custom: boolean
-    /** Rules */
-    rules: string | null
-    /** Observation Conditions */
-    observation_conditions: string | null
-    /** Observation Rank Up Milestone */
-    observation_rank_up_milestone: number | null
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  } | null
-  /**
-   * Neurosis.
-   *
-   * Carries `author_username`; see `abilities_impairments` above.
-   */
-  neurosis: {
-    /** Neurosis ID */
-    id: string
-    /** Neurosis Name */
-    neurosis_name: string
-    /** Custom */
-    custom: boolean
-    /** Rules */
-    rules: string | null
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  } | null
-  /**
-   * Philosophy.
-   *
-   * Carries `author_username`; see `abilities_impairments` above.
-   */
-  philosophy: {
-    /** Philosophy ID */
-    id: string
-    /** Philosophy Name */
-    philosophy_name: string
-    /** Custom */
-    custom: boolean
-    /** Hunt XP Milestones */
-    hunt_xp_milestones: number[] | null
-    /** Tenet Knowledge ID */
-    tenet_knowledge_id: string | null
-    /** Tier */
-    tier: number | null
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  } | null
-  /**
-   * Secret Fighting Arts.
-   *
-   * Each entry carries `author_username`; see `abilities_impairments` above.
-   */
-  secret_fighting_arts: (SecretFightingArtDetail & {
-    author_user_id: string | null
-    author_username: string | null
-    author_avatar_url: string | null
-  })[]
-  /**
-   * Tenet Knowledge.
-   *
-   * Carries `author_username`; see `abilities_impairments` above.
-   */
-  tenet_knowledge: {
-    /** Knowledge ID */
-    id: string
-    /** Knowledge Name */
-    knowledge_name: string
-    /** Custom */
-    custom: boolean
-    /** Rules */
-    rules: string | null
-    /** Observation Conditions */
-    observation_conditions: string | null
-    /** Observation Rank Up Milestone */
-    observation_rank_up_milestone: number | null
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  } | null
-  /**
-   * Weapon Type.
-   *
-   * Carries the selected weapon type's specialist/mastery rules so survivor
-   * cards can render proficiency bonuses without a second catalog lookup.
-   */
-  weapon_type: {
-    /** Weapon Type ID */
-    id: string
-    /** Weapon Type Name */
-    weapon_type_name: string
-    /** Custom */
-    custom: boolean
-    /** Specialist Proficiency Rules */
-    specialist_proficiency_rules: string | null
-    /** Master Proficiency Rules */
-    master_proficiency_rules: string | null
-    /** Author User ID (null for built-ins / non-custom rows) */
-    author_user_id: string | null
-    /** Author Username (null for built-ins / ghost authors) */
-    author_username: string | null
-    /** Author Avatar URL (null for built-ins / ghost / no avatar) */
-    author_avatar_url: string | null
-  } | null
+  /** Knowledge 1 */
+  knowledge_1: (KnowledgeDetail & Authorship) | null
+  /** Knowledge 2 */
+  knowledge_2: (KnowledgeDetail & Authorship) | null
+  /** Neurosis */
+  neurosis: (NeurosisDetail & Authorship) | null
+  /** Philosophy */
+  philosophy: (PhilosophyDetail & Authorship) | null
+  /** Secret Fighting Arts */
+  secret_fighting_arts: SurvivorSecretFightingArtDetail[]
+  /** Tenet Knowledge */
+  tenet_knowledge: (KnowledgeDetail & Authorship) | null
+  /** Weapon Type */
+  weapon_type: (WeaponTypeDetail & Authorship) | null
 }
+
+/**
+ * Survivor Ability/Impairment Detail
+ *
+ * Used throughout the app to represent a survivor's ability or impairment.
+ * Custom abilities/impairments are scoped to a single user; non-custom
+ * abilities/impairments are part of the shared catalog.
+ */
+export type SurvivorAbilityImpairmentDetail = Omit<
+  Tables<'survivor_ability_impairment'>,
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Ability/Impairment Details */
+    ability_impairment: AbilityImpairmentDetail
+  }
 
 /**
  * Survivor Cursed Gear Detail
  *
- * Used throughout the app to represent a survivor's cursed gear items.
+ * Used throughout the app to represent a survivor's cursed gear.
+ * Custom cursed gear is scoped to a single user; non-custom cursed gear
+ * is part of the shared catalog.
  */
 export type SurvivorCursedGearDetail = Omit<
   Tables<'survivor_cursed_gear'>,
-  'created_at' | 'updated_at' | 'survivor_id'
->
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Cursed Gear Details */
+    cursed_gear: GearDetail
+  }
 
 /**
  * Survivor Disorder Detail
  *
  * Used throughout the app to represent a survivor's disorders.
+ * Custom disorders are scoped to a single user; non-custom disorders
+ * are part of the shared catalog.
  */
 export type SurvivorDisorderDetail = Omit<
   Tables<'survivor_disorder'>,
-  'created_at' | 'updated_at' | 'survivor_id'
->
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Disorder Details */
+    disorder: DisorderDetail
+  }
 
 /**
  * Survivor Fighting Art Detail
  *
  * Used throughout the app to represent a survivor's fighting arts.
+ * Custom fighting arts are scoped to a single user; non-custom fighting arts
+ * are part of the shared catalog.
  */
 export type SurvivorFightingArtDetail = Omit<
   Tables<'survivor_fighting_art'>,
-  'created_at' | 'updated_at' | 'survivor_id'
->
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Fighting Art Details */
+    fighting_art: FightingArtDetail
+  }
 
 /**
  * Survivor Secret Fighting Art Detail
@@ -1720,68 +1565,35 @@ export type SurvivorFightingArtDetail = Omit<
  */
 export type SurvivorSecretFightingArtDetail = Omit<
   Tables<'survivor_secret_fighting_art'>,
-  'created_at' | 'updated_at' | 'survivor_id'
->
+  'created_at' | 'updated_at'
+> &
+  Authorship & {
+    /** Secret Fighting Art Details */
+    secret_fighting_art: SecretFightingArtDetail
+  }
 
 /**
- * Survivor State Setter
+ * Survivor Status Detail
  *
- * Accepts either a direct value or a functional updater. Use the functional
- * form inside async `.then` / `.catch` callbacks so the update always operates
- * on the latest state instead of a stale closure capture.
+ * Used throughout the app to represent a survivor status inflicted by a
+ * nemesis or quarry level. Custom statuses are scoped to a single user;
+ * non-custom statuses are part of the shared catalog.
  */
-export type SurvivorStateSetter = (
-  survivorOrUpdater:
-    | SurvivorDetail
-    | null
-    | ((prev: SurvivorDetail | null) => SurvivorDetail | null)
-) => void
+export type SurvivorStatusDetail = Omit<
+  Tables<'survivor_status'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
 
 /**
- * Survivors State Setter
+ * Trait Detail
  *
- * Accepts either a direct value or a functional updater. Use the functional
- * form inside async `.then` / `.catch` callbacks so the update always operates
- * on the latest state instead of a stale closure capture.
+ * Used throughout the app to represent a monster trait. Custom traits are
+ * scoped to a single user; non-custom traits are part of the shared catalog.
  */
-export type SurvivorsStateSetter = (
-  survivorsOrUpdater:
-    | SurvivorDetail[]
-    | ((prev: SurvivorDetail[]) => SurvivorDetail[])
-) => void
-
-/**
- * Notification Kind
- *
- * Discriminator for in-app notification rows. Trigger producers write these
- * values into `notification.kind`; UI renderers can switch on them to choose
- * copy and destination links.
- */
-export type NotificationKind =
-  | 'settlement_shared_with_you'
-  | 'removed_from_settlement'
-
-/**
- * Notification Row
- *
- * Client-side row shape for the `notification` table. Kept explicit because
- * the generated Supabase database types do not include the pending
- * notification migration yet.
- */
-export interface NotificationRow {
-  /** Notification ID */
-  id: string
-  /** Recipient User ID */
-  recipient_user_id: string
-  /** Notification Kind */
-  kind: NotificationKind
-  /** Notification Payload */
-  payload: Json
-  /** Read Timestamp */
-  read_at: string | null
-  /** Created Timestamp */
-  created_at: string
-}
+export type TraitDetail = Omit<
+  Tables<'trait'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
 
 /**
  * User Settings Detail
@@ -1804,24 +1616,7 @@ export type UserSettingsDetail = Omit<
  * re-querying. The same Postgres predicate that decides `can_share` here
  * also gates RLS on `settlement_shared_user.INSERT`.
  */
-export interface UserSubscriptionDetail {
-  /** Active Plan ID */
-  plan_id: 'free' | 'lantern' | 'lantern_hoard'
-  /** Subscription Status (e.g. `active`, `past_due`, `canceled`) */
-  status: string
-  /** Current Period End (ISO timestamp; null on the free plan) */
-  current_period_end: string | null
-  /**
-   * Cancellation Pending At Period End
-   *
-   * `true` when the subscriber has cancelled through the Stripe Customer
-   * Portal but the subscription is still entitled until
-   * `current_period_end`. Stripe holds the row at `status = 'active'` (or
-   * `'trialing'`) during this window and only transitions to `'canceled'`
-   * when the period actually expires. The SubscriptionCard reads this flag
-   * to swap the renewal copy for a "watch ends on …" treatment.
-   */
-  cancel_at_period_end: boolean
+export type UserSubscriptionDetail = Tables<'user_subscription'> & {
   /**
    * Whether The User May Create New Shares
    *
@@ -1829,76 +1624,6 @@ export interface UserSubscriptionDetail {
    * `settlement_shared_user.INSERT`.
    */
   can_share: boolean
-}
-
-/**
- * Wanderer Detail
- *
- * Used throughout the app to represent the currently selected wanderer.
- * Includes additional information not present in the wanderer table.
- */
-export type WandererDetail = Omit<
-  Tables<'wanderer'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
-> & {
-  /** Abilities and Impairments (resolved via junction table) */
-  abilities_impairments: WandererAbilityImpairmentDetail[]
-}
-
-/**
- * Wanderer Ability / Impairment Detail
- *
- * Represents an ability/impairment linked to a wanderer. The wanderer → ability/
- * impairment relationship is stored in the `wanderer_ability_impairment`
- * junction table; at read time the junction is flattened to the underlying
- * `ability_impairment` row so consumers can work with a single object shape.
- */
-export type WandererAbilityImpairmentDetail = AbilityImpairmentDetail
-
-/**
- * Wanderer Timeline Year Detail
- *
- * Used throughout the app to represent a wanderer timeline year.
- */
-export type WandererTimelineYearDetail = Omit<
-  Tables<'wanderer_timeline_year'>,
-  'created_at' | 'updated_at'
->
-
-/**
- * Weapon Type Detail
- *
- * Used throughout the app to represent a weapon type.
- */
-export type WeaponTypeDetail = Omit<
-  Tables<'weapon_type'>,
-  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-/**
- * Vignette Encounter State Setter
- *
- * Accepts either a direct value or a functional updater. Use the functional
- * form inside async `.then` / `.catch` callbacks so the update always operates
- * on the latest state instead of a stale closure capture.
- */
-export type VignetteEncounterStateSetter = (
-  vignetteEncounterOrUpdater:
-    | VignetteEncounterDetail
-    | null
-    | ((prev: VignetteEncounterDetail | null) => VignetteEncounterDetail | null)
-) => void
-
-/**
- * Vignette Encounter Summary Detail
- *
- * Used throughout the app to represent an active vignette encounter.
- */
-export type VignetteEncounterSummaryDetail = Omit<
-  Tables<'vignette_encounter'>,
-  'created_at' | 'updated_at'
-> & {
-  vignette_monster: { monster_name: string }
 }
 
 /**
@@ -1911,13 +1636,40 @@ export type VignetteEncounterDetail = Omit<
   'created_at' | 'updated_at'
 > & {
   /** Vignette Encounter Monsters */
-  vignette_encounter_monsters: {
-    [key: string]: VignetteEncounterMonsterDetail
-  } | null
+  monsters: { [key: string]: VignetteEncounterMonsterDetail }
   /** Vignette Encounter Survivors */
-  vignette_encounter_survivors: {
-    [key: string]: VignetteEncounterSurvivorDetail
-  } | null
+  survivors: { [key: string]: VignetteEncounterSurvivorDetail }
+}
+
+/**
+ * Vignette Encounter AI Deck Detail
+ *
+ * Used throughout the app to represent the AI deck for an active vignette
+ * encounter.
+ */
+export type VignetteEncounterAIDeckDetail = Omit<
+  Tables<'vignette_encounter_ai_deck'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Vignette Encounter Monster Detail
+ *
+ * Used throughout the app to represent a vignette monster for an active
+ * vignette encounter.
+ */
+export type VignetteEncounterMonsterDetail = Omit<
+  Tables<'vignette_encounter_monster'>,
+  'created_at' | 'updated_at'
+> & {
+  /** AI Deck */
+  ai_deck: VignetteEncounterAIDeckDetail
+  /** Moods */
+  moods: VignetteEncounterMonsterMoodDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: VignetteEncounterMonsterSurvivorStatusDetail[]
+  /** Traits */
+  traits: VignetteEncounterMonsterTraitDetail[]
 }
 
 /**
@@ -1935,20 +1687,6 @@ export type VignetteEncounterMonsterMoodDetail = Omit<
 }
 
 /**
- * Vignette Encounter Monster Trait Detail
- *
- * Used throughout the app to represent the trait of a monster in an active
- * vignette encounter.
- */
-export type VignetteEncounterMonsterTraitDetail = Omit<
-  Tables<'vignette_encounter_monster_trait'>,
-  'created_at' | 'updated_at'
-> & {
-  /** Trait */
-  trait: TraitDetail
-}
-
-/**
  * Vignette Encounter Monster Survivor Status Detail
  *
  * Used throughout the app to represent the survivor status of a monster in an
@@ -1963,34 +1701,52 @@ export type VignetteEncounterMonsterSurvivorStatusDetail = Omit<
 }
 
 /**
- * Vignette Encounter AI Deck Detail
+ * Vignette Encounter Monster Trait Detail
  *
- * Used throughout the app to represent the AI deck for an active vignette
- * encounter.
- */
-export type VignetteEncounterAIDeckDetail = Omit<
-  Tables<'vignette_encounter_ai_deck'>,
-  'created_at' | 'updated_at' | 'vignette_encounter_id'
->
-
-/**
- * Vignette Encounter Monster Detail
- *
- * Used throughout the app to represent a vignette monster for an active
+ * Used throughout the app to represent the trait of a monster in an active
  * vignette encounter.
  */
-export type VignetteEncounterMonsterDetail = Omit<
-  Tables<'vignette_encounter_monster'>,
+export type VignetteEncounterMonsterTraitDetail = Omit<
+  Tables<'vignette_encounter_monster_trait'>,
   'created_at' | 'updated_at'
 > & {
-  /** AI Deck */
-  ai_deck: VignetteEncounterAIDeckDetail
-  /** Traits */
-  traits: VignetteEncounterMonsterTraitDetail[]
-  /** Moods */
-  moods: VignetteEncounterMonsterMoodDetail[]
-  /** Survivor Statuses */
-  survivor_statuses: VignetteEncounterMonsterSurvivorStatusDetail[]
+  /** Trait */
+  trait: TraitDetail
+}
+
+/**
+ * Vignette Encounter Shared User Detail
+ *
+ * Used throughout the app to represent a user who has shared an active vignette
+ * encounter.
+ */
+export type VignetteEncounterSharedUserDetail = Omit<
+  Tables<'vignette_encounter_shared_user'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Vignette Encounter Survivor Detail
+ *
+ * Used throughout the app to represent a survivor in an active vignette
+ * encounter.
+ */
+export type VignetteEncounterSurvivorDetail = Omit<
+  Tables<'vignette_encounter_survivor'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Abilities and Impairments */
+  abilities_impairments: VignetteEncounterSurvivorAbilityImpairmentDetail[]
+  /** Disorders */
+  disorders: VignetteEncounterSurvivorDisorderDetail[]
+  /** Fighting Arts */
+  fighting_arts: VignetteEncounterSurvivorFightingArtDetail[]
+  /** Gear Grid */
+  gear_grid: VignetteEncounterSurvivorGearGridDetail[]
+  /** Secret Fighting Arts */
+  secret_fighting_arts: VignetteEncounterSurvivorSecretFightingArtDetail[]
+  /** Weapon Type */
+  weapon_type: WeaponTypeDetail | null
 }
 
 /**
@@ -2036,6 +1792,17 @@ export type VignetteEncounterSurvivorFightingArtDetail = Omit<
 }
 
 /**
+ * Vignette Encounter Survivor Gear Grid Detail
+ *
+ * Used throughout the app to represent a survivor's gear grid in an active
+ * vignette encounter.
+ */
+export type VignetteEncounterSurvivorGearGridDetail = Omit<
+  Tables<'vignette_encounter_survivor_gear_grid'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
  * Vignette Encounter Survivor Secret Fighting Art Detail
  *
  * Used throughout the app to represent a survivor's secret fighting art in an active
@@ -2050,41 +1817,6 @@ export type VignetteEncounterSurvivorSecretFightingArtDetail = Omit<
 }
 
 /**
- * Vignette Encounter Survivor Gear Grid Detail
- *
- * Used throughout the app to represent a survivor's gear grid in an active
- * vignette encounter.
- */
-export type VignetteEncounterSurvivorGearGridDetail = Omit<
-  Tables<'vignette_encounter_survivor_gear_grid'>,
-  'created_at' | 'updated_at'
->
-
-/**
- * Vignette Encounter Survivor Detail
- *
- * Used throughout the app to represent a survivor in an active vignette
- * encounter.
- */
-export type VignetteEncounterSurvivorDetail = Omit<
-  Tables<'vignette_encounter_survivor'>,
-  'created_at' | 'updated_at'
-> & {
-  /** Abilities and Impairments */
-  abilities_and_impairments: VignetteEncounterSurvivorAbilityImpairmentDetail[]
-  /** Disorders */
-  disorders: VignetteEncounterSurvivorDisorderDetail[]
-  /** Fighting Arts */
-  fighting_arts: VignetteEncounterSurvivorFightingArtDetail[]
-  /** Secret Fighting Arts */
-  secret_fighting_arts: VignetteEncounterSurvivorSecretFightingArtDetail[]
-  /** Gear Grid */
-  gear_grid: VignetteEncounterSurvivorGearGridDetail[]
-  /** Weapon Type */
-  weapon_type: WeaponTypeDetail | null
-}
-
-/**
  * Vignette Monster Detail
  *
  * Used throughout the app to represent a template monster for a vignette
@@ -2093,7 +1825,32 @@ export type VignetteEncounterSurvivorDetail = Omit<
 export type VignetteMonsterDetail = Omit<
   Tables<'vignette_monster'>,
   'created_at' | 'updated_at'
->
+> & {
+  /** Source Nemesis */
+  source_nemesis: NemesisDetail | null
+  /** Source Quarry */
+  source_quarry: QuarryDetail | null
+  /** Levels */
+  levels: VignetteMonsterLevelDetail[]
+}
+
+/**
+ * Vignette Monster Level Detail
+ *
+ * Used throughout the app to represent a template monster level for a
+ * vignette encounter.
+ */
+export type VignetteMonsterLevelDetail = Omit<
+  Tables<'vignette_monster_level'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Moods */
+  moods: VignetteMonsterLevelMoodDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: VignetteMonsterLevelSurvivorStatusDetail[]
+  /** Traits */
+  traits: VignetteMonsterLevelTraitDetail[]
+}
 
 /**
  * Vignette Monster Level Mood Detail
@@ -2107,20 +1864,6 @@ export type VignetteMonsterLevelMoodDetail = Omit<
 > & {
   /** Mood */
   mood: MoodDetail
-}
-
-/**
- * Vignette Monster Level Trait Detail
- *
- * Used throughout the app to represent a trait of a template monster level for
- * a vignette encounter.
- */
-export type VignetteMonsterLevelTraitDetail = Omit<
-  Tables<'vignette_monster_level_trait'>,
-  'created_at' | 'updated_at'
-> & {
-  /** Trait */
-  trait: TraitDetail
 }
 
 /**
@@ -2138,35 +1881,36 @@ export type VignetteMonsterLevelSurvivorStatusDetail = Omit<
 }
 
 /**
- * Vignette Monster Level Detail
+ * Vignette Monster Level Trait Detail
  *
- * Used throughout the app to represent a template monster level for a
- * vignette encounter.
+ * Used throughout the app to represent a trait of a template monster level for
+ * a vignette encounter.
  */
-export type VignetteMonsterLevelDetail = Omit<
-  Tables<'vignette_monster_level'>,
+export type VignetteMonsterLevelTraitDetail = Omit<
+  Tables<'vignette_monster_level_trait'>,
   'created_at' | 'updated_at'
 > & {
-  /** Moods */
-  moods: VignetteMonsterLevelMoodDetail[]
-  /** Traits */
-  traits: VignetteMonsterLevelTraitDetail[]
-  /** Survivor Statuses */
-  survivor_statuses: VignetteMonsterLevelSurvivorStatusDetail[]
+  /** Trait */
+  trait: TraitDetail
 }
 
-/**
- * Vignette Survivor Ability Impairment Detail
- *
- * Used throughout the app to represent an ability or impairment of a template
- * survivor for a vignette encounter.
- */
-export type VignetteSurvivorAbilityImpairmentDetail = Omit<
-  Tables<'vignette_survivor_ability_impairment'>,
+/** Vignette Survivor Detail */
+export type VignetteSurvivorDetail = Omit<
+  Tables<'vignette_survivor'>,
   'created_at' | 'updated_at'
 > & {
-  /** Ability or Impairment */
-  ability_impairment: AbilityImpairmentDetail
+  /** Abilities and Impairments */
+  abilities_impairments: VignetteSurvivorAbilityImpairmentDetail[]
+  /** Disorders */
+  disorders: VignetteSurvivorDisorderDetail[]
+  /** Fighting Arts */
+  fighting_arts: VignetteSurvivorFightingArtDetail[]
+  /** Gear Grid */
+  gear_grid: VignetteSurvivorGearGridDetail[]
+  /** Secret Fighting Arts */
+  secret_fighting_arts: VignetteSurvivorSecretFightingArtDetail[]
+  /** Weapon Type */
+  weapon_type: WeaponTypeDetail
 }
 
 /**
@@ -2184,6 +1928,20 @@ export type VignetteSurvivorDisorderDetail = Omit<
 }
 
 /**
+ * Vignette Survivor Ability Impairment Detail
+ *
+ * Used throughout the app to represent an ability or impairment of a template
+ * survivor for a vignette encounter.
+ */
+export type VignetteSurvivorAbilityImpairmentDetail = Omit<
+  Tables<'vignette_survivor_ability_impairment'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Ability or Impairment */
+  ability_impairment: AbilityImpairmentDetail
+}
+
+/**
  * Vignette Survivor Fighting Art Detail
  *
  * Used throughout the app to represent a fighting art of a template survivor
@@ -2196,6 +1954,17 @@ export type VignetteSurvivorFightingArtDetail = Omit<
   /** Fighting Art */
   fighting_art: FightingArtDetail
 }
+
+/**
+ * Vignette Survivor Gear Grid Detail
+ *
+ * Used throughout the app to represent the gear grid of a template survivor for
+ * a vignette encounter.
+ */
+export type VignetteSurvivorGearGridDetail = Omit<
+  Tables<'vignette_survivor_gear_grid'>,
+  'created_at' | 'updated_at'
+> & {}
 
 /**
  * Vignette Survivor Secret Fighting Art Detail
@@ -2212,61 +1981,156 @@ export type VignetteSurvivorSecretFightingArtDetail = Omit<
 }
 
 /**
- * Vignette Survivor Gear Grid Detail
+ * Wanderer Detail
  *
- * Used throughout the app to represent the gear grid of a template survivor for
- * a vignette encounter.
+ * Used throughout the app to represent the currently selected wanderer.
+ * Includes additional information not present in the wanderer table.
  */
-export type VignetteSurvivorGearGridDetail = Omit<
-  Tables<'vignette_survivor_gear_grid'>,
-  'created_at' | 'updated_at'
-> & {
-  /** Gear */
-  gear: GearDetail
-}
-
-/** Vignette Survivor Detail */
-export type VignetteSurvivorDetail = Omit<
-  Tables<'vignette_survivor'>,
-  'created_at' | 'updated_at'
+export type WandererDetail = Omit<
+  Tables<'wanderer'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {
   /** Abilities and Impairments */
-  abilities_impairments: VignetteSurvivorAbilityImpairmentDetail[]
-  /** Disorders */
-  disorders: VignetteSurvivorDisorderDetail[]
+  abilities_impairments: WandererAbilityImpairmentDetail[]
   /** Fighting Arts */
-  fighting_arts: VignetteSurvivorFightingArtDetail[]
-  /** Secret Fighting Arts */
-  secret_fighting_arts: VignetteSurvivorSecretFightingArtDetail[]
-  /** Gear Grid */
-  gear_grid: VignetteSurvivorGearGridDetail[]
+  fighting_arts: FightingArtDetail[]
+  /** Rare Gear */
+  rare_gear: GearDetail[]
+  /** Timeline Years */
+  timeline_years: WandererTimelineYearDetail[]
 }
 
-/** Vignette Encounter Shared User Detail */
-export type VignetteEncounterSharedUserDetail = Omit<
-  Tables<'vignette_encounter_shared_user'>,
+/**
+ * Wanderer Ability / Impairment Detail
+ *
+ * Used throughout the app to represent an ability or impairment of a template
+ * wanderer.
+ */
+export type WandererAbilityImpairmentDetail = Omit<
+  Tables<'wanderer_ability_impairment'>,
   'created_at' | 'updated_at'
 > & {
-  /** Shared Username */
-  username: string
-  /** Shared User Avatar URL */
-  avatar_url: string | null
+  /** Ability or Impairment */
+  ability_impairment: AbilityImpairmentDetail
 }
 
-/** Vignette Encounter Summary */
-export interface VignetteEncounterSummary {
-  /** Vignette Encounter ID */
-  id: string
-  /** Vignette Monster ID */
-  vignette_monster_id: string
-  /** Vignette Monster Name */
-  monster_name: string
-  /** Level Number */
-  level_number: number
-  /** Owner User ID */
-  owner_user_id: string
-  /** Owner Username */
-  owner_username: string | null
-  /** Owner Avatar URL */
-  owner_avatar_url: string | null
-}
+/**
+ * Wanderer Timeline Year Detail
+ *
+ * Used throughout the app to represent a wanderer timeline year.
+ */
+export type WandererTimelineYearDetail = Omit<
+  Tables<'wanderer_timeline_year'>,
+  'created_at' | 'updated_at'
+> & {}
+
+/**
+ * Weapon Type Detail
+ *
+ * Used throughout the app to represent a weapon type.
+ */
+export type WeaponTypeDetail = Omit<
+  Tables<'weapon_type'>,
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
+
+/****************************************************************************
+ * Setter Function Types
+ ****************************************************************************/
+
+/**
+ * Encounter State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type EncounterStateSetter = (
+  encounterOrUpdater:
+    | EncounterDetail
+    | null
+    | ((prev: EncounterDetail | null) => EncounterDetail | null)
+) => void
+
+/**
+ * Hunt State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type HuntStateSetter = (
+  huntOrUpdater:
+    | HuntDetail
+    | null
+    | ((prev: HuntDetail | null) => HuntDetail | null)
+) => void
+
+/**
+ * Settlement State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type SettlementStateSetter = (
+  settlementOrUpdater:
+    | SettlementDetail
+    | null
+    | ((prev: SettlementDetail | null) => SettlementDetail | null)
+) => void
+
+/**
+ * Showdown State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type ShowdownStateSetter = (
+  showdownOrUpdater:
+    | ShowdownDetail
+    | null
+    | ((prev: ShowdownDetail | null) => ShowdownDetail | null)
+) => void
+
+/**
+ * Survivor State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type SurvivorStateSetter = (
+  survivorOrUpdater:
+    | SurvivorDetail
+    | null
+    | ((prev: SurvivorDetail | null) => SurvivorDetail | null)
+) => void
+
+/**
+ * Survivors State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type SurvivorsStateSetter = (
+  survivorsOrUpdater:
+    | SurvivorDetail[]
+    | ((prev: SurvivorDetail[]) => SurvivorDetail[])
+) => void
+
+/**
+ * Vignette Encounter State Setter
+ *
+ * Accepts either a direct value or a functional updater. Use the functional
+ * form inside async `.then` / `.catch` callbacks so the update always operates
+ * on the latest state instead of a stale closure capture.
+ */
+export type VignetteEncounterStateSetter = (
+  vignetteEncounterOrUpdater:
+    | VignetteEncounterDetail
+    | null
+    | ((prev: VignetteEncounterDetail | null) => VignetteEncounterDetail | null)
+) => void
