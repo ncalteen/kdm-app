@@ -2058,10 +2058,7 @@ export type VignetteEncounterSurvivorSecretFightingArtDetail = Omit<
 export type VignetteEncounterSurvivorGearGridDetail = Omit<
   Tables<'vignette_encounter_survivor_gear_grid'>,
   'created_at' | 'updated_at'
-> & {
-  /** Gear */
-  gear: GearDetail
-}
+>
 
 /**
  * Vignette Encounter Survivor Detail
@@ -2084,7 +2081,7 @@ export type VignetteEncounterSurvivorDetail = Omit<
   /** Gear Grid */
   gear_grid: VignetteEncounterSurvivorGearGridDetail[]
   /** Weapon Type */
-  weapon_type: WeaponTypeDetail
+  weapon_type: WeaponTypeDetail | null
 }
 
 /**

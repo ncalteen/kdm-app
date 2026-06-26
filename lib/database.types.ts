@@ -5771,7 +5771,6 @@ export type Database = {
           created_at: string
           id: string
           mood_id: string
-          source_vignette_monster_level_mood_id: string | null
           updated_at: string
           vignette_encounter_monster_id: string
         }
@@ -5779,7 +5778,6 @@ export type Database = {
           created_at?: string
           id?: string
           mood_id: string
-          source_vignette_monster_level_mood_id?: string | null
           updated_at?: string
           vignette_encounter_monster_id: string
         }
@@ -5787,18 +5785,10 @@ export type Database = {
           created_at?: string
           id?: string
           mood_id?: string
-          source_vignette_monster_level_mood_id?: string | null
           updated_at?: string
           vignette_encounter_monster_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "vignette_encounter_monster_mo_source_vignette_monster_leve_fkey"
-            columns: ["source_vignette_monster_level_mood_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_monster_level_mood"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "vignette_encounter_monster_mo_vignette_encounter_monster_i_fkey"
             columns: ["vignette_encounter_monster_id"]
@@ -5819,7 +5809,6 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          source_vignette_monster_level_survivor_status_id: string | null
           survivor_status_id: string
           updated_at: string
           vignette_encounter_monster_id: string
@@ -5827,7 +5816,6 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          source_vignette_monster_level_survivor_status_id?: string | null
           survivor_status_id: string
           updated_at?: string
           vignette_encounter_monster_id: string
@@ -5835,19 +5823,11 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          source_vignette_monster_level_survivor_status_id?: string | null
           survivor_status_id?: string
           updated_at?: string
           vignette_encounter_monster_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "vignette_encounter_monster_su_source_vignette_monster_leve_fkey"
-            columns: ["source_vignette_monster_level_survivor_status_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_monster_level_survivor_status"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "vignette_encounter_monster_su_vignette_encounter_monster_i_fkey"
             columns: ["vignette_encounter_monster_id"]
@@ -5868,7 +5848,6 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          source_vignette_monster_level_trait_id: string | null
           trait_id: string
           updated_at: string
           vignette_encounter_monster_id: string
@@ -5876,7 +5855,6 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          source_vignette_monster_level_trait_id?: string | null
           trait_id: string
           updated_at?: string
           vignette_encounter_monster_id: string
@@ -5884,19 +5862,11 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          source_vignette_monster_level_trait_id?: string | null
           trait_id?: string
           updated_at?: string
           vignette_encounter_monster_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "vignette_encounter_monster_tr_source_vignette_monster_leve_fkey"
-            columns: ["source_vignette_monster_level_trait_id"]
-            isOneToOne: false
-            referencedRelation: "vignette_monster_level_trait"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "vignette_encounter_monster_tr_vignette_encounter_monster_i_fkey"
             columns: ["vignette_encounter_monster_id"]
