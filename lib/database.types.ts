@@ -507,6 +507,55 @@ export type Database = {
           },
         ]
       }
+      encounter_active_monster_survivor_status: {
+        Row: {
+          created_at: string
+          encounter_active_monster_id: string
+          id: string
+          settlement_id: string
+          survivor_status_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          encounter_active_monster_id: string
+          id?: string
+          settlement_id?: string
+          survivor_status_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          encounter_active_monster_id?: string
+          id?: string
+          settlement_id?: string
+          survivor_status_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_active_monster_survi_encounter_active_monster_id_fkey"
+            columns: ["encounter_active_monster_id"]
+            isOneToOne: false
+            referencedRelation: "encounter_active_monster"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_active_monster_survivor_statu_survivor_status_id_fkey"
+            columns: ["survivor_status_id"]
+            isOneToOne: false
+            referencedRelation: "survivor_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_active_monster_survivor_status_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       encounter_active_monster_trait: {
         Row: {
           created_at: string
