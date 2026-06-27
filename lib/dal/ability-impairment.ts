@@ -1,20 +1,38 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { AbilityImpairmentDetail } from '@/lib/types'
 
+type AbilityImpairmentInsertData = Omit<
+  TablesInsert<'ability_impairment'>,
+  'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+>
+
+type AbilityImpairmentUpdateData = Omit<
+  TablesUpdate<'ability_impairment'>,
+  'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+const ABILITY_IMPAIRMENT_SELECT = `
+  id,
+  custom,
+  ability_impairment_name,
+  rules
+`
+
 /**
- * Get Ability Impairments
+ * Get Abilities/Impairments
  *
- * Retrieves all ability/impairments visible to the authenticated user. RLS
+ * Retrieves all abilities/impairments visible to the authenticated user. RLS
  * surfaces:
- * - Built-in (non-custom) ability/impairments
- * - Custom ability/impairments owned by the user
- * - Custom ability/impairments attached to a survivor the user can see
- *   (via the transitive SELECT policy on `ability_impairment` through the
+ *
+ * - Built-in (non-custom) abilities/impairments
+ * - Custom abilities/impairments owned by the user
+ * - Custom abilities/impairments attached to a survivor the user can see (via
+ *   the transitive SELECT policy on `ability_impairment` through the
  *   `survivor_ability_impairment` junction)
  *
- * @returns Ability/Impairments by ID
+ * @returns Abilities/Impairments by ID
  */
 export async function getAbilityImpairments(): Promise<{
   [key: string]: AbilityImpairmentDetail
@@ -22,129 +40,113 @@ export async function getAbilityImpairments(): Promise<{
   await getUserId()
   const supabase = createClient()
 
-  const { data, error } = await supabase.from('ability_impairment').select(
-    `
-      id,
-      custom,
-      ability_impairment_name,
-      rules
-    `
-  )
+  const { data, error } = await supabase
+    .from('ability_impairment')
+    .select(ABILITY_IMPAIRMENT_SELECT)
 
   if (error)
-    throw new Error(`Error Fetching Ability/Impairments: ${error.message}`)
+    throw new Error(`Error Fetching Abilities/Impairments: ${error.message}`)
 
   const map: { [key: string]: AbilityImpairmentDetail } = {}
-  for (const a of data ?? []) map[a.id] = a
+  for (const a of data) map[a.id] = a
 
   return map
 }
 
 /**
- * Get User Custom Ability Impairments
+ * Get User Custom Abilities/Impairments
  *
- * Retrieves only custom ability/impairments authored by the current user.
- * Used by the user-content library so collaborator-authored customs visible
- * via the transitive SELECT policy don't pollute the caller's personal
- * catalog.
+ * Retrieves only custom abilities/impairments authored by the current user.
+ * Used by the user-content library so collaborator-authored customs visible via
+ * the transitive SELECT policy don't pollute the caller's personal catalog.
  *
- * @returns Custom Ability/Impairment Data Map
+ * @returns Custom Abilities/Impairments Data Map
  */
 export async function getUserCustomAbilityImpairments(): Promise<{
-  [key: string]: AbilityImpairmentDetail & {
-    archived_at: string | null
-  }
+  [key: string]: AbilityImpairmentDetail
 }> {
   const userId = await getUserId()
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('ability_impairment')
-    .select(
-      `
-        id,
-        custom,
-        ability_impairment_name,
-        rules,
-        archived_at
-      `
-    )
+    .select(ABILITY_IMPAIRMENT_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(
-      `Error Fetching Custom Ability/Impairments: ${error.message}`
+      `Error Fetching Custom Abilities/Impairments: ${error.message}`
     )
 
-  const map: {
-    [key: string]: AbilityImpairmentDetail & { archived_at: string | null }
-  } = {}
-  for (const a of data ?? []) if (!a.archived_at) map[a.id] = a
+  const map: { [key: string]: AbilityImpairmentDetail } = {}
+  for (const a of data) map[a.id] = a
 
   return map
 }
 
 /**
- * Add Ability Impairment
+ * Add Ability/Impairment
  *
  * Adds a new ability/impairment record to the database.
  *
- * @param data Ability/Impairment Data
+ * @param abilityImpairment Ability/Impairment Data
  * @returns Inserted Ability/Impairment
  */
-export async function addAbilityImpairment(data: {
-  custom: boolean
-  ability_impairment_name: string
-  rules?: string | null
-}): Promise<AbilityImpairmentDetail> {
+export async function addAbilityImpairment(
+  abilityImpairment: AbilityImpairmentInsertData
+): Promise<AbilityImpairmentDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'ability_impairment'> = {
+    ...abilityImpairment
+  }
 
-  if (data.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
 
-  const { data: result, error } = await supabase
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
     .from('ability_impairment')
     .insert({
-      ...data,
-      ...(data.custom ? { user_id: userId! } : {})
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
     })
-    .select(
-      `
-        id,
-        custom,
-        ability_impairment_name,
-        rules
-      `
-    )
+    .select(ABILITY_IMPAIRMENT_SELECT)
     .single()
 
-  if (error)
-    throw new Error(`Error Adding Ability/Impairment: ${error.message}`)
+  if (error) throw new Error(`Error Adding Ability/Impairment: ${error.message}`)
 
-  return result
+  return data
 }
 
 /**
- * Update Ability Impairment
+ * Update Ability/Impairment
  *
  * Updates an existing ability/impairment record in the database.
  *
  * @param id Ability/Impairment ID
- * @param data Ability/Impairment Data
+ * @param abilityImpairment Ability/Impairment Data
  */
 export async function updateAbilityImpairment(
   id: string,
-  data: {
-    ability_impairment_name?: string
-    rules?: string | null
-  }
+  abilityImpairment: AbilityImpairmentUpdateData
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'ability_impairment'> = {
+    ...abilityImpairment
+  }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('ability_impairment')
-    .update(data)
+    .update(updateData)
     .eq('id', id)
 
   if (error)
@@ -159,5 +161,13 @@ export async function updateAbilityImpairment(
  * @param id Ability/Impairment ID
  */
 export async function removeAbilityImpairment(id: string): Promise<void> {
-  await removeCatalogRow('ability_impairment', id, 'Ability/Impairment')
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('ability_impairment')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Ability/Impairment: ${error.message}`)
 }

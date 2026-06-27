@@ -1,13 +1,21 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { MoodDetail } from '@/lib/types'
+
+const MOOD_SELECT = `
+  id,
+  custom,
+  mood_name,
+  rules
+`
 
 /**
  * Get Moods
  *
  * Retrieves all monster moods visible to the authenticated user. RLS
  * surfaces:
+ *
  * - Built-in (non-custom) moods
  * - Custom moods owned by the user
  *
@@ -19,12 +27,12 @@ export async function getMoods(): Promise<{ [key: string]: MoodDetail }> {
 
   const { data, error } = await supabase
     .from('mood')
-    .select('id, custom, mood_name, rules')
+    .select(MOOD_SELECT)
 
   if (error) throw new Error(`Error Fetching Moods: ${error.message}`)
 
   const map: { [key: string]: MoodDetail } = {}
-  for (const m of data ?? []) map[m.id] = m
+  for (const m of data) map[m.id] = m
 
   return map
 }
@@ -46,14 +54,15 @@ export async function getUserCustomMoods(): Promise<{
 
   const { data, error } = await supabase
     .from('mood')
-    .select('id, custom, mood_name, rules, archived_at')
+    .select(MOOD_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error) throw new Error(`Error Fetching Custom Moods: ${error.message}`)
 
   const map: { [key: string]: MoodDetail } = {}
-  for (const m of data ?? []) if (!m.archived_at) map[m.id] = m
+  for (const m of data) map[m.id] = m
 
   return map
 }
@@ -61,28 +70,35 @@ export async function getUserCustomMoods(): Promise<{
 /**
  * Add Mood
  *
- * Inserts a new mood catalog row.
+ * Adds a new mood record to the database.
  *
- * @param data Mood Data
+ * @param mood Mood Data
  * @returns Inserted Mood
  */
-export async function addMood(data: {
-  custom: boolean
-  mood_name: string
-  rules?: string | null
-}): Promise<MoodDetail> {
+export async function addMood(
+  mood: Omit<
+    TablesInsert<'mood'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+  >
+): Promise<MoodDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'mood'> = { ...mood }
 
-  if (data.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data: result, error } = await supabase
     .from('mood')
     .insert({
-      ...data,
-      ...(data.custom ? { user_id: userId! } : {})
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
     })
-    .select('id, custom, mood_name, rules')
+    .select(MOOD_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Mood: ${error.message}`)
@@ -93,18 +109,25 @@ export async function addMood(data: {
 /**
  * Update Mood
  *
- * Updates a mood record.
+ * Updates an existing mood record in the database.
  *
  * @param id Mood ID
- * @param data Mood Data
+ * @param mood Mood Data
  */
 export async function updateMood(
   id: string,
-  data: { mood_name?: string; rules?: string | null }
+  mood: Omit<
+    TablesUpdate<'mood'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'mood'> = { ...mood }
 
-  const { error } = await supabase.from('mood').update(data).eq('id', id)
+  delete updateData.custom
+  delete updateData.user_id
+
+  const { error } = await supabase.from('mood').update(updateData).eq('id', id)
 
   if (error) throw new Error(`Error Updating Mood: ${error.message}`)
 }
@@ -117,7 +140,11 @@ export async function updateMood(
  * @param id Mood ID
  */
 export async function removeMood(id: string): Promise<void> {
-  await removeCatalogRow('mood', id, 'Mood')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('mood').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Mood: ${error.message}`)
 }
 
 /**

@@ -1,17 +1,34 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CharacterDetail } from '@/lib/types'
 
+type CharacterInsertData = Omit<
+  TablesInsert<'character'>,
+  'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+>
+
+type CharacterUpdateData = Omit<
+  TablesUpdate<'character'>,
+  'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+>
+
+const CHARACTER_SELECT = `
+  id,
+  custom,
+  character_name,
+  rules
+`
+
 /**
  * Get Characters
  *
  * Retrieves all characters visible to the authenticated user. RLS surfaces:
+ *
  * - Built-in (non-custom) characters
  * - Custom characters owned by the user
  *
- * @returns Characters
+ * @returns Characters by ID
  */
 export async function getCharacters(): Promise<{
   [key: string]: CharacterDetail
@@ -21,12 +38,12 @@ export async function getCharacters(): Promise<{
 
   const { data, error } = await supabase
     .from('character')
-    .select('id, custom, character_name, rules')
+    .select(CHARACTER_SELECT)
 
   if (error) throw new Error(`Error Fetching Characters: ${error.message}`)
 
   const characterMap: { [key: string]: CharacterDetail } = {}
-  for (const c of data ?? []) characterMap[c.id] = c
+  for (const c of data) characterMap[c.id] = c
 
   return characterMap
 }
@@ -34,9 +51,9 @@ export async function getCharacters(): Promise<{
 /**
  * Get User Custom Characters
  *
- * Retrieves only custom characters authored by the current user. Used by
- * the user-content library so collaborator-authored customs visible via the
- * transitive SELECT policy don't pollute the caller's personal catalog.
+ * Retrieves only custom characters authored by the current user. Used by the
+ * user-content library so archived customs don't pollute the caller's personal
+ * catalog.
  *
  * @returns Custom Character Data Map
  */
@@ -48,17 +65,18 @@ export async function getUserCustomCharacters(): Promise<{
 
   const { data, error } = await supabase
     .from('character')
-    .select('id, custom, character_name, rules, archived_at')
+    .select(CHARACTER_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(`Error Fetching Custom Characters: ${error.message}`)
 
-  const characterMap: { [key: string]: CharacterDetail } = {}
-  for (const c of data ?? []) if (!c.archived_at) characterMap[c.id] = c
+  const map: { [key: string]: CharacterDetail } = {}
+  for (const c of data) map[c.id] = c
 
-  return characterMap
+  return map
 }
 
 /**
@@ -70,23 +88,26 @@ export async function getUserCustomCharacters(): Promise<{
  * @returns Inserted Character
  */
 export async function addCharacter(
-  character: Omit<
-    TablesInsert<'character'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
-  >
+  character: CharacterInsertData
 ): Promise<CharacterDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'character'> = { ...character }
 
-  if (character.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('character')
     .insert({
-      ...character,
-      ...(character.custom ? { user_id: userId! } : {})
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
     })
-    .select('id, custom, character_name, rules')
+    .select(CHARACTER_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Character: ${error.message}`)
@@ -101,17 +122,20 @@ export async function addCharacter(
  *
  * @param id Character ID
  * @param character Character Data
- * @returns Updated Character
  */
 export async function updateCharacter(
   id: string,
-  character: Omit<TablesUpdate<'character'>, 'id' | 'created_at' | 'updated_at'>
+  character: CharacterUpdateData
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'character'> = { ...character }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('character')
-    .update(character)
+    .update(updateData)
     .eq('id', id)
 
   if (error) throw new Error(`Error Updating Character: ${error.message}`)
@@ -125,5 +149,9 @@ export async function updateCharacter(
  * @param id Character ID
  */
 export async function removeCharacter(id: string): Promise<void> {
-  await removeCatalogRow('character', id, 'Character')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('character').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Character: ${error.message}`)
 }

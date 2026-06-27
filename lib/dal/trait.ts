@@ -1,13 +1,21 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { TraitDetail } from '@/lib/types'
+
+const TRAIT_SELECT = `
+  id,
+  custom,
+  trait_name,
+  rules
+`
 
 /**
  * Get Traits
  *
  * Retrieves all monster traits visible to the authenticated user. RLS
  * surfaces:
+ *
  * - Built-in (non-custom) traits
  * - Custom traits owned by the user
  *
@@ -19,12 +27,12 @@ export async function getTraits(): Promise<{ [key: string]: TraitDetail }> {
 
   const { data, error } = await supabase
     .from('trait')
-    .select('id, custom, trait_name, rules')
+    .select(TRAIT_SELECT)
 
   if (error) throw new Error(`Error Fetching Traits: ${error.message}`)
 
   const map: { [key: string]: TraitDetail } = {}
-  for (const t of data ?? []) map[t.id] = t
+  for (const t of data) map[t.id] = t
 
   return map
 }
@@ -46,14 +54,15 @@ export async function getUserCustomTraits(): Promise<{
 
   const { data, error } = await supabase
     .from('trait')
-    .select('id, custom, trait_name, rules, archived_at')
+    .select(TRAIT_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error) throw new Error(`Error Fetching Custom Traits: ${error.message}`)
 
   const map: { [key: string]: TraitDetail } = {}
-  for (const t of data ?? []) if (!t.archived_at) map[t.id] = t
+  for (const t of data) map[t.id] = t
 
   return map
 }
@@ -61,28 +70,35 @@ export async function getUserCustomTraits(): Promise<{
 /**
  * Add Trait
  *
- * Inserts a new trait catalog row.
+ * Adds a new trait record to the database.
  *
- * @param data Trait Data
+ * @param trait Trait Data
  * @returns Inserted Trait
  */
-export async function addTrait(data: {
-  custom: boolean
-  trait_name: string
-  rules?: string | null
-}): Promise<TraitDetail> {
+export async function addTrait(
+  trait: Omit<
+    TablesInsert<'trait'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+  >
+): Promise<TraitDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'trait'> = { ...trait }
 
-  if (data.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data: result, error } = await supabase
     .from('trait')
     .insert({
-      ...data,
-      ...(data.custom ? { user_id: userId! } : {})
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
     })
-    .select('id, custom, trait_name, rules')
+    .select(TRAIT_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Trait: ${error.message}`)
@@ -93,18 +109,25 @@ export async function addTrait(data: {
 /**
  * Update Trait
  *
- * Updates a trait record.
+ * Updates an existing trait record in the database.
  *
  * @param id Trait ID
- * @param data Trait Data
+ * @param trait Trait Data
  */
 export async function updateTrait(
   id: string,
-  data: { trait_name?: string; rules?: string | null }
+  trait: Omit<
+    TablesUpdate<'trait'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'trait'> = { ...trait }
 
-  const { error } = await supabase.from('trait').update(data).eq('id', id)
+  delete updateData.custom
+  delete updateData.user_id
+
+  const { error } = await supabase.from('trait').update(updateData).eq('id', id)
 
   if (error) throw new Error(`Error Updating Trait: ${error.message}`)
 }
@@ -117,7 +140,11 @@ export async function updateTrait(
  * @param id Trait ID
  */
 export async function removeTrait(id: string): Promise<void> {
-  await removeCatalogRow('trait', id, 'Trait')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('trait').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Trait: ${error.message}`)
 }
 
 /**

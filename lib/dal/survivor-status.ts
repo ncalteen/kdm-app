@@ -1,13 +1,21 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SurvivorStatusDetail } from '@/lib/types'
+
+const SURVIVOR_STATUS_SELECT = `
+  id,
+  custom,
+  survivor_status_name,
+  rules
+`
 
 /**
  * Get Survivor Statuses
  *
  * Retrieves all survivor statuses visible to the authenticated user. RLS
  * surfaces:
+ *
  * - Built-in (non-custom) statuses
  * - Custom statuses owned by the user
  *
@@ -21,13 +29,13 @@ export async function getSurvivorStatuses(): Promise<{
 
   const { data, error } = await supabase
     .from('survivor_status')
-    .select('id, custom, survivor_status_name, rules')
+    .select(SURVIVOR_STATUS_SELECT)
 
   if (error)
     throw new Error(`Error Fetching Survivor Statuses: ${error.message}`)
 
   const map: { [key: string]: SurvivorStatusDetail } = {}
-  for (const s of data ?? []) map[s.id] = s
+  for (const s of data) map[s.id] = s
 
   return map
 }
@@ -50,15 +58,16 @@ export async function getUserCustomSurvivorStatuses(): Promise<{
 
   const { data, error } = await supabase
     .from('survivor_status')
-    .select('id, custom, survivor_status_name, rules, archived_at')
+    .select(SURVIVOR_STATUS_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(`Error Fetching Custom Survivor Statuses: ${error.message}`)
 
   const map: { [key: string]: SurvivorStatusDetail } = {}
-  for (const s of data ?? []) if (!s.archived_at) map[s.id] = s
+  for (const s of data) map[s.id] = s
 
   return map
 }
@@ -66,28 +75,35 @@ export async function getUserCustomSurvivorStatuses(): Promise<{
 /**
  * Add Survivor Status
  *
- * Inserts a new survivor status catalog row.
+ * Adds a new survivor status record to the database.
  *
- * @param data Survivor Status Data
+ * @param survivorStatus Survivor Status Data
  * @returns Inserted Survivor Status
  */
-export async function addSurvivorStatus(data: {
-  custom: boolean
-  survivor_status_name: string
-  rules?: string | null
-}): Promise<SurvivorStatusDetail> {
+export async function addSurvivorStatus(
+  survivorStatus: Omit<
+    TablesInsert<'survivor_status'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+  >
+): Promise<SurvivorStatusDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'survivor_status'> = { ...survivorStatus }
 
-  if (data.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data: result, error } = await supabase
     .from('survivor_status')
     .insert({
-      ...data,
-      ...(data.custom ? { user_id: userId! } : {})
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
     })
-    .select('id, custom, survivor_status_name, rules')
+    .select(SURVIVOR_STATUS_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Survivor Status: ${error.message}`)
@@ -98,20 +114,27 @@ export async function addSurvivorStatus(data: {
 /**
  * Update Survivor Status
  *
- * Updates a survivor status record.
+ * Updates an existing survivor status record in the database.
  *
  * @param id Survivor Status ID
- * @param data Survivor Status Data
+ * @param survivorStatus Survivor Status Data
  */
 export async function updateSurvivorStatus(
   id: string,
-  data: { survivor_status_name?: string; rules?: string | null }
+  survivorStatus: Omit<
+    TablesUpdate<'survivor_status'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'survivor_status'> = { ...survivorStatus }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('survivor_status')
-    .update(data)
+    .update(updateData)
     .eq('id', id)
 
   if (error) throw new Error(`Error Updating Survivor Status: ${error.message}`)
@@ -125,7 +148,14 @@ export async function updateSurvivorStatus(
  * @param id Survivor Status ID
  */
 export async function removeSurvivorStatus(id: string): Promise<void> {
-  await removeCatalogRow('survivor_status', id, 'Survivor Status')
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('survivor_status')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Removing Survivor Status: ${error.message}`)
 }
 
 /**

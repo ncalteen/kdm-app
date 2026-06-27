@@ -1,19 +1,28 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { InnovationDetail } from '@/lib/types'
 
+const INNOVATION_SELECT = `
+  id,
+  custom,
+  innovation_name,
+  rules,
+  consequences,
+  benefits
+`
+
 /**
  * Get Innovations
  *
  * Retrieves all innovations visible to the authenticated user. RLS surfaces:
+ *
  * - Built-in (non-custom) innovations
  * - Custom innovations owned by the user
  * - Custom innovations on settlements the user collaborates on (via the
  *   transitive SELECT policy on `innovation`)
  *
- * @returns Innovations
+ * @returns Innovations by ID
  */
 export async function getInnovations(): Promise<{
   [key: string]: InnovationDetail
@@ -23,14 +32,14 @@ export async function getInnovations(): Promise<{
 
   const { data, error } = await supabase
     .from('innovation')
-    .select('id, custom, innovation_name, rules, consequences, benefits')
+    .select(INNOVATION_SELECT)
 
   if (error) throw new Error(`Error Fetching Innovations: ${error.message}`)
 
-  const innovationMap: { [key: string]: InnovationDetail } = {}
-  for (const i of data ?? []) innovationMap[i.id] = i
+  const map: { [key: string]: InnovationDetail } = {}
+  for (const i of data) map[i.id] = i
 
-  return innovationMap
+  return map
 }
 
 /**
@@ -50,19 +59,18 @@ export async function getUserCustomInnovations(): Promise<{
 
   const { data, error } = await supabase
     .from('innovation')
-    .select(
-      'id, custom, innovation_name, rules, consequences, benefits, archived_at'
-    )
+    .select(INNOVATION_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(`Error Fetching Custom Innovations: ${error.message}`)
 
-  const innovationMap: { [key: string]: InnovationDetail } = {}
-  for (const i of data ?? []) if (!i.archived_at) innovationMap[i.id] = i
+  const map: { [key: string]: InnovationDetail } = {}
+  for (const i of data) map[i.id] = i
 
-  return innovationMap
+  return map
 }
 
 /**
@@ -115,21 +123,27 @@ export async function getInnovationIds(
 export async function addInnovation(
   innovation: Omit<
     TablesInsert<'innovation'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<InnovationDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'innovation'> = { ...innovation }
 
-  if (innovation.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('innovation')
     .insert({
-      ...innovation,
-      ...(innovation.custom ? { user_id: userId! } : {})
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
     })
-    .select('id, custom, innovation_name, rules, consequences, benefits')
+    .select(INNOVATION_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Innovation: ${error.message}`)
@@ -144,20 +158,23 @@ export async function addInnovation(
  *
  * @param id Innovation ID
  * @param innovation Innovation Data
- * @returns Updated Innovation
  */
 export async function updateInnovation(
   id: string,
   innovation: Omit<
     TablesUpdate<'innovation'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
   >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'innovation'> = { ...innovation }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('innovation')
-    .update(innovation)
+    .update(updateData)
     .eq('id', id)
 
   if (error) throw new Error(`Error Updating Innovation: ${error.message}`)
@@ -171,5 +188,9 @@ export async function updateInnovation(
  * @param id Innovation ID
  */
 export async function removeInnovation(id: string): Promise<void> {
-  await removeCatalogRow('innovation', id, 'Innovation')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('innovation').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Innovation: ${error.message}`)
 }
