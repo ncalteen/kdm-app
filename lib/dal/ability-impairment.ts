@@ -22,9 +22,14 @@ export async function getAbilityImpairments(): Promise<{
   await getUserId()
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('ability_impairment')
-    .select('id, custom, ability_impairment_name, rules')
+  const { data, error } = await supabase.from('ability_impairment').select(
+    `
+      id,
+      custom,
+      ability_impairment_name,
+      rules
+    `
+  )
 
   if (error)
     throw new Error(`Error Fetching Ability/Impairments: ${error.message}`)
@@ -46,14 +51,24 @@ export async function getAbilityImpairments(): Promise<{
  * @returns Custom Ability/Impairment Data Map
  */
 export async function getUserCustomAbilityImpairments(): Promise<{
-  [key: string]: AbilityImpairmentDetail
+  [key: string]: AbilityImpairmentDetail & {
+    archived_at: string | null
+  }
 }> {
   const userId = await getUserId()
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('ability_impairment')
-    .select('id, custom, ability_impairment_name, rules, archived_at')
+    .select(
+      `
+        id,
+        custom,
+        ability_impairment_name,
+        rules,
+        archived_at
+      `
+    )
     .eq('custom', true)
     .eq('user_id', userId)
 
@@ -62,7 +77,9 @@ export async function getUserCustomAbilityImpairments(): Promise<{
       `Error Fetching Custom Ability/Impairments: ${error.message}`
     )
 
-  const map: { [key: string]: AbilityImpairmentDetail } = {}
+  const map: {
+    [key: string]: AbilityImpairmentDetail & { archived_at: string | null }
+  } = {}
   for (const a of data ?? []) if (!a.archived_at) map[a.id] = a
 
   return map
@@ -92,7 +109,14 @@ export async function addAbilityImpairment(data: {
       ...data,
       ...(data.custom ? { user_id: userId! } : {})
     })
-    .select('id, custom, ability_impairment_name, rules')
+    .select(
+      `
+        id,
+        custom,
+        ability_impairment_name,
+        rules
+      `
+    )
     .single()
 
   if (error)
