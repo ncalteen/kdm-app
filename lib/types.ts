@@ -8,16 +8,6 @@ import { DatabaseCampaignType, HuntEventType } from '@/lib/enums'
 /** Avatar Source */
 export type AvatarSource = 'provider' | 'uploaded' | 'none'
 
-/** Authorship Information */
-export type Authorship = {
-  /** Author User ID */
-  author_user_id: string | null
-  /** Author Username */
-  author_username: string | null
-  /** Author Avatar URL */
-  author_avatar_url: string | null
-}
-
 /**
  * Campaign Template
  *
@@ -207,10 +197,7 @@ export type ArmorSetSlotDetail = Omit<
  * Represents a gear item that satisfies a particular slot for an armor set.
  * Also includes the details about the particular gear item.
  */
-export type ArmorSetSlotGearDetail = Omit<
-  Tables<'armor_set_slot_gear'>,
-  'created_at' | 'updated_at'
-> & {
+export type ArmorSetSlotGearDetail = Tables<'armor_set_slot_gear'> & {
   /** Gear Details */
   gear: GearDetail
 }
@@ -281,9 +268,11 @@ export type EncounterActiveMonsterDetail = Omit<
   'created_at' | 'updated_at'
 > & {
   /** Moods */
-  moods: (EncounterActiveMonsterMoodDetail & Authorship)[]
+  moods: EncounterActiveMonsterMoodDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: EncounterActiveMonsterSurvivorStatusDetail[]
   /** Traits */
-  traits: (EncounterActiveMonsterTraitDetail & Authorship)[]
+  traits: EncounterActiveMonsterTraitDetail[]
 }
 
 /**
@@ -297,6 +286,19 @@ export type EncounterActiveMonsterMoodDetail = Omit<
 > & {
   /** Mood Details */
   mood: MoodDetail
+}
+
+/**
+ * Encounter Active Monster Survivor Status Detail
+ *
+ * Represents a monster's survivor status in an active encounter.
+ */
+export type EncounterActiveMonsterSurvivorStatusDetail = Omit<
+  Tables<'encounter_active_monster_survivor_status'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Survivor Status Details */
+  survivor_status: SurvivorStatusDetail
 }
 
 /**
@@ -508,11 +510,11 @@ export type HuntMonsterDetail = Omit<
   /** AI Deck */
   ai_deck: HuntAIDeckDetail
   /** Moods */
-  moods: (HuntMonsterMoodDetail & Authorship)[]
+  moods: HuntMonsterMoodDetail[]
   /** Survivor Statuses */
-  survivor_statuses: (HuntMonsterSurvivorStatusDetail & Authorship)[]
+  survivor_statuses: HuntMonsterSurvivorStatusDetail[]
   /** Traits */
-  traits: (HuntMonsterTraitDetail & Authorship)[]
+  traits: HuntMonsterTraitDetail[]
 }
 
 /**
@@ -1116,11 +1118,10 @@ export type SettlementDetail = Omit<
 export type SettlementCollectiveCognitionRewardDetail = Omit<
   Tables<'settlement_collective_cognition_reward'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Collective Cognition Reward Details */
-    collective_cognition_reward: CollectiveCognitionRewardDetail
-  }
+> & {
+  /** Collective Cognition Reward Details */
+  collective_cognition_reward: CollectiveCognitionRewardDetail
+}
 
 /**
  * Settlement Gear Detail
@@ -1131,11 +1132,10 @@ export type SettlementCollectiveCognitionRewardDetail = Omit<
 export type SettlementGearDetail = Omit<
   Tables<'settlement_gear'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Gear Details */
-    gear: GearDetail
-  }
+> & {
+  /** Gear Details */
+  gear: GearDetail
+}
 
 /**
  * Settlement Innovation Detail
@@ -1146,11 +1146,10 @@ export type SettlementGearDetail = Omit<
 export type SettlementInnovationDetail = Omit<
   Tables<'settlement_innovation'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Innovation Details */
-    innovation: InnovationDetail
-  }
+> & {
+  /** Innovation Details */
+  innovation: InnovationDetail
+}
 
 /**
  * Settlement Knowledge Detail
@@ -1161,11 +1160,10 @@ export type SettlementInnovationDetail = Omit<
 export type SettlementKnowledgeDetail = Omit<
   Tables<'settlement_knowledge'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Knowledge Details */
-    knowledge: KnowledgeDetail
-  }
+> & {
+  /** Knowledge Details */
+  knowledge: KnowledgeDetail
+}
 
 /**
  * Settlement Location Detail
@@ -1176,11 +1174,10 @@ export type SettlementKnowledgeDetail = Omit<
 export type SettlementLocationDetail = Omit<
   Tables<'settlement_location'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Location Details */
-    location: LocationDetail
-  }
+> & {
+  /** Location Details */
+  location: LocationDetail
+}
 
 /**
  * Settlement Milestone Detail
@@ -1191,11 +1188,10 @@ export type SettlementLocationDetail = Omit<
 export type SettlementMilestoneDetail = Omit<
   Tables<'settlement_milestone'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Milestone Details */
-    milestone: MilestoneDetail
-  }
+> & {
+  /** Milestone Details */
+  milestone: MilestoneDetail
+}
 
 /**
  * Settlement Nemesis Detail
@@ -1206,11 +1202,10 @@ export type SettlementMilestoneDetail = Omit<
 export type SettlementNemesisDetail = Omit<
   Tables<'settlement_nemesis'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Nemesis Details */
-    nemesis: NemesisDetail
-  }
+> & {
+  /** Nemesis Details */
+  nemesis: NemesisDetail
+}
 
 /**
  * Settlement Pattern Detail
@@ -1221,11 +1216,10 @@ export type SettlementNemesisDetail = Omit<
 export type SettlementPatternDetail = Omit<
   Tables<'settlement_pattern'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Pattern Details */
-    pattern: PatternDetail
-  }
+> & {
+  /** Pattern Details */
+  pattern: PatternDetail
+}
 
 /**
  * Settlement Phase Detail
@@ -1262,11 +1256,10 @@ export type SettlementPhaseReturningSurvivorDetail =
 export type SettlementPhilosophyDetail = Omit<
   Tables<'settlement_philosophy'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Philosophy Details */
-    philosophy: PhilosophyDetail
-  }
+> & {
+  /** Philosophy Details */
+  philosophy: PhilosophyDetail
+}
 
 /**
  * Settlement Principle Detail
@@ -1277,11 +1270,10 @@ export type SettlementPhilosophyDetail = Omit<
 export type SettlementPrincipleDetail = Omit<
   Tables<'settlement_principle'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Principle Details */
-    principle: PrincipleDetail
-  }
+> & {
+  /** Principle Details */
+  principle: PrincipleDetail
+}
 
 /**
  * Settlement Quarry Detail
@@ -1292,11 +1284,10 @@ export type SettlementPrincipleDetail = Omit<
 export type SettlementQuarryDetail = Omit<
   Tables<'settlement_quarry'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Quarry Details */
-    quarry: QuarryDetail
-  }
+> & {
+  /** Quarry Details */
+  quarry: QuarryDetail
+}
 
 /**
  * Settlement Resource Detail
@@ -1307,11 +1298,10 @@ export type SettlementQuarryDetail = Omit<
 export type SettlementResourceDetail = Omit<
   Tables<'settlement_resource'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Resource Details */
-    resource: ResourceDetail
-  }
+> & {
+  /** Resource Details */
+  resource: ResourceDetail
+}
 
 /**
  * Settlement Seed Pattern Detail
@@ -1322,11 +1312,10 @@ export type SettlementResourceDetail = Omit<
 export type SettlementSeedPatternDetail = Omit<
   Tables<'settlement_seed_pattern'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Seed Pattern Details */
-    seed_pattern: SeedPatternDetail
-  }
+> & {
+  /** Seed Pattern Details */
+  seed_pattern: SeedPatternDetail
+}
 
 /**
  * Settlement Shared User Detail
@@ -1400,11 +1389,10 @@ export type ShowdownMonsterDetail = Omit<
 export type ShowdownMonsterMoodDetail = Omit<
   Tables<'showdown_monster_mood'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Mood Details */
-    mood: MoodDetail
-  }
+> & {
+  /** Mood Details */
+  mood: MoodDetail
+}
 
 /**
  * Showdown Monster Survivor Status Detail
@@ -1416,11 +1404,10 @@ export type ShowdownMonsterMoodDetail = Omit<
 export type ShowdownMonsterSurvivorStatusDetail = Omit<
   Tables<'showdown_monster_survivor_status'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Survivor Status Details */
-    survivor_status: SurvivorStatusDetail
-  }
+> & {
+  /** Survivor Status Details */
+  survivor_status: SurvivorStatusDetail
+}
 
 /**
  * Showdown Monster Trait Detail
@@ -1430,11 +1417,10 @@ export type ShowdownMonsterSurvivorStatusDetail = Omit<
 export type ShowdownMonsterTraitDetail = Omit<
   Tables<'showdown_monster_trait'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Trait Details */
-    trait: TraitDetail
-  }
+> & {
+  /** Trait Details */
+  trait: TraitDetail
+}
 
 /**
  * Showdown Survivor Detail
@@ -1479,19 +1465,19 @@ export type SurvivorDetail = Tables<'survivor'> & {
   /** Gear Grid (3x3 of equipped gear; null until first edit) */
   gear_grid: GearGridDetail | null
   /** Knowledge 1 */
-  knowledge_1: (KnowledgeDetail & Authorship) | null
+  knowledge_1: KnowledgeDetail | null
   /** Knowledge 2 */
-  knowledge_2: (KnowledgeDetail & Authorship) | null
+  knowledge_2: KnowledgeDetail | null
   /** Neurosis */
-  neurosis: (NeurosisDetail & Authorship) | null
+  neurosis: NeurosisDetail | null
   /** Philosophy */
-  philosophy: (PhilosophyDetail & Authorship) | null
+  philosophy: PhilosophyDetail | null
   /** Secret Fighting Arts */
   secret_fighting_arts: SurvivorSecretFightingArtDetail[]
   /** Tenet Knowledge */
-  tenet_knowledge: (KnowledgeDetail & Authorship) | null
+  tenet_knowledge: KnowledgeDetail | null
   /** Weapon Type */
-  weapon_type: (WeaponTypeDetail & Authorship) | null
+  weapon_type: WeaponTypeDetail | null
 }
 
 /**
@@ -1504,11 +1490,10 @@ export type SurvivorDetail = Tables<'survivor'> & {
 export type SurvivorAbilityImpairmentDetail = Omit<
   Tables<'survivor_ability_impairment'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Ability/Impairment Details */
-    ability_impairment: AbilityImpairmentDetail
-  }
+> & {
+  /** Ability/Impairment Details */
+  ability_impairment: AbilityImpairmentDetail
+}
 
 /**
  * Survivor Cursed Gear Detail
@@ -1520,11 +1505,10 @@ export type SurvivorAbilityImpairmentDetail = Omit<
 export type SurvivorCursedGearDetail = Omit<
   Tables<'survivor_cursed_gear'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Cursed Gear Details */
-    cursed_gear: GearDetail
-  }
+> & {
+  /** Cursed Gear Details */
+  cursed_gear: GearDetail
+}
 
 /**
  * Survivor Disorder Detail
@@ -1536,11 +1520,10 @@ export type SurvivorCursedGearDetail = Omit<
 export type SurvivorDisorderDetail = Omit<
   Tables<'survivor_disorder'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Disorder Details */
-    disorder: DisorderDetail
-  }
+> & {
+  /** Disorder Details */
+  disorder: DisorderDetail
+}
 
 /**
  * Survivor Fighting Art Detail
@@ -1552,11 +1535,10 @@ export type SurvivorDisorderDetail = Omit<
 export type SurvivorFightingArtDetail = Omit<
   Tables<'survivor_fighting_art'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Fighting Art Details */
-    fighting_art: FightingArtDetail
-  }
+> & {
+  /** Fighting Art Details */
+  fighting_art: FightingArtDetail
+}
 
 /**
  * Survivor Secret Fighting Art Detail
@@ -1566,11 +1548,10 @@ export type SurvivorFightingArtDetail = Omit<
 export type SurvivorSecretFightingArtDetail = Omit<
   Tables<'survivor_secret_fighting_art'>,
   'created_at' | 'updated_at'
-> &
-  Authorship & {
-    /** Secret Fighting Art Details */
-    secret_fighting_art: SecretFightingArtDetail
-  }
+> & {
+  /** Secret Fighting Art Details */
+  secret_fighting_art: SecretFightingArtDetail
+}
 
 /**
  * Survivor Status Detail
