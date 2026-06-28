@@ -55,9 +55,7 @@ describe('getCollectiveCognitionRewards', () => {
     expect(mockSupabase.from).toHaveBeenCalledWith(
       'collective_cognition_reward'
     )
-    expect(select).toHaveBeenCalledWith(
-      'id, custom, reward_name, collective_cognition, rules'
-    )
+    expect(select).toHaveBeenCalledWith(expect.stringContaining('reward_name'))
   })
 
   it('throws when user is not authenticated', async () => {
@@ -250,6 +248,34 @@ describe('addCollectiveCognitionReward', () => {
     })
   })
 
+  it('ignores caller-provided user_id when inserting a custom reward', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
+
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockReward, error: null })
+    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
+    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
+    mockSupabase.from.mockReturnValue({ insert: mockInsert })
+
+    await addCollectiveCognitionReward({
+      reward_name: 'My Reward',
+      custom: true,
+      collective_cognition: 5,
+      user_id: 'other-user'
+    } as Parameters<typeof addCollectiveCognitionReward>[0])
+
+    expect(mockInsert).toHaveBeenCalledWith({
+      reward_name: 'My Reward',
+      custom: true,
+      collective_cognition: 5,
+      user_id: mockUser.id
+    })
+  })
+
   it('throws when custom reward requires auth but user is null', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: null },
@@ -316,6 +342,26 @@ describe('updateCollectiveCognitionReward', () => {
     expect(mockSupabase.from).toHaveBeenCalledWith(
       'collective_cognition_reward'
     )
+    expect(mockUpdate).toHaveBeenCalledWith({ reward_name: 'Updated Ammonia' })
+    expect(mockEq).toHaveBeenCalledWith('id', 'r1')
+  })
+
+  it('allows archived_at updates while ignoring custom and user_id', async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: null })
+    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    mockSupabase.from.mockReturnValue({ update: mockUpdate })
+
+    await expect(
+      updateCollectiveCognitionReward('r1', {
+        archived_at: '2026-06-27T00:00:00.000Z',
+        custom: false,
+        user_id: 'other-user'
+      } as Parameters<typeof updateCollectiveCognitionReward>[1])
+    ).resolves.toBeUndefined()
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+      archived_at: '2026-06-27T00:00:00.000Z'
+    })
     expect(mockEq).toHaveBeenCalledWith('id', 'r1')
   })
 

@@ -23,12 +23,19 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
+const createGearGridDetail = (overrides: Record<string, unknown> = {}) => ({
+  id: 'grid-1',
+  survivor_id: 'survivor-1',
+  settlement_id: 'settlement-1',
+  ...emptyGearGrid(),
+  ...overrides
+})
+
 describe('emptyGearGrid', () => {
-  it('returns a grid with every slot null and a null id', () => {
+  it('returns empty slot values without persisted row identity', () => {
     const grid = emptyGearGrid()
 
     expect(grid).toEqual({
-      id: null,
       pos_top_left: null,
       pos_top_center: null,
       pos_top_right: null,
@@ -56,19 +63,10 @@ describe('getGearGrid', () => {
   })
 
   it('returns the persisted gear grid', async () => {
-    const mockData = {
-      id: 'grid-1',
+    const mockData = createGearGridDetail({
       pos_top_left: 'gear-a',
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null,
-      selected_armor_set_id: null
-    }
+      pos_mid_center: 'gear-b'
+    })
     const mockMaybeSingle = vi
       .fn()
       .mockResolvedValue({ data: mockData, error: null })
@@ -80,7 +78,7 @@ describe('getGearGrid', () => {
 
     expect(mockSupabase.from).toHaveBeenCalledWith('gear_grid')
     expect(mockSelect).toHaveBeenCalledWith(
-      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right, selected_armor_set_id'
+      expect.stringContaining('settlement_id')
     )
     expect(mockEq).toHaveBeenCalledWith('survivor_id', 'survivor-1')
     expect(result).toEqual(mockData)
@@ -132,18 +130,10 @@ describe('saveGearGrid', () => {
   })
 
   it('upserts the grid row and returns the persisted detail', async () => {
-    const persisted = {
-      id: 'grid-1',
+    const persisted = createGearGridDetail({
       pos_top_left: 'gear-a',
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null
-    }
+      pos_mid_center: 'gear-b'
+    })
     const mockSingle = vi
       .fn()
       .mockResolvedValue({ data: persisted, error: null })
@@ -180,7 +170,7 @@ describe('saveGearGrid', () => {
       { onConflict: 'survivor_id' }
     )
     expect(mockSelect).toHaveBeenCalledWith(
-      'id, pos_top_left, pos_top_center, pos_top_right, pos_mid_left, pos_mid_center, pos_mid_right, pos_bottom_left, pos_bottom_center, pos_bottom_right, selected_armor_set_id'
+      expect.stringContaining('survivor_id')
     )
     expect(result).toEqual(persisted)
   })
@@ -211,18 +201,11 @@ describe('saveGearGrid', () => {
 
 describe('setGearGridSlot', () => {
   it('preserves the existing grid and writes only the targeted slot', async () => {
-    const persisted = {
-      id: 'grid-1',
+    const persisted = createGearGridDetail({
       pos_top_left: 'gear-a',
       pos_top_center: 'gear-new',
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null
-    }
+      pos_mid_center: 'gear-b'
+    })
     const mockSingle = vi
       .fn()
       .mockResolvedValue({ data: persisted, error: null })
@@ -230,58 +213,29 @@ describe('setGearGridSlot', () => {
     const mockUpsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ upsert: mockUpsert })
 
-    const current = {
-      id: 'grid-1',
+    const current = createGearGridDetail({
       pos_top_left: 'gear-a',
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null,
-      selected_armor_set_id: null
-    }
+      pos_mid_center: 'gear-b'
+    })
 
-    const result = await setGearGridSlot(
-      'survivor-1',
-      current,
-      'top_center',
-      'gear-new'
-    )
+    const result = await setGearGridSlot('survivor-1', 'top_center', 'gear-new')
+    void current
 
     expect(mockUpsert).toHaveBeenCalledWith(
       {
         survivor_id: 'survivor-1',
-        pos_top_left: 'gear-a',
-        pos_top_center: 'gear-new',
-        pos_top_right: null,
-        pos_mid_left: null,
-        pos_mid_center: 'gear-b',
-        pos_mid_right: null,
-        pos_bottom_left: null,
-        pos_bottom_center: null,
-        pos_bottom_right: null
+        pos_top_center: 'gear-new'
       },
       { onConflict: 'survivor_id' }
     )
     expect(result).toEqual(persisted)
   })
 
-  it('uses an empty grid as a baseline when none has been persisted', async () => {
-    const persisted = {
+  it('upserts only the targeted slot when no grid has been persisted', async () => {
+    const persisted = createGearGridDetail({
       id: 'grid-new',
-      pos_top_left: null,
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null
-    }
+      pos_mid_center: 'gear-b'
+    })
     const mockSingle = vi
       .fn()
       .mockResolvedValue({ data: persisted, error: null })
@@ -289,38 +243,22 @@ describe('setGearGridSlot', () => {
     const mockUpsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ upsert: mockUpsert })
 
-    await setGearGridSlot('survivor-1', null, 'mid_center', 'gear-b')
+    await setGearGridSlot('survivor-1', 'mid_center', 'gear-b')
 
     expect(mockUpsert).toHaveBeenCalledWith(
       {
         survivor_id: 'survivor-1',
-        pos_top_left: null,
-        pos_top_center: null,
-        pos_top_right: null,
-        pos_mid_left: null,
-        pos_mid_center: 'gear-b',
-        pos_mid_right: null,
-        pos_bottom_left: null,
-        pos_bottom_center: null,
-        pos_bottom_right: null
+        pos_mid_center: 'gear-b'
       },
       { onConflict: 'survivor_id' }
     )
   })
 
   it('clears a slot when gearId is null', async () => {
-    const persisted = {
-      id: 'grid-1',
+    const persisted = createGearGridDetail({
       pos_top_left: null,
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null
-    }
+      pos_mid_center: 'gear-b'
+    })
     const mockSingle = vi
       .fn()
       .mockResolvedValue({ data: persisted, error: null })
@@ -328,24 +266,16 @@ describe('setGearGridSlot', () => {
     const mockUpsert = vi.fn().mockReturnValue({ select: mockSelect })
     mockSupabase.from.mockReturnValue({ upsert: mockUpsert })
 
-    const current = {
-      id: 'grid-1',
+    const current = createGearGridDetail({
       pos_top_left: 'gear-a',
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null,
-      selected_armor_set_id: null
-    }
+      pos_mid_center: 'gear-b'
+    })
 
-    await setGearGridSlot('survivor-1', current, 'top_left', null)
+    await setGearGridSlot('survivor-1', 'top_left', null)
+    void current
 
     expect(mockUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({ pos_top_left: null, pos_mid_center: 'gear-b' }),
+      expect.objectContaining({ pos_top_left: null }),
       { onConflict: 'survivor_id' }
     )
   })
@@ -353,18 +283,7 @@ describe('setGearGridSlot', () => {
 
 describe('clearGearGrid', () => {
   it('upserts an all-null grid row', async () => {
-    const persisted = {
-      id: 'grid-1',
-      pos_top_left: null,
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: null,
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null
-    }
+    const persisted = createGearGridDetail()
     const mockSingle = vi
       .fn()
       .mockResolvedValue({ data: persisted, error: null })
@@ -395,19 +314,10 @@ describe('clearGearGrid', () => {
 
 describe('applyGearGridSlot', () => {
   it('returns a new grid with the targeted slot updated', () => {
-    const current = {
-      id: 'grid-1',
+    const current = createGearGridDetail({
       pos_top_left: 'gear-a',
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null,
-      selected_armor_set_id: null
-    }
+      pos_mid_center: 'gear-b'
+    })
 
     const result = applyGearGridSlot(current, 'top_center', 'gear-new')
 
@@ -419,52 +329,30 @@ describe('applyGearGridSlot', () => {
     expect(current.pos_top_center).toBeNull()
   })
 
-  it('uses an empty grid baseline when current is null', () => {
+  it('returns null when no persisted grid exists yet', () => {
     const result = applyGearGridSlot(null, 'mid_center', 'gear-b')
 
-    expect(result).toEqual({
-      ...emptyGearGrid(),
-      pos_mid_center: 'gear-b'
-    })
+    expect(result).toBeNull()
   })
 
   it('clears a slot when gearId is null', () => {
-    const current = {
-      id: 'grid-1',
+    const current = createGearGridDetail({
       pos_top_left: 'gear-a',
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null,
-      selected_armor_set_id: null
-    }
+      pos_mid_center: 'gear-b'
+    })
 
     const result = applyGearGridSlot(current, 'top_left', null)
 
-    expect(result.pos_top_left).toBeNull()
-    expect(result.pos_mid_center).toBe('gear-b')
+    expect(result?.pos_top_left).toBeNull()
+    expect(result?.pos_mid_center).toBe('gear-b')
   })
 })
 
 describe('setSelectedArmorSet', () => {
   it('upserts only the selected_armor_set_id field', async () => {
-    const persisted = {
-      id: 'grid-1',
-      pos_top_left: null,
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: null,
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null,
+    const persisted = createGearGridDetail({
       selected_armor_set_id: 'armor-set-1'
-    }
+    })
     const mockSingle = vi
       .fn()
       .mockResolvedValue({ data: persisted, error: null })
@@ -485,19 +373,7 @@ describe('setSelectedArmorSet', () => {
   })
 
   it('clears the selection when armorSetId is null', async () => {
-    const persisted = {
-      id: 'grid-1',
-      pos_top_left: null,
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: null,
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null,
-      selected_armor_set_id: null
-    }
+    const persisted = createGearGridDetail()
     const mockSingle = vi
       .fn()
       .mockResolvedValue({ data: persisted, error: null })
@@ -519,19 +395,10 @@ describe('setSelectedArmorSet', () => {
 
 describe('applySelectedArmorSet', () => {
   it('returns a copy with selected_armor_set_id updated', () => {
-    const current = {
-      id: 'grid-1',
+    const current = createGearGridDetail({
       pos_top_left: 'gear-a',
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null,
-      selected_armor_set_id: null
-    }
+      pos_mid_center: 'gear-b'
+    })
 
     const result = applySelectedArmorSet(current, 'armor-set-1')
 
@@ -543,33 +410,21 @@ describe('applySelectedArmorSet', () => {
     expect(current.selected_armor_set_id).toBeNull()
   })
 
-  it('uses an empty grid baseline when current is null', () => {
+  it('returns null when no persisted grid exists yet', () => {
     const result = applySelectedArmorSet(null, 'armor-set-1')
 
-    expect(result).toEqual({
-      ...emptyGearGrid(),
-      selected_armor_set_id: 'armor-set-1'
-    })
+    expect(result).toBeNull()
   })
 
   it('clears the selection when armorSetId is null', () => {
-    const current = {
-      id: 'grid-1',
+    const current = createGearGridDetail({
       pos_top_left: 'gear-a',
-      pos_top_center: null,
-      pos_top_right: null,
-      pos_mid_left: null,
-      pos_mid_center: 'gear-b',
-      pos_mid_right: null,
-      pos_bottom_left: null,
-      pos_bottom_center: null,
-      pos_bottom_right: null,
       selected_armor_set_id: 'armor-set-1'
-    }
+    })
 
     const result = applySelectedArmorSet(current, null)
 
-    expect(result.selected_armor_set_id).toBeNull()
-    expect(result.pos_top_left).toBe('gear-a')
+    expect(result?.selected_armor_set_id).toBeNull()
+    expect(result?.pos_top_left).toBe('gear-a')
   })
 })

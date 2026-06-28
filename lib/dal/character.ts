@@ -3,16 +3,6 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CharacterDetail } from '@/lib/types'
 
-type CharacterInsertData = Omit<
-  TablesInsert<'character'>,
-  'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-type CharacterUpdateData = Omit<
-  TablesUpdate<'character'>,
-  'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
->
-
 const CHARACTER_SELECT = `
   id,
   custom,
@@ -88,7 +78,10 @@ export async function getUserCustomCharacters(): Promise<{
  * @returns Inserted Character
  */
 export async function addCharacter(
-  character: CharacterInsertData
+  character: Omit<
+    TablesInsert<'character'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+  >
 ): Promise<CharacterDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
@@ -105,7 +98,8 @@ export async function addCharacter(
     .from('character')
     .insert({
       ...insertData,
-      ...(insertData.custom === true ? { user_id: userId } : {})
+      custom: true,
+      user_id: userId
     })
     .select(CHARACTER_SELECT)
     .single()
@@ -125,7 +119,10 @@ export async function addCharacter(
  */
 export async function updateCharacter(
   id: string,
-  character: CharacterUpdateData
+  character: Omit<
+    TablesUpdate<'character'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
   const updateData: TablesUpdate<'character'> = { ...character }

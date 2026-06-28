@@ -8,6 +8,15 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabase
 }))
 
+vi.mock('@/lib/dal/settlement-shared-user', () => ({
+  getSettlementMemberUsernames: vi.fn().mockResolvedValue(new Map()),
+  resolveSettlementAuthorship: () => ({
+    author_avatar_url: null,
+    author_user_id: null,
+    author_username: null
+  })
+}))
+
 const {
   getEncounterSurvivors,
   addEncounterSurvivor,
@@ -41,7 +50,26 @@ describe('getEncounterSurvivors', () => {
       survivor_id: 'survivor-1',
       scout: false,
       bleeding_tokens: 1,
-      settlement_id: 'settlement-1'
+      settlement_id: 'settlement-1',
+      survivor: {
+        id: 'survivor-1',
+        survivor_name: 'Foundling',
+        settlement_id: 'settlement-1',
+        abilities_impairments: [],
+        cursed_gear: [],
+        disorders: [],
+        fighting_arts: [],
+        gear_grid: null,
+        hunt_survivor: [],
+        knowledge_1: null,
+        knowledge_2: null,
+        neurosis: null,
+        philosophy: null,
+        secret_fighting_arts: [],
+        showdown_survivor: [],
+        tenet_knowledge: null,
+        weapon_type: null
+      }
     }
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -50,8 +78,20 @@ describe('getEncounterSurvivors', () => {
     })
 
     const result = await getEncounterSurvivors('encounter-1')
+    const { hunt_survivor, showdown_survivor, ...survivorDetail } =
+      survivor.survivor
+    void hunt_survivor
+    void showdown_survivor
 
-    expect(result).toEqual({ 'encounter-survivor-1': survivor })
+    expect(result).toEqual({
+      'encounter-survivor-1': {
+        ...survivor,
+        survivor: {
+          ...survivorDetail,
+          embarked: false
+        }
+      }
+    })
     expect(mockSupabase.from).toHaveBeenCalledWith('encounter_survivor')
   })
 

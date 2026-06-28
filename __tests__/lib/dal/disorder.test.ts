@@ -147,6 +147,29 @@ describe('addDisorder', () => {
     })
   })
 
+  it('ignores caller-provided user_id when inserting a custom disorder', async () => {
+    vi.mocked(getUserIdOrNull).mockResolvedValue(mockUser.id)
+
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockDisorder, error: null })
+    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
+    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
+    mockSupabase.from.mockReturnValue({ insert: mockInsert })
+
+    await addDisorder({
+      disorder_name: 'My Disorder',
+      custom: true,
+      user_id: 'other-user'
+    } as Parameters<typeof addDisorder>[0])
+
+    expect(mockInsert).toHaveBeenCalledWith({
+      disorder_name: 'My Disorder',
+      custom: true,
+      user_id: mockUser.id
+    })
+  })
+
   it('throws when custom disorder requires auth but user is null', async () => {
     vi.mocked(getUserIdOrNull).mockResolvedValue(null)
 
@@ -195,6 +218,25 @@ describe('updateDisorder', () => {
     expect(mockSupabase.from).toHaveBeenCalledWith('disorder')
     expect(mockUpdate).toHaveBeenCalledWith({
       disorder_name: 'Updated Anxiety'
+    })
+    expect(mockEq).toHaveBeenCalledWith('id', 'd1')
+  })
+
+  it('allows archived_at updates while ignoring custom and user_id', async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: null })
+    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    mockSupabase.from.mockReturnValue({ update: mockUpdate })
+
+    await expect(
+      updateDisorder('d1', {
+        archived_at: '2026-06-27T00:00:00.000Z',
+        custom: false,
+        user_id: 'other-user'
+      } as Parameters<typeof updateDisorder>[1])
+    ).resolves.toBeUndefined()
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+      archived_at: '2026-06-27T00:00:00.000Z'
     })
     expect(mockEq).toHaveBeenCalledWith('id', 'd1')
   })

@@ -1,5 +1,5 @@
 import { Database, Tables } from '@/lib/database.types'
-import { DatabaseCampaignType, HuntEventType } from '@/lib/enums'
+import { HuntEventType } from '@/lib/enums'
 
 /****************************************************************************
  * Miscellaneous Types
@@ -48,7 +48,7 @@ export type CampaignTemplate = {
  * Represents a single affinity requirement entry that must be met for the
  * gear's affinity bonus to be active.
  */
-export type GearAffinityRequirementDetail = {
+export type GearAffinityBonusRequirementDetail = {
   /** Required Affinity Color */
   affinity: Database['public']['Enums']['affinity']
   /** Affinity Puzzle Requirement */
@@ -57,10 +57,6 @@ export type GearAffinityRequirementDetail = {
 
 /**
  * Gear Grid Position
- *
- * One of the nine slots on a survivor's 3x3 gear grid. Position keys map
- * directly to columns on the `gear_grid` table (e.g. `top_left` →
- * `pos_top_left`).
  */
 export type GearGridPosition =
   | 'top_left'
@@ -72,6 +68,65 @@ export type GearGridPosition =
   | 'bottom_left'
   | 'bottom_center'
   | 'bottom_right'
+
+/**
+ * Monster Level Data
+ *
+ * Editable monster-level form data shared by custom nemesis, quarry, and
+ * encounter monster workflows.
+ */
+export type MonsterLevelData = {
+  /** Sub-Monster Name */
+  sub_monster_name: string | null
+  /** Basic AI Cards */
+  basic_cards: number
+  /** Advanced AI Cards */
+  advanced_cards: number
+  /** Legendary AI Cards */
+  legendary_cards: number
+  /** Overtone AI Cards */
+  overtone_cards: number
+  /** Accuracy */
+  accuracy: number
+  /** Accuracy Tokens */
+  accuracy_tokens: number
+  /** Damage */
+  damage: number
+  /** Damage Tokens */
+  damage_tokens: number
+  /** Evasion */
+  evasion: number
+  /** Evasion Tokens */
+  evasion_tokens: number
+  /** Luck */
+  luck: number
+  /** Luck Tokens */
+  luck_tokens: number
+  /** Movement */
+  movement: number
+  /** Movement Tokens */
+  movement_tokens: number
+  /** Speed */
+  speed: number
+  /** Speed Tokens */
+  speed_tokens: number
+  /** Strength */
+  strength: number
+  /** Strength Tokens */
+  strength_tokens: number
+  /** Toughness */
+  toughness: number
+  /** Toughness Tokens */
+  toughness_tokens: number
+  /** Life */
+  life: number
+  /** Traits */
+  traits: TraitDetail[]
+  /** Moods */
+  moods: MoodDetail[]
+  /** Survivor Statuses */
+  survivor_statuses: SurvivorStatusDetail[]
+}
 
 /**
  * Hunt Board
@@ -128,7 +183,7 @@ export type PlanSlug = 'free' | 'lantern' | 'lantern_hoard'
  */
 export interface SettlementListEntry {
   /** Campaign Type */
-  campaign_type: DatabaseCampaignType
+  campaign_type: Database['public']['Enums']['campaign_type']
   /** Settlement ID */
   id: string
   /** Settlement Name */
@@ -147,6 +202,13 @@ export interface SettlementListEntry {
  * `settlement_shared_user` and are subject to the shared-user permission set.
  */
 export type SettlementRole = 'owner' | 'collaborator'
+
+/**
+ * With Authorship
+ *
+ * A utility type that adds an authorship field to a given type.
+ */
+export type WithAuthorship<T> = T & { user_id: string | null }
 
 /****************************************************************************
  * Database Types (with Joins)
@@ -254,8 +316,8 @@ export type EncounterDetail = Omit<
 > & {
   /** Encounter Active Monsters */
   monsters: { [key: string]: EncounterActiveMonsterDetail }
-  /** Encounter Survivors */
-  survivors: { [key: string]: EncounterSurvivorDetail }
+  /** Encounter Active Survivors */
+  survivors: { [key: string]: EncounterActiveSurvivorDetail }
 }
 
 /**
@@ -269,8 +331,6 @@ export type EncounterActiveMonsterDetail = Omit<
 > & {
   /** Moods */
   moods: EncounterActiveMonsterMoodDetail[]
-  /** Survivor Statuses */
-  survivor_statuses: EncounterActiveMonsterSurvivorStatusDetail[]
   /** Traits */
   traits: EncounterActiveMonsterTraitDetail[]
 }
@@ -289,19 +349,6 @@ export type EncounterActiveMonsterMoodDetail = Omit<
 }
 
 /**
- * Encounter Active Monster Survivor Status Detail
- *
- * Represents a monster's survivor status in an active encounter.
- */
-export type EncounterActiveMonsterSurvivorStatusDetail = Omit<
-  Tables<'encounter_active_monster_survivor_status'>,
-  'created_at' | 'updated_at'
-> & {
-  /** Survivor Status Details */
-  survivor_status: SurvivorStatusDetail
-}
-
-/**
  * Encounter Active Monster Trait Detail
  *
  * Represents a monster's trait in an active encounter.
@@ -312,6 +359,19 @@ export type EncounterActiveMonsterTraitDetail = Omit<
 > & {
   /** Trait Details */
   trait: TraitDetail
+}
+
+/**
+ * Encounter Active Survivor Detail
+ *
+ * Used throughout the app to represent a survivor in an active encounter.
+ */
+export type EncounterActiveSurvivorDetail = Omit<
+  Tables<'encounter_active_survivor'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Survivor Details */
+  survivor?: SurvivorDetail
 }
 
 /**
@@ -370,19 +430,6 @@ export type EncounterMonsterLevelTraitDetail = Omit<
 }
 
 /**
- * Encounter Survivor Detail
- *
- * Used throughout the app to represent a survivor in an active encounter.
- */
-export type EncounterSurvivorDetail = Omit<
-  Tables<'encounter_survivor'>,
-  'created_at' | 'updated_at'
-> & {
-  /** Survivor Details */
-  survivor: SurvivorDetail
-}
-
-/**
  * Fighting Art Detail
  *
  * Used throughout the app to represent a fighting art.
@@ -406,15 +453,15 @@ export type GearDetail = Omit<
   | 'archived_at'
 > & {
   /** Affinity Bonus Requirements */
-  affinity_bonus_requirements: GearAffinityRequirementDetail[]
+  gear_affinity_bonus_requirements: GearAffinityBonusRequirementDetail[]
   /** Gear Costs Required to Craft this Gear */
-  gear_costs: GearGearCostDetail[]
+  gear_gear_costs: GearGearCostDetail[]
   /** Other Costs Required to Craft this Gear */
-  other_costs: GearOtherCostDetail[]
+  gear_other_costs: GearOtherCostDetail[]
   /** Resource Costs Required to Craft this Gear */
-  resource_costs: GearResourceCostDetail[]
+  gear_resource_costs: GearResourceCostDetail[]
   /** Resource Type Costs Required to Craft this Gear */
-  resource_type_costs: GearResourceTypeCostDetail[]
+  gear_resource_type_costs: GearResourceTypeCostDetail[]
 }
 
 /**
@@ -805,11 +852,11 @@ export type PhilosophyDetail = Omit<
   'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {
   /** Neurosis Details */
-  neurosis: NeurosisDetail[]
+  neurosis: NeurosisDetail
   /** Philosophy Ranks */
   ranks: PhilosophyRankDetail[]
   /** Tenet Knowledge Details */
-  tenet_knowledge: KnowledgeDetail[]
+  tenet_knowledge: KnowledgeDetail
 }
 
 /**

@@ -115,6 +115,28 @@ describe('addMood', () => {
     })
   })
 
+  it('ignores caller-provided user_id when inserting a custom mood', async () => {
+    vi.mocked(getUserIdOrNull).mockResolvedValue(userId)
+    const insert = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { id: 'm2' }, error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValue({ insert })
+
+    await addMood({
+      custom: true,
+      mood_name: 'B',
+      user_id: 'other-user'
+    } as Parameters<typeof addMood>[0])
+
+    expect(insert).toHaveBeenCalledWith({
+      custom: true,
+      mood_name: 'B',
+      user_id: userId
+    })
+  })
+
   it('throws when custom mood requires auth but user is null', async () => {
     vi.mocked(getUserIdOrNull).mockResolvedValue(null)
     await expect(addMood({ custom: true, mood_name: 'X' })).rejects.toThrow(
@@ -148,6 +170,23 @@ describe('updateMood', () => {
 
     await updateMood('m1', { mood_name: 'X' })
     expect(update).toHaveBeenCalledWith({ mood_name: 'X' })
+    expect(eq).toHaveBeenCalledWith('id', 'm1')
+  })
+
+  it('allows archived_at updates while ignoring custom and user_id', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq })
+    mockSupabase.from.mockReturnValue({ update })
+
+    await updateMood('m1', {
+      archived_at: '2026-06-27T00:00:00.000Z',
+      custom: false,
+      user_id: 'other-user'
+    } as Parameters<typeof updateMood>[1])
+
+    expect(update).toHaveBeenCalledWith({
+      archived_at: '2026-06-27T00:00:00.000Z'
+    })
     expect(eq).toHaveBeenCalledWith('id', 'm1')
   })
 

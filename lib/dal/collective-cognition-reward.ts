@@ -1,20 +1,28 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CollectiveCognitionRewardDetail } from '@/lib/types'
+
+const COLLECTIVE_COGNITION_REWARD_SELECT = `
+  id,
+  custom,
+  reward_name,
+  collective_cognition,
+  rules
+`
 
 /**
  * Get Collective Cognition Rewards
  *
  * Retrieves all collective cognition rewards visible to the authenticated
  * user. RLS surfaces:
+ *
  * - Built-in (non-custom) rewards
  * - Custom rewards owned by the user
  * - Custom rewards on settlements the user collaborates on (via the
  *   transitive SELECT policy on `collective_cognition_reward`)
  *
- * @returns Collective Cognition Rewards
+ * @returns Collective Cognition Rewards by ID
  */
 export async function getCollectiveCognitionRewards(): Promise<{
   [key: string]: CollectiveCognitionRewardDetail
@@ -24,17 +32,17 @@ export async function getCollectiveCognitionRewards(): Promise<{
 
   const { data, error } = await supabase
     .from('collective_cognition_reward')
-    .select('id, custom, reward_name, collective_cognition, rules')
+    .select(COLLECTIVE_COGNITION_REWARD_SELECT)
 
   if (error)
     throw new Error(
       `Error Fetching Collective Cognition Rewards: ${error.message}`
     )
 
-  const rewardMap: { [key: string]: CollectiveCognitionRewardDetail } = {}
-  for (const r of data ?? []) rewardMap[r.id] = r
+  const map: { [key: string]: CollectiveCognitionRewardDetail } = {}
+  for (const r of data) map[r.id] = r
 
-  return rewardMap
+  return map
 }
 
 /**
@@ -54,19 +62,20 @@ export async function getUserCustomCollectiveCognitionRewards(): Promise<{
 
   const { data, error } = await supabase
     .from('collective_cognition_reward')
-    .select('id, custom, reward_name, collective_cognition, rules, archived_at')
+    .select(COLLECTIVE_COGNITION_REWARD_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(
       `Error Fetching Custom Collective Cognition Rewards: ${error.message}`
     )
 
-  const rewardMap: { [key: string]: CollectiveCognitionRewardDetail } = {}
-  for (const r of data ?? []) if (!r.archived_at) rewardMap[r.id] = r
+  const map: { [key: string]: CollectiveCognitionRewardDetail } = {}
+  for (const r of data) map[r.id] = r
 
-  return rewardMap
+  return map
 }
 
 /**
@@ -122,21 +131,28 @@ export async function getCollectiveCognitionRewardIds(
 export async function addCollectiveCognitionReward(
   reward: Omit<
     TablesInsert<'collective_cognition_reward'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<CollectiveCognitionRewardDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'collective_cognition_reward'> = { ...reward }
 
-  if (reward.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('collective_cognition_reward')
     .insert({
-      ...reward,
-      ...(reward.custom ? { user_id: userId! } : {})
+      ...insertData,
+      custom: true,
+      user_id: userId
     })
-    .select('id, custom, collective_cognition, reward_name, rules')
+    .select(COLLECTIVE_COGNITION_REWARD_SELECT)
     .single()
 
   if (error)
@@ -154,20 +170,23 @@ export async function addCollectiveCognitionReward(
  *
  * @param id Collective Cognition Reward ID
  * @param reward Collective Cognition Reward Data
- * @returns Updated Collective Cognition Reward
  */
 export async function updateCollectiveCognitionReward(
   id: string,
   reward: Omit<
     TablesUpdate<'collective_cognition_reward'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
   >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'collective_cognition_reward'> = { ...reward }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('collective_cognition_reward')
-    .update(reward)
+    .update(updateData)
     .eq('id', id)
 
   if (error)
@@ -186,9 +205,15 @@ export async function updateCollectiveCognitionReward(
 export async function removeCollectiveCognitionReward(
   id: string
 ): Promise<void> {
-  await removeCatalogRow(
-    'collective_cognition_reward',
-    id,
-    'Collective Cognition Reward'
-  )
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('collective_cognition_reward')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(
+      `Error Removing Collective Cognition Reward: ${error.message}`
+    )
 }

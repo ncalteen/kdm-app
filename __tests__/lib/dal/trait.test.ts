@@ -116,6 +116,28 @@ describe('addTrait', () => {
     })
   })
 
+  it('ignores caller-provided user_id when inserting a custom trait', async () => {
+    vi.mocked(getUserIdOrNull).mockResolvedValue(userId)
+    const insert = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { id: 't2' }, error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValue({ insert })
+
+    await addTrait({
+      custom: true,
+      trait_name: 'B',
+      user_id: 'other-user'
+    } as Parameters<typeof addTrait>[0])
+
+    expect(insert).toHaveBeenCalledWith({
+      custom: true,
+      trait_name: 'B',
+      user_id: userId
+    })
+  })
+
   it('throws when custom trait requires auth but user is null', async () => {
     vi.mocked(getUserIdOrNull).mockResolvedValue(null)
     await expect(addTrait({ custom: true, trait_name: 'X' })).rejects.toThrow(
@@ -144,11 +166,30 @@ describe('addTrait', () => {
 describe('updateTrait', () => {
   it('updates a trait', async () => {
     const eq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq })
     mockSupabase.from.mockReturnValue({
-      update: vi.fn().mockReturnValue({ eq })
+      update
     })
 
     await updateTrait('t1', { trait_name: 'X' })
+    expect(update).toHaveBeenCalledWith({ trait_name: 'X' })
+    expect(eq).toHaveBeenCalledWith('id', 't1')
+  })
+
+  it('allows archived_at updates while ignoring custom and user_id', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq })
+    mockSupabase.from.mockReturnValue({ update })
+
+    await updateTrait('t1', {
+      archived_at: '2026-06-27T00:00:00.000Z',
+      custom: false,
+      user_id: 'other-user'
+    } as Parameters<typeof updateTrait>[1])
+
+    expect(update).toHaveBeenCalledWith({
+      archived_at: '2026-06-27T00:00:00.000Z'
+    })
     expect(eq).toHaveBeenCalledWith('id', 't1')
   })
 

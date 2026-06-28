@@ -1,22 +1,26 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { DisorderDetail } from '@/lib/types'
 
+const DISORDER_SELECT = `
+  id,
+  custom,
+  disorder_name,
+  rules
+`
+
 /**
  * Get Disorders
  *
  * Retrieves all disorders visible to the authenticated user. RLS surfaces:
+ *
  * - Built-in (non-custom) disorders
  * - Custom disorders owned by the user
  * - Custom disorders on settlements the user collaborates on (via the
  *   transitive SELECT policy on `disorder`)
  *
- * Uses `getUserId()` to centralize the auth check rather than repeating
- * `supabase.auth.getUser()` inline.
- *
- * @returns Disorders keyed by ID
+ * @returns Disorders by ID
  */
 export async function getDisorders(): Promise<{
   [key: string]: DisorderDetail
@@ -26,14 +30,14 @@ export async function getDisorders(): Promise<{
 
   const { data, error } = await supabase
     .from('disorder')
-    .select('id, custom, disorder_name, rules')
+    .select(DISORDER_SELECT)
 
   if (error) throw new Error(`Error Fetching Disorders: ${error.message}`)
 
-  const disorderMap: { [key: string]: DisorderDetail } = {}
-  for (const d of data ?? []) disorderMap[d.id] = d
+  const map: { [key: string]: DisorderDetail } = {}
+  for (const d of data) map[d.id] = d
 
-  return disorderMap
+  return map
 }
 
 /**
@@ -53,17 +57,18 @@ export async function getUserCustomDisorders(): Promise<{
 
   const { data, error } = await supabase
     .from('disorder')
-    .select('id, custom, disorder_name, rules, archived_at')
+    .select(DISORDER_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(`Error Fetching Custom Disorders: ${error.message}`)
 
-  const disorderMap: { [key: string]: DisorderDetail } = {}
-  for (const d of data ?? []) if (!d.archived_at) disorderMap[d.id] = d
+  const map: { [key: string]: DisorderDetail } = {}
+  for (const d of data) map[d.id] = d
 
-  return disorderMap
+  return map
 }
 
 /**
@@ -77,21 +82,28 @@ export async function getUserCustomDisorders(): Promise<{
 export async function addDisorder(
   disorder: Omit<
     TablesInsert<'disorder'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<DisorderDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'disorder'> = { ...disorder }
 
-  if (disorder.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('disorder')
     .insert({
-      ...disorder,
-      ...(disorder.custom ? { user_id: userId! } : {})
+      ...insertData,
+      custom: true,
+      user_id: userId
     })
-    .select('id, custom, disorder_name, rules')
+    .select(DISORDER_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Disorder: ${error.message}`)
@@ -109,13 +121,20 @@ export async function addDisorder(
  */
 export async function updateDisorder(
   id: string,
-  disorder: Omit<TablesUpdate<'disorder'>, 'id' | 'created_at' | 'updated_at'>
+  disorder: Omit<
+    TablesUpdate<'disorder'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'disorder'> = { ...disorder }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('disorder')
-    .update(disorder)
+    .update(updateData)
     .eq('id', id)
 
   if (error) throw new Error(`Error Updating Disorder: ${error.message}`)
@@ -129,5 +148,9 @@ export async function updateDisorder(
  * @param id Disorder ID
  */
 export async function removeDisorder(id: string): Promise<void> {
-  await removeCatalogRow('disorder', id, 'Disorder')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('disorder').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Disorder: ${error.message}`)
 }

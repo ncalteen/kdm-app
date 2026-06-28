@@ -163,6 +163,32 @@ describe('addCharacter', () => {
     })
   })
 
+  it('ignores caller-provided user_id when inserting a custom character', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
+
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockCharacter, error: null })
+    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
+    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
+    mockSupabase.from.mockReturnValue({ insert: mockInsert })
+
+    await addCharacter({
+      character_name: 'My Hero',
+      custom: true,
+      user_id: 'other-user'
+    } as Parameters<typeof addCharacter>[0])
+
+    expect(mockInsert).toHaveBeenCalledWith({
+      character_name: 'My Hero',
+      custom: true,
+      user_id: mockUser.id
+    })
+  })
+
   it('throws when custom character requires auth but user is null', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: null },
@@ -218,6 +244,25 @@ describe('updateCharacter', () => {
     expect(mockSupabase.from).toHaveBeenCalledWith('character')
     expect(mockUpdate).toHaveBeenCalledWith({
       character_name: 'Updated Warrior'
+    })
+    expect(mockEq).toHaveBeenCalledWith('id', 'c1')
+  })
+
+  it('allows archived_at updates while ignoring custom and user_id', async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: null })
+    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    mockSupabase.from.mockReturnValue({ update: mockUpdate })
+
+    await expect(
+      updateCharacter('c1', {
+        archived_at: '2026-06-27T00:00:00.000Z',
+        custom: false,
+        user_id: 'other-user'
+      } as Parameters<typeof updateCharacter>[1])
+    ).resolves.toBeUndefined()
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+      archived_at: '2026-06-27T00:00:00.000Z'
     })
     expect(mockEq).toHaveBeenCalledWith('id', 'c1')
   })

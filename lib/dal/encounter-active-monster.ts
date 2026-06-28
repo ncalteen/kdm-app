@@ -1,106 +1,89 @@
-import {
-  getSettlementMemberUsernames,
-  resolveSettlementAuthorship,
-  type SettlementMemberProfile
-} from '@/lib/dal/settlement-shared-user'
-import { TablesInsert } from '@/lib/database.types'
+import { getUserId } from '@/lib/dal/user'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import {
-  EncounterActiveMonsterDetail,
-  MoodDetail,
-  TraitDetail
-} from '@/lib/types'
+import { EncounterActiveMonsterDetail } from '@/lib/types'
 
-/** Catalog Row With Authorship */
-type WithAuthorship<T> = T & { user_id: string | null }
+const ENCOUNTER_ACTIVE_MONSTER_SELECT = `
+  id,
+  accuracy,
+  accuracy_tokens,
+  damage,
+  damage_tokens,
+  encounter_id,
+  encounter_monster_id,
+  encounter_monster_level_id,
+  evasion,
+  evasion_tokens,
+  knocked_down,
+  life,
+  luck,
+  luck_tokens,
+  monster_name,
+  movement,
+  movement_tokens,
+  notes,
+  settlement_id,
+  speed,
+  speed_tokens,
+  toughness,
+  moods:encounter_active_monster_mood(
+    id,
+    encounter_active_monster_id,
+    settlement_id,
+    mood_id,
+    mood(
+      id,
+      custom,
+      user_id,
+      mood_name,
+      rules
+    )
+  ),
+  traits:encounter_active_monster_trait(
+    id,
+    encounter_active_monster_id,
+    settlement_id,
+    trait_id,
+    trait(
+      id,
+      custom,
+      user_id,
+      trait_name,
+      rules
+    )
+  )
+`
 
 /**
  * Get Encounter Active Monsters
  *
- * Retrieves all monsters assigned to an active encounter.
+ * Retrieves all active monsters assigned to an encounter visible to the
+ * authenticated user. RLS surfaces active encounter monsters for settlements
+ * the user owns or collaborates on.
  *
  * @param encounterId Encounter ID
- * @param prefetchedMemberProfiles Optional in-flight member-profile map
- * @returns Encounter Monsters
+ * @returns Encounter Monsters by ID
  */
 export async function getEncounterActiveMonsters(
-  encounterId: string | null | undefined,
-  prefetchedMemberProfiles?: Promise<Map<string, SettlementMemberProfile>>
-): Promise<{ [key: string]: EncounterActiveMonsterDetail } | null> {
-  if (!encounterId) return null
+  encounterId: string | null | undefined
+): Promise<{ [key: string]: EncounterActiveMonsterDetail }> {
+  if (!encounterId) return {}
 
+  await getUserId()
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('encounter_active_monster')
-    .select(
-      'id, accuracy, accuracy_tokens, damage, damage_tokens, encounter_id, encounter_monster_id, encounter_monster_level_id, evasion, evasion_tokens, knocked_down, life, luck, luck_tokens, monster_name, movement, movement_tokens, notes, settlement_id, speed, speed_tokens, toughness, encounter_active_monster_trait(trait(id, custom, user_id, trait_name, rules)), encounter_active_monster_mood(mood(id, custom, user_id, mood_name, rules))'
-    )
+    .select(ENCOUNTER_ACTIVE_MONSTER_SELECT)
     .eq('encounter_id', encounterId)
 
   if (error)
     throw new Error(`Error Fetching Encounter Monsters: ${error.message}`)
-  if (!data) return null
 
-  const settlementId =
-    (data[0] as { settlement_id?: string | null } | undefined)?.settlement_id ??
-    null
+  const map: { [key: string]: EncounterActiveMonsterDetail } = {}
+  for (const activeMonster of data) map[activeMonster.id] = activeMonster
 
-  const memberProfiles =
-    data.length === 0
-      ? new Map<string, SettlementMemberProfile>()
-      : await (prefetchedMemberProfiles ??
-          (settlementId
-            ? getSettlementMemberUsernames(settlementId)
-            : Promise.resolve(new Map<string, SettlementMemberProfile>())))
-
-  const encounterMonsterMap: {
-    [key: string]: EncounterActiveMonsterDetail
-  } = {}
-
-  for (const monster of data ?? []) {
-    const traitRows = (
-      monster as unknown as {
-        encounter_active_monster_trait: {
-          trait: WithAuthorship<TraitDetail> | null
-        }[]
-      }
-    ).encounter_active_monster_trait
-    const moodRows = (
-      monster as unknown as {
-        encounter_active_monster_mood: {
-          mood: WithAuthorship<MoodDetail> | null
-        }[]
-      }
-    ).encounter_active_monster_mood
-
-    encounterMonsterMap[monster.id] = {
-      ...monster,
-      traits: (traitRows ?? [])
-        .map((row) => row.trait)
-        .filter((trait): trait is WithAuthorship<TraitDetail> => trait !== null)
-        .map(({ user_id, ...trait }) => ({
-          ...trait,
-          ...resolveSettlementAuthorship(
-            { custom: trait.custom, user_id },
-            memberProfiles
-          )
-        })),
-      moods: (moodRows ?? [])
-        .map((row) => row.mood)
-        .filter((mood): mood is WithAuthorship<MoodDetail> => mood !== null)
-        .map(({ user_id, ...mood }) => ({
-          ...mood,
-          ...resolveSettlementAuthorship(
-            { custom: mood.custom, user_id },
-            memberProfiles
-          )
-        })),
-      survivor_statuses: []
-    }
-  }
-
-  return encounterMonsterMap
+  return map
 }
 
 /**
@@ -109,25 +92,25 @@ export async function getEncounterActiveMonsters(
  * Adds a monster to an active encounter.
  *
  * @param encounterMonster Encounter Monster Data
- * @returns Inserted Encounter Monster ID
+ * @returns Inserted Encounter Monster
  */
 export async function addEncounterActiveMonster(
   encounterMonster: Omit<
     TablesInsert<'encounter_active_monster'>,
     'id' | 'created_at' | 'updated_at'
   >
-): Promise<string> {
+): Promise<EncounterActiveMonsterDetail> {
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('encounter_active_monster')
     .insert(encounterMonster)
-    .select('id')
+    .select(ENCOUNTER_ACTIVE_MONSTER_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Encounter Monster: ${error.message}`)
 
-  return data.id
+  return data
 }
 
 /**
@@ -136,13 +119,19 @@ export async function addEncounterActiveMonster(
  * Updates an active encounter monster's data.
  *
  * @param monsterId Encounter Monster Row ID
- * @param updateData Data to Update
+ * @param activeMonster Active Monster Data
  */
 export async function updateEncounterActiveMonster(
   monsterId: string,
-  updateData: Partial<EncounterActiveMonsterDetail>
+  activeMonster: Omit<
+    TablesUpdate<'encounter_active_monster'>,
+    'id' | 'created_at' | 'updated_at'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'encounter_active_monster'> = {
+    ...activeMonster
+  }
 
   const { error } = await supabase
     .from('encounter_active_monster')

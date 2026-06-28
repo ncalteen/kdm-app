@@ -16,21 +16,14 @@ vi.mock('@/lib/dal/encounter-survivor', () => ({
   getEncounterSurvivors: vi.fn()
 }))
 
-vi.mock('@/lib/dal/settlement-shared-user', () => ({
-  getSettlementMemberUsernames: vi.fn()
-}))
-
 const { getEncounter, addEncounter, updateEncounter, removeEncounter } =
   await import('@/lib/dal/encounter')
 const { getEncounterActiveMonsters } =
   await import('@/lib/dal/encounter-active-monster')
 const { getEncounterSurvivors } = await import('@/lib/dal/encounter-survivor')
-const { getSettlementMemberUsernames } =
-  await import('@/lib/dal/settlement-shared-user')
 
 beforeEach(() => {
   vi.resetAllMocks()
-  vi.mocked(getSettlementMemberUsernames).mockResolvedValue(new Map())
 })
 
 describe('getEncounter', () => {
@@ -94,15 +87,34 @@ describe('getEncounter', () => {
 
     expect(result).toEqual({
       ...mockEncounterData,
-      encounter_monsters: mockMonsters,
-      encounter_survivors: mockSurvivors
+      monsters: mockMonsters,
+      survivors: mockSurvivors
     })
-    expect(getSettlementMemberUsernames).toHaveBeenCalledWith('settlement-1')
-    expect(getEncounterActiveMonsters).toHaveBeenCalledWith(
-      'encounter-1',
-      expect.any(Promise)
-    )
+    expect(getEncounterActiveMonsters).toHaveBeenCalledWith('encounter-1')
     expect(getEncounterSurvivors).toHaveBeenCalledWith('encounter-1')
+  })
+
+  it('returns empty child maps when no monsters or survivors are found', async () => {
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi
+            .fn()
+            .mockResolvedValue({ data: mockEncounterData, error: null })
+        })
+      })
+    })
+
+    vi.mocked(getEncounterActiveMonsters).mockResolvedValue(null)
+    vi.mocked(getEncounterSurvivors).mockResolvedValue(null)
+
+    const result = await getEncounter('settlement-1')
+
+    expect(result).toEqual({
+      ...mockEncounterData,
+      monsters: {},
+      survivors: {}
+    })
   })
 
   it('throws when query fails', async () => {

@@ -13,6 +13,7 @@ vi.mock('@/lib/supabase/client', () => ({
 
 const {
   getFightingArts,
+  getUserCustomFightingArts,
   addFightingArt,
   updateFightingArt,
   removeFightingArt,
@@ -174,6 +175,32 @@ describe('addFightingArt', () => {
     })
   })
 
+  it('ignores caller-provided user_id when inserting a custom fighting art', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
+
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockFightingArt, error: null })
+    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
+    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
+    mockSupabase.from.mockReturnValue({ insert: mockInsert })
+
+    await addFightingArt({
+      fighting_art_name: 'My Fighting Art',
+      custom: true,
+      user_id: 'other-user'
+    } as Parameters<typeof addFightingArt>[0])
+
+    expect(mockInsert).toHaveBeenCalledWith({
+      fighting_art_name: 'My Fighting Art',
+      custom: true,
+      user_id: mockUser.id
+    })
+  })
+
   it('throws when custom and user is null', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: null },
@@ -226,6 +253,28 @@ describe('updateFightingArt', () => {
     ).resolves.toBeUndefined()
 
     expect(mockSupabase.from).toHaveBeenCalledWith('fighting_art')
+    expect(mockUpdate).toHaveBeenCalledWith({
+      fighting_art_name: 'Updated Rawhide'
+    })
+    expect(mockEq).toHaveBeenCalledWith('id', 'fa1')
+  })
+
+  it('allows archived_at updates while ignoring custom and user_id', async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: null })
+    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    mockSupabase.from.mockReturnValue({ update: mockUpdate })
+
+    await expect(
+      updateFightingArt('fa1', {
+        archived_at: '2026-06-27T00:00:00.000Z',
+        custom: false,
+        user_id: 'other-user'
+      } as Parameters<typeof updateFightingArt>[1])
+    ).resolves.toBeUndefined()
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+      archived_at: '2026-06-27T00:00:00.000Z'
+    })
     expect(mockEq).toHaveBeenCalledWith('id', 'fa1')
   })
 
@@ -281,9 +330,10 @@ describe('getCustomFightingArts', () => {
       custom: true,
       fighting_art_name: 'My Fighting Art'
     }
-    const mockEq2 = vi
+    const mockIs = vi
       .fn()
       .mockResolvedValue({ data: [customFightingArt], error: null })
+    const mockEq2 = vi.fn().mockReturnValue({ is: mockIs })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -291,8 +341,12 @@ describe('getCustomFightingArts', () => {
     const result = await getCustomFightingArts()
 
     expect(result).toEqual({ fa2: customFightingArt })
+    expect(mockSelect).toHaveBeenCalledWith(
+      expect.stringContaining('fighting_art_name')
+    )
     expect(mockEq1).toHaveBeenCalledWith('custom', true)
     expect(mockEq2).toHaveBeenCalledWith('user_id', mockUser.id)
+    expect(mockIs).toHaveBeenCalledWith('archived_at', null)
   })
 
   it('returns empty map when user has no custom fighting arts', async () => {
@@ -301,7 +355,8 @@ describe('getCustomFightingArts', () => {
       error: null
     })
 
-    const mockEq2 = vi.fn().mockResolvedValue({ data: [], error: null })
+    const mockIs = vi.fn().mockResolvedValue({ data: [], error: null })
+    const mockEq2 = vi.fn().mockReturnValue({ is: mockIs })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -336,9 +391,10 @@ describe('getCustomFightingArts', () => {
       error: null
     })
 
-    const mockEq2 = vi
+    const mockIs = vi
       .fn()
       .mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const mockEq2 = vi.fn().mockReturnValue({ is: mockIs })
     const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
     mockSupabase.from.mockReturnValue({ select: mockSelect })
@@ -346,5 +402,40 @@ describe('getCustomFightingArts', () => {
     await expect(getCustomFightingArts()).rejects.toThrow(
       'Error Fetching Custom Fighting Arts: DB error'
     )
+  })
+})
+
+describe('getUserCustomFightingArts', () => {
+  const mockUser = { id: 'user-1' }
+
+  it('returns custom fighting arts using the FightingArtDetail projection', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
+
+    const customFightingArt = {
+      id: 'fa2',
+      custom: true,
+      fighting_art_name: 'My Fighting Art',
+      rules: null
+    }
+    const mockIs = vi
+      .fn()
+      .mockResolvedValue({ data: [customFightingArt], error: null })
+    const mockEq2 = vi.fn().mockReturnValue({ is: mockIs })
+    const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
+    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
+    mockSupabase.from.mockReturnValue({ select: mockSelect })
+
+    const result = await getUserCustomFightingArts()
+
+    expect(result).toEqual({ fa2: customFightingArt })
+    expect(mockSelect).toHaveBeenCalledWith(
+      expect.stringContaining('fighting_art_name')
+    )
+    expect(mockEq1).toHaveBeenCalledWith('custom', true)
+    expect(mockEq2).toHaveBeenCalledWith('user_id', mockUser.id)
+    expect(mockIs).toHaveBeenCalledWith('archived_at', null)
   })
 })

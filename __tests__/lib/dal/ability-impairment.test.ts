@@ -83,7 +83,7 @@ describe('getAbilityImpairments', () => {
     })
 
     await expect(getAbilityImpairments()).rejects.toThrow(
-      'Error Fetching Ability/Impairments: DB error'
+      'Error Fetching Abilities/Impairments: DB error'
     )
   })
 
@@ -139,6 +139,28 @@ describe('addAbilityImpairment', () => {
     })
   })
 
+  it('ignores caller-provided user_id when inserting a custom row', async () => {
+    vi.mocked(getUserIdOrNull).mockResolvedValue(userId)
+    const insert = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { id: 'a2' }, error: null })
+      })
+    })
+    mockSupabase.from.mockReturnValue({ insert })
+
+    await addAbilityImpairment({
+      custom: true,
+      ability_impairment_name: 'B',
+      user_id: 'other-user'
+    } as Parameters<typeof addAbilityImpairment>[0])
+
+    expect(insert).toHaveBeenCalledWith({
+      custom: true,
+      ability_impairment_name: 'B',
+      user_id: userId
+    })
+  })
+
   it('throws when custom requires auth but user is null', async () => {
     vi.mocked(getUserIdOrNull).mockResolvedValue(null)
     await expect(
@@ -167,11 +189,28 @@ describe('addAbilityImpairment', () => {
 describe('updateAbilityImpairment', () => {
   it('updates a row', async () => {
     const eq = vi.fn().mockResolvedValue({ error: null })
-    mockSupabase.from.mockReturnValue({
-      update: vi.fn().mockReturnValue({ eq })
-    })
+    const update = vi.fn().mockReturnValue({ eq })
+    mockSupabase.from.mockReturnValue({ update })
 
     await updateAbilityImpairment('a1', { ability_impairment_name: 'X' })
+    expect(update).toHaveBeenCalledWith({ ability_impairment_name: 'X' })
+    expect(eq).toHaveBeenCalledWith('id', 'a1')
+  })
+
+  it('allows archived_at updates while ignoring custom and user_id', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq })
+    mockSupabase.from.mockReturnValue({ update })
+
+    await updateAbilityImpairment('a1', {
+      archived_at: '2026-06-27T00:00:00.000Z',
+      custom: false,
+      user_id: 'other-user'
+    } as Parameters<typeof updateAbilityImpairment>[1])
+
+    expect(update).toHaveBeenCalledWith({
+      archived_at: '2026-06-27T00:00:00.000Z'
+    })
     expect(eq).toHaveBeenCalledWith('id', 'a1')
   })
 

@@ -30,6 +30,7 @@ const withGearDefaults = <T extends Record<string, unknown>>(g: T) => ({
   ...g,
   affinity_bonus_requirements: [],
   gear_costs: [],
+  other_costs: [],
   resource_costs: [],
   resource_type_costs: []
 })

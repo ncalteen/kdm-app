@@ -48,7 +48,10 @@ describe('getPhilosophies', () => {
 
     const result = await getPhilosophies()
 
-    expect(result).toEqual({ [row1.id]: row1, [row2.id]: row2 })
+    expect(result).toEqual({
+      [row1.id]: { ...row1, neurosis: [], ranks: [], tenet_knowledge: [] },
+      [row2.id]: { ...row2, neurosis: [], ranks: [], tenet_knowledge: [] }
+    })
     expect(mockSupabase.from).toHaveBeenCalledWith('philosophy')
   })
 
@@ -131,7 +134,12 @@ describe('addPhilosophy', () => {
       custom: false
     })
 
-    expect(result).toEqual(mockPhilosophy)
+    expect(result).toEqual({
+      ...mockPhilosophy,
+      neurosis: [],
+      ranks: [],
+      tenet_knowledge: []
+    })
     expect(mockInsert).toHaveBeenCalledWith({
       philosophy_name: 'Acanthus Doctor',
       custom: false
@@ -161,7 +169,38 @@ describe('addPhilosophy', () => {
       custom: true
     })
 
-    expect(result).toEqual(customPhilosophy)
+    expect(result).toEqual({
+      ...customPhilosophy,
+      neurosis: [],
+      ranks: [],
+      tenet_knowledge: []
+    })
+    expect(mockInsert).toHaveBeenCalledWith({
+      philosophy_name: 'My Philosophy',
+      custom: true,
+      user_id: mockUser.id
+    })
+  })
+
+  it('ignores caller-provided user_id when inserting a custom philosophy', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null
+    })
+
+    const mockSingle = vi
+      .fn()
+      .mockResolvedValue({ data: mockPhilosophy, error: null })
+    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
+    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
+    mockSupabase.from.mockReturnValue({ insert: mockInsert })
+
+    await addPhilosophy({
+      philosophy_name: 'My Philosophy',
+      custom: true,
+      user_id: 'other-user'
+    } as Parameters<typeof addPhilosophy>[0])
+
     expect(mockInsert).toHaveBeenCalledWith({
       philosophy_name: 'My Philosophy',
       custom: true,
@@ -211,53 +250,51 @@ describe('addPhilosophy', () => {
 })
 
 describe('updatePhilosophy', () => {
-  it('updates a philosophy and returns the updated record', async () => {
-    const updatedPhilosophy = {
-      id: 'ph1',
-      custom: false,
-      philosophy_name: 'Updated Doctor'
-    }
-    const mockSingle = vi
-      .fn()
-      .mockResolvedValue({ data: updatedPhilosophy, error: null })
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockEq = vi.fn().mockReturnValue({ select: mockSelect })
+  it('updates a philosophy successfully', async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: null })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
-    const result = await updatePhilosophy('ph1', {
+    await expect(
+      updatePhilosophy('ph1', { philosophy_name: 'Updated Doctor' })
+    ).resolves.toBeUndefined()
+
+    expect(mockSupabase.from).toHaveBeenCalledWith('philosophy')
+    expect(mockUpdate).toHaveBeenCalledWith({
       philosophy_name: 'Updated Doctor'
     })
+    expect(mockEq).toHaveBeenCalledWith('id', 'ph1')
+  })
 
-    expect(result).toEqual(updatedPhilosophy)
-    expect(mockSupabase.from).toHaveBeenCalledWith('philosophy')
+  it('allows archived_at updates while ignoring custom and user_id', async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: null })
+    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    mockSupabase.from.mockReturnValue({ update: mockUpdate })
+
+    await expect(
+      updatePhilosophy('ph1', {
+        archived_at: '2026-06-27T00:00:00.000Z',
+        custom: false,
+        user_id: 'other-user'
+      } as Parameters<typeof updatePhilosophy>[1])
+    ).resolves.toBeUndefined()
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+      archived_at: '2026-06-27T00:00:00.000Z'
+    })
     expect(mockEq).toHaveBeenCalledWith('id', 'ph1')
   })
 
   it('throws when update fails', async () => {
-    const mockSingle = vi
+    const mockEq = vi
       .fn()
-      .mockResolvedValue({ data: null, error: { message: 'Update failed' } })
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockEq = vi.fn().mockReturnValue({ select: mockSelect })
+      .mockResolvedValue({ error: { message: 'Update failed' } })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
     mockSupabase.from.mockReturnValue({ update: mockUpdate })
 
     await expect(
       updatePhilosophy('ph1', { philosophy_name: 'Doctor' })
     ).rejects.toThrow('Error Updating Philosophy: Update failed')
-  })
-
-  it('throws when data is null after update', async () => {
-    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null })
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockEq = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
-    mockSupabase.from.mockReturnValue({ update: mockUpdate })
-
-    await expect(
-      updatePhilosophy('ph1', { philosophy_name: 'Doctor' })
-    ).rejects.toThrow('Philosophy Not Found')
   })
 })
 

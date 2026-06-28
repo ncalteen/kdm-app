@@ -3,16 +3,6 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { AbilityImpairmentDetail } from '@/lib/types'
 
-type AbilityImpairmentInsertData = Omit<
-  TablesInsert<'ability_impairment'>,
-  'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
->
-
-type AbilityImpairmentUpdateData = Omit<
-  TablesUpdate<'ability_impairment'>,
-  'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
->
-
 const ABILITY_IMPAIRMENT_SELECT = `
   id,
   custom,
@@ -48,7 +38,8 @@ export async function getAbilityImpairments(): Promise<{
     throw new Error(`Error Fetching Abilities/Impairments: ${error.message}`)
 
   const map: { [key: string]: AbilityImpairmentDetail } = {}
-  for (const a of data) map[a.id] = a
+  for (const abilityImpairment of data)
+    map[abilityImpairment.id] = abilityImpairment
 
   return map
 }
@@ -95,7 +86,10 @@ export async function getUserCustomAbilityImpairments(): Promise<{
  * @returns Inserted Ability/Impairment
  */
 export async function addAbilityImpairment(
-  abilityImpairment: AbilityImpairmentInsertData
+  abilityImpairment: Omit<
+    TablesInsert<'ability_impairment'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+  >
 ): Promise<AbilityImpairmentDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
@@ -114,12 +108,14 @@ export async function addAbilityImpairment(
     .from('ability_impairment')
     .insert({
       ...insertData,
-      ...(insertData.custom === true ? { user_id: userId } : {})
+      custom: true,
+      user_id: userId
     })
     .select(ABILITY_IMPAIRMENT_SELECT)
     .single()
 
-  if (error) throw new Error(`Error Adding Ability/Impairment: ${error.message}`)
+  if (error)
+    throw new Error(`Error Adding Ability/Impairment: ${error.message}`)
 
   return data
 }
@@ -134,7 +130,10 @@ export async function addAbilityImpairment(
  */
 export async function updateAbilityImpairment(
   id: string,
-  abilityImpairment: AbilityImpairmentUpdateData
+  abilityImpairment: Omit<
+    TablesUpdate<'ability_impairment'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
   const updateData: TablesUpdate<'ability_impairment'> = {
