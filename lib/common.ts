@@ -203,3 +203,19 @@ export const vignetteUnlockMap: Record<string, string> = {
   'Screaming Nukalope': 'unlocked_screaming_nukalope',
   'White Gigalion': 'unlocked_white_gigalion'
 }
+
+/**
+ * Empty Gear Grid
+ */
+export const emptyGearGrid = {
+  pos_top_left: null,
+  pos_top_center: null,
+  pos_top_right: null,
+  pos_mid_left: null,
+  pos_mid_center: null,
+  pos_mid_right: null,
+  pos_bottom_left: null,
+  pos_bottom_center: null,
+  pos_bottom_right: null,
+  selected_armor_set_id: null
+}
