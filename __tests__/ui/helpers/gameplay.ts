@@ -432,7 +432,7 @@ export async function getEncounterSummary(
 ): Promise<ActiveEncounterSummary> {
   const [monsterCount, survivorCount] = await Promise.all([
     countRows('encounter_active_monster', 'encounter_id', encounterId),
-    countRows('encounter_survivor', 'encounter_id', encounterId)
+    countRows('encounter_active_survivor', 'encounter_id', encounterId)
   ])
 
   return { monsterCount, survivorCount }
@@ -444,7 +444,7 @@ export async function getEncounterSurvivorBleedingTokens(
   survivorId: string
 ): Promise<number> {
   return getPhaseSurvivorBleedingTokens(
-    'encounter_survivor',
+    'encounter_active_survivor',
     'encounter_id',
     encounterId,
     survivorId
@@ -457,7 +457,7 @@ export async function findEncounterSurvivorWithBleedingTokens(
   bleedingTokens: number
 ): Promise<string | null> {
   return findPhaseSurvivorWithBleedingTokens(
-    'encounter_survivor',
+    'encounter_active_survivor',
     'encounter_id',
     encounterId,
     bleedingTokens
@@ -617,7 +617,7 @@ async function countRows(
 }
 
 async function getPhaseSurvivorBleedingTokens(
-  table: 'encounter_survivor' | 'hunt_survivor' | 'showdown_survivor',
+  table: 'encounter_active_survivor' | 'hunt_survivor' | 'showdown_survivor',
   phaseColumn: 'encounter_id' | 'hunt_id' | 'showdown_id',
   phaseId: string,
   survivorId: string
@@ -636,7 +636,7 @@ async function getPhaseSurvivorBleedingTokens(
 }
 
 async function findPhaseSurvivorWithBleedingTokens(
-  table: 'encounter_survivor' | 'hunt_survivor' | 'showdown_survivor',
+  table: 'encounter_active_survivor' | 'hunt_survivor' | 'showdown_survivor',
   phaseColumn: 'encounter_id' | 'hunt_id' | 'showdown_id',
   phaseId: string,
   bleedingTokens: number
