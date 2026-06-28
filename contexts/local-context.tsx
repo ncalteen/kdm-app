@@ -123,6 +123,8 @@ interface LocalContextType {
   isCreatingNewShowdown: boolean
   /** Is Creating New Survivor */
   isCreatingNewSurvivor: boolean
+  /** Is Creating New Vignette Encounter */
+  isCreatingNewVignetteEncounter: boolean
 
   /** Pending Special Showdown */
   pendingSpecialShowdown: boolean
