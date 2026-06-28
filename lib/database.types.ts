@@ -605,6 +605,103 @@ export type Database = {
           },
         ]
       }
+      encounter_active_survivor: {
+        Row: {
+          accuracy_tokens: number
+          activation_used: boolean
+          bleeding_tokens: number
+          block_tokens: number
+          created_at: string
+          deflect_tokens: number
+          encounter_id: string
+          evasion_tokens: number
+          id: string
+          insanity_tokens: number
+          knocked_down: boolean
+          luck_tokens: number
+          movement_tokens: number
+          movement_used: boolean
+          notes: string
+          scout: boolean
+          settlement_id: string
+          speed_tokens: number
+          strength_tokens: number
+          survival_tokens: number
+          survivor_id: string
+          updated_at: string
+        }
+        Insert: {
+          accuracy_tokens?: number
+          activation_used?: boolean
+          bleeding_tokens?: number
+          block_tokens?: number
+          created_at?: string
+          deflect_tokens?: number
+          encounter_id: string
+          evasion_tokens?: number
+          id?: string
+          insanity_tokens?: number
+          knocked_down?: boolean
+          luck_tokens?: number
+          movement_tokens?: number
+          movement_used?: boolean
+          notes?: string
+          scout?: boolean
+          settlement_id: string
+          speed_tokens?: number
+          strength_tokens?: number
+          survival_tokens?: number
+          survivor_id: string
+          updated_at?: string
+        }
+        Update: {
+          accuracy_tokens?: number
+          activation_used?: boolean
+          bleeding_tokens?: number
+          block_tokens?: number
+          created_at?: string
+          deflect_tokens?: number
+          encounter_id?: string
+          evasion_tokens?: number
+          id?: string
+          insanity_tokens?: number
+          knocked_down?: boolean
+          luck_tokens?: number
+          movement_tokens?: number
+          movement_used?: boolean
+          notes?: string
+          scout?: boolean
+          settlement_id?: string
+          speed_tokens?: number
+          strength_tokens?: number
+          survival_tokens?: number
+          survivor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_active_survivor_encounter_id_settlement_id_fkey"
+            columns: ["encounter_id", "settlement_id"]
+            isOneToOne: false
+            referencedRelation: "encounter"
+            referencedColumns: ["id", "settlement_id"]
+          },
+          {
+            foreignKeyName: "encounter_active_survivor_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounter_active_survivor_survivor_id_fkey"
+            columns: ["survivor_id"]
+            isOneToOne: false
+            referencedRelation: "survivor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       encounter_monster: {
         Row: {
           archived_at: string | null
@@ -774,103 +871,6 @@ export type Database = {
             columns: ["trait_id"]
             isOneToOne: false
             referencedRelation: "trait"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      encounter_survivor: {
-        Row: {
-          accuracy_tokens: number
-          activation_used: boolean
-          bleeding_tokens: number
-          block_tokens: number
-          created_at: string
-          deflect_tokens: number
-          encounter_id: string
-          evasion_tokens: number
-          id: string
-          insanity_tokens: number
-          knocked_down: boolean
-          luck_tokens: number
-          movement_tokens: number
-          movement_used: boolean
-          notes: string
-          scout: boolean
-          settlement_id: string
-          speed_tokens: number
-          strength_tokens: number
-          survival_tokens: number
-          survivor_id: string
-          updated_at: string
-        }
-        Insert: {
-          accuracy_tokens?: number
-          activation_used?: boolean
-          bleeding_tokens?: number
-          block_tokens?: number
-          created_at?: string
-          deflect_tokens?: number
-          encounter_id: string
-          evasion_tokens?: number
-          id?: string
-          insanity_tokens?: number
-          knocked_down?: boolean
-          luck_tokens?: number
-          movement_tokens?: number
-          movement_used?: boolean
-          notes?: string
-          scout?: boolean
-          settlement_id: string
-          speed_tokens?: number
-          strength_tokens?: number
-          survival_tokens?: number
-          survivor_id: string
-          updated_at?: string
-        }
-        Update: {
-          accuracy_tokens?: number
-          activation_used?: boolean
-          bleeding_tokens?: number
-          block_tokens?: number
-          created_at?: string
-          deflect_tokens?: number
-          encounter_id?: string
-          evasion_tokens?: number
-          id?: string
-          insanity_tokens?: number
-          knocked_down?: boolean
-          luck_tokens?: number
-          movement_tokens?: number
-          movement_used?: boolean
-          notes?: string
-          scout?: boolean
-          settlement_id?: string
-          speed_tokens?: number
-          strength_tokens?: number
-          survival_tokens?: number
-          survivor_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "encounter_survivor_encounter_id_settlement_id_fkey"
-            columns: ["encounter_id", "settlement_id"]
-            isOneToOne: false
-            referencedRelation: "encounter"
-            referencedColumns: ["id", "settlement_id"]
-          },
-          {
-            foreignKeyName: "encounter_survivor_settlement_id_fkey"
-            columns: ["settlement_id"]
-            isOneToOne: false
-            referencedRelation: "settlement"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "encounter_survivor_survivor_id_fkey"
-            columns: ["survivor_id"]
-            isOneToOne: false
-            referencedRelation: "survivor"
             referencedColumns: ["id"]
           },
         ]
