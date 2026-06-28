@@ -101,5 +101,7 @@ export async function getArmorSets(): Promise<ArmorSetDetail[]> {
 
   if (error) throw new Error(`Error Fetching Armor Sets: ${error.message}`)
 
-  return data
+  // This cast is in place because `affinity_bonus_requirements` is a JSON field
+  // and the TypeScript compiler cannot infer the correct type.
+  return data as ArmorSetDetail[]
 }
