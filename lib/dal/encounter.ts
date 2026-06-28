@@ -1,9 +1,16 @@
 import { getEncounterActiveMonsters } from '@/lib/dal/encounter-active-monster'
-import { getEncounterSurvivors } from '@/lib/dal/encounter-survivor'
-import { getSettlementMemberUsernames } from '@/lib/dal/settlement-shared-user'
+import { getEncounterActiveSurvivors } from '@/lib/dal/encounter-active-survivor'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { EncounterDetail } from '@/lib/types'
+
+const ENCOUNTER_SELECT = `
+  id,
+  hunt_id,
+  monster_level,
+  settlement_id,
+  turn
+`
 
 /**
  * Get Encounter
@@ -22,24 +29,22 @@ export async function getEncounter(
 
   const { data, error } = await supabase
     .from('encounter')
-    .select('id, hunt_id, monster_level, settlement_id, turn')
+    .select(ENCOUNTER_SELECT)
     .eq('settlement_id', settlementId)
     .maybeSingle()
 
   if (error) throw new Error(`Error Fetching Encounter: ${error.message}`)
   if (!data) return null
 
-  const memberProfilesPromise = getSettlementMemberUsernames(settlementId)
-
-  const [encounterMonsters, encounterSurvivors] = await Promise.all([
-    getEncounterActiveMonsters(data.id, memberProfilesPromise),
-    getEncounterSurvivors(data.id)
+  const [monsters, survivors] = await Promise.all([
+    getEncounterActiveMonsters(data.id),
+    getEncounterActiveSurvivors(data.id)
   ])
 
   return {
     ...data,
-    encounter_monsters: encounterMonsters,
-    encounter_survivors: encounterSurvivors
+    monsters: monsters ?? {},
+    survivors: survivors ?? {}
   }
 }
 
