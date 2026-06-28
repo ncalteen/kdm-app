@@ -1,59 +1,78 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { EncounterSurvivorDetail } from '@/lib/types'
+import { EncounterActiveSurvivorDetail } from '@/lib/types'
+
+const ENCOUNTER_ACTIVE_SURVIVOR_SELECT = `
+  id,
+  accuracy_tokens,
+  activation_used,
+  bleeding_tokens,
+  block_tokens,
+  deflect_tokens,
+  encounter_id,
+  evasion_tokens,
+  insanity_tokens,
+  knocked_down,
+  luck_tokens,
+  movement_tokens,
+  movement_used,
+  notes,
+  scout,
+  settlement_id,
+  speed_tokens,
+  strength_tokens,
+  survival_tokens,
+  survivor_id
+`
 
 /**
- * Get Encounter Survivors
+ * Get Encounter Active Survivors
  *
  * Retrieves all survivors assigned to an active encounter.
  *
  * @param encounterId Encounter ID
  * @returns Encounter Survivors
  */
-export async function getEncounterSurvivors(
+export async function getEncounterActiveSurvivors(
   encounterId: string | null | undefined
-): Promise<{ [key: string]: EncounterSurvivorDetail } | null> {
-  if (!encounterId) return null
+): Promise<{ [key: string]: EncounterActiveSurvivorDetail }> {
+  if (!encounterId) return {}
 
   const supabase = createClient()
 
   const { data, error } = await supabase
-    .from('encounter_survivor')
-    .select(
-      'id, accuracy_tokens, activation_used, bleeding_tokens, block_tokens, deflect_tokens, encounter_id, evasion_tokens, insanity_tokens, knocked_down, luck_tokens, movement_tokens, movement_used, notes, scout, settlement_id, speed_tokens, strength_tokens, survival_tokens, survivor_id'
-    )
+    .from('encounter_active_survivor')
+    .select(ENCOUNTER_ACTIVE_SURVIVOR_SELECT)
     .eq('encounter_id', encounterId)
 
   if (error)
     throw new Error(`Error Fetching Encounter Survivors: ${error.message}`)
-  if (!data) return null
 
-  const encounterSurvivorMap: { [key: string]: EncounterSurvivorDetail } = {}
+  const encounterSurvivors: { [key: string]: EncounterActiveSurvivorDetail } =
+    {}
+  for (const row of data) encounterSurvivors[row.id] = row
 
-  for (const survivor of data ?? [])
-    encounterSurvivorMap[survivor.id] = survivor
-
-  return encounterSurvivorMap
+  return encounterSurvivors
 }
 
 /**
- * Add Encounter Survivor
+ * Add Encounter Active Survivor
  *
  * Adds a survivor to an active encounter.
  *
  * @param encounterSurvivor Encounter Survivor Data
  * @returns Inserted Encounter Survivor ID
  */
-export async function addEncounterSurvivor(
+export async function addEncounterActiveSurvivor(
   encounterSurvivor: Omit<
-    TablesInsert<'encounter_survivor'>,
+    TablesInsert<'encounter_active_survivor'>,
     'id' | 'created_at' | 'updated_at'
   >
 ): Promise<string> {
   const supabase = createClient()
 
   const { data, error } = await supabase
-    .from('encounter_survivor')
+    .from('encounter_active_survivor')
     .insert(encounterSurvivor)
     .select('id')
     .single()
@@ -74,12 +93,15 @@ export async function addEncounterSurvivor(
  */
 export async function updateEncounterSurvivor(
   survivorId: string,
-  updateData: Partial<EncounterSurvivorDetail>
+  updateData: Omit<
+    TablesUpdate<'encounter_active_survivor'>,
+    'id' | 'created_at' | 'updated_at'
+  >
 ): Promise<void> {
   const supabase = createClient()
 
   const { error } = await supabase
-    .from('encounter_survivor')
+    .from('encounter_active_survivor')
     .update(updateData)
     .eq('id', survivorId)
 
@@ -98,7 +120,7 @@ export async function removeEncounterSurvivor(id: string): Promise<void> {
   const supabase = createClient()
 
   const { error } = await supabase
-    .from('encounter_survivor')
+    .from('encounter_active_survivor')
     .delete()
     .eq('id', id)
 

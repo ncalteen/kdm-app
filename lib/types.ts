@@ -369,10 +369,7 @@ export type EncounterActiveMonsterTraitDetail = Omit<
 export type EncounterActiveSurvivorDetail = Omit<
   Tables<'encounter_active_survivor'>,
   'created_at' | 'updated_at'
-> & {
-  /** Survivor Details */
-  survivor?: SurvivorDetail
-}
+> & {}
 
 /**
  * Encounter Monster Detail
