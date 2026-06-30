@@ -7099,7 +7099,6 @@ export type Database = {
           custom: boolean
           disposition: number
           evasion: number
-          fighting_art_ids: string[]
           gender: Database["public"]["Enums"]["gender"]
           hunt_xp: number
           hunt_xp_rank_up: number[]
@@ -7109,7 +7108,6 @@ export type Database = {
           lumi: number
           movement: number
           permanent_injuries: string[]
-          rare_gear_ids: string[]
           speed: number
           strength: number
           survival: number
@@ -7129,7 +7127,6 @@ export type Database = {
           custom?: boolean
           disposition?: number
           evasion?: number
-          fighting_art_ids?: string[]
           gender: Database["public"]["Enums"]["gender"]
           hunt_xp?: number
           hunt_xp_rank_up?: number[]
@@ -7139,7 +7136,6 @@ export type Database = {
           lumi?: number
           movement?: number
           permanent_injuries?: string[]
-          rare_gear_ids?: string[]
           speed?: number
           strength?: number
           survival?: number
@@ -7159,7 +7155,6 @@ export type Database = {
           custom?: boolean
           disposition?: number
           evasion?: number
-          fighting_art_ids?: string[]
           gender?: Database["public"]["Enums"]["gender"]
           hunt_xp?: number
           hunt_xp_rank_up?: number[]
@@ -7169,7 +7164,6 @@ export type Database = {
           lumi?: number
           movement?: number
           permanent_injuries?: string[]
-          rare_gear_ids?: string[]
           speed?: number
           strength?: number
           survival?: number
@@ -7214,6 +7208,84 @@ export type Database = {
           },
           {
             foreignKeyName: "wanderer_ability_impairment_wanderer_id_fkey"
+            columns: ["wanderer_id"]
+            isOneToOne: false
+            referencedRelation: "wanderer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wanderer_fighting_art: {
+        Row: {
+          created_at: string
+          fighting_art_id: string
+          id: string
+          updated_at: string
+          wanderer_id: string
+        }
+        Insert: {
+          created_at?: string
+          fighting_art_id: string
+          id?: string
+          updated_at?: string
+          wanderer_id: string
+        }
+        Update: {
+          created_at?: string
+          fighting_art_id?: string
+          id?: string
+          updated_at?: string
+          wanderer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wanderer_fighting_art_fighting_art_id_fkey"
+            columns: ["fighting_art_id"]
+            isOneToOne: false
+            referencedRelation: "fighting_art"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wanderer_fighting_art_wanderer_id_fkey"
+            columns: ["wanderer_id"]
+            isOneToOne: false
+            referencedRelation: "wanderer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wanderer_rare_gear: {
+        Row: {
+          created_at: string
+          id: string
+          rare_gear_id: string
+          updated_at: string
+          wanderer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rare_gear_id: string
+          updated_at?: string
+          wanderer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rare_gear_id?: string
+          updated_at?: string
+          wanderer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wanderer_rare_gear_rare_gear_id_fkey"
+            columns: ["rare_gear_id"]
+            isOneToOne: false
+            referencedRelation: "gear"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wanderer_rare_gear_wanderer_id_fkey"
             columns: ["wanderer_id"]
             isOneToOne: false
             referencedRelation: "wanderer"
