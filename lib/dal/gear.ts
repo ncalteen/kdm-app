@@ -3,7 +3,7 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { GearDetail } from '@/lib/types'
 
-const GEAR_SELECT = `
+export const GEAR_SELECT = `
   id,
   custom,
   gear_name,
