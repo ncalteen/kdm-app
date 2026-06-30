@@ -1,58 +1,29 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
-import { Json, TablesInsert, TablesUpdate } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import {
-  GearAffinityRequirementDetail,
-  GearDetail,
-  GearGearCostDetail,
-  GearResourceCostDetail,
-  GearResourceTypeCostDetail
-} from '@/lib/types'
+import { GearDetail } from '@/lib/types'
 
-/**
- * Normalize a Supabase gear row (with junction relations joined) into a
- * {@link GearDetail}. Strips the relation arrays into their flatter
- * equivalents on the returned object.
- *
- * @param row Raw gear row including the junction relations.
- * @returns Normalized GearDetail.
- */
-export function toGearDetail(
-  row: Omit<
-    GearDetail,
-    | 'gear_costs'
-    | 'resource_costs'
-    | 'resource_type_costs'
-    | 'affinity_bonus_requirements'
-  > & {
-    affinity_bonus_requirements?: Json | null
-    gear_gear_cost?: GearGearCostDetail[] | null
-    gear_resource_cost?: GearResourceCostDetail[] | null
-    gear_resource_type_cost?: GearResourceTypeCostDetail[] | null
-    user_id?: string | null
-  }
-): GearDetail {
-  const {
-    affinity_bonus_requirements,
-    gear_gear_cost,
-    gear_resource_cost,
-    gear_resource_type_cost,
-    user_id,
-    ...rest
-  } = row
-  void user_id
-
-  return {
-    ...rest,
-    affinity_bonus_requirements: Array.isArray(affinity_bonus_requirements)
-      ? (affinity_bonus_requirements as GearAffinityRequirementDetail[])
-      : [],
-    gear_costs: gear_gear_cost ?? [],
-    resource_costs: gear_resource_cost ?? [],
-    resource_type_costs: gear_resource_type_cost ?? []
-  }
-}
+const GEAR_SELECT = `
+  id,
+  custom,
+  gear_name,
+  location_id,
+  accessory,
+  accuracy,
+  affinity_top,
+  affinity_left,
+  affinity_right,
+  affinity_bottom,
+  affinity_bonus,
+  affinity_bonus_requirements,
+  armor_points,
+  armor_location,
+  keywords,
+  rules,
+  speed,
+  strength,
+  weapon_type_id
+`
 
 /**
  * Get Gear
@@ -64,7 +35,7 @@ export function toGearDetail(
  * - Custom gear on settlements the user collaborates on (via the transitive
  *   SELECT policy on `gear`)
  *
- * @returns Gear keyed by ID
+ * @returns Gear Keyed by ID
  */
 export async function getGear(): Promise<{
   [key: string]: GearDetail
@@ -72,16 +43,12 @@ export async function getGear(): Promise<{
   await getUserId()
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('gear')
-    .select(
-      'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity)'
-    )
+  const { data, error } = await supabase.from('gear').select(GEAR_SELECT)
 
   if (error) throw new Error(`Error Fetching Gear: ${error.message}`)
 
   const gearMap: { [key: string]: GearDetail } = {}
-  for (const g of data ?? []) gearMap[g.id] = toGearDetail(g)
+  for (const gear of data) gearMap[gear.id] = gear
 
   return gearMap
 }
@@ -103,17 +70,15 @@ export async function getUserCustomGear(): Promise<{
 
   const { data, error } = await supabase
     .from('gear')
-    .select(
-      'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity), archived_at'
-    )
+    .select(GEAR_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error) throw new Error(`Error Fetching Custom Gear: ${error.message}`)
 
   const gearMap: { [key: string]: GearDetail } = {}
-  for (const g of data ?? [])
-    if (!g.archived_at) gearMap[g.id] = toGearDetail(g)
+  for (const gear of data) gearMap[gear.id] = gear
 
   return gearMap
 }
@@ -131,46 +96,57 @@ export async function getUserCustomGear(): Promise<{
 export async function addGear(
   gear: Omit<
     TablesInsert<'gear'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<GearDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'gear'> = { ...gear }
 
-  if (gear.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('gear')
     .insert({
-      ...gear,
-      ...(gear.custom ? { user_id: userId! } : {})
+      ...insertData,
+      custom: true,
+      user_id: userId
     })
-    .select(
-      'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id'
-    )
+    .select(GEAR_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Gear: ${error.message}`)
 
-  return toGearDetail(data)
+  return data
 }
 
 /**
  * Update Gear
  *
- * Updates an existing gear record in the database. Junction rows are
- * persisted separately via the `replaceGear*` helpers.
+ * Updates an existing gear record in the database.
  *
  * @param id Gear ID
  * @param gear Gear Data
  */
 export async function updateGear(
   id: string,
-  gear: Omit<TablesUpdate<'gear'>, 'id' | 'created_at' | 'updated_at'>
+  gear: Omit<
+    TablesUpdate<'gear'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'gear'> = { ...gear }
 
-  const { error } = await supabase.from('gear').update(gear).eq('id', id)
+  delete updateData.custom
+  delete updateData.user_id
+
+  const { error } = await supabase.from('gear').update(updateData).eq('id', id)
 
   if (error) throw new Error(`Error Updating Gear: ${error.message}`)
 }
@@ -183,181 +159,9 @@ export async function updateGear(
  * @param id Gear ID
  */
 export async function removeGear(id: string): Promise<void> {
-  await removeCatalogRow('gear', id, 'Gear')
-}
-
-/**
- * Get Custom Gear
- *
- * Gets only the custom gear that the user has created.
- *
- * @returns Custom Gear keyed by ID
- */
-export async function getCustomGear(): Promise<{
-  [key: string]: GearDetail
-}> {
-  const userId = await getUserId()
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('gear')
-    .select(
-      'id, custom, gear_name, location_id, accessory, accuracy, affinity_top, affinity_left, affinity_right, affinity_bottom, affinity_bonus, affinity_bonus_requirements, armor_points, armor_location, keywords, rules, speed, strength, weapon_type_id, gear_gear_cost!gear_gear_cost_gear_id_fkey(cost_gear_id, quantity), gear_resource_cost(resource_id, quantity), gear_resource_type_cost(resource_type, quantity), archived_at'
-    )
-    .eq('custom', true)
-    .eq('user_id', userId)
+  const { error } = await supabase.from('gear').delete().eq('id', id)
 
-  if (error) throw new Error(`Error Fetching Custom Gear: ${error.message}`)
-
-  const gearMap: { [key: string]: GearDetail } = {}
-  for (const g of data ?? [])
-    if (!g.archived_at) gearMap[g.id] = toGearDetail(g)
-
-  return gearMap
-}
-
-/**
- * Replace Gear Gear Costs
- *
- * Replaces all gear-cost rows for a gear item with the provided list.
- *
- * @param gearId Gear ID
- * @param costs Gear Cost Entries
- */
-export async function replaceGearGearCosts(
-  gearId: string,
-  costs: GearGearCostDetail[]
-): Promise<void> {
-  const supabase = createClient()
-
-  const { error: deleteError } = await supabase
-    .from('gear_gear_cost')
-    .delete()
-    .eq('gear_id', gearId)
-
-  if (deleteError)
-    throw new Error(`Error Clearing Gear Gear Costs: ${deleteError.message}`)
-
-  const seen = new Set<string>()
-  const rows = costs
-    .filter((c) => {
-      if (!c.cost_gear_id || c.quantity < 1) return false
-      if (c.cost_gear_id === gearId) return false
-      if (seen.has(c.cost_gear_id)) return false
-      seen.add(c.cost_gear_id)
-      return true
-    })
-    .map((c) => ({
-      gear_id: gearId,
-      cost_gear_id: c.cost_gear_id,
-      quantity: c.quantity
-    }))
-
-  if (rows.length === 0) return
-
-  const { error: insertError } = await supabase
-    .from('gear_gear_cost')
-    .insert(rows)
-
-  if (insertError)
-    throw new Error(`Error Saving Gear Gear Costs: ${insertError.message}`)
-}
-
-/**
- * Replace Gear Resource Costs
- *
- * Replaces all resource-cost rows for a gear item with the provided list.
- *
- * @param gearId Gear ID
- * @param costs Resource Cost Entries
- */
-export async function replaceGearResourceCosts(
-  gearId: string,
-  costs: GearResourceCostDetail[]
-): Promise<void> {
-  const supabase = createClient()
-
-  const { error: deleteError } = await supabase
-    .from('gear_resource_cost')
-    .delete()
-    .eq('gear_id', gearId)
-
-  if (deleteError)
-    throw new Error(
-      `Error Clearing Gear Resource Costs: ${deleteError.message}`
-    )
-
-  const seen = new Set<string>()
-  const rows = costs
-    .filter((c) => {
-      if (!c.resource_id || c.quantity < 1) return false
-      if (seen.has(c.resource_id)) return false
-      seen.add(c.resource_id)
-      return true
-    })
-    .map((c) => ({
-      gear_id: gearId,
-      resource_id: c.resource_id,
-      quantity: c.quantity
-    }))
-
-  if (rows.length === 0) return
-
-  const { error: insertError } = await supabase
-    .from('gear_resource_cost')
-    .insert(rows)
-
-  if (insertError)
-    throw new Error(`Error Saving Gear Resource Costs: ${insertError.message}`)
-}
-
-/**
- * Replace Gear Resource Type Costs
- *
- * Replaces all resource-type-cost rows for a gear item with the provided
- * list.
- *
- * @param gearId Gear ID
- * @param costs Resource Type Cost Entries
- */
-export async function replaceGearResourceTypeCosts(
-  gearId: string,
-  costs: GearResourceTypeCostDetail[]
-): Promise<void> {
-  const supabase = createClient()
-
-  const { error: deleteError } = await supabase
-    .from('gear_resource_type_cost')
-    .delete()
-    .eq('gear_id', gearId)
-
-  if (deleteError)
-    throw new Error(
-      `Error Clearing Gear Resource Type Costs: ${deleteError.message}`
-    )
-
-  const seen = new Set<string>()
-  const rows = costs
-    .filter((c) => {
-      if (!c.resource_type || c.quantity < 1) return false
-      if (seen.has(c.resource_type)) return false
-      seen.add(c.resource_type)
-      return true
-    })
-    .map((c) => ({
-      gear_id: gearId,
-      resource_type: c.resource_type,
-      quantity: c.quantity
-    }))
-
-  if (rows.length === 0) return
-
-  const { error: insertError } = await supabase
-    .from('gear_resource_type_cost')
-    .insert(rows)
-
-  if (insertError)
-    throw new Error(
-      `Error Saving Gear Resource Type Costs: ${insertError.message}`
-    )
+  if (error) throw new Error(`Error Removing Gear: ${error.message}`)
 }
