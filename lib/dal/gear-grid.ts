@@ -1,3 +1,5 @@
+import { GEAR_SELECT } from '@/lib/dal/gear'
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { GearGridDetail } from '@/lib/types'
 
@@ -14,7 +16,16 @@ const GEAR_GRID_SELECT = `
   pos_bottom_right,
   survivor_id,
   selected_armor_set_id,
-  settlement_id
+  settlement_id,
+  gear_top_left:gear!pos_top_left(${GEAR_SELECT}),
+  gear_top_center:gear!pos_top_center(${GEAR_SELECT}),
+  gear_top_right:gear!pos_top_right(${GEAR_SELECT}),
+  gear_mid_left:gear!pos_mid_left(${GEAR_SELECT}),
+  gear_mid_center:gear!pos_mid_center(${GEAR_SELECT}),
+  gear_mid_right:gear!pos_mid_right(${GEAR_SELECT}),
+  gear_bottom_left:gear!pos_bottom_left(${GEAR_SELECT}),
+  gear_bottom_center:gear!pos_bottom_center(${GEAR_SELECT}),
+  gear_bottom_right:gear!pos_bottom_right(${GEAR_SELECT})
 `
 
 /**
@@ -61,38 +72,41 @@ export async function getGearGrid(
  */
 export async function updateGearGrid(
   survivorId: string,
-  gearGrid: Partial<GearGridDetail>
-): Promise<GearGridDetail> {
-  if (!survivorId) throw new Error('Required: Survivor ID')
-
+  gearGrid: Omit<
+    TablesUpdate<'gear_grid'>,
+    'id' | 'created_at' | 'updated_at' | 'survivor_id' | 'settlement_id'
+  >
+): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'gear_grid'> = {
+    ...gearGrid
+  }
 
-  const { data, error } = await supabase
+  delete updateData.survivor_id
+  delete updateData.settlement_id
+
+  const { error } = await supabase
     .from('gear_grid')
-    .upsert(
-      { ...gearGrid, survivor_id: survivorId },
-      { onConflict: 'survivor_id' }
-    )
-    .select(GEAR_GRID_SELECT)
-    .single<GearGridDetail>()
+    .update(updateData)
+    .eq('survivor_id', survivorId)
 
   if (error) throw new Error(`Error Saving Gear Grid: ${error.message}`)
-
-  return data
 }
 
 /**
- * Set Selected Armor Set
+ * Remove Gear Grid
  *
- * Persists the selected armor set for a survivor's gear grid.
+ * Removes a survivor's gear grid.
  *
  * @param survivorId Survivor ID
- * @param armorSetId Armor Set ID or null to clear the selection
- * @returns Persisted Gear Grid
  */
-export async function setSelectedArmorSet(
-  survivorId: string,
-  armorSetId: string | null
-): Promise<GearGridDetail> {
-  return updateGearGrid(survivorId, { selected_armor_set_id: armorSetId })
+export async function removeGearGrid(survivorId: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('gear_grid')
+    .delete()
+    .eq('survivor_id', survivorId)
+
+  if (error) throw new Error(`Error Removing Gear Grid: ${error.message}`)
 }
