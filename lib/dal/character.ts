@@ -3,7 +3,7 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CharacterDetail } from '@/lib/types'
 
-const CHARACTER_SELECT = `
+export const CHARACTER_SELECT = `
   id,
   custom,
   character_name,
@@ -32,10 +32,10 @@ export async function getCharacters(): Promise<{
 
   if (error) throw new Error(`Error Fetching Characters: ${error.message}`)
 
-  const characterMap: { [key: string]: CharacterDetail } = {}
-  for (const c of data) characterMap[c.id] = c
+  const map: { [key: string]: CharacterDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return characterMap
+  return map
 }
 
 /**
@@ -64,7 +64,7 @@ export async function getUserCustomCharacters(): Promise<{
     throw new Error(`Error Fetching Custom Characters: ${error.message}`)
 
   const map: { [key: string]: CharacterDetail } = {}
-  for (const c of data) map[c.id] = c
+  for (const item of data) map[item.id] = item
 
   return map
 }

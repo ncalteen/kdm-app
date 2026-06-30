@@ -4,7 +4,7 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { GearGearCostDetail } from '@/lib/types'
 
-const GEAR_GEAR_COST_SELECT = `
+export const GEAR_GEAR_COST_SELECT = `
   gear_id,
   cost_gear_id,
   quantity,
@@ -56,11 +56,10 @@ export async function getGearGearCosts(): Promise<{
 
   if (error) throw new Error(`Error Fetching Gear Gear Costs: ${error.message}`)
 
-  const gearGearCostMap: { [key: string]: GearGearCostDetail } = {}
-  for (const gearGearCost of data)
-    gearGearCostMap[gearGearCost.gear_id] = gearGearCost
+  const map: { [key: string]: GearGearCostDetail } = {}
+  for (const item of data) map[item.gear_id] = item
 
-  return gearGearCostMap
+  return map
 }
 
 /**
@@ -75,6 +74,7 @@ export async function addGearGearCost(
   gearGearCost: TablesInsert<'gear_gear_cost'>
 ): Promise<GearGearCostDetail> {
   await ensureGearCanBeUpdated(gearGearCost.gear_id)
+
   const supabase = createClient()
   const insertData: TablesInsert<'gear_gear_cost'> = { ...gearGearCost }
 
@@ -104,6 +104,7 @@ export async function updateGearGearCost(
   gearGearCost: Omit<TablesUpdate<'gear_gear_cost'>, 'gear_id' | 'cost_gear_id'>
 ): Promise<void> {
   await ensureGearCanBeUpdated(id)
+
   const supabase = createClient()
   const updateData: TablesUpdate<'gear_gear_cost'> = { ...gearGearCost }
 

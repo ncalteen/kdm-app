@@ -3,7 +3,7 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { DisorderDetail } from '@/lib/types'
 
-const DISORDER_SELECT = `
+export const DISORDER_SELECT = `
   id,
   custom,
   disorder_name,
@@ -35,7 +35,7 @@ export async function getDisorders(): Promise<{
   if (error) throw new Error(`Error Fetching Disorders: ${error.message}`)
 
   const map: { [key: string]: DisorderDetail } = {}
-  for (const d of data) map[d.id] = d
+  for (const item of data) map[item.id] = item
 
   return map
 }
@@ -66,7 +66,7 @@ export async function getUserCustomDisorders(): Promise<{
     throw new Error(`Error Fetching Custom Disorders: ${error.message}`)
 
   const map: { [key: string]: DisorderDetail } = {}
-  for (const d of data) map[d.id] = d
+  for (const item of data) map[item.id] = item
 
   return map
 }

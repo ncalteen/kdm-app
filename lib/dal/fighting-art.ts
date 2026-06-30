@@ -3,7 +3,7 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { FightingArtDetail } from '@/lib/types'
 
-const FIGHTING_ART_SELECT = `
+export const FIGHTING_ART_SELECT = `
   id,
   custom,
   fighting_art_name,
@@ -36,7 +36,7 @@ export async function getFightingArts(): Promise<{
   if (error) throw new Error(`Error Fetching Fighting Arts: ${error.message}`)
 
   const map: { [key: string]: FightingArtDetail } = {}
-  for (const f of data) map[f.id] = f
+  for (const item of data) map[item.id] = item
 
   return map
 }
@@ -67,7 +67,7 @@ export async function getUserCustomFightingArts(): Promise<{
     throw new Error(`Error Fetching Custom Fighting Arts: ${error.message}`)
 
   const map: { [key: string]: FightingArtDetail } = {}
-  for (const f of data) map[f.id] = f
+  for (const item of data) map[item.id] = item
 
   return map
 }

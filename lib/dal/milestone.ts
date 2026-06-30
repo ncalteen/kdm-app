@@ -1,20 +1,30 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { MilestoneDetail } from '@/lib/types'
 
+export const MILESTONE_SELECT = `
+  id,
+  custom,
+  milestone_name,
+  event_name,
+  campaign_types,
+  requirements,
+  rules
+`
+
 /**
  * Get Milestones
  *
  * Retrieves all milestones visible to the authenticated user. RLS surfaces:
+ *
  * - Built-in (non-custom) milestones
  * - Custom milestones owned by the user
  * - Custom milestones on settlements the user collaborates on (via the
  *   transitive SELECT policy on `milestone`)
  *
- * @returns Milestones
+ * @returns Milestones by ID
  */
 export async function getMilestones(): Promise<{
   [key: string]: MilestoneDetail
@@ -24,16 +34,14 @@ export async function getMilestones(): Promise<{
 
   const { data, error } = await supabase
     .from('milestone')
-    .select(
-      'id, custom, milestone_name, event_name, campaign_types, requirements, rules'
-    )
+    .select(MILESTONE_SELECT)
 
   if (error) throw new Error(`Error Fetching Milestones: ${error.message}`)
 
-  const milestoneMap: { [key: string]: MilestoneDetail } = {}
-  for (const m of data ?? []) milestoneMap[m.id] = m
+  const map: { [key: string]: MilestoneDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return milestoneMap
+  return map
 }
 
 /**
@@ -53,19 +61,102 @@ export async function getUserCustomMilestones(): Promise<{
 
   const { data, error } = await supabase
     .from('milestone')
-    .select(
-      'id, custom, milestone_name, event_name, campaign_types, requirements, rules, archived_at'
-    )
+    .select(MILESTONE_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(`Error Fetching Custom Milestones: ${error.message}`)
 
-  const milestoneMap: { [key: string]: MilestoneDetail } = {}
-  for (const m of data ?? []) if (!m.archived_at) milestoneMap[m.id] = m
+  const map: { [key: string]: MilestoneDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return milestoneMap
+  return map
+}
+
+/**
+ * Add Milestone
+ *
+ * Adds a new milestone record to the database.
+ *
+ * @param milestone Milestone Data
+ * @returns Inserted Milestone
+ */
+export async function addMilestone(
+  milestone: Omit<
+    TablesInsert<'milestone'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+  >
+): Promise<MilestoneDetail> {
+  const userId = await getUserIdOrNull()
+  const supabase = createClient()
+  const insertData: TablesInsert<'milestone'> = { ...milestone }
+
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('milestone')
+    .insert({
+      ...insertData,
+      custom: true,
+      user_id: userId
+    })
+    .select(MILESTONE_SELECT)
+    .single()
+
+  if (error) throw new Error(`Error Adding Milestone: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Milestone
+ *
+ * Updates an existing milestone record in the database.
+ *
+ * @param id Milestone ID
+ * @param milestone Milestone Data
+ */
+export async function updateMilestone(
+  id: string,
+  milestone: Omit<
+    TablesUpdate<'milestone'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
+): Promise<void> {
+  const supabase = createClient()
+  const updateData: TablesUpdate<'milestone'> = { ...milestone }
+
+  delete updateData.custom
+  delete updateData.user_id
+
+  const { error } = await supabase
+    .from('milestone')
+    .update(updateData)
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Updating Milestone: ${error.message}`)
+}
+
+/**
+ * Remove Milestone
+ *
+ * Deletes a milestone record from the database.
+ *
+ * @param id Milestone ID
+ */
+export async function removeMilestone(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('milestone').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Milestone: ${error.message}`)
 }
 
 /**
@@ -112,73 +203,4 @@ export async function getMilestoneIds(
   if (!data) throw new Error('Milestone(s) Not Found')
 
   return data.map((milestone) => milestone.id)
-}
-
-/**
- * Add Milestone
- *
- * Adds a new milestone record to the database.
- *
- * @param milestone Milestone Data
- * @returns Inserted Milestone
- */
-export async function addMilestone(
-  milestone: Omit<
-    TablesInsert<'milestone'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
-  >
-): Promise<MilestoneDetail> {
-  const userId = await getUserIdOrNull()
-  const supabase = createClient()
-
-  if (milestone.custom && !userId) throw new Error('Not Authenticated')
-
-  const { data, error } = await supabase
-    .from('milestone')
-    .insert({
-      ...milestone,
-      ...(milestone.custom ? { user_id: userId! } : {})
-    })
-    .select(
-      'id, custom, campaign_types, event_name, milestone_name, requirements, rules'
-    )
-    .single()
-
-  if (error) throw new Error(`Error Adding Milestone: ${error.message}`)
-
-  return data
-}
-
-/**
- * Update Milestone
- *
- * Updates an existing milestone record in the database.
- *
- * @param id Milestone ID
- * @param milestone Milestone Data
- * @returns Updated Milestone
- */
-export async function updateMilestone(
-  id: string,
-  milestone: Omit<TablesUpdate<'milestone'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('milestone')
-    .update(milestone)
-    .eq('id', id)
-
-  if (error) throw new Error(`Error Updating Milestone: ${error.message}`)
-}
-
-/**
- * Remove Milestone
- *
- * Deletes a milestone record from the database.
- *
- * @param id Milestone ID
- */
-export async function removeMilestone(id: string): Promise<void> {
-  await removeCatalogRow('milestone', id, 'Milestone')
 }

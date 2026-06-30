@@ -3,7 +3,7 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { AbilityImpairmentDetail } from '@/lib/types'
 
-const ABILITY_IMPAIRMENT_SELECT = `
+export const ABILITY_IMPAIRMENT_SELECT = `
   id,
   custom,
   ability_impairment_name,
@@ -38,8 +38,7 @@ export async function getAbilityImpairments(): Promise<{
     throw new Error(`Error Fetching Abilities/Impairments: ${error.message}`)
 
   const map: { [key: string]: AbilityImpairmentDetail } = {}
-  for (const abilityImpairment of data)
-    map[abilityImpairment.id] = abilityImpairment
+  for (const item of data) map[item.id] = item
 
   return map
 }
@@ -72,7 +71,7 @@ export async function getUserCustomAbilityImpairments(): Promise<{
     )
 
   const map: { [key: string]: AbilityImpairmentDetail } = {}
-  for (const a of data) map[a.id] = a
+  for (const item of data) map[item.id] = item
 
   return map
 }

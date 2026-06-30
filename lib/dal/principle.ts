@@ -1,20 +1,31 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
 import { PrincipleDetail } from '@/lib/types'
 
+export const PRINCIPLE_SELECT = `
+  id,
+  custom,
+  principle_name,
+  option_1_name,
+  option_2_name,
+  campaign_types,
+  option_1_rules,
+  option_2_rules
+`
+
 /**
  * Get Principles
  *
  * Retrieves all principles visible to the authenticated user. RLS surfaces:
+ *
  * - Built-in (non-custom) principles
  * - Custom principles owned by the user
  * - Custom principles on settlements the user collaborates on (via the
  *   transitive SELECT policy on `principle`)
  *
- * @returns Principles
+ * @returns Principles by ID
  */
 export async function getPrinciples(): Promise<{
   [key: string]: PrincipleDetail
@@ -24,16 +35,14 @@ export async function getPrinciples(): Promise<{
 
   const { data, error } = await supabase
     .from('principle')
-    .select(
-      'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
-    )
+    .select(PRINCIPLE_SELECT)
 
   if (error) throw new Error(`Error Fetching Principles: ${error.message}`)
 
-  const principleMap: { [key: string]: PrincipleDetail } = {}
-  for (const p of data ?? []) principleMap[p.id] = p
+  const map: { [key: string]: PrincipleDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return principleMap
+  return map
 }
 
 /**
@@ -53,19 +62,102 @@ export async function getUserCustomPrinciples(): Promise<{
 
   const { data, error } = await supabase
     .from('principle')
-    .select(
-      'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules, archived_at'
-    )
+    .select(PRINCIPLE_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(`Error Fetching Custom Principles: ${error.message}`)
 
-  const principleMap: { [key: string]: PrincipleDetail } = {}
-  for (const p of data ?? []) if (!p.archived_at) principleMap[p.id] = p
+  const map: { [key: string]: PrincipleDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return principleMap
+  return map
+}
+
+/**
+ * Add Principle
+ *
+ * Adds a new principle record to the database.
+ *
+ * @param principle Principle Data
+ * @returns Inserted Principle
+ */
+export async function addPrinciple(
+  principle: Omit<
+    TablesInsert<'principle'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+  >
+): Promise<PrincipleDetail> {
+  const userId = await getUserIdOrNull()
+  const supabase = createClient()
+  const insertData: TablesInsert<'principle'> = { ...principle }
+
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('principle')
+    .insert({
+      ...insertData,
+      custom: true,
+      user_id: userId
+    })
+    .select(PRINCIPLE_SELECT)
+    .single()
+
+  if (error) throw new Error(`Error Adding Principle: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Principle
+ *
+ * Updates an existing principle record in the database.
+ *
+ * @param id Principle ID
+ * @param principle Principle Data
+ */
+export async function updatePrinciple(
+  id: string,
+  principle: Omit<
+    TablesUpdate<'principle'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
+): Promise<void> {
+  const supabase = createClient()
+  const updateData: TablesUpdate<'principle'> = { ...principle }
+
+  delete updateData.custom
+  delete updateData.user_id
+
+  const { error } = await supabase
+    .from('principle')
+    .update(updateData)
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Updating Principle: ${error.message}`)
+}
+
+/**
+ * Remove Principle
+ *
+ * Deletes a principle record from the database.
+ *
+ * @param id Principle ID
+ */
+export async function removePrinciple(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('principle').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Principle: ${error.message}`)
 }
 
 /**
@@ -112,73 +204,4 @@ export async function getPrincipleIds(
   if (!data) throw new Error('Principle(s) Not Found')
 
   return data.map((principle) => principle.id)
-}
-
-/**
- * Add Principle
- *
- * Adds a new principle record to the database.
- *
- * @param principle Principle Data
- * @returns Inserted Principle
- */
-export async function addPrinciple(
-  principle: Omit<
-    TablesInsert<'principle'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
-  >
-): Promise<PrincipleDetail> {
-  const userId = await getUserIdOrNull()
-  const supabase = createClient()
-
-  if (principle.custom && !userId) throw new Error('Not Authenticated')
-
-  const { data, error } = await supabase
-    .from('principle')
-    .insert({
-      ...principle,
-      ...(principle.custom ? { user_id: userId! } : {})
-    })
-    .select(
-      'id, custom, principle_name, option_1_name, option_2_name, campaign_types, option_1_rules, option_2_rules'
-    )
-    .single()
-
-  if (error) throw new Error(`Error Adding Principle: ${error.message}`)
-
-  return data
-}
-
-/**
- * Update Principle
- *
- * Updates an existing principle record in the database.
- *
- * @param id Principle ID
- * @param principle Principle Data
- * @returns Updated Principle
- */
-export async function updatePrinciple(
-  id: string,
-  principle: Omit<TablesUpdate<'principle'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('principle')
-    .update(principle)
-    .eq('id', id)
-
-  if (error) throw new Error(`Error Updating Principle: ${error.message}`)
-}
-
-/**
- * Remove Principle
- *
- * Deletes a principle record from the database.
- *
- * @param id Principle ID
- */
-export async function removePrinciple(id: string): Promise<void> {
-  await removeCatalogRow('principle', id, 'Principle')
 }

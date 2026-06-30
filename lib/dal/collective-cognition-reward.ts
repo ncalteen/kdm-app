@@ -3,7 +3,7 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { CollectiveCognitionRewardDetail } from '@/lib/types'
 
-const COLLECTIVE_COGNITION_REWARD_SELECT = `
+export const COLLECTIVE_COGNITION_REWARD_SELECT = `
   id,
   custom,
   reward_name,
@@ -40,7 +40,7 @@ export async function getCollectiveCognitionRewards(): Promise<{
     )
 
   const map: { [key: string]: CollectiveCognitionRewardDetail } = {}
-  for (const r of data) map[r.id] = r
+  for (const item of data) map[item.id] = item
 
   return map
 }
@@ -73,51 +73,9 @@ export async function getUserCustomCollectiveCognitionRewards(): Promise<{
     )
 
   const map: { [key: string]: CollectiveCognitionRewardDetail } = {}
-  for (const r of data) map[r.id] = r
+  for (const item of data) map[item.id] = item
 
   return map
-}
-
-/**
- * Get Collective Cognition Reward IDs
- *
- * Retrieves the IDs of collective cognition rewards. This depends on if they
- * are custom rewards (requires the user ID if so). This is used to populate
- * new settlements created from templates.
- *
- * @param rewardNames Reward Names
- * @param custom Custom
- * @param userId User ID
- * @returns Collective Cognition Reward IDs
- */
-export async function getCollectiveCognitionRewardIds(
-  rewardNames: string[],
-  custom: boolean,
-  userId?: string
-): Promise<string[]> {
-  const supabase = createClient()
-
-  const { data, error } = userId
-    ? await supabase
-        .from('collective_cognition_reward')
-        .select('id')
-        .in('reward_name', rewardNames)
-        .eq('custom', custom)
-        .eq('user_id', userId)
-    : await supabase
-        .from('collective_cognition_reward')
-        .select('id')
-        .in('reward_name', rewardNames)
-        .eq('custom', custom)
-
-  if (error)
-    throw new Error(
-      `Error Fetching Collective Cognition Reward ID(s): ${error.message}`
-    )
-
-  if (!data) throw new Error('Collective Cognition Reward(s) Not Found')
-
-  return data.map((reward) => reward.id)
 }
 
 /**
@@ -216,4 +174,46 @@ export async function removeCollectiveCognitionReward(
     throw new Error(
       `Error Removing Collective Cognition Reward: ${error.message}`
     )
+}
+
+/**
+ * Get Collective Cognition Reward IDs
+ *
+ * Retrieves the IDs of collective cognition rewards. This depends on if they
+ * are custom rewards (requires the user ID if so). This is used to populate
+ * new settlements created from templates.
+ *
+ * @param rewardNames Reward Names
+ * @param custom Custom
+ * @param userId User ID
+ * @returns Collective Cognition Reward IDs
+ */
+export async function getCollectiveCognitionRewardIds(
+  rewardNames: string[],
+  custom: boolean,
+  userId?: string
+): Promise<string[]> {
+  const supabase = createClient()
+
+  const { data, error } = userId
+    ? await supabase
+        .from('collective_cognition_reward')
+        .select('id')
+        .in('reward_name', rewardNames)
+        .eq('custom', custom)
+        .eq('user_id', userId)
+    : await supabase
+        .from('collective_cognition_reward')
+        .select('id')
+        .in('reward_name', rewardNames)
+        .eq('custom', custom)
+
+  if (error)
+    throw new Error(
+      `Error Fetching Collective Cognition Reward ID(s): ${error.message}`
+    )
+
+  if (!data) throw new Error('Collective Cognition Reward(s) Not Found')
+
+  return data.map((reward) => reward.id)
 }

@@ -2,6 +2,13 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { WandererTimelineYearDetail } from '@/lib/types'
 
+export const WANDERER_TIMELINE_YEAR_SELECT = `
+  id,
+  wanderer_id,
+  entries,
+  year_number
+`
+
 /**
  * Get Wanderer Timeline Years
  *
@@ -17,17 +24,16 @@ export async function getWandererTimelineYears(
 
   const { data, error } = await supabase
     .from('wanderer_timeline_year')
-    .select('id, wanderer_id, entries, year_number')
+    .select(WANDERER_TIMELINE_YEAR_SELECT)
     .eq('wanderer_id', wandererId)
 
   if (error)
     throw new Error(`Error Fetching Wanderer Timeline Years: ${error.message}`)
 
-  const timelineYearMap: { [key: string]: WandererTimelineYearDetail } = {}
+  const map: { [key: string]: WandererTimelineYearDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  for (const t of data ?? []) timelineYearMap[t.id] = t
-
-  return timelineYearMap
+  return map
 }
 
 /**
@@ -36,26 +42,26 @@ export async function getWandererTimelineYears(
  * Adds a new timeline year to a wanderer.
  *
  * @param wandererTimelineYear Wanderer Timeline Year Data
- * @returns Inserted Wanderer Timeline Year ID
+ * @returns Inserted Wanderer Timeline Year
  */
 export async function addWandererTimelineYear(
   wandererTimelineYear: Omit<
     TablesInsert<'wanderer_timeline_year'>,
     'id' | 'created_at' | 'updated_at'
   >
-): Promise<string> {
+): Promise<WandererTimelineYearDetail> {
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from('wanderer_timeline_year')
     .insert(wandererTimelineYear)
-    .select('id')
+    .select(WANDERER_TIMELINE_YEAR_SELECT)
     .single()
 
   if (error)
     throw new Error(`Error Adding Wanderer Timeline Year: ${error.message}`)
 
-  return data.id
+  return data
 }
 
 /**
@@ -74,10 +80,16 @@ export async function updateWandererTimelineYear(
   >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'wanderer_timeline_year'> = {
+    ...wandererTimelineYear
+  }
+
+  delete updateData.id
+  delete updateData.wanderer_id
 
   const { error } = await supabase
     .from('wanderer_timeline_year')
-    .update(wandererTimelineYear)
+    .update(updateData)
     .eq('id', id)
 
   if (error)

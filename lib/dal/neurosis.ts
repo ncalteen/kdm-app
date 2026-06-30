@@ -1,8 +1,14 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { NeurosisDetail } from '@/lib/types'
+
+export const NEUROSIS_SELECT = `
+  id,
+  custom,
+  neurosis_name,
+  rules
+`
 
 /**
  * Get Neuroses
@@ -12,7 +18,7 @@ import { NeurosisDetail } from '@/lib/types'
  * - Built-in (non-custom) neuroses
  * - Custom neuroses owned by the user
  *
- * @returns Neuroses
+ * @returns Neuroses by ID
  */
 export async function getNeuroses(): Promise<{
   [key: string]: NeurosisDetail
@@ -22,14 +28,14 @@ export async function getNeuroses(): Promise<{
 
   const { data, error } = await supabase
     .from('neurosis')
-    .select('id, custom, neurosis_name, rules')
+    .select(NEUROSIS_SELECT)
 
   if (error) throw new Error(`Error Fetching Neuroses: ${error.message}`)
 
-  const neurosisMap: { [key: string]: NeurosisDetail } = {}
-  for (const n of data ?? []) neurosisMap[n.id] = n
+  const map: { [key: string]: NeurosisDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return neurosisMap
+  return map
 }
 
 /**
@@ -49,16 +55,17 @@ export async function getUserCustomNeuroses(): Promise<{
 
   const { data, error } = await supabase
     .from('neurosis')
-    .select('id, custom, neurosis_name, rules, archived_at')
+    .select(NEUROSIS_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error) throw new Error(`Error Fetching Custom Neuroses: ${error.message}`)
 
-  const neurosisMap: { [key: string]: NeurosisDetail } = {}
-  for (const n of data ?? []) if (!n.archived_at) neurosisMap[n.id] = n
+  const map: { [key: string]: NeurosisDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return neurosisMap
+  return map
 }
 
 /**
@@ -72,21 +79,28 @@ export async function getUserCustomNeuroses(): Promise<{
 export async function addNeurosis(
   neurosis: Omit<
     TablesInsert<'neurosis'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<NeurosisDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'neurosis'> = { ...neurosis }
 
-  if (neurosis.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('neurosis')
     .insert({
-      ...neurosis,
-      ...(neurosis.custom ? { user_id: userId! } : {})
+      ...insertData,
+      custom: true,
+      user_id: userId
     })
-    .select('id, custom, neurosis_name, rules')
+    .select(NEUROSIS_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Neurosis: ${error.message}`)
@@ -101,17 +115,23 @@ export async function addNeurosis(
  *
  * @param id Neurosis ID
  * @param neurosis Neurosis Data
- * @returns Updated Neurosis
  */
 export async function updateNeurosis(
   id: string,
-  neurosis: Omit<TablesUpdate<'neurosis'>, 'id' | 'created_at' | 'updated_at'>
+  neurosis: Omit<
+    TablesUpdate<'neurosis'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'neurosis'> = { ...neurosis }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('neurosis')
-    .update(neurosis)
+    .update(updateData)
     .eq('id', id)
 
   if (error) throw new Error(`Error Updating Neurosis: ${error.message}`)
@@ -125,5 +145,9 @@ export async function updateNeurosis(
  * @param id Neurosis ID
  */
 export async function removeNeurosis(id: string): Promise<void> {
-  await removeCatalogRow('neurosis', id, 'Neurosis')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('neurosis').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Neurosis: ${error.message}`)
 }

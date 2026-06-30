@@ -1,19 +1,26 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { LocationDetail } from '@/lib/types'
 
+export const LOCATION_SELECT = `
+  id,
+  custom,
+  location_name,
+  rules
+`
+
 /**
  * Get Locations
  *
  * Retrieves all locations visible to the authenticated user. RLS surfaces:
+ *
  * - Built-in (non-custom) locations
  * - Custom locations owned by the user
  * - Custom locations on settlements the user collaborates on (via the
  *   transitive SELECT policy on `location`)
  *
- * @returns Locations
+ * @returns Locations by ID
  */
 export async function getLocations(): Promise<{
   [key: string]: LocationDetail
@@ -23,14 +30,14 @@ export async function getLocations(): Promise<{
 
   const { data, error } = await supabase
     .from('location')
-    .select('id, custom, location_name, rules')
+    .select(LOCATION_SELECT)
 
   if (error) throw new Error(`Error Fetching Locations: ${error.message}`)
 
-  const locationMap: { [key: string]: LocationDetail } = {}
-  for (const l of data ?? []) locationMap[l.id] = l
+  const map: { [key: string]: LocationDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return locationMap
+  return map
 }
 
 /**
@@ -50,17 +57,102 @@ export async function getUserCustomLocations(): Promise<{
 
   const { data, error } = await supabase
     .from('location')
-    .select('id, custom, location_name, rules, archived_at')
+    .select(LOCATION_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(`Error Fetching Custom Locations: ${error.message}`)
 
-  const locationMap: { [key: string]: LocationDetail } = {}
-  for (const l of data ?? []) if (!l.archived_at) locationMap[l.id] = l
+  const map: { [key: string]: LocationDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return locationMap
+  return map
+}
+
+/**
+ * Add Location
+ *
+ * Adds a new location record to the database.
+ *
+ * @param location Location Data
+ * @returns Inserted Location
+ */
+export async function addLocation(
+  location: Omit<
+    TablesInsert<'location'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+  >
+): Promise<LocationDetail> {
+  const userId = await getUserIdOrNull()
+  const supabase = createClient()
+  const insertData: TablesInsert<'location'> = { ...location }
+
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
+
+  const { data, error } = await supabase
+    .from('location')
+    .insert({
+      ...insertData,
+      custom: true,
+      user_id: userId
+    })
+    .select(LOCATION_SELECT)
+    .single()
+
+  if (error) throw new Error(`Error Adding Location: ${error.message}`)
+
+  return data
+}
+
+/**
+ * Update Location
+ *
+ * Updates an existing location record in the database.
+ *
+ * @param id Location ID
+ * @param location Location Data
+ */
+export async function updateLocation(
+  id: string,
+  location: Omit<
+    TablesUpdate<'location'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
+): Promise<void> {
+  const supabase = createClient()
+  const updateData: TablesUpdate<'location'> = { ...location }
+
+  delete updateData.custom
+  delete updateData.user_id
+
+  const { error } = await supabase
+    .from('location')
+    .update(updateData)
+    .eq('id', id)
+
+  if (error) throw new Error(`Error Updating Location: ${error.message}`)
+}
+
+/**
+ * Remove Location
+ *
+ * Deletes a location record from the database.
+ *
+ * @param id Location ID
+ */
+export async function removeLocation(id: string): Promise<void> {
+  const supabase = createClient()
+
+  const { error } = await supabase.from('location').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Location: ${error.message}`)
 }
 
 /**
@@ -99,71 +191,4 @@ export async function getLocationIds(
   if (!data) throw new Error('Location(s) Not Found')
 
   return data.map((location) => location.id)
-}
-
-/**
- * Add Location
- *
- * Adds a new location record to the database.
- *
- * @param location Location Data
- * @returns Inserted Location
- */
-export async function addLocation(
-  location: Omit<
-    TablesInsert<'location'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
-  >
-): Promise<LocationDetail> {
-  const userId = await getUserIdOrNull()
-  const supabase = createClient()
-
-  if (location.custom && !userId) throw new Error('Not Authenticated')
-
-  const { data, error } = await supabase
-    .from('location')
-    .insert({
-      ...location,
-      ...(location.custom ? { user_id: userId! } : {})
-    })
-    .select('id, custom, location_name, rules')
-    .single()
-
-  if (error) throw new Error(`Error Adding Location: ${error.message}`)
-
-  return data
-}
-
-/**
- * Update Location
- *
- * Updates an existing location record in the database.
- *
- * @param id Location ID
- * @param location Location Data
- * @returns Updated Location
- */
-export async function updateLocation(
-  id: string,
-  location: Omit<TablesUpdate<'location'>, 'id' | 'created_at' | 'updated_at'>
-): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase
-    .from('location')
-    .update(location)
-    .eq('id', id)
-
-  if (error) throw new Error(`Error Updating Location: ${error.message}`)
-}
-
-/**
- * Remove Location
- *
- * Deletes a location record from the database.
- *
- * @param id Location ID
- */
-export async function removeLocation(id: string): Promise<void> {
-  await removeCatalogRow('location', id, 'Location')
 }

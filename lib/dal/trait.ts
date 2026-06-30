@@ -3,7 +3,7 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { TraitDetail } from '@/lib/types'
 
-const TRAIT_SELECT = `
+export const TRAIT_SELECT = `
   id,
   custom,
   trait_name,
@@ -25,14 +25,12 @@ export async function getTraits(): Promise<{ [key: string]: TraitDetail }> {
   await getUserId()
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('trait')
-    .select(TRAIT_SELECT)
+  const { data, error } = await supabase.from('trait').select(TRAIT_SELECT)
 
   if (error) throw new Error(`Error Fetching Traits: ${error.message}`)
 
   const map: { [key: string]: TraitDetail } = {}
-  for (const t of data) map[t.id] = t
+  for (const item of data) map[item.id] = item
 
   return map
 }
@@ -62,7 +60,7 @@ export async function getUserCustomTraits(): Promise<{
   if (error) throw new Error(`Error Fetching Custom Traits: ${error.message}`)
 
   const map: { [key: string]: TraitDetail } = {}
-  for (const t of data) map[t.id] = t
+  for (const item of data) map[item.id] = item
 
   return map
 }
@@ -96,7 +94,8 @@ export async function addTrait(
     .from('trait')
     .insert({
       ...insertData,
-      ...(insertData.custom === true ? { user_id: userId } : {})
+      custom: true,
+      user_id: userId
     })
     .select(TRAIT_SELECT)
     .single()
@@ -148,68 +147,39 @@ export async function removeTrait(id: string): Promise<void> {
 }
 
 /**
- * Resolve Trait Names
+ * Get Trait IDs
  *
- * Given a list of trait names, returns the corresponding trait IDs. Names that
- * already exist (non-custom catalog or owned by this user) are reused. Missing
- * names are inserted as new custom traits owned by the current user.
+ * Retrieves the IDs of traits. This depends on if they are custom traits
+ * (requires the user ID if so).
  *
- * Matching is case-insensitive and whitespace-trimmed. Duplicates in the input
- * are collapsed.
- *
- * @param names Trait Names
- * @returns Trait IDs in the order of the deduplicated input
+ * @param traitNames Trait Names
+ * @param custom Custom
+ * @param userId User ID
+ * @returns Traits IDs
  */
-export async function resolveTraitNames(names: string[]): Promise<string[]> {
-  const userId = await getUserId()
+export async function getTraitIds(
+  traitNames: string[],
+  custom: boolean,
+  userId?: string
+): Promise<string[]> {
   const supabase = createClient()
 
-  // Normalise input: trim, drop empties, dedupe case-insensitively while
-  // preserving the first-seen spelling.
-  const seen = new Set<string>()
-  const normalized: { raw: string; key: string }[] = []
-  for (const n of names) {
-    const trimmed = n?.trim() ?? ''
-    if (!trimmed) continue
-    const key = trimmed.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    normalized.push({ raw: trimmed, key })
-  }
+  const { data, error } = userId
+    ? await supabase
+        .from('trait')
+        .select('id')
+        .in('trait_name', traitNames)
+        .eq('custom', custom)
+        .eq('user_id', userId)
+    : await supabase
+        .from('trait')
+        .select('id')
+        .in('trait_name', traitNames)
+        .eq('custom', custom)
 
-  if (normalized.length === 0) return []
+  if (error) throw new Error(`Error Fetching Trait ID(s): ${error.message}`)
 
-  // Look up existing rows visible to this user (non-custom or owned).
-  const { data: existing, error } = await supabase
-    .from('trait')
-    .select('id, trait_name, custom, user_id')
-    .or(`custom.eq.false,and(custom.eq.true,user_id.eq.${userId})`)
+  if (!data) throw new Error('Trait(s) Not Found')
 
-  if (error) throw new Error(`Error Resolving Traits: ${error.message}`)
-
-  const byKey = new Map<string, string>()
-  for (const row of existing ?? [])
-    byKey.set(row.trait_name.trim().toLowerCase(), row.id)
-
-  const results: string[] = []
-  for (const entry of normalized) {
-    const existingId = byKey.get(entry.key)
-    if (existingId) {
-      results.push(existingId)
-      continue
-    }
-    const { data: inserted, error: insertError } = await supabase
-      .from('trait')
-      .insert({ custom: true, user_id: userId, trait_name: entry.raw })
-      .select('id')
-      .single()
-
-    if (insertError)
-      throw new Error(`Error Adding Trait: ${insertError.message}`)
-
-    byKey.set(entry.key, inserted.id)
-    results.push(inserted.id)
-  }
-
-  return results
+  return data.map((trait) => trait.id)
 }

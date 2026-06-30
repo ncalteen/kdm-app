@@ -1,8 +1,14 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SecretFightingArtDetail } from '@/lib/types'
+
+export const SECRET_FIGHTING_ART_SELECT = `
+  id,
+  custom,
+  secret_fighting_art_name,
+  rules
+`
 
 /**
  * Get Secret Fighting Arts
@@ -25,15 +31,15 @@ export async function getSecretFightingArts(): Promise<{
 
   const { data, error } = await supabase
     .from('secret_fighting_art')
-    .select('id, custom, secret_fighting_art_name, rules')
+    .select(SECRET_FIGHTING_ART_SELECT)
 
   if (error)
     throw new Error(`Error Fetching Secret Fighting Arts: ${error.message}`)
 
-  const secretFightingArtMap: { [key: string]: SecretFightingArtDetail } = {}
-  for (const s of data ?? []) secretFightingArtMap[s.id] = s
+  const map: { [key: string]: SecretFightingArtDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return secretFightingArtMap
+  return map
 }
 
 /**
@@ -54,19 +60,20 @@ export async function getUserCustomSecretFightingArts(): Promise<{
 
   const { data, error } = await supabase
     .from('secret_fighting_art')
-    .select('id, custom, secret_fighting_art_name, rules, archived_at')
+    .select(SECRET_FIGHTING_ART_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(
       `Error Fetching Custom Secret Fighting Arts: ${error.message}`
     )
 
-  const secretFightingArtMap: { [key: string]: SecretFightingArtDetail } = {}
-  for (const s of data ?? []) if (!s.archived_at) secretFightingArtMap[s.id] = s
+  const map: { [key: string]: SecretFightingArtDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return secretFightingArtMap
+  return map
 }
 
 /**
@@ -80,21 +87,30 @@ export async function getUserCustomSecretFightingArts(): Promise<{
 export async function addSecretFightingArt(
   secretFightingArt: Omit<
     TablesInsert<'secret_fighting_art'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<SecretFightingArtDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'secret_fighting_art'> = {
+    ...secretFightingArt
+  }
 
-  if (secretFightingArt.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('secret_fighting_art')
     .insert({
-      ...secretFightingArt,
-      ...(secretFightingArt.custom ? { user_id: userId! } : {})
+      ...insertData,
+      custom: true,
+      user_id: userId
     })
-    .select('id, custom, secret_fighting_art_name, rules')
+    .select(SECRET_FIGHTING_ART_SELECT)
     .single()
 
   if (error)
@@ -110,20 +126,25 @@ export async function addSecretFightingArt(
  *
  * @param id Secret Fighting Art ID
  * @param secretFightingArt Secret Fighting Art Data
- * @returns Updated Secret Fighting Art
  */
 export async function updateSecretFightingArt(
   id: string,
   secretFightingArt: Omit<
     TablesUpdate<'secret_fighting_art'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
   >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'secret_fighting_art'> = {
+    ...secretFightingArt
+  }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('secret_fighting_art')
-    .update(secretFightingArt)
+    .update(updateData)
     .eq('id', id)
 
   if (error)
@@ -138,5 +159,13 @@ export async function updateSecretFightingArt(
  * @param id Secret Fighting Art ID
  */
 export async function removeSecretFightingArt(id: string): Promise<void> {
-  await removeCatalogRow('secret_fighting_art', id, 'Secret Fighting Art')
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('secret_fighting_art')
+    .delete()
+    .eq('id', id)
+
+  if (error)
+    throw new Error(`Error Removing Secret Fighting Art: ${error.message}`)
 }

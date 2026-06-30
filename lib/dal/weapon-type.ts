@@ -1,8 +1,15 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { WeaponTypeDetail } from '@/lib/types'
+
+export const WEAPON_TYPE_SELECT = `
+  id,
+  custom,
+  weapon_type_name,
+  specialist_proficiency_rules,
+  master_proficiency_rules
+`
 
 /**
  * Get Weapon Types
@@ -13,7 +20,7 @@ import { WeaponTypeDetail } from '@/lib/types'
  * - Built-in (non-custom) weapon types
  * - Custom weapon types owned by the user
  *
- * @returns Weapon Types
+ * @returns Weapon Types by ID
  */
 export async function getWeaponTypes(): Promise<{
   [key: string]: WeaponTypeDetail
@@ -23,16 +30,14 @@ export async function getWeaponTypes(): Promise<{
 
   const { data, error } = await supabase
     .from('weapon_type')
-    .select(
-      'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules'
-    )
+    .select(WEAPON_TYPE_SELECT)
 
   if (error) throw new Error(`Error Fetching Weapon Types: ${error.message}`)
 
-  const weaponTypeMap: { [key: string]: WeaponTypeDetail } = {}
-  for (const w of data ?? []) weaponTypeMap[w.id] = w
+  const map: { [key: string]: WeaponTypeDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return weaponTypeMap
+  return map
 }
 
 /**
@@ -52,19 +57,18 @@ export async function getUserCustomWeaponTypes(): Promise<{
 
   const { data, error } = await supabase
     .from('weapon_type')
-    .select(
-      'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules, archived_at'
-    )
+    .select(WEAPON_TYPE_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(`Error Fetching Custom Weapon Types: ${error.message}`)
 
-  const weaponTypeMap: { [key: string]: WeaponTypeDetail } = {}
-  for (const w of data ?? []) if (!w.archived_at) weaponTypeMap[w.id] = w
+  const map: { [key: string]: WeaponTypeDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return weaponTypeMap
+  return map
 }
 
 /**
@@ -78,23 +82,28 @@ export async function getUserCustomWeaponTypes(): Promise<{
 export async function addWeaponType(
   weaponType: Omit<
     TablesInsert<'weapon_type'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<WeaponTypeDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'weapon_type'> = { ...weaponType }
 
-  if (weaponType.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('weapon_type')
     .insert({
-      ...weaponType,
-      ...(weaponType.custom ? { user_id: userId! } : {})
+      ...insertData,
+      custom: true,
+      user_id: userId
     })
-    .select(
-      'id, custom, weapon_type_name, specialist_proficiency_rules, master_proficiency_rules'
-    )
+    .select(WEAPON_TYPE_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Weapon Type: ${error.message}`)
@@ -109,20 +118,23 @@ export async function addWeaponType(
  *
  * @param id Weapon Type ID
  * @param weaponType Weapon Type Data
- * @returns Updated Weapon Type
  */
 export async function updateWeaponType(
   id: string,
   weaponType: Omit<
     TablesUpdate<'weapon_type'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
   >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'weapon_type'> = { ...weaponType }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('weapon_type')
-    .update(weaponType)
+    .update(updateData)
     .eq('id', id)
 
   if (error) throw new Error(`Error Updating Weapon Type: ${error.message}`)
@@ -136,5 +148,9 @@ export async function updateWeaponType(
  * @param id Weapon Type ID
  */
 export async function removeWeaponType(id: string): Promise<void> {
-  await removeCatalogRow('weapon_type', id, 'Weapon Type')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('weapon_type').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Weapon Type: ${error.message}`)
 }

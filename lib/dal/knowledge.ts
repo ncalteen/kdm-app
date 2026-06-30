@@ -1,19 +1,29 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { KnowledgeDetail } from '@/lib/types'
 
+export const KNOWLEDGE_SELECT = `
+  id,
+  custom,
+  knowledge_name,
+  philosophy_id,
+  rules,
+  observation_conditions,
+  observation_rank_up_milestone
+`
+
 /**
  * Get Knowledges
  *
  * Retrieves all knowledges visible to the authenticated user. RLS surfaces:
+ *
  * - Built-in (non-custom) knowledges
  * - Custom knowledges owned by the user
  * - Custom knowledges on settlements the user collaborates on (via the
  *   transitive SELECT policy on `knowledge`)
  *
- * @returns Knowledges
+ * @returns Knowledges by ID
  */
 export async function getKnowledges(): Promise<{
   [key: string]: KnowledgeDetail
@@ -23,16 +33,14 @@ export async function getKnowledges(): Promise<{
 
   const { data, error } = await supabase
     .from('knowledge')
-    .select(
-      'id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone'
-    )
+    .select(KNOWLEDGE_SELECT)
 
   if (error) throw new Error(`Error Fetching Knowledges: ${error.message}`)
 
-  const knowledgeMap: { [key: string]: KnowledgeDetail } = {}
-  for (const k of data ?? []) knowledgeMap[k.id] = k
+  const map: { [key: string]: KnowledgeDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return knowledgeMap
+  return map
 }
 
 /**
@@ -52,19 +60,18 @@ export async function getUserCustomKnowledges(): Promise<{
 
   const { data, error } = await supabase
     .from('knowledge')
-    .select(
-      'id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone, archived_at'
-    )
+    .select(KNOWLEDGE_SELECT)
     .eq('custom', true)
     .eq('user_id', userId)
+    .is('archived_at', null)
 
   if (error)
     throw new Error(`Error Fetching Custom Knowledges: ${error.message}`)
 
-  const knowledgeMap: { [key: string]: KnowledgeDetail } = {}
-  for (const k of data ?? []) if (!k.archived_at) knowledgeMap[k.id] = k
+  const map: { [key: string]: KnowledgeDetail } = {}
+  for (const item of data) map[item.id] = item
 
-  return knowledgeMap
+  return map
 }
 
 /**
@@ -78,23 +85,28 @@ export async function getUserCustomKnowledges(): Promise<{
 export async function addKnowledge(
   knowledge: Omit<
     TablesInsert<'knowledge'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<KnowledgeDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'knowledge'> = { ...knowledge }
 
-  if (knowledge.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('knowledge')
     .insert({
-      ...knowledge,
-      ...(knowledge.custom ? { user_id: userId! } : {})
+      ...insertData,
+      custom: true,
+      user_id: userId
     })
-    .select(
-      'id, custom, knowledge_name, philosophy_id, rules, observation_conditions, observation_rank_up_milestone'
-    )
+    .select(KNOWLEDGE_SELECT)
     .single()
 
   if (error) throw new Error(`Error Adding Knowledge: ${error.message}`)
@@ -109,17 +121,23 @@ export async function addKnowledge(
  *
  * @param id Knowledge ID
  * @param knowledge Knowledge Data
- * @returns Updated Knowledge
  */
 export async function updateKnowledge(
   id: string,
-  knowledge: Omit<TablesUpdate<'knowledge'>, 'id' | 'created_at' | 'updated_at'>
+  knowledge: Omit<
+    TablesUpdate<'knowledge'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'knowledge'> = { ...knowledge }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('knowledge')
-    .update(knowledge)
+    .update(updateData)
     .eq('id', id)
 
   if (error) throw new Error(`Error Updating Knowledge: ${error.message}`)
@@ -133,5 +151,9 @@ export async function updateKnowledge(
  * @param id Knowledge ID
  */
 export async function removeKnowledge(id: string): Promise<void> {
-  await removeCatalogRow('knowledge', id, 'Knowledge')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('knowledge').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Knowledge: ${error.message}`)
 }

@@ -3,7 +3,7 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { InnovationDetail } from '@/lib/types'
 
-const INNOVATION_SELECT = `
+export const INNOVATION_SELECT = `
   id,
   custom,
   innovation_name,
@@ -37,7 +37,7 @@ export async function getInnovations(): Promise<{
   if (error) throw new Error(`Error Fetching Innovations: ${error.message}`)
 
   const map: { [key: string]: InnovationDetail } = {}
-  for (const i of data) map[i.id] = i
+  for (const item of data) map[item.id] = item
 
   return map
 }
@@ -68,48 +68,9 @@ export async function getUserCustomInnovations(): Promise<{
     throw new Error(`Error Fetching Custom Innovations: ${error.message}`)
 
   const map: { [key: string]: InnovationDetail } = {}
-  for (const i of data) map[i.id] = i
+  for (const item of data) map[item.id] = item
 
   return map
-}
-
-/**
- * Get Innovation IDs
- *
- * Retrieves the IDs of innovations. This depends on if they are custom
- * innovations (requires the user ID if so).
- *
- * @param innovationNames Innovation Names
- * @param custom Custom
- * @param userId User ID
- * @returns Innovation IDs
- */
-export async function getInnovationIds(
-  innovationNames: string[],
-  custom: boolean,
-  userId?: string
-): Promise<string[]> {
-  const supabase = createClient()
-
-  const { data, error } = userId
-    ? await supabase
-        .from('innovation')
-        .select('id')
-        .in('innovation_name', innovationNames)
-        .eq('custom', custom)
-        .eq('user_id', userId)
-    : await supabase
-        .from('innovation')
-        .select('id')
-        .in('innovation_name', innovationNames)
-        .eq('custom', custom)
-
-  if (error)
-    throw new Error(`Error Fetching Innovation ID(s): ${error.message}`)
-
-  if (!data) throw new Error('Innovation(s) Not Found')
-
-  return data.map((innovation) => innovation.id)
 }
 
 /**
@@ -141,7 +102,8 @@ export async function addInnovation(
     .from('innovation')
     .insert({
       ...insertData,
-      ...(insertData.custom === true ? { user_id: userId } : {})
+      custom: true,
+      user_id: userId
     })
     .select(INNOVATION_SELECT)
     .single()
@@ -193,4 +155,43 @@ export async function removeInnovation(id: string): Promise<void> {
   const { error } = await supabase.from('innovation').delete().eq('id', id)
 
   if (error) throw new Error(`Error Removing Innovation: ${error.message}`)
+}
+
+/**
+ * Get Innovation IDs
+ *
+ * Retrieves the IDs of innovations. This depends on if they are custom
+ * innovations (requires the user ID if so).
+ *
+ * @param innovationNames Innovation Names
+ * @param custom Custom
+ * @param userId User ID
+ * @returns Innovation IDs
+ */
+export async function getInnovationIds(
+  innovationNames: string[],
+  custom: boolean,
+  userId?: string
+): Promise<string[]> {
+  const supabase = createClient()
+
+  const { data, error } = userId
+    ? await supabase
+        .from('innovation')
+        .select('id')
+        .in('innovation_name', innovationNames)
+        .eq('custom', custom)
+        .eq('user_id', userId)
+    : await supabase
+        .from('innovation')
+        .select('id')
+        .in('innovation_name', innovationNames)
+        .eq('custom', custom)
+
+  if (error)
+    throw new Error(`Error Fetching Innovation ID(s): ${error.message}`)
+
+  if (!data) throw new Error('Innovation(s) Not Found')
+
+  return data.map((innovation) => innovation.id)
 }

@@ -3,7 +3,7 @@ import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { MoodDetail } from '@/lib/types'
 
-const MOOD_SELECT = `
+export const MOOD_SELECT = `
   id,
   custom,
   mood_name,
@@ -25,14 +25,12 @@ export async function getMoods(): Promise<{ [key: string]: MoodDetail }> {
   await getUserId()
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('mood')
-    .select(MOOD_SELECT)
+  const { data, error } = await supabase.from('mood').select(MOOD_SELECT)
 
   if (error) throw new Error(`Error Fetching Moods: ${error.message}`)
 
   const map: { [key: string]: MoodDetail } = {}
-  for (const m of data) map[m.id] = m
+  for (const item of data) map[item.id] = item
 
   return map
 }
@@ -62,7 +60,7 @@ export async function getUserCustomMoods(): Promise<{
   if (error) throw new Error(`Error Fetching Custom Moods: ${error.message}`)
 
   const map: { [key: string]: MoodDetail } = {}
-  for (const m of data) map[m.id] = m
+  for (const item of data) map[item.id] = item
 
   return map
 }
@@ -96,7 +94,8 @@ export async function addMood(
     .from('mood')
     .insert({
       ...insertData,
-      ...(insertData.custom === true ? { user_id: userId } : {})
+      custom: true,
+      user_id: userId
     })
     .select(MOOD_SELECT)
     .single()
@@ -148,65 +147,39 @@ export async function removeMood(id: string): Promise<void> {
 }
 
 /**
- * Resolve Mood Names
+ * Get Mood IDs
  *
- * Given a list of mood names, returns the corresponding mood IDs. Names that
- * already exist (non-custom catalog or owned by this user) are reused. Missing
- * names are inserted as new custom moods owned by the current user.
+ * Retrieves the IDs of moods. This depends on if they are custom moods
+ * (requires the user ID if so).
  *
- * Matching is case-insensitive and whitespace-trimmed. Duplicates in the input
- * are collapsed.
- *
- * @param names Mood Names
- * @returns Mood IDs in the order of the deduplicated input
+ * @param moodNames Mood Names
+ * @param custom Custom
+ * @param userId User ID
+ * @returns Moods IDs
  */
-export async function resolveMoodNames(names: string[]): Promise<string[]> {
-  const userId = await getUserId()
+export async function getMoodIds(
+  moodNames: string[],
+  custom: boolean,
+  userId?: string
+): Promise<string[]> {
   const supabase = createClient()
 
-  const seen = new Set<string>()
-  const normalized: { raw: string; key: string }[] = []
-  for (const n of names) {
-    const trimmed = n?.trim() ?? ''
-    if (!trimmed) continue
-    const key = trimmed.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    normalized.push({ raw: trimmed, key })
-  }
+  const { data, error } = userId
+    ? await supabase
+        .from('mood')
+        .select('id')
+        .in('mood_name', moodNames)
+        .eq('custom', custom)
+        .eq('user_id', userId)
+    : await supabase
+        .from('mood')
+        .select('id')
+        .in('mood_name', moodNames)
+        .eq('custom', custom)
 
-  if (normalized.length === 0) return []
+  if (error) throw new Error(`Error Fetching Mood ID(s): ${error.message}`)
 
-  const { data: existing, error } = await supabase
-    .from('mood')
-    .select('id, mood_name, custom, user_id')
-    .or(`custom.eq.false,and(custom.eq.true,user_id.eq.${userId})`)
+  if (!data) throw new Error('Mood(s) Not Found')
 
-  if (error) throw new Error(`Error Resolving Moods: ${error.message}`)
-
-  const byKey = new Map<string, string>()
-  for (const row of existing ?? [])
-    byKey.set(row.mood_name.trim().toLowerCase(), row.id)
-
-  const results: string[] = []
-  for (const entry of normalized) {
-    const existingId = byKey.get(entry.key)
-    if (existingId) {
-      results.push(existingId)
-      continue
-    }
-    const { data: inserted, error: insertError } = await supabase
-      .from('mood')
-      .insert({ custom: true, user_id: userId, mood_name: entry.raw })
-      .select('id')
-      .single()
-
-    if (insertError)
-      throw new Error(`Error Adding Mood: ${insertError.message}`)
-
-    byKey.set(entry.key, inserted.id)
-    results.push(inserted.id)
-  }
-
-  return results
+  return data.map((mood) => mood.id)
 }

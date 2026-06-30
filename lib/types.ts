@@ -349,6 +349,19 @@ export type EncounterActiveMonsterMoodDetail = Omit<
 }
 
 /**
+ * Encounter Active Monster Survivor Status Detail
+ *
+ * Represents a survivor status applied by a monster in an active encounter.
+ */
+export type EncounterActiveMonsterSurvivorStatusDetail = Omit<
+  Tables<'encounter_active_monster_survivor_status'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Survivor Status Details */
+  survivor_status: SurvivorStatusDetail
+}
+
+/**
  * Encounter Active Monster Trait Detail
  *
  * Represents a monster's trait in an active encounter.
@@ -443,24 +456,24 @@ export type FightingArtDetail = Omit<
  */
 export type GearDetail = Omit<
   Tables<'gear'>,
-  | 'created_at'
-  | 'updated_at'
-  | 'user_id'
-  | 'affinity_bonus_requirements'
-  | 'archived_at'
-> & {
-  /** Affinity Bonus Requirements */
-  gear_affinity_bonus_requirements: GearAffinityBonusRequirementDetail[]
-  /** Gear Costs Required to Craft this Gear */
-  gear_gear_costs: GearGearCostDetail[]
-  /** Other Costs Required to Craft this Gear */
-  gear_other_costs: GearOtherCostDetail[]
-  /** Resource Costs Required to Craft this Gear */
-  gear_resource_costs: GearResourceCostDetail[]
-  /** Resource Type Costs Required to Craft this Gear */
-  gear_resource_type_costs: GearResourceTypeCostDetail[]
-}
+  'created_at' | 'updated_at' | 'user_id' | 'archived_at'
+> & {}
 
+/**
+ * Gear Cost Detail
+ *
+ * Represents the various costs to craft a gear item
+ */
+export type GearCostDetail = {
+  /** Gear Costs Required to Craft this Gear */
+  gear_costs: GearGearCostDetail[]
+  /** Other Costs Required to Craft this Gear */
+  other_costs: GearOtherCostDetail[]
+  /** Resource Costs Required to Craft this Gear */
+  resource_costs: GearResourceCostDetail[]
+  /** Resource Type Costs Required to Craft this Gear */
+  resource_type_costs: GearResourceTypeCostDetail[]
+}
 /**
  * Gear Gear Cost Detail
  *
@@ -480,7 +493,26 @@ export type GearGearCostDetail = Tables<'gear_gear_cost'> & {
 export type GearGridDetail = Omit<
   Tables<'gear_grid'>,
   'created_at' | 'updated_at'
-> & {}
+> & {
+  /** Top Left Gear */
+  gear_top_left: GearDetail | null
+  /** Top Center Gear */
+  gear_top_center: GearDetail | null
+  /** Top Right Gear */
+  gear_top_right: GearDetail | null
+  /** Middle Left Gear */
+  gear_mid_left: GearDetail | null
+  /** Middle Center Gear */
+  gear_mid_center: GearDetail | null
+  /** Middle Right Gear */
+  gear_mid_right: GearDetail | null
+  /** Bottom Left Gear */
+  gear_bottom_left: GearDetail | null
+  /** Bottom Center Gear */
+  gear_bottom_center: GearDetail | null
+  /** Bottom Right Gear */
+  gear_bottom_right: GearDetail | null
+}
 
 /**
  * Gear Other Cost Detail
@@ -643,6 +675,13 @@ export type LocationDetail = Omit<
   Tables<'location'>,
   'created_at' | 'updated_at' | 'user_id' | 'archived_at'
 > & {}
+
+/**
+ * Lookup User Audit Detail
+ *
+ * Used throughout the app to represent username lookup audit rows.
+ */
+export type LookupUserAuditDetail = Tables<'lookup_user_audit'> & {}
 
 /**
  * Milestone Detail
@@ -1490,6 +1529,13 @@ export type StrainMilestoneDetail = Omit<
 > & {}
 
 /**
+ * Subscription Plan Detail
+ *
+ * Used throughout the app to represent a seeded subscription plan.
+ */
+export type SubscriptionPlanDetail = Tables<'subscription_plan'> & {}
+
+/**
  * Survivor Detail
  *
  * Used throughout the app to represent the currently selected survivor.
@@ -2018,9 +2064,9 @@ export type WandererDetail = Omit<
   /** Abilities and Impairments */
   abilities_impairments: WandererAbilityImpairmentDetail[]
   /** Fighting Arts */
-  fighting_arts: FightingArtDetail[]
+  fighting_arts: WandererFightingArtDetail[]
   /** Rare Gear */
-  rare_gear: GearDetail[]
+  rare_gear: WandererRareGearDetail[]
   /** Timeline Years */
   timeline_years: WandererTimelineYearDetail[]
 }
@@ -2037,6 +2083,32 @@ export type WandererAbilityImpairmentDetail = Omit<
 > & {
   /** Ability or Impairment */
   ability_impairment: AbilityImpairmentDetail
+}
+
+/**
+ * Wanderer Fighting Art Detail
+ *
+ * Used throughout the app to represent a fighting art of a template wanderer.
+ */
+export type WandererFightingArtDetail = Omit<
+  Tables<'wanderer_fighting_art'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Fighting Art */
+  fighting_art: FightingArtDetail
+}
+
+/**
+ * Wanderer Rare Gear Detail
+ *
+ * Used throughout the app to represent a rare gear of a template wanderer.
+ */
+export type WandererRareGearDetail = Omit<
+  Tables<'wanderer_rare_gear'>,
+  'created_at' | 'updated_at'
+> & {
+  /** Rare Gear */
+  gear: GearDetail
 }
 
 /**
