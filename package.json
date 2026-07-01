@@ -67,7 +67,7 @@
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "2.106.2",
     "@tanstack/react-table": "^8.21.3",
-    "@tanstack/react-virtual": "^3.13.24",
+    "@tanstack/react-virtual": "^3.14.5",
     "@uiw/react-md-editor": "^4.1.1",
     "@vercel/analytics": "^2.0.1",
     "@vercel/edge-config": "^1.4.3",
