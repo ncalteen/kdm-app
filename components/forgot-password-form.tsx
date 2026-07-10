@@ -1,5 +1,6 @@
 'use client'
 
+import { ShutdownNoticeDialog } from '@/components/auth/shutdown-notice-dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -74,6 +75,7 @@ export function ForgotPasswordForm({
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
+      <ShutdownNoticeDialog />
       {success ? (
         <Card>
           <CardHeader>
