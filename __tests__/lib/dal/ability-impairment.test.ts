@@ -14,7 +14,9 @@ vi.mock('@/lib/dal/user', () => ({
 }))
 
 const {
+  ABILITY_IMPAIRMENT_SELECT_DETAIL,
   getAbilityImpairments,
+  getUserCustomAbilityImpairments,
   addAbilityImpairment,
   updateAbilityImpairment,
   removeAbilityImpairment
@@ -97,6 +99,81 @@ describe('getAbilityImpairments', () => {
     const result = await getAbilityImpairments()
     expect(result).toEqual({})
   })
+
+  it('uses the detail select when requested', async () => {
+    vi.mocked(getUserId).mockResolvedValue(userId)
+    const select = vi.fn().mockResolvedValue({ data: [row1], error: null })
+
+    mockSupabase.from.mockReturnValueOnce({ select })
+
+    const result = await getAbilityImpairments(true)
+
+    expect(result).toEqual({ [row1.id]: row1 })
+    expect(select).toHaveBeenCalledWith(ABILITY_IMPAIRMENT_SELECT_DETAIL)
+  })
+})
+
+describe('getUserCustomAbilityImpairments', () => {
+  const userId = 'user-1'
+  const row = {
+    id: 'a1',
+    custom: true,
+    ability_impairment_name: 'Mine',
+    rules: null
+  }
+
+  it('returns current user custom rows by ID', async () => {
+    vi.mocked(getUserId).mockResolvedValue(userId)
+    const is = vi.fn().mockResolvedValue({ data: [row], error: null })
+    const eqUserId = vi.fn().mockReturnValue({ is })
+    const eqCustom = vi.fn().mockReturnValue({ eq: eqUserId })
+    const select = vi.fn().mockReturnValue({ eq: eqCustom })
+
+    mockSupabase.from.mockReturnValueOnce({ select })
+
+    const result = await getUserCustomAbilityImpairments()
+
+    expect(result).toEqual({ [row.id]: row })
+    expect(mockSupabase.from).toHaveBeenCalledWith('ability_impairment')
+    expect(eqCustom).toHaveBeenCalledWith('custom', true)
+    expect(eqUserId).toHaveBeenCalledWith('user_id', userId)
+    expect(is).toHaveBeenCalledWith('archived_at', null)
+  })
+
+  it('throws when the custom query fails', async () => {
+    vi.mocked(getUserId).mockResolvedValue(userId)
+
+    mockSupabase.from.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            is: vi
+              .fn()
+              .mockResolvedValue({ data: null, error: { message: 'DB error' } })
+          })
+        })
+      })
+    })
+
+    await expect(getUserCustomAbilityImpairments()).rejects.toThrow(
+      'Error Fetching Custom Abilities/Impairments: DB error'
+    )
+  })
+
+  it('uses the detail select when requested', async () => {
+    vi.mocked(getUserId).mockResolvedValue(userId)
+    const is = vi.fn().mockResolvedValue({ data: [row], error: null })
+    const eqUserId = vi.fn().mockReturnValue({ is })
+    const eqCustom = vi.fn().mockReturnValue({ eq: eqUserId })
+    const select = vi.fn().mockReturnValue({ eq: eqCustom })
+
+    mockSupabase.from.mockReturnValueOnce({ select })
+
+    const result = await getUserCustomAbilityImpairments(true)
+
+    expect(result).toEqual({ [row.id]: row })
+    expect(select).toHaveBeenCalledWith(ABILITY_IMPAIRMENT_SELECT_DETAIL)
+  })
 })
 
 describe('addAbilityImpairment', () => {
@@ -104,11 +181,12 @@ describe('addAbilityImpairment', () => {
 
   it('inserts a non-custom row without user_id', async () => {
     vi.mocked(getUserIdOrNull).mockResolvedValue(userId)
+    const select = vi.fn().mockReturnValue({
+      single: vi.fn().mockResolvedValue({ data: { id: 'a1' }, error: null })
+    })
     mockSupabase.from.mockReturnValue({
       insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { id: 'a1' }, error: null })
-        })
+        select
       })
     })
 
@@ -116,7 +194,8 @@ describe('addAbilityImpairment', () => {
       custom: false,
       ability_impairment_name: 'A'
     })
-    expect(result).toEqual({ id: 'a1' })
+    expect(result).toBe('a1')
+    expect(select).toHaveBeenCalledWith('id')
   })
 
   it('inserts a custom row with user_id', async () => {

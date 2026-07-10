@@ -1,11 +1,18 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
+import { saveVignetteSurvivorLiveState } from '@/components/survivor/vignette-live-state'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
+import { SurvivorCardMode } from '@/lib/enums'
+import {
+  ShowdownDetail,
+  ShowdownStateSetter,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { RibbonIcon, Shield } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
@@ -14,8 +21,14 @@ import { ReactElement, useCallback, useState } from 'react'
  * Waist Card Properties
  */
 interface WaistCardProps {
+  /** Mode */
+  mode?: SurvivorCardMode
+  /** Selected Showdown */
+  selectedShowdown?: ShowdownDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Showdown */
+  setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
   setSurvivors: SurvivorsStateSetter
   /** Survivors */
@@ -32,10 +45,14 @@ interface WaistCardProps {
  * @returns Waist Card Component
  */
 export function WaistCard({
+  mode = SurvivorCardMode.SURVIVOR_CARD,
+  selectedShowdown = null,
   selectedSurvivor,
+  setSelectedShowdown,
   setSurvivors,
   survivors
 }: WaistCardProps): ReactElement {
+  const isVignetteMode = mode === SurvivorCardMode.VIGNETTE_CARD
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [waistArmor, setWaistArmor] = useState(
     selectedSurvivor?.waist_armor ?? 0
@@ -92,6 +109,22 @@ export function WaistCard({
       setter: (v: T) => void,
       oldValue: T
     ) => {
+      if (mode === SurvivorCardMode.VIGNETTE_CARD) {
+        if (field === 'waist_light_damage' || field === 'waist_heavy_damage') {
+          setter(value)
+          saveVignetteSurvivorLiveState({
+            context: 'Vignette Survivor Waist Damage Update',
+            field,
+            mode,
+            selectedShowdown,
+            selectedSurvivor,
+            setSelectedShowdown,
+            value: value as boolean
+          })
+        }
+        return
+      }
+
       const oldSurvivors = [...survivors]
 
       setter(value)
@@ -109,7 +142,14 @@ export function WaistCard({
         }
       )
     },
-    [selectedSurvivor?.id, setSurvivors, survivors]
+    [
+      mode,
+      selectedShowdown,
+      selectedSurvivor,
+      setSelectedShowdown,
+      setSurvivors,
+      survivors
+    ]
   )
 
   return (
@@ -129,6 +169,7 @@ export function WaistCard({
               onChange={(value) =>
                 handleUpdate('waist_armor', value, setWaistArmor, waistArmor)
               }
+              disabled={isVignetteMode}
               className="absolute top-[50%] left-7 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 text-xl sm:text-xl md:text-xl text-center p-0 bg-transparent! border-none no-spinners focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
@@ -153,6 +194,7 @@ export function WaistCard({
                       waistBrokenHip
                     )
                   }
+                  disabled={isVignetteMode}
                   name="waist-broken-hip"
                   id="waist-broken-hip"
                 />
@@ -171,6 +213,7 @@ export function WaistCard({
                       waistIntestinalProlapse
                     )
                   }
+                  disabled={isVignetteMode}
                   name="waist-intestinal-prolapse"
                   id="waist-intestinal-prolapse"
                 />
@@ -189,6 +232,7 @@ export function WaistCard({
                       waistDestroyedGenitals
                     )
                   }
+                  disabled={isVignetteMode}
                   name="waist-destroyed-genitals"
                   id="waist-destroyed-genitals"
                 />
@@ -213,6 +257,7 @@ export function WaistCard({
                           waistWarpedPelvis
                         )
                       }}
+                      disabled={isVignetteMode}
                       name={`waist-warped-pelvis-${value}`}
                       id={`waist-warped-pelvis-${value}`}
                     />

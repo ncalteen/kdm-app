@@ -1,4 +1,3 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
@@ -197,19 +196,25 @@ export async function getNemesisNodesById(
 export async function addNemesis(
   nemesis: Omit<
     TablesInsert<'nemesis'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<NemesisDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'nemesis'> = { ...nemesis }
 
-  if (nemesis.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('nemesis')
     .insert({
-      ...nemesis,
-      ...(nemesis.custom ? { user_id: userId! } : {})
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
     })
     .select(
       'id, alternate_id, custom, monster_name, multi_monster, node, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
@@ -228,15 +233,24 @@ export async function addNemesis(
  *
  * @param id Nemesis ID
  * @param nemesis Nemesis Data
- * @returns Updated Nemesis
  */
 export async function updateNemesis(
   id: string,
-  nemesis: Omit<TablesUpdate<'nemesis'>, 'id' | 'created_at' | 'updated_at'>
+  nemesis: Omit<
+    TablesUpdate<'nemesis'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'nemesis'> = { ...nemesis }
 
-  const { error } = await supabase.from('nemesis').update(nemesis).eq('id', id)
+  delete updateData.custom
+  delete updateData.user_id
+
+  const { error } = await supabase
+    .from('nemesis')
+    .update(updateData)
+    .eq('id', id)
 
   if (error) throw new Error(`Error Updating Nemesis: ${error.message}`)
 }
@@ -249,5 +263,9 @@ export async function updateNemesis(
  * @param id Nemesis ID
  */
 export async function removeNemesis(id: string): Promise<void> {
-  await removeCatalogRow('nemesis', id, 'Nemesis')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('nemesis').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Nemesis: ${error.message}`)
 }

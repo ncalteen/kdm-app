@@ -1,11 +1,18 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
+import { saveVignetteSurvivorLiveState } from '@/components/survivor/vignette-live-state'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
+import { SurvivorCardMode } from '@/lib/enums'
+import {
+  ShowdownDetail,
+  ShowdownStateSetter,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { FootprintsIcon, Shield } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
@@ -14,8 +21,14 @@ import { ReactElement, useCallback, useState } from 'react'
  * Legs Card Properties
  */
 interface LegsCardProps {
+  /** Mode */
+  mode?: SurvivorCardMode
+  /** Selected Showdown */
+  selectedShowdown?: ShowdownDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Showdown */
+  setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
   setSurvivors: SurvivorsStateSetter
   /** Survivors */
@@ -32,10 +45,14 @@ interface LegsCardProps {
  * @returns Legs Card Component
  */
 export function LegsCard({
+  mode = SurvivorCardMode.SURVIVOR_CARD,
+  selectedShowdown = null,
   selectedSurvivor,
+  setSelectedShowdown,
   setSurvivors,
   survivors
 }: LegsCardProps): ReactElement {
+  const isVignetteMode = mode === SurvivorCardMode.VIGNETTE_CARD
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [legArmor, setLegArmor] = useState(selectedSurvivor?.leg_armor ?? 0)
   const [legHamstrung, setLegHamstrung] = useState(
@@ -80,6 +97,22 @@ export function LegsCard({
       setter: (v: T) => void,
       oldValue: T
     ) => {
+      if (mode === SurvivorCardMode.VIGNETTE_CARD) {
+        if (field === 'leg_light_damage' || field === 'leg_heavy_damage') {
+          setter(value)
+          saveVignetteSurvivorLiveState({
+            context: 'Vignette Survivor Leg Damage Update',
+            field,
+            mode,
+            selectedShowdown,
+            selectedSurvivor,
+            setSelectedShowdown,
+            value: value as boolean
+          })
+        }
+        return
+      }
+
       const oldSurvivors = [...survivors]
 
       setter(value)
@@ -97,7 +130,14 @@ export function LegsCard({
         }
       )
     },
-    [selectedSurvivor?.id, setSurvivors, survivors]
+    [
+      mode,
+      selectedShowdown,
+      selectedSurvivor,
+      setSelectedShowdown,
+      setSurvivors,
+      survivors
+    ]
   )
 
   return (
@@ -117,6 +157,7 @@ export function LegsCard({
               onChange={(value) =>
                 handleUpdate('leg_armor', value, setLegArmor, legArmor)
               }
+              disabled={isVignetteMode}
               className="absolute top-[50%] left-7 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 text-xl sm:text-xl md:text-xl text-center p-0 bg-transparent! border-none no-spinners focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
@@ -141,6 +182,7 @@ export function LegsCard({
                       legHamstrung
                     )
                   }
+                  disabled={isVignetteMode}
                   name="leg-hamstrung"
                   id="leg-hamstrung"
                 />
@@ -165,6 +207,7 @@ export function LegsCard({
                           legBroken
                         )
                       }}
+                      disabled={isVignetteMode}
                       name={`leg-broken-${index + 1}`}
                       id={`leg-broken-${index + 1}`}
                     />
@@ -194,6 +237,7 @@ export function LegsCard({
                           legDismembered
                         )
                       }}
+                      disabled={isVignetteMode}
                       name={`leg-dismembered-${index + 1}`}
                       id={`leg-dismembered-${index + 1}`}
                     />

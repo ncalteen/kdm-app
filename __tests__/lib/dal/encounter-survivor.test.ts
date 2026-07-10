@@ -22,7 +22,7 @@ const {
   addEncounterSurvivor,
   updateEncounterSurvivor,
   removeEncounterSurvivor
-} = await import('@/lib/dal/encounter-survivor')
+} = await import('@/lib/dal/encounter-active-survivor')
 
 beforeEach(() => {
   vi.resetAllMocks()
@@ -92,7 +92,7 @@ describe('getEncounterSurvivors', () => {
         }
       }
     })
-    expect(mockSupabase.from).toHaveBeenCalledWith('encounter_survivor')
+    expect(mockSupabase.from).toHaveBeenCalledWith('encounter_active_survivor')
   })
 
   it('returns null when data is null', async () => {
@@ -150,7 +150,7 @@ describe('addEncounterSurvivor', () => {
     })
 
     expect(result).toBe('encounter-survivor-1')
-    expect(mockSupabase.from).toHaveBeenCalledWith('encounter_survivor')
+    expect(mockSupabase.from).toHaveBeenCalledWith('encounter_active_survivor')
   })
 
   it('throws when insert fails', async () => {
@@ -181,7 +181,7 @@ describe('updateEncounterSurvivor', () => {
       updateEncounterSurvivor('encounter-survivor-1', { scout: true })
     ).resolves.toBeUndefined()
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('encounter_survivor')
+    expect(mockSupabase.from).toHaveBeenCalledWith('encounter_active_survivor')
     expect(mockUpdate).toHaveBeenCalledWith({ scout: true })
     expect(mockEq).toHaveBeenCalledWith('id', 'encounter-survivor-1')
   })
@@ -209,7 +209,7 @@ describe('removeEncounterSurvivor', () => {
       removeEncounterSurvivor('encounter-survivor-1')
     ).resolves.toBeUndefined()
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('encounter_survivor')
+    expect(mockSupabase.from).toHaveBeenCalledWith('encounter_active_survivor')
     expect(mockEq).toHaveBeenCalledWith('id', 'encounter-survivor-1')
   })
 

@@ -19,6 +19,7 @@ type JunctionTable =
   | 'showdown_monster_survivor_status'
   | 'encounter_active_monster_trait'
   | 'encounter_active_monster_mood'
+  | 'encounter_active_monster_survivor_status'
   | 'quarry_level_trait'
   | 'quarry_level_mood'
   | 'quarry_level_survivor_status'
@@ -55,6 +56,10 @@ const COLUMNS: Record<
   encounter_active_monster_mood: {
     parent: 'encounter_active_monster_id',
     catalog: 'mood_id'
+  },
+  encounter_active_monster_survivor_status: {
+    parent: 'encounter_active_monster_id',
+    catalog: 'survivor_status_id'
   },
   quarry_level_trait: { parent: 'quarry_level_id', catalog: 'trait_id' },
   quarry_level_mood: { parent: 'quarry_level_id', catalog: 'mood_id' },
@@ -137,7 +142,9 @@ async function syncJunction(
   }
 
   if (toInsert.length > 0) {
-    const { error: insertError } = await supabase.from(table).insert(toInsert)
+    const { error: insertError } = await supabase
+      .from(table)
+      .insert(toInsert as never)
     if (insertError)
       throw new Error(`Error Adding ${table} Junctions: ${insertError.message}`)
   }
@@ -244,7 +251,7 @@ export async function copyMonsterJunctions(
 
   const { error: insertError } = await supabase
     .from(destination.table)
-    .insert(inserts)
+    .insert(inserts as never)
 
   if (insertError)
     throw new Error(

@@ -1,11 +1,12 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
+import { saveVignetteSurvivorLiveState } from '@/components/survivor/vignette-live-state'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { updateEncounterSurvivor } from '@/lib/dal/encounter-survivor'
+import { updateEncounterSurvivor } from '@/lib/dal/encounter-active-survivor'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -85,6 +86,7 @@ export function SurvivalCard({
   setSelectedShowdown,
   setSurvivors
 }: SurvivalCardProps): ReactElement {
+  const isVignetteMode = mode === SurvivorCardMode.VIGNETTE_CARD
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [survival, setSurvival] = useState(selectedSurvivor?.survival ?? 0)
@@ -157,10 +159,22 @@ export function SurvivalCard({
     )
   }, [mode, selectedShowdown, selectedSurvivor?.id])
 
+  const vignetteSurvivorRecord = useMemo(() => {
+    if (
+      mode !== SurvivorCardMode.VIGNETTE_CARD ||
+      !selectedShowdown?.showdown_survivors
+    )
+      return undefined
+    return Object.values(selectedShowdown.showdown_survivors).find(
+      (ss) => ss.survivor_id === selectedSurvivor?.id
+    )
+  }, [mode, selectedShowdown, selectedSurvivor?.id])
+
   /** Current survival tokens derived from hunt/showdown survivor record */
   const survivalTokens =
     huntSurvivorRecord?.survival_tokens ??
     encounterSurvivorRecord?.survival_tokens ??
+    vignetteSurvivorRecord?.survival_tokens ??
     showdownSurvivorRecord?.survival_tokens ??
     0
 
@@ -261,6 +275,21 @@ export function SurvivalCard({
           toast.error(ERROR_MESSAGE())
         })
       } else if (
+        mode === SurvivorCardMode.VIGNETTE_CARD &&
+        vignetteSurvivorRecord &&
+        selectedShowdown?.showdown_survivors &&
+        setSelectedShowdown
+      ) {
+        saveVignetteSurvivorLiveState({
+          context: 'Vignette Survival Tokens Update',
+          field: 'survival_tokens',
+          mode,
+          selectedShowdown,
+          selectedSurvivor,
+          setSelectedShowdown,
+          value
+        })
+      } else if (
         mode === SurvivorCardMode.SHOWDOWN_CARD &&
         showdownSurvivorRecord &&
         selectedShowdown?.showdown_survivors &&
@@ -306,12 +335,13 @@ export function SurvivalCard({
     },
     [
       mode,
-      selectedSurvivor?.id,
+      selectedSurvivor,
       selectedEncounter,
       selectedHunt,
       selectedShowdown,
       encounterSurvivorRecord,
       huntSurvivorRecord,
+      vignetteSurvivorRecord,
       showdownSurvivorRecord,
       setSelectedEncounter,
       setSelectedHunt,
@@ -328,6 +358,20 @@ export function SurvivalCard({
     (value: number) => {
       // Enforce minimum value of 0
       if (value < 0) return toast.error(SURVIVAL_MINIMUM_ERROR_MESSAGE())
+
+      if (mode === SurvivorCardMode.VIGNETTE_CARD) {
+        saveVignetteSurvivorLiveState({
+          context: 'Vignette Survival Update',
+          field: 'survival',
+          mode,
+          selectedShowdown,
+          selectedSurvivor,
+          setSelectedShowdown,
+          value
+        })
+        setSurvival(value)
+        return
+      }
 
       // Enforce maximum value of survivalLimit
       if (value > (selectedSettlement?.survival_limit ?? 1))
@@ -361,8 +405,11 @@ export function SurvivalCard({
     },
     [
       selectedSettlement?.survival_limit,
+      mode,
+      selectedShowdown,
+      selectedSurvivor,
+      setSelectedShowdown,
       survival,
-      selectedSurvivor?.id,
       setSurvivors
     ]
   )
@@ -649,7 +696,8 @@ export function SurvivalCard({
                 <div className="flex flex-col items-center gap-1">
                   {(mode === SurvivorCardMode.SHOWDOWN_CARD ||
                     mode === SurvivorCardMode.ENCOUNTER_CARD ||
-                    mode === SurvivorCardMode.HUNT_CARD) && (
+                    mode === SurvivorCardMode.HUNT_CARD ||
+                    mode === SurvivorCardMode.VIGNETTE_CARD) && (
                     <Label className="text-xs text-muted-foreground uppercase tracking-wide">
                       Base
                     </Label>
@@ -661,14 +709,15 @@ export function SurvivalCard({
                     max={selectedSettlement?.survival_limit ?? 1}
                     onChange={(value) => updateSurvival(value)}
                     className="w-12 h-12 text-2xl sm:text-2xl md:text-2xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                    disabled={!canSpendSurvival}
+                    disabled={!isVignetteMode && !canSpendSurvival}
                   />
                 </div>
 
                 {/* Survival Tokens */}
                 {(mode === SurvivorCardMode.SHOWDOWN_CARD ||
                   mode === SurvivorCardMode.ENCOUNTER_CARD ||
-                  mode === SurvivorCardMode.HUNT_CARD) && (
+                  mode === SurvivorCardMode.HUNT_CARD ||
+                  mode === SurvivorCardMode.VIGNETTE_CARD) && (
                   <div className="flex flex-col items-center gap-1">
                     <Label className="text-xs text-muted-foreground uppercase tracking-wide">
                       Tokens
@@ -691,6 +740,7 @@ export function SurvivalCard({
                 onCheckedChange={(checked) => updateCanSpendSurvival(!!checked)}
                 name="cannot-spend-survival"
                 id="cannot-spend-survival"
+                disabled={isVignetteMode}
               />
               <Label
                 className="text-xs font-medium leading-none flex items-center"
@@ -710,7 +760,7 @@ export function SurvivalCard({
                   onCheckedChange={(checked) => updateCanDodge(!!checked)}
                   name="can-dodge"
                   id="can-dodge"
-                  disabled={!canSpendSurvival}
+                  disabled={isVignetteMode || !canSpendSurvival}
                 />
                 <Label className="text-xs" htmlFor="can-dodge">
                   Dodge
@@ -724,7 +774,7 @@ export function SurvivalCard({
                   onCheckedChange={(checked) => updateCanEncourage(!!checked)}
                   name="can-encourage"
                   id="can-encourage"
-                  disabled={!canSpendSurvival}
+                  disabled={isVignetteMode || !canSpendSurvival}
                 />
                 <Label className="text-xs" htmlFor="can-encourage">
                   Encourage
@@ -738,7 +788,7 @@ export function SurvivalCard({
                   onCheckedChange={(checked) => updateCanSurge(!!checked)}
                   name="can-surge"
                   id="can-surge"
-                  disabled={!canSpendSurvival}
+                  disabled={isVignetteMode || !canSpendSurvival}
                 />
                 <Label className="text-xs" htmlFor="can-surge">
                   Surge
@@ -752,7 +802,7 @@ export function SurvivalCard({
                   onCheckedChange={(checked) => updateCanDash(!!checked)}
                   name="can-dash"
                   id="can-dash"
-                  disabled={!canSpendSurvival}
+                  disabled={isVignetteMode || !canSpendSurvival}
                 />
                 <Label className="text-xs" htmlFor="can-dash">
                   Dash
@@ -768,7 +818,7 @@ export function SurvivalCard({
                     onCheckedChange={(checked) => updateCanFistPump(!!checked)}
                     name="can-fist-pump"
                     id="can-fist-pump"
-                    disabled={!canSpendSurvival}
+                    disabled={isVignetteMode || !canSpendSurvival}
                   />
                   <Label className="text-xs" htmlFor="can-fist-pump">
                     Fist Pump
@@ -781,7 +831,7 @@ export function SurvivalCard({
                     onCheckedChange={(checked) => updateCanEndure(!!checked)}
                     name="can-endure"
                     id="can-endure"
-                    disabled={!canSpendSurvival}
+                    disabled={isVignetteMode || !canSpendSurvival}
                   />
                   <Label className="text-xs" htmlFor="can-endure">
                     Endure

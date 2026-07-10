@@ -1,7 +1,14 @@
 import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
-import { UserSubscriptionDetail } from '@/lib/types'
+import { PlanSlug, UserSubscriptionDetail } from '@/lib/types'
 import { BillingPlanId } from '@/schemas/billing-checkout-input'
+
+export const USER_SUBSCRIPTION_SELECT = `
+  plan_id,
+  status,
+  current_period_end,
+  cancel_at_period_end
+`
 
 /**
  * Get User Subscription
@@ -31,7 +38,7 @@ export async function getUserSubscription(): Promise<UserSubscriptionDetail | nu
   const [subscriptionResult, canShareResult] = await Promise.all([
     supabase
       .from('user_subscription')
-      .select('plan_id, status, current_period_end, cancel_at_period_end')
+      .select(USER_SUBSCRIPTION_SELECT)
       .eq('user_id', userId)
       .maybeSingle(),
     supabase.rpc('user_can_share')
@@ -50,7 +57,7 @@ export async function getUserSubscription(): Promise<UserSubscriptionDetail | nu
     )
 
   return {
-    plan_id: subscriptionResult.data.plan_id,
+    plan_id: subscriptionResult.data.plan_id as PlanSlug,
     status: subscriptionResult.data.status,
     current_period_end: subscriptionResult.data.current_period_end,
     // The column is `not null default false`, but older rows surfaced via

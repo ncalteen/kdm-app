@@ -106,14 +106,16 @@ export function CustomAbilityImpairmentsCard(): ReactElement {
       setCreateDialogOpen(false)
 
       try {
-        const created = await addAbilityImpairment({
+        const createdId = await addAbilityImpairment({
           custom: true,
           ability_impairment_name: data.name,
           rules: data.rules || null
         })
 
         setItems((prev) =>
-          sortItems(prev.map((i) => (i.id === tempId ? created : i)))
+          sortItems(
+            prev.map((i) => (i.id === tempId ? { ...temp, id: createdId } : i))
+          )
         )
       } catch (err: unknown) {
         setItems(previous)

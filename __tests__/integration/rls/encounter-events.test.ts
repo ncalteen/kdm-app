@@ -218,7 +218,7 @@ describe('RLS: encounter events', () => {
 
     const { data: encounterSurvivor, error: encounterSurvivorError } =
       await admin
-        .from('encounter_survivor')
+        .from('encounter_active_survivor')
         .insert({
           bleeding_tokens: 1,
           encounter_id: encounterId,
@@ -255,7 +255,7 @@ describe('RLS: encounter events', () => {
       table: 'encounter_active_monster_mood',
       rowId: () => activeMoodId
     },
-    { table: 'encounter_survivor', rowId: () => encounterSurvivorId }
+    { table: 'encounter_active_survivor', rowId: () => encounterSurvivorId }
   ]
 
   it.each(activeRows())(
@@ -294,7 +294,7 @@ describe('RLS: encounter events', () => {
       update: { life: 5 }
     },
     {
-      table: 'encounter_survivor',
+      table: 'encounter_active_survivor',
       rowId: () => encounterSurvivorId,
       update: { bleeding_tokens: 2 }
     }

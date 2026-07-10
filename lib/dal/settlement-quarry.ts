@@ -3,8 +3,9 @@ import {
   resolveSettlementAuthorship,
   type SettlementMemberProfile
 } from '@/lib/dal/settlement-shared-user'
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { SettlementDetail, SettlementQuarryDetail } from '@/lib/types'
+import { SettlementDetail } from '@/lib/types'
 
 /**
  * Get Settlement Quarries
@@ -178,7 +179,10 @@ export async function removeSettlementQuarry(
  */
 export async function updateSettlementQuarry(
   settlementQuarryId: string | null | undefined,
-  updates: Partial<SettlementQuarryDetail>
+  updates: Omit<
+    TablesUpdate<'settlement_quarry'>,
+    'id' | 'created_at' | 'updated_at'
+  >
 ): Promise<void> {
   if (!settlementQuarryId) throw new Error('Required: Settlement Quarry ID')
 

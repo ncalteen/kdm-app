@@ -76,7 +76,10 @@ export function CollectiveCognitionVictoriesCard({
         | [boolean, boolean, boolean]
 
       if (field === 'collective_cognition_level_2' && subIndex !== undefined) {
-        const arr: [boolean, boolean] = [...quarry.collective_cognition_level_2]
+        const arr = [...quarry.collective_cognition_level_2] as [
+          boolean,
+          boolean
+        ]
         arr[subIndex] = checked
         updatedValue = arr
       } else if (
@@ -85,7 +88,7 @@ export function CollectiveCognitionVictoriesCard({
       ) {
         const arr: [boolean, boolean, boolean] = [
           ...quarry.collective_cognition_level_3
-        ]
+        ] as [boolean, boolean, boolean]
         arr[subIndex] = checked
         updatedValue = arr
       } else {

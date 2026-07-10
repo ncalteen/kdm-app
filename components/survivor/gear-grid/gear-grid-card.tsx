@@ -258,7 +258,7 @@ export function GearGridCard({
   /**
    * Persist Slot Change
    *
-   * Optimistically updates the cell, then writes the entire grid via the
+   * Optimistically updates the cell, then writes the targeted slot via the
    * gear-grid DAL. Rolls back state on failure.
    */
   const persistSlotChange = useCallback(
@@ -276,7 +276,6 @@ export function GearGridCard({
       try {
         const persisted = await setGearGridSlot(
           selectedSurvivor.id,
-          grid,
           position,
           gearId
         )
@@ -663,9 +662,8 @@ export function GearGridCard({
                 <ul className="flex flex-col gap-2">
                   {activeBonus.armorSet.slots.map((slot) => {
                     const equipped = getEquippedGearIds(grid)
-                    const satisfiedBy = slot.gear_ids.find((id) =>
-                      equipped.has(id)
-                    )
+                    const gearIds = slot.gear_ids ?? []
+                    const satisfiedBy = gearIds.find((id) => equipped.has(id))
 
                     return (
                       <li
@@ -684,12 +682,12 @@ export function GearGridCard({
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1">
-                          {slot.gear_ids.length === 0 ? (
+                          {gearIds.length === 0 ? (
                             <span className="text-xs italic text-muted-foreground">
                               No candidate gear listed.
                             </span>
                           ) : (
-                            slot.gear_ids.map((gearId) => {
+                            gearIds.map((gearId) => {
                               const gear = gearMap[gearId]
                               const isEquipped = gearId === satisfiedBy
                               return (

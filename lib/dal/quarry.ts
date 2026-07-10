@@ -1,4 +1,3 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { MonsterNode } from '@/lib/enums'
@@ -197,17 +196,26 @@ export async function getQuarryNodesById(
 export async function addQuarry(
   quarry: Omit<
     TablesInsert<'quarry'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<QuarryDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'quarry'> = { ...quarry }
 
-  if (quarry.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('quarry')
-    .insert({ ...quarry, ...(quarry.custom ? { user_id: userId! } : {}) })
+    .insert({
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
+    })
     .select(
       'id, alternate_id, custom, monster_name, multi_monster, node, prologue, vignette_id, instinct, basic_action, blind_spot, defeat_outcome, deployment_rules, victory_outcome'
     )
@@ -225,15 +233,24 @@ export async function addQuarry(
  *
  * @param id Quarry ID
  * @param quarry Quarry Data
- * @returns Updated Quarry
  */
 export async function updateQuarry(
   id: string,
-  quarry: Omit<TablesUpdate<'quarry'>, 'id' | 'created_at' | 'updated_at'>
+  quarry: Omit<
+    TablesUpdate<'quarry'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'quarry'> = { ...quarry }
 
-  const { error } = await supabase.from('quarry').update(quarry).eq('id', id)
+  delete updateData.custom
+  delete updateData.user_id
+
+  const { error } = await supabase
+    .from('quarry')
+    .update(updateData)
+    .eq('id', id)
 
   if (error) throw new Error(`Error Updating Quarry: ${error.message}`)
 }
@@ -246,5 +263,9 @@ export async function updateQuarry(
  * @param id Quarry ID
  */
 export async function removeQuarry(id: string): Promise<void> {
-  await removeCatalogRow('quarry', id, 'Quarry')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('quarry').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Quarry: ${error.message}`)
 }

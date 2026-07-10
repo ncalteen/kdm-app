@@ -35,6 +35,7 @@ type RealtimeDomain =
   | 'encounter'
   | 'hunt'
   | 'showdown'
+  | 'vignetteEncounter'
   | 'settlementPhase'
   | 'survivor'
   | 'catalog'
@@ -136,7 +137,7 @@ export const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
     domain: 'encounter',
     filterColumn: 'settlement_id'
   },
-  encounter_survivor: { domain: 'encounter', filterColumn: 'settlement_id' },
+  encounter_active_survivor: { domain: 'encounter', filterColumn: 'settlement_id' },
 
   // Showdown domain
   showdown: { domain: 'showdown', filterColumn: 'settlement_id' },
@@ -155,6 +156,57 @@ export const TABLE_DOMAIN_MAP: Record<string, TableDomainEntry> = {
     filterColumn: 'settlement_id'
   },
   showdown_survivor: { domain: 'showdown', filterColumn: 'settlement_id' },
+
+  // Vignette Encounter domain
+  vignette_encounter: { domain: 'vignetteEncounter', filterColumn: null },
+  vignette_encounter_ai_deck: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_monster: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_monster_mood: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_monster_survivor_status: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_monster_trait: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_shared_user: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_survivor: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_survivor_ability_impairment: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_survivor_disorder: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_survivor_fighting_art: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_survivor_gear_grid: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
+  vignette_encounter_survivor_secret_fighting_art: {
+    domain: 'vignetteEncounter',
+    filterColumn: null
+  },
 
   // Settlement Phase domain
   settlement_phase: {
@@ -476,6 +528,8 @@ interface UseRealtimeSubscriptionsOptions {
   onEncounterChange: () => void
   /** Called when showdown data changes */
   onShowdownChange: () => void
+  /** Called when vignette encounter data changes */
+  onVignetteEncounterChange: () => void
   /** Called when settlement phase data changes */
   onSettlementPhaseChange: () => void
   /** Called when survivor data changes */
@@ -561,6 +615,9 @@ export function useRealtimeSubscriptions(
               break
             case 'showdown':
               callbacks.onShowdownChange()
+              break
+            case 'vignetteEncounter':
+              callbacks.onVignetteEncounterChange()
               break
             case 'settlementPhase':
               callbacks.onSettlementPhaseChange()

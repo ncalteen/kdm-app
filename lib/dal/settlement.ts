@@ -55,7 +55,7 @@ import { addSquiresOfTheCitadelSurvivors } from '@/lib/dal/survivor'
 import { getUserId } from '@/lib/dal/user'
 import { getUserSubscription } from '@/lib/dal/user-subscription'
 import { getWandererTimelineYears } from '@/lib/dal/wanderer-timeline-year'
-import { Tables } from '@/lib/database.types'
+import { TablesUpdate } from '@/lib/database.types'
 import {
   CampaignType,
   DatabaseCampaignType,
@@ -67,6 +67,24 @@ import { canCreateUnlimitedSettlements } from '@/lib/subscription-entitlements'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementTimelineYearDetail } from '@/lib/types'
 import { NewSettlementInput } from '@/schemas/new-settlement-input'
+
+type SettlementBaseDetail = Omit<
+  SettlementDetail,
+  | 'collective_cognition_rewards'
+  | 'gear'
+  | 'innovations'
+  | 'knowledges'
+  | 'locations'
+  | 'milestones'
+  | 'nemeses'
+  | 'patterns'
+  | 'philosophies'
+  | 'principles'
+  | 'quarries'
+  | 'resources'
+  | 'seed_patterns'
+  | 'timeline'
+>
 
 /**
  * Get Owned Settlement Count
@@ -333,7 +351,7 @@ export async function getSettlement(
   const userId = await getUserId()
   const supabase = createClient()
 
-  let settlement: SettlementDetail | null = null
+  let settlement: SettlementBaseDetail | null = null
 
   // Check if the settlement is owned by the user directly.
   const { data: ownedSettlement, error: ownedError } = await supabase
@@ -346,7 +364,8 @@ export async function getSettlement(
   if (ownedError)
     throw new Error(`Error Fetching Settlement: ${ownedError.message}`)
 
-  if (ownedSettlement) settlement = { ...ownedSettlement, role: 'owner' }
+  if (ownedSettlement)
+    settlement = { ...ownedSettlement, role: 'owner' } as SettlementBaseDetail
 
   // Check if it is a shared settlement.
   if (!settlement) {
@@ -367,7 +386,10 @@ export async function getSettlement(
       : sharedSettlementRow?.settlement
 
     if (sharedSettlement)
-      settlement = { ...sharedSettlement, role: 'collaborator' }
+      settlement = {
+        ...sharedSettlement,
+        role: 'collaborator'
+      } as SettlementBaseDetail
   }
 
   if (!settlement) return null
@@ -475,15 +497,22 @@ export async function getLostSettlementCount(
  */
 export async function updateSettlement(
   settlementId: string | null | undefined,
-  updates: Partial<Tables<'settlement'>>
+  updates: Omit<
+    TablesUpdate<'settlement'>,
+    'id' | 'created_at' | 'updated_at' | 'user_id'
+  >
 ): Promise<void> {
   if (!settlementId) throw new Error('Required: Settlement ID')
 
   const supabase = createClient()
+  const updateData: TablesUpdate<'settlement'> = { ...updates }
+
+  delete updateData.id
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('settlement')
-    .update(updates)
+    .update(updateData)
     .eq('id', settlementId)
 
   if (error) throw new Error(`Error Updating Settlement: ${error.message}`)

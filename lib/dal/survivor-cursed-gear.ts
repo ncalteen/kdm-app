@@ -2,6 +2,34 @@ import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SurvivorCursedGearDetail } from '@/lib/types'
 
+const SURVIVOR_CURSED_GEAR_SELECT = `
+  id,
+  gear_id,
+  settlement_id,
+  survivor_id,
+  cursed_gear:gear(
+    id,
+    custom,
+    gear_name,
+    location_id,
+    accessory,
+    accuracy,
+    affinity_top,
+    affinity_left,
+    affinity_right,
+    affinity_bottom,
+    affinity_bonus,
+    affinity_bonus_requirements,
+    armor_points,
+    armor_location,
+    keywords,
+    rules,
+    speed,
+    strength,
+    weapon_type_id
+  )
+`
+
 /**
  * Get Survivor Cursed Gear
  *
@@ -19,13 +47,13 @@ export async function getSurvivorCursedGear(
 
   const { data, error } = await supabase
     .from('survivor_cursed_gear')
-    .select('id, gear_id, settlement_id')
+    .select(SURVIVOR_CURSED_GEAR_SELECT)
     .eq('survivor_id', survivorId)
 
   if (error)
     throw new Error(`Error Fetching Survivor Cursed Gear: ${error.message}`)
 
-  return data ?? []
+  return (data ?? []) as SurvivorCursedGearDetail[]
 }
 
 /**
@@ -95,10 +123,15 @@ export async function updateSurvivorCursedGear(
   >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'survivor_cursed_gear'> = {
+    ...survivorCursedGear
+  }
+
+  delete updateData.id
 
   const { error } = await supabase
     .from('survivor_cursed_gear')
-    .update(survivorCursedGear)
+    .update(updateData)
     .eq('id', id)
 
   if (error)

@@ -39,6 +39,8 @@ const MAX_DISORDERS = 3
  * Disorders Card Properties
  */
 interface DisordersCardProps {
+  /** Read Only */
+  readOnly?: boolean
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
 }
@@ -50,6 +52,7 @@ interface DisordersCardProps {
  * @returns Disorders Card Component
  */
 export function DisordersCard({
+  readOnly = false,
   selectedSurvivor
 }: DisordersCardProps): ReactElement {
   const mutate = useOptimisticMutation()
@@ -255,80 +258,86 @@ export function DisordersCard({
       <CardHeader className="p-0">
         <CardTitle className="p-0 text-sm flex flex-row items-center justify-between h-8">
           Disorders
-          <Popover open={addOpen} onOpenChange={setAddOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-6 w-6"
-                disabled={disorders.length >= MAX_DISORDERS}>
-                <PlusIcon />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0">
-              <Command shouldFilter={true}>
-                <CommandInput
-                  placeholder="Search disorders..."
-                  value={search}
-                  onValueChange={setSearch}
-                />
-                <CommandList>
-                  <CommandEmpty>
-                    {search.trim() ? (
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
-                        disabled={creating}
-                        onClick={openCreateDialog}>
-                        <Plus className="h-4 w-4" />
-                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
-                      </button>
-                    ) : !hasFetched ? (
-                      'Loading disorders...'
-                    ) : (
-                      'No disorders found.'
-                    )}
-                  </CommandEmpty>
-                  <CommandGroup>
-                    {Object.values(availableDisorders)
-                      .filter(
-                        (d) =>
-                          !disorders.some((existing) => existing.id === d.id)
-                      )
-                      .sort((a, b) =>
-                        a.disorder_name.localeCompare(b.disorder_name)
-                      )
-                      .map((disorder) => (
+          {!readOnly && (
+            <Popover open={addOpen} onOpenChange={setAddOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-6 w-6"
+                  disabled={disorders.length >= MAX_DISORDERS}>
+                  <PlusIcon />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0">
+                <Command shouldFilter={true}>
+                  <CommandInput
+                    placeholder="Search disorders..."
+                    value={search}
+                    onValueChange={setSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>
+                      {search.trim() ? (
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                          disabled={creating}
+                          onClick={openCreateDialog}>
+                          <Plus className="h-4 w-4" />
+                          {creating
+                            ? 'Creating...'
+                            : `Create "${search.trim()}"`}
+                        </button>
+                      ) : !hasFetched ? (
+                        'Loading disorders...'
+                      ) : (
+                        'No disorders found.'
+                      )}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {Object.values(availableDisorders)
+                        .filter(
+                          (d) =>
+                            !disorders.some((existing) => existing.id === d.id)
+                        )
+                        .sort((a, b) =>
+                          a.disorder_name.localeCompare(b.disorder_name)
+                        )
+                        .map((disorder) => (
+                          <CommandItem
+                            key={disorder.id}
+                            value={disorder.id}
+                            keywords={[disorder.disorder_name]}
+                            onSelect={() => handleAdd(disorder.id)}>
+                            {disorder.disorder_name}
+                            {disorder.custom && (
+                              <Badge
+                                variant="outline"
+                                className="ml-auto text-xs">
+                                Custom
+                              </Badge>
+                            )}
+                          </CommandItem>
+                        ))}
+                      {search.trim() && !exactMatchExists && (
                         <CommandItem
-                          key={disorder.id}
-                          value={disorder.id}
-                          keywords={[disorder.disorder_name]}
-                          onSelect={() => handleAdd(disorder.id)}>
-                          {disorder.disorder_name}
-                          {disorder.custom && (
-                            <Badge
-                              variant="outline"
-                              className="ml-auto text-xs">
-                              Custom
-                            </Badge>
-                          )}
+                          value={`__create__${search.trim()}`}
+                          onSelect={openCreateDialog}
+                          disabled={creating}>
+                          <Plus className="h-4 w-4" />
+                          {creating
+                            ? 'Creating...'
+                            : `Create "${search.trim()}"`}
                         </CommandItem>
-                      ))}
-                    {search.trim() && !exactMatchExists && (
-                      <CommandItem
-                        value={`__create__${search.trim()}`}
-                        onSelect={openCreateDialog}
-                        disabled={creating}>
-                        <Plus className="h-4 w-4" />
-                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
-                      </CommandItem>
-                    )}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+                      )}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          )}
         </CardTitle>
       </CardHeader>
 
@@ -349,13 +358,15 @@ export function DisordersCard({
                 authorUserId={item.author_user_id}
                 authorUsername={item.author_username}
               />
-              <Button
-                variant="ghost"
-                size="icon"
-                type="button"
-                onClick={() => handleRemove(index)}>
-                <TrashIcon className="h-4 w-4" />
-              </Button>
+              {!readOnly && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleRemove(index)}>
+                  <TrashIcon className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           ))}
         </div>

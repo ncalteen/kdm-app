@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementPhaseDetail } from '@/lib/types'
 
@@ -51,7 +51,10 @@ export async function getSettlementPhase(
  */
 export async function updateSettlementPhase(
   settlementPhaseId: string | null | undefined,
-  updates: Partial<SettlementPhaseDetail>
+  updates: Omit<
+    TablesUpdate<'settlement_phase'>,
+    'id' | 'created_at' | 'updated_at'
+  >
 ): Promise<void> {
   if (!settlementPhaseId) throw new Error('Required: Settlement Phase ID')
 

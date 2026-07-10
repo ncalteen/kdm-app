@@ -4,13 +4,20 @@ import {
   resolveSettlementAuthorship,
   type SettlementMemberProfile
 } from '@/lib/dal/settlement-shared-user'
-import { Tables } from '@/lib/database.types'
+import { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types'
 import {
   SURVIVOR_ON_HUNT_ERROR_MESSAGE,
   SURVIVOR_ON_SHOWDOWN_ERROR_MESSAGE
 } from '@/lib/messages'
 import { createClient } from '@/lib/supabase/client'
-import { SurvivorDetail } from '@/lib/types'
+import {
+  AbilityImpairmentDetail,
+  DisorderDetail,
+  FightingArtDetail,
+  GearDetail,
+  SecretFightingArtDetail,
+  SurvivorDetail
+} from '@/lib/types'
 import { NewSurvivorInput } from '@/schemas/new-survivor-input'
 
 /**
@@ -31,7 +38,7 @@ import { NewSurvivorInput } from '@/schemas/new-survivor-input'
  *   E2.9; see `docs/settlement-sharing-architecture.md` §7.4 / §10 Phase 2
  *   items 2.6–2.7).
  */
-const SURVIVOR_SELECT = `
+export const SURVIVOR_SELECT = `
   *,
   abilities_impairments:survivor_ability_impairment(
     ability_impairment(id, custom, user_id, ability_impairment_name, rules)
@@ -84,31 +91,21 @@ type AuthorshipKeys = 'author_user_id' | 'author_username' | 'author_avatar_url'
  * step before reaching `SurvivorDetail`) so the author triplet can be
  * resolved from the settlement member-profile map.
  */
-type SurvivorRow = Tables<'survivor'> & {
+export type SurvivorRow = Tables<'survivor'> & {
   abilities_impairments: {
-    ability_impairment: WithAuthorship<
-      Omit<SurvivorDetail['abilities_impairments'][number], AuthorshipKeys>
-    > | null
+    ability_impairment: WithAuthorship<AbilityImpairmentDetail> | null
   }[]
   cursed_gear: {
-    gear: WithAuthorship<
-      Omit<SurvivorDetail['cursed_gear'][number], AuthorshipKeys>
-    > | null
+    gear: WithAuthorship<Pick<GearDetail, 'custom' | 'gear_name' | 'id'>> | null
   }[]
   disorders: {
-    disorder: WithAuthorship<
-      Omit<SurvivorDetail['disorders'][number], AuthorshipKeys>
-    > | null
+    disorder: WithAuthorship<DisorderDetail> | null
   }[]
   fighting_arts: {
-    fighting_art: WithAuthorship<
-      Omit<SurvivorDetail['fighting_arts'][number], AuthorshipKeys>
-    > | null
+    fighting_art: WithAuthorship<FightingArtDetail> | null
   }[]
   secret_fighting_arts: {
-    secret_fighting_art: WithAuthorship<
-      Omit<SurvivorDetail['secret_fighting_arts'][number], AuthorshipKeys>
-    > | null
+    secret_fighting_art: WithAuthorship<SecretFightingArtDetail> | null
   }[]
   gear_grid: SurvivorDetail['gear_grid'] | SurvivorDetail['gear_grid'][] | null
   hunt_survivor: { survivor_id: string }[]
@@ -178,7 +175,7 @@ function withAuthorUsername<
  * @param memberProfiles Settlement Member Profile Map
  * @returns Survivor Detail
  */
-function mapSurvivorRow(
+export function mapSurvivorRow(
   row: SurvivorRow,
   memberProfiles: Map<string, SettlementMemberProfile>
 ): SurvivorDetail {
@@ -215,17 +212,15 @@ function mapSurvivorRow(
           ? withAuthorUsername(r.ability_impairment, memberProfiles)
           : null
       )
-      .filter((x): x is SurvivorDetail['abilities_impairments'][number] =>
-        Boolean(x)
-      ),
+      .filter(Boolean) as unknown as SurvivorDetail['abilities_impairments'],
     cursed_gear: cursed_gear
       .map((r) => (r.gear ? withAuthorUsername(r.gear, memberProfiles) : null))
-      .filter((x): x is SurvivorDetail['cursed_gear'][number] => Boolean(x)),
+      .filter(Boolean) as unknown as SurvivorDetail['cursed_gear'],
     disorders: disorders
       .map((r) =>
         r.disorder ? withAuthorUsername(r.disorder, memberProfiles) : null
       )
-      .filter((x): x is SurvivorDetail['disorders'][number] => Boolean(x)),
+      .filter(Boolean) as unknown as SurvivorDetail['disorders'],
     embarked: hunt_survivor.length > 0 || showdown_survivor.length > 0,
     fighting_arts: fighting_arts
       .map((r) =>
@@ -233,7 +228,7 @@ function mapSurvivorRow(
           ? withAuthorUsername(r.fighting_art, memberProfiles)
           : null
       )
-      .filter((x): x is SurvivorDetail['fighting_arts'][number] => Boolean(x)),
+      .filter(Boolean) as unknown as SurvivorDetail['fighting_arts'],
     gear_grid: gridRow,
     knowledge_1: knowledge_1
       ? withAuthorUsername(knowledge_1, memberProfiles)
@@ -251,9 +246,7 @@ function mapSurvivorRow(
           ? withAuthorUsername(r.secret_fighting_art, memberProfiles)
           : null
       )
-      .filter((x): x is SurvivorDetail['secret_fighting_arts'][number] =>
-        Boolean(x)
-      ),
+      .filter(Boolean) as unknown as SurvivorDetail['secret_fighting_arts'],
     tenet_knowledge: tenet_knowledge
       ? withAuthorUsername(tenet_knowledge, memberProfiles)
       : null,
@@ -278,13 +271,15 @@ export async function addSquiresOfTheCitadelSurvivors(
 
   const supabase = createClient()
 
-  const { error } = await supabase.from('survivor').insert(
-    SquiresOfTheCitadelSurvivors.map((squire) => ({
-      gender: squire.gender,
+  const squires: TablesInsert<'survivor'>[] = SquiresOfTheCitadelSurvivors.map(
+    (squire) => ({
+      gender: squire.gender as TablesInsert<'survivor'>['gender'],
       settlement_id: settlementId,
       survivor_name: squire.name
-    }))
+    })
   )
+
+  const { error } = await supabase.from('survivor').insert(squires)
 
   if (error)
     throw new Error(`Error Adding Squires to Settlement: ${error.message}`)
@@ -384,15 +379,18 @@ export async function getSurvivors(
  */
 export async function updateSurvivor(
   survivorId: string | null | undefined,
-  updates: Partial<Tables<'survivor'>>
+  updates: Omit<TablesUpdate<'survivor'>, 'id' | 'created_at' | 'updated_at'>
 ): Promise<void> {
   if (!survivorId) throw new Error('Required: Survivor ID')
 
   const supabase = createClient()
+  const updateData: TablesUpdate<'survivor'> = { ...updates }
+
+  delete updateData.id
 
   const { error } = await supabase
     .from('survivor')
-    .update(updates)
+    .update(updateData)
     .eq('id', survivorId)
 
   if (error) throw new Error(`Error Updating Survivor: ${error.message}`)
@@ -414,7 +412,7 @@ export async function updateSurvivor(
 export async function deleteSurvivor(
   settlementId: string | null | undefined,
   survivorId: string
-): Promise<Tables<'survivor'>[]> {
+): Promise<SurvivorDetail[]> {
   if (!settlementId) throw new Error('Required: Settlement ID')
   if (!survivorId) throw new Error('Required: Survivor ID')
 
@@ -454,16 +452,7 @@ export async function deleteSurvivor(
   if (deleteError)
     throw new Error(`Error Deleting Survivor: ${deleteError.message}`)
 
-  const { data: survivorsData, error: survivorsError } = await supabase
-    .from('survivor')
-    .select('*')
-    .eq('settlement_id', settlementId)
-    .order('id', { ascending: true })
-
-  if (survivorsError)
-    throw new Error(`Error Fetching Survivors: ${survivorsError.message}`)
-
-  return survivorsData ?? []
+  return (await getSurvivors(settlementId)) ?? []
 }
 
 /**
@@ -479,7 +468,7 @@ export async function createSurvivor(
 
   const supabase = createClient()
 
-  const survivor: Partial<Tables<'survivor'>> = {
+  const survivor: TablesInsert<'survivor'> = {
     accuracy: options.accuracy,
     can_dash: options.canDash,
     can_dodge: options.canDodge,

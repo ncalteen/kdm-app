@@ -76,7 +76,7 @@ describe('Realtime publication membership', () => {
     'encounter_active_monster',
     'encounter_active_monster_mood',
     'encounter_active_monster_trait',
-    'encounter_survivor',
+    'encounter_active_survivor',
 
     // Survivor
     'survivor',

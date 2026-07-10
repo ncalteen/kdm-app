@@ -1,9 +1,10 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
+import { saveVignetteSurvivorLiveState } from '@/components/survivor/vignette-live-state'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { updateEncounterSurvivor } from '@/lib/dal/encounter-survivor'
+import { updateEncounterSurvivor } from '@/lib/dal/encounter-active-survivor'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { SurvivorCardMode } from '@/lib/enums'
@@ -79,7 +80,8 @@ export function BleedingCard({
         )
 
   const showdownSurvivorRecord =
-    mode !== SurvivorCardMode.SHOWDOWN_CARD ||
+    (mode !== SurvivorCardMode.SHOWDOWN_CARD &&
+      mode !== SurvivorCardMode.VIGNETTE_CARD) ||
     !selectedShowdown?.showdown_survivors ||
     !selectedSurvivor?.id
       ? undefined
@@ -171,7 +173,8 @@ export function BleedingCard({
         }
       })
     } else if (
-      mode === SurvivorCardMode.SHOWDOWN_CARD &&
+      (mode === SurvivorCardMode.SHOWDOWN_CARD ||
+        mode === SurvivorCardMode.VIGNETTE_CARD) &&
       showdownSurvivorRecord &&
       selectedShowdown?.showdown_survivors &&
       setSelectedShowdown
@@ -189,6 +192,19 @@ export function BleedingCard({
           [ssKey]: { ...showdownSurvivorRecord, bleeding_tokens: value }
         }
       })
+
+      if (
+        saveVignetteSurvivorLiveState({
+          context: 'Vignette Bleeding Tokens Update',
+          field: 'bleeding_tokens',
+          mode,
+          selectedShowdown,
+          selectedSurvivor,
+          setSelectedShowdown,
+          value
+        })
+      )
+        return
 
       void mutate({
         context: 'Bleeding Tokens Update',

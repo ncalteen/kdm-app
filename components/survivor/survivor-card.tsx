@@ -93,6 +93,13 @@ export function SurvivorCard({
   setSurvivors,
   survivors
 }: SurvivorCardProps): ReactElement {
+  const isVignetteMode = mode === SurvivorCardMode.VIGNETTE_CARD
+  const isActiveStateMode =
+    mode === SurvivorCardMode.ENCOUNTER_CARD ||
+    mode === SurvivorCardMode.HUNT_CARD ||
+    mode === SurvivorCardMode.SHOWDOWN_CARD ||
+    mode === SurvivorCardMode.VIGNETTE_CARD
+
   return (
     <Card
       className="w-full border-2 rounded-xl py-2 gap-2 transition-all duration-200 hover:shadow-lg bg-secondary"
@@ -107,26 +114,29 @@ export function SurvivorCard({
           {/* First Column - Essential Stats */}
           <div className="flex flex-col flex-1 gap-1 xl:min-w-112.5">
             <StatusCard
+              mode={mode}
+              selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
-            {selectedSurvivor?.wanderer && (
+            {!isVignetteMode && selectedSurvivor?.wanderer && (
               <WandererCard
                 selectedSurvivor={selectedSurvivor}
                 setSurvivors={setSurvivors}
                 survivors={survivors}
               />
             )}
-            <HuntXPCard
-              selectedSettlement={selectedSettlement}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-              survivors={survivors}
-            />
-            {(mode === SurvivorCardMode.ENCOUNTER_CARD ||
-              mode === SurvivorCardMode.HUNT_CARD ||
-              mode === SurvivorCardMode.SHOWDOWN_CARD) && (
+            {!isVignetteMode && (
+              <HuntXPCard
+                selectedSettlement={selectedSettlement}
+                selectedSurvivor={selectedSurvivor}
+                setSurvivors={setSurvivors}
+                survivors={survivors}
+              />
+            )}
+            {isActiveStateMode && (
               <BleedingCard
                 mode={mode}
                 selectedEncounter={selectedEncounter ?? null}
@@ -150,26 +160,36 @@ export function SurvivorCard({
               setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
             />
-            <WeaponProficiencyCard
+            {!isVignetteMode && (
+              <>
+                <WeaponProficiencyCard
+                  selectedSurvivor={selectedSurvivor}
+                  setSurvivors={setSurvivors}
+                  survivors={survivors}
+                />
+                <CourageUnderstandingCard
+                  selectedSettlement={selectedSettlement}
+                  selectedSurvivor={selectedSurvivor}
+                  setSurvivors={setSurvivors}
+                  survivors={survivors}
+                />
+              </>
+            )}
+            <DisordersCard
+              readOnly={isVignetteMode}
               selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-              survivors={survivors}
             />
-            <CourageUnderstandingCard
-              selectedSettlement={selectedSettlement}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-              survivors={survivors}
-            />
-            <DisordersCard selectedSurvivor={selectedSurvivor} />
             <AbilitiesAndImpairmentsCard
+              readOnly={isVignetteMode}
               selectedSurvivor={selectedSurvivor}
               setSurvivors={setSurvivors}
             />
-            <OncePerLifetimeCard
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-            />
+            {!isVignetteMode && (
+              <OncePerLifetimeCard
+                selectedSurvivor={selectedSurvivor}
+                setSurvivors={setSurvivors}
+              />
+            )}
           </div>
 
           {/* Second Column - Combat */}
@@ -201,27 +221,42 @@ export function SurvivorCard({
               setSurvivors={setSurvivors}
             />
             <HeadCard
+              mode={mode}
+              selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <ArmsCard
+              mode={mode}
+              selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <BodyCard
+              mode={mode}
+              selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <WaistCard
+              mode={mode}
+              selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
             <LegsCard
+              mode={mode}
+              selectedShowdown={selectedShowdown}
               selectedSurvivor={selectedSurvivor}
+              setSelectedShowdown={setSelectedShowdown}
               setSurvivors={setSurvivors}
               survivors={survivors}
             />
@@ -234,16 +269,47 @@ export function SurvivorCard({
           </div>
 
           {/* Third Column - ARC */}
-          {selectedSettlement?.survivor_type ===
-            DatabaseSurvivorType[SurvivorType.ARC] && (
-            <div className="flex flex-col flex-1 gap-1 xl:min-w-112.5 order-3">
-              <PhilosophyCard
-                selectedSettlement={selectedSettlement}
-                selectedSurvivor={selectedSurvivor}
-                setSurvivors={setSurvivors}
-                survivors={survivors}
-              />
-              <KnowledgeCard
+          {!isVignetteMode &&
+            selectedSettlement?.survivor_type ===
+              DatabaseSurvivorType[SurvivorType.ARC] && (
+              <div className="flex flex-col flex-1 gap-1 xl:min-w-112.5 order-3">
+                <PhilosophyCard
+                  selectedSettlement={selectedSettlement}
+                  selectedSurvivor={selectedSurvivor}
+                  setSurvivors={setSurvivors}
+                  survivors={survivors}
+                />
+                <KnowledgeCard
+                  selectedSettlement={selectedSettlement}
+                  selectedSurvivor={selectedSurvivor}
+                  setSurvivors={setSurvivors}
+                  survivors={survivors}
+                />
+              </div>
+            )}
+
+          {/* Fourth Column - Gear Grid */}
+          {(!isVignetteMode ||
+            selectedSurvivor?.fighting_arts.length ||
+            selectedSurvivor?.secret_fighting_arts.length) && (
+            <div className="flex flex-col flex-1 gap-1 xl:min-w-[320px] xl:max-w-105">
+              {!isVignetteMode && (
+                <>
+                  <GearGridCard
+                    selectedSettlement={selectedSettlement}
+                    selectedSurvivor={selectedSurvivor}
+                    setSurvivors={setSurvivors}
+                    survivors={survivors}
+                  />
+                  <CursedGearCard
+                    selectedSettlement={selectedSettlement}
+                    selectedSurvivor={selectedSurvivor}
+                    setSurvivors={setSurvivors}
+                  />
+                </>
+              )}
+              <FightingArtsCard
+                readOnly={isVignetteMode}
                 selectedSettlement={selectedSettlement}
                 selectedSurvivor={selectedSurvivor}
                 setSurvivors={setSurvivors}
@@ -251,27 +317,6 @@ export function SurvivorCard({
               />
             </div>
           )}
-
-          {/* Fourth Column - Gear Grid */}
-          <div className="flex flex-col flex-1 gap-1 xl:min-w-[320px] xl:max-w-105">
-            <GearGridCard
-              selectedSettlement={selectedSettlement}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-              survivors={survivors}
-            />
-            <CursedGearCard
-              selectedSettlement={selectedSettlement}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-            />
-            <FightingArtsCard
-              selectedSettlement={selectedSettlement}
-              selectedSurvivor={selectedSurvivor}
-              setSurvivors={setSurvivors}
-              survivors={survivors}
-            />
-          </div>
         </div>
       </CardContent>
     </Card>

@@ -12,7 +12,7 @@ vi.mock('@/lib/dal/encounter-active-monster', () => ({
   getEncounterActiveMonsters: vi.fn()
 }))
 
-vi.mock('@/lib/dal/encounter-survivor', () => ({
+vi.mock('@/lib/dal/encounter-active-survivor', () => ({
   getEncounterSurvivors: vi.fn()
 }))
 
@@ -20,7 +20,7 @@ const { getEncounter, addEncounter, updateEncounter, removeEncounter } =
   await import('@/lib/dal/encounter')
 const { getEncounterActiveMonsters } =
   await import('@/lib/dal/encounter-active-monster')
-const { getEncounterSurvivors } = await import('@/lib/dal/encounter-survivor')
+const { getEncounterSurvivors } = await import('@/lib/dal/encounter-active-survivor')
 
 beforeEach(() => {
   vi.resetAllMocks()

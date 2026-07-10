@@ -1,9 +1,10 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
+import { saveVignetteSurvivorLiveState } from '@/components/survivor/vignette-live-state'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { updateEncounterSurvivor } from '@/lib/dal/encounter-survivor'
+import { updateEncounterSurvivor } from '@/lib/dal/encounter-active-survivor'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -88,6 +89,7 @@ export function AttributeCard({
   setSelectedShowdown,
   setSurvivors
 }: AttributeCardProps): ReactElement {
+  const isVignetteMode = mode === SurvivorCardMode.VIGNETTE_CARD
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [movement, setMovement] = useState(selectedSurvivor?.movement ?? 1)
   const [accuracy, setAccuracy] = useState(selectedSurvivor?.accuracy ?? 0)
@@ -134,6 +136,17 @@ export function AttributeCard({
   const showdownSurvivorRecord = useMemo(() => {
     if (
       mode !== SurvivorCardMode.SHOWDOWN_CARD ||
+      !selectedShowdown?.showdown_survivors
+    )
+      return undefined
+    return Object.values(selectedShowdown.showdown_survivors).find(
+      (ss) => ss.survivor_id === selectedSurvivor?.id
+    )
+  }, [mode, selectedShowdown, selectedSurvivor?.id])
+
+  const vignetteSurvivorRecord = useMemo(() => {
+    if (
+      mode !== SurvivorCardMode.VIGNETTE_CARD ||
       !selectedShowdown?.showdown_survivors
     )
       return undefined
@@ -235,6 +248,21 @@ export function AttributeCard({
           toast.error(ERROR_MESSAGE())
         })
       } else if (
+        mode === SurvivorCardMode.VIGNETTE_CARD &&
+        vignetteSurvivorRecord &&
+        selectedShowdown?.showdown_survivors &&
+        setSelectedShowdown
+      ) {
+        saveVignetteSurvivorLiveState({
+          context: `${tokenName} Update`,
+          field: dbField as never,
+          mode,
+          selectedShowdown,
+          selectedSurvivor,
+          setSelectedShowdown,
+          value
+        })
+      } else if (
         mode === SurvivorCardMode.SHOWDOWN_CARD &&
         showdownSurvivorRecord &&
         selectedShowdown?.showdown_survivors &&
@@ -274,12 +302,13 @@ export function AttributeCard({
     },
     [
       mode,
-      selectedSurvivor?.id,
+      selectedSurvivor,
       selectedEncounter,
       selectedHunt,
       selectedShowdown,
       encounterSurvivorRecord,
       huntSurvivorRecord,
+      vignetteSurvivorRecord,
       showdownSurvivorRecord,
       setSelectedEncounter,
       setSelectedHunt,
@@ -291,19 +320,22 @@ export function AttributeCard({
     selectedSettlement?.survivor_type === DatabaseSurvivorType[SurvivorType.ARC]
       ? mode === SurvivorCardMode.SHOWDOWN_CARD ||
         mode === SurvivorCardMode.ENCOUNTER_CARD ||
-        mode === SurvivorCardMode.HUNT_CARD
+        mode === SurvivorCardMode.HUNT_CARD ||
+        mode === SurvivorCardMode.VIGNETTE_CARD
         ? 'lg:grid-cols-8'
         : 'lg:grid-cols-7'
       : mode === SurvivorCardMode.SHOWDOWN_CARD ||
           mode === SurvivorCardMode.ENCOUNTER_CARD ||
-          mode === SurvivorCardMode.HUNT_CARD
+          mode === SurvivorCardMode.HUNT_CARD ||
+          mode === SurvivorCardMode.VIGNETTE_CARD
         ? 'lg:grid-cols-7'
         : 'lg:grid-cols-6'
 
   const showTokens =
     mode === SurvivorCardMode.HUNT_CARD ||
     mode === SurvivorCardMode.ENCOUNTER_CARD ||
-    mode === SurvivorCardMode.SHOWDOWN_CARD
+    mode === SurvivorCardMode.SHOWDOWN_CARD ||
+    mode === SurvivorCardMode.VIGNETTE_CARD
 
   /** Current token values derived from hunt/showdown survivor record */
   const tokenValues = {
@@ -355,6 +387,8 @@ export function AttributeCard({
       setLocal: (v: number) => void,
       oldLocal: number
     ) => {
+      if (mode === SurvivorCardMode.VIGNETTE_CARD) return
+
       setLocal(value)
       setSurvivors((prev) =>
         prev.map((s) =>
@@ -374,7 +408,7 @@ export function AttributeCard({
         }
       )
     },
-    [selectedSurvivor?.id, setSurvivors]
+    [mode, selectedSurvivor?.id, setSurvivors]
   )
 
   return (
@@ -425,7 +459,7 @@ export function AttributeCard({
               handleUpdate('movement', value, setMovement, movement)
             }
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            disabled={disabled}
+            disabled={disabled || isVignetteMode}
           />
           {showTokens && (
             <NumericInput
@@ -448,7 +482,7 @@ export function AttributeCard({
               handleUpdate('accuracy', value, setAccuracy, accuracy)
             }
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            disabled={disabled}
+            disabled={disabled || isVignetteMode}
           />
           {showTokens && (
             <NumericInput
@@ -471,7 +505,7 @@ export function AttributeCard({
               handleUpdate('strength', value, setStrength, strength)
             }
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            disabled={disabled}
+            disabled={disabled || isVignetteMode}
           />
           {showTokens && (
             <NumericInput
@@ -494,7 +528,7 @@ export function AttributeCard({
               handleUpdate('evasion', value, setEvasion, evasion)
             }
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            disabled={disabled}
+            disabled={disabled || isVignetteMode}
           />
           {showTokens && (
             <NumericInput
@@ -515,7 +549,7 @@ export function AttributeCard({
             value={luck}
             onChange={(value) => handleUpdate('luck', value, setLuck, luck)}
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            disabled={disabled}
+            disabled={disabled || isVignetteMode}
           />
           {showTokens && (
             <NumericInput
@@ -536,7 +570,7 @@ export function AttributeCard({
             value={speed}
             onChange={(value) => handleUpdate('speed', value, setSpeed, speed)}
             className="w-12 h-12 text-xl sm:text-xl md:text-xl focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            disabled={disabled}
+            disabled={disabled || isVignetteMode}
           />
           {showTokens && (
             <NumericInput

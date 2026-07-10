@@ -3,7 +3,7 @@ import {
   resolveSettlementAuthorship,
   type SettlementMemberProfile
 } from '@/lib/dal/settlement-shared-user'
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import {
   MoodDetail,
@@ -146,7 +146,10 @@ export async function getShowdownMonsters(
  */
 export async function updateShowdownMonster(
   monsterId: string,
-  updateData: Partial<ShowdownMonsterDetail>
+  updateData: Omit<
+    TablesUpdate<'showdown_monster'>,
+    'id' | 'created_at' | 'updated_at'
+  >
 ): Promise<void> {
   const supabase = createClient()
 

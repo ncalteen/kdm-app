@@ -8,6 +8,7 @@ import { SiteHeader } from '@/components/side-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useLocal } from '@/contexts/local-context'
 import { useStripeReturn } from '@/hooks/use-stripe-return'
+import type { VignetteLandingState } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import { ReactElement, Suspense, useEffect } from 'react'
 
@@ -84,7 +85,6 @@ function MainPage(): ReactElement {
     isCreatingNewSettlement,
     // isCreatingNewShowdown,
     isCreatingNewSurvivor,
-    isCreatingNewVignetteEncounter,
 
     pendingSpecialShowdown,
 
@@ -105,13 +105,11 @@ function MainPage(): ReactElement {
     selectedVignetteEncounter,
     selectedVignetteEncounterId,
     selectedVignetteEncounterMonsterIndex,
-    selectedVignetteEncounterSurvivorIndex,
 
     // setIsCreatingNewHunt,
     setIsCreatingNewSettlement,
     // setIsCreatingNewShowdown,
     setIsCreatingNewSurvivor,
-    setIsCreatingNewVignetteEncounter,
 
     setPendingSpecialShowdown,
 
@@ -144,6 +142,12 @@ function MainPage(): ReactElement {
     settlementList,
     isSettlementListLoading
   } = useLocal()
+
+  const vignetteLandingState: VignetteLandingState = {
+    ownedActive: null,
+    sharedActive: [],
+    catalogMonsters: []
+  }
 
   return (
     <div className="[--header-height:calc(--spacing(10))]">
@@ -184,6 +188,10 @@ function MainPage(): ReactElement {
             selectedTab={selectedTab}
             selectedVignetteEncounter={selectedVignetteEncounter}
             selectedVignetteEncounterId={selectedVignetteEncounterId}
+            vignetteLandingState={vignetteLandingState}
+            isVignetteLandingStateLoading={false}
+            hasVignetteLandingStateLoadError={false}
+            refetchVignetteLandingState={() => undefined}
             settlementList={settlementList}
             setIsCreatingNewSettlement={setIsCreatingNewSettlement}
             setIsCreatingNewSurvivor={setIsCreatingNewSurvivor}

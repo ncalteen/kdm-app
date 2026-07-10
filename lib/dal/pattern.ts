@@ -1,4 +1,3 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -9,44 +8,14 @@ import {
   PatternResourceTypeCostDetail
 } from '@/lib/types'
 
-/**
- * Normalize a Supabase pattern row (with junction relations joined) into a
- * {@link PatternDetail}. Strips the relation arrays into their flatter
- * equivalents on the returned object.
- *
- * @param row Raw pattern row including the junction relations.
- * @returns Normalized PatternDetail.
- */
-function toPatternDetail(
-  row: Omit<
-    PatternDetail,
-    | 'gear_costs'
-    | 'resource_costs'
-    | 'resource_type_costs'
-    | 'innovation_requirement_ids'
-  > & {
-    pattern_gear_cost?: PatternGearCostDetail[] | null
-    pattern_resource_cost?: PatternResourceCostDetail[] | null
-    pattern_resource_type_cost?: PatternResourceTypeCostDetail[] | null
-    pattern_innovation_requirement?: { innovation_id: string }[] | null
-  }
-): PatternDetail {
-  const {
-    pattern_gear_cost,
-    pattern_resource_cost,
-    pattern_resource_type_cost,
-    pattern_innovation_requirement,
-    ...rest
-  } = row
-  return {
-    ...rest,
-    gear_costs: pattern_gear_cost ?? [],
-    resource_costs: pattern_resource_cost ?? [],
-    resource_type_costs: pattern_resource_type_cost ?? [],
-    innovation_requirement_ids:
-      pattern_innovation_requirement?.map((r) => r.innovation_id) ?? []
-  }
-}
+export const PATTERN_SELECT = `
+  id,
+  custom,
+  pattern_name,
+  crafting_limit,
+  endeavor_cost,
+  crafted_gear_id
+`
 
 /**
  * Get Patterns
@@ -69,7 +38,7 @@ export async function getPatterns(): Promise<{
   const { data, error } = await supabase
     .from('pattern')
     .select(
-      'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(cost_gear_id, quantity), pattern_resource_cost(resource_id, quantity), pattern_resource_type_cost(resource_type, quantity), pattern_innovation_requirement(innovation_id)'
+      'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(pattern_id, cost_gear_id, quantity), pattern_resource_cost(pattern_id, resource_id, quantity), pattern_resource_type_cost(pattern_id, resource_type, quantity), pattern_innovation_requirement(pattern_id, innovation_id)'
     )
 
   if (error) throw new Error(`Error Fetching Patterns: ${error.message}`)
@@ -98,7 +67,7 @@ export async function getUserCustomPatterns(): Promise<{
   const { data, error } = await supabase
     .from('pattern')
     .select(
-      'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(cost_gear_id, quantity), pattern_resource_cost(resource_id, quantity), pattern_resource_type_cost(resource_type, quantity), pattern_innovation_requirement(innovation_id), archived_at'
+      'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id, pattern_gear_cost(pattern_id, cost_gear_id, quantity), pattern_resource_cost(pattern_id, resource_id, quantity), pattern_resource_type_cost(pattern_id, resource_type, quantity), pattern_innovation_requirement(pattern_id, innovation_id), archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -125,19 +94,25 @@ export async function getUserCustomPatterns(): Promise<{
 export async function addPattern(
   pattern: Omit<
     TablesInsert<'pattern'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<PatternDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'pattern'> = { ...pattern }
 
-  if (pattern.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('pattern')
     .insert({
-      ...pattern,
-      ...(pattern.custom ? { user_id: userId! } : {})
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
     })
     .select(
       'id, custom, pattern_name, crafting_limit, endeavor_cost, crafted_gear_id'
@@ -166,11 +141,21 @@ export async function addPattern(
  */
 export async function updatePattern(
   id: string,
-  pattern: Omit<TablesUpdate<'pattern'>, 'id' | 'created_at' | 'updated_at'>
+  pattern: Omit<
+    TablesUpdate<'pattern'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'pattern'> = { ...pattern }
 
-  const { error } = await supabase.from('pattern').update(pattern).eq('id', id)
+  delete updateData.custom
+  delete updateData.user_id
+
+  const { error } = await supabase
+    .from('pattern')
+    .update(updateData)
+    .eq('id', id)
 
   if (error) throw new Error(`Error Updating Pattern: ${error.message}`)
 }
@@ -183,7 +168,11 @@ export async function updatePattern(
  * @param id Pattern ID
  */
 export async function removePattern(id: string): Promise<void> {
-  await removeCatalogRow('pattern', id, 'Pattern')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('pattern').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Pattern: ${error.message}`)
 }
 
 /**

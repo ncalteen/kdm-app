@@ -1,6 +1,6 @@
 import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
-import { NotificationRow } from '@/lib/types'
+import { NotificationDetail } from '@/lib/types'
 
 /**
  * Get Notifications
@@ -11,7 +11,7 @@ import { NotificationRow } from '@/lib/types'
  *
  * @returns Notification rows for the authenticated user.
  */
-export async function getNotifications(): Promise<NotificationRow[]> {
+export async function getNotifications(): Promise<NotificationDetail[]> {
   const userId = await getUserId()
   const supabase = createClient()
 
@@ -24,7 +24,7 @@ export async function getNotifications(): Promise<NotificationRow[]> {
 
   if (error) throw new Error(`Error Fetching Notifications: ${error.message}`)
 
-  return (data ?? []) as NotificationRow[]
+  return (data ?? []) as NotificationDetail[]
 }
 
 /**

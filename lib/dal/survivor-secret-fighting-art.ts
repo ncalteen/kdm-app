@@ -2,6 +2,19 @@ import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SurvivorSecretFightingArtDetail } from '@/lib/types'
 
+const SURVIVOR_SECRET_FIGHTING_ART_SELECT = `
+  id,
+  secret_fighting_art_id,
+  settlement_id,
+  survivor_id,
+  secret_fighting_art(
+    id,
+    custom,
+    secret_fighting_art_name,
+    rules
+  )
+`
+
 /**
  * Get Survivor Secret Fighting Arts
  *
@@ -19,7 +32,7 @@ export async function getSurvivorSecretFightingArts(
 
   const { data, error } = await supabase
     .from('survivor_secret_fighting_art')
-    .select('id, secret_fighting_art_id, settlement_id')
+    .select(SURVIVOR_SECRET_FIGHTING_ART_SELECT)
     .eq('survivor_id', survivorId)
 
   if (error)
@@ -27,7 +40,7 @@ export async function getSurvivorSecretFightingArts(
       `Error Fetching Survivor Secret Fighting Arts: ${error.message}`
     )
 
-  return data ?? []
+  return (data ?? []) as SurvivorSecretFightingArtDetail[]
 }
 
 /**
@@ -104,10 +117,15 @@ export async function updateSurvivorSecretFightingArt(
   >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'survivor_secret_fighting_art'> = {
+    ...survivorSecretFightingArt
+  }
+
+  delete updateData.id
 
   const { error } = await supabase
     .from('survivor_secret_fighting_art')
-    .update(survivorSecretFightingArt)
+    .update(updateData)
     .eq('id', id)
 
   if (error)

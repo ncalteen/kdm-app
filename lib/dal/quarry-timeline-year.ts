@@ -1,7 +1,7 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
-import { QuarryTimelineDetail } from '@/lib/types'
+import { QuarryTimelineYearDetail } from '@/lib/types'
 
 /**
  * Get Quarry Timeline Years
@@ -16,7 +16,7 @@ import { QuarryTimelineDetail } from '@/lib/types'
 export async function getQuarryTimelineYears(
   quarryId: string | null | undefined,
   campaignType?: CampaignType
-): Promise<QuarryTimelineDetail[]> {
+): Promise<QuarryTimelineYearDetail[]> {
   if (!quarryId) throw new Error('Required: Quarry ID')
 
   const supabase = createClient()

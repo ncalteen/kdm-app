@@ -2,6 +2,19 @@ import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SurvivorFightingArtDetail } from '@/lib/types'
 
+const SURVIVOR_FIGHTING_ART_SELECT = `
+  id,
+  fighting_art_id,
+  settlement_id,
+  survivor_id,
+  fighting_art(
+    id,
+    custom,
+    fighting_art_name,
+    rules
+  )
+`
+
 /**
  * Get Survivor Fighting Arts
  *
@@ -19,13 +32,13 @@ export async function getSurvivorFightingArts(
 
   const { data, error } = await supabase
     .from('survivor_fighting_art')
-    .select('id, fighting_art_id, settlement_id')
+    .select(SURVIVOR_FIGHTING_ART_SELECT)
     .eq('survivor_id', survivorId)
 
   if (error)
     throw new Error(`Error Fetching Survivor Fighting Arts: ${error.message}`)
 
-  return data ?? []
+  return (data ?? []) as SurvivorFightingArtDetail[]
 }
 
 /**
@@ -95,10 +108,15 @@ export async function updateSurvivorFightingArt(
   >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'survivor_fighting_art'> = {
+    ...survivorFightingArt
+  }
+
+  delete updateData.id
 
   const { error } = await supabase
     .from('survivor_fighting_art')
-    .update(survivorFightingArt)
+    .update(updateData)
     .eq('id', id)
 
   if (error)

@@ -261,13 +261,14 @@ function VignetteMonsterStateCard({
             <div className="min-w-0 flex-1 text-left">
               <div className="truncate text-sm font-semibold">
                 {monster.monster_name ??
-                  encounter.vignette_monster.monster_name}
+                  encounter.vignette_monster?.monster_name ??
+                  'Vignette Monster'}
               </div>
               <div className="mt-1 flex flex-wrap gap-2">
                 <Badge variant="outline" className="text-xs">
                   Level {encounter.level_number}
                 </Badge>
-                {encounter.vignette_monster.multi_monster && (
+                {encounter.vignette_monster?.multi_monster && (
                   <Badge variant="secondary" className="text-xs">
                     Multi-monster
                   </Badge>

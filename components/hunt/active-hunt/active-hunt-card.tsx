@@ -29,7 +29,7 @@ import {
 import { addEncounter, removeEncounter } from '@/lib/dal/encounter'
 import { addEncounterActiveMonster } from '@/lib/dal/encounter-active-monster'
 import { getEncounterMonsters } from '@/lib/dal/encounter-monster'
-import { addEncounterSurvivor } from '@/lib/dal/encounter-survivor'
+import { addEncounterSurvivor } from '@/lib/dal/encounter-active-survivor'
 import { removeHunt, updateHunt } from '@/lib/dal/hunt'
 import { updateHuntHuntBoard } from '@/lib/dal/hunt-hunt-board'
 import { copyMonsterJunctions } from '@/lib/dal/monster-trait-mood'
@@ -54,7 +54,7 @@ import {
   EncounterDetail,
   EncounterMonsterDetail,
   EncounterStateSetter,
-  EncounterSurvivorDetail,
+  EncounterActiveSurvivorDetail,
   HuntDetail,
   HuntHuntBoardDetail,
   HuntStateSetter,
@@ -441,8 +441,9 @@ export function ActiveHuntCard({
           speed_tokens: 0,
           toughness: level.toughness
         }
-        const encounterMonsterId =
+        const insertedEncounterMonster =
           await addEncounterActiveMonster(encounterMonster)
+        const encounterMonsterId = insertedEncounterMonster.id
 
         await Promise.all([
           copyMonsterJunctions(
@@ -468,15 +469,14 @@ export function ActiveHuntCard({
         ])
 
         encounterMonstersById[encounterMonsterId] = {
-          id: encounterMonsterId,
-          ...encounterMonster,
-          traits: level.traits.map((trait) => ({
+          ...insertedEncounterMonster,
+          traits: level.traits.map(({ trait }) => ({
             ...trait,
             author_user_id: null,
             author_username: null,
             author_avatar_url: null
           })),
-          moods: level.moods.map((mood) => ({
+          moods: level.moods.map(({ mood }) => ({
             ...mood,
             author_user_id: null,
             author_username: null,
@@ -486,7 +486,7 @@ export function ActiveHuntCard({
         }
       }
 
-      const encounterSurvivors: { [key: string]: EncounterSurvivorDetail } = {}
+      const encounterSurvivors: { [key: string]: EncounterActiveSurvivorDetail } = {}
 
       for (const huntSurvivor of Object.values(huntSurvivors)) {
         const encounterSurvivor = {

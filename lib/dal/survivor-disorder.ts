@@ -2,6 +2,19 @@ import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SurvivorDisorderDetail } from '@/lib/types'
 
+const SURVIVOR_DISORDER_SELECT = `
+  id,
+  disorder_id,
+  settlement_id,
+  survivor_id,
+  disorder(
+    id,
+    custom,
+    disorder_name,
+    rules
+  )
+`
+
 /**
  * Get Survivor Disorders
  *
@@ -19,13 +32,13 @@ export async function getSurvivorDisorders(
 
   const { data, error } = await supabase
     .from('survivor_disorder')
-    .select('id, disorder_id, settlement_id')
+    .select(SURVIVOR_DISORDER_SELECT)
     .eq('survivor_id', survivorId)
 
   if (error)
     throw new Error(`Error Fetching Survivor Disorders: ${error.message}`)
 
-  return data ?? []
+  return (data ?? []) as SurvivorDisorderDetail[]
 }
 
 /**
@@ -94,10 +107,15 @@ export async function updateSurvivorDisorder(
   >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'survivor_disorder'> = {
+    ...survivorDisorder
+  }
+
+  delete updateData.id
 
   const { error } = await supabase
     .from('survivor_disorder')
-    .update(survivorDisorder)
+    .update(updateData)
     .eq('id', id)
 
   if (error)

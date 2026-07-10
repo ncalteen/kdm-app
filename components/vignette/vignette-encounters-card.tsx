@@ -32,6 +32,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { VignetteMonsterCard } from '@/components/vignette/vignette-monster-card'
+import { VignetteSurvivorCards } from '@/components/vignette/vignette-survivor-card'
 import {
   addVignetteEncounterSharedUser,
   createVignetteEncounter,
@@ -86,37 +87,16 @@ interface VignetteEncountersCardProps {
 }
 
 /**
- * Format Vignette Turn
- *
- * @param turn Vignette Turn
- * @returns Display Turn
- */
-function formatVignetteTurn(turn: VignetteEncounterSummary['turn']): string {
-  const lower = turn.toLowerCase()
-  return `${lower.charAt(0).toUpperCase()}${lower.slice(1)} turn`
-}
-
-/**
  * Sorted Vignette Levels
+ *
+ * Sorts the levels of a Vignette Monster by their level number.
  *
  * @param monster Vignette Monster Detail
  * @returns Sorted Vignette Levels
  */
-function sortedVignetteLevels(
-  monster: VignetteMonsterSummary
-): VignetteMonsterSummary['levels'] {
-  return [...monster.levels].sort((a, b) => a.level_number - b.level_number)
-}
-
-/**
- * Sorted Vignette Monster Detail Levels
- *
- * @param monster Vignette Monster Detail
- * @returns Sorted Vignette Monster Levels
- */
-function sortedVignetteMonsterLevels(
-  monster: VignetteMonsterDetail
-): VignetteMonsterLevelDetail[] {
+function sortedVignette(
+  monster: VignetteMonsterSummary | VignetteMonsterDetail
+): VignetteMonsterSummary['levels'] | VignetteMonsterLevelDetail[] {
   return [...monster.levels].sort((a, b) => a.level_number - b.level_number)
 }
 
@@ -295,7 +275,7 @@ export function VignetteEncountersCard({
         .then((detail) => {
           if (catalogMonsterRequestRef.current !== requestId) return
 
-          const levels = detail ? sortedVignetteMonsterLevels(detail) : []
+          const levels = detail ? sortedVignette(detail) : []
           setSelectedCatalogMonster(detail)
           setSelectedLevelNumber(
             levels.length === 1 ? levels[0].level_number : null
@@ -350,26 +330,21 @@ export function VignetteEncountersCard({
       active_vignette_encounter_id: vignetteLandingState.ownedActive?.id ?? null
     })
 
-    if (!activeLimit.success) {
-      toast.error(VIGNETTE_ACTIVE_LIMIT_MESSAGE())
-      return
-    }
+    if (!activeLimit.success)
+      return toast.error(VIGNETTE_ACTIVE_LIMIT_MESSAGE())
 
     const parsedInput = VignetteCreateInputSchema.safeParse({
       vignette_monster_id: selectedCatalogMonster.id,
       level_number: selectedLevelNumber
     })
 
-    if (!parsedInput.success) {
-      toast.error(parsedInput.error.message)
-      return
-    }
+    if (!parsedInput.success) return toast.error(parsedInput.error.message)
 
     setIsCreatingVignetteEncounter(true)
 
     createVignetteEncounter(parsedInput.data)
       .then((vignetteEncounterId) => {
-        toast.success('A vignette lantern is lit. The darkness gathers close.')
+        toast.success('A vignette encounter has begun.')
         setSelectedVignetteEncounterId(vignetteEncounterId)
         refetchVignetteLandingState()
       })
@@ -561,7 +536,7 @@ export function VignetteEncountersCard({
                         <SelectContent>
                           {vignetteLandingState.catalogMonsters.map(
                             (monster) => {
-                              const levels = sortedVignetteLevels(monster)
+                              const levels = sortedVignette(monster)
 
                               return (
                                 <SelectItem key={monster.id} value={monster.id}>
@@ -628,10 +603,16 @@ export function VignetteEncountersCard({
               </section>
 
               {hasSelectedActiveVignette && selectedVignetteEncounter && (
-                <VignetteMonsterCard
-                  selectedVignetteEncounter={selectedVignetteEncounter}
-                  setSelectedVignetteEncounter={setSelectedVignetteEncounter}
-                />
+                <>
+                  <VignetteMonsterCard
+                    selectedVignetteEncounter={selectedVignetteEncounter}
+                    setSelectedVignetteEncounter={setSelectedVignetteEncounter}
+                  />
+                  <VignetteSurvivorCards
+                    selectedVignetteEncounter={selectedVignetteEncounter}
+                    setSelectedVignetteEncounter={setSelectedVignetteEncounter}
+                  />
+                </>
               )}
 
               <VignetteShareDialog
@@ -823,7 +804,7 @@ function VignetteSummaryRow({
           {summary.monster_name}
         </span>
         <span className="mt-1 block text-xs text-muted-foreground">
-          Level {summary.level_number} · {formatVignetteTurn(summary.turn)}
+          Level {summary.level_number}
         </span>
       </button>
       <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
@@ -916,7 +897,7 @@ function VignetteCatalogDetailPanel({
       </section>
     )
 
-  const levels = sortedVignetteMonsterLevels(monster)
+  const levels = sortedVignette(monster)
   const shouldShowLevelSelection = levels.length > 1
 
   return (
@@ -970,7 +951,7 @@ function VignetteCatalogDetailPanel({
         )}
       </div>
 
-      <VignetteSurvivorPresetList survivors={monster.survivors} />
+      <VignetteSurvivorPresetList survivors={monster.survivors ?? []} />
 
       <div className="flex justify-end">
         <Button

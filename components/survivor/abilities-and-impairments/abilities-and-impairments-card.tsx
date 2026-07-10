@@ -44,10 +44,25 @@ import { toast } from 'sonner'
  * Abilities and Impairments Card Properties
  */
 interface AbilitiesAndImpairmentsCardProps {
+  /** Read Only */
+  readOnly?: boolean
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
   /** Set Survivors */
   setSurvivors: SurvivorsStateSetter
+}
+
+type AbilityImpairmentListItem = AbilityImpairmentDetail & {
+  author_avatar_url: string | null
+  author_user_id: string | null
+  author_username: string | null
+}
+
+function getAbilityImpairmentListItems(
+  survivor: SurvivorDetail | null
+): AbilityImpairmentListItem[] {
+  return (survivor?.abilities_impairments ??
+    []) as unknown as AbilityImpairmentListItem[]
 }
 
 /**
@@ -61,6 +76,7 @@ interface AbilitiesAndImpairmentsCardProps {
  * @returns Abilities and Impairments Card Component
  */
 export function AbilitiesAndImpairmentsCard({
+  readOnly = false,
   selectedSurvivor,
   setSurvivors
 }: AbilitiesAndImpairmentsCardProps): ReactElement {
@@ -71,8 +87,8 @@ export function AbilitiesAndImpairmentsCard({
   const [availableItems, setAvailableItems] = useState<{
     [key: string]: AbilityImpairmentDetail
   }>({})
-  const [items, setItems] = useState<SurvivorDetail['abilities_impairments']>(
-    selectedSurvivor?.abilities_impairments ?? []
+  const [items, setItems] = useState<AbilityImpairmentListItem[]>(
+    getAbilityImpairmentListItems(selectedSurvivor)
   )
   const [skipNextHunt, setSkipNextHunt] = useState<boolean>(
     selectedSurvivor?.skip_next_hunt ?? false
@@ -87,7 +103,7 @@ export function AbilitiesAndImpairmentsCard({
 
   if (prevSurvivor !== selectedSurvivor) {
     setPrevSurvivor(selectedSurvivor)
-    setItems(selectedSurvivor?.abilities_impairments ?? [])
+    setItems(getAbilityImpairmentListItems(selectedSurvivor))
     setSkipNextHunt(selectedSurvivor?.skip_next_hunt ?? false)
   }
 
@@ -116,7 +132,7 @@ export function AbilitiesAndImpairmentsCard({
       setAddOpen(false)
       setSearch('')
 
-      const optimisticItem: SurvivorDetail['abilities_impairments'][number] = {
+      const optimisticItem = {
         id: itemId,
         custom: detail.custom,
         ability_impairment_name: detail.ability_impairment_name,
@@ -126,7 +142,7 @@ export function AbilitiesAndImpairmentsCard({
         author_user_id: null,
         author_username: null,
         author_avatar_url: null
-      }
+      } satisfies AbilityImpairmentListItem
       const oldItems = [...items]
 
       setItems([...items, optimisticItem])
@@ -177,6 +193,7 @@ export function AbilitiesAndImpairmentsCard({
     (a) =>
       a.ability_impairment_name.toLowerCase() === search.trim().toLowerCase()
   )
+  const displayItems: AbilityImpairmentListItem[] = items
 
   /**
    * Open Create Dialog
@@ -209,11 +226,17 @@ export function AbilitiesAndImpairmentsCard({
       setCreating(true)
 
       try {
-        const newItem = await addAbilityImpairment({
+        const newItemId = await addAbilityImpairment({
           custom: true,
           ability_impairment_name: name,
           rules: data.rules || null
         })
+        const newItem: AbilityImpairmentDetail = {
+          id: newItemId,
+          custom: true,
+          ability_impairment_name: name,
+          rules: data.rules || null
+        }
 
         setAvailableItems((prev) => ({
           ...prev,
@@ -224,16 +247,15 @@ export function AbilitiesAndImpairmentsCard({
         setCreateDialogOpen(false)
 
         // Add to survivor immediately
-        const optimisticItem: SurvivorDetail['abilities_impairments'][number] =
-          {
-            id: newItem.id,
-            custom: newItem.custom,
-            ability_impairment_name: newItem.ability_impairment_name,
-            rules: newItem.rules ?? '',
-            author_user_id: null,
-            author_username: null,
-            author_avatar_url: null
-          }
+        const optimisticItem = {
+          id: newItem.id,
+          custom: newItem.custom,
+          ability_impairment_name: newItem.ability_impairment_name,
+          rules: newItem.rules ?? '',
+          author_user_id: null,
+          author_username: null,
+          author_avatar_url: null
+        } satisfies AbilityImpairmentListItem
         const oldItems = [...items]
 
         setItems([...items, optimisticItem])
@@ -293,86 +315,92 @@ export function AbilitiesAndImpairmentsCard({
       <CardHeader className="p-0">
         <CardTitle className="p-0 text-sm flex flex-row items-center justify-between h-8">
           Abilities & Impairments
-          <Popover open={addOpen} onOpenChange={setAddOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-6 w-6">
-                <PlusIcon />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0">
-              <Command shouldFilter={true}>
-                <CommandInput
-                  placeholder="Search abilities/impairments..."
-                  value={search}
-                  onValueChange={setSearch}
-                />
-                <CommandList>
-                  <CommandEmpty>
-                    {search.trim() ? (
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
-                        disabled={creating}
-                        onClick={openCreateDialog}>
-                        <Plus className="h-4 w-4" />
-                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
-                      </button>
-                    ) : !hasFetched ? (
-                      'Loading abilities and impairments...'
-                    ) : (
-                      'No abilities or impairments found.'
-                    )}
-                  </CommandEmpty>
-                  <CommandGroup>
-                    {Object.values(availableItems)
-                      .filter(
-                        (a) => !items.some((existing) => existing.id === a.id)
-                      )
-                      .sort((a, b) =>
-                        a.ability_impairment_name.localeCompare(
-                          b.ability_impairment_name
+          {!readOnly && (
+            <Popover open={addOpen} onOpenChange={setAddOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-6 w-6">
+                  <PlusIcon />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0">
+                <Command shouldFilter={true}>
+                  <CommandInput
+                    placeholder="Search abilities/impairments..."
+                    value={search}
+                    onValueChange={setSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>
+                      {search.trim() ? (
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                          disabled={creating}
+                          onClick={openCreateDialog}>
+                          <Plus className="h-4 w-4" />
+                          {creating
+                            ? 'Creating...'
+                            : `Create "${search.trim()}"`}
+                        </button>
+                      ) : !hasFetched ? (
+                        'Loading abilities and impairments...'
+                      ) : (
+                        'No abilities or impairments found.'
+                      )}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {Object.values(availableItems)
+                        .filter(
+                          (a) => !items.some((existing) => existing.id === a.id)
                         )
-                      )
-                      .map((item) => (
+                        .sort((a, b) =>
+                          a.ability_impairment_name.localeCompare(
+                            b.ability_impairment_name
+                          )
+                        )
+                        .map((item) => (
+                          <CommandItem
+                            key={item.id}
+                            value={item.id}
+                            keywords={[item.ability_impairment_name]}
+                            onSelect={() => handleAdd(item.id)}>
+                            {item.ability_impairment_name}
+                            {item.custom && (
+                              <Badge
+                                variant="outline"
+                                className="ml-auto text-xs">
+                                Custom
+                              </Badge>
+                            )}
+                          </CommandItem>
+                        ))}
+                      {search.trim() && !exactMatchExists && (
                         <CommandItem
-                          key={item.id}
-                          value={item.id}
-                          keywords={[item.ability_impairment_name]}
-                          onSelect={() => handleAdd(item.id)}>
-                          {item.ability_impairment_name}
-                          {item.custom && (
-                            <Badge
-                              variant="outline"
-                              className="ml-auto text-xs">
-                              Custom
-                            </Badge>
-                          )}
+                          value={`__create__${search.trim()}`}
+                          onSelect={openCreateDialog}
+                          disabled={creating}>
+                          <Plus className="h-4 w-4" />
+                          {creating
+                            ? 'Creating...'
+                            : `Create "${search.trim()}"`}
                         </CommandItem>
-                      ))}
-                    {search.trim() && !exactMatchExists && (
-                      <CommandItem
-                        value={`__create__${search.trim()}`}
-                        onSelect={openCreateDialog}
-                        disabled={creating}>
-                        <Plus className="h-4 w-4" />
-                        {creating ? 'Creating...' : `Create "${search.trim()}"`}
-                      </CommandItem>
-                    )}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+                      )}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          )}
         </CardTitle>
       </CardHeader>
 
       <CardContent className="p-0">
         <div className="flex flex-col">
-          {items.map((item, index) => {
+          {displayItems.map((item: AbilityImpairmentListItem, index) => {
             return (
               <div
                 key={`${item.id}-${index}`}
@@ -388,32 +416,38 @@ export function AbilitiesAndImpairmentsCard({
                   authorUserId={item.author_user_id}
                   authorUsername={item.author_username}
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  type="button"
-                  onClick={() => handleRemove(index)}>
-                  <TrashIcon className="h-4 w-4" />
-                </Button>
+                {!readOnly && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    onClick={() => handleRemove(index)}>
+                    <TrashIcon className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             )
           })}
 
           {/* Skip Next Hunt */}
-          <div className="flex justify-end mt-2 pr-2">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="skipNextHunt"
-                checked={skipNextHunt}
-                onCheckedChange={(checked) =>
-                  handleSkipNextHuntToggle(!!checked)
-                }
-              />
-              <Label htmlFor="skipNextHunt" className="text-xs cursor-pointer">
-                Skip Next Hunt
-              </Label>
+          {!readOnly && (
+            <div className="flex justify-end mt-2 pr-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="skipNextHunt"
+                  checked={skipNextHunt}
+                  onCheckedChange={(checked) =>
+                    handleSkipNextHuntToggle(!!checked)
+                  }
+                />
+                <Label
+                  htmlFor="skipNextHunt"
+                  className="text-xs cursor-pointer">
+                  Skip Next Hunt
+                </Label>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </CardContent>
 

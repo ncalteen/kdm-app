@@ -53,6 +53,8 @@ import { toast } from 'sonner'
  * Fighting Arts Card Properties
  */
 interface FightingArtsCardProps {
+  /** Read Only */
+  readOnly?: boolean
   /** Selected Settlement */
   selectedSettlement: SettlementDetail | null
   /** Selected Survivor */
@@ -70,6 +72,7 @@ interface FightingArtsCardProps {
  * @returns Fighting Arts Card Component
  */
 export function FightingArtsCard({
+  readOnly = false,
   selectedSettlement,
   selectedSurvivor,
   setSurvivors,
@@ -642,126 +645,128 @@ export function FightingArtsCard({
       <CardHeader className="p-0">
         <CardTitle className="p-0 text-sm flex flex-row items-center justify-between h-8">
           Fighting Arts &amp; Secret Fighting Arts
-          <Popover open={addOpen} onOpenChange={setAddOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-6 w-6"
-                disabled={isAtRegularLimit && isAtSecretLimit}>
-                <PlusIcon />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0">
-              <Command shouldFilter={true}>
-                <CommandInput
-                  placeholder="Search fighting arts..."
-                  value={search}
-                  onValueChange={setSearch}
-                />
-                <CommandList>
-                  <CommandEmpty>
-                    {search.trim() ? (
-                      <div className="flex flex-col gap-1">
-                        {!isAtRegularLimit && (
-                          <button
-                            type="button"
-                            className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
-                            disabled={creatingRegular}
-                            onClick={() => openCreateDialog('regular')}>
+          {!readOnly && (
+            <Popover open={addOpen} onOpenChange={setAddOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-6 w-6"
+                  disabled={isAtRegularLimit && isAtSecretLimit}>
+                  <PlusIcon />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0">
+                <Command shouldFilter={true}>
+                  <CommandInput
+                    placeholder="Search fighting arts..."
+                    value={search}
+                    onValueChange={setSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>
+                      {search.trim() ? (
+                        <div className="flex flex-col gap-1">
+                          {!isAtRegularLimit && (
+                            <button
+                              type="button"
+                              className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                              disabled={creatingRegular}
+                              onClick={() => openCreateDialog('regular')}>
+                              <Plus className="h-4 w-4" />
+                              {creatingRegular
+                                ? 'Creating...'
+                                : `Create Fighting Art "${search.trim()}"`}
+                            </button>
+                          )}
+                          {!isAtSecretLimit && (
+                            <button
+                              type="button"
+                              className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
+                              disabled={creatingSecret}
+                              onClick={() => openCreateDialog('secret')}>
+                              <Plus className="h-4 w-4" />
+                              {creatingSecret
+                                ? 'Creating...'
+                                : `Create Secret Fighting Art "${search.trim()}"`}
+                            </button>
+                          )}
+                        </div>
+                      ) : !hasFetched ? (
+                        'Loading fighting arts...'
+                      ) : (
+                        'No fighting arts found.'
+                      )}
+                    </CommandEmpty>
+                    {!isAtRegularLimit && (
+                      <CommandGroup heading="Fighting Arts">
+                        {selectableRegularArts.map((art) => (
+                          <CommandItem
+                            key={art.id}
+                            value={art.id}
+                            keywords={[art.fighting_art_name]}
+                            onSelect={() => handleAdd(art.id, false)}>
+                            {art.fighting_art_name}
+                            {art.custom && (
+                              <Badge
+                                variant="outline"
+                                className="ml-auto text-xs">
+                                Custom
+                              </Badge>
+                            )}
+                          </CommandItem>
+                        ))}
+                        {search.trim() && !exactRegularMatch && (
+                          <CommandItem
+                            value={`__create_regular__${search.trim()}`}
+                            onSelect={() => openCreateDialog('regular')}
+                            disabled={creatingRegular}>
                             <Plus className="h-4 w-4" />
                             {creatingRegular
                               ? 'Creating...'
-                              : `Create Fighting Art "${search.trim()}"`}
-                          </button>
+                              : `Create "${search.trim()}"`}
+                          </CommandItem>
                         )}
-                        {!isAtSecretLimit && (
-                          <button
-                            type="button"
-                            className="flex items-center gap-2 w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm justify-center"
-                            disabled={creatingSecret}
-                            onClick={() => openCreateDialog('secret')}>
+                      </CommandGroup>
+                    )}
+                    <CommandSeparator />
+                    {!isAtSecretLimit && (
+                      <CommandGroup heading="Secret Fighting Arts">
+                        {selectableSecretArts.map((art) => (
+                          <CommandItem
+                            key={art.id}
+                            value={art.id}
+                            keywords={[art.secret_fighting_art_name]}
+                            onSelect={() => handleAdd(art.id, true)}>
+                            {art.secret_fighting_art_name}
+                            {art.custom && (
+                              <Badge
+                                variant="outline"
+                                className="ml-auto text-xs">
+                                Custom
+                              </Badge>
+                            )}
+                          </CommandItem>
+                        ))}
+                        {search.trim() && !exactSecretMatch && (
+                          <CommandItem
+                            value={`__create_secret__${search.trim()}`}
+                            onSelect={() => openCreateDialog('secret')}
+                            disabled={creatingSecret}>
                             <Plus className="h-4 w-4" />
                             {creatingSecret
                               ? 'Creating...'
-                              : `Create Secret Fighting Art "${search.trim()}"`}
-                          </button>
+                              : `Create "${search.trim()}"`}
+                          </CommandItem>
                         )}
-                      </div>
-                    ) : !hasFetched ? (
-                      'Loading fighting arts...'
-                    ) : (
-                      'No fighting arts found.'
+                      </CommandGroup>
                     )}
-                  </CommandEmpty>
-                  {!isAtRegularLimit && (
-                    <CommandGroup heading="Fighting Arts">
-                      {selectableRegularArts.map((art) => (
-                        <CommandItem
-                          key={art.id}
-                          value={art.id}
-                          keywords={[art.fighting_art_name]}
-                          onSelect={() => handleAdd(art.id, false)}>
-                          {art.fighting_art_name}
-                          {art.custom && (
-                            <Badge
-                              variant="outline"
-                              className="ml-auto text-xs">
-                              Custom
-                            </Badge>
-                          )}
-                        </CommandItem>
-                      ))}
-                      {search.trim() && !exactRegularMatch && (
-                        <CommandItem
-                          value={`__create_regular__${search.trim()}`}
-                          onSelect={() => openCreateDialog('regular')}
-                          disabled={creatingRegular}>
-                          <Plus className="h-4 w-4" />
-                          {creatingRegular
-                            ? 'Creating...'
-                            : `Create "${search.trim()}"`}
-                        </CommandItem>
-                      )}
-                    </CommandGroup>
-                  )}
-                  <CommandSeparator />
-                  {!isAtSecretLimit && (
-                    <CommandGroup heading="Secret Fighting Arts">
-                      {selectableSecretArts.map((art) => (
-                        <CommandItem
-                          key={art.id}
-                          value={art.id}
-                          keywords={[art.secret_fighting_art_name]}
-                          onSelect={() => handleAdd(art.id, true)}>
-                          {art.secret_fighting_art_name}
-                          {art.custom && (
-                            <Badge
-                              variant="outline"
-                              className="ml-auto text-xs">
-                              Custom
-                            </Badge>
-                          )}
-                        </CommandItem>
-                      ))}
-                      {search.trim() && !exactSecretMatch && (
-                        <CommandItem
-                          value={`__create_secret__${search.trim()}`}
-                          onSelect={() => openCreateDialog('secret')}
-                          disabled={creatingSecret}>
-                          <Plus className="h-4 w-4" />
-                          {creatingSecret
-                            ? 'Creating...'
-                            : `Create "${search.trim()}"`}
-                        </CommandItem>
-                      )}
-                    </CommandGroup>
-                  )}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          )}
         </CardTitle>
       </CardHeader>
 
@@ -783,13 +788,15 @@ export function FightingArtsCard({
                 authorUserId={art.author_user_id}
                 authorUsername={art.author_username}
               />
-              <Button
-                variant="ghost"
-                size="icon"
-                type="button"
-                onClick={() => handleRemoveRegular(index)}>
-                <TrashIcon className="h-4 w-4" />
-              </Button>
+              {!readOnly && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={() => handleRemoveRegular(index)}>
+                  <TrashIcon className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           ))}
 
@@ -809,31 +816,35 @@ export function FightingArtsCard({
                 authorUserId={art.author_user_id}
                 authorUsername={art.author_username}
               />
-              <Button
-                variant="ghost"
-                size="icon"
-                type="button"
-                onClick={() => handleRemoveSecret(index)}>
-                <TrashIcon className="h-4 w-4" />
-              </Button>
+              {!readOnly && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={() => handleRemoveSecret(index)}>
+                  <TrashIcon className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           ))}
         </div>
 
-        <div className="flex justify-end mt-2 pr-2">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="canUseFightingArtsOrKnowledges"
-              checked={!canUseFightingArtsKnowledges}
-              onCheckedChange={updateCanUseFightingArtsOrKnowledges}
-            />
-            <Label
-              htmlFor="canUseFightingArtsOrKnowledges"
-              className="text-xs cursor-pointer">
-              Cannot Use Fighting Arts
-            </Label>
+        {!readOnly && (
+          <div className="flex justify-end mt-2 pr-2">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="canUseFightingArtsOrKnowledges"
+                checked={!canUseFightingArtsKnowledges}
+                onCheckedChange={updateCanUseFightingArtsOrKnowledges}
+              />
+              <Label
+                htmlFor="canUseFightingArtsOrKnowledges"
+                className="text-xs cursor-pointer">
+                Cannot Use Fighting Arts
+              </Label>
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
 
       <CustomItemDialog

@@ -1,4 +1,4 @@
-import { TablesUpdate } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { SettlementDetail, SettlementTimelineYearDetail } from '@/lib/types'
 
@@ -61,7 +61,7 @@ export async function addSettlementTimelineYears(
 
   const { error } = await supabase
     .from('settlement_timeline_year')
-    .insert(timelineYears)
+    .insert(timelineYears as TablesInsert<'settlement_timeline_year'>[])
 
   if (error)
     throw new Error(

@@ -395,7 +395,9 @@ export function armorSetQualifies(
   for (const slot of armorSet.slots) {
     if (!slot.required) continue
 
-    const satisfied = slot.gear_ids.some((id) => equippedGearIds.has(id))
+    const satisfied = (slot.gear_ids ?? []).some((id) =>
+      equippedGearIds.has(id)
+    )
     if (!satisfied) return false
   }
 

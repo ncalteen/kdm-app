@@ -16,7 +16,7 @@ vi.mock('@/hooks/use-optimistic-mutation', () => ({
   useOptimisticMutation: () => vi.fn()
 }))
 
-vi.mock('@/lib/dal/encounter-survivor', () => ({
+vi.mock('@/lib/dal/encounter-active-survivor', () => ({
   updateEncounterSurvivor: vi.fn()
 }))
 

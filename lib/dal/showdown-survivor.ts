@@ -1,4 +1,4 @@
-import { TablesInsert } from '@/lib/database.types'
+import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { ShowdownSurvivorDetail } from '@/lib/types'
 
@@ -46,7 +46,10 @@ export async function getShowdownSurvivors(
  */
 export async function updateShowdownSurvivor(
   survivorId: string,
-  updateData: Partial<ShowdownSurvivorDetail>
+  updateData: Omit<
+    TablesUpdate<'showdown_survivor'>,
+    'id' | 'created_at' | 'updated_at'
+  >
 ): Promise<void> {
   const supabase = createClient()
 

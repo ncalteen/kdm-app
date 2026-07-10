@@ -1,3 +1,5 @@
+import { GEAR_SELECT } from '@/lib/dal/gear'
+import { GEAR_GEAR_COST_SELECT } from '@/lib/dal/gear-gear-cost'
 import { getUserId } from '@/lib/dal/user'
 import { createClient } from '@/lib/supabase/client'
 import { ArmorSetDetail } from '@/lib/types'
@@ -17,30 +19,8 @@ const ARMOR_SET_SELECT = `
       armor_set_slot_id,
       gear_id,
       gear(
-        id,
-        custom,
-        gear_name,
-        location_id,
-        accessory,
-        accuracy,
-        affinity_top,
-        affinity_left,
-        affinity_right,
-        affinity_bottom,
-        affinity_bonus,
-        affinity_bonus_requirements,
-        armor_points,
-        armor_location,
-        keywords,
-        rules,
-        speed,
-        strength,
-        weapon_type_id,
-        gear_gear_costs:gear_gear_cost(
-          gear_id,
-          cost_gear_id,
-          quantity
-        ),
+        ${GEAR_SELECT},
+        gear_gear_costs:gear_gear_cost(${GEAR_GEAR_COST_SELECT}),
         gear_other_costs:gear_other_cost(
           id,
           gear_id,
@@ -103,5 +83,5 @@ export async function getArmorSets(): Promise<ArmorSetDetail[]> {
 
   // This cast is in place because `affinity_bonus_requirements` is a JSON field
   // and the TypeScript compiler cannot infer the correct type.
-  return data as ArmorSetDetail[]
+  return data
 }

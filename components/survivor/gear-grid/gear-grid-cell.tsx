@@ -267,7 +267,7 @@ export function GearGridCell({
               )}>
               {(gear.affinity_bonus_requirements ?? []).length > 0 && (
                 <div className="flex shrink-0 flex-col items-center gap-0.5">
-                  {gear.affinity_bonus_requirements.map((req, i) => (
+                  {(gear.affinity_bonus_requirements ?? []).map((req, i) => (
                     <span
                       key={i}
                       className={cn(

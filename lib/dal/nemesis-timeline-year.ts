@@ -1,7 +1,7 @@
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { CampaignType, DatabaseCampaignType } from '@/lib/enums'
 import { createClient } from '@/lib/supabase/client'
-import { NemesisTimelineDetail } from '@/lib/types'
+import { NemesisTimelineYearDetail } from '@/lib/types'
 
 /**
  * Get Nemesis Timeline Years
@@ -16,7 +16,7 @@ import { NemesisTimelineDetail } from '@/lib/types'
 export async function getNemesisTimelineYears(
   nemesisId: string | null | undefined,
   campaignType?: CampaignType
-): Promise<NemesisTimelineDetail[]> {
+): Promise<NemesisTimelineYearDetail[]> {
   if (!nemesisId) throw new Error('Required: Nemesis ID')
 
   const supabase = createClient()

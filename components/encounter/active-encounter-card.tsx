@@ -27,11 +27,12 @@ import { updateEncounterActiveMonster } from '@/lib/dal/encounter-active-monster
 import {
   getEncounterSurvivors,
   updateEncounterSurvivor
-} from '@/lib/dal/encounter-survivor'
+} from '@/lib/dal/encounter-active-survivor'
 import { removeHunt } from '@/lib/dal/hunt'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import {
   syncMonsterMoods,
+  syncMonsterSurvivorStatuses,
   syncMonsterTraits
 } from '@/lib/dal/monster-trait-mood'
 import { addSettlementPhase } from '@/lib/dal/settlement-phase'
@@ -39,9 +40,9 @@ import { SurvivorCardMode, TabType } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
 import {
   EncounterActiveMonsterDetail,
+  EncounterActiveSurvivorDetail,
   EncounterDetail,
   EncounterStateSetter,
-  EncounterSurvivorDetail,
   HuntDetail,
   HuntStateSetter,
   HuntSurvivorDetail,
@@ -227,7 +228,7 @@ export function ActiveEncounterCard({
         }
       })
 
-      const { traits, moods, survivor_statuses, ...columnUpdates } = updateData
+      const { traits, moods, ...columnUpdates } = updateData
       const writes: Promise<unknown>[] = []
       if (Object.keys(columnUpdates).length > 0)
         writes.push(updateEncounterActiveMonster(monster.id, columnUpdates))
@@ -247,7 +248,14 @@ export function ActiveEncounterCard({
             moods.map((mood) => mood.mood_name)
           )
         )
-      void survivor_statuses
+      if (survivor_statuses !== undefined)
+        writes.push(
+          syncMonsterSurvivorStatuses(
+            'encounter_active_monster_survivor_status',
+            monster.id,
+            survivor_statuses.map((status) => status.survivor_status_name)
+          )
+        )
 
       Promise.all(writes).catch((err: unknown) => {
         setSelectedEncounter((prev) =>
@@ -331,7 +339,7 @@ export function ActiveEncounterCard({
 
     let updatedSurvivors = selectedEncounter.encounter_survivors
     if (nextTurn === 'SURVIVOR' && updatedSurvivors) {
-      const reset: { [key: string]: EncounterSurvivorDetail } = {}
+      const reset: { [key: string]: EncounterActiveSurvivorDetail } = {}
       for (const [key, survivor] of Object.entries(updatedSurvivors))
         reset[key] = {
           ...survivor,
@@ -376,7 +384,7 @@ export function ActiveEncounterCard({
     (
       survivorRecordId: string,
       updates: Partial<
-        Pick<EncounterSurvivorDetail, 'movement_used' | 'activation_used'>
+        Pick<EncounterActiveSurvivorDetail, 'movement_used' | 'activation_used'>
       >
     ) => {
       if (!selectedEncounter.encounter_survivors) return

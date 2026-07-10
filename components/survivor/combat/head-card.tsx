@@ -1,11 +1,18 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
+import { saveVignetteSurvivorLiveState } from '@/components/survivor/vignette-live-state'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
+import { SurvivorCardMode } from '@/lib/enums'
+import {
+  ShowdownDetail,
+  ShowdownStateSetter,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { HardHatIcon, Shield } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
@@ -14,8 +21,14 @@ import { ReactElement, useCallback, useState } from 'react'
  * Head Card Properties
  */
 interface HeadCardProps {
+  /** Mode */
+  mode?: SurvivorCardMode
+  /** Selected Showdown */
+  selectedShowdown?: ShowdownDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Showdown */
+  setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
   setSurvivors: SurvivorsStateSetter
   /** Survivors */
@@ -32,10 +45,14 @@ interface HeadCardProps {
  * @returns Head Card Component
  */
 export function HeadCard({
+  mode = SurvivorCardMode.SURVIVOR_CARD,
+  selectedShowdown = null,
   selectedSurvivor,
+  setSelectedShowdown,
   setSurvivors,
   survivors
 }: HeadCardProps): ReactElement {
+  const isVignetteMode = mode === SurvivorCardMode.VIGNETTE_CARD
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [headArmor, setHeadArmor] = useState(selectedSurvivor?.head_armor ?? 0)
   const [headDeaf, setHeadDeaf] = useState(selectedSurvivor?.head_deaf ?? false)
@@ -80,6 +97,22 @@ export function HeadCard({
       setter: (v: T) => void,
       oldValue: T
     ) => {
+      if (mode === SurvivorCardMode.VIGNETTE_CARD) {
+        if (field === 'head_heavy_damage') {
+          setter(value)
+          saveVignetteSurvivorLiveState({
+            context: 'Vignette Survivor Head Damage Update',
+            field,
+            mode,
+            selectedShowdown,
+            selectedSurvivor,
+            setSelectedShowdown,
+            value: value as boolean
+          })
+        }
+        return
+      }
+
       const oldSurvivors = [...survivors]
 
       setter(value)
@@ -97,7 +130,14 @@ export function HeadCard({
         }
       )
     },
-    [selectedSurvivor?.id, setSurvivors, survivors]
+    [
+      mode,
+      selectedShowdown,
+      selectedSurvivor,
+      setSelectedShowdown,
+      setSurvivors,
+      survivors
+    ]
   )
 
   return (
@@ -117,6 +157,7 @@ export function HeadCard({
               onChange={(value) =>
                 handleUpdate('head_armor', value, setHeadArmor, headArmor)
               }
+              disabled={isVignetteMode}
               className="absolute top-[50%] left-7 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 text-xl sm:text-xl md:text-xl text-center p-0 bg-transparent! border-none no-spinners focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
@@ -136,6 +177,7 @@ export function HeadCard({
                   onCheckedChange={(checked) =>
                     handleUpdate('head_deaf', !!checked, setHeadDeaf, headDeaf)
                   }
+                  disabled={isVignetteMode}
                 />
                 <Label className="text-xs">Deaf</Label>
               </div>
@@ -159,6 +201,7 @@ export function HeadCard({
                           headBlind
                         )
                       }}
+                      disabled={isVignetteMode}
                     />
                   ))}
                 </div>
@@ -178,6 +221,7 @@ export function HeadCard({
                       headShatteredJaw
                     )
                   }
+                  disabled={isVignetteMode}
                 />
                 <Label className="text-xs">Shattered Jaw</Label>
               </div>
@@ -195,6 +239,7 @@ export function HeadCard({
                       headIntracranialHemorrhage
                     )
                   }
+                  disabled={isVignetteMode}
                 />
                 <Label className="text-xs">
                   <span className="lg:hidden">Intra Hem</span>

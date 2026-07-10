@@ -1,4 +1,3 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -46,7 +45,7 @@ export async function getSeedPatterns(): Promise<{
   const { data, error } = await supabase
     .from('seed_pattern')
     .select(
-      'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity)'
+      'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(seed_pattern_id, cost_gear_id, quantity)'
     )
 
   if (error) throw new Error(`Error Fetching Seed Patterns: ${error.message}`)
@@ -76,7 +75,7 @@ export async function getUserCustomSeedPatterns(): Promise<{
   const { data, error } = await supabase
     .from('seed_pattern')
     .select(
-      'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(cost_gear_id, quantity), archived_at'
+      'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id, seed_pattern_gear_cost(seed_pattern_id, cost_gear_id, quantity), archived_at'
     )
     .eq('custom', true)
     .eq('user_id', userId)
@@ -103,19 +102,25 @@ export async function getUserCustomSeedPatterns(): Promise<{
 export async function addSeedPattern(
   seedPattern: Omit<
     TablesInsert<'seed_pattern'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<SeedPatternDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'seed_pattern'> = { ...seedPattern }
 
-  if (seedPattern.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('seed_pattern')
     .insert({
-      ...seedPattern,
-      ...(seedPattern.custom ? { user_id: userId! } : {})
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
     })
     .select(
       'id, custom, seed_pattern_name, crafting_limit, crafting_steps, endeavor_cost, era, keywords, requirements, crafted_gear_id'
@@ -134,20 +139,23 @@ export async function addSeedPattern(
  *
  * @param id Seed Pattern ID
  * @param seedPattern Seed Pattern Data
- * @returns Updated Seed Pattern
  */
 export async function updateSeedPattern(
   id: string,
   seedPattern: Omit<
     TablesUpdate<'seed_pattern'>,
-    'id' | 'created_at' | 'updated_at'
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
   >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'seed_pattern'> = { ...seedPattern }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('seed_pattern')
-    .update(seedPattern)
+    .update(updateData)
     .eq('id', id)
 
   if (error) throw new Error(`Error Updating Seed Pattern: ${error.message}`)
@@ -161,7 +169,11 @@ export async function updateSeedPattern(
  * @param id Seed Pattern ID
  */
 export async function removeSeedPattern(id: string): Promise<void> {
-  await removeCatalogRow('seed_pattern', id, 'Seed Pattern')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('seed_pattern').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Seed Pattern: ${error.message}`)
 }
 
 /**

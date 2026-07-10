@@ -1,8 +1,21 @@
-import { removeCatalogRow } from '@/lib/dal/catalog-archive'
 import { getUserId, getUserIdOrNull } from '@/lib/dal/user'
 import { TablesInsert, TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { ResourceDetail } from '@/lib/types'
+
+export const RESOURCE_SELECT = `
+  id,
+  custom,
+  resource_name,
+  category,
+  quarry_id,
+  resource_types,
+  pattern_id,
+  rules,
+  nemesis(monster_name, node),
+  pattern(${PATTERN_SELECT}),
+  quarry(monster_name, node)
+`
 
 /**
  * Get Resources
@@ -23,9 +36,7 @@ export async function getResources(): Promise<{
 
   const { data, error } = await supabase
     .from('resource')
-    .select(
-      'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'
-    )
+    .select(RESOURCE_SELECT)
 
   if (error) throw new Error(`Error Fetching Resources: ${error.message}`)
 
@@ -127,19 +138,25 @@ export async function getUserCustomResources(): Promise<{
 export async function addResource(
   resource: Omit<
     TablesInsert<'resource'>,
-    'id' | 'created_at' | 'updated_at' | 'user_id'
+    'id' | 'created_at' | 'updated_at' | 'user_id' | 'archived_at'
   >
 ): Promise<ResourceDetail> {
   const userId = await getUserIdOrNull()
   const supabase = createClient()
+  const insertData: TablesInsert<'resource'> = { ...resource }
 
-  if (resource.custom && !userId) throw new Error('Not Authenticated')
+  // Ownership is derived from the authenticated user, even if caller input was
+  // cast into this function with a user_id field.
+  delete insertData.user_id
+
+  if (insertData.custom === true && !userId)
+    throw new Error('Not Authenticated')
 
   const { data, error } = await supabase
     .from('resource')
     .insert({
-      ...resource,
-      ...(resource.custom ? { user_id: userId! } : {})
+      ...insertData,
+      ...(insertData.custom === true ? { user_id: userId } : {})
     })
     .select(
       'id, custom, resource_name, category, quarry_id, resource_types, pattern_id, rules, quarry(monster_name, node)'
@@ -176,17 +193,23 @@ export async function addResource(
  *
  * @param id Resource ID
  * @param resource Resource Data
- * @returns Updated Resource
  */
 export async function updateResource(
   id: string,
-  resource: Omit<TablesUpdate<'resource'>, 'id' | 'created_at' | 'updated_at'>
+  resource: Omit<
+    TablesUpdate<'resource'>,
+    'id' | 'created_at' | 'updated_at' | 'custom' | 'user_id'
+  >
 ): Promise<void> {
   const supabase = createClient()
+  const updateData: TablesUpdate<'resource'> = { ...resource }
+
+  delete updateData.custom
+  delete updateData.user_id
 
   const { error } = await supabase
     .from('resource')
-    .update(resource)
+    .update(updateData)
     .eq('id', id)
 
   if (error) throw new Error(`Error Updating Resource: ${error.message}`)
@@ -200,5 +223,9 @@ export async function updateResource(
  * @param id Resource ID
  */
 export async function removeResource(id: string): Promise<void> {
-  await removeCatalogRow('resource', id, 'Resource')
+  const supabase = createClient()
+
+  const { error } = await supabase.from('resource').delete().eq('id', id)
+
+  if (error) throw new Error(`Error Removing Resource: ${error.message}`)
 }

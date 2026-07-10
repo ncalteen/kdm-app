@@ -3,8 +3,9 @@ import {
   resolveSettlementAuthorship,
   type SettlementMemberProfile
 } from '@/lib/dal/settlement-shared-user'
+import { TablesUpdate } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { SettlementDetail, SettlementNemesisDetail } from '@/lib/types'
+import { SettlementDetail } from '@/lib/types'
 
 type EmbeddedNemesis = {
   custom: boolean
@@ -255,7 +256,10 @@ export async function removeSettlementNemesis(
  */
 export async function updateSettlementNemesis(
   settlementNemesisId: string | null | undefined,
-  updates: Partial<SettlementNemesisDetail>
+  updates: Omit<
+    TablesUpdate<'settlement_nemesis'>,
+    'id' | 'created_at' | 'updated_at'
+  >
 ): Promise<void> {
   if (!settlementNemesisId) throw new Error('Required: Settlement Nemesis ID')
 

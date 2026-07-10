@@ -1,5 +1,6 @@
 'use client'
 
+import { saveVignetteSurvivorLiveState } from '@/components/survivor/vignette-live-state'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -11,9 +12,19 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { updateSurvivor } from '@/lib/dal/survivor'
-import { ColorChoice, DatabaseGender, Gender } from '@/lib/enums'
+import {
+  ColorChoice,
+  DatabaseGender,
+  Gender,
+  SurvivorCardMode
+} from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
-import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
+import {
+  ShowdownDetail,
+  ShowdownStateSetter,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { getCardColorStyles, getColorStyle } from '@/lib/utils'
 import { SkullIcon, UserXIcon } from 'lucide-react'
 import { KeyboardEvent, ReactElement, useCallback, useState } from 'react'
@@ -23,8 +34,14 @@ import { toast } from 'sonner'
  * Status Card Props
  */
 interface StatusCardProps {
+  /** Mode */
+  mode?: SurvivorCardMode
+  /** Selected Showdown */
+  selectedShowdown?: ShowdownDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Showdown */
+  setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
   setSurvivors: SurvivorsStateSetter
   /** Survivors */
@@ -43,10 +60,14 @@ interface StatusCardProps {
  * @returns Status Card Component
  */
 export function StatusCard({
+  mode = SurvivorCardMode.SURVIVOR_CARD,
+  selectedShowdown = null,
   selectedSurvivor,
+  setSelectedShowdown,
   setSurvivors,
   survivors
 }: StatusCardProps): ReactElement {
+  const isVignetteMode = mode === SurvivorCardMode.VIGNETTE_CARD
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
 
   const [survivorName, setSurvivorName] = useState(
@@ -152,6 +173,22 @@ export function StatusCard({
   const handleDeadToggle = useCallback(
     (checked: boolean) => {
       const oldDead = survivorDead
+
+      if (
+        saveVignetteSurvivorLiveState({
+          context: 'Vignette Survivor Dead Status Update',
+          field: 'dead',
+          mode,
+          selectedShowdown,
+          selectedSurvivor,
+          setSelectedShowdown,
+          value: checked
+        })
+      ) {
+        setSurvivorDead(checked)
+        return
+      }
+
       const oldSurvivors = [...(survivors ?? [])]
 
       setSurvivorDead(checked)
@@ -170,7 +207,15 @@ export function StatusCard({
         }
       )
     },
-    [selectedSurvivor?.id, survivorDead, survivors, setSurvivors]
+    [
+      mode,
+      selectedShowdown,
+      selectedSurvivor,
+      setSelectedShowdown,
+      survivorDead,
+      survivors,
+      setSurvivors
+    ]
   )
 
   /**
@@ -181,6 +226,22 @@ export function StatusCard({
   const handleRetiredToggle = useCallback(
     (checked: boolean) => {
       const oldRetired = survivorRetired
+
+      if (
+        saveVignetteSurvivorLiveState({
+          context: 'Vignette Survivor Retired Status Update',
+          field: 'retired',
+          mode,
+          selectedShowdown,
+          selectedSurvivor,
+          setSelectedShowdown,
+          value: checked
+        })
+      ) {
+        setSurvivorRetired(checked)
+        return
+      }
+
       const oldSurvivors = [...(survivors ?? [])]
 
       setSurvivorRetired(checked)
@@ -199,7 +260,15 @@ export function StatusCard({
         }
       )
     },
-    [selectedSurvivor?.id, survivorRetired, survivors, setSurvivors]
+    [
+      mode,
+      selectedShowdown,
+      selectedSurvivor,
+      setSelectedShowdown,
+      survivorRetired,
+      survivors,
+      setSurvivors
+    ]
   )
 
   /**
@@ -245,15 +314,19 @@ export function StatusCard({
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <Popover
-              open={isColorPickerOpen}
-              onOpenChange={setIsColorPickerOpen}>
+              open={!isVignetteMode && isColorPickerOpen}
+              onOpenChange={(isOpen) => {
+                if (!isVignetteMode) setIsColorPickerOpen(isOpen)
+              }}>
               <PopoverTrigger asChild>
                 <Avatar
-                  className={`h-8 w-8 ${getColorStyle(survivorColor, 'bg')} items-center justify-center cursor-pointer`}
-                  onClick={() => setIsColorPickerOpen(true)}
+                  className={`h-8 w-8 ${getColorStyle(survivorColor, 'bg')} items-center justify-center ${isVignetteMode ? '' : 'cursor-pointer'}`}
+                  onClick={() => {
+                    if (!isVignetteMode) setIsColorPickerOpen(true)
+                  }}
                   onContextMenu={(e) => {
                     e.preventDefault()
-                    setIsColorPickerOpen(true)
+                    if (!isVignetteMode) setIsColorPickerOpen(true)
                   }}>
                   <AvatarFallback className="bg-transparent">
                     {(survivorDead && <SkullIcon className="h-4 w-4" />) ||
@@ -292,6 +365,7 @@ export function StatusCard({
                 value={survivorName}
                 onChange={(e) => setSurvivorName(e.target.value)}
                 onKeyDown={(e) => handleNameKeyDown(e, e.currentTarget.value)}
+                disabled={isVignetteMode}
               />
             </div>
 
@@ -304,6 +378,7 @@ export function StatusCard({
                 <Checkbox
                   id="male-checkbox"
                   checked={survivorGender === 'MALE'}
+                  disabled={isVignetteMode}
                   onCheckedChange={(checked) => {
                     if (checked) handleGenderChange(Gender.MALE)
                   }}
@@ -316,6 +391,7 @@ export function StatusCard({
                 <Checkbox
                   id="female-checkbox"
                   checked={survivorGender === 'FEMALE'}
+                  disabled={isVignetteMode}
                   onCheckedChange={(checked) => {
                     if (checked) handleGenderChange(Gender.FEMALE)
                   }}

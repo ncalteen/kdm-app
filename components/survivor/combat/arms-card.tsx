@@ -1,12 +1,19 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
+import { saveVignetteSurvivorLiveState } from '@/components/survivor/vignette-live-state'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { updateSurvivor } from '@/lib/dal/survivor'
+import { SurvivorCardMode } from '@/lib/enums'
 import { ERROR_MESSAGE } from '@/lib/messages'
-import { SurvivorDetail, SurvivorsStateSetter } from '@/lib/types'
+import {
+  ShowdownDetail,
+  ShowdownStateSetter,
+  SurvivorDetail,
+  SurvivorsStateSetter
+} from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { HandMetalIcon, Shield } from 'lucide-react'
 import { ReactElement, useCallback, useState } from 'react'
@@ -16,8 +23,14 @@ import { toast } from 'sonner'
  * Arms Card Properties
  */
 interface ArmsCardProps {
+  /** Mode */
+  mode?: SurvivorCardMode
+  /** Selected Showdown */
+  selectedShowdown?: ShowdownDetail | null
   /** Selected Survivor */
   selectedSurvivor: SurvivorDetail | null
+  /** Set Selected Showdown */
+  setSelectedShowdown?: ShowdownStateSetter
   /** Set Survivors */
   setSurvivors: SurvivorsStateSetter
   /** Survivors */
@@ -34,10 +47,14 @@ interface ArmsCardProps {
  * @returns Arms Card Component
  */
 export function ArmsCard({
+  mode = SurvivorCardMode.SURVIVOR_CARD,
+  selectedShowdown = null,
   selectedSurvivor,
+  setSelectedShowdown,
   setSurvivors,
   survivors
 }: ArmsCardProps): ReactElement {
+  const isVignetteMode = mode === SurvivorCardMode.VIGNETTE_CARD
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [armArmor, setArmArmor] = useState(selectedSurvivor?.arm_armor ?? 0)
   const [armBroken, setArmBroken] = useState(selectedSurvivor?.arm_broken ?? 0)
@@ -86,6 +103,22 @@ export function ArmsCard({
       setter: (v: T) => void,
       oldValue: T
     ) => {
+      if (mode === SurvivorCardMode.VIGNETTE_CARD) {
+        if (field === 'arm_light_damage' || field === 'arm_heavy_damage') {
+          setter(value)
+          saveVignetteSurvivorLiveState({
+            context: 'Vignette Survivor Arm Damage Update',
+            field,
+            mode,
+            selectedShowdown,
+            selectedSurvivor,
+            setSelectedShowdown,
+            value: value as boolean
+          })
+        }
+        return
+      }
+
       const oldSurvivors = [...survivors]
 
       setter(value)
@@ -104,7 +137,14 @@ export function ArmsCard({
         }
       )
     },
-    [selectedSurvivor?.id, setSurvivors, survivors]
+    [
+      mode,
+      selectedShowdown,
+      selectedSurvivor,
+      setSelectedShowdown,
+      setSurvivors,
+      survivors
+    ]
   )
 
   return (
@@ -124,6 +164,7 @@ export function ArmsCard({
               onChange={(value) =>
                 handleUpdate('arm_armor', value, setArmArmor, armArmor)
               }
+              disabled={isVignetteMode}
               className="absolute top-[50%] left-7 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 text-xl sm:text-xl md:text-xl text-center p-0 bg-transparent! border-none no-spinners focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
@@ -154,6 +195,7 @@ export function ArmsCard({
                           armBroken
                         )
                       }}
+                      disabled={isVignetteMode}
                     />
                   ))}
                 </div>
@@ -173,6 +215,7 @@ export function ArmsCard({
                       armRupturedMuscle
                     )
                   }
+                  disabled={isVignetteMode}
                 />
                 <Label className="text-xs">Ruptured Muscle</Label>
               </div>
@@ -196,6 +239,7 @@ export function ArmsCard({
                           armDismembered
                         )
                       }}
+                      disabled={isVignetteMode}
                     />
                   ))}
                 </div>
@@ -221,6 +265,7 @@ export function ArmsCard({
                           armContracture
                         )
                       }}
+                      disabled={isVignetteMode}
                     />
                   ))}
                 </div>

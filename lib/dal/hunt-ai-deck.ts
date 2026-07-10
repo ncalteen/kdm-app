@@ -19,7 +19,9 @@ export async function getHuntAIDecks(
 
   const { data, error } = await supabase
     .from('hunt_ai_deck')
-    .select('id, basic_cards, advanced_cards, legendary_cards, overtone_cards')
+    .select(
+      'id, settlement_id, hunt_id, basic_cards, advanced_cards, legendary_cards, overtone_cards'
+    )
     .eq('hunt_id', huntId)
 
   if (error) throw new Error(`Error Fetching Hunt AI Decks: ${error.message}`)
@@ -50,7 +52,9 @@ export async function addHuntAIDeck(
   const { data, error } = await supabase
     .from('hunt_ai_deck')
     .insert(huntAIDeck)
-    .select('id, basic_cards, advanced_cards, legendary_cards, overtone_cards')
+    .select(
+      'id, settlement_id, hunt_id, basic_cards, advanced_cards, legendary_cards, overtone_cards'
+    )
     .single()
 
   if (error) throw new Error(`Error Adding Hunt AI Deck: ${error.message}`)

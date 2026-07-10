@@ -1,11 +1,12 @@
 'use client'
 
 import { NumericInput } from '@/components/menu/numeric-input'
+import { saveVignetteSurvivorLiveState } from '@/components/survivor/vignette-live-state'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useOptimisticMutation } from '@/hooks/use-optimistic-mutation'
-import { updateEncounterSurvivor } from '@/lib/dal/encounter-survivor'
+import { updateEncounterSurvivor } from '@/lib/dal/encounter-active-survivor'
 import { updateHuntSurvivor } from '@/lib/dal/hunt-survivor'
 import { updateShowdownSurvivor } from '@/lib/dal/showdown-survivor'
 import { updateSurvivor } from '@/lib/dal/survivor'
@@ -88,6 +89,7 @@ export function SanityCard({
   setSurvivors
 }: SanityCardProps): ReactElement {
   const mutate = useOptimisticMutation()
+  const isVignetteMode = mode === SurvivorCardMode.VIGNETTE_CARD
 
   const [prevSurvivor, setPrevSurvivor] = useState(selectedSurvivor)
   const [insanity, setInsanity] = useState(selectedSurvivor?.insanity ?? 0)
@@ -136,10 +138,22 @@ export function SanityCard({
     )
   }, [mode, selectedShowdown, selectedSurvivor?.id])
 
+  const vignetteSurvivorRecord = useMemo(() => {
+    if (
+      mode !== SurvivorCardMode.VIGNETTE_CARD ||
+      !selectedShowdown?.showdown_survivors
+    )
+      return undefined
+    return Object.values(selectedShowdown.showdown_survivors).find(
+      (ss) => ss.survivor_id === selectedSurvivor?.id
+    )
+  }, [mode, selectedShowdown, selectedSurvivor?.id])
+
   /** Current insanity tokens derived from hunt/showdown survivor record */
   const insanityTokens =
     huntSurvivorRecord?.insanity_tokens ??
     encounterSurvivorRecord?.insanity_tokens ??
+    vignetteSurvivorRecord?.insanity_tokens ??
     showdownSurvivorRecord?.insanity_tokens ??
     0
 
@@ -235,6 +249,21 @@ export function SanityCard({
           }
         })
       } else if (
+        mode === SurvivorCardMode.VIGNETTE_CARD &&
+        vignetteSurvivorRecord &&
+        selectedShowdown?.showdown_survivors &&
+        setSelectedShowdown
+      ) {
+        saveVignetteSurvivorLiveState({
+          context: 'Vignette Insanity Tokens Update',
+          field: 'insanity_tokens',
+          mode,
+          selectedShowdown,
+          selectedSurvivor,
+          setSelectedShowdown,
+          value
+        })
+      } else if (
         mode === SurvivorCardMode.SHOWDOWN_CARD &&
         showdownSurvivorRecord &&
         selectedShowdown?.showdown_survivors &&
@@ -278,12 +307,13 @@ export function SanityCard({
     },
     [
       mode,
-      selectedSurvivor?.id,
+      selectedSurvivor,
       selectedEncounter,
       selectedHunt,
       selectedShowdown,
       encounterSurvivorRecord,
       huntSurvivorRecord,
+      vignetteSurvivorRecord,
       showdownSurvivorRecord,
       setSelectedEncounter,
       setSelectedHunt,
@@ -300,6 +330,8 @@ export function SanityCard({
   const updateInsanity = useCallback(
     (value: number) => {
       if (value < 0) return toast.error(INSANITY_MINIMUM_ERROR_MESSAGE())
+
+      if (mode === SurvivorCardMode.VIGNETTE_CARD) return
 
       const old = insanity
 
@@ -324,7 +356,7 @@ export function SanityCard({
         }
       })
     },
-    [insanity, selectedSurvivor?.id, setSurvivors, mutate]
+    [insanity, mode, selectedSurvivor?.id, setSurvivors, mutate]
   )
 
   /**
@@ -335,6 +367,20 @@ export function SanityCard({
   const updateBrainLightDamage = useCallback(
     (checked: boolean) => {
       const old = brainLightDamage
+
+      if (mode === SurvivorCardMode.VIGNETTE_CARD) {
+        setBrainLightDamage(!!checked)
+        saveVignetteSurvivorLiveState({
+          context: 'Vignette Brain Light Damage Update',
+          field: 'brain_light_damage',
+          mode,
+          selectedShowdown,
+          selectedSurvivor,
+          setSelectedShowdown,
+          value: !!checked
+        })
+        return
+      }
 
       setBrainLightDamage(!!checked)
       setSurvivors((prev) =>
@@ -363,7 +409,15 @@ export function SanityCard({
         }
       })
     },
-    [brainLightDamage, selectedSurvivor?.id, setSurvivors, mutate]
+    [
+      brainLightDamage,
+      mode,
+      selectedShowdown,
+      selectedSurvivor,
+      setSelectedShowdown,
+      setSurvivors,
+      mutate
+    ]
   )
 
   /**
@@ -417,6 +471,7 @@ export function SanityCard({
                 min={0}
                 onChange={(value) => updateInsanity(value)}
                 className="absolute top-[50%] left-7 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 text-xl sm:text-xl md:text-xl text-center p-0 bg-transparent! border-none no-spinners focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                disabled={isVignetteMode}
               />
             </div>
             {displayText && <Label className="text-xs">Insanity</Label>}
@@ -425,7 +480,8 @@ export function SanityCard({
           {/* Insanity Tokens */}
           {(mode === SurvivorCardMode.HUNT_CARD ||
             mode === SurvivorCardMode.ENCOUNTER_CARD ||
-            mode === SurvivorCardMode.SHOWDOWN_CARD) && (
+            mode === SurvivorCardMode.SHOWDOWN_CARD ||
+            mode === SurvivorCardMode.VIGNETTE_CARD) && (
             <div className="flex flex-col items-center gap-2 pt-1">
               <NumericInput
                 label="Insanity Tokens"
