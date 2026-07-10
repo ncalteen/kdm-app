@@ -1,6 +1,7 @@
 'use client'
 
 import { DiscordButton } from '@/components/auth/discord-button'
+import { ShutdownNoticeDialog } from '@/components/auth/shutdown-notice-dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -140,6 +141,7 @@ export function SignUpForm({
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
+      <ShutdownNoticeDialog />
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Begin your chronicle.</CardTitle>
