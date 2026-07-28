@@ -1,5 +1,13 @@
 # Survivor and Settlement Tracker for Kingdom Death: Monster
 
+> [!IMPORTANT]
+>
+> This repository has been archived and the corresponding application,
+> [`https://archivist.monster`](https://archivist.monster), has been removed.
+> Please feel free to copy and use this project as you see fit. If you want to
+> run it locally for your own use, see the [docs](./docs) and
+> [contribution guidelines](./CONTRIBUTING.md).
+
 ![Continuous Integration](https://github.com/ncalteen/kdm-app/actions/workflows/continuous-integration.yml/badge.svg)
 ![Continuous Delivery](https://github.com/ncalteen/kdm-app/actions/workflows/continuous-delivery.yml/badge.svg)
 ![Linter](https://github.com/ncalteen/kdm-app/actions/workflows/linter.yml/badge.svg)
